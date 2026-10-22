@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useNxdsAppearance } from '@nxds/react/appearance';
 import { cn } from '@nxds/react/utils';
+import { IconBrandGithub } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { PAGE_MANIFEST } from '../_lib/manifest';
-import { SITE_NAME } from '../_lib/site';
+import { REPO_URL, SITE_NAME } from '../_lib/site';
 
 import { Button } from './nxds';
 import { SearchPalette } from './SearchPalette';
@@ -48,6 +49,7 @@ export function TopNav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { resolvedMode, setState } = useNxdsAppearance();
   const isDark = resolvedMode === 'dark';
+
   const currentLink = NAV_LINKS.find((link) => isActive(pathname, link.match));
 
   // relatedTarget is null when focus goes nowhere, not when it leaves the nav.
@@ -85,16 +87,30 @@ export function TopNav() {
   };
 
   return (
-    <header className="nx:sticky nx:top-0 nx:z-30 nx:flex nx:items-center nx:gap-6 nx:px-6 nx:h-(--docs-header-h) nx:bg-nav-background nx:text-nav-foreground nx:border-b nx:border-nav-border">
-      <Link
-        href="/"
-        className="nx:flex nx:items-center nx:gap-2 nx:font-semibold nx:typography-label-default nx:no-underline nx:text-inherit nx:rounded-sm nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default"
-      >
-        {SITE_NAME}
-        <span className="nx:text-[10px] nx:uppercase nx:tracking-wider nx:text-nav-muted-foreground nx:px-1.5 nx:py-0.5 nx:border nx:border-dashed nx:border-nav-border nx:rounded-sm">
-          docs
-        </span>
-      </Link>
+    <header
+      className={`nx:sticky nx:top-0 nx:z-30 nx:flex nx:items-center nx:gap-2 nx:sm:gap-6 nx:px-6 nx:h-(--docs-header-h) nx:bg-nav-background nx:text-nav-foreground ${pathname === '/' ? '' : 'nx:border-b nx:border-nav-border'}`}
+    >
+      {pathname === '/' ? (
+        <Link
+          href="/"
+          aria-label="Nexus Design System home"
+          className="nx:flex nx:items-center nx:text-inherit nx:no-underline nx:rounded-sm nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default"
+        >
+          <span className="nx:font-semibold nx:typography-label-default">
+            Nexus Design System
+          </span>
+        </Link>
+      ) : (
+        <Link
+          href="/"
+          className="nx:flex nx:items-center nx:gap-2 nx:font-semibold nx:typography-label-default nx:no-underline nx:text-inherit nx:rounded-sm nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default"
+        >
+          {SITE_NAME}
+          <span className="nx:text-[10px] nx:uppercase nx:tracking-wider nx:text-nav-muted-foreground nx:px-1.5 nx:py-0.5 nx:border nx:border-dashed nx:border-nav-border nx:rounded-sm">
+            docs
+          </span>
+        </Link>
+      )}
       <nav
         ref={menuRef}
         aria-label="Sections"
@@ -169,6 +185,19 @@ export function TopNav() {
       >
         {isDark ? '☀' : '◐'}
       </Button>
+      {pathname === '/' && (
+        <Button variant="outline" size="sm" asChild>
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Nexus repository on GitHub (opens in a new tab)"
+          >
+            <IconBrandGithub aria-hidden="true" />
+            GitHub
+          </a>
+        </Button>
+      )}
     </header>
   );
 }
