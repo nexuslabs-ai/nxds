@@ -20,6 +20,7 @@ Button triggers an action. Use it for short, visible labels.
 - Use one decorative icon slot at most: \`startIcon\` or \`endIcon\`.
 - A loading button shows only a spinner and hides its icons.
 - Icon-only buttons need \`aria-label\` or \`aria-labelledby\`.
+- Icon-only buttons show 16, 18 or 20px icons with a medium line, by size.
         `,
       },
     },
@@ -201,6 +202,42 @@ export const IconOnlySizes: Story = {
     await expect(
       canvas.getByRole('button', { name: 'Large icon' })
     ).toHaveClass('nx:size-12');
+  },
+};
+
+export const IconOnlyIconScale: Story = {
+  render: () => (
+    <div className="nx:flex nx:items-center nx:gap-2">
+      <Button startIcon={<IconRocket />}>Launch</Button>
+      <Button size="icon-sm" aria-label="Small icon">
+        <IconStar />
+      </Button>
+      <Button size="icon" aria-label="Default icon">
+        <IconStar />
+      </Button>
+      <Button size="icon-lg" aria-label="Large icon">
+        <IconStar />
+      </Button>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    function icon(name: string) {
+      const svg = canvas.getByRole('button', { name }).querySelector('svg');
+      return {
+        height: svg?.getBoundingClientRect().height ?? 0,
+        line: svg ? parseFloat(getComputedStyle(svg).strokeWidth) : 0,
+      };
+    }
+    await expect(icon('Small icon').height).toBeLessThan(
+      icon('Default icon').height
+    );
+    await expect(icon('Default icon').height).toBeLessThan(
+      icon('Large icon').height
+    );
+    for (const name of ['Small icon', 'Default icon', 'Large icon']) {
+      await expect(icon(name).line).toBeLessThan(icon('Launch').line);
+    }
   },
 };
 
