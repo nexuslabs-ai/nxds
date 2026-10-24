@@ -2,15 +2,49 @@
 
 import * as React from 'react';
 
+import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
-import type { VariantProps } from 'class-variance-authority';
+import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '../../lib/utils';
 import { buttonVariants } from '../button/button';
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  type PopoverContentProps,
+} from '../popover/popover';
 import { TooltipProvider } from '../tooltip/tooltip';
 import { TooltipGroupContext } from '../tooltip/tooltip-group';
 
-type ToolbarProps = React.ComponentProps<typeof ToolbarPrimitive.Root>;
+type ToolbarVariant = 'default' | 'floating';
+
+const ToolbarContext = React.createContext<ToolbarVariant>('default');
+
+const toolbarGap: Record<ToolbarVariant, string> = {
+  default: 'nx:gap-0.5',
+  floating: 'nx:gap-2',
+};
+
+const toolbarVariants = cva(
+  'nx:flex nx:w-fit nx:max-w-full nx:min-w-0 nx:flex-wrap nx:items-center nx:border-default nx:border-border-default nx:bg-container nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
+  {
+    variants: {
+      variant: {
+        default: 'nx:rounded-lg nx:p-0.5 nx:shadow-sm',
+        floating: 'nx:rounded-2xl nx:p-2 nx:shadow-lg',
+      },
+    },
+    defaultVariants: { variant: 'default' },
+  }
+);
+
+interface ToolbarProps extends React.ComponentProps<
+  typeof ToolbarPrimitive.Root
+> {
+  /** Floating lifts the toolbar above the content it sits over, like a canvas. */
+  variant?: ToolbarVariant;
+}
 
 /**
  * Label the toolbar with aria-label or aria-labelledby. Controls wrap in DOM
@@ -23,23 +57,27 @@ const Toolbar = React.forwardRef<
 >(function Toolbar(propsWithoutRef, forwardedRef) {
   const {
     className,
+    variant = 'default',
     ...props
   }: React.PropsWithoutRef<ToolbarProps> & {
     ref?: React.ForwardedRef<HTMLDivElement>;
-  } =
-    forwardedRef === null
-      ? propsWithoutRef
-      : { ...propsWithoutRef, ref: forwardedRef };
+  } = forwardedRef === null
+    ? propsWithoutRef
+    : { ...propsWithoutRef, ref: forwardedRef };
   const inGroup = React.useContext(TooltipGroupContext);
   const root = (
-    <ToolbarPrimitive.Root
-      data-slot="toolbar"
-      className={cn(
-        'nx:flex nx:w-fit nx:max-w-full nx:min-w-0 nx:flex-wrap nx:items-center nx:gap-0.5 nx:rounded-lg nx:border-default nx:border-border-default nx:bg-container nx:p-0.5 nx:shadow-sm nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
-        className
-      )}
-      {...props}
-    />
+    <ToolbarContext.Provider value={variant}>
+      <ToolbarPrimitive.Root
+        data-slot="toolbar"
+        data-variant={variant}
+        className={cn(
+          toolbarVariants({ variant }),
+          toolbarGap[variant],
+          className
+        )}
+        {...props}
+      />
+    </ToolbarContext.Provider>
   );
   if (inGroup) return root;
 
@@ -115,12 +153,14 @@ const ToolbarGroup = React.forwardRef<
     forwardedRef === null
       ? propsWithoutRef
       : { ...propsWithoutRef, ref: forwardedRef };
+  const variant = React.useContext(ToolbarContext);
   return (
     <div
       role="group"
       data-slot="toolbar-group"
       className={cn(
-        'nx:flex nx:min-w-0 nx:flex-wrap nx:items-center nx:gap-0.5',
+        'nx:flex nx:min-w-0 nx:flex-wrap nx:items-center',
+        toolbarGap[variant],
         className
       )}
       {...props}
@@ -145,12 +185,14 @@ const ToolbarToggleGroup = React.forwardRef<
     forwardedRef === null
       ? propsWithoutRef
       : { ...propsWithoutRef, ref: forwardedRef };
+  const variant = React.useContext(ToolbarContext);
   return (
     <ToolbarPrimitive.ToggleGroup
       data-slot="toolbar-toggle-group"
       role={props.type === 'single' ? 'radiogroup' : 'group'}
       className={cn(
-        'nx:flex nx:min-w-0 nx:flex-wrap nx:items-center nx:gap-0.5 nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
+        'nx:flex nx:min-w-0 nx:flex-wrap nx:items-center nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
+        toolbarGap[variant],
         className
       )}
       {...props}
@@ -190,6 +232,301 @@ const ToolbarToggleItem = React.forwardRef<
   );
 });
 
+type ToolbarToolGroupContextValue = {
+  value: string;
+  open: boolean;
+  panelId: string;
+  panels: ReadonlySet<string>;
+  activeTool: HTMLButtonElement | null;
+  activeToolRef: React.RefObject<HTMLButtonElement | null>;
+  group: React.RefObject<HTMLDivElement | null>;
+  switching: { current: boolean };
+  restoreFocus: { current: boolean };
+  setActiveTool: (tool: HTMLButtonElement | null) => void;
+  registerPanel: (value: string) => () => void;
+  select: (value: string) => void;
+};
+
+const ToolbarToolGroupContext =
+  React.createContext<ToolbarToolGroupContextValue | null>(null);
+
+function useToolbarToolGroup() {
+  const context = React.useContext(ToolbarToolGroupContext);
+  if (!context)
+    throw new Error(
+      'ToolbarTool and ToolbarToolPanel must be inside ToolbarToolGroup.'
+    );
+  return context;
+}
+
+interface ToolbarToolGroupProps extends Omit<
+  React.ComponentProps<'div'>,
+  'defaultValue'
+> {
+  /** The selected tool. */
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  /** Whether the selected tool's panel is open. */
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+/**
+ * One selected tool at a time. Selecting a tool opens its ToolbarToolPanel;
+ * selecting it again closes it. Label the group with aria-label.
+ */
+const ToolbarToolGroup = React.forwardRef<
+  HTMLDivElement,
+  React.PropsWithoutRef<ToolbarToolGroupProps>
+>(function ToolbarToolGroup(propsWithoutRef, forwardedRef) {
+  const {
+    value: valueProp,
+    defaultValue = '',
+    onValueChange,
+    open: openProp,
+    defaultOpen = false,
+    onOpenChange,
+    className,
+    children,
+    ref,
+    ...props
+  }: React.PropsWithoutRef<ToolbarToolGroupProps> & {
+    ref?: React.ForwardedRef<HTMLDivElement>;
+  } = forwardedRef === null
+    ? propsWithoutRef
+    : { ...propsWithoutRef, ref: forwardedRef };
+  const variant = React.useContext(ToolbarContext);
+  const group = React.useRef<HTMLDivElement>(null);
+  const composedRef = useComposedRefs(ref, group);
+  const activeToolRef = React.useRef<HTMLButtonElement | null>(null);
+  const switching = React.useRef(false);
+  const restoreFocus = React.useRef(true);
+  const panelId = React.useId();
+  const [localValue, setLocalValue] = React.useState(defaultValue);
+  const [localOpen, setLocalOpen] = React.useState(defaultOpen);
+  const [panels, setPanels] = React.useState<ReadonlySet<string>>(
+    () => new Set()
+  );
+  const [activeTool, setActiveToolState] =
+    React.useState<HTMLButtonElement | null>(null);
+  const value = valueProp ?? localValue;
+  const open =
+    (openProp ?? localOpen) && panels.has(value) && activeTool !== null;
+
+  const setActiveTool = React.useCallback((tool: HTMLButtonElement | null) => {
+    activeToolRef.current = tool;
+    setActiveToolState(tool);
+  }, []);
+
+  const registerPanel = React.useCallback((panel: string) => {
+    setPanels((current) => new Set(current).add(panel));
+    return () =>
+      setPanels((current) => {
+        const next = new Set(current);
+        next.delete(panel);
+        return next;
+      });
+  }, []);
+
+  function setOpen(next: boolean) {
+    if (openProp === undefined) setLocalOpen(next);
+    onOpenChange?.(next);
+  }
+
+  function select(next: string) {
+    const nextOpen = panels.has(next) && (next !== value || !open);
+    switching.current = open && nextOpen;
+    if (next !== value) {
+      if (valueProp === undefined) setLocalValue(next);
+      onValueChange?.(next);
+    }
+    if (nextOpen !== open) setOpen(nextOpen);
+  }
+
+  const context = {
+    value,
+    open,
+    panelId,
+    panels,
+    activeTool,
+    activeToolRef,
+    group,
+    switching,
+    restoreFocus,
+    setActiveTool,
+    registerPanel,
+    select,
+  };
+
+  return (
+    <ToolbarToolGroupContext.Provider value={context}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <div
+          role="group"
+          data-slot="toolbar-tool-group"
+          ref={composedRef}
+          className={cn(
+            'nx:flex nx:min-w-0 nx:flex-wrap nx:items-center',
+            toolbarGap[variant],
+            className
+          )}
+          {...props}
+        >
+          {children}
+        </div>
+        <PopoverAnchor
+          virtualRef={activeToolRef as React.RefObject<HTMLButtonElement>}
+        />
+      </Popover>
+    </ToolbarToolGroupContext.Provider>
+  );
+});
+
+type ToolbarToolProps = Omit<
+  React.ComponentProps<typeof ToolbarPrimitive.Button>,
+  'value'
+> &
+  Pick<VariantProps<typeof buttonVariants>, 'size'> & {
+    /** Matches the tool's ToolbarToolPanel, if it has one. */
+    value: string;
+  };
+
+/** A pressable tool. It reports whether its panel is open. */
+const ToolbarTool = React.forwardRef<
+  HTMLButtonElement,
+  React.PropsWithoutRef<ToolbarToolProps>
+>(function ToolbarTool(propsWithoutRef, forwardedRef) {
+  const {
+    value,
+    size = 'sm',
+    className,
+    onClick,
+    ref,
+    ...props
+  }: React.PropsWithoutRef<ToolbarToolProps> & {
+    ref?: React.ForwardedRef<HTMLButtonElement>;
+  } = forwardedRef === null
+    ? propsWithoutRef
+    : { ...propsWithoutRef, ref: forwardedRef };
+  const tools = useToolbarToolGroup();
+  const button = React.useRef<HTMLButtonElement>(null);
+  const composedRef = useComposedRefs(ref, button);
+  const id = React.useId();
+  const selected = value === tools.value;
+  const hasPanel = tools.panels.has(value);
+  const expanded = selected && tools.open;
+  const { setActiveTool } = tools;
+
+  React.useLayoutEffect(() => {
+    if (!selected) return;
+    setActiveTool(button.current);
+    return () => setActiveTool(null);
+  }, [selected, setActiveTool]);
+
+  function handleClick(event: React.MouseEvent<HTMLButtonElement>) {
+    onClick?.(event);
+    if (!event.defaultPrevented) tools.select(value);
+  }
+
+  return (
+    <ToolbarPrimitive.Button
+      data-slot="toolbar-tool"
+      data-size={size}
+      id={id}
+      className={cn(
+        buttonVariants({ variant: 'ghost', size }),
+        'nx:data-[state=on]:bg-primary-background nx:data-[state=on]:text-primary-foreground nx:data-[state=on]:hover:bg-primary-background-hover nx:data-[state=on]:active:bg-primary-background-active',
+        className
+      )}
+      {...props}
+      ref={composedRef}
+      data-state={selected ? 'on' : 'off'}
+      aria-pressed={selected}
+      aria-haspopup={hasPanel ? 'dialog' : undefined}
+      aria-expanded={hasPanel ? expanded : undefined}
+      aria-controls={expanded ? tools.panelId : props['aria-controls']}
+      onClick={handleClick}
+    />
+  );
+});
+
+interface ToolbarToolPanelProps extends PopoverContentProps {
+  /** The ToolbarTool this panel belongs to. */
+  value: string;
+}
+
+/**
+ * Controls for one tool, shown while that tool is selected and open. Named by
+ * its tool unless it gets its own aria-label. Escape returns focus to the tool.
+ */
+const ToolbarToolPanel = React.forwardRef<
+  HTMLDivElement,
+  React.PropsWithoutRef<ToolbarToolPanelProps>
+>(function ToolbarToolPanel(propsWithoutRef, forwardedRef) {
+  const {
+    value,
+    onOpenAutoFocus,
+    onCloseAutoFocus,
+    onInteractOutside,
+    ...props
+  }: React.PropsWithoutRef<ToolbarToolPanelProps> & {
+    ref?: React.ForwardedRef<HTMLDivElement>;
+  } =
+    forwardedRef === null
+      ? propsWithoutRef
+      : { ...propsWithoutRef, ref: forwardedRef };
+  const tools = useToolbarToolGroup();
+  const { registerPanel } = tools;
+
+  React.useLayoutEffect(() => registerPanel(value), [registerPanel, value]);
+
+  if (value !== tools.value) return null;
+
+  function handleOpenAutoFocus(event: Event) {
+    onOpenAutoFocus?.(event);
+    tools.restoreFocus.current = true;
+    // Switching tools keeps focus on the tool that was just chosen.
+    if (!tools.switching.current) return;
+    tools.switching.current = false;
+    event.preventDefault();
+  }
+
+  function handleCloseAutoFocus(event: Event) {
+    onCloseAutoFocus?.(event);
+    if (event.defaultPrevented) return;
+    event.preventDefault();
+    if (tools.restoreFocus.current)
+      tools.activeToolRef.current?.focus({ preventScroll: true });
+  }
+
+  const handleInteractOutside: NonNullable<
+    ToolbarToolPanelProps['onInteractOutside']
+  > = (event) => {
+    onInteractOutside?.(event);
+    if (event.defaultPrevented) return;
+    // Tools handle their own clicks, so the panel can stay open while switching.
+    if (tools.group.current?.contains(event.target as Node)) {
+      event.preventDefault();
+      return;
+    }
+    tools.restoreFocus.current = false;
+  };
+
+  return (
+    <PopoverContent
+      data-slot="toolbar-tool-panel"
+      id={tools.panelId}
+      aria-labelledby={props['aria-label'] ? undefined : tools.activeTool?.id}
+      onOpenAutoFocus={handleOpenAutoFocus}
+      onCloseAutoFocus={handleCloseAutoFocus}
+      onInteractOutside={handleInteractOutside}
+      {...props}
+    />
+  );
+});
+
 const ToolbarSeparator = React.forwardRef<
   HTMLDivElement,
   React.PropsWithoutRef<React.ComponentProps<typeof ToolbarPrimitive.Separator>>
@@ -207,7 +544,7 @@ const ToolbarSeparator = React.forwardRef<
     <ToolbarPrimitive.Separator
       data-slot="toolbar-separator"
       className={cn(
-        'nx:shrink-0 nx:bg-border-default nx:data-[orientation=vertical]:h-5 nx:data-[orientation=vertical]:w-px nx:data-[orientation=horizontal]:h-px nx:data-[orientation=horizontal]:w-full',
+        'nx:shrink-0 nx:bg-border-default nx:data-[orientation=vertical]:my-1.5 nx:data-[orientation=vertical]:w-px nx:data-[orientation=vertical]:self-stretch nx:data-[orientation=horizontal]:h-px nx:data-[orientation=horizontal]:w-full',
         className
       )}
       {...props}
@@ -223,6 +560,9 @@ export {
   ToolbarSeparator,
   ToolbarToggleGroup,
   ToolbarToggleItem,
+  ToolbarTool,
+  ToolbarToolGroup,
+  ToolbarToolPanel,
 };
 export type {
   ToolbarButtonProps,
@@ -230,4 +570,7 @@ export type {
   ToolbarProps,
   ToolbarToggleGroupProps,
   ToolbarToggleItemProps,
+  ToolbarToolGroupProps,
+  ToolbarToolPanelProps,
+  ToolbarToolProps,
 };
