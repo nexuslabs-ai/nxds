@@ -7,6 +7,9 @@
   overflow: auto;
   scrollbar-width: thin;
   padding: 0;
+}
+/* Prototype card surface, for the pre-migration gallery only. */
+.showcase-grid[data-showcase-version='original'] > .showcase-card {
   border: var(--canvas-border, 1px) solid var(--nx-color-border-default);
   border-radius: var(--canvas-radius, 14px);
   background: color-mix(
@@ -233,14 +236,16 @@
   overflow-x: auto;
   margin-block: 20px 0;
 }
-.showcase-grid[data-treatment='Soft'] > .showcase-card {
+.showcase-grid[data-showcase-version='original'][data-treatment='Soft']
+  > .showcase-card {
   background: color-mix(
     in srgb,
     var(--canvas-accent) 9%,
     var(--nx-color-background)
   );
 }
-.showcase-grid[data-treatment='Solid'] > .showcase-card {
+.showcase-grid[data-showcase-version='original'][data-treatment='Solid']
+  > .showcase-card {
   background: var(--nx-color-muted);
 }
 @container showcase-card (max-width: 300px) {

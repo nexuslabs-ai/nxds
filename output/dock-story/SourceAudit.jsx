@@ -88,6 +88,11 @@ const boundaries = [
   ],
   [
     '.showcase-card',
+    'Nexus Card; the application grid sets its size and scrolling',
+    'composition',
+  ],
+  [
+    '[data-showcase-version="original"] > .showcase-card',
     'Nexus Card with custom surface, radius, shadow and responsive layout overrides',
     'mixed',
   ],
@@ -260,16 +265,6 @@ export function SourceAudit() {
               element.setAttribute(
                 'data-nexus-audit',
                 'Application panel layout containing genuine Nexus appearance controls'
-              );
-              element.setAttribute('data-nexus-audit-kind', 'composition');
-            }
-            if (
-              element.matches('.showcase-card') &&
-              element.closest('.appearance-preview')
-            ) {
-              element.setAttribute(
-                'data-nexus-audit',
-                'Nexus Card surface with application-owned grid sizing and scrolling'
               );
               element.setAttribute('data-nexus-audit-kind', 'composition');
             }
