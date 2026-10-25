@@ -24,7 +24,7 @@ const AppearanceControls = {
       <div class="nx:flex nx:gap-2">
         <Button variant="outline" @click="update({ mode: 'dark' })">Dark</Button>
         <Button variant="outline" @click="update({ brandColor: '#2563eb' })">Blue brand</Button>
-        <Button variant="outline" @click="update({ corners: 'round' })">Round corners</Button>
+        <Button variant="outline" @click="update({ corners: '12' })">12px corners</Button>
         <Button variant="outline" @click="appearance.reset()">Reset</Button>
       </div>
       <p class="nx:m-0">Resolved mode: {{ appearance.resolvedMode.value }}</p>
@@ -55,10 +55,8 @@ export const AppliesThemeToPage: Story = {
     await waitFor(() => expect(root).toHaveClass('dark'));
     await expect(canvas.getByText('Resolved mode: dark')).toBeVisible();
 
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Round corners' })
-    );
-    await waitFor(() => expect(root).toHaveAttribute('data-radius', 'round'));
+    await userEvent.click(canvas.getByRole('button', { name: '12px corners' }));
+    await waitFor(() => expect(root).toHaveAttribute('data-radius', '12'));
 
     await userEvent.click(canvas.getByRole('button', { name: 'Reset' }));
     await waitFor(() => expect(root).not.toHaveClass('dark'));
