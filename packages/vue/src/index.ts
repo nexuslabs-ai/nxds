@@ -13,6 +13,7 @@ export * from './components/choice-card';
 export * from './components/choice-row';
 export * from './components/context-menu';
 export * from './components/dialog';
+export * from './components/drawer';
 export * from './components/dropdown-menu';
 export * from './components/field';
 export * from './components/hide';

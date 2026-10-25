@@ -49,6 +49,7 @@ const OVERLAYS: Record<string, Opener> = {
   'alert-dialog': { role: 'button', open: 'click' },
   'context-menu': { open: 'contextmenu' },
   dialog: { role: 'button', open: 'click' },
+  drawer: { role: 'button', open: 'click' },
   'dropdown-menu': { role: 'button', open: 'click' },
   'hover-card': { role: 'button', open: 'focus' },
   menubar: { role: 'menuitem', open: 'click' },
@@ -59,10 +60,10 @@ const OVERLAYS: Record<string, Opener> = {
   tooltip: { role: 'button', open: 'focus' },
 };
 
-// Attributes that hold generated ids or inline styles, that Radix and Reka add
-// for their own bookkeeping, or that `name` already covers (aria-label).
+// Attributes that hold generated ids or inline styles, that Radix, Reka and
+// vaul add for their own bookkeeping, or that `name` already covers (aria-label).
 const SKIPPED_ATTRIBUTE =
-  /^(?:id|style|aria-(?:controls|labelledby|describedby|owns|activedescendant|label)|data-(?:radix|reka)-.*|data-(?:active|dismissable-layer|grace-area-trigger|menu-item|navigation-menu-trigger|slider-impl))$/;
+  /^(?:id|style|aria-(?:controls|labelledby|describedby|owns|activedescendant|label)|data-(?:radix|reka)-.*|data-(?:active|dismissable-layer|grace-area-trigger|menu-item|navigation-menu-trigger|slider-impl|vaul-animate|vaul-custom-container))$/;
 // ARIA states where `"false"` means the same as leaving the attribute out.
 const FALSE_IS_ABSENT =
   /^aria-(?:busy|disabled|hidden|invalid|readonly|required)$/;
