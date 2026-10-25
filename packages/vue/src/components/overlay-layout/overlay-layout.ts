@@ -1,5 +1,30 @@
 import { cva } from 'class-variance-authority';
 
+/**
+ * Popover-family surfaces share the translucent/blurred recipe; Tooltip uses a
+ * solid carve-out because its small, brief text appears over arbitrary content.
+ */
+export const popoverSurfaceClassName = [
+  'nx:rounded-md',
+  'nx:border-default',
+  'nx:border-border-default',
+  'nx:bg-popover-alpha',
+  'nx:backdrop-blur-md',
+  'nx:text-popover-foreground',
+  'nx:typography-body-default',
+  'nx:shadow-lg',
+].join(' ');
+
+export const tooltipSurfaceClassName = [
+  'nx:rounded-md',
+  'nx:border-default',
+  'nx:border-border-default',
+  'nx:bg-popover',
+  'nx:text-popover-foreground',
+  'nx:typography-body-default',
+  'nx:shadow-lg',
+].join(' ');
+
 // `animate-overlay-presence-exit` is a non-visual "presence bridge": Reka's
 // Presence only waits on `animationName`, not `transitionend`, so this inert
 // animation keeps a closing overlay mounted while the opacity/scale
@@ -8,6 +33,15 @@ import { cva } from 'class-variance-authority';
 // cannot override those transitions.
 const overlayPresenceExitClassName =
   'nx:data-[state=closed]:animate-overlay-presence-exit';
+
+export const overlayFloatingTransitionClassName = [
+  'nx:transition-[opacity,scale]',
+  'nx:duration-fast',
+  'nx:ease-move',
+  'nx:data-[state=closed]:scale-95',
+  'nx:data-[state=closed]:opacity-0',
+  overlayPresenceExitClassName,
+].join(' ');
 
 const overlayContentTransitionClassName = [
   'nx:transition-[opacity,scale]',

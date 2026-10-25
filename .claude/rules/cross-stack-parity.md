@@ -38,6 +38,7 @@ These are the same API in each framework's idiom, not differences.
 | `asChild` (Radix Slot) | `as-child` (Reka Primitive) |
 | `className`            | `class`                     |
 | `args.onX` spy in play | `args['onX']` spy in play   |
+| `--radix-*` variable   | `--reka-*` variable         |
 
 A Vue docs story renders without args, so a docs story can't spy on an emit.
 Assert the emit in an interaction story instead.

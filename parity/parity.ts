@@ -28,7 +28,6 @@ export const planned = [
   'filter-builder',
   'filter-chip',
   'filter-condition',
-  'hover-card',
   'item',
   'marker',
   'menubar',
@@ -38,7 +37,6 @@ export const planned = [
   'navigation-menu',
   'page-header',
   'pagination',
-  'popover',
   'resizable',
   'scroll-area',
   'select',
@@ -49,7 +47,6 @@ export const planned = [
   'table',
   'theme-quick-control',
   'toolbar',
-  'tooltip',
 ];
 
 /** Components both packages ship, appearance aside: it has its own contract. */
@@ -66,12 +63,14 @@ export const shared = [
   'dialog',
   'field',
   'hide',
+  'hover-card',
   'input',
   'input-group',
   'input-otp',
   'kbd',
   'label',
   'native-select',
+  'popover',
   'progress',
   'radio-group',
   'separator',
@@ -84,6 +83,7 @@ export const shared = [
   'textarea',
   'toggle',
   'toggle-group',
+  'tooltip',
 ];
 
 const NATIVE_MODEL_VALUE =
@@ -165,16 +165,23 @@ export const behaviourOnlyIn: Record<
 const PIN_INPUT =
   'React types into one hidden input; Reka gives each slot its own input, so Vue reads the code from the slots';
 
+const GRACE_AREA =
+  "user-event's unhover leaves the pointer at (0, 0); Reka keeps the content open until a pointer move lands outside its trigger-to-content grace area, so Vue moves the pointer away";
+
 const TABS_INDICATOR =
   "React waits for its measured indicator's opacity and transform; Reka's indicator has neither, so Vue checks only the geometry";
 
 /** Paired play stories whose steps differ by design, as `{slug}/{Story}`. */
 export const behaviourDifferences: Record<string, string> = {
+  'hover-card/OpenCloseInteraction': GRACE_AREA,
   'input-otp/KeyboardInteraction': PIN_INPUT,
   'input-otp/Paste': PIN_INPUT,
   'tabs/DisabledTabInteraction': TABS_INDICATOR,
   'tabs/UnderlineVariant': TABS_INDICATOR,
   'tabs/VerticalIndicatorFollowsActiveTab': TABS_INDICATOR,
+  'tooltip/GroupedInProvider': GRACE_AREA,
+  'tooltip/HoverInteraction': GRACE_AREA,
+  'tooltip/WithDataAttributes': GRACE_AREA,
   'toggle-group/ControlledDisabledTransition':
     "clearing a single selection emits '' from Radix and undefined from Reka",
 };
@@ -187,6 +194,12 @@ export const renderedDifferences: Record<string, string> = {
     "React's slot is a <div> that shows the character; Vue's slot is Reka's PinInputInput <input>",
   'tabs-indicator':
     "Radix has no indicator, so React measures the active tab and moves a span; Vue renders Reka's TabsIndicator, which reads Reka's CSS variables",
+};
+
+/** Parts whose accessible name differs by design, by `data-slot`; the rendered check compares the rest of them. */
+export const renderedNameDifferences: Record<string, string> = {
+  'popover-content':
+    "Reka names the popover's dialog after its trigger with aria-labelledby; Radix leaves it unnamed",
 };
 
 /** Top-level values a Vue recipe file declares that React has no twin for, as `{file}#{name}`. */
