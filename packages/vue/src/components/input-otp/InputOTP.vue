@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import { reactiveOmit, useVModel } from '@vueuse/core';
 import { PinInputRoot, type PinInputRootProps, useForwardProps } from 'reka-ui';
-import {
-  computed,
-  type HTMLAttributes,
-  provide,
-  ref,
-  useAttrs,
-  watch,
-} from 'vue';
+import { computed, type HTMLAttributes, provide, useAttrs } from 'vue';
 
 import { cn } from '../../lib/utils';
 
@@ -38,18 +31,7 @@ const model = useVModel(props, 'modelValue', emits, {
   passive: true,
   defaultValue: props.defaultValue ?? '',
 });
-const characters = ref([...(model.value ?? '')]);
-
-// Reka leaves an empty slot after Delete, which the joined code can't hold, so
-// the slots resync only when the code changes from outside.
-watch(model, (code) => {
-  if (code !== characters.value.join('')) characters.value = [...(code ?? '')];
-});
-
-function update(next: string[]) {
-  characters.value = next;
-  model.value = next.join('');
-}
+const characters = computed(() => [...(model.value ?? '')]);
 
 // The root is a role-less <div>, so each slot's <input> takes the naming and
 // invalid ARIA instead.
@@ -79,7 +61,7 @@ const forwarded = useForwardProps(delegated);
     :class="
       cn('nx:group/input-otp nx:flex nx:items-center nx:gap-2', props.class)
     "
-    @update:model-value="update"
+    @update:model-value="model = $event.join('')"
     @complete="emits('complete', $event.join(''))"
   >
     <slot />

@@ -396,8 +396,8 @@ export const VModel: Story = {
     await userEvent.click(slots[1]!);
     await userEvent.keyboard('{Delete}');
     await expect(code).toHaveTextContent('47');
-    await expect(slots[1]).toHaveValue('');
-    await expect(slots[2]).toHaveValue('7');
+    await expect(slots[1]).toHaveValue('7');
+    await expect(slots[2]).toHaveValue('');
   },
 };
 
