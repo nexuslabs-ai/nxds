@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { Badge, Button, Toggle } from '@nxds/react';
 import {
   IconAdjustmentsHorizontal,
   IconBorderAll,
@@ -51,6 +52,10 @@ const modules = [
   { name: 'Token values', className: 'chip-values', lane: 'preset' },
   { name: 'Shared theme', className: 'chip-shared', lane: 'shared' },
 ];
+
+// Diagram nodes stretch to fill their grid cell and anchor their flow traces.
+const nodeClassName =
+  'nx:relative nx:h-auto nx:min-h-0 nx:min-w-0 nx:w-full nx:whitespace-normal nx:data-[flowing=true]:bg-secondary-background-hover';
 
 function FlowTrace({ className = '', active }) {
   return (
@@ -127,21 +132,21 @@ export function CoreChipChapter({ framework, onSelect }) {
                       ? themeFlow
                       : presetFlow;
                   return (
-                    <button
-                      type="button"
-                      className="framework-token"
+                    <Button
+                      variant="secondary"
+                      className={`chip-token ${nodeClassName}`}
                       data-flow-node={name}
                       data-flowing={flowing}
                       {...nodeEvents}
                       key={name}
                     >
-                      <Icon size={24} stroke={1.5} aria-hidden="true" />
+                      <Icon stroke={1.5} aria-hidden="true" />
                       <span>{name}</span>
                       <FlowTrace
                         className="chip-trace-input"
                         active={flowing}
                       />
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -164,9 +169,9 @@ export function CoreChipChapter({ framework, onSelect }) {
                     ? themeFlow
                     : presetFlow;
               return (
-                <button
-                  type="button"
-                  className={`chip-module ${className}`}
+                <Button
+                  variant="secondary"
+                  className={`chip-module ${className} ${nodeClassName}`}
                   data-flow-node={name}
                   data-flowing={flowing}
                   {...nodeEvents}
@@ -174,7 +179,7 @@ export function CoreChipChapter({ framework, onSelect }) {
                 >
                   {name}
                   {lane !== 'shared' && <FlowTrace active={flowing} />}
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -188,28 +193,28 @@ export function CoreChipChapter({ framework, onSelect }) {
               const flowing =
                 Boolean(active) && (!activeFramework || active === name);
               return (
-                <button
-                  type="button"
-                  className="framework-destination chip-destination"
-                  data-active={name === framework}
+                <Toggle
+                  variant="outline"
+                  className={`chip-destination ${nodeClassName} nx:flex-col nx:[&_svg]:size-10`}
+                  pressed={name === framework}
+                  onPressedChange={() => onSelect(index)}
                   data-planned={planned || undefined}
                   data-flow-node={name}
                   data-flowing={flowing}
-                  aria-pressed={name === framework}
                   {...nodeEvents}
-                  onClick={() => onSelect(index)}
                   key={name}
                 >
-                  <Icon size={40} stroke={1.5} aria-hidden="true" />
+                  <Icon stroke={1.5} aria-hidden="true" />
                   <strong>{name}</strong>
-                  <span
+                  <Badge
+                    variant="secondary"
                     className="chip-status"
                     aria-label={planned ? 'Planned for Q1 2027' : undefined}
                   >
                     {status}
-                  </span>
+                  </Badge>
                   <FlowTrace className="chip-trace-output" active={flowing} />
-                </button>
+                </Toggle>
               );
             })}
           </div>

@@ -152,9 +152,14 @@ const boundaries = [
     'custom',
   ],
   [
-    '.framework-token, .chip-token-container, .chip-core, .chip-module, .framework-core, .framework-destination, .foundation-core',
+    '.framework-token, .framework-core, .framework-destination, .foundation-core',
     'Custom diagram surface and typography',
     'custom',
+  ],
+  [
+    '.chip-flow, .chip-token-container, .chip-core',
+    'Application-owned diagram layout and flow traces; the nodes are Nexus Button, Toggle and Badge',
+    'composition',
   ],
   [
     '.story-specimen, .story-test-card, .story-test-caption',
