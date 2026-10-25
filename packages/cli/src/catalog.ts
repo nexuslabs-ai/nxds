@@ -5,8 +5,10 @@ import {
   catalogSchema,
   type Framework,
   issueLines,
+  type ReactMajor,
   type SetupVariant,
   type Variant,
+  variantForReact,
 } from '@nxds/catalog';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
@@ -20,9 +22,13 @@ export type {
   CatalogFile,
   CatalogItem,
   Framework,
+  ReactMajor,
   SetupStep,
   Variant,
 } from '@nxds/catalog';
+
+/** Which files an app gets: its framework, and for React, its major. */
+export type Target = { framework: Framework; react: ReactMajor };
 
 export const SETUP = 'setup';
 
@@ -140,17 +146,32 @@ export async function fetchRelease(
   return parsed.data;
 }
 
-/** The release an app is on, or `latest`; fails when the registry doesn't have it. */
+/**
+ * The release an app is on, or `latest`, with files for the app's React
+ * major. Fails when the registry lacks that release, or the release lacks
+ * those files.
+ */
 export async function loadRelease(
   registry: string,
-  version: string
+  version: string,
+  react: ReactMajor
 ): Promise<Catalog> {
   const catalog = await fetchRelease(registry, version);
-  if (catalog) return catalog;
+  if (!catalog) {
+    throw new CliError(
+      version === 'latest'
+        ? `${registry} has no nxds release.`
+        : `${registry} has no nxds ${version}, the release this app is on. Run \`${CLI_COMMAND} update\` to move to the latest release.`
+    );
+  }
+  if (catalog.reactMajors.includes(react)) return catalog;
+  const latest =
+    version === 'latest' ? null : await fetchRelease(registry, 'latest');
+  const fix = latest?.reactMajors.includes(react)
+    ? `Upgrade the app to React 19, or run \`${CLI_COMMAND} update\` to move to nxds ${latest.version}, which has React ${react} files.`
+    : 'Upgrade the app to React 19.';
   throw new CliError(
-    version === 'latest'
-      ? `${registry} has no nxds release.`
-      : `${registry} has no nxds ${version}, the release this app is on. Run \`${CLI_COMMAND} update\` to move to the latest release.`
+    `nxds ${catalog.version} has no React ${react} files. ${fix}`
   );
 }
 
@@ -171,15 +192,20 @@ export function variantOf<V extends Variant>(
   throw new CliError(`${item.title} is not available for ${framework} yet.`);
 }
 
-export function setupVariant(
-  catalog: Catalog,
-  framework: Framework
-): SetupVariant {
+/** `item`'s variant with the files and packages an app on `target` installs. */
+export function variantFor<V extends Variant>(
+  item: { title: string; variants: Partial<Record<Framework, V>> },
+  target: Target
+): V {
+  return variantForReact(variantOf(item, target.framework), target.react);
+}
+
+export function setupVariant(catalog: Catalog, target: Target): SetupVariant {
   const setup = catalog.items.find((item) => item.name === SETUP);
   if (setup?.kind !== 'setup') {
     throw new Error(`nxds ${catalog.version} has no "${SETUP}" setup item.`);
   }
-  return variantOf(setup, framework);
+  return variantFor(setup, target);
 }
 
 /** `names` and every item they need, each listed after what it needs. */
@@ -203,14 +229,16 @@ export function resolveItems(
   return ordered;
 }
 
-/** Every file a release installs for `framework`, by path. */
-export function releaseFiles(catalog: Catalog, framework: Framework) {
+/** Every file a release installs for `target`, by path. */
+export function releaseFiles(catalog: Catalog, target: Target) {
   return new Map(
-    catalog.items.flatMap((item) =>
-      (item.variants[framework]?.files ?? []).map(
-        (file) => [file.path, file.content] as const
+    catalog.items
+      .filter((item) => item.variants[target.framework])
+      .flatMap((item) =>
+        variantFor(item, target).files.map(
+          (file) => [file.path, file.content] as const
+        )
       )
-    )
   );
 }
 
