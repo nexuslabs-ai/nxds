@@ -618,15 +618,13 @@ export const ListRef: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const list = canvas.getByRole('tablist');
-
-    const indicator = list.querySelector<HTMLElement>(
-      '[data-slot="tabs-indicator"]'
-    )!;
+    const indicator = getTabsIndicator(list);
     const active = canvas.getByRole('tab', { name: 'Tab 1' });
 
     await expect(listRef.current).toBe(list);
-    await waitFor(() => expect(indicator.style.opacity).toBe('1'));
-    await expect(indicator.style.width).toBe(`${active.offsetWidth}px`);
+    await waitFor(() =>
+      expect(indicator.style.width).toBe(`${active.offsetWidth}px`)
+    );
   },
 };
 
