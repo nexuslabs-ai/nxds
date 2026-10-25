@@ -496,7 +496,7 @@ If your app uses a strict Content Security Policy, pass a nonce:
 ## Add nxds to an existing app
 
 nxds CSS defines only `nx:` classes and `--nx-*` variables, so your app's
-styles stay as they are. Follow steps 1 to 4 with these three changes:
+styles stay as they are. Follow steps 1 to 4 with these four changes:
 
 1. **Give nxds its own CSS entry** and import it after your own stylesheet:
 
@@ -512,8 +512,23 @@ styles stay as they are. Follow steps 1 to 4 with these three changes:
 2. **Keep your app's reset.** nxds needs `box-sizing: border-box`. Tailwind's
    Preflight, MUI's `CssBaseline` and Bootstrap's Reboot all set it. If your app
    has no Tailwind, install it for the nxds entry.
-3. **Add the provider and the script** as in step 3. nxds and your theme share
-   the `.dark` class on `<html>`.
+3. **Put your library's CSS in a cascade layer**, if it isn't in one. nxds
+   classes sit in Tailwind's `utilities` layer. CSS outside any layer beats
+   every layer, so a reset like `button { border-radius: 0 }` would override
+   `nx:rounded-md`. Name your library's layer first, at the top of your first
+   stylesheet:
+
+   ```css
+   /* app/globals.css */
+   @layer your-library, theme, base, components, utilities;
+   ```
+
+   Then load the library's CSS into that layer.
+   [Integrations](/integrations/overview) gives the line for each library.
+
+4. **Add the provider and the script** as in step 3. nxds owns light and dark
+   mode, and writes the `.dark` class on `<html>`. Make your library follow
+   nxds, as each [Integrations](/integrations/overview) page shows.
 
 Three global effects remain:
 
@@ -523,8 +538,9 @@ Three global effects remain:
 | `tw-animate-css`      | `enter`, `exit`, `accordion-*`, `collapsible-*` and `caret-blink` keyframes, as in any shadcn app |
 | Tailwind's own output | `spin`, `ping`, `pulse` and `bounce` keyframes and `--tw-*` properties, as in any Tailwind 4 app  |
 
-Style an nxds component with `nx:` classes. An unprefixed class loses to the
-component's own `nx:` class, because nxds's stylesheet loads later.
+Style an nxds component with `nx:` classes. An unprefixed Tailwind class
+loses to the component's own `nx:` class, because both sit in the `utilities`
+layer and nxds's stylesheet loads later.
 
 Your content inside an nxds component inherits its text color, font and line
 height.
@@ -541,11 +557,12 @@ nxds overlays use three layers:
 | `--nx-z-index-popover` | 70      | Popover, Select, menus, Tooltip |
 | `--nx-z-index-toast`   | 100     | Toaster                         |
 
-If your app's layers sit higher, like MUI's dialogs at 1300, raise these on
-`:root`.
+If your library's overlays sit higher, raise these on `:root`.
 
 An open nxds dialog blocks pointer events outside itself. Render another
-library's popups inside it, such as an MUI `Menu` with `disablePortal`.
+library's popups inside it, with portals turned off.
+[Integrations](/integrations/overview) lists the z-index values and the
+portal prop for each library.
 
 [Examples](/getting-started/examples) shows nxds added to a shadcn app, an MUI
 app and a company package.

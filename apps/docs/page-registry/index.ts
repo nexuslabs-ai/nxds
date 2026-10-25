@@ -98,6 +98,12 @@ export const PAGE_REGISTRY = {
       { slug: 'forms', label: 'Forms' },
     ],
   },
+  integrations: {
+    slug: 'integrations',
+    title: 'Integrations',
+    href: '/integrations',
+    pages: [{ slug: 'overview', label: 'Overview' }],
+  },
 } satisfies Record<string, RegistrySection> & {
   components: ComponentsSection;
 };

@@ -4,6 +4,9 @@ Real apps that adopt nxds the copy-and-own way: each one copies nxds source
 from this repository and compiles it with its own Tailwind. Together they cover
 the ways a frontend team meets nxds.
 
+For the setup next to each UI library, see the
+[Integrations](https://nxds.dev/integrations/overview) docs.
+
 > Not part of the pnpm workspace, and excluded from the monorepo's turbo,
 > ESLint and Prettier. Each app installs with npm and commits its lockfile.
 
