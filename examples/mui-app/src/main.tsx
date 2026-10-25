@@ -1,12 +1,13 @@
 import CssBaseline from '@mui/material/CssBaseline'
-import { createTheme, ThemeProvider } from '@mui/material/styles'
-import { StrictMode } from 'react'
+import { createTheme, type StorageManager, ThemeProvider, useColorScheme } from '@mui/material/styles'
+import { readStoredNxdsAppearance } from '@nxds/core'
+import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 
 import App from './App'
 import { APPEARANCE_STORAGE_KEY, defaultAppearance } from './appearance-state'
-import { createNxdsAppearance } from './components/nxds/components/appearance/provider'
+import { createNxdsAppearance, useNxdsAppearance } from './components/nxds/components/appearance/provider'
 
 import './nxds.css'
 
@@ -20,15 +21,34 @@ const { NxdsAppearanceProvider } = createNxdsAppearance({
   defaultState: defaultAppearance,
 })
 
+const nxdsModeStorage: StorageManager = ({ key }) => ({
+  get: (fallback) =>
+    key === 'mui-mode' ? readStoredNxdsAppearance(APPEARANCE_STORAGE_KEY, defaultAppearance).mode : fallback,
+  set() {},
+  subscribe: () => () => {},
+})
+
+function MuiFollowsNxds() {
+  const { state, mounted } = useNxdsAppearance()
+  const { setMode } = useColorScheme()
+
+  useEffect(() => {
+    if (mounted) setMode(state.mode)
+  }, [mounted, state.mode, setMode])
+
+  return null
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <NxdsAppearanceProvider>
+    <NxdsAppearanceProvider>
+      <ThemeProvider theme={theme} storageManager={nxdsModeStorage}>
+        <CssBaseline />
+        <MuiFollowsNxds />
         <BrowserRouter>
           <App />
         </BrowserRouter>
-      </NxdsAppearanceProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </NxdsAppearanceProvider>
   </StrictMode>,
 )

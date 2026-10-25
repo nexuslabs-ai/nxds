@@ -3,7 +3,6 @@
 import { Columns2Icon, LayersIcon, MoonIcon, SettingsIcon, SunIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useTheme } from "next-themes"
 
 import { useNxdsAppearance } from "@/components/nxds/components/appearance/provider"
 import { Button } from "@/components/ui/button"
@@ -29,17 +28,12 @@ const NAV = [
   { href: "/overlays", label: "Overlays", icon: LayersIcon },
 ]
 
-// One switch drives both theme systems, so they never disagree about the
-// shared .dark class on <html>.
 function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme()
-  const { setState } = useNxdsAppearance()
-  const dark = resolvedTheme === "dark"
+  const { setState, resolvedMode } = useNxdsAppearance()
+  const dark = resolvedMode === "dark"
 
   function toggleTheme() {
-    const mode = dark ? "light" : "dark"
-    setTheme(mode)
-    setState((current) => ({ ...current, mode }))
+    setState((current) => ({ ...current, mode: dark ? "light" : "dark" }))
   }
 
   return (

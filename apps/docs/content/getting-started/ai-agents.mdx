@@ -1,10 +1,10 @@
 export const description =
-  'Let your AI agent install nxds with nxds-cli, learn its rules from the nxds skill, and read every docs page as Markdown.';
+  'Let your AI agent install nxds with nxds-cli, learn its rules from the nxds skills, and read every docs page as Markdown.';
 
 # AI agents
 
 Your AI agent installs nxds with `nxds-cli`, learns the nxds rules
-from the nxds skill, and reads every docs page as Markdown.
+from the nxds skills, and reads every docs page as Markdown.
 
 ## Install with the CLI
 
@@ -29,25 +29,35 @@ With `--json`, a command prints one object: `{ "ok": true, "exitCode": 0,
 | `2`       | Usage error, such as an unknown option or item                                          |
 | `3`       | Done, with something left for you: conflicts, kept files, manual steps or failed checks |
 
-## Add the nxds skill
+## Add the nxds skills
 
-The skill tells your agent to check the setup first, add components with the
-CLI, and follow the `nx:` class and token rules.
+Two skills teach your agent nxds:
 
-In Claude Code:
+| Skill        | Tells your agent to                                                                                         |
+| ------------ | ----------------------------------------------------------------------------------------------------------- |
+| `nxds`       | Check the setup first, add components with the CLI, and follow the `nx:` class and token rules              |
+| `nxds-adopt` | Add or swap one nxds component at a time in an app on another UI library, and keep the rest on that library |
+
+`nxds-adopt` covers the libraries on the [Integrations](/integrations/overview)
+pages. It never sweeps a whole screen or removes your library.
+
+In Claude Code, the plugin installs both:
 
 ```bash
 /plugin marketplace add nexuslabs-ai/nxds
 /plugin install nxds@nxds
 ```
 
+If you installed the plugin before `nxds-adopt` shipped, run
+`/plugin marketplace update nxds` to get it.
+
 In Cursor, Codex, Gemini CLI and other agents that read skills:
 
 ```bash
-npx skills add nexuslabs-ai/nxds --skill nxds
+npx skills add nexuslabs-ai/nxds --skill nxds nxds-adopt
 ```
 
-Pass `--skill nxds`, because the repository also holds skills for nxds
+Name both skills, because the repository also holds skills for nxds
 contributors.
 
 ## Fetch the docs index

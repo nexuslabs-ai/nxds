@@ -40,7 +40,8 @@ the minimum for each pair.
 
 nxds CSS defines only `nx:` classes and `--nx-` variables, so your own styles
 stay as they are. [Tokens](/foundations/tokens#the-nx-prefix) explains the
-prefix.
+prefix, and [Integrations](/integrations/overview) shows nxds next to MUI,
+shadcn/ui and five other libraries.
 
 ### Conventions are enforced, for people and agents
 
@@ -82,6 +83,9 @@ Not in the usual sense. The components are copy-and-own source. The part you ins
 
 **Do I need Tailwind?**
 Yes. nxds builds its classes with Tailwind 4. Your app also needs a reset that sets `box-sizing: border-box`, such as Tailwind's Preflight or MUI's `CssBaseline`.
+
+**Do I have to replace my UI library?**
+No. Add one nxds component next to MUI, shadcn/ui or another library, and keep the rest. See [Integrations](/integrations/overview).
 
 **Does nxds work outside React?**
 The engine does. It has no framework code, so any app can call it. The components ship for React, and a growing set ships for Vue. Each component page has a tab per framework. Svelte, Angular and React Native bindings are planned.

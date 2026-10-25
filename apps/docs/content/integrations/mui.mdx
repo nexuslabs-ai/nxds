@@ -1,0 +1,399 @@
+export const description =
+  'Add nxds components to a Next.js app built with Material UI. Share dark mode, match your MUI theme, and find the nxds part for each MUI component.';
+
+# nxds with MUI
+
+Add nxds components to a Material UI app, and keep MUI for everything else.
+These steps use a Next.js App Router app on MUI 9.
+
+## What nxds adds for you
+
+nxds gives an MUI app parts it doesn't have, themed from one appearance object.
+[Introduction](/getting-started/introduction) covers the theme engine, the
+copy-and-own source and the agent support.
+
+| You need                       | nxds part                                  |
+| ------------------------------ | ------------------------------------------ |
+| A command palette              | `CommandDialog`                            |
+| An app sidebar                 | `Sidebar` and `SidebarProvider`            |
+| A one-time code input          | `InputOTP`                                 |
+| Resizable panes                | `ResizablePanelGroup` and `ResizablePanel` |
+| A filter bar                   | `FilterBuilder`                            |
+| A date picker without MUI X    | `DatePicker`                               |
+| A chart without MUI X          | `ChartContainer`                           |
+| A menu bar or right-click menu | `Menubar` and `ContextMenu`                |
+| Keyboard shortcut hints        | `Kbd`                                      |
+| A chat thread                  | `Message` and `Bubble`                     |
+
+## Add your first nxds component
+
+Set up nxds, then add a component:
+
+```bash
+npx nxds-cli@latest init
+npx nxds-cli@latest add button
+```
+
+`init` adds the provider and the theme script to `app/layout.tsx`, and creates
+`app/nxds.css`. `CssBaseline` sets `box-sizing`, so delete the Preflight lines
+in `app/nxds.css`, as
+[Add nxds to an existing app](/getting-started/install#add-nxds-to-an-existing-app)
+explains.
+
+MUI needs no cascade layer. Its styles target its own class names, and
+`CssBaseline` only styles `html` and `body`.
+
+Wrap the app in both providers. The nxds provider goes outside, so MUI can
+read the nxds mode:
+
+```tsx
+// app/layout.tsx
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter';
+
+import { NxdsAppearanceProvider } from '@/components/nxds/components/appearance/provider';
+import { NxdsAppearanceScript } from '@/components/nxds/components/appearance/provider/server';
+
+import { APPEARANCE_STORAGE_KEY, defaultAppearance } from './appearance-state';
+import { MuiProvider } from './mui-provider';
+
+import './globals.css';
+import './nxds.css';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <NxdsAppearanceScript
+          storageKey={APPEARANCE_STORAGE_KEY}
+          defaultState={defaultAppearance}
+        />
+      </head>
+      <body>
+        <NxdsAppearanceProvider
+          storageKey={APPEARANCE_STORAGE_KEY}
+          defaultState={defaultAppearance}
+        >
+          <AppRouterCacheProvider>
+            <MuiProvider>{children}</MuiProvider>
+          </AppRouterCacheProvider>
+        </NxdsAppearanceProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+`MuiProvider` holds MUI's `ThemeProvider`, as the next section shows. Render
+the nxds button on an existing screen, beside MUI's:
+
+```tsx
+// app/page.tsx
+import MuiButton from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+
+import { Button } from '@/components/nxds/components/button/button';
+
+export default function Page() {
+  return (
+    <Stack direction="row" spacing={2}>
+      <MuiButton variant="contained">Save</MuiButton>
+      <Button variant="outline">Preview</Button>
+    </Stack>
+  );
+}
+```
+
+MUI's overlays sit at z-index 1300 to 1500. Raise the nxds layers above them,
+so an nxds popup opens over an MUI dialog:
+
+```css
+/* app/nxds.css, after the imports */
+:root {
+  --nx-z-index-modal: 1600;
+  --nx-z-index-popover: 1700;
+  --nx-z-index-toast: 1800;
+}
+```
+
+Inside an nxds dialog, render MUI popups in place with `disablePortal`. It
+works on `Menu`, `Popover` and `Autocomplete`. On `Select`, pass
+`MenuProps={{ disablePortal: true }}`.
+
+The [`mui-app` example](https://github.com/nexuslabs-ai/nxds/tree/main/examples/mui-app)
+shows every step in a Vite app.
+
+## Share light and dark mode
+
+nxds owns the mode. MUI reads the `.dark` class that nxds writes, and a small
+component passes each change to MUI:
+
+```tsx
+// app/mui-provider.tsx
+'use client';
+
+import CssBaseline from '@mui/material/CssBaseline';
+import {
+  type StorageManager,
+  ThemeProvider,
+  useColorScheme,
+} from '@mui/material/styles';
+import { readStoredNxdsAppearance } from '@nxds/core';
+import { useEffect } from 'react';
+
+import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
+
+import { APPEARANCE_STORAGE_KEY, defaultAppearance } from './appearance-state';
+import { theme } from './theme';
+
+const nxdsModeStorage: StorageManager = ({ key }) => ({
+  get: (fallback) =>
+    key === 'mui-mode'
+      ? readStoredNxdsAppearance(APPEARANCE_STORAGE_KEY, defaultAppearance).mode
+      : fallback,
+  set() {},
+  subscribe: () => () => {},
+});
+
+function MuiFollowsNxds() {
+  const { state, mounted } = useNxdsAppearance();
+  const { setMode } = useColorScheme();
+
+  useEffect(() => {
+    if (mounted) setMode(state.mode);
+  }, [mounted, state.mode, setMode]);
+
+  return null;
+}
+
+export function MuiProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <ThemeProvider theme={theme} storageManager={nxdsModeStorage}>
+      <CssBaseline />
+      <MuiFollowsNxds />
+      {children}
+    </ThemeProvider>
+  );
+}
+```
+
+```ts
+// app/theme.ts
+'use client';
+
+import { createTheme } from '@mui/material/styles';
+
+import { brand } from './brand';
+
+const primary = { main: brand.color };
+
+export const theme = createTheme({
+  colorSchemes: {
+    light: { palette: { primary } },
+    dark: { palette: { primary } },
+  },
+  cssVariables: { colorSchemeSelector: 'class' },
+  typography: { fontFamily: brand.font },
+});
+```
+
+`colorSchemeSelector: 'class'` puts MUI's dark colors under `.dark`. The nxds
+head script sets that class before the first paint, so MUI doesn't flash
+light. Leave out `InitColorSchemeScript`, because the nxds script already sets
+the class.
+
+`nxdsModeStorage` starts MUI from the mode nxds saved, and saves nothing of
+its own. MUI then can't fall out of step on a reload or from another tab.
+`MuiFollowsNxds` passes each later change to MUI. Both use `'light'`, `'dark'`
+and `'system'`.
+
+Switch the mode through nxds only:
+
+```tsx
+// app/mode-toggle.tsx
+'use client';
+
+import Button from '@mui/material/Button';
+
+import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
+
+export function ModeToggle() {
+  const { setState, resolvedMode } = useNxdsAppearance();
+  const next = resolvedMode === 'dark' ? 'light' : 'dark';
+
+  return (
+    <Button
+      variant="outlined"
+      onClick={() => setState((current) => ({ ...current, mode: next }))}
+    >
+      Switch to {next}
+    </Button>
+  );
+}
+```
+
+Don't call MUI's `setMode` yourself. `MuiFollowsNxds` does it.
+
+## Match your theme
+
+Keep the values both themes read in one file. `theme.ts` above reads it too:
+
+```ts
+// app/brand.ts
+export const brand = {
+  color: '#1976d2',
+  font: '"Roboto", "Helvetica", "Arial", sans-serif',
+};
+```
+
+```ts
+// app/appearance-state.ts
+import { DEFAULT_NXDS_APPEARANCE, type NxdsAppearanceState } from '@nxds/core';
+
+import { brand } from './brand';
+
+export const APPEARANCE_STORAGE_KEY = 'app-appearance';
+
+export const defaultAppearance = {
+  ...DEFAULT_NXDS_APPEARANCE,
+  brandColor: brand.color,
+  surfaceTone: 'neutral',
+  corners: 'subtle',
+  prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs, uiFont: brand.font },
+} satisfies NxdsAppearanceState;
+```
+
+The server layout imports `appearance-state.ts`, so keep it free of the MUI
+theme. MUI's Next.js guide marks `theme.ts` `'use client'`.
+
+| MUI theme                            | Appearance field                | How to match                                                                                 |
+| ------------------------------------ | ------------------------------- | -------------------------------------------------------------------------------------------- |
+| `palette.primary.main`               | `brandColor`                    | Pass it as is. nxds builds the hover and pressed shades                                      |
+| `palette.grey`, `palette.background` | `surfaceTone`                   | `neutral` matches MUI's pure grey                                                            |
+| `shape.borderRadius`                 | `corners`                       | `0` is `square`, `4` is `subtle`, `8` is `smooth`, `12` is `round`, `16` is `extra-round`    |
+| `spacing`                            | `density`                       | Compare in the [Playground](/playground). `compact` and `tight` suit dense MUI themes        |
+| `shadows`                            | `elevation`                     | Compare in the [Playground](/playground). `flat` turns shadows off                           |
+| None                                 | `stroke`                        | MUI has no border width setting, so keep `normal`                                            |
+| `typography.fontFamily`              | `prefs.uiFont`                  | Pass it as is                                                                                |
+| `typography.fontSize`                | `prefs.uiFontSize`              | Both default to 14                                                                           |
+| `palette.mode`                       | `mode`                          | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows               |
+| `palette.contrastThreshold`          | `lightContrast`, `darkContrast` | No direct match. nxds checks every text pair against a contrast floor, so keep `50` to start |
+
+## Where nxds fits
+
+Each row maps an MUI component to the nxds parts that replace it, and the props
+that change. nxds components follow Radix naming: `onValueChange`,
+`onCheckedChange` and `onOpenChange` take the new value, not an event.
+
+| MUI                                                        | nxds                                                                             | What changes                                                                                                        |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `Button`                                                   | `Button`                                                                         | `variant` `contained`, `outlined`, `text` → `default`, `outline`, `ghost`                                           |
+| `Button color="error"`                                     | `Button variant="destructive"`                                                   |                                                                                                                     |
+| `IconButton`                                               | `Button size="icon"`                                                             | Give it an `aria-label`                                                                                             |
+| `ButtonGroup`                                              | `ButtonGroup`                                                                    |                                                                                                                     |
+| `TextField`                                                | `Field`, `FieldLabel`, `Input`, `FieldDescription`, `FieldError`                 | `label`, `helperText` and `error` become parts                                                                      |
+| `TextField multiline`                                      | `Textarea`                                                                       |                                                                                                                     |
+| `InputAdornment`                                           | `InputGroup`, `InputGroupAddon`, `InputGroupInput`                               |                                                                                                                     |
+| `FormControl`, `FormLabel`, `FormHelperText`               | `Field`, `FieldLabel`, `FieldDescription`                                        |                                                                                                                     |
+| `FormControlLabel`                                         | `Field orientation="horizontal"` with `FieldLabel`                               |                                                                                                                     |
+| `FormGroup`, `FieldSet`                                    | `FieldGroup`, `FieldSet`, `FieldLegend`                                          |                                                                                                                     |
+| `Checkbox`                                                 | `Checkbox`                                                                       | `onChange(event)` → `onCheckedChange(checked)`                                                                      |
+| `Switch`                                                   | `Switch`                                                                         | `onChange(event)` → `onCheckedChange(checked)`                                                                      |
+| `RadioGroup`, `Radio`                                      | `RadioGroup`, `RadioGroupItem`                                                   | `onChange(event)` → `onValueChange(value)`                                                                          |
+| `Select`                                                   | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`          | `onChange(event)` → `onValueChange(value)`                                                                          |
+| `NativeSelect`                                             | `NativeSelect`, `NativeSelectOption`                                             |                                                                                                                     |
+| `Select multiple`                                          | `MultiSelect`                                                                    | `value` → `values`, `onChange` → `onValuesChange(values)`                                                           |
+| `Autocomplete`                                             | `Combobox`                                                                       | Compose a `ComboboxTrigger`, `ComboboxInput` and `ComboboxItem` list                                                |
+| `Autocomplete multiple`                                    | `MultiSelect`                                                                    |                                                                                                                     |
+| `Slider`                                                   | `Slider`                                                                         | `value` is an array. `onChange` → `onValueChange(value)`                                                            |
+| `ToggleButton`                                             | `Toggle`                                                                         | `selected` → `pressed`, `onChange` → `onPressedChange`                                                              |
+| `ToggleButtonGroup`                                        | `ToggleGroup`, `ToggleGroupItem`                                                 | Set `type="single"` or `type="multiple"`. `onChange` → `onValueChange`                                              |
+| `Dialog`                                                   | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogBody`           | `onClose` → `onOpenChange(open)`                                                                                    |
+| `DialogActions`                                            | `DialogFooter`                                                                   |                                                                                                                     |
+| `Dialog` asking to confirm                                 | `AlertDialog`                                                                    |                                                                                                                     |
+| `Modal`                                                    | `Dialog`                                                                         |                                                                                                                     |
+| `Drawer`, temporary                                        | `Sheet`, `SheetContent side="left"`                                              | `anchor` → `side`. `onClose` → `onOpenChange(open)`                                                                 |
+| `Drawer`, permanent                                        | `Sidebar`                                                                        |                                                                                                                     |
+| `SwipeableDrawer`, bottom                                  | `Drawer`                                                                         |                                                                                                                     |
+| `Menu`, `MenuItem`                                         | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem` | No `anchorEl`: the trigger opens the menu                                                                           |
+| `Popover`, `Popper`                                        | `Popover`, `PopoverTrigger`, `PopoverContent`                                    | No `anchorEl`: the trigger, or `PopoverAnchor`, places it                                                           |
+| `Tooltip`                                                  | `Tooltip`, `TooltipTrigger`, `TooltipContent`                                    | `title` → `TooltipContent` children                                                                                 |
+| `Snackbar`                                                 | `Toaster` and `toast()`                                                          | Render `<Toaster />` once, then call `toast('Saved')`                                                               |
+| `Alert`                                                    | `Alert`, `AlertTitle`, `AlertDescription`                                        | `severity` `error`, `warning`, `info`, `success` → `variant` `destructive`, `warning`, `information`, `success`     |
+| `Accordion`                                                | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`             | One `Accordion` holds every item. `expanded` → `value`                                                              |
+| `Collapse`                                                 | `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent`                        |                                                                                                                     |
+| `Tabs`, `Tab`                                              | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`                                 | `onChange(event, value)` → `onValueChange(value)`                                                                   |
+| `Breadcrumbs`                                              | `Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`               |                                                                                                                     |
+| `Pagination`, `TablePagination`                            | `Pagination`, `PaginationContent`, `PaginationLink`                              |                                                                                                                     |
+| `Card`, `CardHeader`, `CardContent`, `CardActions`         | `Card`, `CardHeader`, `CardContent`, `CardFooter`                                |                                                                                                                     |
+| `Paper`                                                    | `Card`                                                                           |                                                                                                                     |
+| `List`, `ListItem`, `ListItemText`, `ListItemIcon`         | `ItemGroup`, `Item`, `ItemTitle`, `ItemDescription`, `ItemMedia`                 |                                                                                                                     |
+| `ListItemButton`                                           | `Item asChild` around a `button` or link                                         |                                                                                                                     |
+| `Table`, `TableHead`, `TableBody`, `TableRow`, `TableCell` | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableCell`, `TableHead`        | Header cells are `TableHead`                                                                                        |
+| `Avatar`, `AvatarGroup`                                    | `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarGroup`                         |                                                                                                                     |
+| `Chip`                                                     | `Badge`, or `FilterChip` for a removable filter                                  | `color` → `variant`. `variant="outlined"` → `fill="outline"`                                                        |
+| `Divider`                                                  | `Separator`                                                                      |                                                                                                                     |
+| `CircularProgress`, indeterminate                          | `Spinner`                                                                        |                                                                                                                     |
+| `LinearProgress`                                           | `Progress`                                                                       |                                                                                                                     |
+| `Skeleton`                                                 | `Skeleton`                                                                       | Size it with `nx:` classes                                                                                          |
+| `Typography`                                               | `nx:typography-*` classes                                                        | `h1`–`h6` → `nx:typography-heading-*`, `body1` → `nx:typography-body-default`, `body2` → `nx:typography-body-small` |
+| `Box`, `Stack`, `Grid`, `Container`                        | `nx:` flex and grid classes                                                      | At the default density, `Stack spacing={2}` → `nx:flex nx:flex-col nx:gap-4`                                        |
+| `useMediaQuery`                                            | `Show` and `Hide`                                                                | `<Hide below="md">` hides content below the `md` breakpoint                                                         |
+| MUI X `DatePicker`                                         | `DatePicker`                                                                     | Takes React Day Picker props: `mode`, `selected`, `onSelect`                                                        |
+| MUI X Charts                                               | `ChartContainer`                                                                 | Built on Recharts                                                                                                   |
+
+## Swap a component (optional)
+
+Swap a component when you touch the screen anyway. This form field moves from
+MUI to nxds:
+
+```tsx
+// Before
+import TextField from '@mui/material/TextField';
+
+<TextField
+  label="Email"
+  type="email"
+  helperText="We never share it."
+  error={Boolean(error)}
+/>;
+```
+
+```tsx
+// After
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from '@/components/nxds/components/field/field';
+import { Input } from '@/components/nxds/components/input/input';
+
+<Field data-invalid={Boolean(error)}>
+  <FieldLabel htmlFor="email">Email</FieldLabel>
+  <Input id="email" type="email" aria-invalid={Boolean(error)} />
+  <FieldDescription>We never share it.</FieldDescription>
+  <FieldError>{error}</FieldError>
+</Field>;
+```
+
+To check the `nx:` classes in the files you move over, add the
+[nxds lint rules](/getting-started/install#optional-add-lint-rules).
+
+## What stays on MUI
+
+nxds has no part for these. Keep them on MUI:
+
+- `Stepper`
+- `Rating`
+- `SpeedDial` and `Fab`
+- `Badge`, the count on an icon
+- `Backdrop`
+- `BottomNavigation`
+- `ImageList` and `Masonry`
+- `Timeline`
+- MUI X `TreeView` and `DataGrid`
+- `CircularProgress` with a value

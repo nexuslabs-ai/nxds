@@ -1,0 +1,373 @@
+export const description =
+  'Add nxds components to a Next.js app built with Mantine. Load Mantine in a cascade layer, keep its color scheme in step with nxds, and find the nxds part for each Mantine component.';
+
+# nxds with Mantine
+
+Add nxds components to a Mantine app, and keep Mantine for everything else.
+These steps use a Next.js App Router app on Mantine 9.
+
+## What nxds adds for you
+
+nxds gives a Mantine app parts it doesn't have, themed from one appearance
+object. [Introduction](/getting-started/introduction) covers the theme engine,
+the copy-and-own source and the agent support.
+
+| You need                       | nxds part                                  |
+| ------------------------------ | ------------------------------------------ |
+| A collapsible app sidebar      | `Sidebar` and `SidebarProvider`            |
+| A filter bar                   | `FilterBuilder`                            |
+| A menu bar or right-click menu | `Menubar` and `ContextMenu`                |
+| Resizable panes                | `ResizablePanelGroup` and `ResizablePanel` |
+| An input with buttons inside   | `InputGroup`                               |
+| An empty screen                | `EmptyState`                               |
+| Label and value pairs          | `DescriptionList`                          |
+| A chat thread                  | `Message` and `Bubble`                     |
+
+## Add your first nxds component
+
+Set up nxds, then add a component:
+
+```bash
+npx nxds-cli@latest init
+npx nxds-cli@latest add button
+```
+
+`init` adds the provider and the theme script to `app/layout.tsx`, and creates
+`app/nxds.css`. Mantine's styles set `box-sizing`, so delete the Preflight
+lines in `app/nxds.css`, as
+[Add nxds to an existing app](/getting-started/install#add-nxds-to-an-existing-app)
+explains.
+
+`@mantine/core/styles.css` sits outside any cascade layer, so its
+`button { font: inherit }` would beat the nxds button's type. Import
+`styles.layer.css` instead, which puts the same CSS in a `mantine` layer.
+Name that layer first, so it sits below the nxds utilities:
+
+```css
+/* app/globals.css */
+@layer mantine, properties, theme, base, components, utilities, nx-runtime;
+@import '@mantine/core/styles.layer.css';
+```
+
+Import `globals.css` in `app/layout.tsx` instead of `@mantine/core/styles.css`.
+
+Render the nxds button on an existing screen, beside Mantine's:
+
+```tsx
+// app/page.tsx
+import { Button as MantineButton, Group } from '@mantine/core';
+
+import { Button } from '@/components/nxds/components/button/button';
+
+export default function Page() {
+  return (
+    <Group gap="sm">
+      <MantineButton>Save</MantineButton>
+      <Button variant="outline">Preview</Button>
+    </Group>
+  );
+}
+```
+
+Mantine's overlays sit at z-index 200 to 400. Raise the nxds layers above
+them, so an nxds popup opens over a Mantine modal:
+
+```css
+/* app/nxds.css, after the imports */
+:root {
+  --nx-z-index-modal: 500;
+  --nx-z-index-popover: 600;
+  --nx-z-index-toast: 700;
+}
+```
+
+Inside an nxds dialog, render Mantine popups in place with
+`withinPortal={false}`. On `Select`, `MultiSelect` and `Autocomplete`, pass
+`comboboxProps={{ withinPortal: false }}`.
+
+## Share light and dark mode
+
+nxds owns the mode. Mantine sets its own `data-mantine-color-scheme` attribute
+on `<html>`, so a small component passes each nxds change to Mantine:
+
+```tsx
+// app/mantine-provider.tsx
+'use client';
+
+import {
+  type MantineColorSchemeManager,
+  MantineProvider,
+  useMantineColorScheme,
+} from '@mantine/core';
+import { type NxdsAppearanceMode, readStoredNxdsAppearance } from '@nxds/core';
+import { useEffect } from 'react';
+
+import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
+
+import { APPEARANCE_STORAGE_KEY, defaultAppearance } from './appearance-state';
+import { theme } from './theme';
+
+function toMantineColorScheme(mode: NxdsAppearanceMode) {
+  return mode === 'system' ? 'auto' : mode;
+}
+
+const nxdsColorSchemeManager: MantineColorSchemeManager = {
+  get: () =>
+    toMantineColorScheme(
+      readStoredNxdsAppearance(APPEARANCE_STORAGE_KEY, defaultAppearance).mode
+    ),
+  set() {},
+  subscribe() {},
+  unsubscribe() {},
+  clear() {},
+};
+
+function MantineFollowsNxds() {
+  const { state, mounted } = useNxdsAppearance();
+  const { setColorScheme } = useMantineColorScheme();
+
+  useEffect(() => {
+    if (mounted) setColorScheme(toMantineColorScheme(state.mode));
+  }, [mounted, state.mode, setColorScheme]);
+
+  return null;
+}
+
+export function AppMantineProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <MantineProvider theme={theme} colorSchemeManager={nxdsColorSchemeManager}>
+      <MantineFollowsNxds />
+      {children}
+    </MantineProvider>
+  );
+}
+```
+
+`theme` is the theme your app already passes to `MantineProvider`. Mantine
+calls the system mode `'auto'`, so `toMantineColorScheme` maps nxds `'system'`
+to it. `nxdsColorSchemeManager` starts Mantine from the mode nxds
+saved, and saves nothing of its own. Mantine then can't fall out of step on a
+reload or from another tab.
+
+Leave out Mantine's `ColorSchemeScript`, because it reads only Mantine's saved
+mode. One line in `<head>` sets Mantine's attribute from the nxds `.dark`
+class before the first paint. Put the Mantine provider inside the nxds
+provider:
+
+```tsx
+// app/layout.tsx
+import { mantineHtmlProps } from '@mantine/core';
+
+import { NxdsAppearanceProvider } from '@/components/nxds/components/appearance/provider';
+import { NxdsAppearanceScript } from '@/components/nxds/components/appearance/provider/server';
+
+import { APPEARANCE_STORAGE_KEY, defaultAppearance } from './appearance-state';
+import { AppMantineProvider } from './mantine-provider';
+
+import './globals.css';
+import './nxds.css';
+
+const MANTINE_THEME_SCRIPT =
+  "document.documentElement.dataset.mantineColorScheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';";
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" {...mantineHtmlProps}>
+      <head>
+        <NxdsAppearanceScript
+          storageKey={APPEARANCE_STORAGE_KEY}
+          defaultState={defaultAppearance}
+        />
+        <script dangerouslySetInnerHTML={{ __html: MANTINE_THEME_SCRIPT }} />
+      </head>
+      <body>
+        <NxdsAppearanceProvider
+          storageKey={APPEARANCE_STORAGE_KEY}
+          defaultState={defaultAppearance}
+        >
+          <AppMantineProvider>{children}</AppMantineProvider>
+        </NxdsAppearanceProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+`mantineHtmlProps` includes `suppressHydrationWarning`, which nxds needs too.
+If you pass a `nonce` to `NxdsAppearanceScript`, pass the same one to the
+Mantine script.
+
+Switch the mode through nxds only, not `setColorScheme`:
+
+```tsx
+// app/mode-toggle.tsx
+'use client';
+
+import { Button } from '@mantine/core';
+
+import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
+
+export function ModeToggle() {
+  const { setState, resolvedMode } = useNxdsAppearance();
+  const next = resolvedMode === 'dark' ? 'light' : 'dark';
+
+  return (
+    <Button
+      variant="default"
+      onClick={() => setState((current) => ({ ...current, mode: next }))}
+    >
+      Switch to {next}
+    </Button>
+  );
+}
+```
+
+## Match your theme
+
+```ts
+// app/appearance-state.ts
+import { DEFAULT_NXDS_APPEARANCE, type NxdsAppearanceState } from '@nxds/core';
+
+export const APPEARANCE_STORAGE_KEY = 'app-appearance';
+
+export const defaultAppearance = {
+  ...DEFAULT_NXDS_APPEARANCE,
+  brandColor: '#228be6',
+  surfaceTone: 'gray',
+  corners: 'smooth',
+} satisfies NxdsAppearanceState;
+```
+
+| Mantine theme                  | Appearance field   | How to match                                                                                             |
+| ------------------------------ | ------------------ | -------------------------------------------------------------------------------------------------------- |
+| `primaryColor`, `primaryShade` | `brandColor`       | Use the light shade, `colors[primaryColor][6]` by default. Mantine's blue is `#228be6`                   |
+| `colors.gray`                  | `surfaceTone`      | `gray` is closest to Mantine's gray                                                                      |
+| `defaultRadius`                | `corners`          | `xs` and `sm` are `subtle`, `md` is `smooth`, `lg` and `xl` are `extra-round`. Mantine's default is `md` |
+| `spacing`, `scale`             | `density`          | Compare in the [Playground](/playground)                                                                 |
+| `shadows`                      | `elevation`        | Compare in the [Playground](/playground). `flat` turns shadows off                                       |
+| None                           | `stroke`           | Mantine has no border width setting, so keep `normal`                                                    |
+| `fontFamily`                   | `prefs.uiFont`     | Pass the same font stack                                                                                 |
+| `fontSizes.md`                 | `prefs.uiFontSize` | Mantine's default is 16 and nxds's is 14. Set `16` to match Mantine's text                               |
+| The color scheme               | `mode`             | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                           |
+
+## Where nxds fits
+
+Many Mantine inputs pass an event to `onChange`. nxds handlers take the value
+itself: `onValueChange(value)`, `onCheckedChange(checked)`,
+`onOpenChange(open)`.
+
+| Mantine                                                     | nxds                                                                      | What changes                                                                                                        |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `Button`                                                    | `Button`                                                                  | `variant` `filled`, `light`, `outline`, `subtle`, `default` → `default`, `secondary`, `outline`, `ghost`, `outline` |
+| `Button color="red"`                                        | `Button variant="destructive"`                                            | nxds has no `color` prop. The brand comes from the appearance                                                       |
+| `ActionIcon`                                                | `Button size="icon"`                                                      | Give it an `aria-label`                                                                                             |
+| `Button.Group`                                              | `ButtonGroup`                                                             |                                                                                                                     |
+| `TextInput`                                                 | `Field`, `FieldLabel`, `Input`, `FieldDescription`, `FieldError`          | `label`, `description` and `error` become parts                                                                     |
+| `Textarea`                                                  | `Textarea` in a `Field`                                                   |                                                                                                                     |
+| `Input.Wrapper`                                             | `Field`                                                                   |                                                                                                                     |
+| `Fieldset`                                                  | `FieldSet`, `FieldLegend`                                                 |                                                                                                                     |
+| `Checkbox`                                                  | `Checkbox` with a `FieldLabel`                                            | `onChange(event)` → `onCheckedChange(checked)`                                                                      |
+| `Switch`                                                    | `Switch`                                                                  | `onChange(event)` → `onCheckedChange(checked)`                                                                      |
+| `Radio.Group`, `Radio`                                      | `RadioGroup`, `RadioGroupItem`                                            | `onChange(value)` → `onValueChange(value)`                                                                          |
+| `Checkbox.Card`, `Radio.Card`                               | `ChoiceCard`                                                              |                                                                                                                     |
+| `Select`                                                    | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`   | Items are children, not `data`. `onChange` → `onValueChange(value)`                                                 |
+| `NativeSelect`                                              | `NativeSelect`, `NativeSelectOption`                                      |                                                                                                                     |
+| `MultiSelect`                                               | `MultiSelect`                                                             | `onChange(values)` → `onValuesChange(values)`                                                                       |
+| `Autocomplete`, `Combobox`                                  | `Combobox`                                                                | Compose a `ComboboxTrigger`, `ComboboxInput` and `ComboboxItem` list                                                |
+| `PinInput`                                                  | `InputOTP`, `InputOTPGroup`, `InputOTPSlot`                               |                                                                                                                     |
+| `Slider`, `RangeSlider`                                     | `Slider`                                                                  | `value` is an array, with two values for a range. `onChange` → `onValueChange`                                      |
+| `SegmentedControl`                                          | `ToggleGroup type="single"`                                               | `onChange` → `onValueChange`                                                                                        |
+| `Chip`, `Chip.Group`                                        | `Toggle`, `ToggleGroup`                                                   | `checked` → `pressed`                                                                                               |
+| `Modal`                                                     | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogBody`    | `opened` → `open`, `onClose` → `onOpenChange(open)`, `title` → `DialogTitle`                                        |
+| `Modal` asking to confirm                                   | `AlertDialog`                                                             |                                                                                                                     |
+| `Drawer`                                                    | `Sheet`, or `Drawer` for a bottom sheet                                   | `position` → `side` on `SheetContent`                                                                               |
+| `Menu`                                                      | `DropdownMenu`                                                            | `Menu.Target` → `DropdownMenuTrigger`, `Menu.Dropdown` → `DropdownMenuContent`                                      |
+| `Popover`, `HoverCard`                                      | `Popover`, `HoverCard`                                                    | `Popover.Target` → `PopoverTrigger`, `Popover.Dropdown` → `PopoverContent`                                          |
+| `Tooltip`                                                   | `Tooltip`, `TooltipTrigger`, `TooltipContent`                             | `label` → `TooltipContent` children                                                                                 |
+| `@mantine/notifications`                                    | `Toaster`, `toast()`                                                      | `notifications.show({ message })` → `toast(message)`                                                                |
+| `Alert`                                                     | `Alert`, `AlertTitle`, `AlertDescription`                                 | `color` → `variant`: `destructive`, `warning`, `information`, `success`                                             |
+| `Accordion`                                                 | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`      | `multiple` → `type="multiple"`. `Accordion.Control` → `AccordionTrigger`, `Accordion.Panel` → `AccordionContent`    |
+| `Collapse`                                                  | `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent`                 |                                                                                                                     |
+| `Tabs`                                                      | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`                          | `Tabs.Tab` → `TabsTrigger`, `Tabs.Panel` → `TabsContent`. `onChange` → `onValueChange`                              |
+| `Breadcrumbs`                                               | `Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`        |                                                                                                                     |
+| `Pagination`                                                | `Pagination`, `PaginationContent`, `PaginationLink`                       |                                                                                                                     |
+| `Card`, `Paper`                                             | `Card`, `CardHeader`, `CardContent`, `CardFooter`                         |                                                                                                                     |
+| `Avatar`, `Avatar.Group`                                    | `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarGroup`                  |                                                                                                                     |
+| `Badge`                                                     | `Badge`                                                                   | `color` → `variant`. `variant="light"` → `fill="light"`, `variant="outline"` → `fill="outline"`                     |
+| `Pill` with a remove button                                 | `FilterChip`                                                              |                                                                                                                     |
+| `Divider`                                                   | `Separator`                                                               |                                                                                                                     |
+| `Progress`                                                  | `Progress`                                                                |                                                                                                                     |
+| `Loader`, `Skeleton`                                        | `Spinner`, `Skeleton`                                                     |                                                                                                                     |
+| `Table`                                                     | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell` | `Table.Thead` → `TableHeader`, `Table.Th` → `TableHead`, `Table.Td` → `TableCell`                                   |
+| `Kbd`, `ScrollArea`                                         | `Kbd`, `ScrollArea`                                                       |                                                                                                                     |
+| `AppShell`, `NavLink`                                       | `SidebarProvider`, `Sidebar`, `SidebarInset`, `SidebarMenuButton`         |                                                                                                                     |
+| `Stack`, `Group`, `Flex`, `Grid`, `SimpleGrid`, `Container` | `nx:` flex and grid classes                                               | At the default density, `gap="md"` → `nx:gap-4`                                                                     |
+| `Text`, `Title`                                             | `nx:typography-*` classes                                                 | Such as `nx:typography-heading-large` and `nx:typography-body-default`                                              |
+| `visibleFrom`, `hiddenFrom`                                 | `Show` and `Hide`                                                         | `hiddenFrom="md"` → `<Hide above="md">`                                                                             |
+| `@mantine/dates` `DatePicker`                               | `DatePicker`                                                              | Takes React Day Picker props: `mode`, `selected`, `onSelect`                                                        |
+| `@mantine/spotlight`                                        | `CommandDialog`                                                           |                                                                                                                     |
+| `@mantine/charts`                                           | `ChartContainer`                                                          | Built on Recharts, like Mantine's charts                                                                            |
+| `@mantine/carousel`                                         | `Carousel`                                                                | Built on Embla, like Mantine's carousel                                                                             |
+
+## Swap a component (optional)
+
+Swap a component when you touch the screen anyway. This form field moves from
+Mantine to nxds:
+
+```tsx
+// Before
+import { TextInput } from '@mantine/core';
+
+<TextInput
+  label="Email"
+  type="email"
+  description="We never share it."
+  error={error}
+/>;
+```
+
+```tsx
+// After
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from '@/components/nxds/components/field/field';
+import { Input } from '@/components/nxds/components/input/input';
+
+<Field data-invalid={Boolean(error)}>
+  <FieldLabel htmlFor="email">Email</FieldLabel>
+  <Input id="email" type="email" aria-invalid={Boolean(error)} />
+  <FieldDescription>We never share it.</FieldDescription>
+  <FieldError>{error}</FieldError>
+</Field>;
+```
+
+To check the `nx:` classes in the files you move over, add the
+[nxds lint rules](/getting-started/install#optional-add-lint-rules).
+`@mantine/form` keeps working: pass its values and errors to nxds parts.
+
+## What stays on Mantine
+
+nxds has no part for these. Keep them on Mantine:
+
+- `Stepper`
+- `Rating`
+- `Timeline`
+- `Tree`
+- `ColorInput` and `ColorPicker`
+- `FileInput` and `@mantine/dropzone`
+- `NumberInput` and `PasswordInput`
+- `TagsInput`
+- `RingProgress` and `SemiCircleProgress`
+- `Spoiler`, `Indicator` and `LoadingOverlay`
+- `JsonInput` and `@mantine/tiptap`

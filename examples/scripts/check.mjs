@@ -45,14 +45,19 @@ const SKIP = new Set(['node_modules', '.next', 'dist']);
 
 const PROVIDER_STUB = `'use client';
 import type * as React from 'react';
-import { DEFAULT_NXDS_APPEARANCE } from '@nxds/core';
+import { DEFAULT_NXDS_APPEARANCE, type NxdsAppearanceState, type NxdsResolvedAppearanceMode } from '@nxds/core';
 
 export function NxdsAppearanceProvider({ children }: { children?: React.ReactNode; [prop: string]: unknown }) {
   return children;
 }
-type State = typeof DEFAULT_NXDS_APPEARANCE;
-export function useNxdsAppearance(): { state: State; setState: React.Dispatch<React.SetStateAction<State>> } {
-  return { state: DEFAULT_NXDS_APPEARANCE, setState() {} };
+export function useNxdsAppearance(): {
+  state: NxdsAppearanceState;
+  setState: React.Dispatch<React.SetStateAction<NxdsAppearanceState>>;
+  resolvedMode: NxdsResolvedAppearanceMode;
+  mounted: boolean;
+  reset: () => void;
+} {
+  return { state: DEFAULT_NXDS_APPEARANCE, setState() {}, resolvedMode: 'light', mounted: false, reset() {} };
 }
 export function NxdsAppearanceScript(_props: Record<string, unknown>) {
   return null;
