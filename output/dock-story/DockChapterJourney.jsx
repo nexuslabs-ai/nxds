@@ -278,11 +278,11 @@ export function DockChapterJourney({
       frameworkDiagram: {
         type: 'select',
         options: [
-          { value: 'tokens', label: 'Token flow · current' },
+          { value: 'tokens', label: 'Token flow · previous' },
           { value: 'foundation', label: 'Shared foundation · new' },
           { value: 'chip', label: 'Core chip · new' },
         ],
-        default: 'tokens',
+        default: 'chip',
       },
       motion: { duration: [0.25, 0.1, 0.6, 0.05] },
     },
