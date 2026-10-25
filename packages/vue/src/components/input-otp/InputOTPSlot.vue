@@ -21,15 +21,11 @@ export interface InputOTPSlotProps extends Omit<PinInputInputProps, 'index'> {
 
 const props = defineProps<InputOTPSlotProps>();
 
-const otpAttrs = inject(InputOTPKey, {});
+const otpAttrs = inject(InputOTPKey)!;
 const active = ref(false);
 
 function nameAttrs() {
-  const label = otpAttrs['aria-label'];
-  const shared = {
-    'aria-labelledby': otpAttrs['aria-labelledby'],
-    'aria-invalid': otpAttrs['aria-invalid'],
-  };
+  const { 'aria-label': label, ...shared } = otpAttrs.value;
   if (typeof label !== 'string') return shared;
   return { ...shared, 'aria-label': `${label}, character ${props.index + 1}` };
 }

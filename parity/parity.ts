@@ -111,12 +111,18 @@ export const vueOnlyApi: Record<string, string> = {
   'InputGroupInput.modelValue': NATIVE_MODEL_VALUE,
   'InputGroupTextarea.defaultValue': NATIVE_DEFAULT_VALUE,
   'InputGroupTextarea.modelValue': NATIVE_MODEL_VALUE,
+  'InputOTP.defaultValue':
+    "starting code without v-model; React's defaultValue is inherited from input-otp's props type",
+  'InputOTP.modelValue':
+    "v-model code as a string; React's value is inherited from input-otp's props type",
   'NativeSelect.defaultValue': NATIVE_DEFAULT_VALUE,
   'NativeSelect.modelValue': NATIVE_MODEL_VALUE,
   'Switch.thumb':
     'slot for custom thumb content; React renders the thumb itself with no way to compose it',
   'Textarea.defaultValue': NATIVE_DEFAULT_VALUE,
   'Textarea.modelValue': NATIVE_MODEL_VALUE,
+  'ToggleGroupItem.value':
+    "string, as Radix types it, so aria-checked matches Reka's pressed state; React inherits value from Radix's props type",
 };
 
 const V_MODEL = 'v-model binding, a Vue idiom with no React counterpart';
@@ -137,6 +143,8 @@ export const behaviourOnlyIn: Record<
   vue: {
     'checkbox/VModel': V_MODEL,
     'input/VModel': V_MODEL,
+    'input-otp/SlotNaming':
+      "each slot is its own <input>, so Vue forwards the field's name and invalid state to it; React's single <input> carries them",
     'input-otp/VModel': V_MODEL,
     'native-select/VModel': V_MODEL,
     'radio-group/VModel': V_MODEL,
@@ -151,7 +159,7 @@ export const behaviourOnlyIn: Record<
 };
 
 const PIN_INPUT =
-  'React types into one hidden input and reports the code as a string; Reka gives each slot its own input and emits one character per slot';
+  'React types into one hidden input; Reka gives each slot its own input, so Vue reads the code from the slots';
 
 const TABS_INDICATOR =
   "React waits for its measured indicator's opacity and transform; Reka's indicator has neither, so Vue checks only the geometry";
@@ -179,8 +187,6 @@ export const renderedDifferences: Record<string, string> = {
 
 /** Top-level values a Vue recipe file declares that React has no twin for, as `{file}#{name}`. */
 export const vueOnlyDeclarations: Record<string, string> = {
-  'button/index.ts#ButtonGroupKey':
-    'Vue injection key ButtonGroup provides to its Buttons and ButtonGroupText; React passes the same size through context',
   'input-otp/index.ts#InputOTPKey':
     "Vue injection key the root provides so each slot's <input> takes the field's name; React's single <input> carries it",
   'tabs/index.ts#TabsListKey':

@@ -319,7 +319,7 @@ function FieldError({
 }
 
 /** Unique, non-empty error messages in first-seen order. */
-function dedupeErrorMessages(errors: FieldErrorProps['errors']): string[] {
+function dedupeErrorMessages(errors: FieldErrors | undefined): string[] {
   const seen = new Map<string, string>();
   for (const error of errors ?? []) {
     if (error?.message) seen.set(error.message, error.message);

@@ -3,7 +3,8 @@ import { Primitive, type PrimitiveProps } from 'reka-ui';
 import { computed, type HTMLAttributes, inject } from 'vue';
 
 import { cn } from '../../lib/utils';
-import { ButtonGroupKey, type ButtonGroupSize } from '../button';
+
+import { ButtonGroupKey, type ButtonGroupSize } from './button-group-context';
 
 import { buttonGroupTextVariants } from '.';
 

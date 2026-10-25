@@ -2,7 +2,8 @@
 import { type HTMLAttributes, provide } from 'vue';
 
 import { cn } from '../../lib/utils';
-import { ButtonGroupKey, type ButtonGroupSize } from '../button';
+
+import { ButtonGroupKey, type ButtonGroupSize } from './button-group-context';
 
 import { type ButtonGroupVariants, buttonGroupVariants } from '.';
 

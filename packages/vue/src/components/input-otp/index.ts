@@ -1,4 +1,4 @@
-import type { InjectionKey } from 'vue';
+import type { ComputedRef, InjectionKey } from 'vue';
 
 export { default as InputOTP, type InputOTPProps } from './InputOTP.vue';
 export {
@@ -14,5 +14,10 @@ export {
   type InputOTPSlotProps,
 } from './InputOTPSlot.vue';
 
-export const InputOTPKey: InjectionKey<Record<string, unknown>> =
-  Symbol('input-otp');
+export const InputOTPKey: InjectionKey<
+  ComputedRef<{
+    'aria-label'?: unknown;
+    'aria-labelledby'?: unknown;
+    'aria-invalid'?: unknown;
+  }>
+> = Symbol('input-otp');

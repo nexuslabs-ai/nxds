@@ -6,8 +6,8 @@ import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '.';
 
 type InputOTPArgs = InstanceType<typeof InputOTP>['$props'] & {
   'aria-label'?: string;
-  'onUpdate:modelValue'?: Mock<(value: string[]) => void>;
-  onComplete?: Mock<(value: string[]) => void>;
+  'onUpdate:modelValue'?: Mock<(value: string) => void>;
+  onComplete?: Mock<(value: string) => void>;
 };
 
 const SixDigitSlots = {
@@ -294,14 +294,7 @@ export const KeyboardInteraction: Story = {
 
     await expect(slots.map((slot) => slot.value).join('')).toBe('123456');
     await expect(args['onUpdate:modelValue']).toHaveBeenCalled();
-    await expect(args.onComplete).toHaveBeenCalledWith([
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-    ]);
+    await expect(args.onComplete).toHaveBeenCalledWith('123456');
   },
 };
 
@@ -313,14 +306,7 @@ export const Paste: Story = {
     await userEvent.paste('123456');
 
     await expect(slots.map((slot) => slot.value).join('')).toBe('123456');
-    await expect(args.onComplete).toHaveBeenCalledWith([
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-    ]);
+    await expect(args.onComplete).toHaveBeenCalledWith('123456');
   },
 };
 
@@ -346,17 +332,54 @@ export const WithDataAttributes: Story = {
   },
 };
 
-// v-model holds one character per slot.
+export const SlotNaming: Story = {
+  render: () => ({
+    components: { InputOTP, SixDigitSlots },
+    template: `
+      <div class="nx:flex nx:flex-col nx:gap-4">
+        <InputOTP aria-label="One-time password">
+          <SixDigitSlots />
+        </InputOTP>
+        <span id="otp-invalid-label">Recovery code</span>
+        <InputOTP aria-labelledby="otp-invalid-label" aria-invalid="true">
+          <SixDigitSlots />
+        </InputOTP>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const [named, labelled] = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>('[data-slot="input-otp"]')
+    ).map(slotsIn);
+
+    await expect(named![0]).toHaveAccessibleName(
+      'One-time password, character 1'
+    );
+    await expect(named![1]).toHaveAccessibleName(
+      'One-time password, character 2'
+    );
+    await expect(named![0]).not.toHaveAttribute('aria-invalid');
+
+    await expect(labelled![0]).toHaveAccessibleName('Recovery code');
+    await expect(labelled![0]).toHaveAttribute(
+      'aria-labelledby',
+      'otp-invalid-label'
+    );
+    await expect(labelled![0]).toHaveAttribute('aria-invalid', 'true');
+    await expect(labelled![5]).toHaveAttribute('aria-invalid', 'true');
+  },
+};
+
 export const VModel: Story = {
   render: () => ({
     components: { InputOTP, SixDigitSlots },
-    setup: () => ({ code: ref(['4', '2']) }),
+    setup: () => ({ code: ref('42') }),
     template: `
       <div class="nx:flex nx:flex-col nx:gap-2">
         <InputOTP v-model="code" aria-label="One-time password">
           <SixDigitSlots />
         </InputOTP>
-        <output data-testid="code">{{ code.join('') }}</output>
+        <output data-testid="code">{{ code }}</output>
       </div>
     `,
   }),

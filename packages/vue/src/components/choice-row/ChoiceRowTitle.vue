@@ -20,6 +20,7 @@ const props = defineProps<ChoiceRowTitleProps>();
       )
     "
   >
+    <!-- An unfilled <slot /> still renders fragment anchors, so the title would not be an empty element. -->
     <slot v-if="$slots.default" />
   </div>
 </template>

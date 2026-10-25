@@ -1,20 +1,13 @@
 <script setup lang="ts">
-import type { PrimitiveProps } from 'reka-ui';
-import type { HTMLAttributes, VNode } from 'vue';
+import type { VNode } from 'vue';
 
 import { cn } from '../../lib/utils';
-import { Button, type ButtonVariants } from '../button';
+import { Button, type ButtonProps } from '../button';
 
 import { type InputGroupButtonVariants, inputGroupButtonVariants } from '.';
 
-export interface InputGroupButtonProps extends PrimitiveProps {
-  variant?: ButtonVariants['variant'];
+export interface InputGroupButtonProps extends Omit<ButtonProps, 'size'> {
   size?: InputGroupButtonVariants['size'];
-  /** Disables the button and shows a spinner in place of its content. */
-  loading?: boolean;
-  disabled?: boolean;
-  type?: 'button' | 'submit' | 'reset';
-  class?: HTMLAttributes['class'];
 }
 
 const props = withDefaults(defineProps<InputGroupButtonProps>(), {

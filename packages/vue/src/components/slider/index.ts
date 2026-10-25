@@ -43,4 +43,44 @@ export const sliderThumbVariants = cva(
 export const sliderMarkerClassName =
   'nx:pointer-events-none nx:absolute nx:z-10 nx:size-1.5 nx:rounded-full nx:bg-muted-foreground-subtle nx:opacity-50 nx:transition-colors nx:duration-fast nx:data-disabled:bg-disabled-foreground nx:data-[orientation=horizontal]:top-1/2 nx:data-[orientation=horizontal]:-translate-x-1/2 nx:data-[orientation=horizontal]:-translate-y-1/2 nx:data-[orientation=vertical]:left-1/2 nx:data-[orientation=vertical]:-translate-x-1/2 nx:data-[orientation=vertical]:translate-y-1/2';
 
+const sliderFloatTolerance = 0.000001;
+
+export function getStepMarkerValues(min: number, max: number, step: number) {
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return [];
+  if (!Number.isFinite(step) || step <= 0) return [];
+  if (max <= min) return [];
+
+  return Array.from(
+    { length: Math.floor((max - min) / step) },
+    (_, index) => min + step * (index + 1)
+  );
+}
+
+export function isMarkerCovered(marker: number, sortedValues: number[]) {
+  const firstValue = sortedValues[0];
+
+  if (firstValue === undefined) return false;
+
+  if (sortedValues.length === 1) {
+    return marker <= firstValue + sliderFloatTolerance;
+  }
+
+  const lastValue = sortedValues[sortedValues.length - 1];
+
+  if (lastValue === undefined) return false;
+
+  return (
+    marker >= firstValue - sliderFloatTolerance &&
+    marker <= lastValue + sliderFloatTolerance
+  );
+}
+
+export function isRangeBoundary(value: number | undefined, boundary: number) {
+  return (
+    value !== undefined &&
+    Number.isFinite(value) &&
+    Math.abs(value - boundary) <= sliderFloatTolerance
+  );
+}
+
 export type SliderTrackVariants = VariantProps<typeof sliderTrackVariants>;

@@ -1,5 +1,6 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 
+export type { ButtonGroupSize } from './button-group-context';
 export {
   default as ButtonGroup,
   type ButtonGroupProps,

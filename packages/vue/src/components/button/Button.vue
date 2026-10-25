@@ -4,9 +4,10 @@ import { computed, type HTMLAttributes, inject, type VNode } from 'vue';
 
 import { renderedNodes } from '../../lib/slots';
 import { cn } from '../../lib/utils';
+import { ButtonGroupKey } from '../button-group/button-group-context';
 import Spinner from '../spinner/Spinner.vue';
 
-import { ButtonGroupKey, type ButtonVariants, buttonVariants } from '.';
+import { type ButtonVariants, buttonVariants } from '.';
 
 export interface ButtonProps extends PrimitiveProps {
   variant?: ButtonVariants['variant'];
