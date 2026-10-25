@@ -1,3 +1,5 @@
+import * as React from 'react';
+
 import type { Meta, StoryObj } from '@storybook/react';
 import { IconArrowRight, IconRocket, IconStar } from '@tabler/icons-react';
 import { expect, fn, userEvent, within } from 'storybook/test';
@@ -376,6 +378,19 @@ export const WithDataAttributes: Story = {
     await expect(explicitButton).toHaveAttribute('data-slot', 'button');
     await expect(explicitButton).toHaveAttribute('data-variant', 'secondary');
     await expect(explicitButton).toHaveAttribute('data-size', 'lg');
+  },
+};
+
+const saveRef = React.createRef<HTMLButtonElement>();
+
+// A ref on Button reaches the native button.
+export const RefForwarding: Story = {
+  render: () => <Button ref={saveRef}>Save</Button>,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(saveRef.current).toBe(
+      canvas.getByRole('button', { name: 'Save' })
+    );
   },
 };
 
