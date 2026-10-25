@@ -90,7 +90,7 @@ export interface CatalogueVariant {
   readonly mode: Mode | null;
   /**
    * The family mode file the value comes from without its theme mode
-   * (`square`, `compact`, `quiet`), or `null` when the family has a single
+   * (`0`, `compact`, `quiet`), or `null` when the family has a single
    * file.
    */
   readonly preset: string | null;

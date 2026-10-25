@@ -21,11 +21,15 @@ export const CANONICAL_MODES = [
   'tight',
 ];
 export const CANONICAL_RADIUS_MODES = [
-  'extra-round',
-  'round',
-  'smooth',
-  'square',
-  'subtle',
+  '0',
+  '2',
+  '4',
+  '6',
+  '8',
+  '10',
+  '12',
+  '14',
+  '16',
 ];
 export const CANONICAL_BORDERWIDTH_MODES = ['fine', 'normal', 'strong'];
 export const CANONICAL_SHADOW_MODES = [
@@ -54,7 +58,7 @@ export function tokenModeFamilies({
     {
       family: 'radius',
       dir: path.join(primitivesDir, 'radius'),
-      modePattern: /^radius-([a-z]+(?:-[a-z]+)*)\.json$/,
+      modePattern: /^radius-(\d+)\.json$/,
     },
     {
       family: 'borderwidth',
@@ -89,9 +93,9 @@ export function keyParityModeFamilyConfigs({
       name: 'radius',
       reportName: 'radius',
       dir: path.join(primitivesDir, 'radius'),
-      baseline: 'square',
+      baseline: '0',
       expectedModes: CANONICAL_RADIUS_MODES,
-      modePattern: /^radius-([a-z]+(?:-[a-z]+)*)\.json$/,
+      modePattern: /^radius-(\d+)\.json$/,
       fileName: (mode) => `radius-${mode}.json`,
     },
     {

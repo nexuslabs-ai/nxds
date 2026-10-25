@@ -177,7 +177,7 @@ export function scaledModeBlocks(
     ...entries.filter(([mode]) => mode === defaultMode),
     ...entries
       .filter(([mode]) => mode !== defaultMode)
-      .sort(([a], [b]) => a.localeCompare(b)),
+      .sort(([a], [b]) => a.localeCompare(b, 'en', { numeric: true })),
   ];
   return NON_DEFAULT_UI_SCALES.flatMap((scale) =>
     modes.map(([mode, tokens]) => {

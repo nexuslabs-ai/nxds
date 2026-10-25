@@ -640,7 +640,9 @@ export function generateSpacingModesCSS(modesByName, opts = {}) {
     }
   }
 
-  const otherModes = allModes.filter((m) => m !== defaultMode).sort();
+  const otherModes = allModes
+    .filter((m) => m !== defaultMode)
+    .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
 
   let css = `\n/* ===== PER-MODE ${commentLabel} (mode swap via [${attrName}="X"] on any ancestor) ===== */\n`;
 

@@ -29,11 +29,15 @@ export type NxdsDensity =
   | 'relaxed'
   | 'spacious';
 export type NxdsCorners =
-  | 'square'
-  | 'subtle'
-  | 'smooth'
-  | 'round'
-  | 'extra-round';
+  | '0'
+  | '2'
+  | '4'
+  | '6'
+  | '8'
+  | '10'
+  | '12'
+  | '14'
+  | '16';
 export type NxdsElevation = 'flat' | 'quiet' | 'soft' | 'standard' | 'strong';
 export type NxdsStroke = 'fine' | 'normal' | 'strong';
 
@@ -129,11 +133,15 @@ export const DENSITY_OPTIONS = [
 ] as const satisfies readonly { value: NxdsDensity; label: string }[];
 
 export const CORNER_OPTIONS = [
-  { value: 'square', label: 'Square' },
-  { value: 'subtle', label: 'Subtle' },
-  { value: 'smooth', label: 'Smooth' },
-  { value: 'round', label: 'Round' },
-  { value: 'extra-round', label: 'Extra Round' },
+  { value: '0', label: '0px' },
+  { value: '2', label: '2px' },
+  { value: '4', label: '4px' },
+  { value: '6', label: '6px' },
+  { value: '8', label: '8px' },
+  { value: '10', label: '10px' },
+  { value: '12', label: '12px' },
+  { value: '14', label: '14px' },
+  { value: '16', label: '16px' },
 ] as const satisfies readonly { value: NxdsCorners; label: string }[];
 
 export const ELEVATION_OPTIONS = [
@@ -159,7 +167,7 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
   uiScale: 'default',
   textSize: 14,
   density: 'default',
-  corners: 'subtle',
+  corners: '4',
   elevation: 'quiet',
   stroke: 'normal',
   prefs: {
@@ -235,16 +243,14 @@ const clampFontSize = (value: unknown, fallback: number): number =>
 // Retired public-mode codename -> friendly, applied to persisted state on read
 // (see normalizeAppearanceModeIds). Internal; correctness is covered behaviorally
 // by the sanitize codename->friendly tests, so it is not part of the public API.
-const PUBLIC_MODE_RENAME: Record<NxdsPresetField, Record<string, string>> = {
+const PUBLIC_MODE_RENAME: Partial<
+  Record<NxdsPresetField, Record<string, string>>
+> = {
   density: {
     nova: 'compact',
     mira: 'default',
     luma: 'comfortable',
     sera: 'spacious',
-  },
-  corners: {
-    sharp: 'square',
-    mellow: 'round',
   },
   elevation: {
     maia: 'quiet',
@@ -302,7 +308,11 @@ export function sanitizeNxdsAppearance(rawInput: unknown): NxdsAppearanceState {
     uiScale: enumOr(raw.uiScale, SCALES, d.uiScale),
     textSize: enumOr(raw.textSize, TEXT_SIZE_VALUES, d.textSize),
     density: enumOr(raw.density, DENSITIES, d.density),
-    corners: enumOr(raw.corners, CORNERS, d.corners),
+    corners: enumOr(
+      typeof raw.corners === 'number' ? String(raw.corners) : raw.corners,
+      CORNERS,
+      d.corners
+    ),
     elevation: enumOr(raw.elevation, ELEVATIONS, d.elevation),
     stroke: enumOr(raw.stroke, STROKES, d.stroke),
     prefs: sanitizeNxdsAppearancePrefs(raw.prefs),

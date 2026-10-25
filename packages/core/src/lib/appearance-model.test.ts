@@ -34,7 +34,7 @@ describe('appearance model', () => {
       uiScale: 'default',
       textSize: 14,
       density: 'default',
-      corners: 'subtle',
+      corners: '4',
       elevation: 'quiet',
       stroke: 'normal',
       prefs: {
@@ -84,11 +84,15 @@ describe('appearance model', () => {
       { value: 'spacious', label: 'Spacious' },
     ]);
     expect(CORNER_OPTIONS).toEqual([
-      { value: 'square', label: 'Square' },
-      { value: 'subtle', label: 'Subtle' },
-      { value: 'smooth', label: 'Smooth' },
-      { value: 'round', label: 'Round' },
-      { value: 'extra-round', label: 'Extra Round' },
+      { value: '0', label: '0px' },
+      { value: '2', label: '2px' },
+      { value: '4', label: '4px' },
+      { value: '6', label: '6px' },
+      { value: '8', label: '8px' },
+      { value: '10', label: '10px' },
+      { value: '12', label: '12px' },
+      { value: '14', label: '14px' },
+      { value: '16', label: '16px' },
     ]);
     expect(ELEVATION_OPTIONS).toEqual([
       { value: 'flat', label: 'Flat' },
@@ -122,7 +126,7 @@ describe('sanitizeNxdsAppearance', () => {
       uiScale: 'large' as const,
       textSize: 16 as const,
       density: 'tight' as const,
-      corners: 'extra-round' as const,
+      corners: '16' as const,
       elevation: 'flat' as const,
       stroke: 'fine' as const,
       prefs: {
@@ -219,7 +223,7 @@ describe('sanitizeNxdsAppearance', () => {
         ...DEFAULT_NXDS_APPEARANCE,
         corners: 'pill',
       }).corners
-    ).toBe('subtle');
+    ).toBe('4');
     expect(
       sanitizeNxdsAppearance({
         ...DEFAULT_NXDS_APPEARANCE,
@@ -238,8 +242,16 @@ describe('sanitizeNxdsAppearance', () => {
     );
   });
 
-  it('normalizes a persisted corner codename to its friendly value', () => {
-    expect(sanitizeNxdsAppearance({ corners: 'mellow' }).corners).toBe('round');
+  it('falls back to the default corner mode for a retired name', () => {
+    expect(sanitizeNxdsAppearance({ corners: 'round' }).corners).toBe('4');
+  });
+
+  it('keeps the 0px corner mode', () => {
+    expect(sanitizeNxdsAppearance({ corners: '0' }).corners).toBe('0');
+  });
+
+  it('reads a numeric corner mode as its pixel name', () => {
+    expect(sanitizeNxdsAppearance({ corners: 12 }).corners).toBe('12');
   });
 
   it('normalizes a persisted stroke codename to its friendly value', () => {
@@ -409,7 +421,7 @@ describe('createNxdsThemeContract', () => {
         surfaceTone: 'stone',
         contrast: 85, // pre-flat persisted value; intentionally dropped (pre-production, no shim)
         density: 'default',
-        corners: 'square',
+        corners: '0',
         elevation: 'quiet',
         stroke: 'normal',
         prefs: DEFAULT_NXDS_APPEARANCE.prefs,

@@ -198,7 +198,7 @@ function primitiveFiles(family: PrimitiveFamily): TokenFile[] {
 /**
  * A mode file's suffix split into its preset and theme mode:
  * `shadow-quiet-dark.json` is preset `quiet` in `dark`, and
- * `radius-round.json` is preset `round` in both modes.
+ * `radius-12.json` is preset `12` in both modes.
  */
 function modeFileAxes(file: TokenFile, family: PrimitiveFamily): VariantAxes {
   const suffix = file.slice(
