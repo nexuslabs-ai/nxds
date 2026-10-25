@@ -12,11 +12,8 @@ export const planned = [
   'brand-color-field',
   'breadcrumb',
   'bubble',
-  'button-group',
   'carousel',
   'chart',
-  'choice-card',
-  'choice-row',
   'collapsible',
   'color-field',
   'combobox',
@@ -28,13 +25,10 @@ export const planned = [
   'drawer',
   'dropdown-menu',
   'empty-state',
-  'field',
   'filter-builder',
   'filter-chip',
   'filter-condition',
   'hover-card',
-  'input-group',
-  'input-otp',
   'item',
   'marker',
   'menubar',
@@ -51,11 +45,9 @@ export const planned = [
   'setting-row',
   'sheet',
   'sidebar',
-  'slider',
   'sonner',
   'table',
   'theme-quick-control',
-  'toggle-group',
   'toolbar',
   'tooltip',
 ];
@@ -66,11 +58,17 @@ export const shared = [
   'aspect-ratio',
   'badge',
   'button',
+  'button-group',
   'card',
   'checkbox',
+  'choice-card',
+  'choice-row',
   'dialog',
+  'field',
   'hide',
   'input',
+  'input-group',
+  'input-otp',
   'kbd',
   'label',
   'native-select',
@@ -79,11 +77,13 @@ export const shared = [
   'separator',
   'show',
   'skeleton',
+  'slider',
   'spinner',
   'switch',
   'tabs',
   'textarea',
   'toggle',
+  'toggle-group',
 ];
 
 const NATIVE_MODEL_VALUE =
@@ -103,12 +103,26 @@ export const vueOnlyApi: Record<string, string> = {
     "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
   'Input.defaultValue': NATIVE_DEFAULT_VALUE,
   'Input.modelValue': NATIVE_MODEL_VALUE,
+  'InputGroupButton.disabled':
+    'native <button> attribute React inherits from its props type; Vue declares it to pass on to Button',
+  'InputGroupButton.type':
+    "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
+  'InputGroupInput.defaultValue': NATIVE_DEFAULT_VALUE,
+  'InputGroupInput.modelValue': NATIVE_MODEL_VALUE,
+  'InputGroupTextarea.defaultValue': NATIVE_DEFAULT_VALUE,
+  'InputGroupTextarea.modelValue': NATIVE_MODEL_VALUE,
+  'InputOTP.defaultValue':
+    "starting code without v-model; React's defaultValue is inherited from input-otp's props type",
+  'InputOTP.modelValue':
+    "v-model code as a string; React's value is inherited from input-otp's props type",
   'NativeSelect.defaultValue': NATIVE_DEFAULT_VALUE,
   'NativeSelect.modelValue': NATIVE_MODEL_VALUE,
   'Switch.thumb':
     'slot for custom thumb content; React renders the thumb itself with no way to compose it',
   'Textarea.defaultValue': NATIVE_DEFAULT_VALUE,
   'Textarea.modelValue': NATIVE_MODEL_VALUE,
+  'ToggleGroupItem.value':
+    "string, as Radix types it, so aria-checked matches Reka's pressed state; React inherits value from Radix's props type",
 };
 
 const V_MODEL = 'v-model binding, a Vue idiom with no React counterpart';
@@ -121,6 +135,10 @@ export const behaviourOnlyIn: Record<
   Record<string, string>
 > = {
   react: {
+    'button-group/SplitButton':
+      'joins a DropdownMenu trigger to the group, and DropdownMenu is planned for Vue',
+    'button-group/WithSelectTrigger':
+      'joins a Select trigger to the group, and Select is planned for Vue',
     'dialog/NestedOverlayStacking':
       'opens a DropdownMenu inside the dialog, and DropdownMenu is planned for Vue',
     'button/RefForwarding': REACT_REF,
@@ -129,36 +147,56 @@ export const behaviourOnlyIn: Record<
   vue: {
     'checkbox/VModel': V_MODEL,
     'input/VModel': V_MODEL,
+    'input-otp/SlotNaming':
+      "each slot is its own <input>, so Vue forwards the field's name and invalid state to it; React's single <input> carries them",
+    'input-otp/VModel': V_MODEL,
     'native-select/VModel': V_MODEL,
     'radio-group/VModel': V_MODEL,
+    'slider/VModel': V_MODEL,
     'switch/VModel': V_MODEL,
     'textarea/VModel': V_MODEL,
+    'toggle-group/VModel': V_MODEL,
     'switch/ThumbSlot': 'the #thumb slot is Vue-only API (see vueOnlyApi)',
     'tabs/IndicatorFollowsActiveTab':
       "pins Reka's horizontal indicator geometry; React's measured indicator is pinned by UnderlineVariant",
   },
 };
 
+const PIN_INPUT =
+  'React types into one hidden input; Reka gives each slot its own input, so Vue reads the code from the slots';
+
 const TABS_INDICATOR =
   "React waits for its measured indicator's opacity and transform; Reka's indicator has neither, so Vue checks only the geometry";
 
 /** Paired play stories whose steps differ by design, as `{slug}/{Story}`. */
 export const behaviourDifferences: Record<string, string> = {
+  'input-otp/KeyboardInteraction': PIN_INPUT,
+  'input-otp/Paste': PIN_INPUT,
   'tabs/DisabledTabInteraction': TABS_INDICATOR,
   'tabs/UnderlineVariant': TABS_INDICATOR,
   'tabs/VerticalIndicatorFollowsActiveTab': TABS_INDICATOR,
+  'toggle-group/ControlledDisabledTransition':
+    "clearing a single selection emits '' from Radix and undefined from Reka",
 };
 
 /** Parts whose rendered element differs by design, by `data-slot`; the rendered check skips them. */
 export const renderedDifferences: Record<string, string> = {
+  'input-otp':
+    "input-otp puts data-slot on its hidden <input>; Vue's root is Reka's PinInputRoot <div>",
+  'input-otp-slot':
+    "React's slot is a <div> that shows the character; Vue's slot is Reka's PinInputInput <input>",
   'tabs-indicator':
     "Radix has no indicator, so React measures the active tab and moves a span; Vue renders Reka's TabsIndicator, which reads Reka's CSS variables",
 };
 
 /** Top-level values a Vue recipe file declares that React has no twin for, as `{file}#{name}`. */
 export const vueOnlyDeclarations: Record<string, string> = {
+  'input-otp/index.ts#InputOTPKey':
+    "Vue injection key the root provides so each slot's <input> takes the field's name; React's single <input> carries it",
   'tabs/index.ts#TabsListKey':
     'Vue injection key the list provides to its triggers; React passes the same state through context',
+  'toggle-group/index.ts#ToggleGroupKey':
+    'Vue injection key the group provides to its items; React passes the same state through context',
 };
 
 /** Files Vue copies from React byte for byte, as `[react, vue]` repo paths. */
