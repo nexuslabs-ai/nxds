@@ -31,6 +31,7 @@ import { MorphingDock } from './MorphingDock';
 import { NexusAppearanceControls } from './NexusAppearanceControls';
 import { NexusDock } from './NexusDock';
 import { NexusPropertyControls } from './NexusPropertyControls';
+import { NexusToolbar } from './NexusToolbar';
 import { OriginalShowcaseGrid } from './original/ShowcaseGrid';
 import { PlaceholderGrid } from './PlaceholderGrid';
 import { PreviousNexusDock } from './PreviousNexusDock';
@@ -220,7 +221,8 @@ export function DockChapterJourney({
       iteration: {
         type: 'select',
         options: [
-          { value: 'nexus-owned', label: 'Nexus owned · new' },
+          { value: 'nexus-toolbar', label: 'Nexus Toolbar · new' },
+          { value: 'nexus-owned', label: 'Nexus owned dock · previous' },
           { value: 'nexus-dock', label: 'Nexus Dock · previous' },
           { value: 'straight-bare', label: 'Roomy · bare icons' },
           { value: 'straight-roomy', label: 'Straight expansion · roomy' },
@@ -233,7 +235,7 @@ export function DockChapterJourney({
           { value: 'contextual', label: 'Contextual dock' },
           { value: 'colored', label: 'Colored tiles · previous' },
         ],
-        default: 'nexus-owned',
+        default: 'nexus-toolbar',
       },
       selectedWidth: {
         type: 'select',
@@ -284,7 +286,7 @@ export function DockChapterJourney({
       },
       motion: { duration: [0.25, 0.1, 0.6, 0.05] },
     },
-    { id: 'nexus-story-dock-v1', persist: true, onAction: showCustomize }
+    { id: 'nexus-story-dock-v2', persist: true, onAction: showCustomize }
   );
   const coexistence = useDialKit(
     'Coexistence studio',
@@ -459,7 +461,11 @@ export function DockChapterJourney({
       ? NexusPropertyControls
       : NexusAppearanceControls;
   const DockComponent =
-    dock.iteration === 'nexus-owned' ? NexusDock : PreviousNexusDock;
+    dock.iteration === 'nexus-toolbar'
+      ? NexusToolbar
+      : dock.iteration === 'nexus-owned'
+        ? NexusDock
+        : PreviousNexusDock;
   const chapterControls =
     current?.id === 'customize' && dock.customize !== 'previous' ? (
       <AppearanceControls
@@ -599,7 +605,9 @@ export function DockChapterJourney({
               />
             </div>
             <div className="story-dock-position">
-              {['nexus-owned', 'nexus-dock'].includes(dock.iteration) ? (
+              {['nexus-toolbar', 'nexus-owned', 'nexus-dock'].includes(
+                dock.iteration
+              ) ? (
                 <DockComponent
                   hugActive={dock.selectedWidth === 'hug'}
                   compactControls={['compact', 'owned'].includes(

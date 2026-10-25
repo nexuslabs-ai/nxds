@@ -5,6 +5,7 @@
 @source '../../packages/react/src';
 @source '/Users/temp/.codex/worktrees/nexus-dock/nexus/packages/react/src';
 @source '/Users/temp/.codex/worktrees/nexus-dock/nexus/output/dock-retired/preview-dock.tsx';
+@source '/Users/temp/.codex/worktrees/toolbar-tools/packages/react/src';
 * {
   box-sizing: border-box;
 }

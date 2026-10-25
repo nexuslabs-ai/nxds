@@ -8,6 +8,7 @@ import { defineConfig } from 'vite';
 const path = (value) => fileURLToPath(new URL(value, import.meta.url));
 const repo = path('../../');
 const dock = '/Users/temp/.codex/worktrees/nexus-dock/nexus';
+const toolbar = '/Users/temp/.codex/worktrees/toolbar-tools';
 const radix = `${repo}node_modules/@radix-ui`;
 
 // Files from the Dock checkout import Radix too. Point every Radix import at
@@ -28,6 +29,14 @@ export default defineConfig({
       {
         find: '@nexus-dock/source',
         replacement: `${dock}/output/dock-retired/preview-dock.tsx`,
+      },
+      {
+        find: '@nexus-toolbar/toolbar',
+        replacement: `${toolbar}/packages/react/src/components/toolbar/toolbar.tsx`,
+      },
+      {
+        find: '@nexus-toolbar/tooltip',
+        replacement: `${toolbar}/packages/react/src/components/tooltip/tooltip.tsx`,
       },
       {
         find: '@nexus-dock/property-slider',
@@ -63,5 +72,5 @@ export default defineConfig({
       'hero-adoption-preview/index.html',
     ],
   },
-  server: { fs: { allow: [repo, dock] } },
+  server: { fs: { allow: [repo, dock, toolbar] } },
 });

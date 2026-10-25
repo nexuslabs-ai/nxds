@@ -25,10 +25,14 @@ cd output/dock-story
 ```
 
 `vite.config.mjs` resolves `@nxds/react` and `@nxds/core` from this repository's
-`packages/`. The bar, `PropertySlider` and the compact `ColorField` come from the
-Dock checkout at `/Users/temp/.codex/worktrees/nexus-dock/nexus`, which holds
-[PR #889](https://github.com/nexuslabs-ai/nxds/pull/889). The retired Dock loads
-from that checkout's `output/dock-retired/preview-dock.tsx`.
+`packages/`. The bar is `NexusToolbar`: a floating `Toolbar` with `ToolbarTool`
+and `ToolbarToolPanel` from the `aishvarya/toolbar-tools` checkout at
+`/Users/temp/.codex/worktrees/toolbar-tools`. `PropertySlider` and the compact
+`ColorField` come from the Dock checkout at
+`/Users/temp/.codex/worktrees/nexus-dock/nexus`, which holds
+[PR #889](https://github.com/nexuslabs-ai/nxds/pull/889). The retired Dock, still
+selectable in Dock studio, loads from that checkout's
+`output/dock-retired/preview-dock.tsx`.
 
 The server also serves the HeroUI comparison at `/hero-adoption-preview/`. See
 `HEROUI-ADOPTION.md` for the experiment, caveats, and verification results.
