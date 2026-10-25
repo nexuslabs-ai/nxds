@@ -9,7 +9,7 @@ import { InputOTPKey } from '.';
 
 export interface InputOTPProps extends Omit<
   PinInputRootProps,
-  'modelValue' | 'defaultValue'
+  'modelValue' | 'defaultValue' | 'otp'
 > {
   modelValue?: string;
   defaultValue?: string;
@@ -18,9 +18,7 @@ export interface InputOTPProps extends Omit<
 
 defineOptions({ inheritAttrs: false });
 
-const props = withDefaults(defineProps<InputOTPProps>(), {
-  otp: true,
-});
+const props = defineProps<InputOTPProps>();
 const emits = defineEmits<{
   'update:modelValue': [value: string];
   complete: [value: string];
@@ -57,6 +55,7 @@ const forwarded = useForwardProps(delegated);
   <PinInputRoot
     v-bind="{ ...forwarded, ...rootAttrs() }"
     :model-value="characters"
+    otp
     data-slot="input-otp"
     :class="
       cn('nx:group/input-otp nx:flex nx:items-center nx:gap-2', props.class)
