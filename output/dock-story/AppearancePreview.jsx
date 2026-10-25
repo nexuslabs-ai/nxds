@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { PREVIEW_CHANNEL } from './appearance-model';
+import { useIconLibrary } from './icon-library';
 
 import './component-gallery.css';
 
@@ -10,6 +11,7 @@ export function AppearancePreview({ appearance, view }) {
   const [ready, setReady] = useState(0);
   const [applied, setApplied] = useState(0);
   const [geometry, setGeometry] = useState(null);
+  const iconLibrary = useIconLibrary();
 
   useEffect(() => {
     function receive(event) {
@@ -57,12 +59,13 @@ export function AppearancePreview({ appearance, view }) {
         type: 'update',
         revision: revision.current,
         appearance,
+        iconLibrary,
         view,
         geometry,
       },
       window.location.origin
     );
-  }, [appearance, view, geometry, ready]);
+  }, [appearance, iconLibrary, view, geometry, ready]);
 
   return (
     <iframe

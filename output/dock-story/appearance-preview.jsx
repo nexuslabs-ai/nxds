@@ -7,6 +7,7 @@ import { NxdsAppearanceProvider } from '@nxds/react/appearance';
 import { initialPreviewAppearance, PREVIEW_CHANNEL } from './appearance-model';
 import { ComponentBoard } from './ComponentBoard';
 import { ComponentGallery } from './ComponentGallery';
+import { setIconLibrary } from './icon-library';
 import { LabeledComponentBoard } from './LabeledComponentBoard';
 import { ShowcaseGrid } from './ShowcaseGrid';
 
@@ -17,6 +18,8 @@ import './page.css';
 import './dock-chapter-journey.css';
 import './source-audit.css';
 import './appearance-preview.css';
+
+import './catalogue-fonts';
 
 function Preview() {
   const [preview, setPreview] = useState(null);
@@ -49,6 +52,7 @@ function Preview() {
       )
         return;
       lastRevision = data.revision;
+      setIconLibrary(data.iconLibrary);
       setPreview({
         ...data,
         appearance: sanitizeNxdsAppearance(data.appearance),

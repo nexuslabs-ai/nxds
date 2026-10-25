@@ -6,8 +6,13 @@ import {
   BASE_TONE_OPTIONS,
   BRAND_COLOR_PRESETS,
   CORNER_OPTIONS,
+  DEFAULT_ICON_LIBRARY,
+  DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
   ELEVATION_OPTIONS,
+  FONT_OPTIONS,
+  ICON_LIBRARY_OPTIONS,
+  shuffleNxdsAppearance,
   STROKE_OPTIONS,
 } from '@nxds/core';
 import {
@@ -20,11 +25,28 @@ import {
   Switch,
 } from '@nxds/react';
 
+import { setIconLibrary, useIconLibrary } from './icon-library';
+
 const rowClass =
   'nx:min-h-10 nx:flex-row nx:items-center nx:gap-2 nx:rounded-md nx:bg-container nx:px-3 nx:py-1';
 const labelClass =
   'nx:min-w-0 nx:flex-1 nx:typography-label-small nx:text-muted-foreground';
 const descriptionClass = 'nx:typography-body-small';
+
+const TEXT_FONTS = FONT_OPTIONS.filter((font) => font.category !== 'mono').map(
+  ({ family, label }) => ({ value: family, label })
+);
+const UI_FONTS = [
+  { value: DEFAULT_NXDS_APPEARANCE.prefs.uiFont, label: 'System' },
+  ...TEXT_FONTS,
+];
+const HEADING_FONTS = [{ value: '', label: 'Same as UI font' }, ...TEXT_FONTS];
+
+// A font stack set some other way, like the page's own DM Sans, shows as Custom.
+function withCustom(options, value) {
+  if (options.some((option) => option.value === value)) return options;
+  return [...options, { value, label: 'Custom' }];
+}
 
 function AppearanceSelect({ label, value, options, onChange, description }) {
   const id = useId();
@@ -77,6 +99,7 @@ export function NexusPropertyControls({
   cornersControl,
 }) {
   const id = useId();
+  const iconLibrary = useIconLibrary();
   const contrastKey =
     appearance.mode === 'dark' ? 'darkContrast' : 'lightContrast';
   function update(name, value) {
@@ -84,6 +107,15 @@ export function NexusPropertyControls({
   }
   function updatePrefs(name, value) {
     onChange({ ...appearance, prefs: { ...appearance.prefs, [name]: value } });
+  }
+  function shuffle() {
+    onChange(shuffleNxdsAppearance(appearance));
+    const index = Math.floor(Math.random() * ICON_LIBRARY_OPTIONS.length);
+    setIconLibrary(ICON_LIBRARY_OPTIONS[index].value);
+  }
+  function reset() {
+    onReset();
+    setIconLibrary(DEFAULT_ICON_LIBRARY);
   }
   return (
     <div
@@ -159,14 +191,25 @@ export function NexusPropertyControls({
         {tool === 'Typography' && (
           <>
             <AppearanceSelect
-              label="UI font"
+              label="Font"
               value={appearance.prefs.uiFont}
-              options={[
-                { value: 'DM Sans, Arial, sans-serif', label: 'DM Sans' },
-                { value: DEFAULT_SYSTEM_FONT, label: 'System sans' },
-                { value: 'ui-monospace, monospace', label: 'Monospace' },
-              ]}
+              options={withCustom(UI_FONTS, appearance.prefs.uiFont)}
               onChange={(value) => updatePrefs('uiFont', value)}
+            />
+            <AppearanceSelect
+              label="Heading font"
+              value={appearance.prefs.headingFont ?? ''}
+              options={withCustom(
+                HEADING_FONTS,
+                appearance.prefs.headingFont ?? ''
+              )}
+              onChange={(value) => updatePrefs('headingFont', value || null)}
+            />
+            <AppearanceSelect
+              label="Icons"
+              value={iconLibrary}
+              options={ICON_LIBRARY_OPTIONS}
+              onChange={setIconLibrary}
             />
             <AppearanceRange
               label="UI size"
@@ -212,13 +255,15 @@ export function NexusPropertyControls({
             />
           </>
         )}
-        <Button variant="ghost" size="sm" onClick={onReset}>
-          Reset preview
-        </Button>
+        <div className="nx:flex nx:flex-wrap nx:gap-2">
+          <Button variant="outline" size="sm" onClick={shuffle}>
+            Shuffle
+          </Button>
+          <Button variant="ghost" size="sm" onClick={reset}>
+            Reset preview
+          </Button>
+        </div>
       </FieldGroup>
     </div>
   );
 }
-
-const DEFAULT_SYSTEM_FONT =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';

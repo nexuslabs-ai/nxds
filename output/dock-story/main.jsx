@@ -17,6 +17,8 @@ import '@fontsource/dm-sans/latin-500.css';
 import '@fontsource/dm-sans/latin-600.css';
 import './page.css';
 
+import './catalogue-fonts';
+
 function Page() {
   const page = useRef(null);
   const header = useRef(null);

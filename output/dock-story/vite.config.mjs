@@ -9,6 +9,10 @@ const path = (value) => fileURLToPath(new URL(value, import.meta.url));
 const repo = path('../../');
 const dock = '/Users/temp/.codex/worktrees/nexus-dock/nexus';
 const toolbar = '/Users/temp/.codex/worktrees/toolbar-tools';
+// PR #913 (icon libraries, fonts, Shuffle) until it merges; then point the
+// @nxds aliases back at `repo` and drop the icon and font aliases.
+const iconsAndFonts =
+  '/Users/temp/code/nexus/.claude/worktrees/sweet-proskuriakova-899aff/';
 const radix = `${repo}node_modules/@radix-ui`;
 
 // Files from the Dock checkout import Radix too. Point every Radix import at
@@ -48,19 +52,33 @@ export default defineConfig({
       },
       {
         find: '@nxds/react/appearance',
-        replacement: `${repo}packages/react/src/components/appearance/provider/index.ts`,
+        replacement: `${iconsAndFonts}packages/react/src/components/appearance/provider/index.ts`,
       },
       {
         find: '@nxds/react/utils',
-        replacement: `${repo}packages/react/src/lib/utils.ts`,
+        replacement: `${iconsAndFonts}packages/react/src/lib/utils.ts`,
       },
       {
         find: /^@nxds\/react$/,
-        replacement: `${repo}packages/react/src/index.ts`,
+        replacement: `${iconsAndFonts}packages/react/src/index.ts`,
       },
       {
         find: /^@nxds\/core$/,
-        replacement: `${repo}packages/core/src/index.ts`,
+        replacement: `${iconsAndFonts}packages/core/src/index.ts`,
+      },
+      {
+        find: '@nxds/icon-sets',
+        replacement: `${iconsAndFonts}packages/react/src/lib/icon-libraries/index.ts`,
+      },
+      // Components import their own icons as `../../lib/icons`; draw them in
+      // the icon library the visitor picks.
+      {
+        find: /^(\.\.\/)+lib\/icons$/,
+        replacement: path('./switchable-icons.jsx'),
+      },
+      {
+        find: /^@fontsource-variable\/(.+)$/,
+        replacement: `${iconsAndFonts}node_modules/@fontsource-variable/$1`,
       },
       ...radixAliases,
     ],
@@ -72,5 +90,5 @@ export default defineConfig({
       'hero-adoption-preview/index.html',
     ],
   },
-  server: { fs: { allow: [repo, dock, toolbar] } },
+  server: { fs: { allow: [repo, dock, toolbar, iconsAndFonts] } },
 });
