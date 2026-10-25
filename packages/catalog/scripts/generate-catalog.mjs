@@ -321,6 +321,7 @@ export function buildCatalog() {
     schema: 1,
     version: reactPackage.version,
     frameworks: ['react'],
+    reactMajors: [18, 19],
     items: [setup, ...components, ...blocks],
   };
   // Checked, not parsed: parsing would reorder keys in the written JSON.

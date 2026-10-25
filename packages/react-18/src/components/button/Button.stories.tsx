@@ -381,10 +381,6 @@ export const WithDataAttributes: Story = {
   },
 };
 
-// ============================================
-// COMPOSITION (asChild)
-// ============================================
-
 const saveRef = React.createRef<HTMLButtonElement>();
 
 // A ref on Button reaches the native button.
@@ -397,6 +393,10 @@ export const RefForwarding: Story = {
     );
   },
 };
+
+// ============================================
+// COMPOSITION (asChild)
+// ============================================
 
 export const AsLink: Story = {
   render: (args) => (

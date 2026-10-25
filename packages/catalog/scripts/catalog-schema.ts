@@ -165,11 +165,6 @@ export function variantForReact<V extends Variant>(
   };
 }
 
-/** Whether `catalog` has React 18 files: releases before React 18 support don't. */
-export function hasReact18(catalog: Catalog) {
-  return catalog.items.some((item) => item.variants.react?.react18);
-}
-
 const variantSchema = variantWith(z.object({ npm: npmPackagesSchema }));
 
 export type Variant = z.infer<typeof variantSchema>;
@@ -221,6 +216,8 @@ export const catalogSchema = z.object({
   frameworks: z
     .array(z.string())
     .transform((frameworks) => frameworks.filter(isFramework)),
+  /** The React majors this release has files for. Releases from before React 18 support leave it out, and have React 19 files only. */
+  reactMajors: z.array(reactMajorSchema).nonempty().default([19]),
   items: z.array(catalogItemSchema),
 });
 

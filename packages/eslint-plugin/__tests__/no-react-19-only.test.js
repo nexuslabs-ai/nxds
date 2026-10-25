@@ -57,6 +57,13 @@ ruleTester.run('no-react-19-only', rule, {
       errors: [{ messageId: 'api', data: { name: 'Activity' } }],
     },
     {
+      code: "import * as React from 'react'; const load = React.cache(fetchUser); const signal = React.cacheSignal();",
+      errors: [
+        { messageId: 'api', data: { name: 'cache' } },
+        { messageId: 'api', data: { name: 'cacheSignal' } },
+      ],
+    },
+    {
       code: "import { useFormStatus, preload } from 'react-dom';",
       errors: [
         { messageId: 'api', data: { name: 'useFormStatus' } },

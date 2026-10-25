@@ -4,7 +4,6 @@ import {
   type CatalogItem,
   catalogSchema,
   type Framework,
-  hasReact18,
   issueLines,
   type ReactMajor,
   type SetupVariant,
@@ -186,9 +185,9 @@ export function variantFor<V extends Variant>(
   return variantForReact(variantOf(item, target.framework), target.react);
 }
 
-/** Fails when `catalog` is a release from before React 18 support and the app is on 18. */
+/** Fails when `catalog` has no files for the app's React major. */
 export function assertSupportsReact(catalog: Catalog, react: ReactMajor) {
-  if (react === 19 || hasReact18(catalog)) return;
+  if (catalog.reactMajors.includes(react)) return;
   throw new CliError(
     `nxds ${catalog.version} has no React 18 files. Upgrade the app to React 19, or run \`${CLI_COMMAND} update\` to move to a release with React 18 support.`
   );

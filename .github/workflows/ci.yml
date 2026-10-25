@@ -340,9 +340,17 @@ jobs:
         run: pnpm audit:mode-distinctness
 
   test-react:
-    name: Test (React)
+    name: Test (${{ matrix.lane.name }})
     # Playwright 1.60 can't install Chromium on ubuntu-latest's 26.04 image.
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        lane:
+          - name: React 19, Vue, parity
+            projects: --project=storybook --project=storybook-vue --project=parity
+          - name: React 18
+            projects: --project=storybook-react18
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -381,7 +389,7 @@ jobs:
         run: npx playwright install chromium
 
       - name: Run story tests
-        run: pnpm test:storybook
+        run: pnpm exec vitest run ${{ matrix.lane.projects }}
 
   build-storybook:
     name: Build Storybook

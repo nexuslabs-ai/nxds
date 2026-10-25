@@ -1,16 +1,20 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+
 import {
   type Catalog,
   type CatalogItem,
   findItem,
   type Framework,
   loadRelease,
+  type ReactMajor,
   SETUP,
   variantFor,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
 import { readConfig } from '../config';
 import { CliError } from '../errors';
-import { readProject } from '../project';
+import { reactMajor, readProject } from '../project';
 
 import type { CommandResult } from './result';
 
@@ -90,6 +94,15 @@ function projectFramework(cwd: string, catalog: Catalog): Framework {
   );
 }
 
+/** The React major in nxds.json, else the app's, else 19 outside a React app. */
+function projectReact(cwd: string): ReactMajor {
+  const configured = readConfig(cwd)?.react;
+  if (configured !== undefined) return configured;
+  if (!existsSync(path.join(cwd, 'package.json'))) return 19;
+  const project = readProject(cwd);
+  return 'react' in project.dependencies ? reactMajor(project) : 19;
+}
+
 export async function view(
   cwd: string,
   registry: string,
@@ -99,7 +112,7 @@ export async function view(
   const item = findItem(catalog, name);
   const variant = variantFor(item, {
     framework: projectFramework(cwd, catalog),
-    react: readConfig(cwd)?.react ?? 19,
+    react: projectReact(cwd),
   });
   const packages = Object.entries(variant.packages.npm).map(
     ([pkg, range]) => `${pkg}@${range}`

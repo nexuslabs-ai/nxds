@@ -81,15 +81,6 @@ function collectLabels(
   return labels;
 }
 
-function debounce<T extends (...args: never[]) => void>(func: T, wait: number) {
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-
-  return (...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
-
 interface MultiSelectProps {
   children: React.ReactNode;
   /**
@@ -290,9 +281,13 @@ const MultiSelectValue = React.forwardRef<
   React.useEffect(() => {
     if (!container) return;
 
+    let resizeTimeout: ReturnType<typeof setTimeout> | undefined;
     const check = () => setOverflowAmount(hideOverflowingChips(container));
     const mutationObserver = new MutationObserver(check);
-    const resizeObserver = new ResizeObserver(debounce(check, 100));
+    const resizeObserver = new ResizeObserver(() => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(check, 100);
+    });
 
     mutationObserver.observe(container, {
       childList: true,
@@ -302,6 +297,7 @@ const MultiSelectValue = React.forwardRef<
     resizeObserver.observe(container);
 
     return () => {
+      clearTimeout(resizeTimeout);
       mutationObserver.disconnect();
       resizeObserver.disconnect();
     };

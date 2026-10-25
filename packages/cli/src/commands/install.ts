@@ -363,19 +363,20 @@ export async function update(
   );
   const previousFiles = previous && releaseFiles(previous, config);
   config.items = known;
-  config.react = react;
   const installed = installItems(
     latest,
     project,
-    config,
+    { ...config, react },
     known,
     previousFiles,
     options
   );
 
   const stays = !unchanged && installed.skipped.length > 0;
-  if (stays) config.react = fromReact;
-  else config.version = latest.version;
+  if (!stays) {
+    config.version = latest.version;
+    config.react = react;
+  }
   if (!options.dryRun) writeConfig(cwd, config);
 
   const data: UpdateData = {

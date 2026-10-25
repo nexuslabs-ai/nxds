@@ -11,6 +11,8 @@ const REACT_ONLY_19 = new Set([
   'useEffectEvent',
   'Activity',
   'captureOwnerStack',
+  'cache',
+  'cacheSignal',
 ]);
 
 const REACT_DOM_ONLY_19 = new Set([

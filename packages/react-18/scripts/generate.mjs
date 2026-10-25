@@ -34,6 +34,13 @@ const OWNED = new Set(['.storybook/main.ts']);
 const SKIP = [/\.test\.ts$/, /(^|\/)tsconfig\.tsbuildinfo$/];
 
 const REACT_18 = '^18.3.1';
+// The React 18 the stories and the typecheck run on.
+const REACT_18_DEV = {
+  react: '18.3.1',
+  'react-dom': '18.3.1',
+  '@types/react': '18.3.23',
+  '@types/react-dom': '18.3.7',
+};
 const MANIFEST = 'hand-maintained.json';
 
 function listFiles(root, dir = '') {
@@ -146,31 +153,52 @@ function reactImport(sourceFile) {
   };
 }
 
+/**
+ * The component name a function goes by: its own, the variable it's assigned
+ * to directly or through a call such as `memo(…)`, or `default` for an
+ * anonymous default export. Null for anything else, such as a callback.
+ */
+function componentName(node) {
+  if (node.name) return node.name.text;
+  if (
+    node.modifiers?.some((m) => m.kind === ts.SyntaxKind.DefaultKeyword) ||
+    ts.isExportAssignment(node.parent)
+  )
+    return 'default';
+  const holder = ts.isCallExpression(node.parent)
+    ? node.parent.parent
+    : node.parent;
+  if (ts.isVariableDeclaration(holder) && ts.isIdentifier(holder.name))
+    return holder.name.text;
+  return null;
+}
+
+/** Each component outside `handled` that takes ref, which forwardRef can't wrap. */
+function unwrappable(checker, sourceFile, rel, handled, problems) {
+  const visit = (node) => {
+    if (ts.isFunctionLike(node) && node.body && !handled.has(node)) {
+      const name = componentName(node);
+      const param = node.parameters[0];
+      if (
+        name !== null &&
+        (name === 'default' || isComponentName(name)) &&
+        param &&
+        refElement(checker, param) !== undefined
+      ) {
+        problems.push(
+          `${rel}: ${name} takes ref, and only a top-level function declaration with one parameter can be wrapped in forwardRef. Write it as one.`
+        );
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+}
+
 function transform(checker, sourceFile, rel, problems) {
   const edits = [];
+  const handled = new Set();
   for (const statement of sourceFile.statements) {
-    if (ts.isVariableStatement(statement)) {
-      for (const declaration of statement.declarationList.declarations) {
-        const init = declaration.initializer;
-        if (
-          !ts.isIdentifier(declaration.name) ||
-          !isComponentName(declaration.name.text)
-        )
-          continue;
-        if (
-          !init ||
-          !(ts.isArrowFunction(init) || ts.isFunctionExpression(init))
-        )
-          continue;
-        const param = init.parameters[0];
-        if (param && refElement(checker, param) !== undefined) {
-          problems.push(
-            `${rel}: ${declaration.name.text} is an arrow or function expression that takes ref. Write it as a function declaration.`
-          );
-        }
-      }
-      continue;
-    }
     if (
       !ts.isFunctionDeclaration(statement) ||
       !statement.name ||
@@ -183,6 +211,7 @@ function transform(checker, sourceFile, rel, problems) {
     const param = statement.parameters[0];
     const element = refElement(checker, param);
     if (element === undefined) continue;
+    handled.add(statement);
     if (element === null) {
       problems.push(`${rel}: can't name the element ${name}'s ref points at.`);
       continue;
@@ -217,6 +246,7 @@ function transform(checker, sourceFile, rel, problems) {
     });
     edits.push({ from: statement.end, to: statement.end, text: ');' });
   }
+  unwrappable(checker, sourceFile, rel, handled, problems);
 
   if (edits.length === 0) return null;
 
@@ -268,17 +298,30 @@ async function generate() {
   return { output, problems };
 }
 
-/** packages/react-18's package.json with packages/react's dependencies. */
+/** packages/react-18's package.json: packages/react's dependencies, on React 18. */
 function manifest() {
-  const own = JSON.parse(
-    fs.readFileSync(path.join(PACKAGE, 'package.json'), 'utf8')
-  );
   const source = JSON.parse(
     fs.readFileSync(path.join(SOURCE, 'package.json'), 'utf8')
   );
-  const devDependencies = { ...source.devDependencies, ...own.devDependencies };
+  const devDependencies = { ...source.devDependencies, ...REACT_18_DEV };
   const next = {
-    ...own,
+    name: '@nxds/react-18',
+    version: '0.0.0',
+    private: true,
+    description:
+      'nxds React components for React 18, generated from @nxds/react',
+    type: 'module',
+    scripts: {
+      generate: 'node scripts/generate.mjs',
+      check: 'node scripts/generate.mjs --check',
+      typecheck: 'tsc --noEmit',
+      storybook: 'storybook dev -p 6008',
+      'build-storybook': 'storybook build',
+    },
+    devDependencies: Object.fromEntries(
+      Object.entries(devDependencies).sort(([a], [b]) => a.localeCompare(b))
+    ),
+    license: source.license,
     dependencies: source.dependencies,
     peerDependencies: {
       ...source.peerDependencies,
@@ -286,9 +329,6 @@ function manifest() {
       'react-dom': REACT_18,
     },
     peerDependenciesMeta: source.peerDependenciesMeta,
-    devDependencies: Object.fromEntries(
-      Object.entries(devDependencies).sort(([a], [b]) => a.localeCompare(b))
-    ),
   };
   return `${JSON.stringify(next, null, 2)}\n`;
 }

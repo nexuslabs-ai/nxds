@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { satisfies } from 'semver';
+import { major, satisfies } from 'semver';
 
 import {
   type CatalogFile,
@@ -44,6 +44,8 @@ export async function diff(
   names: string[]
 ): Promise<CommandResult> {
   const config = requireConfig(cwd);
+  // `update` installs the app's React major, which may differ from the files'.
+  const target = { ...config, react: reactMajor(readProject(cwd)) };
   const latest = await loadRelease(registry, 'latest');
   const previous = await fetchRelease(registry, config.version);
   const previousFiles = previous && releaseFiles(previous, config);
@@ -74,7 +76,7 @@ export async function diff(
   }
 
   const files = items.flatMap((item) =>
-    variantFor(item, config).files.map((file) => {
+    variantFor(item, target).files.map((file) => {
       const state = fileState(cwd, config, file, previousFiles);
       return {
         item: item.name,
@@ -159,7 +161,7 @@ function unscannedReason(cwd: string, config: Config, css: string) {
 /** The major `name` is installed at, or null when it isn't installed. */
 function installedMajor(project: Project, name: string) {
   const version = installedVersion(project, name);
-  return version === null ? null : Number(version.split('.')[0]);
+  return version === null ? null : major(version);
 }
 
 /** Whether React is one nxds supports, and the files and React packages match it. */
@@ -181,20 +183,20 @@ function reactChecks(project: Project, config: Config): Check[] {
           : `The files are for React ${config.react}, and this app uses React ${react}. Run \`${CLI_COMMAND} update\` to switch them.`,
     },
   ];
+  const reactInstalled = installedMajor(project, 'react');
+  if (reactInstalled === null) return checks;
   for (const name of ['react-dom', '@types/react', '@types/react-dom']) {
     if (name.startsWith('@types/') && !(name in project.dependencies)) continue;
-    const major = installedMajor(project, name);
-    const reactInstalled = installedMajor(project, 'react');
-    if (reactInstalled === null) continue;
+    const installed = installedMajor(project, name);
     checks.push({
       name,
-      ok: major === reactInstalled,
+      ok: installed === reactInstalled,
       message:
-        major === null
+        installed === null
           ? `${name} is not installed`
-          : major === reactInstalled
-            ? `${name} ${major} matches react ${reactInstalled}`
-            : `${name} ${major} is installed with react ${reactInstalled}. Install the same major as react.`,
+          : installed === reactInstalled
+            ? `${name} ${installed} matches react ${reactInstalled}`
+            : `${name} ${installed} is installed with react ${reactInstalled}. Install the same major as react.`,
     });
   }
   return checks;

@@ -373,6 +373,7 @@ const REACT_18_BUTTON = readFileSync(
 function react18Release(version: string): Catalog {
   const release = structuredClone(RELEASE);
   release.version = version;
+  release.reactMajors = [18, 19];
   buttonSource(release).content = REACT_BUTTON;
   const button = release.items.find((item) => item.name === 'button');
   if (!button?.variants.react) throw new Error(`${version} has no button`);
