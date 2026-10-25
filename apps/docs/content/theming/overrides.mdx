@@ -19,7 +19,7 @@ import type { ReactNode } from 'react';
 
 export function CompactPanel({ children }: { children: ReactNode }) {
   return (
-    <section data-density="compact" data-radius="round">
+    <section data-density="compact" data-radius="12">
       {children}
     </section>
   );
@@ -29,7 +29,7 @@ export function CompactPanel({ children }: { children: ReactNode }) {
 | Attribute          | Appearance field | Values                                                              |
 | ------------------ | ---------------- | ------------------------------------------------------------------- |
 | `data-density`     | `density`        | `tight`, `compact`, `default`, `comfortable`, `relaxed`, `spacious` |
-| `data-radius`      | `corners`        | `square`, `subtle`, `smooth`, `round`, `extra-round`                |
+| `data-radius`      | `corners`        | `0`, `2`, `4`, `6`, `8`, `10`, `12`, `14`, `16` (pixels)            |
 | `data-shadow`      | `elevation`      | `flat`, `quiet`, `soft`, `standard`, `strong`                       |
 | `data-borderwidth` | `stroke`         | `fine`, `normal`, `strong`                                          |
 
@@ -57,7 +57,7 @@ const pillButtons: RadiusStyle = { '--nx-radius-base': '9999px' };
 
 export function RoundedActions() {
   return (
-    <div data-radius="round" style={pillButtons}>
+    <div data-radius="12" style={pillButtons}>
       <Button>Save changes</Button>
       <Input aria-label="Name" />
       <Select>
@@ -70,8 +70,8 @@ export function RoundedActions() {
 }
 ```
 
-The buttons become pills. The input and the select trigger keep the `round`
-value's `12px`.
+The buttons become pills. The input and the select trigger keep the `12`
+mode's `12px`.
 
 To change one button, put `style={pillButtons}` on that button instead.
 

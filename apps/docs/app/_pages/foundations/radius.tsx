@@ -1,3 +1,5 @@
+import { CORNER_OPTIONS } from '@nxds/core';
+
 import { SectionHeading } from '../../_components/Heading';
 
 /**
@@ -26,13 +28,10 @@ const RADII: { cls: string; label: string }[] = [
   { cls: 'nx:rounded-full', label: 'full' },
 ];
 
-const RADIUS_MODES: { mode: string; md: number }[] = [
-  { mode: 'square', md: 0 },
-  { mode: 'subtle', md: 4 },
-  { mode: 'smooth', md: 8 },
-  { mode: 'round', md: 12 },
-  { mode: 'extra-round', md: 16 },
-];
+const RADIUS_MODES = CORNER_OPTIONS.map((option) => ({
+  mode: option.value,
+  md: Number(option.value),
+}));
 
 const BORDER_DESIGNS: {
   mode: string;
