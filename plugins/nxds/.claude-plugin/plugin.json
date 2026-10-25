@@ -1,7 +1,7 @@
 {
   "name": "nxds",
-  "version": "0.1.0",
-  "description": "Add and use nxds components with the nxds CLI.",
+  "version": "0.2.0",
+  "description": "Add and use nxds components with the nxds CLI, on their own or next to another UI library.",
   "author": { "name": "Nexus Labs", "url": "https://github.com/nexuslabs-ai" },
   "homepage": "https://nxds.dev",
   "repository": "https://github.com/nexuslabs-ai/nxds",

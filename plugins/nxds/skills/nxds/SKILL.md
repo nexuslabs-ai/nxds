@@ -22,6 +22,8 @@ done with something left to do (conflicts, kept files, manual steps, failed chec
    App Router and Vite + React apps that use TypeScript. For any other setup,
    follow https://nxds.dev/getting-started/install.md by hand.
 3. If `init` returns `"ok": false`, do each step in `data.manual` by hand.
+4. If the app also uses MUI, shadcn/ui, Chakra UI, Mantine, Ant Design,
+   Bootstrap or plain Tailwind, follow the `nxds-adopt` skill too.
 
 ## Add components
 
