@@ -19,18 +19,15 @@ export const planned = [
   'combobox',
   'command',
   'config-preview',
-  'context-menu',
   'date-picker',
   'description-list',
   'drawer',
-  'dropdown-menu',
   'empty-state',
   'filter-builder',
   'filter-chip',
   'filter-condition',
   'item',
   'marker',
-  'menubar',
   'message',
   'message-scroller',
   'multi-select',
@@ -60,7 +57,9 @@ export const shared = [
   'checkbox',
   'choice-card',
   'choice-row',
+  'context-menu',
   'dialog',
+  'dropdown-menu',
   'field',
   'hide',
   'hover-card',
@@ -69,6 +68,7 @@ export const shared = [
   'input-otp',
   'kbd',
   'label',
+  'menubar',
   'native-select',
   'popover',
   'progress',
@@ -135,12 +135,8 @@ export const behaviourOnlyIn: Record<
   Record<string, string>
 > = {
   react: {
-    'button-group/SplitButton':
-      'joins a DropdownMenu trigger to the group, and DropdownMenu is planned for Vue',
     'button-group/WithSelectTrigger':
       'joins a Select trigger to the group, and Select is planned for Vue',
-    'dialog/NestedOverlayStacking':
-      'opens a DropdownMenu inside the dialog, and DropdownMenu is planned for Vue',
     'button/RefForwarding': REACT_REF,
     'tabs/ListRef': REACT_REF,
   },

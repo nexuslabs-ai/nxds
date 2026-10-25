@@ -9,7 +9,7 @@ import {
   type StoryObj as VueStory,
 } from '@storybook/vue3';
 import { computeAccessibleName } from 'dom-accessibility-api';
-import { userEvent, waitFor, within } from 'storybook/test';
+import { fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { describe, expect, it } from 'vitest';
 
 import reactPreview from '../../packages/react/.storybook/preview';
@@ -34,17 +34,23 @@ const vueModules = import.meta.glob<VueModule>(
   '../../packages/vue/src/components/*/*.stories.ts'
 );
 
-type Opener = {
-  /** The trigger's role; the first trigger in the story opens. */
-  role: 'button' | 'combobox' | 'menuitem';
-  /** Focus opens a tooltip at once, without its hover delay. */
-  open: 'click' | 'focus';
-};
+type Opener =
+  | {
+      /** The trigger's role; the first trigger in the story opens. */
+      role: 'button' | 'combobox' | 'menuitem';
+      /** Focus opens a tooltip at once, without its hover delay. */
+      open: 'click' | 'focus';
+    }
+  /** Right-clicks the context menu's trigger area, the first element with an open state. */
+  | { open: 'contextmenu' };
 
 /** Components whose content renders only once opened, and how to open them. */
 const OVERLAYS: Record<string, Opener> = {
+  'context-menu': { open: 'contextmenu' },
   dialog: { role: 'button', open: 'click' },
+  'dropdown-menu': { role: 'button', open: 'click' },
   'hover-card': { role: 'button', open: 'focus' },
+  menubar: { role: 'menuitem', open: 'click' },
   popover: { role: 'button', open: 'click' },
   tooltip: { role: 'button', open: 'focus' },
 };
@@ -56,6 +62,7 @@ const SKIPPED_ATTRIBUTE =
 // ARIA states where `"false"` means the same as leaving the attribute out.
 const FALSE_IS_ABSENT =
   /^aria-(?:busy|disabled|hidden|invalid|readonly|required)$/;
+const MENU_ITEM = /^menuitem(?:checkbox|radio)?$/;
 
 function slugOf(file: string) {
   return file.split('/').at(-2) ?? '';
@@ -97,6 +104,7 @@ function isOwnSlot(slot: string, slug: string) {
 function describeElement(element: Element) {
   // Reka repeats a native `disabled` as `aria-disabled="true"`; Radix doesn't.
   const isNativelyDisabled = element.hasAttribute('disabled');
+  const isMenuItem = MENU_ITEM.test(element.getAttribute('role') ?? '');
   const attributes = [...element.attributes]
     .filter(({ name }) => /^(?:data-|aria-|role$)/.test(name))
     .filter(({ name }) => !SKIPPED_ATTRIBUTE.test(name))
@@ -104,6 +112,12 @@ function describeElement(element: Element) {
       ({ name, value }) => !(FALSE_IS_ABSENT.test(name) && value === 'false')
     )
     .filter(({ name }) => !(name === 'aria-disabled' && isNativelyDisabled))
+    // Radix's roving focus repeats the menu's orientation on each item; Reka doesn't.
+    .filter(({ name }) => !(name === 'data-orientation' && isMenuItem))
+    // Reka gives each menubar menu a generated value.
+    .filter(
+      ({ name, value }) => !(name === 'data-value' && value.startsWith('reka-'))
+    )
     .map(({ name, value }) => `${name}="${value}"`)
     .sort();
   const classes = [...element.classList].map(normalizeClass).sort().join(' ');
@@ -154,14 +168,25 @@ function normalizeClass(token: string) {
 }
 
 /** Opens `slug`'s first trigger and waits until its content stops moving. */
+async function openTrigger(canvasElement: HTMLElement, opener: Opener) {
+  if (opener.open === 'contextmenu') {
+    fireEvent.contextMenu(canvasElement.querySelector('[data-state]')!, {
+      clientX: 20,
+      clientY: 20,
+    });
+    return;
+  }
+  const [trigger] = within(canvasElement).getAllByRole(opener.role);
+  if (opener.open === 'click') await userEvent.click(trigger!);
+  else trigger!.focus();
+}
+
 async function openOverlay(
   canvasElement: HTMLElement,
   slug: string,
-  { role, open }: Opener
+  opener: Opener
 ) {
-  const [trigger] = within(canvasElement).getAllByRole(role);
-  if (open === 'click') await userEvent.click(trigger!);
-  else trigger!.focus();
+  await openTrigger(canvasElement, opener);
 
   const content = await waitFor(
     () => {
@@ -171,6 +196,12 @@ async function openOverlay(
     },
     { timeout: 2000 }
   );
+  // A menu moves focus into itself once open, which can highlight an item.
+  if (content.matches('[role="menu"], [role="listbox"]')) {
+    await waitFor(() =>
+      expect(content.contains(document.activeElement)).toBe(true)
+    );
+  }
   // Popper places the content after measuring it, which can flip its side.
   await waitFor(async () => {
     const placement = `${content.getAttribute('data-side')}/${content.getAttribute('data-align')}`;

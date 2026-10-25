@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
   IconBold,
+  IconChevronDown,
   IconItalic,
   IconLink,
   IconUnderline,
@@ -8,6 +9,12 @@ import {
 import { expect, within } from 'storybook/test';
 
 import { Button } from '../button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../dropdown-menu';
 
 import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from '.';
 
@@ -228,6 +235,52 @@ export const WithDataAttributes: Story = {
     await expect(
       canvas.getByRole('button', { name: 'Nested' })
     ).toHaveAttribute('data-size', 'sm');
+  },
+};
+
+// A split button: a primary action joined to a DropdownMenu trigger. The
+// trigger renders as a button via asChild, so it joins the seam like any
+// other button-shaped control and inherits the group size.
+export const SplitButton: Story = {
+  render: () => ({
+    components: {
+      Button,
+      ButtonGroup,
+      DropdownMenu,
+      DropdownMenuContent,
+      DropdownMenuItem,
+      DropdownMenuTrigger,
+      IconChevronDown,
+    },
+    template: `
+      <ButtonGroup size="sm">
+        <Button>Deploy</Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button>
+              Options
+              <template #end-icon><IconChevronDown /></template>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>Deploy to staging</DropdownMenuItem>
+            <DropdownMenuItem>Deploy to production</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </ButtonGroup>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    // The DropdownMenu trigger composes onto a Button via asChild, so it lands
+    // in the group as a button-shaped control (data-slot=button) that opens a
+    // menu.
+    const trigger = canvasElement.querySelector(
+      '[data-slot="button-group"] [aria-haspopup="menu"]'
+    );
+    await expect(trigger).toBeInTheDocument();
+    await expect(trigger).toHaveAttribute('data-slot', 'button');
+    // The trigger sets no size of its own, so the group's "sm" reaches it.
+    await expect(trigger).toHaveAttribute('data-size', 'sm');
   },
 };
 

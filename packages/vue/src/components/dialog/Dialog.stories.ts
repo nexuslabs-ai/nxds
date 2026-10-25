@@ -4,6 +4,12 @@ import { useId } from 'vue';
 
 import { expectExitBeforeUnmount } from '../../stories/support/overlay-motion-test-utils';
 import { Button } from '../button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../dropdown-menu';
 
 import {
   Dialog,
@@ -427,6 +433,84 @@ export const CloseButtonFocus: Story = {
       'nx:focus-visible:bg-container-hover'
     );
 
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+    });
+  },
+};
+
+export const NestedOverlayStacking: Story = {
+  render: () => ({
+    components: {
+      Button,
+      Dialog,
+      DialogBody,
+      DialogContent,
+      DialogDescription,
+      DialogHeader,
+      DialogTitle,
+      DialogTrigger,
+      DropdownMenu,
+      DropdownMenuContent,
+      DropdownMenuItem,
+      DropdownMenuTrigger,
+    },
+    template: `
+      <Dialog>
+        <DialogTrigger as-child>
+          <Button variant="outline">Open stacking dialog</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nested overlay stacking</DialogTitle>
+            <DialogDescription>The dropdown below must appear above this dialog.</DialogDescription>
+          </DialogHeader>
+          <DialogBody>
+            <DropdownMenu>
+              <DropdownMenuTrigger as-child>
+                <Button variant="outline">Open menu</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem>Settings</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </DialogBody>
+        </DialogContent>
+      </Dialog>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+
+    // Open the dialog (modal layer).
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Open stacking dialog' })
+    );
+    const dialog = await body.findByRole('dialog');
+    await expect(dialog).toHaveClass('nx:z-modal');
+
+    // Open the dropdown nested inside the dialog (popover layer).
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Open menu' })
+    );
+    const menu = await body.findByRole('menu');
+    await expect(menu).toHaveClass('nx:z-popover');
+    await expect(
+      within(menu).getByRole('menuitem', { name: 'Profile' })
+    ).toBeInTheDocument();
+
+    // The popover layer must stack above the modal layer.
+    const zIndexOf = (el: Element) => Number(getComputedStyle(el).zIndex);
+    await expect(zIndexOf(menu)).toBeGreaterThan(zIndexOf(dialog));
+
+    // Cleanup: close the menu, then the dialog.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(document.querySelector('[role="menu"]')).toBeNull();
+    });
     await userEvent.keyboard('{Escape}');
     await waitFor(() => {
       expect(document.querySelector('[role="dialog"]')).toBeNull();
