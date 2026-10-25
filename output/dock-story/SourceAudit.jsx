@@ -2,6 +2,8 @@ import { useEffect, useId, useState } from 'react';
 
 import { Button, Card, Label, Switch } from '@nxds/react';
 
+import { findTokenGaps } from './token-audit';
+
 import './source-audit.css';
 
 // Source-reviewed boundaries. Container ownership never certifies its descendants.
@@ -193,12 +195,30 @@ const boundaries = [
   ],
 ];
 
+function auditDocuments() {
+  const documents = new Set([document]);
+  document
+    .querySelectorAll('.appearance-preview-frame, .library-comparison-frame')
+    .forEach((frame) => {
+      if (frame.contentDocument) documents.add(frame.contentDocument);
+    });
+  return documents;
+}
+
+const noTokenGaps = { raw: 0, variable: 0, derived: 0 };
+
 export function SourceAudit() {
   const id = useId();
+  const tokenId = useId();
   const [enabled, setEnabled] = useState(true);
+  const [tokensEnabled, setTokensEnabled] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [detail, setDetail] = useState(
     'Hover or focus a red outline to inspect its source.'
+  );
+  const [tokenCounts, setTokenCounts] = useState(noTokenGaps);
+  const [tokenDetail, setTokenDetail] = useState(
+    'Hover or focus an amber outline to see the style.'
   );
 
   useEffect(() => {
@@ -219,15 +239,7 @@ export function SourceAudit() {
         element.removeAttribute('data-nexus-audit-kind');
       }
       marked.clear();
-      const currentDocuments = new Set([document]);
-      document
-        .querySelectorAll(
-          '.appearance-preview-frame, .library-comparison-frame'
-        )
-        .forEach((frame) => {
-          if (frame.contentDocument)
-            currentDocuments.add(frame.contentDocument);
-        });
+      const currentDocuments = auditDocuments();
       for (const [doc, observer] of documents) {
         if (currentDocuments.has(doc)) continue;
         observer.disconnect();
@@ -292,6 +304,86 @@ export function SourceAudit() {
     };
   }, [enabled]);
 
+  useEffect(() => {
+    if (!tokensEnabled) return;
+    let marked = [];
+    let timer = 0;
+    const documents = new Map();
+    function inspect(event) {
+      const element = event.target.closest?.('[data-nexus-token-audit]');
+      if (element)
+        setTokenDetail(element.getAttribute('data-nexus-token-audit'));
+    }
+    // The panel re-renders with new counts; its own changes don't need a rescan.
+    function schedule(records) {
+      if (
+        records?.every((record) =>
+          record.target.closest?.('.nexus-source-audit')
+        )
+      )
+        return;
+      timer ||= setTimeout(annotate, 300);
+    }
+    function clearMarks() {
+      for (const element of marked) {
+        element.removeAttribute('data-nexus-token-audit');
+        element.removeAttribute('data-nexus-token-audit-kind');
+      }
+    }
+    function annotate() {
+      timer = 0;
+      clearMarks();
+      const current = auditDocuments();
+      for (const [doc, observer] of documents) {
+        if (current.has(doc)) continue;
+        observer.disconnect();
+        doc.removeEventListener('pointerover', inspect);
+        doc.removeEventListener('focusin', inspect);
+        documents.delete(doc);
+      }
+      for (const doc of current) {
+        if (documents.has(doc) || !doc.documentElement) continue;
+        const observer = new MutationObserver(schedule);
+        observer.observe(doc.documentElement, {
+          childList: true,
+          subtree: true,
+        });
+        documents.set(doc, observer);
+        doc.addEventListener('pointerover', inspect);
+        doc.addEventListener('focusin', inspect);
+      }
+      const found = findTokenGaps(current);
+      const counts = { ...noTokenGaps };
+      for (const [element, { kind, texts }] of found) {
+        const list = [...texts];
+        const more = list.length > 3 ? `\n+${list.length - 3} more` : '';
+        element.setAttribute(
+          'data-nexus-token-audit',
+          list.slice(0, 3).join('\n') + more
+        );
+        element.setAttribute('data-nexus-token-audit-kind', kind);
+        counts[kind]++;
+      }
+      marked = [...found.keys()];
+      setTokenCounts(counts);
+    }
+    function onLoad() {
+      schedule();
+    }
+    annotate();
+    document.addEventListener('load', onLoad, true);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('load', onLoad, true);
+      for (const [doc, observer] of documents) {
+        observer.disconnect();
+        doc.removeEventListener('pointerover', inspect);
+        doc.removeEventListener('focusin', inspect);
+      }
+      clearMarks();
+    };
+  }, [tokensEnabled]);
+
   return (
     <Card className="nexus-source-audit nx:p-3" aria-label="Nexus source audit">
       <div className="nx:flex nx:items-center nx:gap-3">
@@ -306,6 +398,25 @@ export function SourceAudit() {
           {expanded ? 'Hide' : 'Details'}
         </Button>
       </div>
+      <div className="nx:mt-2 nx:flex nx:items-center nx:gap-3">
+        <Switch
+          id={tokenId}
+          checked={tokensEnabled}
+          onCheckedChange={setTokensEnabled}
+        />
+        <Label htmlFor={tokenId}>Mark non-token styles</Label>
+      </div>
+      {expanded && tokensEnabled && (
+        <div className="nx:mt-3 nx:typography-body-small">
+          <p className="token-audit-key">
+            Amber marks a style that does not use a Nexus token:{' '}
+            {tokenCounts.raw} hard-coded, {tokenCounts.variable} page variable,{' '}
+            {tokenCounts.derived} changed token. Nexus components&apos; own
+            classes are not checked.
+          </p>
+          <p className="nx:whitespace-pre-line">{tokenDetail}</p>
+        </div>
+      )}
       {expanded && (
         <div className="nx:mt-3 nx:typography-body-small">
           <p className="source-audit-key">

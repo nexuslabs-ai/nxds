@@ -6,7 +6,12 @@
 [data-nexus-audit-kind='consumer'] {
   color: #f04452 !important;
 }
-[data-nexus-audit]:focus-visible {
+[data-nexus-token-audit] {
+  outline: 1px dashed #f5a524 !important;
+  outline-offset: -1px;
+}
+[data-nexus-audit]:focus-visible,
+[data-nexus-token-audit]:focus-visible {
   outline-width: 3px !important;
   outline-offset: 2px;
 }
@@ -33,4 +38,7 @@
 }
 .source-audit-key {
   color: #e63646;
+}
+.token-audit-key {
+  color: #d48a0c;
 }
