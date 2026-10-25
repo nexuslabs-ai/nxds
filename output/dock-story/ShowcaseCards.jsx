@@ -23,6 +23,10 @@ import {
   ChoiceRowContent,
   ChoiceRowDescription,
   ChoiceRowTitle,
+  DescriptionList,
+  DescriptionListDescription,
+  DescriptionListItem,
+  DescriptionListTerm,
   Field,
   FieldContent,
   FieldDescription,
@@ -71,6 +75,14 @@ import {
   IconSend,
 } from '@tabler/icons-react';
 import { Bar, BarChart, XAxis } from 'recharts';
+
+const statusClassName =
+  'nx:m-0 nx:typography-body-small nx:text-muted-foreground nx:wrap-anywhere';
+const proseClassName =
+  'nx:m-0 nx:typography-body-default nx:text-muted-foreground';
+const metricClassName =
+  'nx:my-3 nx:flex nx:flex-wrap nx:items-center nx:gap-3.5';
+const metricValueClassName = 'nx:typography-heading-large nx:tabular-nums';
 
 export function ShowcaseCard({ title, description, children, className = '' }) {
   const id = useId();
@@ -256,7 +268,7 @@ export function ProjectCard() {
         <Button type="submit">
           <IconPlus data-prototype-icon="true" size={16} /> Create project
         </Button>
-        <p className="showcase-status" role="status">
+        <p className={statusClassName} role="status">
           {created
             ? `${created} is ready in this demo.`
             : 'Try it. Everything stays in this preview.'}
@@ -299,8 +311,8 @@ export function ActivityCard() {
             key={period}
             className="showcase-activity-period"
           >
-            <div className="showcase-metric">
-              <strong>{data.total}</strong>
+            <div className={metricClassName}>
+              <strong className={metricValueClassName}>{data.total}</strong>
               <Badge variant="success" fill="light">
                 <IconArrowUpRight data-prototype-icon="true" size={14} />
                 {data.change}
@@ -339,20 +351,23 @@ export function ActivityCard() {
                 />
               </BarChart>
             </ChartContainer>
-            <dl className="showcase-expanded showcase-chart-summary">
-              <div>
-                <dt>Completed</dt>
-                <dd>{period === 'week' ? '48' : '196'}</dd>
-              </div>
-              <div>
-                <dt>In progress</dt>
-                <dd>{period === 'week' ? '12' : '24'}</dd>
-              </div>
-              <div>
-                <dt>Contributors</dt>
-                <dd>{period === 'week' ? '8' : '16'}</dd>
-              </div>
-            </dl>
+            <div className="showcase-expanded">
+              <Separator className="nx:my-6" />
+              <DescriptionList>
+                {[
+                  ['Completed', period === 'week' ? '48' : '196'],
+                  ['In progress', period === 'week' ? '12' : '24'],
+                  ['Contributors', period === 'week' ? '8' : '16'],
+                ].map(([term, value]) => (
+                  <DescriptionListItem key={term}>
+                    <DescriptionListTerm>{term}</DescriptionListTerm>
+                    <DescriptionListDescription className="nx:typography-heading-small nx:tabular-nums">
+                      {value}
+                    </DescriptionListDescription>
+                  </DescriptionListItem>
+                ))}
+              </DescriptionList>
+            </div>
           </TabsContent>
         ))}
       </Tabs>
@@ -408,7 +423,8 @@ export function TeamCard() {
             </NativeSelect>
           </Person>
         ))}
-        <div className="showcase-expanded showcase-team-permissions">
+        <div className="showcase-expanded">
+          <Separator className="nx:mb-5" />
           <Field orientation="horizontal">
             <FieldContent>
               <FieldLabel htmlFor={`${id}-invites`}>
@@ -457,7 +473,7 @@ export function TeamCard() {
           </Button>
         )}
         {invited && (
-          <p className="showcase-status" role="status">
+          <p className={statusClassName} role="status">
             {invited} added to this demo. No invitation sent.
           </p>
         )}
@@ -615,27 +631,30 @@ export function PreferencesCard() {
             </Field>
           )
         )}
-        <FieldSet className="showcase-expanded nx:m-0 nx:min-w-0 nx:border-0 nx:p-0 showcase-delivery">
-          <FieldLegend variant="label">Delivery</FieldLegend>
-          <div className="showcase-actions">
-            <ChoiceRow htmlFor={`${id}-email`}>
-              <Checkbox
-                id={`${id}-email`}
-                aria-labelledby={`${id}-email-label`}
-                defaultChecked
-              />
-              <ChoiceRowTitle id={`${id}-email-label`}>Email</ChoiceRowTitle>
-            </ChoiceRow>
-            <ChoiceRow htmlFor={`${id}-push`}>
-              <Checkbox
-                id={`${id}-push`}
-                aria-labelledby={`${id}-push-label`}
-                defaultChecked
-              />
-              <ChoiceRowTitle id={`${id}-push-label`}>Push</ChoiceRowTitle>
-            </ChoiceRow>
-          </div>
-        </FieldSet>
+        <div className="showcase-expanded">
+          <Separator className="nx:mb-6" />
+          <FieldSet className="nx:m-0 nx:min-w-0 nx:border-0 nx:p-0">
+            <FieldLegend variant="label">Delivery</FieldLegend>
+            <div className="showcase-actions">
+              <ChoiceRow htmlFor={`${id}-email`}>
+                <Checkbox
+                  id={`${id}-email`}
+                  aria-labelledby={`${id}-email-label`}
+                  defaultChecked
+                />
+                <ChoiceRowTitle id={`${id}-email-label`}>Email</ChoiceRowTitle>
+              </ChoiceRow>
+              <ChoiceRow htmlFor={`${id}-push`}>
+                <Checkbox
+                  id={`${id}-push`}
+                  aria-labelledby={`${id}-push-label`}
+                  defaultChecked
+                />
+                <ChoiceRowTitle id={`${id}-push-label`}>Push</ChoiceRowTitle>
+              </ChoiceRow>
+            </div>
+          </FieldSet>
+        </div>
         <Field className="showcase-expanded nexus-showcase-field showcase-quiet">
           <FieldLabel htmlFor={`${id}-quiet`}>Quiet hours</FieldLabel>
           <NativeSelect id={`${id}-quiet`} defaultValue="off">
@@ -684,10 +703,13 @@ export function TasksCard() {
       title="Project checklist"
       description="Website refresh · This week"
     >
-      <div className="showcase-metric">
-        <strong>
+      <div className={metricClassName}>
+        <strong className={metricValueClassName}>
           {completed}
-          <span> / 4</span>
+          <span className="nx:typography-heading-small nx:text-muted-foreground">
+            {' '}
+            / 4
+          </span>
         </strong>
         <Badge variant="secondary" fill="light">
           In progress
@@ -795,7 +817,7 @@ export function InboxCard() {
       <Separator className="showcase-rule" />
       <Person name={mail[selected].name} detail={mail[selected].time} />
       <h3>{mail[selected].title}</h3>
-      <p className="showcase-prose">{mail[selected].body}</p>
+      <p className={proseClassName}>{mail[selected].body}</p>
     </ShowcaseCard>
   );
 }
@@ -836,7 +858,7 @@ export function ComposeCard() {
         <Button type="submit" variant="outline">
           Save draft
         </Button>
-        <p className="showcase-status" role="status">
+        <p className={statusClassName} role="status">
           {saved
             ? 'Draft saved in this preview.'
             : 'Nothing is sent from this demo.'}
@@ -880,7 +902,7 @@ export function FilesCard() {
           </Item>
         ))}
       </div>
-      <p className="showcase-status" role="status">
+      <p className={statusClassName} role="status">
         {selected
           ? `${selected} selected. Sample file only.`
           : 'Three files · Updated today'}
@@ -900,13 +922,19 @@ export function BillingCard() {
           <TabsTrigger value="yearly">Yearly</TabsTrigger>
         </TabsList>
         <TabsContent value="monthly">
-          <p className="showcase-price">
-            $24 <span>/ person / month</span>
+          <p className={`nx:my-6 ${metricValueClassName}`}>
+            $24{' '}
+            <span className="nx:typography-body-small nx:text-muted-foreground">
+              / person / month
+            </span>
           </p>
         </TabsContent>
         <TabsContent value="yearly">
-          <p className="showcase-price">
-            $20 <span>/ person / month</span>
+          <p className={`nx:my-6 ${metricValueClassName}`}>
+            $20{' '}
+            <span className="nx:typography-body-small nx:text-muted-foreground">
+              / person / month
+            </span>
           </p>
           <Badge variant="success" fill="light">
             Billed yearly · Save 17%
@@ -931,7 +959,7 @@ export function BillingCard() {
           {reviewing ? 'Close plan details' : 'Review plan'}
         </Button>
         {reviewing && (
-          <p className="showcase-status" role="status">
+          <p className={statusClassName} role="status">
             5 seats, 20 GB storage, unlimited projects. Demo only; no payment is
             taken.
           </p>
@@ -1038,7 +1066,7 @@ export function ContactCard() {
         </Field>
         <Button type="submit">Save contact</Button>
         {saved && (
-          <p className="showcase-status" role="status">
+          <p className={statusClassName} role="status">
             Contact updated in this preview.
           </p>
         )}
@@ -1069,14 +1097,14 @@ export function PipelineCard() {
           </Button>
         ))}
       </div>
-      <div className="showcase-metric">
-        <strong>{totals[stage][0]}</strong>
+      <div className={metricClassName}>
+        <strong className={metricValueClassName}>{totals[stage][0]}</strong>
       </div>
       <Progress
         value={totals[stage][1]}
         aria-label={`${stage} pipeline progress`}
       />
-      <p className="showcase-prose">Total value in {stage.toLowerCase()}.</p>
+      <p className={proseClassName}>Total value in {stage.toLowerCase()}.</p>
     </ShowcaseCard>
   );
 }
@@ -1103,7 +1131,7 @@ export function NotesCard() {
         <Button variant="outline" type="submit">
           Save note
         </Button>
-        <p className="showcase-status" role="status">
+        <p className={statusClassName} role="status">
           {saved ? 'Note saved in this preview.' : 'Only visible in this demo.'}
         </p>
       </form>
