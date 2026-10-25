@@ -615,13 +615,21 @@ The token CSS defines the colors, spacing and type scale. Copy the seven files
 from `packages/tailwind/` in the
 [nxds repo](https://github.com/nexuslabs-ai/nxds) into `src/styles/nxds/`.
 
-Import Tailwind's Preflight and the token CSS from your CSS entry point:
+Install the animation utilities that some components use to open and close:
+
+```bash
+npm install tw-animate-css
+```
+
+Import Tailwind's Preflight, the token CSS and the animation utilities from your
+CSS entry point:
 
 ```css
 /* src/style.css */
 @layer theme, base, components, utilities;
 @import 'tailwindcss/preflight.css' layer(base);
 @import './styles/nxds/nxds.css';
+@import 'tw-animate-css';
 ```
 
 nxds ships no reset, so the page brings Preflight. nxds components need its

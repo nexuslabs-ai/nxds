@@ -5,7 +5,6 @@
 /** React components Vue doesn't ship yet. */
 export const planned = [
   'accordion',
-  'alert-dialog',
   'appearance-settings',
   'attachment',
   'avatar',
@@ -19,42 +18,33 @@ export const planned = [
   'combobox',
   'command',
   'config-preview',
-  'context-menu',
   'date-picker',
   'description-list',
-  'drawer',
-  'dropdown-menu',
   'empty-state',
   'filter-builder',
   'filter-chip',
   'filter-condition',
-  'hover-card',
   'item',
   'marker',
-  'menubar',
   'message',
   'message-scroller',
   'multi-select',
-  'navigation-menu',
   'page-header',
   'pagination',
-  'popover',
   'resizable',
   'scroll-area',
-  'select',
   'setting-row',
-  'sheet',
   'sidebar',
   'sonner',
   'table',
   'theme-quick-control',
   'toolbar',
-  'tooltip',
 ];
 
 /** Components both packages ship, appearance aside: it has its own contract. */
 export const shared = [
   'alert',
+  'alert-dialog',
   'aspect-ratio',
   'badge',
   'button',
@@ -63,18 +53,27 @@ export const shared = [
   'checkbox',
   'choice-card',
   'choice-row',
+  'context-menu',
   'dialog',
+  'drawer',
+  'dropdown-menu',
   'field',
   'hide',
+  'hover-card',
   'input',
   'input-group',
   'input-otp',
   'kbd',
   'label',
+  'menubar',
   'native-select',
+  'navigation-menu',
+  'popover',
   'progress',
   'radio-group',
+  'select',
   'separator',
+  'sheet',
   'show',
   'skeleton',
   'slider',
@@ -84,6 +83,7 @@ export const shared = [
   'textarea',
   'toggle',
   'toggle-group',
+  'tooltip',
 ];
 
 const NATIVE_MODEL_VALUE =
@@ -135,12 +135,6 @@ export const behaviourOnlyIn: Record<
   Record<string, string>
 > = {
   react: {
-    'button-group/SplitButton':
-      'joins a DropdownMenu trigger to the group, and DropdownMenu is planned for Vue',
-    'button-group/WithSelectTrigger':
-      'joins a Select trigger to the group, and Select is planned for Vue',
-    'dialog/NestedOverlayStacking':
-      'opens a DropdownMenu inside the dialog, and DropdownMenu is planned for Vue',
     'button/RefForwarding': REACT_REF,
     'tabs/ListRef': REACT_REF,
   },
@@ -165,16 +159,23 @@ export const behaviourOnlyIn: Record<
 const PIN_INPUT =
   'React types into one hidden input; Reka gives each slot its own input, so Vue reads the code from the slots';
 
+const GRACE_AREA =
+  "user-event's unhover leaves the pointer at (0, 0); Reka keeps the content open until a pointer move lands outside its trigger-to-content grace area, so Vue moves the pointer away";
+
 const TABS_INDICATOR =
   "React waits for its measured indicator's opacity and transform; Reka's indicator has neither, so Vue checks only the geometry";
 
 /** Paired play stories whose steps differ by design, as `{slug}/{Story}`. */
 export const behaviourDifferences: Record<string, string> = {
+  'hover-card/OpenCloseInteraction': GRACE_AREA,
   'input-otp/KeyboardInteraction': PIN_INPUT,
   'input-otp/Paste': PIN_INPUT,
   'tabs/DisabledTabInteraction': TABS_INDICATOR,
   'tabs/UnderlineVariant': TABS_INDICATOR,
   'tabs/VerticalIndicatorFollowsActiveTab': TABS_INDICATOR,
+  'tooltip/GroupedInProvider': GRACE_AREA,
+  'tooltip/HoverInteraction': GRACE_AREA,
+  'tooltip/WithDataAttributes': GRACE_AREA,
   'toggle-group/ControlledDisabledTransition':
     "clearing a single selection emits '' from Radix and undefined from Reka",
 };
@@ -189,8 +190,38 @@ export const renderedDifferences: Record<string, string> = {
     "Radix has no indicator, so React measures the active tab and moves a span; Vue renders Reka's TabsIndicator, which reads Reka's CSS variables",
 };
 
+const ORIENTATION_ON_ITEMS =
+  "Radix's roving focus repeats the menu's orientation on each item; Reka doesn't";
+
+/**
+ * Attributes of a part that differ by design, as `{data-slot} {attribute}`,
+ * with `name` for the accessible name; the rendered check compares the rest.
+ */
+export const renderedAttributeDifferences: Record<string, string> = {
+  'context-menu-checkbox-item data-orientation': ORIENTATION_ON_ITEMS,
+  'context-menu-item data-orientation': ORIENTATION_ON_ITEMS,
+  'context-menu-radio-item data-orientation': ORIENTATION_ON_ITEMS,
+  'context-menu-sub-trigger data-orientation': ORIENTATION_ON_ITEMS,
+  'dropdown-menu-checkbox-item data-orientation': ORIENTATION_ON_ITEMS,
+  'dropdown-menu-item data-orientation': ORIENTATION_ON_ITEMS,
+  'dropdown-menu-radio-item data-orientation': ORIENTATION_ON_ITEMS,
+  'dropdown-menu-sub-trigger data-orientation': ORIENTATION_ON_ITEMS,
+  'menubar-checkbox-item data-orientation': ORIENTATION_ON_ITEMS,
+  'menubar-item data-orientation': ORIENTATION_ON_ITEMS,
+  'menubar-radio-item data-orientation': ORIENTATION_ON_ITEMS,
+  'menubar-sub-trigger data-orientation': ORIENTATION_ON_ITEMS,
+  'menubar-trigger data-value':
+    'Reka gives each menubar menu a generated value; Radix sets none',
+  'navigation-menu-content data-state':
+    'Reka marks a flyout open inside the shared viewport; Radix sets its state only on a flyout under its own trigger',
+  'popover-content name':
+    "Reka names the popover's dialog after its trigger with aria-labelledby; Radix leaves it unnamed",
+};
+
 /** Top-level values a Vue recipe file declares that React has no twin for, as `{file}#{name}`. */
 export const vueOnlyDeclarations: Record<string, string> = {
+  'alert-dialog/index.ts#AlertDialogLayoutKey':
+    'Vue injection key the content provides to its header and footer; React passes the same layout through context',
   'input-otp/index.ts#InputOTPKey':
     "Vue injection key the root provides so each slot's <input> takes the field's name; React's single <input> carries it",
   'tabs/index.ts#TabsListKey':

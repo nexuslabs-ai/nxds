@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
   IconBold,
+  IconChevronDown,
   IconItalic,
   IconLink,
   IconUnderline,
@@ -8,6 +9,20 @@ import {
 import { expect, within } from 'storybook/test';
 
 import { Button } from '../button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../dropdown-menu';
+import { Input } from '../input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../select';
 
 import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from '.';
 
@@ -228,6 +243,108 @@ export const WithDataAttributes: Story = {
     await expect(
       canvas.getByRole('button', { name: 'Nested' })
     ).toHaveAttribute('data-size', 'sm');
+  },
+};
+
+// A Select trigger joins the group as a button-shaped control, sharing the
+// seam with the previous control. The group size reaches Buttons and
+// ButtonGroupText only: the Input and Select trigger keep their own size.
+export const WithSelectTrigger: Story = {
+  render: () => ({
+    components: {
+      Button,
+      ButtonGroup,
+      ButtonGroupText,
+      Input,
+      Select,
+      SelectContent,
+      SelectItem,
+      SelectTrigger,
+      SelectValue,
+    },
+    template: `
+      <ButtonGroup size="lg">
+        <ButtonGroupText>Status</ButtonGroupText>
+        <Button variant="outline">Filter</Button>
+        <Input aria-label="Search" class="nx:w-40" />
+        <Select default-value="all">
+          <SelectTrigger aria-label="Status">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="open">Open</SelectItem>
+            <SelectItem value="closed">Closed</SelectItem>
+          </SelectContent>
+        </Select>
+      </ButtonGroup>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const trigger = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="select-trigger"]'
+    );
+    await expect(trigger).toBeInTheDocument();
+    if (!trigger) return;
+    // The trigger joins the seam like a button: its left border is removed so
+    // it doesn't double up against the previous control.
+    await expect(getComputedStyle(trigger).borderLeftWidth).toBe('0px');
+
+    const canvas = within(canvasElement);
+    await expect(trigger).toHaveAttribute('data-size', 'default');
+    await expect(
+      canvas.getByRole('textbox', { name: 'Search' })
+    ).toHaveAttribute('data-size', 'default');
+    await expect(
+      canvas.getByRole('button', { name: 'Filter' })
+    ).toHaveAttribute('data-size', 'lg');
+    await expect(canvas.getByText('Status')).toHaveAttribute('data-size', 'lg');
+  },
+};
+
+// A split button: a primary action joined to a DropdownMenu trigger. The
+// trigger renders as a button via asChild, so it joins the seam like any
+// other button-shaped control and inherits the group size.
+export const SplitButton: Story = {
+  render: () => ({
+    components: {
+      Button,
+      ButtonGroup,
+      DropdownMenu,
+      DropdownMenuContent,
+      DropdownMenuItem,
+      DropdownMenuTrigger,
+      IconChevronDown,
+    },
+    template: `
+      <ButtonGroup size="sm">
+        <Button>Deploy</Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button>
+              Options
+              <template #end-icon><IconChevronDown /></template>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem>Deploy to staging</DropdownMenuItem>
+            <DropdownMenuItem>Deploy to production</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </ButtonGroup>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    // The DropdownMenu trigger composes onto a Button via asChild, so it lands
+    // in the group as a button-shaped control (data-slot=button) that opens a
+    // menu.
+    const trigger = canvasElement.querySelector(
+      '[data-slot="button-group"] [aria-haspopup="menu"]'
+    );
+    await expect(trigger).toBeInTheDocument();
+    await expect(trigger).toHaveAttribute('data-slot', 'button');
+    // The trigger sets no size of its own, so the group's "sm" reaches it.
+    await expect(trigger).toHaveAttribute('data-size', 'sm');
   },
 };
 

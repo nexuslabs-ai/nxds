@@ -1,13 +1,66 @@
-import { cva } from 'class-variance-authority';
+import { cva, type VariantProps } from 'class-variance-authority';
+
+/**
+ * Popover-family surfaces share the translucent/blurred recipe; Tooltip uses a
+ * solid carve-out because its small, brief text appears over arbitrary content.
+ */
+export const popoverSurfaceClassName = [
+  'nx:rounded-md',
+  'nx:border-default',
+  'nx:border-border-default',
+  'nx:bg-popover-alpha',
+  'nx:backdrop-blur-md',
+  'nx:text-popover-foreground',
+  'nx:typography-body-default',
+  'nx:shadow-lg',
+].join(' ');
+
+export const tooltipSurfaceClassName = [
+  'nx:rounded-md',
+  'nx:border-default',
+  'nx:border-border-default',
+  'nx:bg-popover',
+  'nx:text-popover-foreground',
+  'nx:typography-body-default',
+  'nx:shadow-lg',
+].join(' ');
+
+export const navigationMenuInlinePopoverSurfaceClassName = [
+  'nx:group-data-[viewport=false]/navigation-menu:rounded-md',
+  'nx:group-data-[viewport=false]/navigation-menu:border-default',
+  'nx:group-data-[viewport=false]/navigation-menu:border-border-default',
+  'nx:group-data-[viewport=false]/navigation-menu:bg-popover-alpha',
+  'nx:group-data-[viewport=false]/navigation-menu:backdrop-blur-md',
+  'nx:group-data-[viewport=false]/navigation-menu:text-popover-foreground',
+  'nx:group-data-[viewport=false]/navigation-menu:shadow-lg',
+].join(' ');
+
+export const navigationMenuInlinePopoverTransitionClassName = [
+  'nx:group-data-[viewport=false]/navigation-menu:transition-[opacity,scale]',
+  'nx:group-data-[viewport=false]/navigation-menu:duration-fast',
+  'nx:group-data-[viewport=false]/navigation-menu:ease-move',
+  'nx:group-data-[viewport=false]/navigation-menu:data-[state=closed]:scale-95',
+  'nx:group-data-[viewport=false]/navigation-menu:data-[state=closed]:opacity-0',
+  'nx:group-data-[viewport=false]/navigation-menu:data-[state=closed]:animate-overlay-presence-exit',
+].join(' ');
 
 // `animate-overlay-presence-exit` is a non-visual "presence bridge": Reka's
 // Presence only waits on `animationName`, not `transitionend`, so this inert
-// animation keeps a closing overlay mounted while the opacity/scale
+// animation keeps a closing overlay mounted while the opacity/scale/translate
 // TRANSITIONS below run the visible exit. It animates an unread custom property (see
 // generateMotionUtilitiesCSS in @nxds/core), never a transitioned property, so it
 // cannot override those transitions.
 const overlayPresenceExitClassName =
   'nx:data-[state=closed]:animate-overlay-presence-exit';
+
+export const overlayFloatingTransitionClassName = [
+  'nx:transition-[opacity,scale]',
+  'nx:duration-fast',
+  'nx:ease-move',
+  'nx:data-[state=closed]:scale-95',
+  'nx:data-[state=closed]:opacity-0',
+  overlayPresenceExitClassName,
+].join(' ');
 
 const overlayContentTransitionClassName = [
   'nx:transition-[opacity,scale]',
@@ -18,11 +71,18 @@ const overlayContentTransitionClassName = [
   overlayPresenceExitClassName,
 ].join(' ');
 
-const overlayScrimTransitionClassName = [
+export const overlayScrimTransitionClassName = [
   'nx:transition-opacity',
   'nx:duration-default',
   'nx:ease-move',
   'nx:data-[state=closed]:opacity-0',
+  overlayPresenceExitClassName,
+].join(' ');
+
+export const overlayPanelTransitionClassName = [
+  'nx:transition-[translate]',
+  'nx:duration-slow',
+  'nx:ease-move',
   overlayPresenceExitClassName,
 ].join(' ');
 
@@ -69,6 +129,22 @@ export const overlayBodyClassName = [
   'nx:focus-visible:[outline-offset:-2px]',
 ].join(' ');
 
+export const overlayFooterVariants = cva(
+  'nx:flex nx:shrink-0 nx:gap-2 nx:px-6',
+  {
+    variants: {
+      orientation: {
+        horizontal:
+          'nx:flex-col nx:sm:flex-row nx:sm:items-center nx:sm:justify-end',
+        vertical: 'nx:flex-col nx:items-stretch nx:*:w-full',
+      },
+    },
+    defaultVariants: {
+      orientation: 'horizontal',
+    },
+  }
+);
+
 export const overlayCloseButtonClassName = [
   'nx:absolute nx:right-6 nx:top-6 nx:rounded-sm nx:border-0 nx:bg-transparent nx:p-1 nx:text-muted-foreground-subtle',
   'nx:transition-control',
@@ -77,3 +153,29 @@ export const overlayCloseButtonClassName = [
   'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
   'nx:disabled:pointer-events-none',
 ].join(' ');
+
+export type OverlayHeaderVariants = VariantProps<typeof overlayHeaderVariants>;
+
+export type OverlayVariant = NonNullable<
+  VariantProps<typeof overlayHeaderVariants>['variant']
+>;
+
+export type OverlayButtonOrientation = NonNullable<
+  VariantProps<typeof overlayFooterVariants>['orientation']
+>;
+
+export type OverlayLayoutContextValue = {
+  variant: OverlayVariant;
+  buttonOrientation: OverlayButtonOrientation;
+};
+
+export const defaultOverlayLayout: OverlayLayoutContextValue = {
+  variant: 'default',
+  buttonOrientation: 'horizontal',
+};
+
+export function resolveOverlayButtonOrientation(
+  variant: OverlayVariant
+): OverlayButtonOrientation {
+  return variant === 'center' ? 'vertical' : 'horizontal';
+}

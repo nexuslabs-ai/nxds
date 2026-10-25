@@ -17,9 +17,22 @@ import {
 const ContextMenu = ContextMenuPrimitive.Root;
 
 /**
+ * ContextMenuTriggerProps
+ *
+ * Props for the ContextMenuTrigger.
+ */
+type ContextMenuTriggerProps = React.ComponentProps<
+  typeof ContextMenuPrimitive.Trigger
+>;
+
+/**
  * The area that opens the menu when right-clicked.
  */
-const ContextMenuTrigger = ContextMenuPrimitive.Trigger;
+function ContextMenuTrigger(props: ContextMenuTriggerProps) {
+  return (
+    <ContextMenuPrimitive.Trigger data-slot="context-menu-trigger" {...props} />
+  );
+}
 
 /**
  * Groups related menu items.
@@ -423,4 +436,5 @@ export {
   ContextMenuSubTrigger,
   type ContextMenuSubTriggerProps,
   ContextMenuTrigger,
+  type ContextMenuTriggerProps,
 };
