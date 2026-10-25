@@ -24,6 +24,7 @@ export * from './components/kbd';
 export * from './components/label';
 export * from './components/menubar';
 export * from './components/native-select';
+export * from './components/navigation-menu';
 export * from './components/popover';
 export * from './components/progress';
 export * from './components/radio-group';

@@ -30,7 +30,6 @@ export const planned = [
   'message',
   'message-scroller',
   'multi-select',
-  'navigation-menu',
   'page-header',
   'pagination',
   'resizable',
@@ -68,6 +67,7 @@ export const shared = [
   'label',
   'menubar',
   'native-select',
+  'navigation-menu',
   'popover',
   'progress',
   'radio-group',
@@ -190,9 +190,14 @@ export const renderedDifferences: Record<string, string> = {
     "Radix has no indicator, so React measures the active tab and moves a span; Vue renders Reka's TabsIndicator, which reads Reka's CSS variables",
 };
 
-/** Parts whose accessible name differs by design, by `data-slot`; the rendered check compares the rest of them. */
-export const renderedNameDifferences: Record<string, string> = {
-  'popover-content':
+/**
+ * Attributes of a part that differ by design, as `{data-slot} {attribute}`,
+ * with `name` for the accessible name; the rendered check compares the rest.
+ */
+export const renderedAttributeDifferences: Record<string, string> = {
+  'navigation-menu-content data-state':
+    'Reka marks a flyout open inside the shared viewport; Radix sets its state only on a flyout under its own trigger',
+  'popover-content name':
     "Reka names the popover's dialog after its trigger with aria-labelledby; Radix leaves it unnamed",
 };
 

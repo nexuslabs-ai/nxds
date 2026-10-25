@@ -15,8 +15,8 @@ import { describe, expect, it } from 'vitest';
 import reactPreview from '../../packages/react/.storybook/preview';
 import vuePreview from '../../packages/vue/.storybook/preview';
 import {
+  renderedAttributeDifferences,
   renderedDifferences,
-  renderedNameDifferences,
   shared,
 } from '../parity.ts';
 
@@ -38,8 +38,8 @@ type Opener =
   | {
       /** The trigger's role; the first trigger in the story opens. */
       role: 'button' | 'combobox' | 'menuitem';
-      /** Focus opens a tooltip at once, without its hover delay. */
-      open: 'click' | 'focus';
+      /** Focus opens a tooltip at once, without its hover delay; Enter then opens a navigation flyout. */
+      open: 'click' | 'focus' | 'enter';
     }
   /** Right-clicks the context menu's trigger area, the first element with an open state. */
   | { open: 'contextmenu' };
@@ -52,6 +52,7 @@ const OVERLAYS: Record<string, Opener> = {
   'dropdown-menu': { role: 'button', open: 'click' },
   'hover-card': { role: 'button', open: 'focus' },
   menubar: { role: 'menuitem', open: 'click' },
+  'navigation-menu': { role: 'button', open: 'enter' },
   popover: { role: 'button', open: 'click' },
   select: { role: 'combobox', open: 'click' },
   sheet: { role: 'button', open: 'click' },
@@ -61,7 +62,7 @@ const OVERLAYS: Record<string, Opener> = {
 // Attributes that hold generated ids or inline styles, that Radix and Reka add
 // for their own bookkeeping, or that `name` already covers (aria-label).
 const SKIPPED_ATTRIBUTE =
-  /^(?:id|style|aria-(?:controls|labelledby|describedby|owns|activedescendant|label)|data-(?:radix|reka)-.*|data-(?:active|dismissable-layer|grace-area-trigger|slider-impl))$/;
+  /^(?:id|style|aria-(?:controls|labelledby|describedby|owns|activedescendant|label)|data-(?:radix|reka)-.*|data-(?:active|dismissable-layer|grace-area-trigger|menu-item|navigation-menu-trigger|slider-impl))$/;
 // ARIA states where `"false"` means the same as leaving the attribute out.
 const FALSE_IS_ABSENT =
   /^aria-(?:busy|disabled|hidden|invalid|readonly|required)$/;
@@ -115,6 +116,7 @@ function describeElement(element: Element) {
   // Reka repeats a native `disabled` as `aria-disabled="true"`; Radix doesn't.
   const isNativelyDisabled = element.hasAttribute('disabled');
   const isMenuItem = MENU_ITEM.test(element.getAttribute('role') ?? '');
+  const slot = element.getAttribute('data-slot') ?? '';
   const attributes = [...element.attributes]
     .filter(({ name }) => /^(?:data-|aria-|role$)/.test(name))
     .filter(({ name }) => !SKIPPED_ATTRIBUTE.test(name))
@@ -122,6 +124,7 @@ function describeElement(element: Element) {
       ({ name, value }) => !(FALSE_IS_ABSENT.test(name) && value === 'false')
     )
     .filter(({ name }) => !(name === 'aria-disabled' && isNativelyDisabled))
+    .filter(({ name }) => !(`${slot} ${name}` in renderedAttributeDifferences))
     // Radix's roving focus repeats the menu's orientation on each item; Reka doesn't.
     .filter(({ name }) => !(name === 'data-orientation' && isMenuItem))
     // Reka gives each menubar menu a generated value.
@@ -132,8 +135,8 @@ function describeElement(element: Element) {
     .sort();
   const classes = [...element.classList].map(normalizeClass).sort().join(' ');
   const name =
-    (element.getAttribute('data-slot') ?? '') in renderedNameDifferences
-      ? '(see renderedNameDifferences)'
+    `${slot} name` in renderedAttributeDifferences
+      ? '(see renderedAttributeDifferences)'
       : computeAccessibleName(element);
   // A textarea shows its value; its text content is only the default value.
   const content =
@@ -146,8 +149,8 @@ function describeElement(element: Element) {
 
 /**
  * Every element of `slug`'s own parts on the page, in document order, the
- * `renderedDifferences` slots it skipped, and the accessible name of each
- * `renderedNameDifferences` slot.
+ * `renderedDifferences` slots it skipped, and the value of each
+ * `renderedAttributeDifferences` entry it left out, by entry.
  */
 function readTree(slug: string) {
   const own = [...document.body.querySelectorAll('[data-slot]')].filter(
@@ -158,11 +161,18 @@ function readTree(slug: string) {
   return {
     tree: own.filter((element) => !differs(element)).map(describeElement),
     skipped: own.filter(differs).map(slotOf),
-    names: own
-      .filter((element) => slotOf(element) in renderedNameDifferences)
-      .map(
-        (element) => [slotOf(element), computeAccessibleName(element)] as const
-      ),
+    leftOut: own.flatMap((element) =>
+      Object.keys(renderedAttributeDifferences)
+        .filter((entry) => entry.startsWith(`${slotOf(element)} `))
+        .map((entry) => {
+          const attribute = entry.slice(slotOf(element).length + 1);
+          const value =
+            attribute === 'name'
+              ? computeAccessibleName(element)
+              : element.getAttribute(attribute);
+          return [entry, value] as const;
+        })
+    ),
   };
 }
 
@@ -178,17 +188,24 @@ function normalizeClass(token: string) {
 }
 
 /** Opens `slug`'s first trigger and waits until its content stops moving. */
+/** Opens the story's first trigger; false when it has none that can open, such as plain links or a disabled trigger. */
 async function openTrigger(canvasElement: HTMLElement, opener: Opener) {
   if (opener.open === 'contextmenu') {
     fireEvent.contextMenu(canvasElement.querySelector('[data-state]')!, {
       clientX: 20,
       clientY: 20,
     });
-    return;
+    return true;
   }
-  const [trigger] = within(canvasElement).getAllByRole(opener.role);
-  if (opener.open === 'click') await userEvent.click(trigger!);
-  else trigger!.focus();
+  const [trigger] = within(canvasElement).queryAllByRole(opener.role);
+  if (!trigger || trigger.matches(':disabled')) return false;
+  if (opener.open === 'click') {
+    await userEvent.click(trigger);
+    return true;
+  }
+  trigger.focus();
+  if (opener.open === 'enter') await userEvent.keyboard('{Enter}');
+  return true;
 }
 
 async function openOverlay(
@@ -196,7 +213,7 @@ async function openOverlay(
   slug: string,
   opener: Opener
 ) {
-  await openTrigger(canvasElement, opener);
+  if (!(await openTrigger(canvasElement, opener))) return;
 
   const content = await waitFor(
     () => {
@@ -212,13 +229,14 @@ async function openOverlay(
       expect(content.contains(document.activeElement)).toBe(true)
     );
   }
-  // Popper places the content after measuring it, which can flip its side.
+  // Popper places the content after measuring it, which can flip its side,
+  // and Radix mounts a navigation indicator once a ResizeObserver reports.
+  const layout = () =>
+    `${content.getAttribute('data-side')}/${content.getAttribute('data-align')}/${document.querySelectorAll('[data-slot]').length}`;
   await waitFor(async () => {
-    const placement = `${content.getAttribute('data-side')}/${content.getAttribute('data-align')}`;
-    await settle();
-    expect(
-      `${content.getAttribute('data-side')}/${content.getAttribute('data-align')}`
-    ).toBe(placement);
+    const before = layout();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(layout()).toBe(before);
   });
 }
 
@@ -302,7 +320,9 @@ describe('rendered docs stories', () => {
   it('allows only rendered differences that belong to a shared component', () => {
     const unowned = [
       ...Object.keys(renderedDifferences),
-      ...Object.keys(renderedNameDifferences),
+      ...Object.keys(renderedAttributeDifferences).map(
+        (entry) => entry.split(' ')[0]!
+      ),
     ].filter((slot) => !shared.some((slug) => isOwnSlot(slot, slug)));
     expect(unowned).toEqual([]);
   });
@@ -314,7 +334,7 @@ describe('rendered docs stories', () => {
       const vue = await load(vueModules, slug);
       const vueStories = new Map(docsStories(vue));
       const skipped = new Set<string>();
-      const namedDifferently = new Set<string>();
+      const differing = new Set<string>();
 
       for (const [name, story] of docsStories(react)) {
         const vueStory = vueStories.get(name);
@@ -332,10 +352,10 @@ describe('rendered docs stories', () => {
         for (const slot of [...reactTree.skipped, ...vueTree.skipped]) {
           skipped.add(slot);
         }
-        const reactNames = new Map(reactTree.names);
-        for (const [slot, name] of vueTree.names) {
-          if (reactNames.has(slot) && reactNames.get(slot) !== name) {
-            namedDifferently.add(slot);
+        const reactValues = new Map(reactTree.leftOut);
+        for (const [entry, value] of vueTree.leftOut) {
+          if (reactValues.has(entry) && reactValues.get(entry) !== value) {
+            differing.add(entry);
           }
         }
 
@@ -351,10 +371,13 @@ describe('rendered docs stories', () => {
       );
       expect(stale, 'rendered differences that no longer render').toEqual([]);
 
-      const sameName = Object.keys(renderedNameDifferences).filter(
-        (slot) => isOwnSlot(slot, slug) && !namedDifferently.has(slot)
+      const agreeing = Object.keys(renderedAttributeDifferences).filter(
+        (entry) =>
+          isOwnSlot(entry.split(' ')[0]!, slug) && !differing.has(entry)
       );
-      expect(sameName, 'name differences that no longer differ').toEqual([]);
+      expect(agreeing, 'attribute differences that no longer differ').toEqual(
+        []
+      );
     },
     60_000
   );

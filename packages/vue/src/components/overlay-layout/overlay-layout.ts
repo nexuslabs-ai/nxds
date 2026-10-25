@@ -25,6 +25,25 @@ export const tooltipSurfaceClassName = [
   'nx:shadow-lg',
 ].join(' ');
 
+export const navigationMenuInlinePopoverSurfaceClassName = [
+  'nx:group-data-[viewport=false]/navigation-menu:rounded-md',
+  'nx:group-data-[viewport=false]/navigation-menu:border-default',
+  'nx:group-data-[viewport=false]/navigation-menu:border-border-default',
+  'nx:group-data-[viewport=false]/navigation-menu:bg-popover-alpha',
+  'nx:group-data-[viewport=false]/navigation-menu:backdrop-blur-md',
+  'nx:group-data-[viewport=false]/navigation-menu:text-popover-foreground',
+  'nx:group-data-[viewport=false]/navigation-menu:shadow-lg',
+].join(' ');
+
+export const navigationMenuInlinePopoverTransitionClassName = [
+  'nx:group-data-[viewport=false]/navigation-menu:transition-[opacity,scale]',
+  'nx:group-data-[viewport=false]/navigation-menu:duration-fast',
+  'nx:group-data-[viewport=false]/navigation-menu:ease-move',
+  'nx:group-data-[viewport=false]/navigation-menu:data-[state=closed]:scale-95',
+  'nx:group-data-[viewport=false]/navigation-menu:data-[state=closed]:opacity-0',
+  'nx:group-data-[viewport=false]/navigation-menu:data-[state=closed]:animate-overlay-presence-exit',
+].join(' ');
+
 // `animate-overlay-presence-exit` is a non-visual "presence bridge": Reka's
 // Presence only waits on `animationName`, not `transitionend`, so this inert
 // animation keeps a closing overlay mounted while the opacity/scale
