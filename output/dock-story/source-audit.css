@@ -17,6 +17,14 @@
   max-width: min(360px, calc(100vw - 32px));
   z-index: 100;
 }
+/* On phones the chapter heading sits right under the header, so the review
+   overlay moves above the 66px toolbar instead. */
+@media (max-width: 700px) {
+  .nexus-source-audit {
+    top: auto;
+    bottom: calc(16px + 66px + 12px);
+  }
+}
 .nexus-source-audit p {
   margin: 0 0 12px;
 }
