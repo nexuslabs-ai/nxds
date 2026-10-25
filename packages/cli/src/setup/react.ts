@@ -17,7 +17,7 @@ import {
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import type { SetupStep } from '../catalog';
+import type { ChosenFonts, Font, SetupStep } from '../catalog';
 import type { Config } from '../config';
 import { CliError } from '../errors';
 import { relativeImport } from '../files';
@@ -97,7 +97,11 @@ function read(project: Project, file: string) {
  * The nxds CSS entry: nxds's own Tailwind build, beside the app's. An app
  * without Tailwind has no reset yet, so the entry brings Preflight.
  */
-export function cssEntry(config: Config, withPreflight: boolean) {
+export function cssEntry(
+  config: Config,
+  withPreflight: boolean,
+  fonts: ChosenFonts
+) {
   const tokens = relativeImport(config.css, `${config.dir}/tailwind/nxds.css`);
   return [
     ...(withPreflight
@@ -108,8 +112,18 @@ export function cssEntry(config: Config, withPreflight: boolean) {
       : []),
     `@import '${tokens}';`,
     "@import 'tw-animate-css';",
+    ...new Set(
+      Object.values(fonts)
+        .filter((font) => font !== undefined)
+        .map(fontImportLine)
+    ),
     '',
   ].join('\n');
+}
+
+/** The `@import` line that loads a release font. */
+export function fontImportLine(font: Font) {
+  return `@import '${font.package}';`;
 }
 
 /** The `@import` line `add` appends for a component stylesheet. */
@@ -117,15 +131,39 @@ export function cssImportLine(config: Config, file: string) {
   return `@import '${relativeImport(config.css, `${config.dir}/${file}`)}';`;
 }
 
-const APPEARANCE_STATE = `import {
-  DEFAULT_NXDS_APPEARANCE,
-  type NxdsAppearanceState,
-} from '@nxds/core';
+/** `font: 'family',` lines for each font set up, for the default prefs. */
+function fontPrefLines({ font, headingFont }: ChosenFonts) {
+  return [
+    ...(font ? [`    uiFont: '${font.family}',`] : []),
+    ...(headingFont ? [`    headingFont: '${headingFont.family}',`] : []),
+  ];
+}
 
-export const defaultAppearance = {
-  ...DEFAULT_NXDS_APPEARANCE,
-} satisfies NxdsAppearanceState;
-`;
+/** `appearance-state.ts`: the default appearance, with the fonts set up. */
+function appearanceState(fonts: ChosenFonts) {
+  const prefLines = fontPrefLines(fonts);
+  const prefs =
+    prefLines.length === 0
+      ? []
+      : [
+          '  prefs: {',
+          '    ...DEFAULT_NXDS_APPEARANCE.prefs,',
+          ...prefLines,
+          '  },',
+        ];
+  return [
+    'import {',
+    '  DEFAULT_NXDS_APPEARANCE,',
+    '  type NxdsAppearanceState,',
+    "} from '@nxds/core';",
+    '',
+    'export const defaultAppearance = {',
+    '  ...DEFAULT_NXDS_APPEARANCE,',
+    ...prefs,
+    '} satisfies NxdsAppearanceState;',
+    '',
+  ].join('\n');
+}
 
 function providerImport(fromFile: string, config: Config, file = '') {
   return relativeImport(fromFile, `${config.dir}/${PROVIDER}${file}`);
@@ -554,6 +592,31 @@ function createdUnlessExists(
 }
 
 /**
+ * `appearance-state.ts` with the fonts set up. An existing one is the app's,
+ * so a font it doesn't name yet is a manual step.
+ */
+function planAppearanceState(project: Project, fonts: ChosenFonts) {
+  const file = `${entryDir(project)}/appearance-state.ts`;
+  if (!existsSync(path.join(project.root, file))) {
+    return createdUnlessExists(project, file, appearanceState(fonts));
+  }
+  const current = read(project, file);
+  const missing = fontPrefLines(fonts)
+    .map((line) => line.trim())
+    .filter((line) => !current.includes(line));
+  if (missing.length === 0) return NO_CHANGES;
+  return {
+    changes: [],
+    manual: [
+      {
+        file,
+        step: `Set ${missing.join(' ')} in the prefs of defaultAppearance.`,
+      },
+    ],
+  };
+}
+
+/**
  * Every file `init` writes or edits, beside the nxds folder itself, for the
  * setup steps the catalog declares.
  */
@@ -561,23 +624,22 @@ export function planWiring(
   project: Project,
   config: Config,
   addTailwind: boolean,
-  setupSteps: SetupStep[]
+  setupSteps: SetupStep[],
+  fonts: ChosenFonts
 ): WiringPlan {
   const steps: Steps = new Set(setupSteps);
   const plans: WiringPlan[] = [wireTsconfigAlias(project)];
   if (steps.has('add-css-import')) {
     plans.push(
-      createdUnlessExists(project, config.css, cssEntry(config, addTailwind))
+      createdUnlessExists(
+        project,
+        config.css,
+        cssEntry(config, addTailwind, fonts)
+      )
     );
   }
   if (steps.has('add-head-script') || steps.has('wrap-root-with-provider')) {
-    plans.push(
-      createdUnlessExists(
-        project,
-        `${entryDir(project)}/appearance-state.ts`,
-        APPEARANCE_STATE
-      )
-    );
+    plans.push(planAppearanceState(project, fonts));
   }
   if (project.setup === 'next-app') {
     plans.push(wireNextLayout(project, config, steps));

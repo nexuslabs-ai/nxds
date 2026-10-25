@@ -545,6 +545,188 @@ describe('React 18', () => {
   });
 });
 
+const ICONS = 'lib/icons.ts';
+const NXDS_ICONS = `components/nxds/${ICONS}`;
+const LUCIDE_ICONS = readFileSync(
+  path.resolve(
+    import.meta.dirname,
+    '../../react/src/lib/icon-libraries/lucide.ts'
+  ),
+  'utf8'
+);
+const INTER = {
+  name: 'inter',
+  label: 'Inter',
+  category: 'sans',
+  family: '"Inter Variable", sans-serif',
+  package: '@fontsource-variable/inter',
+  range: '^5.3.0',
+} as const;
+const LORA = {
+  name: 'lora',
+  label: 'Lora',
+  category: 'serif',
+  family: '"Lora Variable", Georgia, serif',
+  package: '@fontsource-variable/lora',
+  range: '^5.3.0',
+} as const;
+
+/**
+ * The committed release as `version`, with icon libraries and fonts to pick
+ * from: Tabler, the icons its items carry, first, then Lucide.
+ */
+function choicesRelease(version: string): Catalog {
+  const release = structuredClone(RELEASE);
+  release.version = version;
+  const tabler = release.items
+    .flatMap((item) => item.variants.react?.files ?? [])
+    .find((file) => file.path === ICONS);
+  if (!tabler) throw new Error(`${RELEASE.version} has no ${ICONS}`);
+  release.iconLibraries = [
+    {
+      name: 'tabler',
+      label: 'Tabler Icons',
+      file: tabler,
+      npm: { '@tabler/icons-react': '^3.36.1' },
+    },
+    {
+      name: 'lucide',
+      label: 'Lucide',
+      file: { path: ICONS, content: LUCIDE_ICONS },
+      npm: { 'lucide-react': '^1.61.0' },
+    },
+  ];
+  release.fonts = [INTER, LORA];
+  return release;
+}
+
+function nxdsJson(app: string) {
+  return JSON.parse(readApp(app, 'nxds.json')) as Record<string, unknown>;
+}
+
+describe('icon libraries', () => {
+  it('draws lib/icons.ts with the library init picks, and installs its package', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+    expect((await cli(['init', '--icons', 'lucide'], context)).exitCode).toBe(
+      EXIT_CODES.ok
+    );
+
+    const { exitCode, body } = await cliJson(['add', 'spinner'], context);
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(readApp(context.app, NXDS_ICONS)).toBe(LUCIDE_ICONS);
+    expect(body.data.packages).toContain('lucide-react@^1.61.0');
+    expect(body.data.packages.join(' ')).not.toContain('@tabler/icons-react');
+    expect(nxdsJson(context.app)).toMatchObject({ iconLibrary: 'lucide' });
+  });
+
+  it('keeps the library when update moves to the next release', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+    await cli(['init', '--icons', 'lucide'], context);
+    await cli(['add', 'spinner'], context);
+    writeRegistry(context.registry, [
+      choicesRelease('0.4.7'),
+      choicesRelease('0.4.8'),
+    ]);
+
+    const { exitCode } = await cliJson(['update'], context);
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(readApp(context.app, NXDS_ICONS)).toBe(LUCIDE_ICONS);
+    expect(nxdsVersion(context.app)).toBe('0.4.8');
+  });
+
+  it('switches lib/icons.ts in the installed items when init picks another library', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+    await cli(['init'], context);
+    await cli(['add', 'spinner'], context);
+    expect(nxdsJson(context.app)).toMatchObject({ iconLibrary: 'tabler' });
+
+    const run = await cli(['init', '--icons', 'lucide'], context);
+
+    expect(run.exitCode, run.stdout + run.stderr).toBe(EXIT_CODES.ok);
+    expect(readApp(context.app, NXDS_ICONS)).toBe(LUCIDE_ICONS);
+    expect(run.stdout).toMatch(/with Lucide icons/);
+  });
+
+  it('keeps the default library for an app from before icon libraries', async () => {
+    const context = setup();
+    await cli(['init'], context);
+    expect(nxdsJson(context.app)).not.toHaveProperty('iconLibrary');
+    writeRegistry(context.registry, [RELEASE, choicesRelease('0.4.7')]);
+
+    expect((await cli(['update'], context)).exitCode).toBe(EXIT_CODES.ok);
+
+    expect(nxdsJson(context.app)).toMatchObject({ iconLibrary: 'tabler' });
+  });
+
+  it('exits 2 for an icon library the release does not have', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+
+    const run = await cli(['init', '--icons', 'feather'], context);
+
+    expect(run.exitCode).toBe(EXIT_CODES.usage);
+    expect(run.stderr).toMatch(
+      /has no icon library "feather"\. Pick one of: tabler, lucide\./
+    );
+  });
+});
+
+describe('fonts', () => {
+  it('imports, installs and sets the fonts init picks', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+
+    const { exitCode, body } = await cliJson(
+      ['init', '--font', 'inter', '--heading-font', 'lora'],
+      context
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    const css = readApp(context.app, 'app/nxds.css');
+    expect(css).toContain("@import '@fontsource-variable/inter';");
+    expect(css).toContain("@import '@fontsource-variable/lora';");
+    const state = readApp(context.app, 'app/appearance-state.ts');
+    expect(state).toContain(`uiFont: '${INTER.family}',`);
+    expect(state).toContain(`headingFont: '${LORA.family}',`);
+    expect(body.data.packages).toEqual(
+      expect.arrayContaining([
+        '@fontsource-variable/inter@^5.3.0',
+        '@fontsource-variable/lora@^5.3.0',
+      ])
+    );
+    expect(nxdsJson(context.app)).toMatchObject({
+      font: 'inter',
+      headingFont: 'lora',
+    });
+  });
+
+  it('asks you to set a font your appearance-state.ts does not name yet', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+    await cli(['init'], context);
+
+    const run = await cli(['init', '--font', 'inter'], context);
+
+    expect(run.exitCode).toBe(EXIT_CODES.attention);
+    expect(run.stdout).toContain(
+      `app/appearance-state.ts: Set uiFont: '${INTER.family}', in the prefs of defaultAppearance.`
+    );
+    expect(readApp(context.app, 'app/nxds.css')).toContain(
+      "@import '@fontsource-variable/inter';"
+    );
+  });
+
+  it('exits 2 for a font the release does not have', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+
+    const run = await cli(['init', '--font', 'comic-sans'], context);
+
+    expect(run.exitCode).toBe(EXIT_CODES.usage);
+    expect(run.stderr).toMatch(
+      /has no font "comic-sans"\. Pick one of: inter, lora\./
+    );
+  });
+});
+
 describe('help', () => {
   it.each([[['help', 'add']], [['add', '--help']]])(
     'prints help for %j and exits 0',

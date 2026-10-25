@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import {
   type Catalog,
+  chosenFonts,
   fetchRelease,
   loadRelease,
   type ReactMajor,
@@ -13,7 +14,9 @@ import {
   setupVariant,
   splitInstalled,
   type Target,
+  unknownName,
   variantFor,
+  withIconLibrary,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
 import { type Config, readConfig, requireConfig, writeConfig } from '../config';
@@ -106,6 +109,19 @@ function nxdsDir(dir: string) {
   );
 }
 
+/** `name`, when the release has a `kind` by that name. */
+function releaseChoice(
+  catalog: Catalog,
+  kind: 'icon library' | 'font',
+  name: string | undefined,
+  entries: { name: string }[]
+) {
+  if (name === undefined || entries.some((entry) => entry.name === name)) {
+    return name;
+  }
+  throw new UsageError(unknownName(catalog, kind, name, entries));
+}
+
 function assertTailwind4(project: Project) {
   const declared = project.dependencies.tailwindcss;
   const tailwindMajor = majorVersion(project, 'tailwindcss');
@@ -123,7 +139,12 @@ function assertTailwind4(project: Project) {
 export async function init(
   cwd: string,
   registry: string,
-  options: InstallOptions & { dir?: string }
+  options: InstallOptions & {
+    dir?: string;
+    icons?: string;
+    font?: string;
+    headingFont?: string;
+  }
 ): Promise<CommandResult> {
   const project = readProject(cwd);
   if (!project.setup) {
@@ -143,7 +164,7 @@ export async function init(
   const dir = options.dir ? nxdsDir(options.dir) : undefined;
   const existing = readConfig(cwd);
   // Running init again stays on the app's release.
-  const catalog = await loadRelease(
+  const release = await loadRelease(
     registry,
     existing?.version ?? 'latest',
     react
@@ -157,14 +178,39 @@ export async function init(
   const config: Config = existing ?? {
     framework: 'react',
     react,
-    version: catalog.version,
+    version: release.version,
     dir: dir ?? defaultDir(project),
     css: cssEntryPath(project),
     items: [],
   };
+  const previousLibrary = config.iconLibrary;
+  const icons = releaseChoice(
+    release,
+    'icon library',
+    options.icons,
+    release.iconLibraries
+  );
+  config.iconLibrary =
+    icons ?? config.iconLibrary ?? release.iconLibraries[0]?.name;
+  config.font =
+    releaseChoice(release, 'font', options.font, release.fonts) ?? config.font;
+  config.headingFont =
+    releaseChoice(release, 'font', options.headingFont, release.fonts) ??
+    config.headingFont;
+  const catalog = withIconLibrary(release, config.iconLibrary);
+  // A new icon library rewrites `lib/icons.ts` in every installed item, from
+  // the files the old library gave them.
+  const switched =
+    existing !== null && icons !== undefined && icons !== previousLibrary;
 
   const setup = setupVariant(catalog, config);
-  const wiring = planWiring(project, config, addTailwind, setup.steps);
+  const wiring = planWiring(
+    project,
+    config,
+    addTailwind,
+    setup.steps,
+    chosenFonts(catalog, config)
+  );
 
   const tailwind = packagesToInstall(
     project,
@@ -177,8 +223,10 @@ export async function init(
     catalog,
     project,
     config,
-    [SETUP],
-    null,
+    switched ? [SETUP, ...config.items] : [SETUP],
+    switched
+      ? releaseFiles(withIconLibrary(release, previousLibrary), config)
+      : null,
     options
   );
 
@@ -192,6 +240,9 @@ export async function init(
   }
 
   const packages = [...tailwind, ...installed.packages];
+  const iconsLabel = release.iconLibraries.find(
+    (library) => library.name === config.iconLibrary
+  )?.label;
   const [createVerb, editVerb] = options.dryRun
     ? ['Would create', 'Would edit']
     : ['Created', 'Edited'];
@@ -203,6 +254,9 @@ export async function init(
       version: config.version,
       dir: config.dir,
       css: config.css,
+      iconLibrary: config.iconLibrary,
+      font: config.font,
+      headingFont: config.headingFont,
       dryRun: options.dryRun,
       ...installed,
       packages,
@@ -215,7 +269,7 @@ export async function init(
       manual: wiring.manual,
     },
     lines: [
-      `nxds ${config.version} in ${config.dir}, for React ${config.react}`,
+      `nxds ${config.version} in ${config.dir}, for React ${config.react}${iconsLabel ? `, with ${iconsLabel} icons` : ''}`,
       ...installLines(config, { ...installed, packages }, options),
       ...wiring.changes.map(
         (change) => `${change.created ? createVerb : editVerb} ${change.path}`
@@ -249,7 +303,10 @@ export async function add(
   const config = requireConfig(cwd);
   const project = readProject(cwd);
   assertFilesMatchReact(config, reactMajor(project));
-  const catalog = await loadRelease(registry, config.version, config.react);
+  const catalog = withIconLibrary(
+    await loadRelease(registry, config.version, config.react),
+    config.iconLibrary
+  );
   const installed = installItems(
     catalog,
     project,
@@ -324,10 +381,14 @@ export async function update(
   const from = config.version;
   const fromReact = config.react;
   const react = reactMajor(project);
-  const latest = await loadRelease(registry, 'latest', react);
+  const release = await loadRelease(registry, 'latest', react);
+  // An app from before icon libraries keeps the default from now on.
+  config.iconLibrary ??= release.iconLibraries[0]?.name;
+  const latest = withIconLibrary(release, config.iconLibrary);
   const { known, removed } = splitInstalled(latest, config.items);
   const current = filesOf(latest, { ...config, react }, known);
-  const previous = await fetchRelease(registry, from);
+  const fetched = await fetchRelease(registry, from);
+  const previous = fetched && withIconLibrary(fetched, config.iconLibrary);
   const installedBefore = previous
     ? filesOf(previous, config, splitInstalled(previous, config.items).known)
     : new Set<string>();

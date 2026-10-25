@@ -86,10 +86,29 @@ function program(
         '--dir <path>',
         'nxds folder (default: components/nxds, or src/components/nxds)'
       )
+      .option(
+        '--icons <library>',
+        'icon library nxds components draw, such as lucide (default: phosphor)'
+      )
+      .option('--font <font>', 'font for UI text, such as inter')
+      .option('--heading-font <font>', 'font for headings, such as lora')
   ).action(async (_options, command: Command) => {
     const { cwd, registry } = context(command);
-    const { dir } = command.opts<{ dir?: string }>();
-    done(await init(cwd, registry, { ...installOptions(command), dir }));
+    const { dir, icons, font, headingFont } = command.opts<{
+      dir?: string;
+      icons?: string;
+      font?: string;
+      headingFont?: string;
+    }>();
+    done(
+      await init(cwd, registry, {
+        ...installOptions(command),
+        dir,
+        icons,
+        font,
+        headingFont,
+      })
+    );
   });
 
   withInstallFlags(
