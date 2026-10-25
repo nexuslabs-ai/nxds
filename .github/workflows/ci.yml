@@ -87,6 +87,9 @@ jobs:
             exit 1
           fi
 
+      - name: packages/react-18 matches packages/react
+        run: pnpm --filter @nxds/react-18 check
+
       - name: Restore ESLint cache
         uses: actions/cache@v4
         with:
@@ -337,9 +340,17 @@ jobs:
         run: pnpm audit:mode-distinctness
 
   test-react:
-    name: Test (React)
+    name: Test (${{ matrix.lane.name }})
     # Playwright 1.60 can't install Chromium on ubuntu-latest's 26.04 image.
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        lane:
+          - name: React 19, Vue, parity
+            script: react19
+          - name: React 18
+            script: react18
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -378,7 +389,7 @@ jobs:
         run: npx playwright install chromium
 
       - name: Run story tests
-        run: pnpm test:storybook
+        run: pnpm test:storybook:${{ matrix.lane.script }}
 
   build-storybook:
     name: Build Storybook
@@ -439,7 +450,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [next, vite]
+        app: [next, vite, vite-react18]
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -1,5 +1,13 @@
 # @nxds/docs
 
+## 0.0.16
+
+### Patch Changes
+
+- Updated dependencies [7370faf]
+- Updated dependencies [7370faf]
+  - @nxds/react@0.5.0
+
 ## 0.0.15
 
 ### Patch Changes

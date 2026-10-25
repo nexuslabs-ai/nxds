@@ -1,5 +1,6 @@
 {
   "framework": "react",
+  "react": 19,
   "version": "0.4.6",
   "dir": "components/nxds",
   "css": "app/nxds.css",

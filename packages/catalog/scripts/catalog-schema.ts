@@ -102,6 +102,20 @@ export type SetupStep = z.infer<typeof setupStepSchema>;
 
 const npmPackagesSchema = z.record(npmNameSchema, rangeSchema);
 
+/** The React major an app's files are for. */
+export const reactMajorSchema = z.union([z.literal(18), z.literal(19)]);
+
+export type ReactMajor = z.infer<typeof reactMajorSchema>;
+
+/**
+ * What a React variant changes for an app on React 18, from packages/react-18:
+ * the files whose content differs, and packages whose range differs.
+ */
+const react18Schema = z.object({
+  files: z.array(catalogFileSchema),
+  packages: z.object({ npm: npmPackagesSchema }),
+});
+
 /** A variant with `packages`, whose `css` names only files in its `files`. */
 function variantWith<P extends z.ZodType>(packages: P) {
   return z
@@ -113,12 +127,42 @@ function variantWith<P extends z.ZodType>(packages: P) {
       /** Files in `files` the nxds CSS entry imports. */
       css: z.array(relativePathSchema),
       steps: z.array(setupStepSchema),
+      react18: react18Schema.optional(),
     })
     .refine(
       ({ css, files }) =>
         css.every((entry) => files.some((file) => file.path === entry)),
       { path: ['css'], message: 'must name files in `files`' }
+    )
+    .refine(
+      ({ files, react18 }) =>
+        (react18?.files ?? []).every((file) =>
+          files.some((own) => own.path === file.path)
+        ),
+      {
+        path: ['react18', 'files'],
+        message: 'must replace files in `files`',
+      }
     );
+}
+
+/** `variant` as an app on `react` installs it. */
+export function variantForReact<V extends Variant>(
+  variant: V,
+  react: ReactMajor
+): V {
+  if (react === 19 || !variant.react18) return variant;
+  const replaced = new Map(
+    variant.react18.files.map((file) => [file.path, file])
+  );
+  return {
+    ...variant,
+    files: variant.files.map((file) => replaced.get(file.path) ?? file),
+    packages: {
+      ...variant.packages,
+      npm: { ...variant.packages.npm, ...variant.react18.packages.npm },
+    },
+  };
 }
 
 const variantSchema = variantWith(z.object({ npm: npmPackagesSchema }));
@@ -172,6 +216,8 @@ export const catalogSchema = z.object({
   frameworks: z
     .array(z.string())
     .transform((frameworks) => frameworks.filter(isFramework)),
+  /** The React majors this release has files for. Releases from before React 18 support leave it out, and have React 19 files only. */
+  reactMajors: z.array(reactMajorSchema).nonempty().default([19]),
   items: z.array(catalogItemSchema),
 });
 
