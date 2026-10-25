@@ -200,7 +200,7 @@ export function CoreChipChapter({ framework, onSelect }) {
                 Boolean(active) && (!activeFramework || active === name);
               return (
                 <Toggle
-                  className={`chip-destination ${nodeClassName} nx:flex-col nx:rounded-(--canvas-radius) nx:bg-muted nx:data-[flowing=true]:bg-control-background nx:[&_svg]:size-10`}
+                  className={`chip-destination ${nodeClassName} nx:flex-col nx:rounded-xl nx:bg-muted nx:data-[flowing=true]:bg-control-background nx:[&_svg]:size-10`}
                   pressed={name === framework}
                   onPressedChange={() => onSelect(index)}
                   data-planned={planned || undefined}

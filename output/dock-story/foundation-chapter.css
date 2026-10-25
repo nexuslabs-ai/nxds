@@ -1,11 +1,11 @@
 .foundation-core {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: clamp(12px, 2cqb, 32px);
+  gap: clamp(var(--nx-spacing-3), 2cqb, var(--nx-spacing-8));
   min-block-size: 0;
   min-inline-size: 0;
   padding: clamp(20px, 3cqb, 48px) clamp(16px, 2cqi, 40px) 100px;
-  border-radius: var(--canvas-radius, 14px);
+  border-radius: var(--nx-radius-xl);
   background: var(--framework-surface);
   text-align: center;
 }
@@ -13,7 +13,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: var(--nx-spacing-3);
 }
 .foundation-core strong {
   font-size: inherit;
@@ -30,7 +30,7 @@
 .foundation-capabilities {
   display: grid;
   grid-template-rows: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: var(--nx-spacing-4);
   min-block-size: 0;
 }
 .foundation-capability {
@@ -38,7 +38,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--nx-spacing-2);
   min-block-size: 0;
 }
 .foundation-capability-title {
@@ -46,7 +46,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--nx-spacing-2);
 }
 .foundation-capability-title > svg,
 .foundation-core-heading > svg {
@@ -54,7 +54,7 @@
 }
 .foundation-integration {
   display: grid;
-  gap: 8px;
+  gap: var(--nx-spacing-2);
 }
 .foundation-status {
   color: var(--nx-color-muted-foreground);
@@ -63,7 +63,7 @@
   font-weight: 400;
 }
 .foundation-destination {
-  gap: 6px;
+  gap: var(--nx-spacing-1_5);
 }
 @container framework (max-height: 640px) and (min-width: 701px) {
   .foundation-flow {
@@ -77,21 +77,21 @@
   .foundation-flow .framework-token-group,
   .foundation-flow .framework-core-column,
   .foundation-flow .framework-output-group {
-    gap: 12px;
+    gap: var(--nx-spacing-3);
   }
   .foundation-core {
-    padding: 16px 16px 112px;
-    gap: 12px;
+    padding: var(--nx-spacing-4) var(--nx-spacing-4) var(--nx-spacing-28);
+    gap: var(--nx-spacing-3);
   }
   .foundation-core-heading > svg {
     inline-size: 20px;
     block-size: 20px;
   }
   .foundation-capabilities {
-    gap: 8px;
+    gap: var(--nx-spacing-2);
   }
   .foundation-capability {
-    gap: 4px;
+    gap: var(--nx-spacing-1);
   }
   .foundation-capability-title {
     flex-direction: row;
@@ -101,10 +101,10 @@
     block-size: 18px;
   }
   .foundation-integration {
-    gap: 4px;
+    gap: var(--nx-spacing-1);
   }
   .foundation-destination {
-    gap: 2px;
+    gap: var(--nx-spacing-0_5);
   }
   .foundation-destination > svg {
     inline-size: 20px;
@@ -116,26 +116,26 @@
     mask-image: linear-gradient(to bottom, #000 calc(100% - 80px), transparent);
   }
   .foundation-core {
-    padding: 12px 8px 128px;
-    gap: 12px;
-    border-radius: 12px;
+    padding: var(--nx-spacing-3) var(--nx-spacing-2) var(--nx-spacing-32);
+    gap: var(--nx-spacing-3);
+    border-radius: var(--nx-radius-xl);
   }
   .foundation-core-heading {
     flex-direction: column;
-    gap: 6px;
+    gap: var(--nx-spacing-1_5);
   }
   .foundation-core-heading > svg {
     inline-size: 24px;
     block-size: 24px;
   }
   .foundation-capabilities {
-    gap: 12px;
+    gap: var(--nx-spacing-3);
   }
   .foundation-capability {
-    gap: 4px;
+    gap: var(--nx-spacing-1);
   }
   .foundation-capability-title {
-    gap: 4px;
+    gap: var(--nx-spacing-1);
   }
   .foundation-capability-title > svg {
     inline-size: 16px;
@@ -145,10 +145,10 @@
     line-height: 1.35;
   }
   .foundation-integration {
-    gap: 4px;
+    gap: var(--nx-spacing-1);
   }
   .foundation-destination {
-    gap: 4px;
-    padding-inline: 4px;
+    gap: var(--nx-spacing-1);
+    padding-inline: var(--nx-spacing-1);
   }
 }

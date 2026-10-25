@@ -2,7 +2,8 @@
   isolation: isolate;
 }
 .story-chapter-content {
-  animation: story-arrive 300ms ease-out both;
+  animation: story-arrive var(--nx-motion-duration-slow)
+    var(--nx-motion-ease-enter) both;
 }
 .stories-chapter {
   display: flex;

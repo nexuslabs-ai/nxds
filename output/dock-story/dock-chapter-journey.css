@@ -65,7 +65,7 @@
 }
 .story-empty-box {
   border: var(--nx-borderwidth-default) solid var(--nx-color-border-default);
-  border-radius: var(--canvas-radius, 14px);
+  border-radius: var(--nx-radius-xl);
   background: var(--nx-color-background);
   min-width: 0;
   min-height: 0;

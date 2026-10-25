@@ -11,7 +11,7 @@
 /* Prototype card surface, for the pre-migration gallery only. */
 .showcase-grid[data-showcase-version='original'] > .showcase-card {
   border: var(--nx-borderwidth-default) solid var(--nx-color-border-default);
-  border-radius: var(--canvas-radius, 14px);
+  border-radius: 14px;
   background: var(--nx-color-background);
   color: var(--nx-color-foreground);
 }

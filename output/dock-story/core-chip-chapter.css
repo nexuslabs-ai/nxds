@@ -1,9 +1,9 @@
 .chip-flow {
-  --chip-row-gap: clamp(4px, 0.5cqi, 8px);
-  --chip-output-gap: clamp(8px, 1cqi, 16px);
+  --chip-row-gap: clamp(var(--nx-spacing-1), 0.5cqi, var(--nx-spacing-2));
+  --chip-output-gap: clamp(var(--nx-spacing-2), 1cqi, var(--nx-spacing-4));
   --chip-trace: color-mix(in srgb, var(--nx-color-foreground) 16%, transparent);
   --chip-space: var(--framework-column-gap);
-  --chip-icon-size: clamp(16px, 1.5cqi, 24px);
+  --chip-icon-size: clamp(var(--nx-spacing-4), 1.5cqi, var(--nx-spacing-6));
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 2fr) minmax(0, 0.8fr);
 }
 .chip-token-container,
@@ -19,7 +19,7 @@
   min-block-size: 0;
   padding: var(--chip-space);
   background: var(--nx-color-muted);
-  border-radius: var(--canvas-radius, 14px);
+  border-radius: var(--nx-radius-xl);
 }
 .chip-core {
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -60,7 +60,8 @@
   overflow: hidden;
   pointer-events: none;
   z-index: 1;
-  transition: background-color 180ms ease;
+  transition: background-color var(--nx-motion-duration-default)
+    var(--nx-motion-ease-enter);
 }
 .chip-trace-input {
   inline-size: calc(3 * var(--chip-space));
@@ -119,7 +120,8 @@
   }
 }
 .chip-destination > :is(svg, strong, .chip-status) {
-  transition: opacity 180ms ease;
+  transition: opacity var(--nx-motion-duration-default)
+    var(--nx-motion-ease-enter);
 }
 .chip-destination[data-planned='true'] > :is(svg, strong, .chip-status) {
   opacity: 0.72;
@@ -137,13 +139,13 @@
 @container framework (max-height: 640px) and (min-width: 701px) {
   .chip-flow {
     --framework-label-size: 12px;
-    --chip-row-gap: 2px;
-    --chip-icon-size: 14px;
+    --chip-row-gap: var(--nx-spacing-0_5);
+    --chip-icon-size: var(--nx-spacing-3_5);
   }
   .chip-flow .framework-token-group,
   .chip-flow .framework-core-column,
   .chip-flow .framework-output-group {
-    gap: 12px;
+    gap: var(--nx-spacing-3);
   }
   .chip-destination {
     display: grid;
@@ -151,8 +153,8 @@
     grid-template-rows: auto auto;
     align-content: center;
     justify-content: center;
-    column-gap: 8px;
-    row-gap: 2px;
+    column-gap: var(--nx-spacing-2);
+    row-gap: var(--nx-spacing-0_5);
   }
   .chip-destination > svg {
     grid-area: 1 / 1 / 3 / 2;
@@ -185,19 +187,19 @@
   }
   .chip-flow .framework-output-group {
     grid-template-rows: auto minmax(0, 1fr);
-    gap: 8px;
+    gap: var(--nx-spacing-2);
   }
   .chip-flow .framework-destinations {
-    --chip-output-gap: 8px;
+    --chip-output-gap: var(--nx-spacing-2);
   }
   .chip-destination {
     flex-direction: row;
     justify-content: flex-start;
-    gap: 12px;
-    padding-inline: 16px;
+    gap: var(--nx-spacing-3);
+    padding-inline: var(--nx-spacing-4);
   }
   .chip-destination strong {
-    font-size: 16px;
+    font-size: var(--nx-typography-size-sm);
   }
   .chip-status {
     margin-inline-start: auto;

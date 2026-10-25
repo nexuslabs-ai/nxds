@@ -33,7 +33,7 @@
 .framework-output-group {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 24px;
+  gap: var(--nx-spacing-6);
   min-inline-size: 0;
   min-block-size: 0;
 }
@@ -47,7 +47,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: repeat(12, minmax(0, 1fr));
-  gap: clamp(4px, 0.5cqi, 8px);
+  gap: clamp(var(--nx-spacing-1), 0.5cqi, var(--nx-spacing-2));
   min-block-size: 0;
 }
 .framework-token {
@@ -56,12 +56,12 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: var(--nx-spacing-3);
   min-inline-size: 0;
   min-block-size: 0;
-  padding: 0 20px;
+  padding: 0 var(--nx-spacing-5);
   border: 0;
-  border-radius: var(--canvas-radius, 14px);
+  border-radius: var(--nx-radius-xl);
   background: var(--framework-surface);
   color: var(--nx-color-foreground);
   font-size: inherit;
@@ -96,13 +96,13 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 16px;
+  gap: var(--nx-spacing-4);
   inline-size: 100%;
   block-size: 100%;
   min-block-size: 0;
   border: 0;
-  border-radius: var(--canvas-radius, 14px);
-  padding: clamp(16px, 2cqi, 40px);
+  border-radius: var(--nx-radius-xl);
+  padding: clamp(var(--nx-spacing-4), 2cqi, var(--nx-spacing-10));
   text-align: center;
   background: var(--framework-surface);
 }
@@ -123,7 +123,7 @@
 .framework-destinations {
   display: grid;
   grid-template-rows: repeat(5, minmax(0, 1fr));
-  gap: clamp(8px, 1cqi, 16px);
+  gap: clamp(var(--nx-spacing-2), 1cqi, var(--nx-spacing-4));
   min-block-size: 0;
 }
 .framework-destination {
@@ -132,18 +132,19 @@
   align-items: center;
   flex-direction: column;
   justify-content: center;
-  gap: 8px;
+  gap: var(--nx-spacing-2);
   min-block-size: 0;
-  padding: 4px;
+  padding: var(--nx-spacing-1);
   border: 0;
-  border-radius: var(--canvas-radius, 14px);
+  border-radius: var(--nx-radius-xl);
   color: var(--nx-color-muted-foreground);
   background: var(--framework-surface);
   font: inherit;
   cursor: pointer;
   transition:
-    color 240ms,
-    background-color 240ms;
+    color var(--nx-motion-duration-moderate) var(--nx-motion-ease-enter),
+    background-color var(--nx-motion-duration-moderate)
+      var(--nx-motion-ease-enter);
 }
 .framework-destination > svg {
   inline-size: clamp(24px, 3cqi, 40px);
@@ -191,15 +192,15 @@
   .framework-token-group,
   .framework-core-column,
   .framework-output-group {
-    gap: 12px;
+    gap: var(--nx-spacing-3);
   }
   .framework-token-list {
-    gap: 2px;
+    gap: var(--nx-spacing-0_5);
   }
   .framework-token {
-    padding-inline: 12px;
+    padding-inline: var(--nx-spacing-3);
     flex-direction: row;
-    gap: 6px;
+    gap: var(--nx-spacing-1_5);
   }
   .framework-token > svg {
     inline-size: 14px;
@@ -207,15 +208,15 @@
   }
   .framework-destination {
     padding: 0;
-    gap: 4px;
+    gap: var(--nx-spacing-1);
   }
   .framework-destination > svg {
     inline-size: 20px;
     block-size: 20px;
   }
   .framework-core {
-    gap: 10px;
-    padding: 16px;
+    gap: var(--nx-spacing-2_5);
+    padding: var(--nx-spacing-4);
   }
   .framework-core > svg {
     inline-size: 28px;
@@ -225,7 +226,7 @@
 @container framework (max-width: 700px) {
   .framework-flow {
     --framework-label-size: 10px;
-    --framework-column-gap: 8px;
+    --framework-column-gap: var(--nx-spacing-2);
   }
   .framework-column-label {
     display: none;
@@ -237,33 +238,33 @@
     gap: 0;
   }
   .framework-token-list {
-    gap: 4px;
+    gap: var(--nx-spacing-1);
   }
   .framework-token {
-    gap: 4px;
-    padding: 0 4px;
-    border-radius: 6px;
+    gap: var(--nx-spacing-1);
+    padding: 0 var(--nx-spacing-1);
+    border-radius: var(--nx-radius-sm);
   }
   .framework-token > svg {
     inline-size: 12px;
     block-size: 12px;
   }
   .framework-core {
-    padding: 8px;
-    border-radius: 12px;
-    gap: 12px;
+    padding: var(--nx-spacing-2);
+    border-radius: var(--nx-radius-xl);
+    gap: var(--nx-spacing-3);
   }
   .framework-core > svg {
     inline-size: 28px;
     block-size: 28px;
   }
   .framework-destinations {
-    gap: 8px;
+    gap: var(--nx-spacing-2);
   }
   .framework-destination {
-    gap: 4px;
-    padding: 4px;
-    border-radius: 8px;
+    gap: var(--nx-spacing-1);
+    padding: var(--nx-spacing-1);
+    border-radius: var(--nx-radius-md);
     text-align: center;
   }
   .framework-destination > svg {

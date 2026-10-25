@@ -26,7 +26,7 @@
 }
 .coexistence-application {
   border: var(--nx-borderwidth-default) solid var(--coexistence-line);
-  border-radius: var(--canvas-radius, 14px);
+  border-radius: var(--nx-radius-xl);
   padding: clamp(var(--nx-spacing-5), 3cqi, var(--nx-spacing-12));
 }
 .coexistence-application-label {
@@ -45,7 +45,7 @@
   flex-direction: column;
   gap: var(--nx-spacing-6);
   padding: clamp(var(--nx-spacing-5), 3cqi, var(--nx-spacing-10));
-  border-radius: var(--canvas-radius, 14px);
+  border-radius: var(--nx-radius-xl);
   background: var(--coexistence-surface);
   min-inline-size: 0;
 }
