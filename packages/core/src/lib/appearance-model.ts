@@ -243,8 +243,9 @@ const clampFontSize = (value: unknown, fallback: number): number =>
 // Retired public-mode codename -> friendly, applied to persisted state on read
 // (see normalizeAppearanceModeIds). Internal; correctness is covered behaviorally
 // by the sanitize codename->friendly tests, so it is not part of the public API.
-const PUBLIC_MODE_RENAME: Partial<
-  Record<NxdsPresetField, Record<string, string>>
+const PUBLIC_MODE_RENAME: Record<
+  Exclude<NxdsPresetField, 'corners'>,
+  Record<string, string>
 > = {
   density: {
     nova: 'compact',

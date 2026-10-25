@@ -28,10 +28,7 @@ const RADII: { cls: string; label: string }[] = [
   { cls: 'nx:rounded-full', label: 'full' },
 ];
 
-const RADIUS_MODES = CORNER_OPTIONS.map((option) => ({
-  mode: option.value,
-  md: Number(option.value),
-}));
+const RADIUS_MODES = CORNER_OPTIONS.map((option) => option.value);
 
 const BORDER_DESIGNS: {
   mode: string;
@@ -89,31 +86,11 @@ export default function Radius() {
             </div>
           ))}
         </div>
-        <div className="nx:overflow-x-auto">
-          <table className="nx:w-full nx:min-w-[360px] nx:border-collapse nx:typography-label-default">
-            <thead>
-              <tr className="nx:border-b nx:border-border-default nx:text-left">
-                <th className="nx:py-2 nx:pr-3 nx:font-semibold">Mode</th>
-                <th className="nx:py-2 nx:font-semibold">md value (px)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {RADIUS_MODES.map((m) => (
-                <tr
-                  key={m.mode}
-                  className="nx:border-b nx:border-border-default"
-                >
-                  <td className="nx:py-2 nx:pr-3 nx:font-mono nx:typography-label-small">
-                    {m.mode}
-                  </td>
-                  <td className="nx:py-2 nx:text-muted-foreground nx:typography-label-small">
-                    {m.md}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <p className="nx:typography-body-default nx:text-muted-foreground nx:max-w-[64ch]">
+          Each <code>corners</code> mode is named by its <code>md</code> radius
+          in pixels: {RADIUS_MODES.slice(0, -1).join(', ')} and{' '}
+          {RADIUS_MODES.at(-1)}. The other sizes scale with it.
+        </p>
       </section>
 
       {/* ── Border widths ───────────────────────────────────── */}

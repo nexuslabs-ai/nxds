@@ -1,7 +1,7 @@
 ---
 '@nxds/core': minor
-'@nxds/react': patch
-'@nxds/vue': patch
+'@nxds/react': minor
+'@nxds/vue': minor
 ---
 
 Corner modes are named by their pixel value: `0`, `2`, `4`, `6`, `8`, `10`, `12`, `14` and `16` (`data-radius="12"`, `corners: '12'`). The default is `4`. The old names `square`, `subtle`, `smooth`, `round` and `extra-round` are removed; use `0`, `4`, `8`, `12` and `16`.
