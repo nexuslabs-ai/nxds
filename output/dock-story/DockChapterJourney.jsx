@@ -15,9 +15,7 @@ import { ComparisonChapter } from './ComparisonChapter';
 import { ContextDock } from './ContextDock';
 import { ContinuousDock } from './ContinuousDock';
 import { CoreChipChapter } from './CoreChipChapter';
-import { DialKitToolControls } from './DialKitToolControls';
 import { tabIcons } from './dock-icons';
-import { DockToolControls } from './DockToolControls';
 import { FoundationChapter } from './FoundationChapter';
 import { FrameworkChapter } from './FrameworkChapter';
 import {
@@ -91,7 +89,6 @@ const chapters = [
 function ChapterCanvas({
   chapter,
   tool,
-  settings,
   split,
   onSplitChange,
   onFrameworkSelect,
@@ -99,11 +96,10 @@ function ChapterCanvas({
   showcaseView,
   showcaseVersion,
   appearance,
-  customizeVersion,
   customizeCanvas,
   coexistenceVersion,
 }) {
-  if (chapter === 'customize' && customizeVersion !== 'previous')
+  if (chapter === 'customize')
     return (
       <AppearancePreview
         appearance={appearance}
@@ -118,23 +114,9 @@ function ChapterCanvas({
         }
       />
     );
-  if (
-    (chapter === 'explore' || chapter === 'customize') &&
-    showcaseVersion === 'original'
-  )
-    return (
-      <OriginalShowcaseGrid
-        view={chapter === 'explore' ? tool : showcaseView}
-        settings={settings}
-      />
-    );
-  if (chapter === 'explore' || chapter === 'customize')
-    return (
-      <ShowcaseGrid
-        view={chapter === 'explore' ? tool : showcaseView}
-        settings={settings}
-      />
-    );
+  if (chapter === 'explore' && showcaseVersion === 'original')
+    return <OriginalShowcaseGrid view={tool} />;
+  if (chapter === 'explore') return <ShowcaseGrid view={tool} />;
   if (chapter === 'coexist' && coexistenceVersion === 'hero-adoption') {
     if (tool === 'HeroUI') return <HeroAdoptionStudy />;
     if (tool === 'MUI')
@@ -189,7 +171,6 @@ function ChapterCanvas({
     return (
       <ComparisonChapter
         stack={tool}
-        settings={settings}
         split={split}
         onSplitChange={onSplitChange}
       />
@@ -202,13 +183,10 @@ function ChapterCanvas({
     return <FrameworkChapter framework={tool} onSelect={onFrameworkSelect} />;
   if (chapter === 'stories')
     return <StoriesChapter key={tool} scenario={tool} />;
-  return (
-    <PlaceholderGrid layout={settings.layout} treatment={settings.treatment} />
-  );
+  return <PlaceholderGrid />;
 }
 
 export function DockChapterJourney({
-  onThemeChange,
   previewAppearance,
   onPreviewAppearanceChange: updatePreviewAppearance,
   sharedAppearance,
@@ -261,7 +239,6 @@ export function DockChapterJourney({
           { value: 'compact', label: 'Compact Nexus · previous' },
           { value: 'visual', label: 'Visual choices · previous' },
           { value: 'nexus', label: 'Nexus appearance · previous' },
-          { value: 'previous', label: 'Prototype controls · previous' },
         ],
         default: 'owned',
       },
@@ -392,21 +369,6 @@ export function DockChapterJourney({
     });
   }
 
-  const [settings, setSettings] = useState({
-    accent: '#c4c9f8',
-    tint: 0,
-    gap: 16,
-    radius: 14,
-    border: 1,
-    shadow: 0,
-    titleSize: 56,
-    weight: '600',
-    layout: 'Sidebar',
-    treatment: 'Outline',
-  });
-  function updateSetting(name, value) {
-    setSettings((current) => ({ ...current, [name]: value }));
-  }
   const [chapter, setChapter] = useState(0);
   const [selected, setSelected] = useState(() => chapters.map(() => 0));
   const [split, setSplit] = useState(50);
@@ -486,7 +448,7 @@ export function DockChapterJourney({
         ? NexusDock
         : PreviousNexusDock;
   const chapterControls =
-    current?.id === 'customize' && dock.customize !== 'previous' ? (
+    current?.id === 'customize' ? (
       <AppearanceControls
         compact={dock.customize === 'compact'}
         tool={current.tabs[activeIndex]}
@@ -530,17 +492,7 @@ export function DockChapterJourney({
       aria-label="Design system walkthrough"
       data-dock-iteration={dock.iteration}
       data-phone-gallery={dock.phone.gallery}
-      style={{
-        '--story-chapter-count': chapters.length + 1,
-        '--canvas-accent': settings.accent,
-        '--canvas-tint': settings.tint + '%',
-        '--canvas-gap': settings.gap + 'px',
-        '--canvas-radius': settings.radius + 'px',
-        '--canvas-border': settings.border + 'px',
-        '--canvas-shadow': settings.shadow + 'px',
-        '--story-title-size': settings.titleSize + 'px',
-        '--story-title-weight': settings.weight,
-      }}
+      style={{ '--story-chapter-count': chapters.length + 1 }}
     >
       <div className="dock-chapter-stage" data-footer={showFooter} ref={stage}>
         {showFooter ? (
@@ -603,8 +555,7 @@ export function DockChapterJourney({
               {current.id === 'customize' &&
                 ['gallery', 'board', 'labeled'].includes(
                   dock.customizeCanvas
-                ) &&
-                dock.customize !== 'previous' && (
+                ) && (
                   <p className="customize-gallery-subtitle">
                     Change one setting. See your system respond.
                   </p>
@@ -630,7 +581,6 @@ export function DockChapterJourney({
               <ChapterCanvas
                 chapter={current.id}
                 tool={current.tabs[activeIndex]}
-                settings={settings}
                 split={split}
                 onSplitChange={setSplit}
                 onFrameworkSelect={selectTab}
@@ -638,7 +588,6 @@ export function DockChapterJourney({
                 showcaseView={chapters[0].tabs[selected[0]]}
                 showcaseVersion={dock.showcase}
                 appearance={previewAppearance}
-                customizeVersion={dock.customize}
                 customizeCanvas={dock.customizeCanvas}
                 coexistenceVersion={coexistence.iteration}
               />
@@ -661,15 +610,7 @@ export function DockChapterJourney({
                   onSelect={selectTab}
                   hasControls={Boolean(current.controls)}
                 >
-                  {chapterControls ?? (
-                    <DialKitToolControls
-                      tool={current.tabs[activeIndex]}
-                      settings={settings}
-                      onChange={updateSetting}
-                      theme={state.mode}
-                      onThemeChange={onThemeChange}
-                    />
-                  )}
+                  {chapterControls}
                 </DockComponent>
               ) : dock.iteration === 'straight-bare' ? (
                 <StraightDock
@@ -685,15 +626,7 @@ export function DockChapterJourney({
                   reduceMotion={state.prefs.reduceMotion}
                   theme={state.mode}
                 >
-                  {chapterControls ?? (
-                    <DialKitToolControls
-                      tool={current.tabs[activeIndex]}
-                      settings={settings}
-                      onChange={updateSetting}
-                      theme={state.mode}
-                      onThemeChange={onThemeChange}
-                    />
-                  )}
+                  {chapterControls}
                 </StraightDock>
               ) : dock.iteration === 'straight-roomy' ? (
                 <StraightDock
@@ -709,15 +642,7 @@ export function DockChapterJourney({
                   reduceMotion={state.prefs.reduceMotion}
                   theme={state.mode}
                 >
-                  {chapterControls ?? (
-                    <DialKitToolControls
-                      tool={current.tabs[activeIndex]}
-                      settings={settings}
-                      onChange={updateSetting}
-                      theme={state.mode}
-                      onThemeChange={onThemeChange}
-                    />
-                  )}
+                  {chapterControls}
                 </StraightDock>
               ) : dock.iteration === 'straight' ? (
                 <StraightDock
@@ -732,15 +657,7 @@ export function DockChapterJourney({
                   reduceMotion={state.prefs.reduceMotion}
                   theme={state.mode}
                 >
-                  {chapterControls ?? (
-                    <DialKitToolControls
-                      tool={current.tabs[activeIndex]}
-                      settings={settings}
-                      onChange={updateSetting}
-                      theme={state.mode}
-                      onThemeChange={onThemeChange}
-                    />
-                  )}
+                  {chapterControls}
                 </StraightDock>
               ) : dock.iteration === 'continuous' ? (
                 <ContinuousDock
@@ -755,15 +672,7 @@ export function DockChapterJourney({
                   reduceMotion={state.prefs.reduceMotion}
                   theme={state.mode}
                 >
-                  {chapterControls ?? (
-                    <DialKitToolControls
-                      tool={current.tabs[activeIndex]}
-                      settings={settings}
-                      onChange={updateSetting}
-                      theme={state.mode}
-                      onThemeChange={onThemeChange}
-                    />
-                  )}
+                  {chapterControls}
                 </ContinuousDock>
               ) : dock.iteration === 'pill-morph' ? (
                 <MorphingDock
@@ -778,15 +687,7 @@ export function DockChapterJourney({
                   reduceMotion={state.prefs.reduceMotion}
                   theme={state.mode}
                 >
-                  {chapterControls ?? (
-                    <DialKitToolControls
-                      tool={current.tabs[activeIndex]}
-                      settings={settings}
-                      onChange={updateSetting}
-                      theme={state.mode}
-                      onThemeChange={onThemeChange}
-                    />
-                  )}
+                  {chapterControls}
                 </MorphingDock>
               ) : dock.iteration === 'markup-portrait' ? (
                 <MarkupPortraitDock
@@ -801,15 +702,7 @@ export function DockChapterJourney({
                   reduceMotion={state.prefs.reduceMotion}
                   theme={state.mode}
                 >
-                  {chapterControls ?? (
-                    <DialKitToolControls
-                      tool={current.tabs[activeIndex]}
-                      settings={settings}
-                      onChange={updateSetting}
-                      theme={state.mode}
-                      onThemeChange={onThemeChange}
-                    />
-                  )}
+                  {chapterControls}
                 </MarkupPortraitDock>
               ) : dock.iteration === 'tactile' ? (
                 <TactileDock
@@ -823,15 +716,7 @@ export function DockChapterJourney({
                   duration={dock.motion.duration}
                   reduceMotion={state.prefs.reduceMotion}
                 >
-                  {chapterControls ?? (
-                    <DockToolControls
-                      tool={current.tabs[activeIndex]}
-                      settings={settings}
-                      onChange={updateSetting}
-                      theme={state.mode}
-                      onThemeChange={onThemeChange}
-                    />
-                  )}
+                  {chapterControls}
                 </TactileDock>
               ) : dock.iteration === 'active-label' ? (
                 <ActiveLabelDock
@@ -846,15 +731,7 @@ export function DockChapterJourney({
                   reduceMotion={state.prefs.reduceMotion}
                   theme={state.mode}
                 >
-                  {chapterControls ?? (
-                    <DialKitToolControls
-                      tool={current.tabs[activeIndex]}
-                      settings={settings}
-                      onChange={updateSetting}
-                      theme={state.mode}
-                      onThemeChange={onThemeChange}
-                    />
-                  )}
+                  {chapterControls}
                 </ActiveLabelDock>
               ) : dock.iteration === 'contextual' ? (
                 <ContextDock
@@ -868,15 +745,7 @@ export function DockChapterJourney({
                   duration={dock.motion.duration}
                   reduceMotion={state.prefs.reduceMotion}
                 >
-                  {chapterControls ?? (
-                    <DockToolControls
-                      tool={current.tabs[activeIndex]}
-                      settings={settings}
-                      onChange={updateSetting}
-                      theme={state.mode}
-                      onThemeChange={onThemeChange}
-                    />
-                  )}
+                  {chapterControls}
                 </ContextDock>
               ) : (
                 <div

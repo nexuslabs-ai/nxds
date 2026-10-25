@@ -164,9 +164,6 @@ function Page() {
             previewAppearance={previewAppearance}
             onPreviewAppearanceChange={updatePreviewAppearance}
             sharedAppearance={sharedAppearance}
-            onThemeChange={(mode) =>
-              setAppearance((current) => ({ ...current, mode }))
-            }
           />
         </main>
         <SourceAudit />

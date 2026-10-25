@@ -106,10 +106,7 @@ function Preview() {
           ) : preview.view === 'Gallery' ? (
             <ComponentGallery />
           ) : (
-            <ShowcaseGrid
-              view={preview.view}
-              settings={{ layout: 'Sidebar', treatment: 'Outline' }}
-            />
+            <ShowcaseGrid view={preview.view} />
           )}
         </div>
       )}

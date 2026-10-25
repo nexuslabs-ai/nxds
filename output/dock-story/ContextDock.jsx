@@ -143,7 +143,11 @@ export function ContextDock({
                   <span className="context-tool-icon">
                     <Icon size={23} stroke={1.65} aria-hidden="true" />
                     {tab === 'Colors' && (
-                      <i style={{ background: 'var(--canvas-accent)' }} />
+                      <i
+                        style={{
+                          background: 'var(--nx-color-primary-background)',
+                        }}
+                      />
                     )}
                   </span>
                   <span className="context-tool-label">{tab}</span>

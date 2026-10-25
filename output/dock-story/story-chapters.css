@@ -13,22 +13,12 @@
   position: absolute;
   inset: 0;
 }
-.comparison-before {
-  --canvas-radius: 14px;
-  --canvas-border: 1px;
-  --canvas-shadow: 0px;
-  --canvas-tint: 0%;
-}
 .comparison-after {
   clip-path: inset(0 0 0 var(--comparison-split));
   background: var(--nx-color-background);
 }
 .comparison-after .story-empty-box {
-  border-color: color-mix(
-    in srgb,
-    var(--canvas-accent) 55%,
-    var(--nx-color-border-default)
-  );
+  border-color: color-mix(in srgb, #c4c9f8 55%, var(--nx-color-border-default));
 }
 .comparison-labels {
   position: absolute;

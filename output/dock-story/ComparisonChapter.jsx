@@ -2,22 +2,15 @@ import { IconArrowsHorizontal } from '@tabler/icons-react';
 
 import { PlaceholderGrid } from './PlaceholderGrid';
 
-export function ComparisonChapter({ stack, settings, split, onSplitChange }) {
+export function ComparisonChapter({ stack, split, onSplitChange }) {
   return (
     <div
       className="story-comparison"
       style={{ '--comparison-split': `${split}%` }}
     >
-      <PlaceholderGrid
-        layout={settings.layout}
-        treatment="Outline"
-        className="comparison-before"
-      />
+      <PlaceholderGrid />
       <div className="comparison-after">
-        <PlaceholderGrid
-          layout={settings.layout}
-          treatment={settings.treatment}
-        />
+        <PlaceholderGrid />
       </div>
       <div className="comparison-labels" aria-hidden="true">
         <span>{stack}</span>

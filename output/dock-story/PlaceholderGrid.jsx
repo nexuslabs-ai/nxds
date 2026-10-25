@@ -1,11 +1,6 @@
-export function PlaceholderGrid({ layout, treatment, className = '' }) {
+export function PlaceholderGrid({ className = '' }) {
   return (
-    <div
-      className={`story-box-grid ${className}`}
-      data-layout={layout}
-      data-treatment={treatment}
-      aria-hidden="true"
-    >
+    <div className={`story-box-grid ${className}`} aria-hidden="true">
       {Array.from({ length: 6 }, (_, index) => (
         <div className="story-empty-box" key={index} />
       ))}

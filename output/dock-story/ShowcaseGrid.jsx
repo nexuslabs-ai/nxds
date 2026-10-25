@@ -85,13 +85,11 @@ function CrmBoard() {
   );
 }
 
-export function ShowcaseGrid({ view, settings }) {
+export function ShowcaseGrid({ view }) {
   return (
     <div
       className="story-box-grid showcase-grid nexus-showcase"
       data-showcase-version="nexus"
-      data-layout={settings.layout}
-      data-treatment={settings.treatment}
       aria-label={`${view} showcase`}
     >
       {view === 'Components' && <ComponentsBoard />}

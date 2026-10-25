@@ -11,7 +11,7 @@
     var(--nx-color-foreground) 4%,
     var(--nx-color-background)
   );
-  --framework-column-gap: var(--canvas-gap, 16px);
+  --framework-column-gap: var(--nx-spacing-4);
   position: relative;
   isolation: isolate;
   display: grid;

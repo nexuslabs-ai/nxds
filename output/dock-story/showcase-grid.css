@@ -10,16 +10,10 @@
 }
 /* Prototype card surface, for the pre-migration gallery only. */
 .showcase-grid[data-showcase-version='original'] > .showcase-card {
-  border: var(--canvas-border, 1px) solid var(--nx-color-border-default);
+  border: var(--nx-borderwidth-default) solid var(--nx-color-border-default);
   border-radius: var(--canvas-radius, 14px);
-  background: color-mix(
-    in srgb,
-    var(--canvas-accent) var(--canvas-tint, 0%),
-    var(--nx-color-background)
-  );
+  background: var(--nx-color-background);
   color: var(--nx-color-foreground);
-  box-shadow: 0 calc(var(--canvas-shadow, 0px) / 4) var(--canvas-shadow, 0px)
-    #0002;
 }
 .showcase-grid > .showcase-card:first-child {
   grid-row: span 2;
@@ -236,18 +230,6 @@
   overflow-x: auto;
   margin-block: var(--nx-spacing-5) 0;
 }
-.showcase-grid[data-showcase-version='original'][data-treatment='Soft']
-  > .showcase-card {
-  background: color-mix(
-    in srgb,
-    var(--canvas-accent) 9%,
-    var(--nx-color-background)
-  );
-}
-.showcase-grid[data-showcase-version='original'][data-treatment='Solid']
-  > .showcase-card {
-  background: var(--nx-color-muted);
-}
 @container showcase-card (max-width: 300px) {
   .showcase-heading {
     margin-bottom: var(--nx-spacing-3);
@@ -440,13 +422,6 @@
   .showcase-project > .showcase-body > .showcase-stack {
     gap: var(--nx-spacing-8);
   }
-}
-.showcase-grid[data-layout='Grid'] > .showcase-card,
-.showcase-grid[data-layout='Columns'] > .showcase-card {
-  grid-row: auto;
-}
-.showcase-grid[data-layout='Columns'] > .showcase-card:nth-child(n + 4) {
-  display: none;
 }
 @container showcase-card (max-height: 360px) {
   .showcase-body {
