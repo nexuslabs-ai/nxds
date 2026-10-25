@@ -5,7 +5,7 @@
 }
 .dock-chapter-stage {
   --story-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr);
-  --story-dock-clearance: 112px;
+  --story-dock-clearance: var(--nx-spacing-28);
   container: chapter / size;
   position: sticky;
   top: var(--story-header-height, 64px);
@@ -13,13 +13,15 @@
   min-height: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: clamp(16px, 2.25svh, 32px);
-  padding: clamp(12px, 3svh, 40px) 32px 0;
+  gap: clamp(var(--nx-spacing-4), 2.25svh, var(--nx-spacing-8));
+  padding: clamp(var(--nx-spacing-3), 3svh, var(--nx-spacing-10))
+    var(--nx-spacing-8) 0;
 }
 .dock-chapter-heading {
   text-align: center;
-  animation: story-arrive 300ms ease-out both;
-  padding-block: 12px 40px;
+  animation: story-arrive var(--nx-motion-duration-slow)
+    var(--nx-motion-ease-enter) both;
+  padding-block: var(--nx-spacing-3) var(--nx-spacing-10);
 }
 @container chapter (min-height: 1040px) {
   .dock-chapter-heading {
@@ -32,12 +34,12 @@
   letter-spacing: -0.045em;
   line-height: 1.12;
   text-wrap: balance;
-  margin: 0 0 clamp(16px, 2.5cqb, 28px);
+  margin: 0 0 clamp(var(--nx-spacing-4), 2.5cqb, var(--nx-spacing-7));
 }
 .story-ctas {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: var(--nx-spacing-3);
 }
 .story-canvas {
   container: story-canvas / size;
@@ -85,8 +87,8 @@
   z-index: 1;
   display: grid;
   justify-items: center;
-  gap: 14px;
-  margin-block-end: 20px;
+  gap: var(--nx-spacing-3_5);
+  margin-block-end: var(--nx-spacing-5);
 }
 .story-segmented {
   display: flex;
@@ -207,10 +209,10 @@
 }
 @media (max-width: 700px) {
   .dock-chapter-stage {
-    padding: 24px 16px 0;
+    padding: var(--nx-spacing-6) var(--nx-spacing-4) 0;
   }
   .story-dock-position {
-    margin-block-end: 16px;
+    margin-block-end: var(--nx-spacing-4);
   }
   .story-box-grid {
     grid-template-columns: 1fr 1fr;
@@ -225,18 +227,18 @@
 
 @container chapter (max-height: 760px) {
   .dock-chapter-heading {
-    padding-block: 0 16px;
+    padding-block: 0 var(--nx-spacing-4);
   }
   .dock-chapter-heading h1 {
-    margin-bottom: 20px;
+    margin-bottom: var(--nx-spacing-5);
   }
 }
 @container chapter (max-height: 560px) {
   .dock-chapter-heading {
-    padding-bottom: 8px;
+    padding-bottom: var(--nx-spacing-2);
   }
   .dock-chapter-heading h1 {
-    margin-bottom: 16px;
+    margin-bottom: var(--nx-spacing-4);
   }
 }
 @container chapter (max-width: 700px) {
@@ -255,16 +257,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 32px;
+  gap: var(--nx-spacing-8);
   width: min(100%, 1216px);
   margin-inline: auto;
-  padding-block: 32px;
-  border-top: 1px solid var(--nx-color-border-default);
-  animation: story-arrive 300ms ease-out both;
+  padding-block: var(--nx-spacing-8);
+  border-top: var(--nx-borderwidth-default) solid var(--nx-color-border-default);
+  animation: story-arrive var(--nx-motion-duration-slow)
+    var(--nx-motion-ease-enter) both;
 }
 .story-footer nav {
   display: flex;
-  gap: 24px;
+  gap: var(--nx-spacing-6);
 }
 @media (max-width: 700px) {
   .story-footer {
