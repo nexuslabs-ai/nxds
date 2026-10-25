@@ -81,8 +81,12 @@ function rawLiteral(category, property, text) {
     return firstNonZero(lengths, text);
   if (category === 'border' || category === 'shadow')
     return firstNonZero(lengths, text) ?? text.match(colorLiteral)?.[0];
-  if (category === 'motion')
-    return firstNonZero(durations, text) ?? text.match(easings)?.[0];
+  if (category === 'motion') {
+    const duration = firstNonZero(durations, text);
+    // `animation: none` serializes as `… ease 0s …`; a zero-length motion has nothing to tokenize.
+    if (duration || /(?<![\d.])0m?s\b/.test(text)) return duration;
+    return text.match(easings)?.[0];
+  }
   if (category !== 'type') return anyLiteral(text);
   const sized = firstNonZero(lengths, text) ?? firstNonZero(numbers, text);
   if (sized) return sized;
