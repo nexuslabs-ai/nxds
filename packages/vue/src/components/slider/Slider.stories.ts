@@ -346,7 +346,7 @@ export const Vertical: Story = {
 export const CornerModes: Story = {
   render: () => ({
     components: { SliderControlRow },
-    setup: () => ({ radii: ['square', 'subtle', 'round'] }),
+    setup: () => ({ radii: ['0', '4', '12'] }),
     template: `
       <div class="nx:grid nx:w-full nx:gap-6">
         <div
@@ -356,7 +356,7 @@ export const CornerModes: Story = {
           :data-testid="'radius-' + radius"
           class="nx:grid nx:gap-2"
         >
-          <span class="nx:typography-label-small nx:text-muted-foreground">{{ radius }}</span>
+          <span class="nx:typography-label-small nx:text-muted-foreground">{{ radius }}px</span>
           <SliderControlRow
             label="Roundness"
             :default-value="[2]"
@@ -384,19 +384,19 @@ export const CornerModes: Story = {
       return Number.parseFloat(getComputedStyle(range).borderTopLeftRadius);
     };
 
-    const squareRadius = trackRadiusFor('square');
-    const subtleRadius = trackRadiusFor('subtle');
-    const roundRadius = trackRadiusFor('round');
-    const squareRangeRadius = rangeRadiusFor('square');
-    const subtleRangeRadius = rangeRadiusFor('subtle');
-    const roundRangeRadius = rangeRadiusFor('round');
+    const radius0 = trackRadiusFor('0');
+    const radius4 = trackRadiusFor('4');
+    const radius12 = trackRadiusFor('12');
+    const rangeRadius0 = rangeRadiusFor('0');
+    const rangeRadius4 = rangeRadiusFor('4');
+    const rangeRadius12 = rangeRadiusFor('12');
 
-    await expect(squareRadius).toBe(0);
-    await expect(subtleRadius).toBeGreaterThan(squareRadius);
-    await expect(roundRadius).toBeGreaterThan(subtleRadius);
-    await expect(squareRangeRadius).toBe(0);
-    await expect(subtleRangeRadius).toBeGreaterThan(squareRangeRadius);
-    await expect(roundRangeRadius).toBeGreaterThan(subtleRangeRadius);
+    await expect(radius0).toBe(0);
+    await expect(radius4).toBeGreaterThan(radius0);
+    await expect(radius12).toBeGreaterThan(radius4);
+    await expect(rangeRadius0).toBe(0);
+    await expect(rangeRadius4).toBeGreaterThan(rangeRadius0);
+    await expect(rangeRadius12).toBeGreaterThan(rangeRadius4);
   },
 };
 
