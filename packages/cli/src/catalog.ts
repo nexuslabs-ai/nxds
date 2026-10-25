@@ -146,17 +146,31 @@ export async function fetchRelease(
   return parsed.data;
 }
 
-/** The release an app is on, or `latest`; fails when the registry doesn't have it. */
+/**
+ * The release an app is on, or `latest`, with files for the app's React
+ * major; fails when the registry doesn't have it.
+ */
 export async function loadRelease(
   registry: string,
-  version: string
+  version: string,
+  react: ReactMajor
 ): Promise<Catalog> {
   const catalog = await fetchRelease(registry, version);
-  if (catalog) return catalog;
+  if (!catalog) {
+    throw new CliError(
+      version === 'latest'
+        ? `${registry} has no nxds release.`
+        : `${registry} has no nxds ${version}, the release this app is on. Run \`${CLI_COMMAND} update\` to move to the latest release.`
+    );
+  }
+  if (catalog.reactMajors.includes(react)) return catalog;
+  const latest =
+    version === 'latest' ? null : await fetchRelease(registry, 'latest');
+  const fix = latest?.reactMajors.includes(react)
+    ? `Upgrade the app to React 19, or run \`${CLI_COMMAND} update\` to move to nxds ${latest.version}, which has React ${react} files.`
+    : 'Upgrade the app to React 19.';
   throw new CliError(
-    version === 'latest'
-      ? `${registry} has no nxds release.`
-      : `${registry} has no nxds ${version}, the release this app is on. Run \`${CLI_COMMAND} update\` to move to the latest release.`
+    `nxds ${catalog.version} has no React ${react} files. ${fix}`
   );
 }
 
@@ -183,23 +197,6 @@ export function variantFor<V extends Variant>(
   target: Target
 ): V {
   return variantForReact(variantOf(item, target.framework), target.react);
-}
-
-/**
- * Fails when `catalog` has no files for the app's React major. `pinned` is
- * true when `catalog` is the app's release rather than the latest, so
- * `update` can move it to one with React 18 files.
- */
-export function assertSupportsReact(
-  catalog: Catalog,
-  react: ReactMajor,
-  pinned: boolean
-) {
-  if (catalog.reactMajors.includes(react)) return;
-  const fix = pinned
-    ? `Upgrade the app to React 19, or run \`${CLI_COMMAND} update\` to move to a release with React 18 support.`
-    : 'Upgrade the app to React 19.';
-  throw new CliError(`nxds ${catalog.version} has no React 18 files. ${fix}`);
 }
 
 export function setupVariant(catalog: Catalog, target: Target): SetupVariant {

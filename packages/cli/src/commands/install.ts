@@ -3,7 +3,6 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import {
-  assertSupportsReact,
   type Catalog,
   fetchRelease,
   loadRelease,
@@ -144,8 +143,11 @@ export async function init(
   const dir = options.dir ? nxdsDir(options.dir) : undefined;
   const existing = readConfig(cwd);
   // Running init again stays on the app's release.
-  const catalog = await loadRelease(registry, existing?.version ?? 'latest');
-  assertSupportsReact(catalog, react, existing !== null);
+  const catalog = await loadRelease(
+    registry,
+    existing?.version ?? 'latest',
+    react
+  );
   if (existing) assertFilesMatchReact(existing, react);
   if (existing && dir && dir !== existing.dir) {
     throw new CliError(
@@ -247,7 +249,7 @@ export async function add(
   const config = requireConfig(cwd);
   const project = readProject(cwd);
   assertFilesMatchReact(config, reactMajor(project));
-  const catalog = await loadRelease(registry, config.version);
+  const catalog = await loadRelease(registry, config.version, config.react);
   const installed = installItems(
     catalog,
     project,
@@ -322,8 +324,7 @@ export async function update(
   const from = config.version;
   const fromReact = config.react;
   const react = reactMajor(project);
-  const latest = await loadRelease(registry, 'latest');
-  assertSupportsReact(latest, react, false);
+  const latest = await loadRelease(registry, 'latest', react);
   const { known, removed } = splitInstalled(latest, config.items);
   const current = filesOf(latest, { ...config, react }, known);
   const previous = await fetchRelease(registry, from);

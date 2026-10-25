@@ -2,7 +2,6 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 import {
-  assertSupportsReact,
   type Catalog,
   type CatalogItem,
   findItem,
@@ -13,15 +12,19 @@ import {
   variantFor,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
-import { readConfig } from '../config';
+import { type Config, readConfig } from '../config';
 import { CliError } from '../errors';
 import { reactMajor, readProject } from '../project';
 
 import type { CommandResult } from './result';
 
 /** The release the app is on, else the latest: what `add` would install. */
-function appRelease(cwd: string, registry: string) {
-  return loadRelease(registry, readConfig(cwd)?.version ?? 'latest');
+function appRelease(
+  registry: string,
+  config: Config | null,
+  react: ReactMajor
+) {
+  return loadRelease(registry, config?.version ?? 'latest', react);
 }
 
 function summary(item: CatalogItem) {
@@ -50,7 +53,12 @@ export async function list(
   registry: string,
   kind: 'component' | 'block' | undefined
 ): Promise<CommandResult> {
-  const items = (await appRelease(cwd, registry)).items.filter(
+  const catalog = await appRelease(
+    registry,
+    readConfig(cwd),
+    projectReact(cwd)
+  );
+  const items = catalog.items.filter(
     (item) => item.name !== SETUP && (kind === undefined || item.kind === kind)
   );
   return { data: items.map(summary), lines: summaryLines(items), ok: true };
@@ -68,7 +76,12 @@ export async function search(
     if (item.description.toLowerCase().includes(needle)) return 2;
     return undefined;
   };
-  const items = (await appRelease(cwd, registry)).items
+  const catalog = await appRelease(
+    registry,
+    readConfig(cwd),
+    projectReact(cwd)
+  );
+  const items = catalog.items
     .filter((item) => item.name !== SETUP)
     .flatMap((item) => {
       const score = rank(item);
@@ -85,9 +98,8 @@ export async function search(
 }
 
 /** The framework in nxds.json, else the catalog's only one. */
-function projectFramework(cwd: string, catalog: Catalog): Framework {
-  const configured = readConfig(cwd)?.framework;
-  if (configured) return configured;
+function projectFramework(config: Config | null, catalog: Catalog): Framework {
+  if (config) return config.framework;
   const [only, ...others] = catalog.frameworks;
   if (only && others.length === 0) return only;
   throw new CliError(
@@ -107,12 +119,12 @@ export async function view(
   registry: string,
   name: string
 ): Promise<CommandResult> {
-  const catalog = await appRelease(cwd, registry);
-  const item = findItem(catalog, name);
+  const config = readConfig(cwd);
   const react = projectReact(cwd);
-  assertSupportsReact(catalog, react, readConfig(cwd) !== null);
+  const catalog = await appRelease(registry, config, react);
+  const item = findItem(catalog, name);
   const variant = variantFor(item, {
-    framework: projectFramework(cwd, catalog),
+    framework: projectFramework(config, catalog),
     react,
   });
   const packages = Object.entries(variant.packages.npm).map(

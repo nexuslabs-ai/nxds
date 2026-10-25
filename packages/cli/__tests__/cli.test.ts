@@ -450,6 +450,33 @@ describe('React 18', () => {
     expect(run.stderr).toMatch(/nxds 0\.4\.6 has no React 18 files/);
   });
 
+  it('suggests update when a later release has React 18 files', async () => {
+    const context = setup();
+    expect((await cli(['init'], context)).exitCode).toBe(EXIT_CODES.ok);
+    writeRegistry(context.registry, [RELEASE, react18Release('0.4.7')]);
+    setReact(context.app, '^18.3.1');
+
+    const run = await cli(['view', 'button'], context);
+
+    expect(run.exitCode).toBe(EXIT_CODES.error);
+    expect(run.stderr).toMatch(
+      /^nxds 0\.4\.6 has no React 18 files\. Upgrade the app to React 19, or run `npx nxds-cli@latest update` to move to nxds 0\.4\.7, which has React 18 files\.$/m
+    );
+  });
+
+  it('suggests only React 19 when the app is on the latest release', async () => {
+    const context = setup();
+    expect((await cli(['init'], context)).exitCode).toBe(EXIT_CODES.ok);
+    setReact(context.app, '^18.3.1');
+
+    const run = await cli(['view', 'button'], context);
+
+    expect(run.exitCode).toBe(EXIT_CODES.error);
+    expect(run.stderr).toMatch(
+      /^nxds 0\.4\.6 has no React 18 files\. Upgrade the app to React 19\.$/m
+    );
+  });
+
   it('refuses to add files for the wrong React after React changes', async () => {
     const context = setup([react18Release('0.4.7')]);
     setReact(context.app, '^18.3.1');
