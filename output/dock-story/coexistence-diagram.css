@@ -1,8 +1,6 @@
 .coexistence-story-subtitle {
   margin: calc(var(--nx-spacing-2) * -1) 0 var(--nx-spacing-6);
   color: var(--nx-color-muted-foreground);
-  font-size: clamp(14px, 1.5cqi, 18px);
-  line-height: 1.5;
 }
 .coexistence-diagram {
   --coexistence-surface: color-mix(

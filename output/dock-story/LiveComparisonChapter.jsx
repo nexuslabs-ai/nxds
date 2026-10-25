@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { Button } from '@nxds/react';
+import { Button, Slider } from '@nxds/react';
 
 import './live-comparison.css';
 
@@ -67,18 +67,14 @@ export function LiveComparisonChapter({
         >
           {stack}
         </Button>
-        <label className="live-comparison-slider">
-          <span>Drag to compare</span>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={split}
-            onChange={(event) => onSplitChange(Number(event.target.value))}
+        <div className="live-comparison-slider nx:typography-body-small">
+          <span aria-hidden="true">Drag to compare</span>
+          <Slider
+            value={[split]}
+            onValueChange={([value]) => onSplitChange(value)}
             aria-label={`Compare ${stack} with Nexus`}
-            aria-valuetext={`${100 - split}% with Nexus revealed`}
           />
-        </label>
+        </div>
         <Button
           size="sm"
           variant={split === 0 ? 'secondary' : 'ghost'}
@@ -116,7 +112,7 @@ export function LiveComparisonChapter({
           </div>
         )}
       </div>
-      <p className="live-comparison-note">
+      <p className="live-comparison-note nx:typography-body-small">
         {comparing
           ? example === 'reference'
             ? 'Same app. New Nexus capabilities. Reveal either side to try it.'

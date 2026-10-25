@@ -98,8 +98,10 @@ function Study({ mode, setMode }) {
     >
       <div className="hero-adoption-intro">
         <div>
-          <h2>Add one component. Keep everything else.</h2>
-          <p>
+          <h2 className="nx:typography-heading-xsmall">
+            Add one component. Keep everything else.
+          </h2>
+          <p className="nx:typography-body-small">
             The same HeroUI workspace. The same new role selector. Two ways to
             bring it in.
           </p>
@@ -142,10 +144,10 @@ function Study({ mode, setMode }) {
               }
             >
               <header>
-                <span>{number}</span>
+                <span className="nx:typography-label-caps">{number}</span>
                 <div>
-                  <h3>{title}</h3>
-                  <p>{subtitle}</p>
+                  <h3 className="nx:typography-label-small">{title}</h3>
+                  <p className="nx:typography-body-small">{subtitle}</p>
                 </div>
               </header>
               <div className="hero-adoption-frame-shell">
@@ -159,7 +161,10 @@ function Study({ mode, setMode }) {
                   onReport={receiveReport}
                 />
               </div>
-              <div className="hero-adoption-result" role="status">
+              <div
+                className="hero-adoption-result nx:typography-body-small"
+                role="status"
+              >
                 <span className="hero-adoption-result-dot" aria-hidden="true" />
                 {!report
                   ? 'Measuring host styles…'
@@ -171,7 +176,7 @@ function Study({ mode, setMode }) {
                         ? `${changed} of ${report.total} host elements changed`
                         : `${report.total} of ${report.total} host elements unchanged`}
               </div>
-              <p className="hero-adoption-outcome">
+              <p className="hero-adoption-outcome nx:typography-body-small">
                 {id === 'before'
                   ? 'Blue accent. Readable secondary text. Your existing components.'
                   : id === 'shadcn'
@@ -182,7 +187,7 @@ function Study({ mode, setMode }) {
           );
         })}
       </div>
-      <div className="hero-adoption-footnote">
+      <div className="hero-adoption-footnote nx:typography-body-small">
         <p>
           Both added Selects work. Choose a role in either one to update both.
         </p>
@@ -191,7 +196,7 @@ function Study({ mode, setMode }) {
           customized shadcn setup can avoid these collisions.
         </p>
       </div>
-      <details className="hero-adoption-evidence">
+      <details className="hero-adoption-evidence nx:typography-body-small">
         <summary>Inspect what changed and why</summary>
         <p>
           {baselineMatches

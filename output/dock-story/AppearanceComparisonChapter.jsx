@@ -81,7 +81,7 @@ export function AppearanceComparisonChapter({
         className="coexistence-appearance-controls"
         aria-label="Nexus addition appearance"
       >
-        <p className="coexistence-appearance-caption">
+        <p className="coexistence-appearance-caption nx:typography-body-small">
           <strong>Nexus appearance</strong>
           <span>
             {example === 'reference'

@@ -55,8 +55,10 @@ export function WorkspaceThemeStudy({ stack, onSelectMui }) {
   if (stack !== 'MUI')
     return (
       <section className="workspace-theme-unmeasured">
-        <h2>This study starts with MUI.</h2>
-        <p>
+        <h2 className="nx:typography-heading-xsmall">
+          This study starts with MUI.
+        </h2>
+        <p className="nx:typography-body-default">
           We haven’t tested a matching adapter for {stack}. The earlier examples
           are still in DialKit.
         </p>
@@ -70,13 +72,15 @@ export function WorkspaceThemeStudy({ stack, onSelectMui }) {
     >
       <div className="workspace-theme-intro">
         <div>
-          <h2>How close can appearance settings get?</h2>
-          <p>
+          <h2 className="nx:typography-heading-xsmall">
+            How close can appearance settings get?
+          </h2>
+          <p className="nx:typography-body-small">
             One workspace. A real MUI theme. Every extra styling decision made
             visible.
           </p>
         </div>
-        <span className="workspace-theme-study-label">
+        <span className="workspace-theme-study-label nx:typography-body-small">
           Theme study · MUI 9.5.0
         </span>
       </div>
@@ -132,10 +136,12 @@ export function WorkspaceThemeStudy({ stack, onSelectMui }) {
         title="MUI target and Nexus workspace settings"
         src="./workspace-theme-preview.html"
       />
-      <div className="workspace-theme-findings">
+      <div className="workspace-theme-findings nx:typography-body-small">
         <article>
-          <span>Appearance settings</span>
-          <h3>A shared visual direction</h3>
+          <span className="nx:typography-label-caps">Appearance settings</span>
+          <h3 className="nx:typography-label-small">
+            A shared visual direction
+          </h3>
           <p>
             Brand color and body font come from MUI. Neutral surfaces and subtle
             corners use Nexus presets. In this runtime, the heading font stays
@@ -143,8 +149,10 @@ export function WorkspaceThemeStudy({ stack, onSelectMui }) {
           </p>
         </article>
         <article>
-          <span>Explicit custom code</span>
-          <h3>Exact values, chosen by us</h3>
+          <span className="nx:typography-label-caps">Explicit custom code</span>
+          <h3 className="nx:typography-label-small">
+            Exact values, chosen by us
+          </h3>
           <p>
             The third layer maps palette tokens and adds CSS for card radius,
             title type, input borders and button size, casing and shadow. This
@@ -152,8 +160,10 @@ export function WorkspaceThemeStudy({ stack, onSelectMui }) {
           </p>
         </article>
         <article>
-          <span>Still different</span>
-          <h3>Component anatomy stays Nexus</h3>
+          <span className="nx:typography-label-caps">Still different</span>
+          <h3 className="nx:typography-label-small">
+            Component anatomy stays Nexus
+          </h3>
           <p>
             Labels stay above fields. Switch geometry, focus treatment and press
             feedback retain Nexus behavior. No claim of automatic or complete
@@ -161,7 +171,7 @@ export function WorkspaceThemeStudy({ stack, onSelectMui }) {
           </p>
         </article>
       </div>
-      <details className="workspace-theme-source">
+      <details className="workspace-theme-source nx:typography-body-small">
         <summary>Inspect the mapping and custom code</summary>
         <p>
           The MUI target uses{' '}
@@ -176,15 +186,21 @@ export function WorkspaceThemeStudy({ stack, onSelectMui }) {
           is loaded. Results describe the Nexus checkout used by this local
           preview.
         </p>
-        <h3>Appearance mapping and scoped token overrides</h3>
+        <h3 className="nx:typography-label-small">
+          Appearance mapping and scoped token overrides
+        </h3>
         <pre>
           <code>{modelSource}</code>
         </pre>
-        <h3>Consumer CSS — only enabled in layer 3</h3>
+        <h3 className="nx:typography-label-small">
+          Consumer CSS — only enabled in layer 3
+        </h3>
         <pre>
           <code>{adapterSource}</code>
         </pre>
-        <h3>Actual MUI and Nexus compositions</h3>
+        <h3 className="nx:typography-label-small">
+          Actual MUI and Nexus compositions
+        </h3>
         <pre>
           <code>{formsSource}</code>
         </pre>

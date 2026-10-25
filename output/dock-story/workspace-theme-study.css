@@ -17,22 +17,16 @@
   margin-block-end: var(--nx-spacing-5);
 }
 .workspace-theme-intro h2 {
-  font-size: 20px;
-  font-weight: 500;
-  letter-spacing: -0.025em;
   margin: 0 0 var(--nx-spacing-1_5);
 }
 .workspace-theme-intro p,
 .workspace-theme-findings p,
 .workspace-theme-source p {
-  font-size: 13px;
-  line-height: 1.65;
   color: var(--nx-color-muted-foreground);
   margin: 0;
 }
 .workspace-theme-study-label {
   color: var(--nx-color-muted-foreground);
-  font-size: 12px;
 }
 .workspace-theme-toolbar {
   display: flex;
@@ -40,7 +34,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--nx-spacing-4);
-  margin-block-end: 22px;
+  margin-block-end: var(--nx-spacing-6);
 }
 .workspace-theme-stages {
   display: flex;
@@ -72,20 +66,15 @@
 }
 .workspace-theme-findings span {
   color: var(--nx-color-muted-foreground);
-  font-size: 11px;
-  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 .workspace-theme-findings h3 {
   margin: var(--nx-spacing-2) 0;
-  font-size: 14px;
-  font-weight: 500;
 }
 .workspace-theme-source {
   border-block-start: var(--nx-borderwidth-default) solid
     var(--nx-color-border-default);
   padding-block-start: var(--nx-spacing-4);
-  font-size: 13px;
 }
 .workspace-theme-source summary {
   cursor: pointer;
@@ -101,26 +90,19 @@
 .workspace-theme-source pre {
   max-inline-size: 100%;
   overflow: auto;
-  font-size: 12px;
+  font-family: var(--nx-typography-family-font-mono);
+  font-size: var(--nx-typography-size-xs);
   padding: var(--nx-spacing-4);
   background: var(--nx-color-container);
   border-radius: var(--nx-radius-md);
-}
-.workspace-theme-source h3 {
-  font-size: 14px;
-  font-weight: 500;
 }
 .workspace-theme-unmeasured {
   max-inline-size: 480px;
   margin: var(--nx-spacing-10) auto;
   text-align: center;
 }
-.workspace-theme-unmeasured h2 {
-  font-size: 22px;
-}
 .workspace-theme-unmeasured p {
   color: var(--nx-color-muted-foreground);
-  line-height: 1.6;
 }
 @container theme-study (max-width: 680px) {
   .workspace-theme-preview {

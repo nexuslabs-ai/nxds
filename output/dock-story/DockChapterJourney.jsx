@@ -561,7 +561,9 @@ export function DockChapterJourney({
                   </p>
                 )}
               {current.subtitle && (
-                <p className="coexistence-story-subtitle">{current.subtitle}</p>
+                <p className="coexistence-story-subtitle nx:typography-body-default">
+                  {current.subtitle}
+                </p>
               )}
               <div className="story-ctas">
                 <Button asChild>

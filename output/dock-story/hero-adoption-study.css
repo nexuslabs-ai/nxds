@@ -13,12 +13,9 @@
   justify-content: space-between;
   align-items: center;
   gap: var(--nx-spacing-5);
-  margin-block-end: 18px;
+  margin-block-end: var(--nx-spacing-5);
 }
 .hero-adoption-intro h2 {
-  font-size: 20px;
-  letter-spacing: -0.025em;
-  font-weight: 500;
   margin: 0 0 var(--nx-spacing-1_5);
 }
 .hero-adoption-intro p,
@@ -26,8 +23,6 @@
 .hero-adoption-outcome,
 .hero-adoption-footnote p,
 .hero-adoption-evidence p {
-  font-size: 12px;
-  line-height: 1.65;
   color: var(--nx-color-muted-foreground);
   margin: 0;
 }
@@ -57,12 +52,9 @@
 }
 .hero-adoption-case > header > span {
   color: var(--nx-color-muted-foreground);
-  font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
 .hero-adoption-case h3 {
-  font-size: 14px;
-  font-weight: 500;
   margin: 0;
 }
 .hero-adoption-frame-shell {
@@ -80,7 +72,6 @@
   display: flex;
   align-items: center;
   gap: var(--nx-spacing-2);
-  font-size: 12px;
   margin-block: var(--nx-spacing-4) var(--nx-spacing-1_5);
 }
 .hero-adoption-result-dot {
@@ -99,10 +90,9 @@
 .hero-adoption-footnote {
   display: grid;
   gap: var(--nx-spacing-1);
-  margin-block: 24px 18px;
+  margin-block: var(--nx-spacing-6) var(--nx-spacing-5);
 }
 .hero-adoption-evidence {
-  font-size: 12px;
   border-block-start: var(--nx-borderwidth-default) solid
     var(--nx-color-border-default);
   padding-block-start: var(--nx-spacing-4);
@@ -133,7 +123,8 @@
   margin-block: var(--nx-spacing-1);
 }
 .hero-adoption-evidence code {
-  font-size: 11px;
+  font-family: var(--nx-typography-family-font-mono);
+  font-size: var(--nx-typography-size-xxs);
 }
 @container hero-adoption (min-width: 900px) {
   .hero-adoption-cases {
