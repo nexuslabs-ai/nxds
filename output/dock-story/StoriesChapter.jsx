@@ -57,16 +57,21 @@ export function StoriesChapter({ scenario }) {
             <p>{current.instruction}</p>
             <div className="story-example-actions">
               {scenario === 'Keyboard' && (
-                <button
-                  type="button"
+                <Button
+                  variant="link"
+                  size="sm"
                   onClick={() => example.current.focus({ preventScroll: true })}
                 >
                   Focus the example
-                </button>
+                </Button>
               )}
-              <button type="button" onClick={() => setActivations(0)}>
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => setActivations(0)}
+              >
                 Reset
-              </button>
+              </Button>
             </div>
           </div>
           <div className="story-assertions">

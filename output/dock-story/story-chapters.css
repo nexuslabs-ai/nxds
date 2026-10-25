@@ -191,21 +191,6 @@
   gap: 16px;
   margin-top: 12px;
 }
-.story-example-actions button {
-  padding: 4px;
-  color: var(--nx-color-muted-foreground);
-  background: transparent;
-  border: 0;
-  font: inherit;
-  font-size: 12px;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  cursor: pointer;
-}
-.story-example-actions button:focus-visible {
-  outline: 2px solid var(--nx-color-foreground);
-  outline-offset: 3px;
-}
 .story-assertions {
   min-width: 0;
   padding: 32px;
