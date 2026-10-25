@@ -148,7 +148,8 @@ export async function fetchRelease(
 
 /**
  * The release an app is on, or `latest`, with files for the app's React
- * major; fails when the registry doesn't have it.
+ * major. Fails when the registry lacks that release, or the release lacks
+ * those files.
  */
 export async function loadRelease(
   registry: string,
