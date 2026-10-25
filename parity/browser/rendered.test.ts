@@ -53,6 +53,7 @@ const OVERLAYS: Record<string, Opener> = {
   'hover-card': { role: 'button', open: 'focus' },
   menubar: { role: 'menuitem', open: 'click' },
   popover: { role: 'button', open: 'click' },
+  select: { role: 'combobox', open: 'click' },
   sheet: { role: 'button', open: 'click' },
   tooltip: { role: 'button', open: 'focus' },
 };
@@ -102,6 +103,13 @@ function isOwnSlot(slot: string, slug: string) {
   return ownerOf(slot) === slug;
 }
 
+/** `element`'s text without the CSS Radix and Reka inject as a <style> into a select's viewport. */
+function visibleText(element: Element) {
+  const copy = element.cloneNode(true) as Element;
+  for (const style of copy.querySelectorAll('style')) style.remove();
+  return copy.textContent;
+}
+
 /** One element as a line, so a mismatch prints as a readable line diff. */
 function describeElement(element: Element) {
   // Reka repeats a native `disabled` as `aria-disabled="true"`; Radix doesn't.
@@ -131,7 +139,7 @@ function describeElement(element: Element) {
   const content =
     element instanceof HTMLTextAreaElement
       ? element.value
-      : element.textContent;
+      : visibleText(element);
   const text = content?.replace(/\s+/g, ' ').trim() ?? '';
   return `<${element.tagName.toLowerCase()} ${attributes.join(' ')}> class="${classes}" name="${name}" text="${text}"`;
 }

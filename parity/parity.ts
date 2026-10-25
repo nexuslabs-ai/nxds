@@ -35,7 +35,6 @@ export const planned = [
   'pagination',
   'resizable',
   'scroll-area',
-  'select',
   'setting-row',
   'sidebar',
   'sonner',
@@ -72,6 +71,7 @@ export const shared = [
   'popover',
   'progress',
   'radio-group',
+  'select',
   'separator',
   'sheet',
   'show',
@@ -135,8 +135,6 @@ export const behaviourOnlyIn: Record<
   Record<string, string>
 > = {
   react: {
-    'button-group/WithSelectTrigger':
-      'joins a Select trigger to the group, and Select is planned for Vue',
     'button/RefForwarding': REACT_REF,
     'tabs/ListRef': REACT_REF,
   },
