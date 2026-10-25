@@ -98,6 +98,21 @@ export const PAGE_REGISTRY = {
       { slug: 'forms', label: 'Forms' },
     ],
   },
+  integrations: {
+    slug: 'integrations',
+    title: 'Integrations',
+    href: '/integrations',
+    pages: [
+      { slug: 'overview', label: 'Overview' },
+      { slug: 'mui', label: 'MUI' },
+      { slug: 'shadcn', label: 'shadcn/ui' },
+      { slug: 'chakra', label: 'Chakra UI' },
+      { slug: 'mantine', label: 'Mantine' },
+      { slug: 'ant-design', label: 'Ant Design' },
+      { slug: 'bootstrap', label: 'Bootstrap' },
+      { slug: 'tailwind', label: 'Tailwind' },
+    ],
+  },
 } satisfies Record<string, RegistrySection> & {
   components: ComponentsSection;
 };

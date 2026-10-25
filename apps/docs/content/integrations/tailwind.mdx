@@ -1,0 +1,224 @@
+export const description =
+  'Add nxds components to a Next.js app styled with plain Tailwind. Run a second, prefixed Tailwind build beside yours, switch your dark: classes to the .dark class, and replace hand-written components when you choose.';
+
+# nxds with Tailwind
+
+Add nxds components to an app styled with plain Tailwind, and keep your own
+classes and tokens. These steps use a Next.js App Router app on Tailwind 4.
+
+## What nxds adds for you
+
+Hand-written Tailwind components give you full control, and you maintain every
+state and theme yourself. nxds components come with that work done:
+
+| You get                            | Instead of                                                                 |
+| ---------------------------------- | -------------------------------------------------------------------------- |
+| One appearance object              | Color, radius, spacing and shadow values spread across class strings       |
+| Hover, pressed and dark shades     | A `dark:` and a `hover:` class per color, picked by hand                   |
+| Contrast checked for every pair    | Checking text on each background yourself                                  |
+| Keyboard and screen reader support | Writing focus, roles and key handling for each menu and dialog             |
+| `nxds-cli update`                  | Copying upstream fixes by hand. `update` merges them into files you edited |
+
+[Introduction](/getting-started/introduction) covers the theme engine and the
+agent support.
+
+## Add your first nxds component
+
+Set up nxds, then add a component:
+
+```bash
+npx nxds-cli@latest init
+npx nxds-cli@latest add button
+```
+
+`init` creates `app/nxds.css` and imports it after `globals.css`. It also adds
+the provider and the theme script to `app/layout.tsx`.
+
+Your app now runs two Tailwind builds. `globals.css` keeps its
+`@import "tailwindcss"`, its default theme and its unprefixed classes.
+`app/nxds.css` builds the `nx:` classes:
+
+```css
+/* app/nxds.css */
+@import '../components/nxds/tailwind/nxds.css';
+@import 'tw-animate-css';
+```
+
+The two class sets read side by side. Your classes lay out the page, and
+`nx:` classes style nxds:
+
+```tsx
+// app/page.tsx
+import { Button } from '@/components/nxds/components/button/button';
+
+export default function Page() {
+  return (
+    <div className="flex gap-2 p-6">
+      <button
+        type="button"
+        className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+      >
+        Save
+      </button>
+      <Button variant="outline" className="nx:min-w-24">
+        Preview
+      </Button>
+    </div>
+  );
+}
+```
+
+The builds don't clash. Every nxds class starts with `nx:`, and every nxds
+variable starts with `--nx-`. Your `@theme` tokens, such as `--color-primary`,
+stay yours. The nxds build turns off Tailwind's default colors and spacing
+inside its own build only, so `bg-blue-600` keeps working.
+
+Both builds use Tailwind's cascade layers, so nothing needs a layer of its
+own. On a conflict in the same element, the `nx:` class wins, because
+`app/nxds.css` loads later.
+
+## Share light and dark mode
+
+nxds owns the mode, and writes the `.dark` class on `<html>`. Tailwind's own
+`dark:` variant follows the operating system by default, so point it at the
+class instead:
+
+```css
+/* app/globals.css */
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+```
+
+Move any dark values from `@media (prefers-color-scheme: dark)` to `.dark`,
+as above. nxds sets `.dark` for `mode: 'system'` too, so your pages still
+follow the operating system when the user picks it. If your app had its own
+dark mode script or toggle, remove it.
+
+Switch the mode through nxds:
+
+```tsx
+// app/mode-toggle.tsx
+'use client';
+
+import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
+
+export function ModeToggle() {
+  const { setState, resolvedMode } = useNxdsAppearance();
+  const next = resolvedMode === 'dark' ? 'light' : 'dark';
+
+  return (
+    <button
+      type="button"
+      className="rounded-md border px-3 py-1.5"
+      onClick={() => setState((current) => ({ ...current, mode: next }))}
+    >
+      Switch to {next}
+    </button>
+  );
+}
+```
+
+## Match your theme
+
+Set the appearance from your own tokens:
+
+```ts
+// app/appearance-state.ts
+import { DEFAULT_NXDS_APPEARANCE, type NxdsAppearanceState } from '@nxds/core';
+
+export const defaultAppearance = {
+  ...DEFAULT_NXDS_APPEARANCE,
+  brandColor: '#2563eb',
+  surfaceTone: 'slate',
+  corners: 'smooth',
+} satisfies NxdsAppearanceState;
+```
+
+| Your Tailwind theme                                       | Appearance field | How to match                                                                                                                         |
+| --------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Your brand color, such as `--color-primary` or `blue-600` | `brandColor`     | Pass the same value. nxds builds the hover, pressed and dark shades                                                                  |
+| The gray you use for surfaces                             | `surfaceTone`    | Same names as Tailwind's grays: `slate`, `gray`, `zinc`, `neutral`, `stone`                                                          |
+| `rounded-*` on your controls                              | `corners`        | `rounded-none` is `square`, `rounded` is `subtle`, `rounded-lg` is `smooth`, `rounded-xl` is `round`, `rounded-2xl` is `extra-round` |
+| Your padding and gap scale                                | `density`        | Compare in the [Playground](/playground)                                                                                             |
+| `shadow-*` on cards and menus                             | `elevation`      | Compare in the [Playground](/playground). `flat` turns shadows off                                                                   |
+| `border`, `border-2`                                      | `stroke`         | `border` is `normal`, `border-2` is `strong`                                                                                         |
+| `--font-sans`                                             | `prefs.uiFont`   | Pass the same font stack                                                                                                             |
+| `dark:` classes                                           | `mode`           | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                                                       |
+
+## Where nxds fits
+
+Most Tailwind apps write components by hand or with Headless UI. Each row maps
+one of them to its nxds part:
+
+| Hand-written or Headless UI                                   | nxds                                                                             | What changes                                                         |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| A styled `<button>`                                           | `Button`                                                                         | `variant` and `size` replace the class string                        |
+| A styled `<input>` with a label and hint                      | `Field`, `FieldLabel`, `Input`, `FieldDescription`, `FieldError`                 |                                                                      |
+| `Field`, `Label`, `Description`                               | `Field`, `FieldLabel`, `FieldDescription`                                        |                                                                      |
+| `Fieldset`, `Legend`                                          | `FieldSet`, `FieldLegend`                                                        |                                                                      |
+| `Dialog`, `DialogPanel`, `DialogTitle`                        | `Dialog`, `DialogContent`, `DialogTitle`                                         | `onClose` → `onOpenChange(open)`                                     |
+| `Menu`, `MenuButton`, `MenuItems`, `MenuItem`                 | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem` |                                                                      |
+| `Listbox`, `ListboxButton`, `ListboxOptions`, `ListboxOption` | `Select`, `SelectTrigger`, `SelectContent`, `SelectItem`                         | `onChange(value)` → `onValueChange(value)`                           |
+| `Listbox multiple`                                            | `MultiSelect`                                                                    | `onChange(values)` → `onValuesChange(values)`                        |
+| `Combobox`                                                    | `Combobox`                                                                       | Compose a `ComboboxTrigger`, `ComboboxInput` and `ComboboxItem` list |
+| `Switch`                                                      | `Switch`                                                                         | `onChange(checked)` → `onCheckedChange(checked)`                     |
+| `Checkbox`                                                    | `Checkbox`                                                                       | `onChange(checked)` → `onCheckedChange(checked)`                     |
+| `RadioGroup`, `Radio`                                         | `RadioGroup`, `RadioGroupItem`                                                   | `onChange(value)` → `onValueChange(value)`                           |
+| `Disclosure`, `DisclosureButton`, `DisclosurePanel`           | `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent`                        |                                                                      |
+| A list of disclosures                                         | `Accordion`                                                                      |                                                                      |
+| `Popover`, `PopoverButton`, `PopoverPanel`                    | `Popover`, `PopoverTrigger`, `PopoverContent`                                    |                                                                      |
+| `TabGroup`, `TabList`, `Tab`, `TabPanels`, `TabPanel`         | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`                                 | Tabs match by `value`, not by position                               |
+| `Transition`                                                  | Built in                                                                         | nxds overlays animate open and closed on their own                   |
+| A hand-written toast                                          | `Toaster`, `toast()`                                                             |                                                                      |
+| A card `<div>`                                                | `Card`, `CardHeader`, `CardTitle`, `CardContent`, `CardFooter`                   |                                                                      |
+| A table with your own classes                                 | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`        |                                                                      |
+| `hidden md:block`                                             | `Show` and `Hide`                                                                | `<Show above="md">` shows content from the `md` breakpoint up        |
+
+## Swap a component (optional)
+
+Swap a component when you touch the screen anyway. This button moves from a
+class string to nxds, and its `dark:` classes go away, because nxds tokens
+change with the mode:
+
+```tsx
+// Before
+<button
+  type="button"
+  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 dark:bg-blue-500 dark:hover:bg-blue-400"
+>
+  Save
+</button>
+```
+
+```tsx
+// After
+import { Button } from '@/components/nxds/components/button/button';
+
+<Button>Save</Button>;
+```
+
+To check the `nx:` classes in the files you move over, add the
+[nxds lint rules](/getting-started/install#optional-add-lint-rules). Point
+them at `components/nxds` only, because your own files use unprefixed
+classes.
+
+## What stays on your Tailwind
+
+Keep these in your own classes:
+
+- Page layout: grids, columns and spacing between sections
+- Marketing pages and one-off visuals
+- Your own design tokens in `@theme`
+- Components nxds doesn't have. Style them with your classes, or with `nx:`
+  token classes so they follow the appearance

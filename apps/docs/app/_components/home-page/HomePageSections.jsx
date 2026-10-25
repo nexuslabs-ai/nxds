@@ -156,6 +156,7 @@ export function HomePageSections({ docsBase = '' }) {
         </div>
         <nav aria-label="Footer">
           <a href={`${docsBase}/getting-started/introduction`}>Docs</a>
+          <a href={`${docsBase}/integrations/overview`}>Integrations</a>
           <a href="https://github.com/nexuslabs-ai/nexus">GitHub</a>
           <a href="https://github.com/nexuslabs-ai/nexus/releases">Releases</a>
           <a href="https://github.com/nexuslabs-ai/nexus/blob/main/LICENSE">

@@ -4,6 +4,9 @@ Real apps that adopt nxds the copy-and-own way: each one copies nxds source
 from this repository and compiles it with its own Tailwind. Together they cover
 the ways a frontend team meets nxds.
 
+For the setup next to each UI library, see the
+[Integrations](https://nxds.dev/integrations/overview) docs.
+
 > Not part of the pnpm workspace, and excluded from the monorepo's turbo,
 > ESLint and Prettier. Each app installs with npm and commits its lockfile.
 
@@ -57,7 +60,7 @@ The apps also show the integration points a team has to wire:
 
 | Point | Where |
 | ----- | ----- |
-| One theme switch sets both systems, since they share the `.dark` class | Every coexistence app's header |
+| nxds owns light and dark mode, and the host library follows it | Every coexistence app's header and provider setup |
 | Each Toaster shows only its own system's toasts | `/overlays` |
 | nxds overlay layers raised above MUI's | `mui-app/src/nxds.css` |
 | MUI popups inside an nxds dialog render in place (`disablePortal`) | `mui-app` `/overlays` |

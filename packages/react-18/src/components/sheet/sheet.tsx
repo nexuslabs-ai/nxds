@@ -69,9 +69,7 @@ const SheetOverlay = React.forwardRef<
 
 /**
  * Per-side positioning and slide motion for the sheet panel. Each side pins the
- * panel to an edge and slides it fully on/off screen from that edge — the bare
- * `slide-*` utilities translate by 100% (the spacing-scaled `slide-*-N` forms
- * resolve to 0 under the nxds spacing reset, so they would not move).
+ * panel to an edge, and a closed panel translates 100% past that edge.
  */
 const sheetContentVariants = cva(
   cn(
