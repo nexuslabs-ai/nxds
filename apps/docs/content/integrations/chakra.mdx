@@ -1,0 +1,350 @@
+export const description =
+  'Add nxds components to a Next.js app built with Chakra UI. Order the cascade layers, share dark mode through next-themes, and find the nxds part for each Chakra component.';
+
+# nxds with Chakra UI
+
+Add nxds components to a Chakra UI app, and keep Chakra for everything else.
+These steps use a Next.js App Router app on Chakra UI 3.
+
+## What nxds adds for you
+
+nxds gives a Chakra app parts it doesn't have, themed from one appearance
+object. [Introduction](/getting-started/introduction) covers the theme engine,
+the copy-and-own source and the agent support.
+
+| You need                       | nxds part                       |
+| ------------------------------ | ------------------------------- |
+| A command palette              | `CommandDialog`                 |
+| An app sidebar                 | `Sidebar` and `SidebarProvider` |
+| A date picker                  | `DatePicker`                    |
+| A chart                        | `ChartContainer`                |
+| A filter bar                   | `FilterBuilder`                 |
+| A select with several values   | `MultiSelect`                   |
+| A menu bar or right-click menu | `Menubar` and `ContextMenu`     |
+| A carousel                     | `Carousel`                      |
+| A chat thread                  | `Message` and `Bubble`          |
+
+## Add your first nxds component
+
+Set up nxds, then add a component:
+
+```bash
+npx nxds-cli@latest init
+npx nxds-cli@latest add button
+```
+
+`init` adds the provider and the theme script to `app/layout.tsx`, and creates
+`app/nxds.css`. Your app has no Tailwind, so `init` also puts Tailwind's
+Preflight in `app/nxds.css`. Delete it. Chakra's own reset already sets
+`box-sizing`, and Preflight would restyle your Chakra pages:
+
+```css
+/* app/nxds.css */
+@import '../components/nxds/tailwind/nxds.css';
+@import 'tw-animate-css';
+```
+
+Chakra puts its CSS in four cascade layers: `reset`, `base`, `tokens` and
+`recipes`. It declares them after nxds loads, so its reset would win over
+`nx:` classes and strip an nxds button's padding. Name every layer at the top
+of `globals.css`, so Chakra's sit below the nxds utilities:
+
+```css
+/* app/globals.css */
+@layer theme, reset, base, tokens, recipes, components, utilities;
+```
+
+Chakra's layers keep their own order, so your Chakra components look the same.
+
+Render the nxds button on an existing screen, beside Chakra's:
+
+```tsx
+// app/page.tsx
+import { Button as ChakraButton, HStack } from '@chakra-ui/react';
+
+import { Button } from '@/components/nxds/components/button/button';
+
+export default function Page() {
+  return (
+    <HStack gap="2">
+      <ChakraButton>Save</ChakraButton>
+      <Button variant="outline">Preview</Button>
+    </HStack>
+  );
+}
+```
+
+Chakra's overlays sit at z-index 1300 to 1800. Raise the nxds layers above
+them, so an nxds popup opens over a Chakra dialog:
+
+```css
+/* app/nxds.css, after the imports */
+:root {
+  --nx-z-index-modal: 1900;
+  --nx-z-index-popover: 2000;
+  --nx-z-index-toast: 2100;
+}
+```
+
+Inside an nxds dialog, render Chakra popups in place: leave out their
+`<Portal>`, or pass `<Portal disabled>`.
+
+On Next.js 16, Chakra asks you to build with `next build --webpack`. Turbopack
+hydrates Chakra's styles out of order, which logs a hydration error. See
+Chakra's [Next.js guide](https://chakra-ui.com/docs/get-started/frameworks/next-app).
+
+## Share light and dark mode
+
+nxds owns the mode. Chakra reads the `.dark` class through `next-themes`, the
+same class nxds writes. Make `next-themes` follow nxds in the provider that
+Chakra's CLI created:
+
+```tsx
+// components/ui/provider.tsx
+'use client';
+
+import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
+import { ThemeProvider, useTheme } from 'next-themes';
+import { useEffect } from 'react';
+
+import { defaultAppearance } from '@/app/appearance-state';
+import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
+
+function ChakraFollowsNxds() {
+  const { state, mounted } = useNxdsAppearance();
+  const { setTheme } = useTheme();
+
+  useEffect(() => {
+    if (mounted) setTheme(state.mode);
+  }, [mounted, state.mode, setTheme]);
+
+  return null;
+}
+
+export function Provider({ children }: { children: React.ReactNode }) {
+  return (
+    <ChakraProvider value={defaultSystem}>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme={defaultAppearance.mode}
+        disableTransitionOnChange
+      >
+        <ChakraFollowsNxds />
+        {children}
+      </ThemeProvider>
+    </ChakraProvider>
+  );
+}
+```
+
+Put it inside the nxds provider:
+
+```tsx
+// app/layout.tsx
+import { NxdsAppearanceProvider } from '@/components/nxds/components/appearance/provider';
+import { NxdsAppearanceScript } from '@/components/nxds/components/appearance/provider/server';
+import { Provider } from '@/components/ui/provider';
+
+import { defaultAppearance } from './appearance-state';
+
+import './globals.css';
+import './nxds.css';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <NxdsAppearanceScript
+          storageKey="app-appearance"
+          defaultState={defaultAppearance}
+        />
+      </head>
+      <body>
+        <NxdsAppearanceProvider
+          storageKey="app-appearance"
+          defaultState={defaultAppearance}
+        >
+          <Provider>{children}</Provider>
+        </NxdsAppearanceProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+`next-themes` uses `'light'`, `'dark'` and `'system'`, like nxds. Its
+`defaultTheme` matches the nxds default, so a first visit paints one mode. If
+`next-themes` saved another mode before you added nxds, that mode can show for
+a moment on the first load. From then on, both save the same mode.
+
+Switch the mode through nxds only, not Chakra's `setColorMode`:
+
+```tsx
+// components/mode-toggle.tsx
+'use client';
+
+import { Button } from '@chakra-ui/react';
+
+import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
+
+export function ModeToggle() {
+  const { setState, resolvedMode } = useNxdsAppearance();
+  const next = resolvedMode === 'dark' ? 'light' : 'dark';
+
+  return (
+    <Button
+      variant="outline"
+      onClick={() => setState((current) => ({ ...current, mode: next }))}
+    >
+      Switch to {next}
+    </Button>
+  );
+}
+```
+
+`useColorMode` and `useColorModeValue` keep working, because they read
+`next-themes`.
+
+## Match your theme
+
+```ts
+// app/appearance-state.ts
+import { DEFAULT_NXDS_APPEARANCE, type NxdsAppearanceState } from '@nxds/core';
+
+export const defaultAppearance = {
+  ...DEFAULT_NXDS_APPEARANCE,
+  brandColor: '#2563eb',
+  surfaceTone: 'zinc',
+  corners: 'subtle',
+  prefs: {
+    ...DEFAULT_NXDS_APPEARANCE.prefs,
+    uiFont: 'Inter, sans-serif',
+  },
+} satisfies NxdsAppearanceState;
+```
+
+| Chakra theme                        | Appearance field | How to match                                                                                                                                    |
+| ----------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `colors.brand`, your `colorPalette` | `brandColor`     | Use the shade your `solid` buttons show. nxds builds the hover and pressed shades                                                               |
+| `colors.gray`                       | `surfaceTone`    | Chakra's default gray is the same scale as `zinc`                                                                                               |
+| `radii.l2`                          | `corners`        | `0` is `square`, `0.25rem` is `subtle`, `0.5rem` is `smooth`, `0.75rem` is `round`, `1rem` is `extra-round`. Chakra's default `l2` is `0.25rem` |
+| `spacing`                           | `density`        | Compare in the [Playground](/playground)                                                                                                        |
+| `shadows`                           | `elevation`      | Compare in the [Playground](/playground). `flat` turns shadows off                                                                              |
+| None                                | `stroke`         | Chakra has no border width setting, so keep `normal`                                                                                            |
+| `fonts.body`                        | `prefs.uiFont`   | Chakra's default is Inter                                                                                                                       |
+| The color mode                      | `mode`           | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                                                                  |
+
+## Where nxds fits
+
+Chakra 3 passes a details object to its handlers, such as
+`onValueChange({ value })`. nxds handlers take the value itself:
+`onValueChange(value)`, `onCheckedChange(checked)`, `onOpenChange(open)`.
+
+| Chakra UI                                                                                   | nxds                                                                                          | What changes                                                                                                  |
+| ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `Button`                                                                                    | `Button`                                                                                      | `variant` `solid`, `subtle`, `outline`, `ghost`, `plain` → `default`, `secondary`, `outline`, `ghost`, `link` |
+| `Button colorPalette="red"`                                                                 | `Button variant="destructive"`                                                                | nxds has no `colorPalette`. The brand comes from the appearance                                               |
+| `IconButton`                                                                                | `Button size="icon"`                                                                          | Give it an `aria-label`                                                                                       |
+| `Group attached`                                                                            | `ButtonGroup`                                                                                 |                                                                                                               |
+| `Field.Root`, `Field.Label`, `Field.HelperText`, `Field.ErrorText`                          | `Field`, `FieldLabel`, `FieldDescription`, `FieldError`                                       | `invalid` → `data-invalid` on `Field` and `aria-invalid` on the input                                         |
+| `Field.RequiredIndicator`                                                                   | `FieldRequiredIndicator`                                                                      |                                                                                                               |
+| `Fieldset.Root`, `Fieldset.Legend`, `Fieldset.Content`                                      | `FieldSet`, `FieldLegend`, `FieldGroup`                                                       |                                                                                                               |
+| `Input`, `Textarea`                                                                         | `Input`, `Textarea`                                                                           |                                                                                                               |
+| `InputGroup`                                                                                | `InputGroup`, `InputGroupAddon`, `InputGroupInput`                                            | `startElement` and `endElement` → `InputGroupAddon`                                                           |
+| `Checkbox.Root`                                                                             | `Checkbox` with a `FieldLabel`                                                                | `onCheckedChange(details)` → `onCheckedChange(checked)`                                                       |
+| `Switch.Root`                                                                               | `Switch`                                                                                      | `onCheckedChange(details)` → `onCheckedChange(checked)`                                                       |
+| `RadioGroup.Root`, `RadioGroup.Item`                                                        | `RadioGroup`, `RadioGroupItem`                                                                | `onValueChange(details)` → `onValueChange(value)`                                                             |
+| `CheckboxCard`, `RadioCard`                                                                 | `ChoiceCard`                                                                                  |                                                                                                               |
+| `Select.Root` with a `collection`                                                           | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`                       | Items are children, not a `collection`. `value` is a string, not an array                                     |
+| `Select.Root multiple`                                                                      | `MultiSelect`                                                                                 | `onValueChange(details)` → `onValuesChange(values)`                                                           |
+| `NativeSelect`                                                                              | `NativeSelect`, `NativeSelectOption`                                                          |                                                                                                               |
+| `Combobox`                                                                                  | `Combobox`                                                                                    | Compose a `ComboboxTrigger`, `ComboboxInput` and `ComboboxItem` list                                          |
+| `PinInput`                                                                                  | `InputOTP`, `InputOTPGroup`, `InputOTPSlot`                                                   |                                                                                                               |
+| `Slider`                                                                                    | `Slider`                                                                                      | `onValueChange(details)` → `onValueChange(value)`                                                             |
+| `SegmentGroup`                                                                              | `ToggleGroup type="single"`                                                                   |                                                                                                               |
+| `Dialog.Root`, `Dialog.Content`, `Dialog.Header`, `Dialog.Body`, `Dialog.Footer`            | `Dialog`, `DialogContent`, `DialogHeader`, `DialogBody`, `DialogFooter`                       | `onOpenChange(details)` → `onOpenChange(open)`                                                                |
+| `Dialog` asking to confirm                                                                  | `AlertDialog`                                                                                 |                                                                                                               |
+| `Drawer`                                                                                    | `Sheet`, or `Drawer` for a bottom sheet                                                       | `placement` → `side` on `SheetContent`                                                                        |
+| `Menu`                                                                                      | `DropdownMenu`                                                                                |                                                                                                               |
+| `Popover`, `HoverCard`, `Tooltip`                                                           | `Popover`, `HoverCard`, `Tooltip`                                                             | `Popover.Trigger` → `PopoverTrigger`, `Popover.Content` → `PopoverContent`                                    |
+| `Toaster`, `createToaster`                                                                  | `Toaster`, `toast()`                                                                          | Render `<Toaster />` once, then call `toast('Saved')`                                                         |
+| `Alert.Root`, `Alert.Title`, `Alert.Description`                                            | `Alert`, `AlertTitle`, `AlertDescription`                                                     | `status` `error`, `warning`, `info`, `success` → `variant` `destructive`, `warning`, `information`, `success` |
+| `Accordion.Root`, `Accordion.Item`, `Accordion.ItemTrigger`, `Accordion.ItemContent`        | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`                          | `multiple` → `type="multiple"`                                                                                |
+| `Collapsible`                                                                               | `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent`                                     |                                                                                                               |
+| `Tabs.Root`, `Tabs.List`, `Tabs.Trigger`, `Tabs.Content`                                    | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`                                              | `onValueChange(details)` → `onValueChange(value)`                                                             |
+| `Breadcrumb`                                                                                | `Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`                            |                                                                                                               |
+| `Pagination`                                                                                | `Pagination`, `PaginationContent`, `PaginationLink`                                           |                                                                                                               |
+| `Card.Root`, `Card.Header`, `Card.Body`, `Card.Footer`                                      | `Card`, `CardHeader`, `CardContent`, `CardFooter`                                             | `Card.Title` → `CardTitle`, `Card.Description` → `CardDescription`                                            |
+| `Avatar`, `AvatarGroup`                                                                     | `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarGroup`                                      |                                                                                                               |
+| `Badge`                                                                                     | `Badge`                                                                                       | `colorPalette` → `variant`. `variant="outline"` → `fill="outline"`                                            |
+| `Tag` with a close button                                                                   | `FilterChip`                                                                                  |                                                                                                               |
+| `Separator`                                                                                 | `Separator`                                                                                   |                                                                                                               |
+| `Progress`                                                                                  | `Progress`                                                                                    |                                                                                                               |
+| `Spinner`, `Skeleton`                                                                       | `Spinner`, `Skeleton`                                                                         |                                                                                                               |
+| `Table.Root`, `Table.Header`, `Table.Body`, `Table.Row`, `Table.ColumnHeader`, `Table.Cell` | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`                     |                                                                                                               |
+| `EmptyState`                                                                                | `EmptyState`, `EmptyStateHeader`, `EmptyStateTitle`, `EmptyStateDescription`                  |                                                                                                               |
+| `DataList`                                                                                  | `DescriptionList`, `DescriptionListItem`, `DescriptionListTerm`, `DescriptionListDescription` |                                                                                                               |
+| `Kbd`, `ScrollArea`                                                                         | `Kbd`, `ScrollArea`                                                                           |                                                                                                               |
+| `Splitter`                                                                                  | `ResizablePanelGroup`, `ResizablePanel`, `ResizableHandle`                                    |                                                                                                               |
+| `Box`, `Flex`, `Stack`, `Grid`, `Container`                                                 | `nx:` flex and grid classes                                                                   | At the default density, `gap="4"` → `nx:gap-4` and `p="4"` → `nx:p-4`                                         |
+| `Text`, `Heading`                                                                           | `nx:typography-*` classes                                                                     | Such as `nx:typography-heading-large` and `nx:typography-body-default`                                        |
+| `hideBelow`, `hideFrom`, `useBreakpointValue`                                               | `Show` and `Hide`                                                                             | `hideBelow="md"` → `<Hide below="md">`                                                                        |
+
+## Swap a component (optional)
+
+Swap a component when you touch the screen anyway. This form field moves from
+Chakra to nxds:
+
+```tsx
+// Before
+import { Field, Input } from '@chakra-ui/react';
+
+<Field.Root invalid={Boolean(error)}>
+  <Field.Label>Email</Field.Label>
+  <Input type="email" />
+  <Field.HelperText>We never share it.</Field.HelperText>
+  <Field.ErrorText>{error}</Field.ErrorText>
+</Field.Root>;
+```
+
+```tsx
+// After
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from '@/components/nxds/components/field/field';
+import { Input } from '@/components/nxds/components/input/input';
+
+<Field data-invalid={Boolean(error)}>
+  <FieldLabel htmlFor="email">Email</FieldLabel>
+  <Input id="email" type="email" aria-invalid={Boolean(error)} />
+  <FieldDescription>We never share it.</FieldDescription>
+  <FieldError>{error}</FieldError>
+</Field>;
+```
+
+To check the `nx:` classes in the files you move over, add the
+[nxds lint rules](/getting-started/install#optional-add-lint-rules).
+
+## What stays on Chakra UI
+
+nxds has no part for these. Keep them on Chakra:
+
+- `Steps`
+- `RatingGroup`
+- `ColorPicker` and `ColorSwatch`
+- `FileUpload`
+- `Editable`
+- `NumberInput`
+- `PasswordInput`
+- `ProgressCircle`
+- `Stat`
+- `Timeline`
+- `TreeView`
+- `QrCode`, `Clipboard`, `Marquee` and `ActionBar`

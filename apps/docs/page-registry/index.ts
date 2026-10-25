@@ -106,6 +106,8 @@ export const PAGE_REGISTRY = {
       { slug: 'overview', label: 'Overview' },
       { slug: 'mui', label: 'MUI' },
       { slug: 'shadcn', label: 'shadcn/ui' },
+      { slug: 'chakra', label: 'Chakra UI' },
+      { slug: 'mantine', label: 'Mantine' },
     ],
   },
 } satisfies Record<string, RegistrySection> & {
