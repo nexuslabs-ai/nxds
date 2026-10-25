@@ -27,6 +27,8 @@ export type NxdsStroke = 'fine' | 'normal' | 'strong';
 
 export interface NxdsAppearancePrefs {
   uiFont: string;
+  /** The heading `font-family` stack. `null` follows `uiFont`. */
+  headingFont: string | null;
   codeFont: string;
   uiFontSize: number;
   codeFontSize: number;
@@ -134,6 +136,7 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
   stroke: 'normal',
   prefs: {
     uiFont: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    headingFont: null,
     codeFont: 'ui-monospace, "SF Mono", Menlo, monospace',
     uiFontSize: 14,
     codeFontSize: 12,
@@ -173,7 +176,10 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 // Font families are interpolated into a `<style>` rule, so reject characters that
 // could break out of the declaration (`;` `{` `}`) or open a tag (`<`).
 const FONT_FAMILY_UNSAFE = /[;{}<]/;
-const fontFamilyOr = (value: unknown, fallback: string): string =>
+const fontFamilyOr = <T extends string | null>(
+  value: unknown,
+  fallback: T
+): string | T =>
   typeof value === 'string' &&
   value.length > 0 &&
   !FONT_FAMILY_UNSAFE.test(value)
@@ -258,6 +264,10 @@ export function sanitizeNxdsAppearancePrefs(raw: unknown): NxdsAppearancePrefs {
   const d = DEFAULT_NXDS_APPEARANCE.prefs;
   return {
     uiFont: fontFamilyOr(o.uiFont, d.uiFont),
+    headingFont:
+      o.headingFont === null
+        ? null
+        : fontFamilyOr(o.headingFont, d.headingFont),
     codeFont: fontFamilyOr(o.codeFont, d.codeFont),
     uiFontSize: clampFontSize(o.uiFontSize, d.uiFontSize),
     codeFontSize: clampFontSize(o.codeFontSize, d.codeFontSize),
@@ -314,6 +324,7 @@ export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
   const blocks: string[] = [
     inRuntimeLayer(`:root {
   --nx-typography-family-font-sans: ${prefs.uiFont};
+  --nx-typography-family-font-heading: ${prefs.headingFont ?? 'var(--nx-typography-family-font-sans)'};
   --nx-typography-family-font-mono: ${prefs.codeFont};
 ${typographyScaleVariables(uiPx)}
 }`),
