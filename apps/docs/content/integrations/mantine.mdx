@@ -104,7 +104,7 @@ import { useEffect } from 'react';
 
 import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
 
-import { defaultAppearance } from './appearance-state';
+import { APPEARANCE_STORAGE_KEY, defaultAppearance } from './appearance-state';
 import { theme } from './theme';
 
 function toMantineColorScheme(mode: NxdsAppearanceMode) {
@@ -114,7 +114,7 @@ function toMantineColorScheme(mode: NxdsAppearanceMode) {
 const nxdsColorSchemeManager: MantineColorSchemeManager = {
   get: () =>
     toMantineColorScheme(
-      readStoredNxdsAppearance('app-appearance', defaultAppearance).mode
+      readStoredNxdsAppearance(APPEARANCE_STORAGE_KEY, defaultAppearance).mode
     ),
   set() {},
   subscribe() {},
@@ -165,7 +165,7 @@ import { mantineHtmlProps } from '@mantine/core';
 import { NxdsAppearanceProvider } from '@/components/nxds/components/appearance/provider';
 import { NxdsAppearanceScript } from '@/components/nxds/components/appearance/provider/server';
 
-import { defaultAppearance } from './appearance-state';
+import { APPEARANCE_STORAGE_KEY, defaultAppearance } from './appearance-state';
 import { AppMantineProvider } from './mantine-provider';
 
 import './globals.css';
@@ -183,14 +183,14 @@ export default function RootLayout({
     <html lang="en" {...mantineHtmlProps}>
       <head>
         <NxdsAppearanceScript
-          storageKey="app-appearance"
+          storageKey={APPEARANCE_STORAGE_KEY}
           defaultState={defaultAppearance}
         />
         <script dangerouslySetInnerHTML={{ __html: MANTINE_THEME_SCRIPT }} />
       </head>
       <body>
         <NxdsAppearanceProvider
-          storageKey="app-appearance"
+          storageKey={APPEARANCE_STORAGE_KEY}
           defaultState={defaultAppearance}
         >
           <AppMantineProvider>{children}</AppMantineProvider>
@@ -235,6 +235,8 @@ export function ModeToggle() {
 ```ts
 // app/appearance-state.ts
 import { DEFAULT_NXDS_APPEARANCE, type NxdsAppearanceState } from '@nxds/core';
+
+export const APPEARANCE_STORAGE_KEY = 'app-appearance';
 
 export const defaultAppearance = {
   ...DEFAULT_NXDS_APPEARANCE,
