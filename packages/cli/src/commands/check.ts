@@ -4,6 +4,7 @@ import path from 'node:path';
 import { major, satisfies } from 'semver';
 
 import {
+  assertSupportsReact,
   type CatalogFile,
   type CatalogItem,
   fetchRelease,
@@ -47,6 +48,7 @@ export async function diff(
   // `update` installs the app's React major, which may differ from the files'.
   const target = { ...config, react: reactMajor(readProject(cwd)) };
   const latest = await loadRelease(registry, 'latest');
+  assertSupportsReact(latest, target.react);
   const previous = await fetchRelease(registry, config.version);
   const previousFiles = previous && releaseFiles(previous, config);
   const { known, removed } = splitInstalled(latest, config.items);

@@ -226,6 +226,14 @@ function transform(checker, sourceFile, rel, problems) {
       problems.push(`${rel}: ${name}'s props have no type annotation.`);
       continue;
     }
+    if (
+      statement.modifiers?.some((m) => m.kind === ts.SyntaxKind.DefaultKeyword)
+    ) {
+      problems.push(
+        `${rel}: ${name} is a default export and takes ref; forwardRef would drop the default export. Export it by name.`
+      );
+      continue;
+    }
 
     const exported = statement.modifiers?.some(
       (m) => m.kind === ts.SyntaxKind.ExportKeyword

@@ -94,10 +94,8 @@ function projectFramework(cwd: string, catalog: Catalog): Framework {
   );
 }
 
-/** The React major in nxds.json, else the app's, else 19 outside a React app. */
+/** The app's React major, else 19 outside a React app: what `add` would install. */
 function projectReact(cwd: string): ReactMajor {
-  const configured = readConfig(cwd)?.react;
-  if (configured !== undefined) return configured;
   if (!existsSync(path.join(cwd, 'package.json'))) return 19;
   const project = readProject(cwd);
   return 'react' in project.dependencies ? reactMajor(project) : 19;

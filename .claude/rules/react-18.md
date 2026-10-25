@@ -40,9 +40,9 @@ generator would now write the same file (delete the entry).
 
 ## What Is Checked
 
-| Check      | Command                                     | Fails when                                       |
-| ---------- | ------------------------------------------- | ------------------------------------------------ |
-| Freshness  | `pnpm --filter @nxds/react-18 check`        | Generated files differ from a fresh run          |
-| Types      | `pnpm --filter @nxds/react-18 typecheck`    | The source doesn't compile on `@types/react` 18  |
-| Stories    | `pnpm test:storybook` (`storybook-react18`) | A story fails, or React logs an error, on 18.3.1 |
-| React APIs | `pnpm lint` (`@nxds/no-react-19-only`)      | `packages/react` uses a React 19-only API        |
+| Check      | Command                                  | Fails when                                       |
+| ---------- | ---------------------------------------- | ------------------------------------------------ |
+| Freshness  | `pnpm --filter @nxds/react-18 check`     | Generated files differ from a fresh run          |
+| Types      | `pnpm --filter @nxds/react-18 typecheck` | The source doesn't compile on `@types/react` 18  |
+| Stories    | `pnpm test:storybook:react18`            | A story fails, or React logs an error, on 18.3.1 |
+| React APIs | `pnpm lint` (`@nxds/no-react-19-only`)   | `packages/react` uses a React 19-only API        |

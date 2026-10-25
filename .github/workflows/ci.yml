@@ -348,9 +348,9 @@ jobs:
       matrix:
         lane:
           - name: React 19, Vue, parity
-            projects: --project=storybook --project=storybook-vue --project=parity
+            script: react19
           - name: React 18
-            projects: --project=storybook-react18
+            script: react18
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -389,7 +389,7 @@ jobs:
         run: npx playwright install chromium
 
       - name: Run story tests
-        run: pnpm exec vitest run ${{ matrix.lane.projects }}
+        run: pnpm test:storybook:${{ matrix.lane.script }}
 
   build-storybook:
     name: Build Storybook

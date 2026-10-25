@@ -13,8 +13,18 @@ const listeners = new Set<() => void>();
 let chosen: ReactVersion | null = null;
 
 function subscribe(listener: () => void) {
+  /** Picks up a choice made in another tab. */
+  function onStorage(event: StorageEvent) {
+    if (event.key !== STORAGE_KEY) return;
+    chosen = null;
+    listener();
+  }
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  window.addEventListener('storage', onStorage);
+  return () => {
+    listeners.delete(listener);
+    window.removeEventListener('storage', onStorage);
+  };
 }
 
 function readVersion(): ReactVersion {
