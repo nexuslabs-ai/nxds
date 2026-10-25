@@ -1,5 +1,6 @@
 import CssBaseline from '@mui/material/CssBaseline'
-import { createTheme, ThemeProvider, useColorScheme } from '@mui/material/styles'
+import { createTheme, type StorageManager, ThemeProvider, useColorScheme } from '@mui/material/styles'
+import { readStoredNxdsAppearance } from '@nxds/core'
 import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
@@ -20,8 +21,13 @@ const { NxdsAppearanceProvider } = createNxdsAppearance({
   defaultState: defaultAppearance,
 })
 
-// nxds owns light and dark mode; MUI follows it, so the two never disagree
-// about the shared .dark class on <html>.
+const nxdsModeStorage: StorageManager = ({ key }) => ({
+  get: (fallback) =>
+    key === 'mui-mode' ? readStoredNxdsAppearance(APPEARANCE_STORAGE_KEY, defaultAppearance).mode : fallback,
+  set() {},
+  subscribe: () => () => {},
+})
+
 function MuiFollowsNxds() {
   const { state, mounted } = useNxdsAppearance()
   const { setMode } = useColorScheme()
@@ -35,14 +41,14 @@ function MuiFollowsNxds() {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <NxdsAppearanceProvider>
+    <NxdsAppearanceProvider>
+      <ThemeProvider theme={theme} storageManager={nxdsModeStorage}>
+        <CssBaseline />
         <MuiFollowsNxds />
         <BrowserRouter>
           <App />
         </BrowserRouter>
-      </NxdsAppearanceProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </NxdsAppearanceProvider>
   </StrictMode>,
 )

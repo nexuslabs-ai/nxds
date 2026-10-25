@@ -5,8 +5,6 @@ import { useEffect } from "react"
 
 import { useNxdsAppearance } from "@/components/nxds/components/appearance/provider"
 
-// nxds owns light and dark mode; next-themes follows it, so the two never
-// disagree about the shared .dark class on <html>.
 function NextThemesFollowsNxds() {
   const { state, mounted } = useNxdsAppearance()
   const { setTheme } = useTheme()

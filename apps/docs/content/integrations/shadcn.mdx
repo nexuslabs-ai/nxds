@@ -168,6 +168,10 @@ export default function RootLayout({
 `next-themes` saved another mode before you added nxds, that mode can show for
 a moment on the first load. From then on, both save the same mode.
 
+`next-themes` has no option to stop saving its own copy, and it syncs that
+copy across tabs. A toggle in another tab switches the `.dark` class here, and
+the nxds state catches up on the next reload.
+
 Switch the mode through nxds only:
 
 ```tsx

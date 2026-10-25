@@ -511,20 +511,37 @@ styles stay as they are. Follow steps 1 to 4 with these four changes:
 
 2. **Keep your app's reset.** nxds needs `box-sizing: border-box`. Tailwind's
    Preflight, MUI's `CssBaseline` and Bootstrap's Reboot all set it. If your app
-   has no Tailwind, install it for the nxds entry.
-3. **Put your library's CSS in a cascade layer**, if it isn't in one. nxds
-   classes sit in Tailwind's `utilities` layer. CSS outside any layer beats
-   every layer, so a reset like `button { border-radius: 0 }` would override
-   `nx:rounded-md`. Name your library's layer first, at the top of your first
-   stylesheet:
+   has no Tailwind, install it for the nxds entry. `init` then adds Preflight to
+   `app/nxds.css`. If your app or library has its own reset, delete the
+   Preflight lines, so your existing pages keep their look.
+3. **Put element rules in a cascade layer**, your library's and your own, if
+   they aren't in one. nxds classes sit in Tailwind's `utilities` layer. CSS
+   outside any layer beats every layer, so a reset like
+   `button { border-radius: 0 }` would override `nx:rounded-md`. Name your
+   library's layer first, at the top of your first stylesheet:
 
    ```css
    /* app/globals.css */
-   @layer your-library, theme, base, components, utilities;
+   @layer your-library, properties, theme, base, components, utilities, nx-runtime;
    ```
 
-   Then load the library's CSS into that layer.
-   [Integrations](/integrations/overview) gives the line for each library.
+   Then load the library's CSS into that layer. Each
+   [Integrations](/integrations/overview) page gives the line for its library.
+
+   If you use Vite, put the statement at the top of `<head>` in `index.html`
+   instead:
+
+   ```html
+   <!-- index.html -->
+   <head>
+     <style>
+       @layer your-library, properties, theme, base, components, utilities, nx-runtime;
+     </style>
+   </head>
+   ```
+
+   The first statement on the page sets the order. On Vite, the nxds script's
+   own statement comes before your CSS.
 
 4. **Add the provider and the script** as in step 3. nxds owns light and dark
    mode, and writes the `.dark` class on `<html>`. Make your library follow
@@ -560,9 +577,9 @@ nxds overlays use three layers:
 If your library's overlays sit higher, raise these on `:root`.
 
 An open nxds dialog blocks pointer events outside itself. Render another
-library's popups inside it, with portals turned off.
-[Integrations](/integrations/overview) lists the z-index values and the
-portal prop for each library.
+library's popups inside it, with portals turned off. Each
+[Integrations](/integrations/overview) page gives its library's z-index values
+and portal prop.
 
 [Examples](/getting-started/examples) shows nxds added to a shadcn app, an MUI
 app and a company package.

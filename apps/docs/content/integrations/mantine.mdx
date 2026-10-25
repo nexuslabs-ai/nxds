@@ -33,15 +33,10 @@ npx nxds-cli@latest add button
 ```
 
 `init` adds the provider and the theme script to `app/layout.tsx`, and creates
-`app/nxds.css`. Your app has no Tailwind, so `init` also puts Tailwind's
-Preflight in `app/nxds.css`. Delete it. Mantine's styles already set
-`box-sizing`, and Preflight would restyle your Mantine pages:
-
-```css
-/* app/nxds.css */
-@import '../components/nxds/tailwind/nxds.css';
-@import 'tw-animate-css';
-```
+`app/nxds.css`. Mantine's styles set `box-sizing`, so delete the Preflight
+lines in `app/nxds.css`, as
+[Add nxds to an existing app](/getting-started/install#add-nxds-to-an-existing-app)
+explains.
 
 `@mantine/core/styles.css` sits outside any cascade layer, so its
 `button { font: inherit }` would beat the nxds button's type. Import
@@ -50,7 +45,7 @@ Name that layer first, so it sits below the nxds utilities:
 
 ```css
 /* app/globals.css */
-@layer mantine, theme, base, components, utilities;
+@layer mantine, properties, theme, base, components, utilities, nx-runtime;
 @import '@mantine/core/styles.layer.css';
 ```
 
@@ -99,13 +94,33 @@ on `<html>`, so a small component passes each nxds change to Mantine:
 // app/mantine-provider.tsx
 'use client';
 
-import { MantineProvider, useMantineColorScheme } from '@mantine/core';
+import {
+  type MantineColorSchemeManager,
+  MantineProvider,
+  useMantineColorScheme,
+} from '@mantine/core';
+import { type NxdsAppearanceMode, readStoredNxdsAppearance } from '@nxds/core';
 import { useEffect } from 'react';
 
 import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
 
 import { defaultAppearance } from './appearance-state';
-import { theme, toMantineColorScheme } from './theme';
+import { theme } from './theme';
+
+function toMantineColorScheme(mode: NxdsAppearanceMode) {
+  return mode === 'system' ? 'auto' : mode;
+}
+
+const nxdsColorSchemeManager: MantineColorSchemeManager = {
+  get: () =>
+    toMantineColorScheme(
+      readStoredNxdsAppearance('app-appearance', defaultAppearance).mode
+    ),
+  set() {},
+  subscribe() {},
+  unsubscribe() {},
+  clear() {},
+};
 
 function MantineFollowsNxds() {
   const { state, mounted } = useNxdsAppearance();
@@ -124,10 +139,7 @@ export function AppMantineProvider({
   children: React.ReactNode;
 }) {
   return (
-    <MantineProvider
-      theme={theme}
-      defaultColorScheme={toMantineColorScheme(defaultAppearance.mode)}
-    >
+    <MantineProvider theme={theme} colorSchemeManager={nxdsColorSchemeManager}>
       <MantineFollowsNxds />
       {children}
     </MantineProvider>
@@ -135,37 +147,32 @@ export function AppMantineProvider({
 }
 ```
 
-```ts
-// app/theme.ts
-import { createTheme } from '@mantine/core';
-import type { NxdsAppearanceMode } from '@nxds/core';
+`theme` is the theme your app already passes to `MantineProvider`. Mantine
+calls the system mode `'auto'`, so `toMantineColorScheme` maps nxds `'system'`
+to it. `nxdsColorSchemeManager` starts Mantine from the mode nxds
+saved, and saves nothing of its own. Mantine then can't fall out of step on a
+reload or from another tab.
 
-export const theme = createTheme({ primaryColor: 'blue' });
-
-export function toMantineColorScheme(mode: NxdsAppearanceMode) {
-  return mode === 'system' ? 'auto' : mode;
-}
-```
-
-Mantine calls the system mode `'auto'`, so `toMantineColorScheme` maps nxds
-`'system'` to it.
-
-Add Mantine's script beside the nxds script, and put the Mantine provider
-inside the nxds provider:
+Leave out Mantine's `ColorSchemeScript`, because it reads only Mantine's saved
+mode. One line in `<head>` sets Mantine's attribute from the nxds `.dark`
+class before the first paint. Put the Mantine provider inside the nxds
+provider:
 
 ```tsx
 // app/layout.tsx
-import { ColorSchemeScript, mantineHtmlProps } from '@mantine/core';
+import { mantineHtmlProps } from '@mantine/core';
 
 import { NxdsAppearanceProvider } from '@/components/nxds/components/appearance/provider';
 import { NxdsAppearanceScript } from '@/components/nxds/components/appearance/provider/server';
 
 import { defaultAppearance } from './appearance-state';
 import { AppMantineProvider } from './mantine-provider';
-import { toMantineColorScheme } from './theme';
 
 import './globals.css';
 import './nxds.css';
+
+const MANTINE_THEME_SCRIPT =
+  "document.documentElement.dataset.mantineColorScheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';";
 
 export default function RootLayout({
   children,
@@ -179,9 +186,7 @@ export default function RootLayout({
           storageKey="app-appearance"
           defaultState={defaultAppearance}
         />
-        <ColorSchemeScript
-          defaultColorScheme={toMantineColorScheme(defaultAppearance.mode)}
-        />
+        <script dangerouslySetInnerHTML={{ __html: MANTINE_THEME_SCRIPT }} />
       </head>
       <body>
         <NxdsAppearanceProvider
@@ -197,10 +202,8 @@ export default function RootLayout({
 ```
 
 `mantineHtmlProps` includes `suppressHydrationWarning`, which nxds needs too.
-Both scripts run before the first paint, and both start from the nxds default
-mode, so a first visit paints one mode. If Mantine saved another mode before
-you added nxds, that mode can show for a moment on the first load. From then
-on, both save the same mode.
+If you pass a `nonce` to `NxdsAppearanceScript`, pass the same one to the
+Mantine script.
 
 Switch the mode through nxds only, not `setColorScheme`:
 

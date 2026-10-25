@@ -34,19 +34,10 @@ npx nxds-cli@latest add button
 ```
 
 `init` adds the provider and the theme script to `app/layout.tsx`, and creates
-`app/nxds.css`. Your app has no Tailwind, so `init` also puts Tailwind's
-Preflight in `app/nxds.css`, because nxds needs `box-sizing: border-box`. If
-your app imports `antd/dist/reset.css`, delete Preflight, because the reset
-already sets it. If your app has no reset, keep Preflight. It also resets bare
-elements on your pages, such as heading margins.
-
-With antd's reset, `app/nxds.css` keeps two imports:
-
-```css
-/* app/nxds.css */
-@import '../components/nxds/tailwind/nxds.css';
-@import 'tw-animate-css';
-```
+`app/nxds.css`. `antd/dist/reset.css` sets `box-sizing`. If your app imports
+it, delete the Preflight lines in `app/nxds.css`, as
+[Add nxds to an existing app](/getting-started/install#add-nxds-to-an-existing-app)
+explains. If your app has no reset, keep Preflight.
 
 antd's component styles target only its own `.ant-` classes, so they need no
 cascade layer. `antd/dist/reset.css` does style bare elements, such as
@@ -54,7 +45,7 @@ cascade layer. `antd/dist/reset.css` does style bare elements, such as
 
 ```css
 /* app/globals.css */
-@layer antd-reset, theme, base, components, utilities;
+@layer antd-reset, properties, theme, base, components, utilities, nx-runtime;
 @import 'antd/dist/reset.css' layer(antd-reset);
 ```
 

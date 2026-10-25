@@ -35,15 +35,10 @@ npx nxds-cli@latest add button
 ```
 
 `init` adds the provider and the theme script to `app/layout.tsx`, and creates
-`app/nxds.css`. Your app has no Tailwind, so `init` also puts Tailwind's
-Preflight in `app/nxds.css`. Delete it. Bootstrap's Reboot already sets
-`box-sizing`, and Preflight would restyle your Bootstrap pages:
-
-```css
-/* app/nxds.css */
-@import '../components/nxds/tailwind/nxds.css';
-@import 'tw-animate-css';
-```
+`app/nxds.css`. Bootstrap's Reboot sets `box-sizing`, so delete the Preflight
+lines in `app/nxds.css`, as
+[Add nxds to an existing app](/getting-started/install#add-nxds-to-an-existing-app)
+explains.
 
 Bootstrap's CSS sits outside any cascade layer, so Reboot's
 `button { border-radius: 0 }` would beat an nxds button's corners. Load
@@ -51,7 +46,7 @@ Bootstrap into a layer below the nxds utilities:
 
 ```css
 /* app/globals.css */
-@layer bootstrap, theme, base, components, utilities;
+@layer bootstrap, properties, theme, base, components, utilities, nx-runtime;
 @import 'bootstrap/dist/css/bootstrap.min.css' layer(bootstrap);
 ```
 
@@ -141,6 +136,9 @@ export default function RootLayout({
   );
 }
 ```
+
+If you pass a `nonce` to `NxdsAppearanceScript`, pass the same one to the
+Bootstrap script.
 
 `BootstrapFollowsNxds` keeps the attribute in step when the mode changes:
 

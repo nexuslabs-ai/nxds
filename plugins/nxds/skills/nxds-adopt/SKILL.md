@@ -25,17 +25,17 @@ This skill only adds what changes next to another library.
 
 ## Find the library
 
-Read `package.json`, and pick the first row that matches:
+Read `package.json` and the app's CSS, and pick the first row that matches:
 
-| Library    | Detect                               | Docs page                                   |
-| ---------- | ------------------------------------ | ------------------------------------------- |
-| MUI        | `@mui/material`                      | https://nxds.dev/integrations/mui.md        |
-| Chakra UI  | `@chakra-ui/react`                   | https://nxds.dev/integrations/chakra.md     |
-| Mantine    | `@mantine/core`                      | https://nxds.dev/integrations/mantine.md    |
-| Ant Design | `antd`                               | https://nxds.dev/integrations/ant-design.md |
-| Bootstrap  | `bootstrap` or `react-bootstrap`     | https://nxds.dev/integrations/bootstrap.md  |
-| shadcn/ui  | `components.json` at the app root    | https://nxds.dev/integrations/shadcn.md     |
-| Tailwind   | `tailwindcss`, and none of the above | https://nxds.dev/integrations/tailwind.md   |
+| Library    | Detect                                                                                  | Docs page                                   |
+| ---------- | --------------------------------------------------------------------------------------- | ------------------------------------------- |
+| MUI        | `@mui/material`                                                                         | https://nxds.dev/integrations/mui.md        |
+| Chakra UI  | `@chakra-ui/react`                                                                      | https://nxds.dev/integrations/chakra.md     |
+| Mantine    | `@mantine/core`                                                                         | https://nxds.dev/integrations/mantine.md    |
+| Ant Design | `antd`                                                                                  | https://nxds.dev/integrations/ant-design.md |
+| Bootstrap  | `bootstrap` or `react-bootstrap`                                                        | https://nxds.dev/integrations/bootstrap.md  |
+| shadcn/ui  | `components.json` at the app root                                                       | https://nxds.dev/integrations/shadcn.md     |
+| Tailwind   | `@import "tailwindcss"` in the app's own CSS, not the nxds entry, and none of the above | https://nxds.dev/integrations/tailwind.md   |
 
 Read that page before you change anything. Its "Where nxds fits" table maps
 each library component to its nxds parts.

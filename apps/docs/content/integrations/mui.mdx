@@ -35,15 +35,10 @@ npx nxds-cli@latest add button
 ```
 
 `init` adds the provider and the theme script to `app/layout.tsx`, and creates
-`app/nxds.css`. Your app has no Tailwind, so `init` also puts Tailwind's
-Preflight in `app/nxds.css`. Delete it. `CssBaseline` already sets
-`box-sizing`, and Preflight would restyle your MUI pages:
-
-```css
-/* app/nxds.css */
-@import '../components/nxds/tailwind/nxds.css';
-@import 'tw-animate-css';
-```
+`app/nxds.css`. `CssBaseline` sets `box-sizing`, so delete the Preflight lines
+in `app/nxds.css`, as
+[Add nxds to an existing app](/getting-started/install#add-nxds-to-an-existing-app)
+explains.
 
 MUI needs no cascade layer. Its styles target its own class names, and
 `CssBaseline` only styles `html` and `body`.
@@ -141,12 +136,27 @@ component passes each change to MUI:
 'use client';
 
 import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider, useColorScheme } from '@mui/material/styles';
+import {
+  type StorageManager,
+  ThemeProvider,
+  useColorScheme,
+} from '@mui/material/styles';
+import { readStoredNxdsAppearance } from '@nxds/core';
 import { useEffect } from 'react';
 
 import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
 
+import { defaultAppearance } from './appearance-state';
 import { theme } from './theme';
+
+const nxdsModeStorage: StorageManager = ({ key }) => ({
+  get: (fallback) =>
+    key === 'mui-mode'
+      ? readStoredNxdsAppearance('app-appearance', defaultAppearance).mode
+      : fallback,
+  set() {},
+  subscribe: () => () => {},
+});
 
 function MuiFollowsNxds() {
   const { state, mounted } = useNxdsAppearance();
@@ -161,7 +171,7 @@ function MuiFollowsNxds() {
 
 export function MuiProvider({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={theme} storageManager={nxdsModeStorage}>
       <CssBaseline />
       <MuiFollowsNxds />
       {children}
@@ -174,9 +184,17 @@ export function MuiProvider({ children }: { children: React.ReactNode }) {
 // app/theme.ts
 import { createTheme } from '@mui/material/styles';
 
+import { brand } from './brand';
+
+const primary = { main: brand.color };
+
 export const theme = createTheme({
-  colorSchemes: { light: true, dark: true },
+  colorSchemes: {
+    light: { palette: { primary } },
+    dark: { palette: { primary } },
+  },
   cssVariables: { colorSchemeSelector: 'class' },
+  typography: { fontFamily: brand.font },
 });
 ```
 
@@ -185,9 +203,10 @@ head script sets that class before the first paint, so MUI doesn't flash
 light. Leave out `InitColorSchemeScript`, because the nxds script already sets
 the class.
 
-`MuiFollowsNxds` keeps MUI's own `mode` and saved value in step with nxds.
-Both use `'light'`, `'dark'` and `'system'`. If MUI saved another mode before
-you added nxds, nxds wins on the first load.
+`nxdsModeStorage` starts MUI from the mode nxds saved, and saves nothing of
+its own. MUI then can't fall out of step on a reload or from another tab.
+`MuiFollowsNxds` passes each later change to MUI. Both use `'light'`, `'dark'`
+and `'system'`.
 
 Switch the mode through nxds only:
 
@@ -218,25 +237,33 @@ Don't call MUI's `setMode` yourself. `MuiFollowsNxds` does it.
 
 ## Match your theme
 
-Read your MUI theme in the nxds appearance, so each value lives in one place:
+Keep the values both themes read in one file. `theme.ts` above reads it too:
+
+```ts
+// app/brand.ts
+export const brand = {
+  color: '#1976d2',
+  font: '"Roboto", "Helvetica", "Arial", sans-serif',
+};
+```
 
 ```ts
 // app/appearance-state.ts
 import { DEFAULT_NXDS_APPEARANCE, type NxdsAppearanceState } from '@nxds/core';
 
-import { theme } from './theme';
+import { brand } from './brand';
 
 export const defaultAppearance = {
   ...DEFAULT_NXDS_APPEARANCE,
-  brandColor: theme.palette.primary.main,
+  brandColor: brand.color,
   surfaceTone: 'neutral',
   corners: 'subtle',
-  prefs: {
-    ...DEFAULT_NXDS_APPEARANCE.prefs,
-    uiFont: theme.typography.fontFamily ?? DEFAULT_NXDS_APPEARANCE.prefs.uiFont,
-  },
+  prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs, uiFont: brand.font },
 } satisfies NxdsAppearanceState;
 ```
+
+The server layout imports `appearance-state.ts`, so keep it free of the MUI
+theme. MUI's Next.js guide marks `theme.ts` `'use client'`.
 
 | MUI theme                            | Appearance field                | How to match                                                                                 |
 | ------------------------------------ | ------------------------------- | -------------------------------------------------------------------------------------------- |

@@ -34,15 +34,10 @@ npx nxds-cli@latest add button
 ```
 
 `init` adds the provider and the theme script to `app/layout.tsx`, and creates
-`app/nxds.css`. Your app has no Tailwind, so `init` also puts Tailwind's
-Preflight in `app/nxds.css`. Delete it. Chakra's own reset already sets
-`box-sizing`, and Preflight would restyle your Chakra pages:
-
-```css
-/* app/nxds.css */
-@import '../components/nxds/tailwind/nxds.css';
-@import 'tw-animate-css';
-```
+`app/nxds.css`. Chakra's reset sets `box-sizing`, so delete the Preflight
+lines in `app/nxds.css`, as
+[Add nxds to an existing app](/getting-started/install#add-nxds-to-an-existing-app)
+explains.
 
 Chakra puts its CSS in four cascade layers: `reset`, `base`, `tokens` and
 `recipes`. It declares them after nxds loads, so its reset would win over
@@ -51,7 +46,7 @@ of `globals.css`, so Chakra's sit below the nxds utilities:
 
 ```css
 /* app/globals.css */
-@layer theme, reset, base, tokens, recipes, components, utilities;
+@layer properties, theme, reset, base, tokens, recipes, components, utilities, nx-runtime;
 ```
 
 Chakra's layers keep their own order, so your Chakra components look the same.
@@ -89,8 +84,9 @@ them, so an nxds popup opens over a Chakra dialog:
 Inside an nxds dialog, render Chakra popups in place: leave out their
 `<Portal>`, or pass `<Portal disabled>`.
 
-On Next.js 16, Chakra asks you to build with `next build --webpack`. Turbopack
-hydrates Chakra's styles out of order, which logs a hydration error. See
+On Next.js 16, Chakra asks you to add `--webpack` to your `dev` and `build`
+scripts: `next dev --webpack` and `next build --webpack`. Turbopack hydrates
+Chakra's styles out of order, which logs a hydration error. See
 Chakra's [Next.js guide](https://chakra-ui.com/docs/get-started/frameworks/next-app).
 
 ## Share light and dark mode
@@ -180,6 +176,10 @@ export default function RootLayout({
 `defaultTheme` matches the nxds default, so a first visit paints one mode. If
 `next-themes` saved another mode before you added nxds, that mode can show for
 a moment on the first load. From then on, both save the same mode.
+
+`next-themes` has no option to stop saving its own copy, and it syncs that
+copy across tabs. A toggle in another tab switches the `.dark` class here, and
+the nxds state catches up on the next reload.
 
 Switch the mode through nxds only, not Chakra's `setColorMode`:
 
