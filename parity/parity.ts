@@ -5,7 +5,6 @@
 /** React components Vue doesn't ship yet. */
 export const planned = [
   'accordion',
-  'alert-dialog',
   'appearance-settings',
   'attachment',
   'avatar',
@@ -38,7 +37,6 @@ export const planned = [
   'scroll-area',
   'select',
   'setting-row',
-  'sheet',
   'sidebar',
   'sonner',
   'table',
@@ -49,6 +47,7 @@ export const planned = [
 /** Components both packages ship, appearance aside: it has its own contract. */
 export const shared = [
   'alert',
+  'alert-dialog',
   'aspect-ratio',
   'badge',
   'button',
@@ -74,6 +73,7 @@ export const shared = [
   'progress',
   'radio-group',
   'separator',
+  'sheet',
   'show',
   'skeleton',
   'slider',
@@ -200,6 +200,8 @@ export const renderedNameDifferences: Record<string, string> = {
 
 /** Top-level values a Vue recipe file declares that React has no twin for, as `{file}#{name}`. */
 export const vueOnlyDeclarations: Record<string, string> = {
+  'alert-dialog/index.ts#AlertDialogLayoutKey':
+    'Vue injection key the content provides to its header and footer; React passes the same layout through context',
   'input-otp/index.ts#InputOTPKey':
     "Vue injection key the root provides so each slot's <input> takes the field's name; React's single <input> carries it",
   'tabs/index.ts#TabsListKey':

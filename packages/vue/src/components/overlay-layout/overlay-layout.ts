@@ -1,4 +1,4 @@
-import { cva } from 'class-variance-authority';
+import { cva, type VariantProps } from 'class-variance-authority';
 
 /**
  * Popover-family surfaces share the translucent/blurred recipe; Tooltip uses a
@@ -52,11 +52,18 @@ const overlayContentTransitionClassName = [
   overlayPresenceExitClassName,
 ].join(' ');
 
-const overlayScrimTransitionClassName = [
+export const overlayScrimTransitionClassName = [
   'nx:transition-opacity',
   'nx:duration-default',
   'nx:ease-move',
   'nx:data-[state=closed]:opacity-0',
+  overlayPresenceExitClassName,
+].join(' ');
+
+export const overlayPanelTransitionClassName = [
+  'nx:transition-[translate]',
+  'nx:duration-slow',
+  'nx:ease-move',
   overlayPresenceExitClassName,
 ].join(' ');
 
@@ -103,6 +110,22 @@ export const overlayBodyClassName = [
   'nx:focus-visible:[outline-offset:-2px]',
 ].join(' ');
 
+export const overlayFooterVariants = cva(
+  'nx:flex nx:shrink-0 nx:gap-2 nx:px-6',
+  {
+    variants: {
+      orientation: {
+        horizontal:
+          'nx:flex-col nx:sm:flex-row nx:sm:items-center nx:sm:justify-end',
+        vertical: 'nx:flex-col nx:items-stretch nx:*:w-full',
+      },
+    },
+    defaultVariants: {
+      orientation: 'horizontal',
+    },
+  }
+);
+
 export const overlayCloseButtonClassName = [
   'nx:absolute nx:right-6 nx:top-6 nx:rounded-sm nx:border-0 nx:bg-transparent nx:p-1 nx:text-muted-foreground-subtle',
   'nx:transition-control',
@@ -111,3 +134,29 @@ export const overlayCloseButtonClassName = [
   'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
   'nx:disabled:pointer-events-none',
 ].join(' ');
+
+export type OverlayHeaderVariants = VariantProps<typeof overlayHeaderVariants>;
+
+export type OverlayVariant = NonNullable<
+  VariantProps<typeof overlayHeaderVariants>['variant']
+>;
+
+export type OverlayButtonOrientation = NonNullable<
+  VariantProps<typeof overlayFooterVariants>['orientation']
+>;
+
+export type OverlayLayoutContextValue = {
+  variant: OverlayVariant;
+  buttonOrientation: OverlayButtonOrientation;
+};
+
+export const defaultOverlayLayout: OverlayLayoutContextValue = {
+  variant: 'default',
+  buttonOrientation: 'horizontal',
+};
+
+export function resolveOverlayButtonOrientation(
+  variant: OverlayVariant
+): OverlayButtonOrientation {
+  return variant === 'center' ? 'vertical' : 'horizontal';
+}

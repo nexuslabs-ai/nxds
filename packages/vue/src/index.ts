@@ -1,6 +1,7 @@
 import './index.css';
 
 export * from './components/alert';
+export * from './components/alert-dialog';
 export * from './components/appearance';
 export * from './components/aspect-ratio';
 export * from './components/badge';
@@ -27,6 +28,7 @@ export * from './components/popover';
 export * from './components/progress';
 export * from './components/radio-group';
 export * from './components/separator';
+export * from './components/sheet';
 export * from './components/show';
 export * from './components/skeleton';
 export * from './components/slider';
