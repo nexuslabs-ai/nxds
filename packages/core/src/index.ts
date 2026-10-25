@@ -17,6 +17,7 @@ export type {
   TokenMap,
 } from './lib/derive-theme';
 export { deriveTheme, themeToCss } from './lib/derive-theme';
+export * from './lib/icon-libraries';
 export type { Mode, NxdsSurfaceTone, Tier } from './lib/palette';
 export { PALETTE_KEYS, TIER_THRESHOLDS } from './lib/palette';
 export { isColor } from './lib/perceptual-ramp';
