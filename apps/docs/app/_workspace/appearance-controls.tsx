@@ -5,8 +5,11 @@ import { type ChangeEvent, type ReactNode, useId, useState } from 'react';
 import {
   BASE_TONE_OPTIONS,
   CORNER_OPTIONS,
+  DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
   ELEVATION_OPTIONS,
+  FONT_OPTIONS,
+  ICON_LIBRARY_OPTIONS,
   type NxdsAppearancePrefs,
   type NxdsAppearanceState,
   type NxdsResolvedAppearanceMode,
@@ -23,6 +26,7 @@ import {
 } from '@nxds/react';
 
 import { THEME_MODE_OPTIONS } from '../_lib/appearance-controls';
+import { setIconLibrary, useIconLibrary } from '../_lib/icon-library';
 
 const CONTRAST_MIN = 0;
 const CONTRAST_MAX = 100;
@@ -77,6 +81,61 @@ function SelectField<T extends string>({
         ))}
       </NativeSelect>
     </div>
+  );
+}
+
+/** A font a picker offers: `family` is the stack the prefs store, `null` for the UI font. */
+type FontChoice = { value: string; label: string; family: string | null };
+
+function catalogueFonts(categories: readonly string[]): FontChoice[] {
+  return FONT_OPTIONS.filter((font) => categories.includes(font.category)).map(
+    ({ value, label, family }) => ({ value, label, family })
+  );
+}
+
+const { prefs: DEFAULT_PREFS } = DEFAULT_NXDS_APPEARANCE;
+
+const UI_FONTS: FontChoice[] = [
+  { value: 'system', label: 'System', family: DEFAULT_PREFS.uiFont },
+  ...catalogueFonts(['sans', 'serif']),
+];
+const HEADING_FONTS: FontChoice[] = [
+  { value: 'ui', label: 'Same as UI font', family: null },
+  ...catalogueFonts(['sans', 'serif']),
+];
+const CODE_FONTS: FontChoice[] = [
+  { value: 'system', label: 'System', family: DEFAULT_PREFS.codeFont },
+  ...catalogueFonts(['mono']),
+];
+
+/** Picks a font by name. A stack set some other way shows as Custom. */
+function FontField({
+  label,
+  family,
+  choices,
+  onChange,
+}: {
+  label: string;
+  family: string | null;
+  choices: FontChoice[];
+  onChange: (family: string | null) => void;
+}) {
+  const custom = { value: 'custom', label: 'Custom', family };
+  const chosen = choices.find((choice) => choice.family === family) ?? custom;
+  const options = chosen === custom ? [...choices, custom] : choices;
+
+  function change(value: string) {
+    const choice = options.find((option) => option.value === value);
+    if (choice) onChange(choice.family);
+  }
+
+  return (
+    <SelectField
+      label={label}
+      value={chosen.value}
+      options={options}
+      onChange={change}
+    />
   );
 }
 
@@ -245,6 +304,8 @@ export function AppearanceControls({
   const contrastKey =
     resolvedMode === 'dark' ? 'darkContrast' : 'lightContrast';
 
+  const iconLibrary = useIconLibrary();
+
   function changePrefs(patch: Partial<NxdsAppearancePrefs>) {
     onChange({ prefs: { ...state.prefs, ...patch } });
   }
@@ -299,6 +360,36 @@ export function AppearanceControls({
           value={state.stroke}
           options={STROKE_OPTIONS}
           onChange={(stroke) => onChange({ stroke })}
+        />
+      </ControlGroup>
+      <ControlGroup title="Type and icons">
+        <FontField
+          label="Font"
+          family={state.prefs.uiFont}
+          choices={UI_FONTS}
+          onChange={(uiFont) =>
+            changePrefs({ uiFont: uiFont ?? DEFAULT_PREFS.uiFont })
+          }
+        />
+        <FontField
+          label="Heading font"
+          family={state.prefs.headingFont}
+          choices={HEADING_FONTS}
+          onChange={(headingFont) => changePrefs({ headingFont })}
+        />
+        <FontField
+          label="Code font"
+          family={state.prefs.codeFont}
+          choices={CODE_FONTS}
+          onChange={(codeFont) =>
+            changePrefs({ codeFont: codeFont ?? DEFAULT_PREFS.codeFont })
+          }
+        />
+        <SelectField
+          label="Icons"
+          value={iconLibrary}
+          options={ICON_LIBRARY_OPTIONS}
+          onChange={setIconLibrary}
         />
       </ControlGroup>
       <ControlGroup title="Preferences">

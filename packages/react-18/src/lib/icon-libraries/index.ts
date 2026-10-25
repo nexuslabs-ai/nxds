@@ -12,7 +12,7 @@ import * as tabler from './tabler';
 export type IconName = keyof typeof phosphor;
 
 /** What a component may pass an internal icon. */
-type IconProps = Omit<ComponentPropsWithoutRef<'svg'>, 'children'>;
+export type IconProps = Omit<ComponentPropsWithoutRef<'svg'>, 'children'>;
 
 /** Every library's internal icon set. Each one exports every `IconName`. */
 export const ICON_SETS = {
