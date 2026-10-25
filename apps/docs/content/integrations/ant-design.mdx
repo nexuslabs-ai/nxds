@@ -1,0 +1,376 @@
+export const description =
+  'Add nxds components to a Next.js app built with Ant Design. Drive the antd algorithm from the nxds mode, match your antd tokens, and find the nxds part for each antd component.';
+
+# nxds with Ant Design
+
+Add nxds components to an Ant Design app, and keep antd for everything else.
+These steps use a Next.js App Router app on antd 6.
+
+## What nxds adds for you
+
+nxds gives an antd app parts it doesn't have, themed from one appearance
+object. [Introduction](/getting-started/introduction) covers the theme engine,
+the copy-and-own source and the agent support.
+
+| You need                        | nxds part                       |
+| ------------------------------- | ------------------------------- |
+| A command palette               | `CommandDialog`                 |
+| A collapsible app sidebar       | `Sidebar` and `SidebarProvider` |
+| A filter bar                    | `FilterBuilder`                 |
+| A right-click menu or menu bar  | `ContextMenu` and `Menubar`     |
+| A bottom sheet                  | `Drawer`                        |
+| A select with several values    | `MultiSelect`                   |
+| Large radio or checkbox choices | `ChoiceCard`, `ChoiceRow`       |
+| A chart                         | `ChartContainer`                |
+| A chat thread                   | `Message` and `Bubble`          |
+
+## Add your first nxds component
+
+Set up nxds, then add a component:
+
+```bash
+npx nxds-cli@latest init
+npx nxds-cli@latest add button
+```
+
+`init` adds the provider and the theme script to `app/layout.tsx`, and creates
+`app/nxds.css`. Your app has no Tailwind, so `init` also puts Tailwind's
+Preflight in `app/nxds.css`, because nxds needs `box-sizing: border-box`. If
+your app imports `antd/dist/reset.css`, delete Preflight, because the reset
+already sets it. If your app has no reset, keep Preflight. It also resets bare
+elements on your pages, such as heading margins.
+
+With antd's reset, `app/nxds.css` keeps two imports:
+
+```css
+/* app/nxds.css */
+@import '../components/nxds/tailwind/nxds.css';
+@import 'tw-animate-css';
+```
+
+antd's component styles target only its own `.ant-` classes, so they need no
+cascade layer. `antd/dist/reset.css` does style bare elements, such as
+`p { margin-bottom }`. Load it into a layer below the nxds utilities:
+
+```css
+/* app/globals.css */
+@layer antd-reset, theme, base, components, utilities;
+@import 'antd/dist/reset.css' layer(antd-reset);
+```
+
+Render the nxds button on an existing screen, beside antd's:
+
+```tsx
+// app/page.tsx
+import { Button as AntdButton, Flex } from 'antd';
+
+import { Button } from '@/components/nxds/components/button/button';
+
+export default function Page() {
+  return (
+    <Flex gap="small">
+      <AntdButton type="primary">Save</AntdButton>
+      <Button variant="outline">Preview</Button>
+    </Flex>
+  );
+}
+```
+
+antd's popups sit at z-index 1000 to 1070. Raise the nxds layers above them,
+so an nxds popup opens over an antd modal:
+
+```css
+/* app/nxds.css, after the imports */
+:root {
+  --nx-z-index-modal: 1100;
+  --nx-z-index-popover: 1200;
+  --nx-z-index-toast: 1300;
+}
+```
+
+Inside an nxds dialog, render antd popups in place with
+`getPopupContainer={(trigger) => trigger.parentElement ?? document.body}`.
+
+## Share light and dark mode
+
+nxds owns the mode. antd has no color mode of its own: it picks colors from
+the algorithm you pass to `ConfigProvider`. Pick the algorithm from the nxds
+mode:
+
+```tsx
+// app/antd-provider.tsx
+'use client';
+
+import { ConfigProvider, theme } from 'antd';
+
+import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
+
+import { brand } from './brand';
+
+export function AntdProvider({ children }: { children: React.ReactNode }) {
+  const { resolvedMode } = useNxdsAppearance();
+
+  return (
+    <ConfigProvider
+      theme={{
+        algorithm:
+          resolvedMode === 'dark'
+            ? theme.darkAlgorithm
+            : theme.defaultAlgorithm,
+        token: { colorPrimary: brand.color, borderRadius: brand.radius },
+      }}
+    >
+      {children}
+    </ConfigProvider>
+  );
+}
+```
+
+antd renders its styles in React, so it can't read the nxds head script. Read
+the mode from a cookie in the root layout instead, so the server renders the
+right algorithm on the first request:
+
+```tsx
+// app/layout.tsx
+import { AntdRegistry } from '@ant-design/nextjs-registry';
+import {
+  createNxdsAppearanceSnapshotFromCookie,
+  DEFAULT_COOKIE_KEY,
+} from '@nxds/core';
+import { cookies } from 'next/headers';
+
+import { NxdsAppearanceProvider } from '@/components/nxds/components/appearance/provider';
+import { NxdsAppearanceScript } from '@/components/nxds/components/appearance/provider/server';
+
+import { AntdProvider } from './antd-provider';
+import { defaultAppearance } from './appearance-state';
+
+import './globals.css';
+import './nxds.css';
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const cookieStore = await cookies();
+  const snapshot = createNxdsAppearanceSnapshotFromCookie(
+    cookieStore.get(DEFAULT_COOKIE_KEY)?.value,
+    defaultAppearance
+  );
+
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <NxdsAppearanceScript
+          storageKey="app-appearance"
+          defaultState={snapshot.state}
+        />
+      </head>
+      <body>
+        <NxdsAppearanceProvider
+          storageKey="app-appearance"
+          cookieWriteKey={DEFAULT_COOKIE_KEY}
+          defaultState={snapshot.state}
+        >
+          <AntdRegistry>
+            <AntdProvider>{children}</AntdProvider>
+          </AntdRegistry>
+        </NxdsAppearanceProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+The provider writes the cookie each time the mode changes.
+[Load the theme from a cookie](/getting-started/install#optional-load-the-theme-from-a-cookie)
+explains the setup. Reading cookies renders every route on each request.
+
+The server can't see the operating system's mode. When `mode` is `'system'`
+and the system is dark, antd paints light for a moment, then turns dark after
+hydration. Set `mode` to `'light'` or `'dark'` to avoid it.
+
+Switch the mode through nxds:
+
+```tsx
+// app/mode-toggle.tsx
+'use client';
+
+import { Button } from 'antd';
+
+import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
+
+export function ModeToggle() {
+  const { setState, resolvedMode } = useNxdsAppearance();
+  const next = resolvedMode === 'dark' ? 'light' : 'dark';
+
+  return (
+    <Button onClick={() => setState((current) => ({ ...current, mode: next }))}>
+      Switch to {next}
+    </Button>
+  );
+}
+```
+
+## Match your theme
+
+Keep the values both systems read in one file:
+
+```ts
+// app/brand.ts
+export const brand = { color: '#1677ff', radius: 6 };
+```
+
+```ts
+// app/appearance-state.ts
+import { DEFAULT_NXDS_APPEARANCE, type NxdsAppearanceState } from '@nxds/core';
+
+import { brand } from './brand';
+
+export const defaultAppearance = {
+  ...DEFAULT_NXDS_APPEARANCE,
+  brandColor: brand.color,
+  surfaceTone: 'neutral',
+  corners: 'smooth',
+} satisfies NxdsAppearanceState;
+```
+
+| antd token                                      | Appearance field   | How to match                                                                                                                           |
+| ----------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `colorPrimary`                                  | `brandColor`       | Pass it as is. nxds builds the hover and pressed shades                                                                                |
+| `colorBgBase`, `colorTextBase`                  | `surfaceTone`      | antd's grays are pure, so `neutral` matches                                                                                            |
+| `borderRadius`                                  | `corners`          | `0` is `square`, `2` to `4` is `subtle`, `6` to `8` is `smooth`, `10` to `12` is `round`, `16` is `extra-round`. antd's default is `6` |
+| `compactAlgorithm`, `controlHeight`, `sizeStep` | `density`          | `compactAlgorithm` matches `compact`. Compare others in the [Playground](/playground)                                                  |
+| `boxShadow`                                     | `elevation`        | Compare in the [Playground](/playground). `flat` turns shadows off                                                                     |
+| `lineWidth`                                     | `stroke`           | `1` is `normal`, `2` is `strong`                                                                                                       |
+| `fontFamily`                                    | `prefs.uiFont`     | Pass the same font stack                                                                                                               |
+| `fontSize`                                      | `prefs.uiFontSize` | Both default to 14                                                                                                                     |
+| `darkAlgorithm`                                 | `mode`             | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                                                         |
+
+## Where nxds fits
+
+antd components take data props, such as `items`, `options` and `columns`.
+nxds components take children: one part per item. nxds handlers take the value
+itself: `onValueChange(value)`, `onCheckedChange(checked)`,
+`onOpenChange(open)`.
+
+| Ant Design                                       | nxds                                                                                          | What changes                                                                                                      |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `Button`                                         | `Button`                                                                                      | `type` `primary`, `default`, `dashed`, `text`, `link` → `variant` `default`, `outline`, `dashed`, `ghost`, `link` |
+| `Button danger`                                  | `Button variant="destructive"`                                                                |                                                                                                                   |
+| `Button` with only an `icon`                     | `Button size="icon"`                                                                          | Give it an `aria-label`                                                                                           |
+| `Space.Compact` with buttons                     | `ButtonGroup`                                                                                 |                                                                                                                   |
+| `Form.Item`                                      | `Field`, `FieldLabel`, `FieldDescription`, `FieldError`                                       | `label`, `extra` and `help` become parts. `validateStatus="error"` → `data-invalid`                               |
+| `Input`                                          | `Input` in a `Field`                                                                          |                                                                                                                   |
+| `Input` with `prefix`, `suffix` or `addonBefore` | `InputGroup`, `InputGroupAddon`, `InputGroupInput`                                            |                                                                                                                   |
+| `Input.TextArea`                                 | `Textarea`                                                                                    |                                                                                                                   |
+| `Input.OTP`                                      | `InputOTP`, `InputOTPGroup`, `InputOTPSlot`                                                   |                                                                                                                   |
+| `Checkbox`                                       | `Checkbox` with a `FieldLabel`                                                                | `onChange(event)` → `onCheckedChange(checked)`                                                                    |
+| `Checkbox.Group`                                 | Several `Checkbox` parts in a `FieldGroup`                                                    |                                                                                                                   |
+| `Radio.Group`, `Radio`                           | `RadioGroup`, `RadioGroupItem`                                                                | `onChange(event)` → `onValueChange(value)`                                                                        |
+| `Radio.Button`, `Segmented`                      | `ToggleGroup type="single"`                                                                   | `onChange` → `onValueChange`                                                                                      |
+| `Switch`                                         | `Switch`                                                                                      | `onChange(checked)` → `onCheckedChange(checked)`                                                                  |
+| `Select`                                         | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`                       | `options` → `SelectItem` children. `onChange` → `onValueChange(value)`                                            |
+| `Select mode="multiple"`                         | `MultiSelect`                                                                                 | `onChange(values)` → `onValuesChange(values)`                                                                     |
+| `AutoComplete`, `Select showSearch`              | `Combobox`                                                                                    | Compose a `ComboboxTrigger`, `ComboboxInput` and `ComboboxItem` list                                              |
+| `Slider`                                         | `Slider`                                                                                      | `value` is an array, with two values for `range`. `onChange` → `onValueChange`                                    |
+| `DatePicker`                                     | `DatePicker` in a `Popover`                                                                   | Takes React Day Picker props: `mode`, `selected`, `onSelect`                                                      |
+| `Calendar`                                       | `DatePicker`                                                                                  |                                                                                                                   |
+| `Modal`                                          | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogBody`, `DialogFooter`        | `onCancel` → `onOpenChange(open)`. `footer` → `DialogFooter`                                                      |
+| `Modal.confirm`, `Popconfirm`                    | `AlertDialog`                                                                                 |                                                                                                                   |
+| `Drawer`                                         | `Sheet`, `SheetContent`                                                                       | `placement` → `side`. `onClose` → `onOpenChange(open)`                                                            |
+| `Dropdown`                                       | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`              | `menu={{ items }}` → `DropdownMenuItem` children                                                                  |
+| `Menu mode="inline"`                             | `SidebarMenu`, `SidebarMenuItem`, `SidebarMenuButton`                                         |                                                                                                                   |
+| `Menu mode="horizontal"`                         | `NavigationMenu`                                                                              |                                                                                                                   |
+| `Popover`                                        | `Popover`, `PopoverTrigger`, `PopoverContent`                                                 | `content` → `PopoverContent` children                                                                             |
+| `Tooltip`                                        | `Tooltip`, `TooltipTrigger`, `TooltipContent`                                                 | `title` → `TooltipContent` children                                                                               |
+| `message`, `notification`                        | `Toaster`, `toast()`                                                                          | `message.success('Saved')` → `toast.success('Saved')`                                                             |
+| `Alert`                                          | `Alert`, `AlertTitle`, `AlertDescription`                                                     | `type` `error`, `warning`, `info`, `success` → `variant` `destructive`, `warning`, `information`, `success`       |
+| `Collapse`                                       | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`                          | `items` → `AccordionItem` children. `accordion` → `type="single"`                                                 |
+| `Tabs`                                           | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`                                              | `items` → children. `onChange` → `onValueChange`                                                                  |
+| `Breadcrumb`                                     | `Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`                            | `items` → `BreadcrumbItem` children                                                                               |
+| `Pagination`                                     | `Pagination`, `PaginationContent`, `PaginationLink`                                           |                                                                                                                   |
+| `Card`                                           | `Card`, `CardHeader`, `CardTitle`, `CardAction`, `CardContent`, `CardFooter`                  | `title` → `CardTitle`, `extra` → `CardAction`, `actions` → `CardFooter`                                           |
+| `Avatar`, `Avatar.Group`                         | `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarGroup`                                      |                                                                                                                   |
+| `Tag`                                            | `Badge`                                                                                       | `color` → `variant`                                                                                               |
+| `Tag closable`                                   | `FilterChip`                                                                                  |                                                                                                                   |
+| `Divider`                                        | `Separator`                                                                                   |                                                                                                                   |
+| `Progress`                                       | `Progress`                                                                                    | Line progress only                                                                                                |
+| `Spin`, `Skeleton`                               | `Spinner`, `Skeleton`                                                                         |                                                                                                                   |
+| `Table`                                          | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`                     | Render `columns` and `dataSource` as rows yourself                                                                |
+| `Table rowSelection`                             | `TableSelectionHead`, `TableSelectionCell`                                                    |                                                                                                                   |
+| `Descriptions`                                   | `DescriptionList`, `DescriptionListItem`, `DescriptionListTerm`, `DescriptionListDescription` |                                                                                                                   |
+| `Empty`, `Result`                                | `EmptyState`                                                                                  |                                                                                                                   |
+| `List`                                           | `ItemGroup`, `Item`, `ItemTitle`, `ItemDescription`                                           |                                                                                                                   |
+| `Carousel`                                       | `Carousel`, `CarouselContent`, `CarouselItem`                                                 |                                                                                                                   |
+| `Splitter`                                       | `ResizablePanelGroup`, `ResizablePanel`, `ResizableHandle`                                    |                                                                                                                   |
+| `Layout.Sider`                                   | `Sidebar`                                                                                     |                                                                                                                   |
+| `Flex`, `Space`, `Row`, `Col`, `Layout`          | `nx:` flex and grid classes                                                                   | At the default density, `gap` `small`, `middle`, `large` → `nx:gap-2`, `nx:gap-4`, `nx:gap-6`                     |
+| `Typography.Title`, `Typography.Text`            | `nx:typography-*` classes                                                                     | Such as `nx:typography-heading-large` and `nx:typography-body-default`                                            |
+| `Grid.useBreakpoint`                             | `Show` and `Hide`                                                                             | `<Hide below="md">` hides content below the `md` breakpoint                                                       |
+
+## Swap a component (optional)
+
+Swap a component when you touch the screen anyway. This form field moves from
+antd to nxds:
+
+```tsx
+// Before
+import { Form, Input } from 'antd';
+
+<Form.Item
+  label="Email"
+  extra="We never share it."
+  validateStatus={error ? 'error' : undefined}
+  help={error}
+>
+  <Input type="email" />
+</Form.Item>;
+```
+
+```tsx
+// After
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from '@/components/nxds/components/field/field';
+import { Input } from '@/components/nxds/components/input/input';
+
+<Field data-invalid={Boolean(error)}>
+  <FieldLabel htmlFor="email">Email</FieldLabel>
+  <Input id="email" type="email" aria-invalid={Boolean(error)} />
+  <FieldDescription>We never share it.</FieldDescription>
+  <FieldError>{error}</FieldError>
+</Field>;
+```
+
+antd's `Form` validates the fields inside each `Form.Item`. Move a whole form
+at once, or validate the nxds fields with your own form library. See
+[Forms](/patterns/forms).
+
+To check the `nx:` classes in the files you move over, add the
+[nxds lint rules](/getting-started/install#optional-add-lint-rules).
+
+## What stays on Ant Design
+
+nxds has no part for these. Keep them on antd:
+
+- `Steps`
+- `Rate`
+- `Tree` and `TreeSelect`
+- `Cascader`
+- `Transfer`
+- `Upload`
+- `TimePicker`
+- `InputNumber` and `Mentions`
+- `ColorPicker`
+- `Timeline`
+- `Tour`
+- `Statistic`, `QRCode`, `Image` and `Watermark`
+- `FloatButton`
+- `Badge`, the count on an icon
+- `Progress type="circle"`
+- `Table` with sorting, filters or virtual scroll

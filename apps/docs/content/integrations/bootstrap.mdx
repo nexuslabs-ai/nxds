@@ -1,0 +1,319 @@
+export const description =
+  'Add nxds components to a Next.js app styled with Bootstrap. Load Bootstrap in a cascade layer, keep data-bs-theme in step with nxds, and find the nxds part for each Bootstrap component.';
+
+# nxds with Bootstrap
+
+Add nxds components to a Bootstrap app, and keep Bootstrap for everything
+else. These steps use a Next.js App Router app on Bootstrap 5.3.
+
+## What nxds adds for you
+
+nxds gives a Bootstrap app React components with their behavior built in,
+themed from one appearance object.
+[Introduction](/getting-started/introduction) covers the theme engine, the
+copy-and-own source and the agent support.
+
+| You need                       | nxds part                       |
+| ------------------------------ | ------------------------------- |
+| A searchable select            | `Combobox`                      |
+| A select with several values   | `MultiSelect`                   |
+| A date picker                  | `DatePicker`                    |
+| A command palette              | `CommandDialog`                 |
+| A collapsible app sidebar      | `Sidebar` and `SidebarProvider` |
+| A filter bar                   | `FilterBuilder`                 |
+| A right-click menu or menu bar | `ContextMenu` and `Menubar`     |
+| A chart                        | `ChartContainer`                |
+| A one-time code input          | `InputOTP`                      |
+
+## Add your first nxds component
+
+Set up nxds, then add a component:
+
+```bash
+npx nxds-cli@latest init
+npx nxds-cli@latest add button
+```
+
+`init` adds the provider and the theme script to `app/layout.tsx`, and creates
+`app/nxds.css`. Your app has no Tailwind, so `init` also puts Tailwind's
+Preflight in `app/nxds.css`. Delete it. Bootstrap's Reboot already sets
+`box-sizing`, and Preflight would restyle your Bootstrap pages:
+
+```css
+/* app/nxds.css */
+@import '../components/nxds/tailwind/nxds.css';
+@import 'tw-animate-css';
+```
+
+Bootstrap's CSS sits outside any cascade layer, so Reboot's
+`button { border-radius: 0 }` would beat an nxds button's corners. Load
+Bootstrap into a layer below the nxds utilities:
+
+```css
+/* app/globals.css */
+@layer bootstrap, theme, base, components, utilities;
+@import 'bootstrap/dist/css/bootstrap.min.css' layer(bootstrap);
+```
+
+Import `globals.css` in `app/layout.tsx` instead of the Bootstrap stylesheet.
+If you build Bootstrap from Sass, wrap your compiled CSS the same way. Your own
+CSS outside a layer now beats every Bootstrap rule, whatever its specificity.
+
+Bootstrap classes and nxds classes never collide. `d-flex` and `mt-3` are
+Bootstrap's, and `nx:flex` and `nx:mt-3` are nxds's, so they read side by side:
+
+```tsx
+// app/page.tsx
+import { Button } from '@/components/nxds/components/button/button';
+
+export default function Page() {
+  return (
+    <div className="d-flex gap-2">
+      <button type="button" className="btn btn-primary">
+        Save
+      </button>
+      <Button variant="outline">Preview</Button>
+    </div>
+  );
+}
+```
+
+Bootstrap's overlays sit at z-index 1000 to 1090. Raise the nxds layers above
+them, so an nxds popup opens over a Bootstrap modal:
+
+```css
+/* app/nxds.css, after the imports */
+:root {
+  --nx-z-index-modal: 1100;
+  --nx-z-index-popover: 1200;
+  --nx-z-index-toast: 1300;
+}
+```
+
+Bootstrap dropdowns render in place, so they work inside an nxds dialog. If you
+use React Bootstrap, pass `container` to `Overlay` and `OverlayTrigger` to keep
+popovers and tooltips in place.
+
+## Share light and dark mode
+
+nxds owns the mode. Bootstrap reads `data-bs-theme` on `<html>`, so set it from
+the `.dark` class that nxds writes. One line in `<head>` sets it before the
+first paint, after the nxds script:
+
+```tsx
+// app/layout.tsx
+import { NxdsAppearanceProvider } from '@/components/nxds/components/appearance/provider';
+import { NxdsAppearanceScript } from '@/components/nxds/components/appearance/provider/server';
+
+import { defaultAppearance } from './appearance-state';
+import { BootstrapFollowsNxds } from './bootstrap-follows-nxds';
+
+import './globals.css';
+import './nxds.css';
+
+const BOOTSTRAP_THEME_SCRIPT =
+  "document.documentElement.dataset.bsTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';";
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <NxdsAppearanceScript
+          storageKey="app-appearance"
+          defaultState={defaultAppearance}
+        />
+        <script dangerouslySetInnerHTML={{ __html: BOOTSTRAP_THEME_SCRIPT }} />
+      </head>
+      <body>
+        <NxdsAppearanceProvider
+          storageKey="app-appearance"
+          defaultState={defaultAppearance}
+        >
+          <BootstrapFollowsNxds />
+          {children}
+        </NxdsAppearanceProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+`BootstrapFollowsNxds` keeps the attribute in step when the mode changes:
+
+```tsx
+// app/bootstrap-follows-nxds.tsx
+'use client';
+
+import { useEffect } from 'react';
+
+import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
+
+export function BootstrapFollowsNxds() {
+  const { resolvedMode, mounted } = useNxdsAppearance();
+
+  useEffect(() => {
+    if (mounted) document.documentElement.dataset.bsTheme = resolvedMode;
+  }, [mounted, resolvedMode]);
+
+  return null;
+}
+```
+
+Bootstrap has no saved mode and no system mode of its own. It follows
+`resolvedMode`, so nxds `'system'` works without a change.
+
+Switch the mode through nxds:
+
+```tsx
+// app/mode-toggle.tsx
+'use client';
+
+import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
+
+export function ModeToggle() {
+  const { setState, resolvedMode } = useNxdsAppearance();
+  const next = resolvedMode === 'dark' ? 'light' : 'dark';
+
+  return (
+    <button
+      type="button"
+      className="btn btn-outline-secondary"
+      onClick={() => setState((current) => ({ ...current, mode: next }))}
+    >
+      Switch to {next}
+    </button>
+  );
+}
+```
+
+## Match your theme
+
+```ts
+// app/appearance-state.ts
+import { DEFAULT_NXDS_APPEARANCE, type NxdsAppearanceState } from '@nxds/core';
+
+export const defaultAppearance = {
+  ...DEFAULT_NXDS_APPEARANCE,
+  brandColor: '#0d6efd',
+  surfaceTone: 'gray',
+  corners: 'smooth',
+  elevation: 'flat',
+} satisfies NxdsAppearanceState;
+```
+
+| Bootstrap                        | Appearance field   | How to match                                                                                                            |
+| -------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `$primary`, `--bs-primary`       | `brandColor`       | Pass it as is. Bootstrap's default is `#0d6efd`                                                                         |
+| `$gray-100` to `$gray-900`       | `surfaceTone`      | `gray` is closest to Bootstrap's grays                                                                                  |
+| `$border-radius`                 | `corners`          | `0` is `square`, `.25rem` is `subtle`, `.375rem` and `.5rem` are `smooth`, `.75rem` is `round`, `1rem` is `extra-round` |
+| `$spacer`                        | `density`          | Compare in the [Playground](/playground)                                                                                |
+| `$enable-shadows`, `$box-shadow` | `elevation`        | Bootstrap turns shadows off by default, so `flat` matches                                                               |
+| `$border-width`                  | `stroke`           | `1px` is `normal`, `2px` is `strong`                                                                                    |
+| `$font-family-sans-serif`        | `prefs.uiFont`     | Pass the same font stack                                                                                                |
+| `$font-size-base`                | `prefs.uiFontSize` | Bootstrap's default is 16 and nxds's is 14. Set `16` to match Bootstrap's text                                          |
+| `data-bs-theme`                  | `mode`             | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                                          |
+
+## Where nxds fits
+
+Each row maps a Bootstrap class, and its React Bootstrap component, to the nxds
+parts that replace it.
+
+| Bootstrap                                                          | nxds                                                                                         | What changes                                                                    |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `.btn-primary`, `.btn-secondary`, `.btn-outline-*`, `.btn-link`    | `Button` `variant` `default`, `secondary`, `outline`, `link`                                 |                                                                                 |
+| `.btn-danger`                                                      | `Button variant="destructive"`                                                               |                                                                                 |
+| `.btn-sm`, `.btn-lg`                                               | `Button size="sm"`, `size="lg"`                                                              |                                                                                 |
+| `.btn-group`                                                       | `ButtonGroup`                                                                                |                                                                                 |
+| `.form-label`, `.form-control`, `.form-text`                       | `Field`, `FieldLabel`, `Input`, `FieldDescription`                                           |                                                                                 |
+| `.is-invalid`, `.invalid-feedback`                                 | `data-invalid` on `Field`, `aria-invalid` on the input, `FieldError`                         |                                                                                 |
+| `textarea.form-control`                                            | `Textarea`                                                                                   |                                                                                 |
+| `.input-group`, `.input-group-text`                                | `InputGroup`, `InputGroupAddon`, `InputGroupText`, `InputGroupInput`                         |                                                                                 |
+| `.form-select`                                                     | `NativeSelect`, or `Select` for a styled list                                                | `Select` takes `onValueChange(value)`                                           |
+| `.form-check` with a checkbox                                      | `Checkbox` in a `Field orientation="horizontal"`                                             | `onCheckedChange(checked)` instead of `onChange(event)`                         |
+| `.form-check` with radios                                          | `RadioGroup`, `RadioGroupItem`                                                               | `onValueChange(value)`                                                          |
+| `.form-switch`                                                     | `Switch`                                                                                     | `onCheckedChange(checked)`                                                      |
+| `.form-range`                                                      | `Slider`                                                                                     | `value` is an array. `onValueChange(value)`                                     |
+| `.btn-check` button groups                                         | `ToggleGroup`, `ToggleGroupItem`                                                             |                                                                                 |
+| `.modal` (`Modal`)                                                 | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogBody`, `DialogFooter`       | No `data-bs-toggle`: `DialogTrigger` opens it                                   |
+| `.offcanvas` (`Offcanvas`)                                         | `Sheet`, `SheetContent`                                                                      | `.offcanvas-start` → `side="left"`, `.offcanvas-end` → `side="right"`           |
+| `.dropdown` (`Dropdown`)                                           | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`             |                                                                                 |
+| `.popover`, `.tooltip` (`Popover`, `Tooltip`)                      | `Popover`, `PopoverTrigger`, `PopoverContent`, `Tooltip`, `TooltipTrigger`, `TooltipContent` | No `data-bs-toggle` and no JavaScript setup                                     |
+| `.toast` (`Toast`)                                                 | `Toaster`, `toast()`                                                                         | Render `<Toaster />` once, then call `toast('Saved')`                           |
+| `.alert-danger`, `.alert-warning`, `.alert-info`, `.alert-success` | `Alert` `variant` `destructive`, `warning`, `information`, `success`                         | `AlertTitle` and `AlertDescription` hold the text                               |
+| `.accordion` (`Accordion`)                                         | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`                         |                                                                                 |
+| `.collapse` (`Collapse`)                                           | `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent`                                    |                                                                                 |
+| `.nav-tabs`, `.nav-pills` with `.tab-pane` (`Tabs`)                | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`                                             | `.nav-tabs` → `variant="underline"`                                             |
+| `.navbar` links                                                    | `NavigationMenu`                                                                             |                                                                                 |
+| `.breadcrumb`                                                      | `Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage`         |                                                                                 |
+| `.pagination`                                                      | `Pagination`, `PaginationContent`, `PaginationItem`, `PaginationLink`                        |                                                                                 |
+| `.card`, `.card-header`, `.card-body`, `.card-footer`              | `Card`, `CardHeader`, `CardContent`, `CardFooter`                                            | `.card-title` → `CardTitle`, `.card-text` → `CardDescription`                   |
+| `.list-group`, `.list-group-item`                                  | `ItemGroup`, `Item`                                                                          |                                                                                 |
+| `.badge` with `.text-bg-*`                                         | `Badge`                                                                                      | `.text-bg-danger` → `variant="error"`, `.text-bg-success` → `variant="success"` |
+| `.progress`                                                        | `Progress`                                                                                   |                                                                                 |
+| `.spinner-border`                                                  | `Spinner`                                                                                    |                                                                                 |
+| `.placeholder`                                                     | `Skeleton`                                                                                   |                                                                                 |
+| `.table`                                                           | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`                    |                                                                                 |
+| `.carousel` (`Carousel`)                                           | `Carousel`, `CarouselContent`, `CarouselItem`                                                |                                                                                 |
+| `.ratio`                                                           | `AspectRatio`                                                                                |                                                                                 |
+| `hr`, `.vr`                                                        | `Separator`                                                                                  | `orientation="vertical"` for `.vr`                                              |
+| `.d-flex`, `.gap-3`, `.row`, `.col`                                | `nx:` flex and grid classes                                                                  | At the default density, `.gap-3` → `nx:gap-4`                                   |
+| `.h1` to `.h6`, `.display-*`, `.lead`                              | `nx:typography-*` classes                                                                    | Such as `nx:typography-heading-large` and `nx:typography-body-default`          |
+| `.d-none .d-md-block`                                              | `Show` and `Hide`                                                                            | `<Show above="md">` shows content from the `md` breakpoint up                   |
+| `.visually-hidden`                                                 | `nx:sr-only`                                                                                 |                                                                                 |
+
+## Swap a component (optional)
+
+Swap a component when you touch the screen anyway. This form field moves from
+Bootstrap markup to nxds:
+
+```tsx
+// Before
+<div className="mb-3">
+  <label htmlFor="email" className="form-label">
+    Email
+  </label>
+  <input
+    id="email"
+    type="email"
+    className={error ? 'form-control is-invalid' : 'form-control'}
+  />
+  <div className="form-text">We never share it.</div>
+  <div className="invalid-feedback">{error}</div>
+</div>
+```
+
+```tsx
+// After
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from '@/components/nxds/components/field/field';
+import { Input } from '@/components/nxds/components/input/input';
+
+<Field data-invalid={Boolean(error)}>
+  <FieldLabel htmlFor="email">Email</FieldLabel>
+  <Input id="email" type="email" aria-invalid={Boolean(error)} />
+  <FieldDescription>We never share it.</FieldDescription>
+  <FieldError>{error}</FieldError>
+</Field>;
+```
+
+To check the `nx:` classes in the files you move over, add the
+[nxds lint rules](/getting-started/install#optional-add-lint-rules).
+
+## What stays on Bootstrap
+
+nxds has no part for these. Keep them on Bootstrap:
+
+- Floating labels (`.form-floating`)
+- Scrollspy
+- A navbar that collapses into a menu button (`.navbar-expand-*`)
+- `.figure` and `.stretched-link`
+- The grid for page layout, if you like it. nxds components fit inside it
+- Bootstrap Icons. nxds components take any icon as a child
