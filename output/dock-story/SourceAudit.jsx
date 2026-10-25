@@ -77,7 +77,7 @@ const boundaries = [
     'composition',
   ],
   [
-    '.story-header nav a, .story-header > a',
+    '.story-header nav a:not([data-slot]), .story-header > a:not([data-slot]), .story-footer a:not([data-slot])',
     'Native link composed with Nexus utilities; not a Nexus navigation component',
     'composition',
   ],
@@ -168,7 +168,7 @@ const boundaries = [
   ],
   [
     '.story-footer',
-    'Custom footer composition and native links',
+    'Application footer layout; links are Nexus link Buttons',
     'composition',
   ],
   [

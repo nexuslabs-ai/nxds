@@ -36,6 +36,7 @@ import { OriginalShowcaseGrid } from './original/ShowcaseGrid';
 import { PlaceholderGrid } from './PlaceholderGrid';
 import { PreviousNexusDock } from './PreviousNexusDock';
 import { ShowcaseGrid } from './ShowcaseGrid';
+import { brandLinkClassName, navLinkClassName } from './site-links';
 import { StoriesChapter } from './StoriesChapter';
 import { StoryReplayChapter } from './StoryReplayChapter';
 import { StoryTestIterations } from './StoryTestIterations';
@@ -553,20 +554,39 @@ export function DockChapterJourney({
       <div className="dock-chapter-stage" data-footer={showFooter} ref={stage}>
         {showFooter ? (
           <footer className="story-footer" key="footer">
-            <a className="story-footer-brand" href="#top">
-              Nexus Design System
-            </a>
+            <Button
+              asChild
+              variant="link"
+              size="sm"
+              className={brandLinkClassName}
+            >
+              <a href="#top">Nexus Design System</a>
+            </Button>
             <nav aria-label="Footer navigation">
-              <a href="https://nxds.dev/getting-started/introduction">
-                Documentation
-              </a>
-              <a
-                href="https://github.com/nexuslabs-ai/nexus"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Button
+                asChild
+                variant="link"
+                size="sm"
+                className={navLinkClassName}
               >
-                GitHub
-              </a>
+                <a href="https://nxds.dev/getting-started/introduction">
+                  Documentation
+                </a>
+              </Button>
+              <Button
+                asChild
+                variant="link"
+                size="sm"
+                className={navLinkClassName}
+              >
+                <a
+                  href="https://github.com/nexuslabs-ai/nexus"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  GitHub
+                </a>
+              </Button>
             </nav>
           </footer>
         ) : current.id === 'stories' && stories.iteration === 'walkthrough' ? (

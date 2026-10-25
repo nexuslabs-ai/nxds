@@ -9,6 +9,7 @@ import { useDialKit } from 'dialkit';
 
 import { initialPreviewAppearance } from './appearance-model';
 import { DockChapterJourney } from './DockChapterJourney';
+import { brandLinkClassName, navLinkClassName } from './site-links';
 import { SourceAudit } from './SourceAudit';
 
 import '@fontsource/dm-sans/latin-400.css';
@@ -89,23 +90,36 @@ function Page() {
           ref={header}
           className="story-header nx:mx-auto nx:max-w-7xl nx:flex nx:flex-wrap nx:items-center nx:justify-between nx:gap-4 nx:px-4 nx:py-4 nx:lg:px-8"
         >
-          <a
-            href="#top"
-            aria-label="Nexus Design System home"
-            className="nx:flex nx:items-center nx:text-inherit nx:no-underline"
+          <Button
+            asChild
+            variant="link"
+            size="sm"
+            className={brandLinkClassName}
           >
-            <span className="nx:font-semibold nx:typography-label-default">
+            <a href="#top" aria-label="Nexus Design System home">
               Nexus Design System
-            </span>
-          </a>
+            </a>
+          </Button>
           <nav
             aria-label="Main navigation"
-            className="nx:order-3 nx:flex nx:w-full nx:justify-between nx:gap-3 nx:lg:order-none nx:lg:w-auto nx:lg:gap-6 nx:typography-label-default nx:text-muted-foreground"
+            className="nx:order-3 nx:flex nx:w-full nx:justify-between nx:gap-3 nx:lg:order-none nx:lg:w-auto nx:lg:gap-6"
           >
-            <a href="https://nxds.dev/components">Components</a>
-            <a href="https://nxds.dev/foundations">Foundations</a>
-            <a href="https://nxds.dev/theming/appearance">Themes</a>
-            <a href="https://nxds.dev/getting-started/introduction">Docs</a>
+            {[
+              ['Components', 'https://nxds.dev/components'],
+              ['Foundations', 'https://nxds.dev/foundations'],
+              ['Themes', 'https://nxds.dev/theming/appearance'],
+              ['Docs', 'https://nxds.dev/getting-started/introduction'],
+            ].map(([label, href]) => (
+              <Button
+                asChild
+                variant="link"
+                size="sm"
+                className={navLinkClassName}
+                key={href}
+              >
+                <a href={href}>{label}</a>
+              </Button>
+            ))}
           </nav>
           <div className="nx:flex nx:items-center nx:gap-2">
             <Button

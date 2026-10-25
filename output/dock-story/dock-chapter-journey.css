@@ -262,18 +262,9 @@
   border-top: 1px solid var(--nx-color-border-default);
   animation: story-arrive 300ms ease-out both;
 }
-.story-footer a {
-  color: inherit;
-  text-decoration: none;
-  font-size: 15px;
-}
-.story-footer-brand {
-  font-weight: 600;
-}
 .story-footer nav {
   display: flex;
   gap: 24px;
-  color: var(--nx-color-muted-foreground);
 }
 @media (max-width: 700px) {
   .story-footer {
