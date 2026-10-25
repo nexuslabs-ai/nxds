@@ -36,7 +36,6 @@ const easings =
 const fontKeywords =
   /\b(?:inherit|initial|unset|revert-layer|revert|normal|sans-serif|serif|monospace|system-ui|ui-sans-serif|ui-monospace)\b/g;
 const internalVariable = /^--(?:nx|tw|default)-/;
-const tokenMath = /^\s*(?:calc|clamp|min|max)\(/;
 
 // Hover and focus rules still describe the element, so they match without the state.
 const statePseudo =
@@ -113,6 +112,39 @@ function worse(a, b) {
   return tokenGapKinds[a].rank >= tokenGapKinds[b].rank ? a : b;
 }
 
+// The outermost calc(), clamp(), min() and max() calls in a value.
+function mathCalls(value) {
+  const calls = [];
+  const start = /\b(?:calc|clamp|min|max)\(/g;
+  for (let match = start.exec(value); match; match = start.exec(value)) {
+    let depth = 0;
+    let end = match.index + match[0].length - 1;
+    for (; end < value.length; end++) {
+      if (value[end] === '(') depth++;
+      if (value[end] === ')' && --depth === 0) break;
+    }
+    calls.push(value.slice(match.index, end + 1));
+    start.lastIndex = end + 1;
+  }
+  return calls;
+}
+
+// A raw number inside math that also reads a variable changes that variable,
+// so it counts as a changed token, not a hard-coded value.
+function classifyValue(category, property, value, resolve) {
+  let rest = value;
+  let changed = /color-mix\(/.test(value) && value.includes('var(');
+  for (const call of mathCalls(value)) {
+    if (!call.includes('var(')) continue;
+    if (rawLiteral(category, property, removeVars(call))) changed = true;
+    rest = rest.replace(call, ' ');
+  }
+  if (rawLiteral(category, property, removeVars(rest))) return { kind: 'raw' };
+  for (const name of pageVariables(value))
+    if (resolve(name)) return { kind: 'variable', note: name };
+  return changed ? { kind: 'derived' } : null;
+}
+
 // A page variable takes the worst kind of its definitions; null means every
 // definition is a Nexus token or a neutral value such as `0` or `none`.
 function variableResolver(definitions) {
@@ -123,21 +155,14 @@ function variableResolver(definitions) {
     if (!values || depth > 4) return 'variable';
     resolved.set(name, null);
     let kind = null;
-    for (const value of values) kind = worse(kind, classify(null, '', value));
+    for (const value of values) {
+      const gap = classifyValue(null, '', value, (child) =>
+        resolve(child, depth + 1)
+      );
+      kind = worse(kind, gap?.kind ?? null);
+    }
     resolved.set(name, kind);
     return kind;
-
-    function classify(category, property, value) {
-      const literal = rawLiteral(category, property, removeVars(value));
-      const usesToken = /var\(\s*--nx-/.test(value);
-      if (literal && !(usesToken && tokenMath.test(value))) return 'raw';
-      const nested = pageVariables(value)
-        .map((child) => resolve(child, depth + 1))
-        .reduce(worse, null);
-      if (nested) return nested;
-      if (usesToken && (literal || /color-mix\(/.test(value))) return 'derived';
-      return null;
-    }
   }
   return resolve;
 }
@@ -145,16 +170,7 @@ function variableResolver(definitions) {
 export function classifyDeclaration(property, value, resolve) {
   const category = categories.find(([, pattern]) => pattern.test(property));
   if (!category) return null;
-  const variables = pageVariables(value);
-  const usesToken = /var\(\s*--nx-/.test(value) || variables.length > 0;
-  const literal = rawLiteral(category[0], property, removeVars(value));
-
-  if (literal && !(usesToken && tokenMath.test(value))) return { kind: 'raw' };
-  for (const name of variables)
-    if (resolve(name)) return { kind: 'variable', note: name };
-  if (usesToken && (literal || /color-mix\(/.test(value)))
-    return { kind: 'derived' };
-  return null;
+  return classifyValue(category[0], property, value, resolve);
 }
 
 function declarations(style) {
