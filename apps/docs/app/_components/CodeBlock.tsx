@@ -3,7 +3,7 @@
 import * as React from 'react';
 
 import { cn } from '@nxds/react/utils';
-import { IconCheck, IconCopy, IconX } from '@tabler/icons-react';
+import { CheckIcon, CopyIcon, XIcon } from '@phosphor-icons/react/ssr';
 
 import { useCopyAnnouncer } from './CopyAnnouncer';
 import { Button } from './nxds';
@@ -11,9 +11,9 @@ import { Button } from './nxds';
 const RESET_DELAY_MS = 2000;
 
 const COPY_STATUS = {
-  idle: { icon: <IconCopy /> },
-  copied: { icon: <IconCheck />, message: 'Code copied to clipboard' },
-  failed: { icon: <IconX />, message: 'Could not copy code' },
+  idle: { icon: <CopyIcon /> },
+  copied: { icon: <CheckIcon />, message: 'Code copied to clipboard' },
+  failed: { icon: <XIcon />, message: 'Could not copy code' },
 };
 
 type CopyStatus = keyof typeof COPY_STATUS;

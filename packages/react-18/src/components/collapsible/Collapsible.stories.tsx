@@ -1,5 +1,5 @@
+import { CaretUpDownIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconSelector } from '@tabler/icons-react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -38,7 +38,7 @@ export const Default: Story = {
           </span>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" aria-label="Toggle repositories">
-              <IconSelector />
+              <CaretUpDownIcon />
             </Button>
           </CollapsibleTrigger>
         </div>

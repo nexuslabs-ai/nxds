@@ -1,5 +1,5 @@
+import { FolderIcon, GearIcon, HouseIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconFolder, IconHome, IconSettings } from '@tabler/icons-react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -141,7 +141,7 @@ export const WithIcons: Story = {
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink href="#">
-            <IconFolder aria-hidden />
+            <FolderIcon aria-hidden />
             <span>Workspace</span>
           </BreadcrumbLink>
           <DropdownMenu>
@@ -164,7 +164,7 @@ export const WithIcons: Story = {
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbLink href="#">
-            <IconFolder aria-hidden />
+            <FolderIcon aria-hidden />
             <span>Projects</span>
           </BreadcrumbLink>
           <DropdownMenu>
@@ -187,7 +187,7 @@ export const WithIcons: Story = {
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbPage>
-            <IconFolder aria-hidden />
+            <FolderIcon aria-hidden />
             <span>Breadcrumb</span>
           </BreadcrumbPage>
           <DropdownMenu>
@@ -240,19 +240,19 @@ export const IconOnly: Story = {
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink href="/home" aria-label="Home">
-            <IconHome aria-hidden />
+            <HouseIcon aria-hidden />
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbLink href="/projects" aria-label="Projects">
-            <IconFolder aria-hidden />
+            <FolderIcon aria-hidden />
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <BreadcrumbPage>
-            <IconSettings aria-hidden />
+            <GearIcon aria-hidden />
             <span className="nx:sr-only">Settings</span>
           </BreadcrumbPage>
         </BreadcrumbItem>

@@ -46,7 +46,7 @@ function useToasterTheme(): 'light' | 'dark' {
   );
 }
 
-/** Tabler icons in place of sonner's bundled set, matching nxds iconography. */
+/** nxds's internal icons in place of sonner's bundled set. */
 const toasterIcons = {
   success: <IconCircleCheck className="nx:size-4" />,
   info: <IconInfoCircle className="nx:size-4" />,

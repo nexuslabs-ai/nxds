@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { IconChevronDown, IconSearch } from '@tabler/icons-react';
+import { CaretDownIcon, MagnifyingGlassIcon } from '@phosphor-icons/react/ssr';
 
 import { MultiChoiceEditor } from '../../blocks/filtering/multi-choice-filter/multi-choice-filter';
 import { Button } from '../../components/button/button';
@@ -151,7 +151,7 @@ function InvoiceChoiceFilter({
               {selected}
             </span>
           )}
-          <IconChevronDown aria-hidden="true" />
+          <CaretDownIcon aria-hidden="true" />
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -214,7 +214,7 @@ export function InvoiceFilteringExample() {
         aria-label="Invoice filters"
       >
         <div className="nx:relative nx:w-64 nx:max-w-full">
-          <IconSearch
+          <MagnifyingGlassIcon
             aria-hidden="true"
             className="nx:pointer-events-none nx:absolute nx:start-2.5 nx:top-1/2 nx:size-4 nx:-translate-y-1/2 nx:text-muted-foreground"
           />

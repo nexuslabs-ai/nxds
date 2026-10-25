@@ -109,8 +109,8 @@ const meta: Meta<typeof InlineEdit> = {
               . If your copy lives elsewhere, update the relative imports.
             </li>
             <li>
-              <code>@tabler/icons-react</code>, which the nxds components
-              already use.
+              The icon package your <code>lib/icons</code> imports, which the
+              nxds components already use.
             </li>
             <li>
               Include the copied file in your Tailwind source scan and use the

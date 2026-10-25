@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ComponentType } from 'react';
+import type { ComponentPropsWithoutRef, JSXElementConstructor } from 'react';
 
 import type { NxdsIconLibrary } from '@nxds/core';
 
@@ -21,4 +21,7 @@ export const ICON_SETS = {
   tabler,
   hugeicons,
   remix,
-} satisfies Record<NxdsIconLibrary, Record<IconName, ComponentType<IconProps>>>;
+} satisfies Record<
+  NxdsIconLibrary,
+  Record<IconName, JSXElementConstructor<IconProps>>
+>;

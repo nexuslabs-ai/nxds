@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 
 import { cn } from '@nxds/react/utils';
-import { IconChevronDown, IconMenu2 } from '@tabler/icons-react';
+import { CaretDownIcon, ListIcon } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -52,7 +52,7 @@ export function MobileNav() {
     <Sheet open={open} onOpenChange={changeOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="sm">
-          <IconMenu2 aria-hidden="true" />
+          <ListIcon aria-hidden="true" />
           {currentLink?.label ?? 'Sections'}
         </Button>
       </SheetTrigger>
@@ -125,7 +125,7 @@ function SectionDisclosure({
         className={ROW_BASE}
       >
         {section.title}
-        <IconChevronDown
+        <CaretDownIcon
           aria-hidden="true"
           className={cn(
             'nx:size-4 nx:text-muted-foreground nx:transition-transform',

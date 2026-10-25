@@ -1,7 +1,11 @@
 import * as React from 'react';
 
+import {
+  ArrowClockwiseIcon,
+  CopyIcon,
+  FileTextIcon,
+} from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconCopy, IconFileText, IconRefresh } from '@tabler/icons-react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { cn } from '../../lib/utils';
@@ -515,7 +519,7 @@ export const WithActions: Story = {
                     variant="ghost"
                     aria-label="Copy reply"
                   >
-                    <IconCopy />
+                    <CopyIcon />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Copy</TooltipContent>
@@ -527,7 +531,7 @@ export const WithActions: Story = {
                     variant="ghost"
                     aria-label="Regenerate reply"
                   >
-                    <IconRefresh />
+                    <ArrowClockwiseIcon />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Regenerate</TooltipContent>
@@ -555,7 +559,7 @@ export const WithActions: Story = {
                     variant="ghost"
                     aria-label="Copy message"
                   >
-                    <IconCopy />
+                    <CopyIcon />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Copy</TooltipContent>
@@ -567,7 +571,7 @@ export const WithActions: Story = {
                     variant="ghost"
                     aria-label="Retry sending"
                   >
-                    <IconRefresh />
+                    <ArrowClockwiseIcon />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Retry</TooltipContent>
@@ -661,7 +665,7 @@ export const WithAttachment: Story = {
           <MessageHeader>Ana Bianchi</MessageHeader>
           <Attachment>
             <AttachmentMedia>
-              <IconFileText />
+              <FileTextIcon />
             </AttachmentMedia>
             <AttachmentContent>
               <AttachmentTitle>sales-dashboard.pdf</AttachmentTitle>
@@ -678,7 +682,7 @@ export const WithAttachment: Story = {
         <MessageContent>
           <Attachment>
             <AttachmentMedia>
-              <IconFileText />
+              <FileTextIcon />
             </AttachmentMedia>
             <AttachmentContent>
               <AttachmentTitle>contrast-audit.log</AttachmentTitle>
@@ -833,7 +837,7 @@ export const ComposedScene: Story = {
           </Bubble>
           <Attachment>
             <AttachmentMedia>
-              <IconFileText />
+              <FileTextIcon />
             </AttachmentMedia>
             <AttachmentContent>
               <AttachmentTitle>contrast-audit.log</AttachmentTitle>
