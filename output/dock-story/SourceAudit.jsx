@@ -124,7 +124,7 @@ const boundaries = [
     'mixed',
   ],
   [
-    '.context-dock, .story-segmented, .story-test-segmented-dock',
+    '.context-dock, .story-segmented',
     'Custom dock, tool selection and motion; not Nexus Tabs',
     'custom',
   ],
@@ -134,7 +134,7 @@ const boundaries = [
     'custom',
   ],
   [
-    '.dialkit-panel, .dialkit-trigger, .context-panel-content, .story-test-tool-controls, .story-test-option-fields',
+    '.dialkit-panel, .dialkit-trigger, .context-panel-content',
     'External DialKit: visitor controls are migration candidates; developer comparison studio is intentional tooling',
     'external',
   ],
@@ -159,7 +159,7 @@ const boundaries = [
     'composition',
   ],
   [
-    '.story-specimen, .story-test-card, .story-test-caption',
+    '.story-test-card, .story-test-caption',
     'Custom story demonstration layout; the test subject uses Nexus',
     'composition',
   ],

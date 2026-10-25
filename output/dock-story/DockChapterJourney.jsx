@@ -32,8 +32,6 @@ import { PlaceholderGrid } from './PlaceholderGrid';
 import { PreviousNexusDock } from './PreviousNexusDock';
 import { ShowcaseGrid } from './ShowcaseGrid';
 import { brandLinkClassName, navLinkClassName } from './site-links';
-import { StoriesChapter } from './StoriesChapter';
-import { StoryReplayChapter } from './StoryReplayChapter';
 import { StoryTestIterations } from './StoryTestIterations';
 import { StraightDock } from './StraightDock';
 import { WorkspaceThemeStudy } from './WorkspaceThemeStudy';
@@ -136,8 +134,6 @@ function ChapterCanvas({
     return <FoundationChapter framework={tool} onSelect={onFrameworkSelect} />;
   if (chapter === 'frameworks')
     return <FrameworkChapter framework={tool} onSelect={onFrameworkSelect} />;
-  if (chapter === 'stories')
-    return <StoriesChapter key={tool} scenario={tool} />;
   return <PlaceholderGrid />;
 }
 
@@ -265,18 +261,17 @@ export function DockChapterJourney({
       iteration: {
         type: 'select',
         options: [
-          { value: 'current', label: 'Button story · current' },
-          { value: 'bento', label: 'Connected bento' },
           { value: 'split', label: 'Code and preview' },
-          { value: 'regression', label: 'Catch a regression' },
-          { value: 'walkthrough', label: 'Follow the story · new' },
+          { value: 'bento', label: 'Connected bento' },
         ],
-        default: 'current',
+        default: 'split',
       },
       showStories: { type: 'action', label: 'Show stories chapter' },
     },
     { id: 'nexus-story-examples-v1', persist: true, onAction: showStories }
   );
+  // A version saved before the other story versions were removed falls back to the default.
+  const storiesLayout = stories.iteration === 'bento' ? 'bento' : 'split';
 
   function showCoexistence(action) {
     if (action !== 'showCoexistence') return;
@@ -482,21 +477,12 @@ export function DockChapterJourney({
               </Button>
             </nav>
           </footer>
-        ) : current.id === 'stories' && stories.iteration === 'walkthrough' ? (
-          <StoryReplayChapter
-            dockIteration={dock.iteration}
-            duration={dock.motion.duration}
-            reduceMotion={state.prefs.reduceMotion}
-            theme={state.mode}
-          />
-        ) : current.id === 'stories' && stories.iteration !== 'current' ? (
+        ) : current.id === 'stories' ? (
           <StoryTestIterations
-            key={stories.iteration}
-            iteration={stories.iteration}
-            dockIteration={dock.iteration}
-            duration={dock.motion.duration}
+            key={storiesLayout}
+            iteration={storiesLayout}
             reduceMotion={state.prefs.reduceMotion}
-            theme={state.mode}
+            compactOnSmallPhones={dock.phone.toolbar === 'compact'}
           />
         ) : (
           <>

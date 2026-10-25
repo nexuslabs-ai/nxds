@@ -1,7 +1,15 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 
-import { Button, Label, Switch } from '@nxds/react';
+import {
+  Button,
+  Field,
+  FieldLabel,
+  Label,
+  NativeSelect,
+  NativeSelectOption,
+  Switch,
+} from '@nxds/react';
 import {
   IconArrowRight,
   IconCheck,
@@ -10,8 +18,8 @@ import {
   IconWindow,
   IconX,
 } from '@tabler/icons-react';
-import { ButtonGroup, SelectControl } from 'dialkit';
 
+import { NexusToolbar } from './NexusToolbar';
 import {
   describeStory,
   initialChecks,
@@ -19,7 +27,6 @@ import {
   resultSummary,
   storyModes,
 } from './story-test-model';
-import { StoryTestDock } from './StoryTestDock';
 
 import './story-test-iterations.css';
 
@@ -27,19 +34,14 @@ const tabs = storyModes.map(({ label }) => label);
 const captions = {
   bento: 'One example. Its source. Observable results.',
   split: 'Read the action. See its effect. Inspect the result.',
-  regression: 'The switch can look right while sending the wrong value.',
 };
 
 export function StoryTestIterations({
   iteration,
-  dockIteration,
-  duration,
   reduceMotion,
-  theme,
+  compactOnSmallPhones,
 }) {
-  const [modeIndex, setModeIndex] = useState(
-    iteration === 'regression' ? 2 : 1
-  );
+  const [modeIndex, setModeIndex] = useState(1);
   const [choices, setChoices] = useState({
     states: 'off',
     interactions: 'click',
@@ -52,7 +54,6 @@ export function StoryTestIterations({
   const [status, setStatus] = useState('Ready to run');
   const [running, setRunning] = useState(false);
   const [activeLine, setActiveLine] = useState(-1);
-  const [inspect, setInspect] = useState(false);
   const example = useRef(null);
   const callsRef = useRef([]);
   const sequence = useRef(0);
@@ -344,28 +345,15 @@ export function StoryTestIterations({
               ? 'Restore correct behavior'
               : 'Try a regression'}
           </Button>
-          {iteration === 'regression' && (
-            <Button
-              variant="ghost"
-              aria-pressed={inspect}
-              onClick={() => setInspect(!inspect)}
-            >
-              {inspect ? 'Focus on results' : 'Inspect story'}
-            </Button>
-          )}
         </div>
       </div>
       <div
         className="story-canvas story-tests-canvas"
         id="story-panel"
-        role={dockIteration === 'colored' ? 'tabpanel' : 'region'}
+        role="region"
         aria-labelledby={`story-tab-tests-${modeIndex}`}
       >
-        <div
-          className="story-tests-workspace"
-          data-layout={iteration}
-          data-inspect={inspect}
-        >
+        <div className="story-tests-workspace" data-layout={iteration}>
           <section
             className="story-test-card story-test-preview"
             aria-label="Live switch example"
@@ -439,48 +427,42 @@ export function StoryTestIterations({
               </span>
             </footer>
           </section>
-          {(iteration !== 'regression' || inspect) && (
-            <section
-              className="story-test-card story-test-source"
-              aria-label="Storybook source excerpt"
-            >
-              <header>
-                <span>
-                  <IconCode
-                    data-prototype-icon="true"
-                    size={16}
-                    aria-hidden="true"
-                  />
-                  Switch.stories.tsx
-                </span>
-                <span>{story.name}</span>
-              </header>
-              <pre>
-                <code>
-                  {story.source.map((line, index) => (
-                    <span
-                      className="story-test-code-line"
-                      key={index}
-                      data-current={activeLine === index}
-                      data-result={checks[story.lines.indexOf(index)]?.status}
-                    >
-                      <span
-                        className="story-test-line-number"
-                        aria-hidden="true"
-                      >
-                        {index + 1}
-                      </span>
-                      <span>{line || ' '}</span>
+          <section
+            className="story-test-card story-test-source"
+            aria-label="Storybook source excerpt"
+          >
+            <header>
+              <span>
+                <IconCode
+                  data-prototype-icon="true"
+                  size={16}
+                  aria-hidden="true"
+                />
+                Switch.stories.tsx
+              </span>
+              <span>{story.name}</span>
+            </header>
+            <pre>
+              <code>
+                {story.source.map((line, index) => (
+                  <span
+                    className="story-test-code-line"
+                    key={index}
+                    data-current={activeLine === index}
+                    data-result={checks[story.lines.indexOf(index)]?.status}
+                  >
+                    <span className="story-test-line-number" aria-hidden="true">
+                      {index + 1}
                     </span>
-                  ))}
-                </code>
-              </pre>
-              <p className="story-test-source-note">
-                Storybook excerpt · equivalent checks run locally on this
-                example.
-              </p>
-            </section>
-          )}
+                    <span>{line || ' '}</span>
+                  </span>
+                ))}
+              </code>
+            </pre>
+            <p className="story-test-source-note">
+              Storybook excerpt · equivalent checks run locally on this example.
+            </p>
+          </section>
           <section
             className="story-test-card story-test-results"
             aria-label="Observed check results"
@@ -537,47 +519,48 @@ export function StoryTestIterations({
         </p>
       </div>
       <div className="story-dock-position story-test-dock-position">
-        <StoryTestDock
-          iteration={dockIteration}
+        <NexusToolbar
           chapter="tests"
           title="Explore the stories"
           tabs={tabs}
           selected={modeIndex}
           onSelect={selectMode}
-          duration={duration}
-          reduceMotion={reduceMotion}
-          theme={theme}
+          compactOnSmallPhones={compactOnSmallPhones}
+          hasControls
         >
-          <div
-            className="story-test-tool-controls dialkit-root"
-            data-theme={theme}
-          >
-            <p className="story-test-tool-description">{mode.description}</p>
-            <SelectControl
-              label={mode.field}
-              value={choice}
-              options={mode.options}
-              onChange={selectChoice}
-            />
-            <ButtonGroup
-              buttons={[
-                {
-                  label: keyboard
-                    ? 'Focus the switch'
-                    : running
-                      ? 'Restart checks'
-                      : 'Run selected check',
-                  onClick: () => runExample(),
-                },
-              ]}
-            />
-            <p className="story-test-tool-description">
+          <div className="nx:flex nx:min-w-0 nx:flex-col nx:gap-3">
+            <p className="nx:m-0 nx:typography-body-small nx:text-muted-foreground">
+              {mode.description}
+            </p>
+            <Field>
+              <FieldLabel htmlFor={`${id}-choice`}>{mode.field}</FieldLabel>
+              <NativeSelect
+                id={`${id}-choice`}
+                size="sm"
+                value={choice}
+                onChange={(event) => selectChoice(event.target.value)}
+              >
+                {mode.options.map((option) => (
+                  <NativeSelectOption key={option.value} value={option.value}>
+                    {option.label}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </Field>
+            <Button size="sm" onClick={() => runExample()}>
+              {keyboard
+                ? 'Focus the switch'
+                : running
+                  ? 'Restart checks'
+                  : 'Run selected check'}
+            </Button>
+            <p className="nx:m-0 nx:typography-body-small nx:text-muted-foreground">
               {mode.id === 'accessibility'
                 ? 'Name check only · not an axe audit.'
                 : 'Runs on the live example above.'}
             </p>
           </div>
-        </StoryTestDock>
+        </NexusToolbar>
       </div>
     </>
   );
