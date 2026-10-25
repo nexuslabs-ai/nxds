@@ -190,11 +190,28 @@ export const renderedDifferences: Record<string, string> = {
     "Radix has no indicator, so React measures the active tab and moves a span; Vue renders Reka's TabsIndicator, which reads Reka's CSS variables",
 };
 
+const ORIENTATION_ON_ITEMS =
+  "Radix's roving focus repeats the menu's orientation on each item; Reka doesn't";
+
 /**
  * Attributes of a part that differ by design, as `{data-slot} {attribute}`,
  * with `name` for the accessible name; the rendered check compares the rest.
  */
 export const renderedAttributeDifferences: Record<string, string> = {
+  'context-menu-checkbox-item data-orientation': ORIENTATION_ON_ITEMS,
+  'context-menu-item data-orientation': ORIENTATION_ON_ITEMS,
+  'context-menu-radio-item data-orientation': ORIENTATION_ON_ITEMS,
+  'context-menu-sub-trigger data-orientation': ORIENTATION_ON_ITEMS,
+  'dropdown-menu-checkbox-item data-orientation': ORIENTATION_ON_ITEMS,
+  'dropdown-menu-item data-orientation': ORIENTATION_ON_ITEMS,
+  'dropdown-menu-radio-item data-orientation': ORIENTATION_ON_ITEMS,
+  'dropdown-menu-sub-trigger data-orientation': ORIENTATION_ON_ITEMS,
+  'menubar-checkbox-item data-orientation': ORIENTATION_ON_ITEMS,
+  'menubar-item data-orientation': ORIENTATION_ON_ITEMS,
+  'menubar-radio-item data-orientation': ORIENTATION_ON_ITEMS,
+  'menubar-sub-trigger data-orientation': ORIENTATION_ON_ITEMS,
+  'menubar-trigger data-value':
+    'Reka gives each menubar menu a generated value; Radix sets none',
   'navigation-menu-content data-state':
     'Reka marks a flyout open inside the shared viewport; Radix sets its state only on a flyout under its own trigger',
   'popover-content name':

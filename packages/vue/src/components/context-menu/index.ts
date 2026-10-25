@@ -37,6 +37,10 @@ export {
   type ContextMenuSubTriggerProps,
 } from './ContextMenuSubTrigger.vue';
 export {
+  default as ContextMenuTrigger,
+  type ContextMenuTriggerProps,
+} from './ContextMenuTrigger.vue';
+export {
   ContextMenuRoot as ContextMenu,
   ContextMenuGroup,
   type ContextMenuGroupProps,
@@ -47,8 +51,6 @@ export {
   type ContextMenuRadioGroupProps,
   ContextMenuSub,
   type ContextMenuSubProps,
-  ContextMenuTrigger,
-  type ContextMenuTriggerProps,
 } from 'reka-ui';
 
 export const contextMenuItemVariants = cva(

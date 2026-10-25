@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
 import {
+  type FocusOutsideEvent,
   HoverCardContent,
   type HoverCardContentProps as RekaHoverCardContentProps,
   HoverCardPortal,
-  useForwardProps,
+  type PointerDownOutsideEvent,
+  useForwardPropsEmits,
 } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
@@ -25,8 +27,16 @@ const props = withDefaults(defineProps<HoverCardContentProps>(), {
   sideOffset: 4,
 });
 
+// Reka emits these from HoverCardContent but exports no type for them.
+const emits = defineEmits<{
+  escapeKeyDown: [event: KeyboardEvent];
+  pointerDownOutside: [event: PointerDownOutsideEvent];
+  focusOutside: [event: FocusOutsideEvent];
+  interactOutside: [event: PointerDownOutsideEvent | FocusOutsideEvent];
+}>();
+
 const delegated = reactiveOmit(props, 'class');
-const forwarded = useForwardProps(delegated);
+const forwarded = useForwardPropsEmits(delegated, emits);
 </script>
 
 <template>

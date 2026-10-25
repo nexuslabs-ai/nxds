@@ -41,7 +41,7 @@ type Opener =
       /** Focus opens a tooltip at once, without its hover delay; Enter then opens a navigation flyout. */
       open: 'click' | 'focus' | 'enter';
     }
-  /** Right-clicks the context menu's trigger area, the first element with an open state. */
+  /** Right-clicks the context menu's trigger area. */
   | { open: 'contextmenu' };
 
 /** Components whose content renders only once opened, and how to open them. */
@@ -67,7 +67,6 @@ const SKIPPED_ATTRIBUTE =
 // ARIA states where `"false"` means the same as leaving the attribute out.
 const FALSE_IS_ABSENT =
   /^aria-(?:busy|disabled|hidden|invalid|readonly|required)$/;
-const MENU_ITEM = /^menuitem(?:checkbox|radio)?$/;
 
 function slugOf(file: string) {
   return file.split('/').at(-2) ?? '';
@@ -116,7 +115,6 @@ function visibleText(element: Element) {
 function describeElement(element: Element) {
   // Reka repeats a native `disabled` as `aria-disabled="true"`; Radix doesn't.
   const isNativelyDisabled = element.hasAttribute('disabled');
-  const isMenuItem = MENU_ITEM.test(element.getAttribute('role') ?? '');
   const slot = element.getAttribute('data-slot') ?? '';
   const attributes = [...element.attributes]
     .filter(({ name }) => /^(?:data-|aria-|role$)/.test(name))
@@ -126,12 +124,6 @@ function describeElement(element: Element) {
     )
     .filter(({ name }) => !(name === 'aria-disabled' && isNativelyDisabled))
     .filter(({ name }) => !(`${slot} ${name}` in renderedAttributeDifferences))
-    // Radix's roving focus repeats the menu's orientation on each item; Reka doesn't.
-    .filter(({ name }) => !(name === 'data-orientation' && isMenuItem))
-    // Reka gives each menubar menu a generated value.
-    .filter(
-      ({ name, value }) => !(name === 'data-value' && value.startsWith('reka-'))
-    )
     .map(({ name, value }) => `${name}="${value}"`)
     .sort();
   const classes = [...element.classList].map(normalizeClass).sort().join(' ');
@@ -188,11 +180,14 @@ function normalizeClass(token: string) {
   return token.replaceAll('--radix-', '--reka-');
 }
 
-/** Opens `slug`'s first trigger and waits until its content stops moving. */
 /** Opens the story's first trigger; false when it has none that can open, such as plain links or a disabled trigger. */
 async function openTrigger(canvasElement: HTMLElement, opener: Opener) {
   if (opener.open === 'contextmenu') {
-    fireEvent.contextMenu(canvasElement.querySelector('[data-state]')!, {
+    const area = canvasElement.querySelector(
+      '[data-slot="context-menu-trigger"]'
+    );
+    if (!area) return false;
+    fireEvent.contextMenu(area, {
       clientX: 20,
       clientY: 20,
     });
@@ -209,12 +204,16 @@ async function openTrigger(canvasElement: HTMLElement, opener: Opener) {
   return true;
 }
 
+/**
+ * Opens `slug`'s first trigger and waits until its content stops moving;
+ * false when the story has no trigger that can open.
+ */
 async function openOverlay(
   canvasElement: HTMLElement,
   slug: string,
   opener: Opener
 ) {
-  if (!(await openTrigger(canvasElement, opener))) return;
+  if (!(await openTrigger(canvasElement, opener))) return false;
 
   const content = await waitFor(
     () => {
@@ -239,6 +238,7 @@ async function openOverlay(
     await new Promise((resolve) => setTimeout(resolve, 100));
     expect(layout()).toBe(before);
   });
+  return true;
 }
 
 // `run` mounts the story; without its play function both frameworks read the same initial state.
@@ -290,9 +290,11 @@ async function renderTree(
   await settle();
 
   const opener = OVERLAYS[slug];
-  if (opener) await openOverlay(canvasElement, slug, opener);
+  const opened = opener
+    ? await openOverlay(canvasElement, slug, opener)
+    : false;
 
-  const tree = readTree(slug);
+  const tree = { ...readTree(slug), opened };
 
   // A composed story queues its unmount; the next `load` runs it.
   await composed.load();
@@ -336,6 +338,7 @@ describe('rendered docs stories', () => {
       const vueStories = new Map(docsStories(vue));
       const skipped = new Set<string>();
       const differing = new Set<string>();
+      let opened = false;
 
       for (const [name, story] of docsStories(react)) {
         const vueStory = vueStories.get(name);
@@ -350,6 +353,7 @@ describe('rendered docs stories', () => {
           (canvasElement) => mountVue(vue, name, vueStory, canvasElement),
           slug
         );
+        opened ||= reactTree.opened && vueTree.opened;
         for (const slot of [...reactTree.skipped, ...vueTree.skipped]) {
           skipped.add(slot);
         }
@@ -365,6 +369,10 @@ describe('rendered docs stories', () => {
           `${slug}/${name} renders no ${slug} part`
         ).toBeGreaterThan(0);
         expect(vueTree.tree, `${slug}/${name}`).toEqual(reactTree.tree);
+      }
+
+      if (slug in OVERLAYS) {
+        expect(opened, `no ${slug} docs story opens its content`).toBe(true);
       }
 
       const stale = Object.keys(renderedDifferences).filter(
