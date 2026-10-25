@@ -39,11 +39,6 @@ const boundaries = [
     'external',
   ],
   [
-    '.live-comparison, .workspace-columns, .workspace-column',
-    'Application comparison and workspace layout; library components and Nexus addition keep their own styling',
-    'composition',
-  ],
-  [
     '[data-slot="nexus-property-controls"]',
     'Nexus PropertySlider and compact AppearanceColorField with normal Field, NativeSelect and Switch composition; library-owned behavior and styling',
     'composition',
@@ -144,11 +139,6 @@ const boundaries = [
     'external',
   ],
   [
-    '.story-comparison',
-    'Custom before/after composition with a native range input',
-    'custom',
-  ],
-  [
     '.story-empty-box',
     'Custom placeholder surface; not a Nexus component',
     'custom',
@@ -197,11 +187,9 @@ const boundaries = [
 
 function auditDocuments() {
   const documents = new Set([document]);
-  document
-    .querySelectorAll('.appearance-preview-frame, .library-comparison-frame')
-    .forEach((frame) => {
-      if (frame.contentDocument) documents.add(frame.contentDocument);
-    });
+  document.querySelectorAll('.appearance-preview-frame').forEach((frame) => {
+    if (frame.contentDocument) documents.add(frame.contentDocument);
+  });
   return documents;
 }
 

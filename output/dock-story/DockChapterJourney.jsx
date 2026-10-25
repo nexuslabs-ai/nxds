@@ -8,10 +8,8 @@ import { DialRoot, useDialKit } from 'dialkit';
 
 import { initialPreviewAppearance } from './appearance-model';
 import { CornerChoices, SurfaceToneChoices } from './AppearanceChoices';
-import { AppearanceComparisonChapter } from './AppearanceComparisonChapter';
 import { AppearancePreview } from './AppearancePreview';
 import { CoexistenceDiagram } from './CoexistenceDiagram';
-import { ComparisonChapter } from './ComparisonChapter';
 import { ContextDock } from './ContextDock';
 import { ContinuousDock } from './ContinuousDock';
 import { CoreChipChapter } from './CoreChipChapter';
@@ -24,7 +22,6 @@ import {
   TactileDock,
 } from './GrowingDock';
 import { HeroAdoptionStudy } from './HeroAdoptionStudy';
-import { LiveComparisonChapter } from './LiveComparisonChapter';
 import { MorphingDock } from './MorphingDock';
 import { NexusAppearanceControls } from './NexusAppearanceControls';
 import { NexusDock } from './NexusDock';
@@ -89,8 +86,6 @@ const chapters = [
 function ChapterCanvas({
   chapter,
   tool,
-  split,
-  onSplitChange,
   onFrameworkSelect,
   frameworkDiagram,
   showcaseView,
@@ -119,19 +114,10 @@ function ChapterCanvas({
   if (chapter === 'explore') return <ShowcaseGrid view={tool} />;
   if (chapter === 'coexist' && coexistenceVersion === 'hero-adoption') {
     if (tool === 'HeroUI') return <HeroAdoptionStudy />;
-    if (tool === 'MUI')
-      return (
-        <WorkspaceThemeStudy
-          stack={tool}
-          onSelectMui={() => onFrameworkSelect(1)}
-        />
-      );
     return (
-      <LiveComparisonChapter
+      <WorkspaceThemeStudy
         stack={tool}
-        appearance={appearance}
-        split={split}
-        onSplitChange={onSplitChange}
+        onSelectMui={() => onFrameworkSelect(1)}
       />
     );
   }
@@ -144,37 +130,6 @@ function ChapterCanvas({
     );
   if (chapter === 'coexist' && coexistenceVersion === 'diagram')
     return <CoexistenceDiagram stack={tool} />;
-  if (
-    chapter === 'coexist' &&
-    ['reference', 'appearance'].includes(coexistenceVersion)
-  )
-    return (
-      <AppearanceComparisonChapter
-        key={coexistenceVersion}
-        stack={tool}
-        appearance={appearance}
-        split={split}
-        onSplitChange={onSplitChange}
-        example={coexistenceVersion === 'reference' ? 'reference' : 'workspace'}
-      />
-    );
-  if (chapter === 'coexist' && coexistenceVersion === 'live')
-    return (
-      <LiveComparisonChapter
-        stack={tool}
-        appearance={appearance}
-        split={split}
-        onSplitChange={onSplitChange}
-      />
-    );
-  if (chapter === 'coexist')
-    return (
-      <ComparisonChapter
-        stack={tool}
-        split={split}
-        onSplitChange={onSplitChange}
-      />
-    );
   if (chapter === 'frameworks' && frameworkDiagram === 'chip')
     return <CoreChipChapter framework={tool} onSelect={onFrameworkSelect} />;
   if (chapter === 'frameworks' && frameworkDiagram === 'foundation')
@@ -293,10 +248,6 @@ export function DockChapterJourney({
           { value: 'hero-adoption', label: 'HeroUI adoption · new' },
           { value: 'theme-match', label: 'Workspace theme study · previous' },
           { value: 'diagram', label: 'Coexistence diagram · previous' },
-          { value: 'reference', label: 'App examples · previous' },
-          { value: 'appearance', label: 'Nexus appearance · previous' },
-          { value: 'live', label: 'Real libraries + Nexus · previous' },
-          { value: 'placeholder', label: 'Placeholder comparison · previous' },
         ],
         default: 'hero-adoption',
       },
@@ -371,7 +322,6 @@ export function DockChapterJourney({
 
   const [chapter, setChapter] = useState(0);
   const [selected, setSelected] = useState(() => chapters.map(() => 0));
-  const [split, setSplit] = useState(50);
 
   useEffect(() => {
     let frame = 0;
@@ -429,7 +379,7 @@ export function DockChapterJourney({
     coexistence.iteration === 'hero-adoption'
       ? {
           ...chapters[chapter],
-          tabs: ['HeroUI', 'MUI', 'Ant Design', 'shadcn/ui'],
+          tabs: ['HeroUI', 'MUI'],
         }
       : chapters[chapter];
   const activeIndex = Math.min(
@@ -583,8 +533,6 @@ export function DockChapterJourney({
               <ChapterCanvas
                 chapter={current.id}
                 tool={current.tabs[activeIndex]}
-                split={split}
-                onSplitChange={setSplit}
                 onFrameworkSelect={selectTab}
                 frameworkDiagram={dock.frameworkDiagram}
                 showcaseView={chapters[0].tabs[selected[0]]}
