@@ -435,6 +435,18 @@ describe('React 18', () => {
     const run = await cli(['init'], context);
 
     expect(run.exitCode).toBe(EXIT_CODES.error);
+    expect(run.stderr).toMatch(
+      /nxds 0\.4\.6 has no React 18 files\. Upgrade the app to React 19\.$/m
+    );
+  });
+
+  it('refuses to view the React 19 files on React 18', async () => {
+    const context = setup();
+    setReact(context.app, '^18.3.1');
+
+    const run = await cli(['view', 'button'], context);
+
+    expect(run.exitCode).toBe(EXIT_CODES.error);
     expect(run.stderr).toMatch(/nxds 0\.4\.6 has no React 18 files/);
   });
 

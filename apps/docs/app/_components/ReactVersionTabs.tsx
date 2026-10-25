@@ -15,7 +15,7 @@ let chosen: ReactVersion | null = null;
 function subscribe(listener: () => void) {
   /** Picks up a choice made in another tab. */
   function onStorage(event: StorageEvent) {
-    if (event.key !== STORAGE_KEY) return;
+    if (event.key !== null && event.key !== STORAGE_KEY) return;
     chosen = null;
     listener();
   }

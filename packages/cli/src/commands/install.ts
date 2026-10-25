@@ -145,7 +145,7 @@ export async function init(
   const existing = readConfig(cwd);
   // Running init again stays on the app's release.
   const catalog = await loadRelease(registry, existing?.version ?? 'latest');
-  assertSupportsReact(catalog, react);
+  assertSupportsReact(catalog, react, existing !== null);
   if (existing) assertFilesMatchReact(existing, react);
   if (existing && dir && dir !== existing.dir) {
     throw new CliError(
@@ -323,7 +323,7 @@ export async function update(
   const fromReact = config.react;
   const react = reactMajor(project);
   const latest = await loadRelease(registry, 'latest');
-  assertSupportsReact(latest, react);
+  assertSupportsReact(latest, react, false);
   const { known, removed } = splitInstalled(latest, config.items);
   const current = filesOf(latest, { ...config, react }, known);
   const previous = await fetchRelease(registry, from);

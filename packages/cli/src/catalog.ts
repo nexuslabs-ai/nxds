@@ -185,12 +185,21 @@ export function variantFor<V extends Variant>(
   return variantForReact(variantOf(item, target.framework), target.react);
 }
 
-/** Fails when `catalog` has no files for the app's React major. */
-export function assertSupportsReact(catalog: Catalog, react: ReactMajor) {
+/**
+ * Fails when `catalog` has no files for the app's React major. `pinned` is
+ * true when `catalog` is the app's release rather than the latest, so
+ * `update` can move it to one with React 18 files.
+ */
+export function assertSupportsReact(
+  catalog: Catalog,
+  react: ReactMajor,
+  pinned: boolean
+) {
   if (catalog.reactMajors.includes(react)) return;
-  throw new CliError(
-    `nxds ${catalog.version} has no React 18 files. Upgrade the app to React 19, or run \`${CLI_COMMAND} update\` to move to a release with React 18 support.`
-  );
+  const fix = pinned
+    ? `Upgrade the app to React 19, or run \`${CLI_COMMAND} update\` to move to a release with React 18 support.`
+    : 'Upgrade the app to React 19.';
+  throw new CliError(`nxds ${catalog.version} has no React 18 files. ${fix}`);
 }
 
 export function setupVariant(catalog: Catalog, target: Target): SetupVariant {

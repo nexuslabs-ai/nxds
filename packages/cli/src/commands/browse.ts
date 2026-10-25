@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 import {
+  assertSupportsReact,
   type Catalog,
   type CatalogItem,
   findItem,
@@ -108,9 +109,11 @@ export async function view(
 ): Promise<CommandResult> {
   const catalog = await appRelease(cwd, registry);
   const item = findItem(catalog, name);
+  const react = projectReact(cwd);
+  assertSupportsReact(catalog, react, readConfig(cwd) !== null);
   const variant = variantFor(item, {
     framework: projectFramework(cwd, catalog),
-    react: projectReact(cwd),
+    react,
   });
   const packages = Object.entries(variant.packages.npm).map(
     ([pkg, range]) => `${pkg}@${range}`
