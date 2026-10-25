@@ -50,12 +50,18 @@ const modules = [
   { name: 'Semantic colors', className: 'chip-colors', lane: 'theme' },
   { name: 'Tokens & presets', className: 'chip-presets', lane: 'preset' },
   { name: 'Token values', className: 'chip-values', lane: 'preset' },
-  { name: 'Shared theme', className: 'chip-shared', lane: 'shared' },
+  {
+    name: 'Shared theme',
+    className: 'chip-shared nx:bg-control-background-hover',
+    lane: 'shared',
+  },
 ];
 
 // Diagram nodes stretch to fill their grid cell and anchor their flow traces.
 const nodeClassName =
-  'nx:relative nx:h-auto nx:min-h-0 nx:min-w-0 nx:w-full nx:whitespace-normal nx:data-[flowing=true]:bg-secondary-background-hover';
+  'nx:relative nx:h-auto nx:min-h-0 nx:min-w-0 nx:w-full nx:whitespace-normal nx:data-[flowing=true]:bg-control-background-hover';
+
+const tileClassName = `${nodeClassName} nx:bg-control-background`;
 
 function FlowTrace({ className = '', active }) {
   return (
@@ -134,7 +140,7 @@ export function CoreChipChapter({ framework, onSelect }) {
                   return (
                     <Button
                       variant="secondary"
-                      className={`chip-token ${nodeClassName}`}
+                      className={`chip-token ${tileClassName} nx:[&_svg]:size-(--chip-icon-size)`}
                       data-flow-node={name}
                       data-flowing={flowing}
                       {...nodeEvents}
@@ -171,7 +177,7 @@ export function CoreChipChapter({ framework, onSelect }) {
               return (
                 <Button
                   variant="secondary"
-                  className={`chip-module ${className} ${nodeClassName}`}
+                  className={`chip-module ${tileClassName} ${className}`}
                   data-flow-node={name}
                   data-flowing={flowing}
                   {...nodeEvents}
@@ -194,8 +200,7 @@ export function CoreChipChapter({ framework, onSelect }) {
                 Boolean(active) && (!activeFramework || active === name);
               return (
                 <Toggle
-                  variant="outline"
-                  className={`chip-destination ${nodeClassName} nx:flex-col nx:[&_svg]:size-10`}
+                  className={`chip-destination ${nodeClassName} nx:flex-col nx:rounded-(--canvas-radius) nx:bg-muted nx:data-[flowing=true]:bg-control-background nx:[&_svg]:size-10`}
                   pressed={name === framework}
                   onPressedChange={() => onSelect(index)}
                   data-planned={planned || undefined}
@@ -205,7 +210,7 @@ export function CoreChipChapter({ framework, onSelect }) {
                   key={name}
                 >
                   <Icon stroke={1.5} aria-hidden="true" />
-                  <strong>{name}</strong>
+                  <strong className="nx:font-medium">{name}</strong>
                   <Badge
                     variant="secondary"
                     className="chip-status"

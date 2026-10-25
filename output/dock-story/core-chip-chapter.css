@@ -3,6 +3,7 @@
   --chip-output-gap: clamp(8px, 1cqi, 16px);
   --chip-trace: color-mix(in srgb, var(--nx-color-foreground) 16%, transparent);
   --chip-space: var(--framework-column-gap);
+  --chip-icon-size: clamp(16px, 1.5cqi, 24px);
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 2fr) minmax(0, 0.8fr);
 }
 .chip-token-container,
@@ -17,7 +18,7 @@
   min-inline-size: 0;
   min-block-size: 0;
   padding: var(--chip-space);
-  background: var(--framework-surface);
+  background: var(--nx-color-muted);
   border-radius: var(--canvas-radius, 14px);
 }
 .chip-core {
@@ -137,6 +138,7 @@
   .chip-flow {
     --framework-label-size: 12px;
     --chip-row-gap: 2px;
+    --chip-icon-size: 14px;
   }
   .chip-flow .framework-token-group,
   .chip-flow .framework-core-column,
@@ -169,6 +171,7 @@
   .chip-flow {
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 2fr) minmax(0, 0.85fr);
     --chip-row-gap: 2px;
+    --chip-icon-size: 12px;
   }
   .chip-flow .framework-column-label {
     display: block;
