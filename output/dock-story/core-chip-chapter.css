@@ -290,3 +290,29 @@
     --chip-output-gap: 8px;
   }
 }
+
+/* Phones: a simpler diagram that keeps only the frameworks. */
+@container framework (max-width: 700px) {
+  [data-phone-frameworks='simple'] .chip-flow {
+    --framework-label-size: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    padding-block-end: var(--story-dock-clearance);
+  }
+  [data-phone-frameworks='simple'] .chip-flow .framework-token-group,
+  [data-phone-frameworks='simple'] .chip-flow .framework-core-column,
+  [data-phone-frameworks='simple'] .chip-trace-output {
+    display: none;
+  }
+  [data-phone-frameworks='simple'] .chip-destination {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    padding-inline: 16px;
+  }
+  [data-phone-frameworks='simple'] .chip-destination strong {
+    font-size: 16px;
+  }
+  [data-phone-frameworks='simple'] .chip-status {
+    margin-inline-start: auto;
+  }
+}
