@@ -708,11 +708,27 @@ describe('fonts', () => {
 
     expect(run.exitCode).toBe(EXIT_CODES.attention);
     expect(run.stdout).toContain(
-      `app/appearance-state.ts: Set uiFont: '${INTER.family}', in the prefs of defaultAppearance.`
+      `app/appearance-state.ts: Set uiFont: '${INTER.family}' in the prefs of defaultAppearance.`
     );
     expect(readApp(context.app, 'app/nxds.css')).toContain(
       "@import '@fontsource-variable/inter';"
     );
+  });
+
+  it('finds a font a formatter moved onto its own line', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+    await cli(['init', '--font', 'inter'], context);
+    const state = readApp(context.app, 'app/appearance-state.ts');
+    writeApp(
+      context.app,
+      'app/appearance-state.ts',
+      state.replace('uiFont: ', 'uiFont:\n      ')
+    );
+
+    const run = await cli(['init', '--icons', 'lucide'], context);
+
+    expect(run.exitCode, run.stdout).toBe(EXIT_CODES.ok);
+    expect(run.stdout).not.toContain('appearance-state.ts: Set');
   });
 
   it('exits 2 for a font the release does not have', async () => {

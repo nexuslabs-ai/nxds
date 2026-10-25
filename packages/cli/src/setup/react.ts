@@ -131,17 +131,17 @@ export function cssImportLine(config: Config, file: string) {
   return `@import '${relativeImport(config.css, `${config.dir}/${file}`)}';`;
 }
 
-/** `font: 'family',` lines for each font set up, for the default prefs. */
-function fontPrefLines({ font, headingFont }: ChosenFonts) {
+/** `pref: 'family'` for each font set up, as the default prefs set it. */
+function fontPrefs({ font, headingFont }: ChosenFonts) {
   return [
-    ...(font ? [`    uiFont: '${font.family}',`] : []),
-    ...(headingFont ? [`    headingFont: '${headingFont.family}',`] : []),
+    ...(font ? [`uiFont: '${font.family}'`] : []),
+    ...(headingFont ? [`headingFont: '${headingFont.family}'`] : []),
   ];
 }
 
 /** `appearance-state.ts`: the default appearance, with the fonts set up. */
 function appearanceState(fonts: ChosenFonts) {
-  const prefLines = fontPrefLines(fonts);
+  const prefLines = fontPrefs(fonts).map((pref) => `    ${pref},`);
   const prefs =
     prefLines.length === 0
       ? []
@@ -600,17 +600,16 @@ function planAppearanceState(project: Project, fonts: ChosenFonts) {
   if (!existsSync(path.join(project.root, file))) {
     return createdUnlessExists(project, file, appearanceState(fonts));
   }
-  const current = read(project, file);
-  const missing = fontPrefLines(fonts)
-    .map((line) => line.trim())
-    .filter((line) => !current.includes(line));
+  // A formatter may move a long font stack onto its own line.
+  const current = read(project, file).replace(/\s+/g, ' ');
+  const missing = fontPrefs(fonts).filter((pref) => !current.includes(pref));
   if (missing.length === 0) return NO_CHANGES;
   return {
     changes: [],
     manual: [
       {
         file,
-        step: `Set ${missing.join(' ')} in the prefs of defaultAppearance.`,
+        step: `Set ${missing.join(', ')} in the prefs of defaultAppearance.`,
       },
     ],
   };

@@ -12,11 +12,6 @@ import {
   componentStoryFiles,
 } from '@nxds/source-model/docs-stories.ts';
 import {
-  DEFAULT_ICON_LIBRARY,
-  FONT_OPTIONS,
-  ICON_LIBRARY_OPTIONS,
-} from '@nxds/core';
-import {
   importSpecifiers,
   readCanonical,
   writeJson,
@@ -41,6 +36,13 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// Core's source, not its build: the release job snapshots a catalog before
+// anything is built.
+import { FONT_OPTIONS } from '../../core/src/lib/font-options.ts';
+import {
+  DEFAULT_ICON_LIBRARY,
+  ICON_LIBRARY_OPTIONS,
+} from '../../core/src/lib/icon-libraries.ts';
 import { catalogSchema, issueLines } from './catalog-schema.ts';
 import {
   dependencyEntries,

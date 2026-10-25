@@ -7,9 +7,10 @@ import { MDX_OPTIONS } from './mdx-options';
 
 const docsRoot = path.dirname(fileURLToPath(import.meta.url));
 
-// packages/react imports its own icons as these, from components and blocks.
-// The docs swap that module for one that follows the reader's icon library.
-const ICONS_REQUESTS = ['../../lib/icons', '../../../lib/icons'];
+// How packages/react's components and blocks import its own icons, and how a
+// generated demo does. The docs swap that module for one that follows the
+// reader's icon library.
+const ICONS_REQUESTS = ['../../lib/icons', '../../../lib/icons', '@/lib/icons'];
 const SWITCHABLE_ICONS = './app/_lib/switchable-icons.tsx';
 
 const nextConfig: NextConfig = {
