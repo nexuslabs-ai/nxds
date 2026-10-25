@@ -4,7 +4,16 @@ import { computed, type HTMLAttributes, type VNode } from 'vue';
 import { renderedNodes } from '../../lib/slots';
 import { cn } from '../../lib/utils';
 
-import { dedupeErrorMessages, type FieldErrors } from '.';
+import type { FieldErrors } from '.';
+
+/** Unique, non-empty error messages in first-seen order. */
+function dedupeErrorMessages(errors: FieldErrors | undefined): string[] {
+  const seen = new Map<string, string>();
+  for (const error of errors ?? []) {
+    if (error?.message) seen.set(error.message, error.message);
+  }
+  return [...seen.values()];
+}
 
 export interface FieldErrorProps {
   /**

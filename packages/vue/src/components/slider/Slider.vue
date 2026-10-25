@@ -14,9 +14,6 @@ import { computed, type HTMLAttributes, useAttrs } from 'vue';
 import { cn } from '../../lib/utils';
 
 import {
-  getStepMarkerValues,
-  isMarkerCovered,
-  isRangeBoundary,
   sliderMarkerClassName,
   sliderRangeVariants,
   sliderThumbVariants,
@@ -24,6 +21,46 @@ import {
   sliderTrackVariants,
   sliderVariants,
 } from '.';
+
+const sliderFloatTolerance = 0.000001;
+
+function getStepMarkerValues(min: number, max: number, step: number) {
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return [];
+  if (!Number.isFinite(step) || step <= 0) return [];
+  if (max <= min) return [];
+
+  return Array.from(
+    { length: Math.floor((max - min) / step) },
+    (_, index) => min + step * (index + 1)
+  );
+}
+
+function isMarkerCovered(marker: number, sortedValues: number[]) {
+  const firstValue = sortedValues[0];
+
+  if (firstValue === undefined) return false;
+
+  if (sortedValues.length === 1) {
+    return marker <= firstValue + sliderFloatTolerance;
+  }
+
+  const lastValue = sortedValues[sortedValues.length - 1];
+
+  if (lastValue === undefined) return false;
+
+  return (
+    marker >= firstValue - sliderFloatTolerance &&
+    marker <= lastValue + sliderFloatTolerance
+  );
+}
+
+function isRangeBoundary(value: number | undefined, boundary: number) {
+  return (
+    value !== undefined &&
+    Number.isFinite(value) &&
+    Math.abs(value - boundary) <= sliderFloatTolerance
+  );
+}
 
 type SliderSize = NonNullable<SliderTrackVariants['size']>;
 

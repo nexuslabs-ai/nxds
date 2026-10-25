@@ -49,12 +49,3 @@ export type FieldVariants = VariantProps<typeof fieldVariants>;
 
 /** Validation errors for a field, in the shape form libraries report them. */
 export type FieldErrors = Array<{ message?: string } | undefined>;
-
-/** Unique, non-empty error messages in first-seen order. */
-export function dedupeErrorMessages(errors: FieldErrors | undefined): string[] {
-  const seen = new Map<string, string>();
-  for (const error of errors ?? []) {
-    if (error?.message) seen.set(error.message, error.message);
-  }
-  return [...seen.values()];
-}

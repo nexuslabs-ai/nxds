@@ -32,7 +32,9 @@ const slots = defineSlots<{
   'end-icon'?: () => VNode[];
 }>();
 
-function isIconButtonSize(size: ButtonVariants['size']) {
+type ButtonSize = NonNullable<ButtonVariants['size']>;
+
+function isIconButtonSize(size: ButtonSize) {
   return size === 'icon-sm' || size === 'icon' || size === 'icon-lg';
 }
 

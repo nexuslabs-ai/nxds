@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { reactiveOmit } from '@vueuse/core';
 import type { VNode } from 'vue';
 
 import { cn } from '../../lib/utils';
@@ -23,16 +24,13 @@ const slots = defineSlots<{
   'start-icon'?: () => VNode[];
   'end-icon'?: () => VNode[];
 }>();
+
+const delegated = reactiveOmit(props, 'class', 'size');
 </script>
 
 <template>
   <Button
-    :as="as"
-    :as-child="asChild"
-    :variant="variant"
-    :loading="loading"
-    :disabled="disabled"
-    :type="type"
+    v-bind="delegated"
     data-slot="input-group-button"
     :data-size="size"
     :class="cn(inputGroupButtonVariants({ size }), props.class)"

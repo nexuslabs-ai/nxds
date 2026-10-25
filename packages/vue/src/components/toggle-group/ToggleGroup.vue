@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
 import {
+  type AcceptableValue,
   ToggleGroupRoot,
-  type ToggleGroupRootEmits,
   type ToggleGroupRootProps,
-  useForwardPropsEmits,
+  useForwardProps,
 } from 'reka-ui';
 import { type HTMLAttributes, provide } from 'vue';
 
@@ -13,7 +13,9 @@ import type { ToggleVariants } from '../toggle';
 
 import { ToggleGroupKey } from '.';
 
-export interface ToggleGroupProps extends ToggleGroupRootProps {
+export interface ToggleGroupProps extends ToggleGroupRootProps<
+  string | string[]
+> {
   variant?: ToggleVariants['variant'];
   size?: ToggleVariants['size'];
   /**
@@ -30,12 +32,20 @@ const props = withDefaults(defineProps<ToggleGroupProps>(), {
   spacing: 0,
   orientation: 'horizontal',
 });
-const emits = defineEmits<ToggleGroupRootEmits>();
+// Clearing a single selection emits undefined.
+const emits = defineEmits<{
+  'update:modelValue': [value: string | string[] | undefined];
+}>();
 
 provide(ToggleGroupKey, props);
 
 const delegated = reactiveOmit(props, 'class', 'variant', 'size', 'spacing');
-const forwarded = useForwardPropsEmits(delegated, emits);
+const forwarded = useForwardProps(delegated);
+
+// Every item's value is a string, so Reka reports only strings.
+function update(value: AcceptableValue | AcceptableValue[]) {
+  emits('update:modelValue', value as string | string[] | undefined);
+}
 </script>
 
 <template>
@@ -54,6 +64,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     :data-size="size"
     :data-spacing="spacing"
     :data-orientation="orientation"
+    @update:model-value="update"
   >
     <slot />
   </ToggleGroupRoot>
