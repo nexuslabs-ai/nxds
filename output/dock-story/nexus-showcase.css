@@ -2,15 +2,15 @@
 .nexus-showcase-message-scroll {
   max-height: 124px;
   overflow: auto;
-  padding: 2px;
-  margin-bottom: 12px;
+  padding: var(--nx-spacing-0_5);
+  margin-bottom: var(--nx-spacing-3);
 }
 @container showcase-card (min-height: 440px) and (min-width: 280px) {
   .nexus-showcase-message-scroll {
     flex: 1;
     min-height: 0;
     max-height: none;
-    margin-bottom: 24px;
+    margin-bottom: var(--nx-spacing-6);
   }
 }
 @container showcase-card (min-height: 600px) and (min-width: 280px) {
