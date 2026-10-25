@@ -1,0 +1,303 @@
+export const description =
+  'Add nxds components to a Next.js app built with shadcn/ui. Run two Tailwind builds side by side, share dark mode, and rewrite classes when you move a component over.';
+
+# nxds with shadcn/ui
+
+Add nxds components to a shadcn/ui app, and keep `components/ui` as it is.
+These steps use a Next.js App Router app with Tailwind 4.
+
+## What nxds adds for you
+
+nxds started from shadcn/ui, so the parts read the same. What changes is the
+theme: one appearance object sets color, density, corners, shadows and border
+width, and every text pair is contrast-checked.
+[Introduction](/getting-started/introduction#nxds-and-shadcnui) compares the
+two.
+
+nxds also has parts shadcn/ui doesn't ship:
+
+| You need                          | nxds part                              |
+| --------------------------------- | -------------------------------------- |
+| A filter bar                      | `FilterBuilder`, `FilterChip`          |
+| A select with several values      | `MultiSelect`                          |
+| Large radio or checkbox choices   | `ChoiceCard`, `ChoiceRow`              |
+| A page title with actions         | `PageHeader`                           |
+| Label and value pairs             | `DescriptionList`                      |
+| A chat thread                     | `Message`, `Bubble`, `MessageScroller` |
+| A file in a message or form       | `Attachment`                           |
+| Content shown only at some widths | `Show`, `Hide`                         |
+
+## Add your first nxds component
+
+Set up nxds, then add a component:
+
+```bash
+npx nxds-cli@latest init
+npx nxds-cli@latest add button
+```
+
+`init` creates `app/nxds.css` and imports it after `globals.css`. It also adds
+the provider and the theme script to `app/layout.tsx`.
+
+Your app now runs two Tailwind builds. `globals.css` keeps its
+`@import "tailwindcss"` and its unprefixed classes. `app/nxds.css` builds the
+`nx:` classes:
+
+```css
+/* app/nxds.css */
+@import '../components/nxds/tailwind/nxds.css';
+@import 'tw-animate-css';
+```
+
+Both builds use Tailwind's cascade layers, so nothing needs a layer of its
+own. Your `components/ui` files stay where they are, and nxds goes in
+`components/nxds`. Import each `Button` from its own folder, and rename one:
+
+```tsx
+// app/page.tsx
+import { Button as NxdsButton } from '@/components/nxds/components/button/button';
+import { Button } from '@/components/ui/button';
+
+export default function Page() {
+  return (
+    <div className="flex gap-2">
+      <Button>Save</Button>
+      <NxdsButton variant="outline">Preview</NxdsButton>
+    </div>
+  );
+}
+```
+
+shadcn/ui overlays use `z-50`, the same as the nxds modal layer. nxds popovers
+and toasts sit higher, so they open above a shadcn/ui dialog. Inside an nxds
+dialog, use nxds popups: a shadcn/ui popover portals to `<body>`, where the
+dialog blocks pointer events.
+
+The [`shadcn-app` example](https://github.com/nexuslabs-ai/nxds/tree/main/examples/shadcn-app)
+shows every step.
+
+## Share light and dark mode
+
+nxds owns the mode. shadcn/ui reads the `.dark` class through its
+`@custom-variant dark`, so it follows nxds without a change. `next-themes`
+stays for the components that read it, such as the shadcn/ui `Toaster`, and
+follows nxds too:
+
+```tsx
+// components/theme-provider.tsx
+'use client';
+
+import { ThemeProvider as NextThemesProvider, useTheme } from 'next-themes';
+import { useEffect } from 'react';
+
+import { defaultAppearance } from '@/app/appearance-state';
+import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
+
+function NextThemesFollowsNxds() {
+  const { state, mounted } = useNxdsAppearance();
+  const { setTheme } = useTheme();
+
+  useEffect(() => {
+    if (mounted) setTheme(state.mode);
+  }, [mounted, state.mode, setTheme]);
+
+  return null;
+}
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <NextThemesProvider
+      attribute="class"
+      defaultTheme={defaultAppearance.mode}
+      disableTransitionOnChange
+    >
+      <NextThemesFollowsNxds />
+      {children}
+    </NextThemesProvider>
+  );
+}
+```
+
+Put it inside the nxds provider:
+
+```tsx
+// app/layout.tsx
+import { NxdsAppearanceProvider } from '@/components/nxds/components/appearance/provider';
+import { NxdsAppearanceScript } from '@/components/nxds/components/appearance/provider/server';
+import { Toaster as NxdsToaster } from '@/components/nxds/components/sonner/sonner';
+import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
+
+import { defaultAppearance } from './appearance-state';
+
+import './globals.css';
+import './nxds.css';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <NxdsAppearanceScript
+          storageKey="app-appearance"
+          defaultState={defaultAppearance}
+        />
+      </head>
+      <body>
+        <NxdsAppearanceProvider
+          storageKey="app-appearance"
+          defaultState={defaultAppearance}
+        >
+          <ThemeProvider>
+            {children}
+            <Toaster />
+            <NxdsToaster />
+          </ThemeProvider>
+        </NxdsAppearanceProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+`next-themes` uses `'light'`, `'dark'` and `'system'`, like nxds. Its
+`defaultTheme` matches the nxds default, so a first visit paints one mode. If
+`next-themes` saved another mode before you added nxds, that mode can show for
+a moment on the first load. From then on, both save the same mode.
+
+Switch the mode through nxds only:
+
+```tsx
+// components/mode-toggle.tsx
+'use client';
+
+import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
+import { Button } from '@/components/ui/button';
+
+export function ModeToggle() {
+  const { setState, resolvedMode } = useNxdsAppearance();
+  const next = resolvedMode === 'dark' ? 'light' : 'dark';
+
+  return (
+    <Button
+      variant="outline"
+      onClick={() => setState((current) => ({ ...current, mode: next }))}
+    >
+      Switch to {next}
+    </Button>
+  );
+}
+```
+
+Don't call `setTheme` yourself. `NextThemesFollowsNxds` does it.
+
+## Match your theme
+
+```ts
+// app/appearance-state.ts
+import { DEFAULT_NXDS_APPEARANCE, type NxdsAppearanceState } from '@nxds/core';
+
+export const defaultAppearance = {
+  ...DEFAULT_NXDS_APPEARANCE,
+  brandColor: 'oklch(0.205 0 0)',
+  surfaceTone: 'neutral',
+  corners: 'smooth',
+} satisfies NxdsAppearanceState;
+```
+
+| shadcn/ui                        | Appearance field                 | How to match                                                                                                |
+| -------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `--primary`                      | `brandColor`                     | Copy the light value from `globals.css`. nxds builds the dark and hover shades                              |
+| `baseColor` in `components.json` | `surfaceTone`                    | Same names: `neutral`, `stone`, `zinc`, `gray`, `slate`                                                     |
+| `--radius`                       | `corners`                        | `0` is `square`, `0.25rem` is `subtle`, `0.5rem` is `smooth`, `0.75rem` is `round`, `1rem` is `extra-round` |
+| `--font-sans`                    | `prefs.uiFont`                   | Pass the same font stack                                                                                    |
+| None                             | `density`, `elevation`, `stroke` | shadcn/ui has no setting for these, so keep the defaults                                                    |
+| `.dark` in `globals.css`         | `mode`                           | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                              |
+
+nxds derives the dark palette from the same fields. You don't copy the `.dark`
+block.
+
+## Where nxds fits
+
+Most parts keep their shadcn/ui names. These change:
+
+| shadcn/ui                                                                              | nxds                                                                                                                 | What changes                                                           |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `Form`, `FormField`, `FormItem`, `FormLabel`, `FormDescription`, `FormMessage`         | `Field`, `FieldLabel`, `FieldDescription`, `FieldError`                                                              | Wire your form library yourself. See [Forms](/patterns/forms)          |
+| `Calendar`                                                                             | `DatePicker`                                                                                                         | Same React Day Picker props                                            |
+| `Toast`, `useToast`                                                                    | `Toaster`, `toast()`                                                                                                 |                                                                        |
+| `Empty`, `EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, `EmptyContent` | `EmptyState`, `EmptyStateHeader`, `EmptyStateMedia`, `EmptyStateTitle`, `EmptyStateDescription`, `EmptyStateContent` |                                                                        |
+| `Badge variant="destructive"`                                                          | `Badge variant="error"`                                                                                              |                                                                        |
+| `Badge variant="outline"`                                                              | `Badge fill="outline"`                                                                                               | `fill` is separate from `variant`, so any status color can be outlined |
+| `Alert variant="destructive"`                                                          | `Alert variant="destructive"`                                                                                        | Also `success`, `warning` and `information`                            |
+| Dialog content between header and footer                                               | `DialogBody`                                                                                                         | The body scrolls while the header and footer stay put                  |
+| Sheet and Drawer content                                                               | `SheetBody`, `DrawerBody`                                                                                            |                                                                        |
+| The Combobox recipe                                                                    | `Combobox`, `ComboboxTrigger`, `ComboboxContent`, `ComboboxInput`, `ComboboxList`, `ComboboxItem`                    | One part per piece of the recipe                                       |
+| Data table rows with checkboxes                                                        | `TableSelectionHead`, `TableSelectionCell`                                                                           |                                                                        |
+| Typography classes                                                                     | `nx:typography-*` classes                                                                                            | Such as `nx:typography-heading-large`, `nx:typography-body-default`    |
+
+### Rewrite classes
+
+When you move a component into `components/nxds`, rewrite its classes:
+
+| shadcn/ui                               | nxds                                             | Rule                                               |
+| --------------------------------------- | ------------------------------------------------ | -------------------------------------------------- |
+| `md:flex`                               | `nx:md:flex`                                     | `nx:` goes before every modifier                   |
+| `bg-primary`                            | `nx:bg-primary-background`                       | Name the role, not only the color family           |
+| `hover:bg-primary/90`                   | `nx:hover:bg-primary-background-hover`           | Use the state token, not an opacity                |
+| `hover:bg-accent` on the page           | `nx:hover:bg-background-hover`                   | There is no `accent`. Pick the hover by surface    |
+| `hover:bg-accent` on a card             | `nx:hover:bg-container-hover`                    |                                                    |
+| `focus:bg-accent` in a menu             | `nx:focus:bg-popover-hover`                      |                                                    |
+| `bg-card`                               | `nx:bg-container`                                |                                                    |
+| `bg-destructive`                        | `nx:bg-error-background`                         | The prop stays `destructive`. The token is `error` |
+| `bg-sidebar`, `text-sidebar-foreground` | `nx:bg-nav-background`, `nx:text-nav-foreground` |                                                    |
+| `dark:bg-input/30`                      | Delete it                                        | Semantic tokens already change in dark mode        |
+
+### Send toasts
+
+Import `toast` from the nxds `sonner` file to show a toast in the nxds
+`Toaster`:
+
+```tsx
+import { toast } from '@/components/nxds/components/sonner/sonner';
+
+toast.success('Saved');
+```
+
+nxds toasts render only in the nxds `Toaster`. Your shadcn/ui `Toaster` keeps
+showing the toasts you send with `sonner`'s own `toast`.
+
+## Swap a component (optional)
+
+Swap a component by changing its import. Rename props where the table above
+says so:
+
+```tsx
+// Before
+import { Badge } from '@/components/ui/badge';
+
+<Badge variant="destructive">Failed</Badge>;
+```
+
+```tsx
+// After
+import { Badge } from '@/components/nxds/components/badge/badge';
+
+<Badge variant="error">Failed</Badge>;
+```
+
+To check the classes in the files you move over, add the
+[nxds lint rules](/getting-started/install#optional-add-lint-rules). They
+catch an unprefixed class, an opacity state and an `accent` token.
+
+## What stays on shadcn/ui
+
+Keep these on shadcn/ui:
+
+- Blocks and community registry items. They use shadcn/ui token names.
+- Components you have edited a lot. Move them when you touch them anyway.
+- `Form` with `react-hook-form`, if you like its wiring. nxds `Field` works
+  with any form library.
