@@ -167,55 +167,39 @@
     justify-self: center;
   }
 }
+/* Phones: a simpler diagram that keeps only the frameworks. */
 @container framework (max-width: 700px) {
   .chip-flow {
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 2fr) minmax(0, 0.85fr);
-    --chip-row-gap: 2px;
-    --chip-icon-size: 12px;
+    --framework-label-size: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    padding-block-end: var(--story-dock-clearance);
+  }
+  .chip-flow .framework-token-group,
+  .chip-flow .framework-core-column,
+  .chip-trace-output {
+    display: none;
   }
   .chip-flow .framework-column-label {
     display: block;
     line-height: 16px;
   }
-  .chip-flow .framework-token-group,
-  .chip-flow .framework-core-column,
   .chip-flow .framework-output-group {
     grid-template-rows: auto minmax(0, 1fr);
     gap: 8px;
   }
-  .chip-token,
-  .chip-module,
-  .chip-destination {
-    gap: 2px;
-    padding-inline: 2px;
-  }
   .chip-flow .framework-destinations {
     --chip-output-gap: 8px;
   }
-}
-
-/* Phones: a simpler diagram that keeps only the frameworks. */
-@container framework (max-width: 700px) {
-  [data-phone-frameworks='simple'] .chip-flow {
-    --framework-label-size: 12px;
-    grid-template-columns: minmax(0, 1fr);
-    padding-block-end: var(--story-dock-clearance);
-  }
-  [data-phone-frameworks='simple'] .chip-flow .framework-token-group,
-  [data-phone-frameworks='simple'] .chip-flow .framework-core-column,
-  [data-phone-frameworks='simple'] .chip-trace-output {
-    display: none;
-  }
-  [data-phone-frameworks='simple'] .chip-destination {
+  .chip-destination {
     flex-direction: row;
     justify-content: flex-start;
     gap: 12px;
     padding-inline: 16px;
   }
-  [data-phone-frameworks='simple'] .chip-destination strong {
+  .chip-destination strong {
     font-size: 16px;
   }
-  [data-phone-frameworks='simple'] .chip-status {
+  .chip-status {
     margin-inline-start: auto;
   }
 }

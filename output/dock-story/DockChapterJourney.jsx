@@ -303,14 +303,6 @@ export function DockChapterJourney({
           ],
           default: 'swipe',
         },
-        frameworks: {
-          type: 'select',
-          options: [
-            { value: 'simple', label: 'Frameworks only · new' },
-            { value: 'full', label: 'Full diagram · previous' },
-          ],
-          default: 'simple',
-        },
       },
     },
     { id: 'nexus-story-dock-v2', persist: true, onAction: showCustomize }
@@ -538,7 +530,6 @@ export function DockChapterJourney({
       aria-label="Design system walkthrough"
       data-dock-iteration={dock.iteration}
       data-phone-gallery={dock.phone.gallery}
-      data-phone-frameworks={dock.phone.frameworks}
       style={{
         '--story-chapter-count': chapters.length + 1,
         '--canvas-accent': settings.accent,
