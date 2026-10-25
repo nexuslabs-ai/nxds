@@ -1,7 +1,7 @@
 .chip-flow {
   --chip-row-gap: clamp(var(--nx-spacing-1), 0.5cqi, var(--nx-spacing-2));
   --chip-output-gap: clamp(var(--nx-spacing-2), 1cqi, var(--nx-spacing-4));
-  --chip-trace: color-mix(in srgb, var(--nx-color-foreground) 16%, transparent);
+  --chip-trace: var(--nx-color-border-default);
   --chip-space: var(--framework-column-gap);
   --chip-icon-size: clamp(var(--nx-spacing-4), 1.5cqi, var(--nx-spacing-6));
   grid-template-columns: minmax(0, 0.8fr) minmax(0, 2fr) minmax(0, 0.8fr);
@@ -95,7 +95,7 @@
 }
 .chip-trace[data-flowing='true'],
 .chip-destination[data-state='on'] > .chip-trace {
-  background: color-mix(in srgb, var(--nx-color-foreground) 28%, transparent);
+  background: var(--nx-color-border-focus);
 }
 .chip-flow[data-flow-motion='true'] .chip-trace[data-flowing='true'] > i {
   animation: chip-signal 2200ms linear infinite;
@@ -138,7 +138,8 @@
 }
 @container framework (max-height: 640px) and (min-width: 701px) {
   .chip-flow {
-    --framework-label-size: 12px;
+    --framework-label-size: var(--nx-typography-size-xs);
+    --framework-label-leading: var(--nx-typography-line-height-xs);
     --chip-row-gap: var(--nx-spacing-0_5);
     --chip-icon-size: var(--nx-spacing-3_5);
   }
@@ -172,7 +173,8 @@
 /* Phones: a simpler diagram that keeps only the frameworks. */
 @container framework (max-width: 700px) {
   .chip-flow {
-    --framework-label-size: 12px;
+    --framework-label-size: var(--nx-typography-size-xs);
+    --framework-label-leading: var(--nx-typography-line-height-xs);
     grid-template-columns: minmax(0, 1fr);
     padding-block-end: var(--story-dock-clearance);
   }
@@ -183,7 +185,6 @@
   }
   .chip-flow .framework-column-label {
     display: block;
-    line-height: 16px;
   }
   .chip-flow .framework-output-group {
     grid-template-rows: auto minmax(0, 1fr);

@@ -5,7 +5,8 @@
   min-block-size: 0;
 }
 .framework-flow {
-  --framework-label-size: 16px;
+  --framework-label-size: var(--nx-typography-size-sm);
+  --framework-label-leading: var(--nx-typography-line-height-sm);
   --framework-surface: color-mix(
     in srgb,
     var(--nx-color-foreground) 4%,
@@ -40,7 +41,7 @@
 .framework-column-label {
   color: var(--nx-color-muted-foreground);
   font-size: inherit;
-  line-height: 20px;
+  line-height: var(--framework-label-leading);
   text-align: center;
 }
 .framework-token-list {
@@ -76,7 +77,7 @@
   inset-block-start: 50%;
   inline-size: var(--framework-column-gap);
   block-size: 1px;
-  background: color-mix(in srgb, var(--nx-color-foreground) 16%, transparent);
+  background: var(--nx-color-border-default);
   transform: translateY(-50%);
   pointer-events: none;
 }
@@ -187,7 +188,8 @@
 }
 @container framework (max-height: 480px) and (min-width: 701px) {
   .framework-flow {
-    --framework-label-size: 12px;
+    --framework-label-size: var(--nx-typography-size-xs);
+    --framework-label-leading: var(--nx-typography-line-height-xs);
   }
   .framework-token-group,
   .framework-core-column,
@@ -225,7 +227,8 @@
 }
 @container framework (max-width: 700px) {
   .framework-flow {
-    --framework-label-size: 10px;
+    --framework-label-size: var(--nx-typography-size-xs);
+    --framework-label-leading: var(--nx-typography-line-height-xs);
     --framework-column-gap: var(--nx-spacing-2);
   }
   .framework-column-label {

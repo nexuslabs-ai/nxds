@@ -67,7 +67,8 @@
 }
 @container framework (max-height: 640px) and (min-width: 701px) {
   .foundation-flow {
-    --framework-label-size: 12px;
+    --framework-label-size: var(--nx-typography-size-xs);
+    --framework-label-leading: var(--nx-typography-line-height-xs);
     mask-image: linear-gradient(
       to bottom,
       #000 calc(100% - 100px),
