@@ -285,6 +285,16 @@ export function DockChapterJourney({
         default: 'chip',
       },
       motion: { duration: [0.25, 0.1, 0.6, 0.05] },
+      phone: {
+        toolbar: {
+          type: 'select',
+          options: [
+            { value: 'compact', label: '40px tools under 378px · new' },
+            { value: 'large', label: 'Always 48px · previous' },
+          ],
+          default: 'compact',
+        },
+      },
     },
     { id: 'nexus-story-dock-v2', persist: true, onAction: showCustomize }
   );
@@ -609,6 +619,7 @@ export function DockChapterJourney({
                 dock.iteration
               ) ? (
                 <DockComponent
+                  compactOnSmallPhones={dock.phone.toolbar === 'compact'}
                   hugActive={dock.selectedWidth === 'hug'}
                   compactControls={['compact', 'owned'].includes(
                     dock.customize

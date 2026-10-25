@@ -272,13 +272,11 @@
     gap: 8px;
   }
   .comparison-labels span {
-    font-size: 10px;
     padding: 6px;
   }
   .story-specimen-header,
   .story-specimen-footer {
     padding: 12px 16px;
-    font-size: 10px;
   }
   .story-specimen-body {
     grid-template-columns: minmax(0, 1fr);
@@ -293,9 +291,6 @@
   .story-example-button {
     padding: 20px 0 16px;
   }
-  .story-example p {
-    font-size: 11px;
-  }
   .story-example-actions {
     margin-top: 4px;
   }
@@ -306,7 +301,6 @@
     border-top: 1px solid var(--nx-color-border-default);
   }
   .story-assertions pre {
-    font-size: 10px;
     line-height: 1.5;
   }
   .story-assertions p {

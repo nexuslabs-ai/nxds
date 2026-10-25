@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from 'react';
+
 import {
   Toolbar,
   ToolbarTool,
@@ -12,6 +14,23 @@ import {
 
 import { tabIcons } from './dock-icons';
 
+// Six 48px tools plus the page's side padding need 378px, so narrower
+// phones get the 40px tool size to keep the bar on one row.
+const SMALL_PHONE = '(max-width: 377px)';
+
+function subscribeToSmallPhone(onChange) {
+  const query = window.matchMedia(SMALL_PHONE);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+}
+
+function useSmallPhone() {
+  return useSyncExternalStore(
+    subscribeToSmallPhone,
+    () => window.matchMedia(SMALL_PHONE).matches
+  );
+}
+
 export function NexusToolbar({
   chapter,
   title,
@@ -19,8 +38,11 @@ export function NexusToolbar({
   selected,
   onSelect,
   hasControls,
+  compactOnSmallPhones = false,
   children,
 }) {
+  const smallPhone = useSmallPhone();
+  const toolSize = compactOnSmallPhones && smallPhone ? 'icon' : 'icon-lg';
   return (
     <Toolbar variant="floating" aria-label={title}>
       <ToolbarToolGroup
@@ -36,7 +58,7 @@ export function NexusToolbar({
                 <span className="nx:inline-flex">
                   <ToolbarTool
                     value={tab}
-                    size="icon-lg"
+                    size={toolSize}
                     aria-label={tab}
                     id={`story-tab-${chapter}-${index}`}
                   >
