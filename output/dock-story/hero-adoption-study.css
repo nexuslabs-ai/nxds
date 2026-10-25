@@ -4,7 +4,7 @@
   block-size: calc(100% - var(--story-dock-clearance, 112px));
   margin-inline: auto;
   overflow: auto;
-  padding: 4px 4px 28px;
+  padding: var(--nx-spacing-1) var(--nx-spacing-1) var(--nx-spacing-7);
   scrollbar-width: thin;
 }
 .hero-adoption-intro {
@@ -12,14 +12,14 @@
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  gap: var(--nx-spacing-5);
   margin-block-end: 18px;
 }
 .hero-adoption-intro h2 {
   font-size: 20px;
   letter-spacing: -0.025em;
   font-weight: 500;
-  margin: 0 0 6px;
+  margin: 0 0 var(--nx-spacing-1_5);
 }
 .hero-adoption-intro p,
 .hero-adoption-case header p,
@@ -34,17 +34,17 @@
 .hero-adoption-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: var(--nx-spacing-4);
   align-items: center;
 }
 .hero-adoption-options [data-slot='field'] {
   width: auto;
-  gap: 8px;
+  gap: var(--nx-spacing-2);
 }
 .hero-adoption-cases {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
+  gap: var(--nx-spacing-6);
 }
 .hero-adoption-case {
   min-inline-size: 0;
@@ -52,8 +52,8 @@
 .hero-adoption-case > header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-block-end: 14px;
+  gap: var(--nx-spacing-3);
+  margin-block-end: var(--nx-spacing-3_5);
 }
 .hero-adoption-case > header > span {
   color: var(--nx-color-muted-foreground);
@@ -66,8 +66,8 @@
   margin: 0;
 }
 .hero-adoption-frame-shell {
-  border: 1px solid var(--nx-color-border-default);
-  border-radius: 16px;
+  border: var(--nx-borderwidth-default) solid var(--nx-color-border-default);
+  border-radius: var(--nx-radius-2xl);
   overflow: clip;
 }
 .hero-adoption-frame {
@@ -79,9 +79,9 @@
 .hero-adoption-result {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--nx-spacing-2);
   font-size: 12px;
-  margin-block: 16px 6px;
+  margin-block: var(--nx-spacing-4) var(--nx-spacing-1_5);
 }
 .hero-adoption-result-dot {
   inline-size: 6px;
@@ -98,13 +98,14 @@
 }
 .hero-adoption-footnote {
   display: grid;
-  gap: 4px;
+  gap: var(--nx-spacing-1);
   margin-block: 24px 18px;
 }
 .hero-adoption-evidence {
   font-size: 12px;
-  border-block-start: 1px solid var(--nx-color-border-default);
-  padding-block-start: 16px;
+  border-block-start: var(--nx-borderwidth-default) solid
+    var(--nx-color-border-default);
+  padding-block-start: var(--nx-spacing-4);
 }
 .hero-adoption-evidence summary {
   cursor: pointer;
@@ -115,21 +116,21 @@
   outline-offset: 6px;
 }
 .hero-adoption-evidence p {
-  margin-block: 12px;
+  margin-block: var(--nx-spacing-3);
 }
 .hero-adoption-evidence a {
   text-decoration: underline;
 }
 .hero-adoption-measurements {
   display: grid;
-  gap: 24px;
+  gap: var(--nx-spacing-6);
 }
 .hero-adoption-measurement {
-  margin-block: 16px;
+  margin-block: var(--nx-spacing-4);
   overflow-wrap: anywhere;
 }
 .hero-adoption-measurement p {
-  margin-block: 4px;
+  margin-block: var(--nx-spacing-1);
 }
 .hero-adoption-evidence code {
   font-size: 11px;
@@ -137,7 +138,7 @@
 @container hero-adoption (min-width: 900px) {
   .hero-adoption-cases {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
+    gap: var(--nx-spacing-5);
   }
   .hero-adoption-measurements {
     grid-template-columns: repeat(2, minmax(0, 1fr));
