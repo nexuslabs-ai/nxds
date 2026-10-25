@@ -130,7 +130,7 @@ export function WorkspaceThemeStudy({ stack, onSelectMui }) {
         ref={frame}
         className="workspace-theme-preview"
         title="MUI target and Nexus workspace settings"
-        src="/dock-story/workspace-theme-preview.html"
+        src="./workspace-theme-preview.html"
       />
       <div className="workspace-theme-findings">
         <article>

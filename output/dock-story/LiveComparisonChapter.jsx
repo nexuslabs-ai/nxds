@@ -37,7 +37,7 @@ function LibraryFrame({ stack, addition, appearance, interactive, example }) {
       ref={frame}
       className="library-comparison-frame"
       title={`${stack} ${addition ? 'with Nexus additions' : 'without Nexus'}`}
-      src={`/dock-story/comparison-preview.html?library=${encodeURIComponent(stack)}&addition=${addition}&mode=${initialMode}&example=${example}`}
+      src={`./comparison-preview.html?library=${encodeURIComponent(stack)}&addition=${addition}&mode=${initialMode}&example=${example}`}
       inert={!interactive}
     />
   );
