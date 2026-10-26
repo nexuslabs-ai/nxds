@@ -216,6 +216,7 @@ function MultipleValues({
         <div className="nx:border-b nx:border-border-default nx:p-2">
           <Input
             size="sm"
+            className="nx:rounded-nest"
             aria-label={`Search ${field.label} options`}
             placeholder="Search options…"
             value={search}
@@ -223,12 +224,12 @@ function MultipleValues({
             onChange={(event) => setSearch(event.target.value)}
           />
         </div>
-        <div className="nx:max-h-48 nx:overflow-y-auto nx:p-1">
+        <div className="nx:max-h-48 nx:overflow-y-auto nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:rounded-t-nest-corner nx:[&>:last-child]:rounded-b-nest-corner">
           {options.map((option, index) => (
             <ChoiceRow
               key={option.value}
               htmlFor={`${id}-${index}`}
-              className="nx:not-has-[:disabled]:hover:bg-popover-hover"
+              className="nx:rounded-nest nx:not-has-[:disabled]:hover:bg-popover-hover"
             >
               <Checkbox
                 id={`${id}-${index}`}

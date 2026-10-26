@@ -621,3 +621,33 @@ export const RestrictedOperators: Story = {
     await userEvent.keyboard('{Escape}');
   },
 };
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: MultipleChoices.render,
+  play: async ({ canvasElement }) => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    const page = within(canvasElement.ownerDocument.body);
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: 'Team values' })
+    );
+    const rows = page
+      .getAllByRole('checkbox')
+      .map((checkbox) => checkbox.closest('[data-slot="choice-row"]')!);
+    await expect(corners(rows[0]!)).toEqual(['7px', '7px', '6px', '6px']);
+    await expect(corners(rows.at(-1)!)).toEqual(['6px', '6px', '7px', '7px']);
+    await expect(
+      corners(page.getByRole('textbox', { name: 'Search Team options' }))
+    ).toEqual(['6px', '6px', '6px', '6px']);
+    await userEvent.keyboard('{Escape}');
+  },
+};
