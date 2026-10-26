@@ -151,6 +151,8 @@ const CodeBlockLine = React.forwardRef<
       {...props}
     >
       <span>{children}</span>
+      {/* A grid doesn't render this newline, but the code's text keeps it. */}
+      {'\n'}
     </span>
   );
 });
@@ -167,12 +169,12 @@ const COPY_MESSAGES = {
 
 type CopyState = keyof typeof COPY_MESSAGES;
 
-// Lines are grid rows with no newline between them, so join them by hand.
+// Each line ends in a newline. Drop the last, so a pasted command doesn't run.
 function codeText(button: HTMLElement) {
-  const lines = button
+  const code = button
     .closest('[data-slot="code-block"]')
-    ?.querySelectorAll('[data-slot="code-block-line"]');
-  return Array.from(lines ?? [], (line) => line.textContent).join('\n');
+    ?.querySelector('code');
+  return code?.textContent?.replace(/\n$/, '') ?? '';
 }
 
 type CodeBlockCopyButtonProps = Omit<
