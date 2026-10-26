@@ -1,0 +1,12 @@
+{
+  "glyph": {
+    "default": {
+      "$value": {
+        "value": 16,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$description": "Icon in a control, at every control size. The same at every density."
+    }
+  }
+}

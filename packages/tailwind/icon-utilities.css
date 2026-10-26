@@ -1,0 +1,6 @@
+/* Icon Size Utilities */
+
+@utility size-icon-glyph-default {
+  width: var(--nx-icon-glyph-default);
+  height: var(--nx-icon-glyph-default);
+}

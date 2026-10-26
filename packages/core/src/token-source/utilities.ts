@@ -55,6 +55,18 @@ export function durationUtility(key: string): UtilityRule {
   };
 }
 
+/** The `size-icon-*` utility an icon size `key` (e.g. `glyph-default`) emits. */
+export function iconSizeUtility(key: string): UtilityRule {
+  const value = `var(--nx-icon-${key})`;
+  return {
+    name: `size-icon-${key}`,
+    declarations: [
+      { property: 'width', value },
+      { property: 'height', value },
+    ],
+  };
+}
+
 /**
  * The motion tokens emitted as Tailwind's `--default-transition-duration` and
  * `--default-transition-timing-function`.

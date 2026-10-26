@@ -33,6 +33,7 @@ import {
   generateAutofillUtilitiesCSS,
   generateBorderColorAliasUtilitiesCSS,
   generateBorderWidthUtilitiesCSS,
+  generateIconUtilitiesCSS,
   generateMotionUtilitiesCSS,
   generateNativeBrowserUIThemeCSS,
   generateSpacingModesCSS,
@@ -538,6 +539,7 @@ function generateNxdsCSS(
       './borderwidth-utilities.css',
       './border-color-aliases.css',
       './motion-utilities.css',
+      './icon-utilities.css',
       './spacing-utilities.css',
     ],
     tailwindPrefix: 'nx',
@@ -679,6 +681,12 @@ async function generateTailwindPackage(overrides, engine) {
   );
   writeDistFile('motion-utilities.css', motionUtilities.css);
   log.success(`Generated ${motionUtilities.count} motion duration utilities`);
+
+  const iconUtilities = generateIconUtilitiesCSS(
+    primitiveTokens.filter((t) => t.category === 'icon')
+  );
+  writeDistFile('icon-utilities.css', iconUtilities.css);
+  log.success(`Generated ${iconUtilities.count} icon size utilities`);
 
   // `spacingDefault` controls which mode lands under `:root, [data-density="X"]`.
   const { spacingDefault } = config;

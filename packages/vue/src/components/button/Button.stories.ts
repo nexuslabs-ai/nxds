@@ -1,5 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { IconArrowRight, IconRocket, IconStar } from '@tabler/icons-vue';
+import {
+  IconArrowRight,
+  IconDownload,
+  IconRocket,
+  IconStar,
+} from '@tabler/icons-vue';
 import { expect, fn, type Mock, userEvent, within } from 'storybook/test';
 
 import { expectHeightPinned } from '../../stories/support/story-height-test-utils';
@@ -262,35 +267,39 @@ export const Link: Story = {
   },
 };
 
-export const IconOnlyIconScale: Story = {
+export const IconSize: Story = {
   render: () => ({
-    components: { Button, IconRocket, IconStar },
+    components: { Button, IconDownload, IconStar },
     template: `
-      <div class="nx:flex nx:items-center nx:gap-2">
-        <Button><template #start-icon><IconRocket /></template>Launch</Button>
-        <Button size="icon-sm" aria-label="Small icon"><IconStar /></Button>
-        <Button size="icon" aria-label="Default icon"><IconStar /></Button>
-        <Button size="icon-lg" aria-label="Large icon"><IconStar /></Button>
+      <div class="nx:flex nx:flex-col nx:items-start nx:gap-3">
+        <div class="nx:flex nx:items-center nx:gap-2">
+          <Button size="sm"><template #start-icon><IconDownload /></template>Download</Button>
+          <Button size="icon-sm" aria-label="Small icon"><IconStar /></Button>
+        </div>
+        <div class="nx:flex nx:items-center nx:gap-2">
+          <Button><template #start-icon><IconDownload /></template>Download</Button>
+          <Button size="icon" aria-label="Default icon"><IconStar /></Button>
+        </div>
+        <div class="nx:flex nx:items-center nx:gap-2">
+          <Button size="lg"><template #start-icon><IconDownload /></template>Download</Button>
+          <Button size="icon-lg" aria-label="Large icon"><IconStar /></Button>
+        </div>
       </div>
     `,
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    function icon(name: string) {
-      const svg = canvas.getByRole('button', { name }).querySelector('svg');
-      return {
-        height: svg?.getBoundingClientRect().height ?? 0,
-        line: svg ? parseFloat(getComputedStyle(svg).strokeWidth) : 0,
-      };
-    }
-    await expect(icon('Small icon').height).toBeLessThan(
-      icon('Default icon').height
+    const iconToken = parseFloat(
+      getComputedStyle(canvasElement).getPropertyValue(
+        '--nx-icon-glyph-default'
+      )
     );
-    await expect(icon('Default icon').height).toBeLessThan(
-      icon('Large icon').height
-    );
-    for (const name of ['Small icon', 'Default icon', 'Large icon']) {
-      await expect(icon(name).line).toBeLessThan(icon('Launch').line);
+    for (const button of canvas.getAllByRole('button')) {
+      const svg = button.querySelector('svg');
+      await expect(svg?.getBoundingClientRect().height).toBe(iconToken);
+      await expect(
+        parseFloat(svg ? getComputedStyle(svg).strokeWidth : '')
+      ).toBeLessThan(Number(svg?.getAttribute('stroke-width')));
     }
   },
 };

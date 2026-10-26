@@ -144,6 +144,7 @@ describe('cn', () => {
   });
 
   it.each([
+    ['icon size', 'nx:size-icon-glyph-default', 'nx:size-4'],
     ['radius base', 'nx:rounded-base', 'nx:rounded-md'],
     ['ease enter', 'nx:ease-enter', 'nx:ease-linear'],
     ['ease exit', 'nx:ease-exit', 'nx:ease-linear'],

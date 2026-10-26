@@ -10,7 +10,7 @@ import { ButtonGroupSizeContext } from '../button-group/button-group-context';
 import { Spinner } from '../spinner/spinner';
 
 const buttonVariants = cva(
-  'nx:inline-flex nx:box-border nx:cursor-pointer nx:items-center nx:bg-transparent nx:py-0 nx:no-underline nx:justify-center nx:rounded-base nx:border-default nx:border-transparent nx:whitespace-nowrap nx:transition-[color,background-color,border-color,scale] nx:active:scale-[0.96] nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:focus-visible:outline-offset-2 nx:disabled:pointer-events-none nx:disabled:cursor-default nx:disabled:opacity-100 nx:aria-disabled:pointer-events-none nx:aria-disabled:cursor-default nx:aria-disabled:opacity-100 nx:[&_svg]:pointer-events-none nx:[&_svg]:size-3.5 nx:[&_svg]:shrink-0',
+  'nx:inline-flex nx:box-border nx:cursor-pointer nx:items-center nx:bg-transparent nx:py-0 nx:no-underline nx:justify-center nx:rounded-base nx:border-default nx:border-transparent nx:whitespace-nowrap nx:transition-[color,background-color,border-color,scale] nx:active:scale-[0.96] nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:focus-visible:outline-offset-2 nx:disabled:pointer-events-none nx:disabled:cursor-default nx:disabled:opacity-100 nx:aria-disabled:pointer-events-none nx:aria-disabled:cursor-default nx:aria-disabled:opacity-100 nx:[&_svg]:pointer-events-none nx:[&_svg]:shrink-0 nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:stroke-[1.75]',
   {
     variants: {
       variant: {
@@ -34,11 +34,9 @@ const buttonVariants = cva(
         sm: 'nx:h-8 nx:px-2.5 nx:gap-2 nx:typography-label-default',
         default: 'nx:h-10 nx:px-3 nx:gap-2 nx:typography-label-default',
         lg: 'nx:h-12 nx:px-3.5 nx:gap-2 nx:typography-label-default',
-        'icon-sm':
-          'nx:size-8 nx:gap-0 nx:p-0 nx:[&_svg]:size-[16px] nx:[&_svg]:stroke-[1.75]',
-        icon: 'nx:size-10 nx:gap-0 nx:p-0 nx:[&_svg]:size-[18px] nx:[&_svg]:stroke-[1.75]',
-        'icon-lg':
-          'nx:size-12 nx:gap-0 nx:p-0 nx:[&_svg]:size-[20px] nx:[&_svg]:stroke-[1.75]',
+        'icon-sm': 'nx:size-8 nx:gap-0 nx:p-0',
+        icon: 'nx:size-10 nx:gap-0 nx:p-0',
+        'icon-lg': 'nx:size-12 nx:gap-0 nx:p-0',
       },
     },
     compoundVariants: [
