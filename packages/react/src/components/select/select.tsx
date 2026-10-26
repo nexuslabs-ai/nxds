@@ -166,7 +166,7 @@ function SelectContent({
         <SelectScrollUpButton />
         <SelectPrimitive.Viewport
           className={cn(
-            'nx:p-1',
+            'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:rounded-t-nest-corner nx:[&>:last-child]:rounded-b-nest-corner',
             position === 'popper' &&
               'nx:h-(--radix-select-trigger-height) nx:w-full nx:min-w-(--radix-select-trigger-width)'
           )}
@@ -211,7 +211,7 @@ function SelectItem({ className, children, ...props }: SelectItemProps) {
       data-slot="select-item"
       className={cn(
         'nx:group nx:relative nx:flex nx:w-full nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
-        'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
+        'nx:rounded-nest nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
         menuItemInsetClassName,
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',

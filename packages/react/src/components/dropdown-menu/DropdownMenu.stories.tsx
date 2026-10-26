@@ -731,3 +731,70 @@ export const AllVariants: Story = {
 // A11Y is tested automatically on ALL stories
 // via addon-a11y with test: 'error'
 // ============================================
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: () => (
+    <DropdownMenu defaultOpen modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">Actions</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuItem>Rename</DropdownMenuItem>
+        <DropdownMenuItem>Duplicate</DropdownMenuItem>
+        <DropdownMenuItem>Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ),
+  play: async () => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    const items = await within(document.body).findAllByRole('menuitem');
+    await expect(corners(items[0]!)).toEqual(['7px', '7px', '6px', '6px']);
+    await expect(corners(items[1]!)).toEqual(['6px', '6px', '6px', '6px']);
+    await expect(corners(items[2]!)).toEqual(['6px', '6px', '7px', '7px']);
+
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+export const NestedCornersAfterLabel: Story = {
+  globals: { corners: '12' },
+  render: () => (
+    <DropdownMenu defaultOpen modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">Actions</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuLabel>Document</DropdownMenuLabel>
+        <DropdownMenuItem>Rename</DropdownMenuItem>
+        <DropdownMenuItem>Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ),
+  play: async () => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    const items = await within(document.body).findAllByRole('menuitem');
+    await expect(corners(items[0]!)).toEqual(['6px', '6px', '6px', '6px']);
+    await expect(corners(items[1]!)).toEqual(['6px', '6px', '7px', '7px']);
+
+    await userEvent.keyboard('{Escape}');
+  },
+};

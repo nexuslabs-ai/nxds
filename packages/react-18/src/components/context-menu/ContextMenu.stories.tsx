@@ -753,3 +753,36 @@ export const AllVariants: Story = {
 // A11Y is tested automatically on ALL stories
 // via addon-a11y with test: 'error'
 // ============================================
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: () => (
+    <ContextMenu>
+      <ContextMenuTrigger className="nx:flex nx:h-24 nx:w-60 nx:items-center nx:justify-center nx:rounded-md nx:border-default nx:border-dashed nx:border-border-default">
+        Right-click here
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem>Back</ContextMenuItem>
+        <ContextMenuItem>Forward</ContextMenuItem>
+        <ContextMenuItem>Reload</ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  ),
+  play: async ({ canvasElement }) => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    fireEvent.contextMenu(within(canvasElement).getByText('Right-click here'));
+    const items = await within(document.body).findAllByRole('menuitem');
+    await expect(corners(items[0]!)).toEqual(['7px', '7px', '6px', '6px']);
+    await expect(corners(items[1]!)).toEqual(['6px', '6px', '6px', '6px']);
+    await expect(corners(items[2]!)).toEqual(['6px', '6px', '7px', '7px']);
+  },
+};
