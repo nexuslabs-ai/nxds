@@ -29,7 +29,6 @@ export const planned = [
   'setting-row',
   'sidebar',
   'sonner',
-  'table',
   'theme-quick-control',
   'toolbar',
 ];
@@ -79,6 +78,7 @@ export const shared = [
   'slider',
   'spinner',
   'switch',
+  'table',
   'tabs',
   'textarea',
   'toggle',
@@ -224,6 +224,10 @@ export const vueOnlyDeclarations: Record<string, string> = {
     'Vue injection key the content provides to its header and footer; React passes the same layout through context',
   'input-otp/index.ts#InputOTPKey':
     "Vue injection key the root provides so each slot's <input> takes the field's name; React's single <input> carries it",
+  'table/index.ts#TableKey':
+    'Vue injection key the table provides to its rows and cells; React passes the same state through context',
+  'table/index.ts#tableContextDefaults':
+    "what a cell outside a Table injects; React's context default holds the same values",
   'tabs/index.ts#TabsListKey':
     'Vue injection key the list provides to its triggers; React passes the same state through context',
   'toggle-group/index.ts#ToggleGroupKey':
