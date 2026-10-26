@@ -1,4 +1,10 @@
-import { type ComputedRef, inject, type InjectionKey, type Ref } from 'vue';
+import {
+  type ComputedRef,
+  type HTMLAttributes,
+  inject,
+  type InjectionKey,
+  type Ref,
+} from 'vue';
 
 export { default as Command, type CommandProps } from './Command.vue';
 export {
@@ -9,34 +15,57 @@ export {
   default as CommandEmpty,
   type CommandEmptyProps,
 } from './CommandEmpty.vue';
-export {
-  default as CommandGroup,
-  type CommandGroupProps,
-} from './CommandGroup.vue';
-export {
-  default as CommandInput,
-  type CommandInputProps,
-} from './CommandInput.vue';
-export {
-  default as CommandItem,
-  type CommandItemProps,
-} from './CommandItem.vue';
-export {
-  default as CommandList,
-  type CommandListProps,
-} from './CommandList.vue';
+export { default as CommandGroup } from './CommandGroup.vue';
+export { default as CommandInput } from './CommandInput.vue';
+export { default as CommandItem } from './CommandItem.vue';
+export { default as CommandList } from './CommandList.vue';
 export {
   default as CommandLoading,
   type CommandLoadingProps,
 } from './CommandLoading.vue';
-export {
-  default as CommandSeparator,
-  type CommandSeparatorProps,
-} from './CommandSeparator.vue';
+export { default as CommandSeparator } from './CommandSeparator.vue';
 export {
   default as CommandShortcut,
   type CommandShortcutProps,
 } from './CommandShortcut.vue';
+
+export interface CommandGroupProps {
+  /** Heading shown above the group's items. Screen readers read it as the group's name. */
+  heading?: string;
+  /** Shows the group whatever the search. */
+  forceMount?: boolean;
+  class?: HTMLAttributes['class'];
+}
+
+export interface CommandInputProps {
+  /** The search text. Bind it with `v-model` to read or set the search. */
+  modelValue?: string;
+  class?: HTMLAttributes['class'];
+}
+
+export interface CommandItemProps {
+  /** What the search matches and `select` passes. Defaults to the item's text. */
+  value?: string;
+  /** More words the search matches, such as synonyms. */
+  keywords?: string[];
+  /** Shows the item dimmed and skips it in keyboard navigation. */
+  disabled?: boolean;
+  /** Shows the item whatever the search. */
+  forceMount?: boolean;
+  class?: HTMLAttributes['class'];
+}
+
+export interface CommandListProps {
+  /** Accessible name for the list. */
+  label?: string;
+  class?: HTMLAttributes['class'];
+}
+
+export interface CommandSeparatorProps {
+  /** Keeps the separator while a search is active. */
+  alwaysRender?: boolean;
+  class?: HTMLAttributes['class'];
+}
 
 /** What the search matches an item by. */
 export interface CommandItemEntry {
@@ -73,5 +102,5 @@ export function injectCommand() {
 
 export const CommandGroupKey: InjectionKey<{
   id: string;
-  forceMount: boolean;
+  forceMount: Ref<boolean>;
 }> = Symbol('command-group');

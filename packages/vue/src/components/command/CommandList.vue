@@ -1,16 +1,9 @@
 <script setup lang="ts">
 import { ListboxContent } from 'reka-ui';
-import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
 
-import { injectCommand } from '.';
-
-export interface CommandListProps {
-  /** Accessible name for the list. */
-  label?: string;
-  class?: HTMLAttributes['class'];
-}
+import { type CommandListProps, injectCommand } from '.';
 
 defineOptions({ inheritAttrs: false });
 

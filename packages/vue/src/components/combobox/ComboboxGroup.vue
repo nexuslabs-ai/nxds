@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
+import { CommandGroup, type CommandGroupProps } from '../command';
 
-import { CommandGroup } from '../command';
+export type ComboboxGroupProps = CommandGroupProps;
 
-export interface ComboboxGroupProps {
-  class?: HTMLAttributes['class'];
-}
-
-const props = defineProps<ComboboxGroupProps>();
+const props = withDefaults(defineProps<ComboboxGroupProps>(), {
+  forceMount: false,
+});
 </script>
 
 <template>
-  <CommandGroup data-slot="combobox-group" :class="props.class">
+  <CommandGroup v-bind="props" data-slot="combobox-group">
     <slot />
   </CommandGroup>
 </template>

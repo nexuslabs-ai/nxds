@@ -599,6 +599,42 @@ export const KeyboardInteraction: Story = {
   },
 };
 
+// Matches keep the order they are written in, so the partial match stays
+// above the exact one and Enter runs it.
+export const SearchRanking: Story = {
+  render: () => ({
+    components: { Command, CommandInput, CommandItem, CommandList },
+    setup: () => ({ paletteClass, selected: ref('none') }),
+    template: `
+      <div class="nx:flex nx:flex-col nx:gap-4">
+        <Command label="Command menu" :class="paletteClass">
+          <CommandInput placeholder="Type a command or search..." />
+          <CommandList>
+            <CommandItem value="open recent" @select="selected = $event">Open recent</CommandItem>
+            <CommandItem value="open" @select="selected = $event">Open</CommandItem>
+          </CommandList>
+        </Command>
+        <p data-testid="last-selected">Selected: {{ selected }}</p>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(canvas.getByRole('combobox'), 'open');
+    await waitFor(() =>
+      expect(canvas.getAllByRole('option')[0]).toHaveTextContent(
+        /^Open recent$/
+      )
+    );
+
+    await userEvent.keyboard('{Enter}');
+    await expect(canvas.getByTestId('last-selected')).toHaveTextContent(
+      'Selected: open recent'
+    );
+  },
+};
+
 export const WithDataAttributes: Story = {
   render: () => ({
     components: {

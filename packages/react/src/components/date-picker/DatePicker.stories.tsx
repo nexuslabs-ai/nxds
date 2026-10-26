@@ -35,23 +35,6 @@ function resolveSpacingPx(canvasElement: HTMLElement, varName: string) {
   );
 }
 
-// Inclusive ascending list of dates between two days (order-agnostic).
-function daysBetween(a: Date, b: Date) {
-  const [start, end] = a <= b ? [a, b] : [b, a];
-  const days: Date[] = [];
-  const cursor = new Date(
-    start.getFullYear(),
-    start.getMonth(),
-    start.getDate()
-  );
-  const last = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-  while (cursor <= last) {
-    days.push(new Date(cursor));
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return days;
-}
-
 const PRESETS = [
   { label: 'Today', days: 0 },
   { label: 'Tomorrow', days: 1 },
@@ -294,23 +277,13 @@ export const Range: Story = {
 };
 
 // Range hover-preview: while a range is half-selected, hovering paints a
-// tentative rail (the `preview` modifier) from the start to the hovered day.
+// tentative rail from the start to the hovered day.
 export const RangeHoverPreview: Story = {
   render: function RangeHoverPreviewStory() {
     const [range, setRange] = React.useState<DateRange | undefined>({
       from: new Date(2025, 0, 8),
       to: undefined,
     });
-    const [hovered, setHovered] = React.useState<Date | undefined>();
-
-    // Tentative span from the committed start to the hovered day, minus the
-    // start itself (it already shows as the committed endpoint).
-    const preview =
-      range?.from && !range.to && hovered
-        ? daysBetween(range.from, hovered).filter(
-            (d) => d.getTime() !== range.from!.getTime()
-          )
-        : [];
 
     return (
       <Card className="nx:w-fit">
@@ -320,9 +293,6 @@ export const RangeHoverPreview: Story = {
             defaultMonth={REFERENCE_MONTH}
             selected={range}
             onSelect={setRange}
-            modifiers={{ preview }}
-            onDayMouseEnter={(day) => setHovered(day)}
-            onDayMouseLeave={() => setHovered(undefined)}
           />
         </CardContent>
       </Card>

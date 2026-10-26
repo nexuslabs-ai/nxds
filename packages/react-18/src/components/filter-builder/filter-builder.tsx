@@ -684,6 +684,8 @@ interface FilterBuilderProps extends Omit<
   disabled?: boolean;
   /** Limits how deep new groups go, with the root at zero. Deeper groups already in the tree show as invalid. */
   maxDepth?: number;
+  /** Accessible name for the root group. */
+  'aria-label'?: string;
 }
 const FilterBuilder = React.forwardRef<
   HTMLDivElement,

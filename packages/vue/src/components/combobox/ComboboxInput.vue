@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
+import { CommandInput, type CommandInputProps } from '../command';
 
-import { CommandInput } from '../command';
-
-export interface ComboboxInputProps {
-  class?: HTMLAttributes['class'];
-}
+export type ComboboxInputProps = CommandInputProps;
 
 const props = defineProps<ComboboxInputProps>();
+const emit = defineEmits<{ 'update:modelValue': [value: string] }>();
 </script>
 
 <template>
-  <CommandInput data-slot="combobox-input" :class="props.class" />
+  <CommandInput
+    v-bind="props"
+    data-slot="combobox-input"
+    @update:model-value="emit('update:modelValue', $event)"
+  />
 </template>

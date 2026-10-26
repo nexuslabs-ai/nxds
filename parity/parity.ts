@@ -121,6 +121,20 @@ export const vueOnlyApi: Record<string, string> = {
     'native <button> attribute React inherits from its props type; Vue declares it to pass on to Button',
   'ComboboxTrigger.type':
     "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
+  'ComboboxGroup.forceMount': CMDK_PROP,
+  'ComboboxGroup.heading': CMDK_PROP,
+  'ComboboxInput.modelValue':
+    "v-model search text; React's cmdk value prop is inherited from its props type",
+  'ComboboxInput.update:modelValue':
+    "v-model update; React's cmdk onValueChange is inherited from its props type",
+  'ComboboxItem.disabled': CMDK_PROP,
+  'ComboboxItem.forceMount': CMDK_PROP,
+  'ComboboxItem.keywords': CMDK_PROP,
+  'ComboboxItem.select':
+    "the item's value, as React's cmdk onSelect passes it, inherited from its props type",
+  'ComboboxItem.value': CMDK_PROP,
+  'ComboboxList.label': CMDK_PROP,
+  'ComboboxSeparator.alwaysRender': CMDK_PROP,
   'Command.label': CMDK_PROP,
   'Command.loop': CMDK_PROP,
   'Command.shouldFilter': CMDK_PROP,
@@ -179,7 +193,12 @@ export const vueOnlyApi: Record<string, string> = {
     "v-model code as a string; React's value is inherited from input-otp's props type",
   'InputOTP.update:modelValue':
     "v-model update with the code as a string; React's onChange is inherited from input-otp's props type",
+  'MultiSelectGroup.forceMount': CMDK_PROP,
+  'MultiSelectGroup.heading': CMDK_PROP,
+  'MultiSelectItem.disabled': CMDK_PROP,
+  'MultiSelectItem.forceMount': CMDK_PROP,
   'MultiSelectItem.keywords': CMDK_PROP,
+  'MultiSelectSeparator.alwaysRender': CMDK_PROP,
   'NativeSelect.defaultValue': NATIVE_DEFAULT_VALUE,
   'NativeSelect.modelValue': NATIVE_MODEL_VALUE,
   'NativeSelect.update:modelValue': NATIVE_MODEL_UPDATE,
@@ -192,6 +211,146 @@ export const vueOnlyApi: Record<string, string> = {
     "v-model update narrowed to the string values items take; React's onValueChange is inherited from Radix's props type",
   'ToggleGroupItem.value':
     "string, as Radix types it, so aria-checked matches Reka's pressed state; React inherits value from Radix's props type",
+};
+
+/**
+ * Packages whose components Vue rebuilds over Reka rather than inheriting a
+ * twin's props. The props check can't see the props React inherits from them.
+ */
+export const rebuiltPackages = ['cmdk', 'react-day-picker'];
+
+const CMDK_AS_CHILD =
+  "cmdk's Radix Primitive asChild; the Vue part renders its own element over Reka's Listbox";
+const CMDK_GROUP_VALUE =
+  'cmdk ranks a group by its value; Vue keeps groups in the order they are written (see command/SearchRanking)';
+const CMDK_SEARCH = 'Vue binds the search text with v-model as modelValue';
+const CMDK_HIGHLIGHT =
+  "cmdk's controlled highlighted item; Reka's Listbox keeps the highlight itself";
+const DAY_PICKER_NATIVE =
+  'native attribute react-day-picker redeclares; Vue passes it to the root as a fallthrough attribute';
+const DAY_PICKER_BOUNDS =
+  'Reka bounds navigation and picking with minValue and maxValue';
+const DAY_PICKER_PARTS =
+  "react-day-picker's per-part styling and rendering hooks; the Vue picker renders and styles its own parts";
+const DAY_PICKER_DAY_EVENT =
+  "Reka's day cells take no listeners from the root; listen on the #day-content slot's content";
+const DAY_PICKER_DATE_LIB =
+  'date-fns option; Reka dates are @internationalized/date values, which carry their own calendar and time zone';
+const DAY_PICKER_NOT_PORTED =
+  "react-day-picker option with no twin in Reka's Calendar, so the Vue picker doesn't take it";
+
+/**
+ * Props a React part inherits from a rebuilt package that the Vue part has no
+ * prop, slot or emit of the same name for, as `{Part}.{prop}`.
+ */
+export const reactOnlyInheritedProps: Record<string, string> = {
+  'ComboboxEmpty.asChild': CMDK_AS_CHILD,
+  'ComboboxGroup.asChild': CMDK_AS_CHILD,
+  'ComboboxGroup.value': CMDK_GROUP_VALUE,
+  'ComboboxInput.asChild': CMDK_AS_CHILD,
+  'ComboboxInput.onValueChange': CMDK_SEARCH,
+  'ComboboxInput.value': CMDK_SEARCH,
+  'ComboboxItem.asChild': CMDK_AS_CHILD,
+  'ComboboxList.asChild': CMDK_AS_CHILD,
+  'ComboboxSeparator.asChild': CMDK_AS_CHILD,
+  'Command.asChild': CMDK_AS_CHILD,
+  'Command.defaultValue': CMDK_HIGHLIGHT,
+  'Command.disablePointerSelection':
+    "Vue always highlights the hovered item, through Reka's highlightOnHover",
+  'Command.filter':
+    "Vue scores items with cmdk's own commandScore; set shouldFilter to false to filter them yourself",
+  'Command.onValueChange': CMDK_HIGHLIGHT,
+  'Command.value': CMDK_HIGHLIGHT,
+  'Command.vimBindings': "Reka's Listbox has no Ctrl+J/K/N/P bindings",
+  'CommandEmpty.asChild': CMDK_AS_CHILD,
+  'CommandGroup.asChild': CMDK_AS_CHILD,
+  'CommandGroup.value': CMDK_GROUP_VALUE,
+  'CommandInput.asChild': CMDK_AS_CHILD,
+  'CommandInput.onValueChange': CMDK_SEARCH,
+  'CommandInput.value': CMDK_SEARCH,
+  'CommandItem.asChild': CMDK_AS_CHILD,
+  'CommandList.asChild': CMDK_AS_CHILD,
+  'CommandLoading.asChild': CMDK_AS_CHILD,
+  'CommandSeparator.asChild': CMDK_AS_CHILD,
+  'DatePicker.animate': DAY_PICKER_NOT_PORTED,
+  'DatePicker.aria-label': DAY_PICKER_NATIVE,
+  'DatePicker.aria-labelledby': DAY_PICKER_NATIVE,
+  'DatePicker.autoFocus': 'Reka takes it as initialFocus',
+  'DatePicker.broadcastCalendar': DAY_PICKER_DATE_LIB,
+  'DatePicker.classNames': DAY_PICKER_PARTS,
+  'DatePicker.components': DAY_PICKER_PARTS,
+  'DatePicker.dateLib': DAY_PICKER_DATE_LIB,
+  'DatePicker.defaultMonth':
+    'Reka takes the starting month as defaultPlaceholder',
+  'DatePicker.disableNavigation': DAY_PICKER_NOT_PORTED,
+  'DatePicker.endMonth': DAY_PICKER_BOUNDS,
+  'DatePicker.excludeDisabled': DAY_PICKER_NOT_PORTED,
+  'DatePicker.firstWeekContainsDate': DAY_PICKER_DATE_LIB,
+  'DatePicker.formatters': DAY_PICKER_PARTS,
+  'DatePicker.fromDate': DAY_PICKER_BOUNDS,
+  'DatePicker.fromMonth': DAY_PICKER_BOUNDS,
+  'DatePicker.fromYear': DAY_PICKER_BOUNDS,
+  'DatePicker.hidden': DAY_PICKER_NOT_PORTED,
+  'DatePicker.hideNavigation': DAY_PICKER_NOT_PORTED,
+  'DatePicker.hideWeekdays': DAY_PICKER_NOT_PORTED,
+  'DatePicker.id': DAY_PICKER_NATIVE,
+  'DatePicker.ISOWeek': 'Vue starts the week on Monday with weekStartsOn: 1',
+  'DatePicker.labels': DAY_PICKER_PARTS,
+  'DatePicker.lang': DAY_PICKER_NATIVE,
+  'DatePicker.max': DAY_PICKER_NOT_PORTED,
+  'DatePicker.min': DAY_PICKER_NOT_PORTED,
+  'DatePicker.modifiers':
+    "Reka marks days with isDateDisabled and isDateUnavailable, and the #day-content slot reads each day's state",
+  'DatePicker.modifiersClassNames': DAY_PICKER_PARTS,
+  'DatePicker.modifiersStyles': DAY_PICKER_PARTS,
+  'DatePicker.month':
+    "Vue binds the shown month with v-model:placeholder, Reka's name for it",
+  'DatePicker.navLayout': DAY_PICKER_NOT_PORTED,
+  'DatePicker.nonce': DAY_PICKER_NOT_PORTED,
+  'DatePicker.noonSafe': DAY_PICKER_DATE_LIB,
+  'DatePicker.numerals': DAY_PICKER_DATE_LIB,
+  'DatePicker.onDayBlur': DAY_PICKER_DAY_EVENT,
+  'DatePicker.onDayClick': DAY_PICKER_DAY_EVENT,
+  'DatePicker.onDayFocus': DAY_PICKER_DAY_EVENT,
+  'DatePicker.onDayKeyDown': DAY_PICKER_DAY_EVENT,
+  'DatePicker.onDayKeyPress': DAY_PICKER_DAY_EVENT,
+  'DatePicker.onDayKeyUp': DAY_PICKER_DAY_EVENT,
+  'DatePicker.onDayMouseEnter': DAY_PICKER_DAY_EVENT,
+  'DatePicker.onDayMouseLeave': DAY_PICKER_DAY_EVENT,
+  'DatePicker.onDayPointerEnter': DAY_PICKER_DAY_EVENT,
+  'DatePicker.onDayPointerLeave': DAY_PICKER_DAY_EVENT,
+  'DatePicker.onDayTouchCancel': DAY_PICKER_DAY_EVENT,
+  'DatePicker.onDayTouchEnd': DAY_PICKER_DAY_EVENT,
+  'DatePicker.onDayTouchMove': DAY_PICKER_DAY_EVENT,
+  'DatePicker.onDayTouchStart': DAY_PICKER_DAY_EVENT,
+  'DatePicker.onMonthChange':
+    "Vue binds the shown month with v-model:placeholder, Reka's name for it",
+  'DatePicker.onNextClick': DAY_PICKER_NOT_PORTED,
+  'DatePicker.onPrevClick': DAY_PICKER_NOT_PORTED,
+  'DatePicker.onSelect':
+    'Vue binds the date, dates or range with v-model as modelValue',
+  'DatePicker.onWeekNumberClick': DAY_PICKER_NOT_PORTED,
+  'DatePicker.required': 'Reka takes it as preventDeselect',
+  'DatePicker.resetOnSelect': DAY_PICKER_NOT_PORTED,
+  'DatePicker.reverseMonths': DAY_PICKER_NOT_PORTED,
+  'DatePicker.reverseYears': DAY_PICKER_NOT_PORTED,
+  'DatePicker.role': DAY_PICKER_NATIVE,
+  'DatePicker.selected':
+    'Vue binds the date, dates or range with v-model as modelValue',
+  'DatePicker.showWeekNumber': DAY_PICKER_NOT_PORTED,
+  'DatePicker.startMonth': DAY_PICKER_BOUNDS,
+  'DatePicker.styles': DAY_PICKER_PARTS,
+  'DatePicker.timeZone': DAY_PICKER_DATE_LIB,
+  'DatePicker.title': DAY_PICKER_NATIVE,
+  'DatePicker.toDate': DAY_PICKER_BOUNDS,
+  'DatePicker.toMonth': DAY_PICKER_BOUNDS,
+  'DatePicker.toYear': DAY_PICKER_BOUNDS,
+  'DatePicker.useAdditionalDayOfYearTokens': DAY_PICKER_DATE_LIB,
+  'DatePicker.useAdditionalWeekYearTokens': DAY_PICKER_DATE_LIB,
+  'MultiSelectGroup.asChild': CMDK_AS_CHILD,
+  'MultiSelectGroup.value': CMDK_GROUP_VALUE,
+  'MultiSelectItem.asChild': CMDK_AS_CHILD,
+  'MultiSelectSeparator.asChild': CMDK_AS_CHILD,
 };
 
 const V_MODEL = 'v-model binding, a Vue idiom with no React counterpart';
@@ -242,6 +401,8 @@ const TABS_INDICATOR =
 /** Paired play stories whose steps differ by design, as `{slug}/{Story}`. */
 export const behaviourDifferences: Record<string, string> = {
   'avatar/CroppedImage': AVATAR_IMAGE_LOAD,
+  'command/SearchRanking':
+    'cmdk sorts the matches by score; Vue keeps them in the order they are written, since sorting would move DOM nodes Vue owns, so Enter runs another item',
   'date-picker/Accessibility':
     "react-day-picker labels a day 'Today, Wednesday, January 15th, 2025, selected'; Reka labels it 'Wednesday, January 15, 2025' and marks selection with aria-selected on the cell, so Vue checks those",
   'avatar/WithDataAttributes': AVATAR_IMAGE_LOAD,

@@ -1,17 +1,11 @@
 <script setup lang="ts">
 import { IconSearch } from '@tabler/icons-vue';
 import { ListboxFilter } from 'reka-ui';
-import { type HTMLAttributes, watch } from 'vue';
+import { watch } from 'vue';
 
 import { cn } from '../../lib/utils';
 
-import { injectCommand } from '.';
-
-export interface CommandInputProps {
-  /** The search text. Bind it with `v-model` to read or set the search. */
-  modelValue?: string;
-  class?: HTMLAttributes['class'];
-}
+import { type CommandInputProps, injectCommand } from '.';
 
 defineOptions({ inheritAttrs: false });
 

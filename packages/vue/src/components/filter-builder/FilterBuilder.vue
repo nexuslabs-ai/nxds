@@ -32,14 +32,15 @@ export interface FilterBuilderProps {
   disabled?: boolean;
   /** Limits how deep new groups go, with the root at zero. Deeper groups already in the tree show as invalid. */
   maxDepth?: number;
+  /** Accessible name for the root group. */
+  ariaLabel?: string;
   class?: HTMLAttributes['class'];
 }
-
-defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<FilterBuilderProps>(), {
   disabled: false,
   maxDepth: 3,
+  ariaLabel: 'Filters',
 });
 const emit = defineEmits<{ 'value-change': [value: FilterGroup] }>();
 
@@ -69,7 +70,6 @@ function markEdited(id: string) {
 
 <template>
   <div
-    v-bind="{ ...$attrs, 'aria-label': undefined }"
     data-slot="filter-builder"
     :data-disabled="disabled || undefined"
     :class="
@@ -86,7 +86,7 @@ function markEdited(id: string) {
       :depth="0"
       :max-depth="maxDepth"
       :errors="errors"
-      :label="($attrs['aria-label'] as string | undefined) ?? 'Filters'"
+      :label="ariaLabel"
       :create-id="createId"
       @value-change="emit('value-change', $event)"
       @rule-edited="markEdited"

@@ -770,9 +770,6 @@ importers:
 
   packages/vue:
     dependencies:
-      '@internationalized/date':
-        specifier: ^3.5.0
-        version: 3.12.4
       '@nxds/core':
         specifier: workspace:*
         version: link:../core
@@ -798,6 +795,9 @@ importers:
         specifier: ^3.4.0
         version: 3.6.0
     devDependencies:
+      '@internationalized/date':
+        specifier: ^3.5.0
+        version: 3.12.4
       '@storybook/addon-a11y':
         specifier: ^10.4.2
         version: 10.4.2(storybook@10.4.2(@testing-library/dom@10.4.1)(@types/react@19.2.16)(prettier@3.8.3)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))
@@ -879,6 +879,9 @@ importers:
       '@vitejs/plugin-vue':
         specifier: ^6.0.10
         version: 6.0.10(vite@7.3.5(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))(vue@3.5.44(typescript@5.9.3))
+      cmdk:
+        specifier: ^1.1.1
+        version: 1.1.1(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       dom-accessibility-api:
         specifier: ^0.6.3
         version: 0.6.3

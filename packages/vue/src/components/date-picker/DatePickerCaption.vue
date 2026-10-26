@@ -31,10 +31,11 @@ const months = computed(() =>
     }),
   }))
 );
-// The year dropdown runs from a century before today to the end of this year.
+// The years run between the bounds the DatePicker sets in dropdown layout.
 const years = computed(() => {
-  const latest = datePicker.today.value.year;
-  return Array.from({ length: 101 }, (_, index) => latest - 100 + index);
+  const first = root?.minValue.value?.year ?? datePicker.today.value.year;
+  const last = root?.maxValue.value?.year ?? datePicker.today.value.year;
+  return Array.from({ length: last - first + 1 }, (_, index) => first + index);
 });
 
 function showMonth(event: Event) {

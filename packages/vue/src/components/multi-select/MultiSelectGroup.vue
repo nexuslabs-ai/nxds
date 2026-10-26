@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
+import { CommandGroup, type CommandGroupProps } from '../command';
 
-import { CommandGroup } from '../command';
+export type MultiSelectGroupProps = CommandGroupProps;
 
-export interface MultiSelectGroupProps {
-  class?: HTMLAttributes['class'];
-}
-
-const props = defineProps<MultiSelectGroupProps>();
+const props = withDefaults(defineProps<MultiSelectGroupProps>(), {
+  forceMount: false,
+});
 </script>
 
 <template>
-  <CommandGroup data-slot="multi-select-group" :class="props.class">
+  <CommandGroup v-bind="props" data-slot="multi-select-group">
     <slot />
   </CommandGroup>
 </template>

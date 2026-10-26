@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
+import { CommandSeparator, type CommandSeparatorProps } from '../command';
 
-import { CommandSeparator } from '../command';
+export type MultiSelectSeparatorProps = CommandSeparatorProps;
 
-export interface MultiSelectSeparatorProps {
-  class?: HTMLAttributes['class'];
-}
-
-const props = defineProps<MultiSelectSeparatorProps>();
+const props = withDefaults(defineProps<MultiSelectSeparatorProps>(), {
+  alwaysRender: false,
+});
 </script>
 
 <template>
-  <CommandSeparator data-slot="multi-select-separator" :class="props.class" />
+  <CommandSeparator v-bind="props" data-slot="multi-select-separator" />
 </template>

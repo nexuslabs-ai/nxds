@@ -1,17 +1,9 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes, provide, useId } from 'vue';
+import { computed, provide, toRef, useId } from 'vue';
 
 import { cn } from '../../lib/utils';
 
-import { CommandGroupKey, injectCommand } from '.';
-
-export interface CommandGroupProps {
-  /** Heading shown above the group's items. Screen readers read it as the group's name. */
-  heading?: string;
-  /** Shows the group whatever the search. */
-  forceMount?: boolean;
-  class?: HTMLAttributes['class'];
-}
+import { CommandGroupKey, type CommandGroupProps, injectCommand } from '.';
 
 const props = withDefaults(defineProps<CommandGroupProps>(), {
   forceMount: false,
@@ -21,7 +13,7 @@ const command = injectCommand();
 const id = useId();
 const headingId = useId();
 
-provide(CommandGroupKey, { id, forceMount: props.forceMount });
+provide(CommandGroupKey, { id, forceMount: toRef(props, 'forceMount') });
 
 const shown = computed(() => props.forceMount || command.isGroupShown(id));
 </script>

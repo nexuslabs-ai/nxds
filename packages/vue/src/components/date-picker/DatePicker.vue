@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import {
   type DateValue,
+  endOfYear,
   getLocalTimeZone,
+  startOfYear,
   today as todayIn,
 } from '@internationalized/date';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-vue';
@@ -105,6 +107,23 @@ const forwarded = useForwardPropsEmits(delegated, emits);
 // shape; the type system can't see that across the two roots.
 const rootProps = computed(() => forwarded.value as Record<string, unknown>);
 
+const today = computed(() => props.today ?? todayIn(getLocalTimeZone()));
+
+// The year dropdown runs from a century back to the end of this year, so
+// navigation stops there too unless the app sets its own bounds.
+const minValue = computed(
+  () =>
+    props.minValue ??
+    (props.captionLayout === 'dropdown'
+      ? startOfYear(today.value.subtract({ years: 100 }))
+      : undefined)
+);
+const maxValue = computed(
+  () =>
+    props.maxValue ??
+    (props.captionLayout === 'dropdown' ? endOfYear(today.value) : undefined)
+);
+
 const cellSizeClassNames: Record<DatePickerCellSize, string> = {
   default:
     'nx:[--cell-size:var(--nx-spacing-8)] nx:[--today-marker-size:var(--nx-spacing-6)]',
@@ -140,7 +159,7 @@ const parts = computed(() =>
 
 provide(DatePickerKey, {
   mode: toRef(props, 'mode'),
-  today: computed(() => props.today ?? todayIn(getLocalTimeZone())),
+  today,
   showOutsideDays: toRef(props, 'showOutsideDays'),
   captionLayout: toRef(props, 'captionLayout'),
   dayContent: () => slots['day-content'],
@@ -159,6 +178,8 @@ const navButtonClass = computed(() =>
     :is="parts.Root"
     v-slot="{ grid, weekDays }"
     v-bind="rootProps"
+    :min-value="minValue"
+    :max-value="maxValue"
     :multiple="mode === 'multiple' ? true : undefined"
     weekday-format="short"
     data-slot="date-picker"

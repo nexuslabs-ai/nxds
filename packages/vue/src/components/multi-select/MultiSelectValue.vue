@@ -98,8 +98,14 @@ function removeChip(event: MouseEvent, value: string) {
   toggle(value);
 }
 
-const ChipLabel: FunctionalComponent<{ value: string }> = ({ value }) =>
-  labels().get(value)?.() ?? value;
+// Reads every option's label in one walk of MultiSelect's slot per render.
+const WithLabels: FunctionalComponent = (_, { slots }) =>
+  slots.default?.({ labels: labels() });
+
+const ChipLabel: FunctionalComponent<{
+  label: (() => VNode[]) | undefined;
+  value: string;
+}> = ({ label, value }) => label?.() ?? value;
 </script>
 
 <template>
@@ -122,29 +128,33 @@ const ChipLabel: FunctionalComponent<{ value: string }> = ({ value }) =>
       )
     "
   >
-    <Badge
-      v-for="value in selectedValues"
-      :key="value"
-      data-slot="multi-select-chip"
-      data-selected-item="true"
-      variant="secondary"
-      fill="outline"
-      :is-caps="false"
-      :class="
-        cn(
-          'nx:group/chip nx:max-w-40 nx:gap-1',
-          clickToRemove && 'nx:cursor-pointer'
-        )
-      "
-      @click="clickToRemove ? removeChip($event, value) : undefined"
-    >
-      <span class="nx:truncate"><ChipLabel :value="value" /></span>
-      <IconX
-        v-if="clickToRemove"
-        aria-hidden="true"
-        class="nx:size-3 nx:text-muted-foreground nx:transition-colors nx:group-hover/chip:text-error-subtle-foreground"
-      />
-    </Badge>
+    <WithLabels v-slot="{ labels: chipLabels }">
+      <Badge
+        v-for="value in selectedValues"
+        :key="value"
+        data-slot="multi-select-chip"
+        data-selected-item="true"
+        variant="secondary"
+        fill="outline"
+        :is-caps="false"
+        :class="
+          cn(
+            'nx:group/chip nx:max-w-40 nx:gap-1',
+            clickToRemove && 'nx:cursor-pointer'
+          )
+        "
+        @click="clickToRemove ? removeChip($event, value) : undefined"
+      >
+        <span class="nx:truncate"
+          ><ChipLabel :label="chipLabels.get(value)" :value="value"
+        /></span>
+        <IconX
+          v-if="clickToRemove"
+          aria-hidden="true"
+          class="nx:size-3 nx:text-muted-foreground nx:transition-colors nx:group-hover/chip:text-error-subtle-foreground"
+        />
+      </Badge>
+    </WithLabels>
     <Badge
       data-slot="multi-select-overflow"
       variant="secondary"

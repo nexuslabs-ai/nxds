@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
+import { CommandSeparator, type CommandSeparatorProps } from '../command';
 
-import { CommandSeparator } from '../command';
+export type ComboboxSeparatorProps = CommandSeparatorProps;
 
-export interface ComboboxSeparatorProps {
-  class?: HTMLAttributes['class'];
-}
-
-const props = defineProps<ComboboxSeparatorProps>();
+const props = withDefaults(defineProps<ComboboxSeparatorProps>(), {
+  alwaysRender: false,
+});
 </script>
 
 <template>
-  <CommandSeparator data-slot="combobox-separator" :class="props.class" />
+  <CommandSeparator v-bind="props" data-slot="combobox-separator" />
 </template>

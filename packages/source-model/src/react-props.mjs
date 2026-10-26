@@ -169,16 +169,12 @@ function byNameThenSource(a, b) {
   );
 }
 
-/** One props file per component folder that exports a component, in slug order. */
-export function reactPropsFiles() {
-  const slugs = componentSlugs();
-
+function createReactProgram(slugs) {
   const sourceFiles = slugs
     .flatMap((slug) =>
       collectSourceFiles(path.join(componentsRoot, slug), isComponentSource)
     )
     .sort();
-  const parsedPaths = new Set(sourceFiles.map(toRepoPath));
 
   const compilerOptions = ts.parseJsonConfigFileContent(
     ts.readConfigFile(reactTsconfig, ts.sys.readFile).config,
@@ -198,6 +194,60 @@ export function reactPropsFiles() {
     containingFile: path.join(reactSrc, 'index.ts'),
   });
 
+  return { sourceFiles, compilerOptions, program };
+}
+
+/**
+ * The props each public component takes from the types of one of `packages`,
+ * by component name. The props files leave these out, as they do every prop a
+ * dependency declares.
+ */
+export function reactPackageProps(packages) {
+  const { program } = createReactProgram(componentSlugs());
+  const checker = program.getTypeChecker();
+  const components = publicComponents(
+    checker,
+    publicExports(checker, program, entryPoints),
+    componentsRoot
+  );
+  const isFromPackage = (declaration) =>
+    packages.some((name) =>
+      declaration.getSourceFile().fileName.includes(`/node_modules/${name}/`)
+    );
+
+  return new Map(
+    [...components].map(([name, symbol]) => {
+      const declaration = symbol.declarations[0];
+      const type = checker.getTypeOfSymbolAtLocation(symbol, declaration);
+      const props = new Set();
+      for (const signature of checker.getSignaturesOfType(
+        type,
+        ts.SignatureKind.Call
+      )) {
+        const [propsSymbol] = signature.parameters;
+        if (!propsSymbol) continue;
+        const propsType = checker.getTypeOfSymbolAtLocation(
+          propsSymbol,
+          declaration
+        );
+        // A union of props types, such as DayPicker's one per mode, takes each member's props.
+        const members = propsType.isUnion() ? propsType.types : [propsType];
+        for (const member of members) {
+          for (const prop of checker.getPropertiesOfType(member)) {
+            if (prop.declarations?.some(isFromPackage)) props.add(prop.name);
+          }
+        }
+      }
+      return [name, [...props].sort()];
+    })
+  );
+}
+
+/** One props file per component folder that exports a component, in slug order. */
+export function reactPropsFiles() {
+  const slugs = componentSlugs();
+  const { sourceFiles, compilerOptions, program } = createReactProgram(slugs);
+  const parsedPaths = new Set(sourceFiles.map(toRepoPath));
   const checker = program.getTypeChecker();
 
   const exported = publicExports(checker, program, entryPoints);

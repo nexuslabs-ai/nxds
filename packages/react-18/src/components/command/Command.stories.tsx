@@ -575,6 +575,43 @@ export const KeyboardInteraction: Story = {
   },
 };
 
+// cmdk sorts the matches by score, so the exact match moves above the
+// partial one and Enter runs it.
+export const SearchRanking: Story = {
+  render: function SearchRankingStory() {
+    const [selected, setSelected] = React.useState('none');
+    return (
+      <div className="nx:flex nx:flex-col nx:gap-4">
+        <Command label="Command menu" className={paletteClass}>
+          <CommandInput placeholder="Type a command or search..." />
+          <CommandList>
+            <CommandItem value="open recent" onSelect={setSelected}>
+              Open recent
+            </CommandItem>
+            <CommandItem value="open" onSelect={setSelected}>
+              Open
+            </CommandItem>
+          </CommandList>
+        </Command>
+        <p data-testid="last-selected">Selected: {selected}</p>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(canvas.getByRole('combobox'), 'open');
+    await waitFor(() =>
+      expect(canvas.getAllByRole('option')[0]).toHaveTextContent(/^Open$/)
+    );
+
+    await userEvent.keyboard('{Enter}');
+    await expect(canvas.getByTestId('last-selected')).toHaveTextContent(
+      'Selected: open'
+    );
+  },
+};
+
 export const WithDataAttributes: Story = {
   render: () => (
     <Command label="Command menu" className={paletteClass}>

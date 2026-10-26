@@ -2,7 +2,6 @@
 import { injectListboxRootContext, ListboxItem } from 'reka-ui';
 import {
   computed,
-  type HTMLAttributes,
   inject,
   onMounted,
   onUnmounted,
@@ -15,19 +14,7 @@ import {
 
 import { cn } from '../../lib/utils';
 
-import { CommandGroupKey, injectCommand } from '.';
-
-export interface CommandItemProps {
-  /** What the search matches and `select` passes. Defaults to the item's text. */
-  value?: string;
-  /** More words the search matches, such as synonyms. */
-  keywords?: string[];
-  /** Shows the item dimmed and skips it in keyboard navigation. */
-  disabled?: boolean;
-  /** Shows the item whatever the search. */
-  forceMount?: boolean;
-  class?: HTMLAttributes['class'];
-}
+import { CommandGroupKey, type CommandItemProps, injectCommand } from '.';
 
 defineOptions({ inheritAttrs: false });
 
@@ -60,7 +47,7 @@ const entry = computed(() => ({
 }));
 
 const forceMount = computed(
-  () => props.forceMount ?? group?.forceMount ?? false
+  () => props.forceMount ?? group?.forceMount.value ?? false
 );
 
 watch(
@@ -112,7 +99,11 @@ const itemAttrs = computed(() => ({
 </script>
 
 <template>
-  <template v-if="shown">
+  <!-- A hidden item still renders its content, so the search can read its text. -->
+  <div v-if="!shown" ref="element" hidden>
+    <slot />
+  </div>
+  <template v-else>
     <!-- A disabled item stays out of Reka's collection, so arrow keys skip it. -->
     <div
       v-if="disabled"

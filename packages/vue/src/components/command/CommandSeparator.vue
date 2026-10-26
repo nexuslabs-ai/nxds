@@ -1,15 +1,7 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
-
 import { cn } from '../../lib/utils';
 
-import { injectCommand } from '.';
-
-export interface CommandSeparatorProps {
-  /** Keeps the separator while a search is active. */
-  alwaysRender?: boolean;
-  class?: HTMLAttributes['class'];
-}
+import { type CommandSeparatorProps, injectCommand } from '.';
 
 const props = withDefaults(defineProps<CommandSeparatorProps>(), {
   alwaysRender: false,

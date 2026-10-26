@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
+import { CommandList, type CommandListProps } from '../command';
 
-import { CommandList } from '../command';
-
-export interface ComboboxListProps {
-  class?: HTMLAttributes['class'];
-}
+export type ComboboxListProps = CommandListProps;
 
 const props = defineProps<ComboboxListProps>();
 </script>
 
 <template>
-  <CommandList data-slot="combobox-list" :class="props.class">
+  <CommandList v-bind="props" data-slot="combobox-list">
     <slot />
   </CommandList>
 </template>

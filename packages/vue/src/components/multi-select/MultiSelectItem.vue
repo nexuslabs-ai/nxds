@@ -1,21 +1,26 @@
 <script setup lang="ts">
 import { IconCheck } from '@tabler/icons-vue';
-import { type HTMLAttributes, Text, type VNode } from 'vue';
+import { Text, type VNode } from 'vue';
 
 import { renderedNodes } from '../../lib/slots';
 import { cn } from '../../lib/utils';
-import { CommandItem } from '../command';
+import { CommandItem, type CommandItemProps } from '../command';
 
 import { injectMultiSelect } from '.';
 
-export interface MultiSelectItemProps {
+export interface MultiSelectItemProps extends Omit<
+  CommandItemProps,
+  'value' | 'keywords'
+> {
   value: string;
   /** More words the search matches. Defaults to the option's text. */
   keywords?: string[];
-  class?: HTMLAttributes['class'];
 }
 
-const props = defineProps<MultiSelectItemProps>();
+const props = withDefaults(defineProps<MultiSelectItemProps>(), {
+  disabled: false,
+  forceMount: undefined,
+});
 const emit = defineEmits<{
   /**
    * Called with the option's value after it is toggled.
@@ -57,6 +62,8 @@ function searchKeywords() {
     :data-checked="selectedValues.has(value) || undefined"
     :value="value"
     :keywords="searchKeywords()"
+    :disabled="disabled"
+    :force-mount="forceMount"
     :class="cn('nx:gap-2', props.class)"
     @select="handleSelect"
   >
