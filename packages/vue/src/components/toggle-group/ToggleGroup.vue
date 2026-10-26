@@ -13,6 +13,43 @@ import type { ToggleVariants } from '../toggle';
 
 import { ToggleGroupKey } from '.';
 
+/** A step on the spacing scale. Each one has its own `--nx-spacing-*` variable. */
+type ToggleGroupSpacing =
+  | 0
+  | 0.5
+  | 1
+  | 1.5
+  | 2
+  | 2.5
+  | 3
+  | 3.5
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 14
+  | 16
+  | 20
+  | 24
+  | 28
+  | 32
+  | 36
+  | 40
+  | 44
+  | 48
+  | 52
+  | 56
+  | 60
+  | 64
+  | 72
+  | 80
+  | 96;
+
 export interface ToggleGroupProps extends ToggleGroupRootProps<
   string | string[]
 > {
@@ -22,7 +59,7 @@ export interface ToggleGroupProps extends ToggleGroupRootProps<
    * Gap between items, in spacing-scale units. `0` joins them into one
    * segmented control. A larger value splits them into separate pills.
    */
-  spacing?: number;
+  spacing?: ToggleGroupSpacing;
   class?: HTMLAttributes['class'];
 }
 

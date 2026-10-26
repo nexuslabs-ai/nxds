@@ -5,6 +5,8 @@
 // with that class. Each text style's class carries the declarations of the
 // `nx:typography-*` utility it mirrors, so it reads the same variables as the
 // components.
+import { RUNTIME_LAYER_ORDER } from '@nxds/core';
+
 import {
   familyVariable,
   type ListToken,
@@ -13,10 +15,6 @@ import {
 } from './tokens.ts';
 
 const TOKENS_CSS_HEADER = '/* nxds — generated from tokens.json */';
-
-/** The order `inRuntimeLayer` from @nxds/core declares, whichever file loads first. */
-const LAYER_ORDER =
-  '@layer properties, theme, base, components, utilities, nx-runtime;';
 
 /** The families tokens.css declares under the theme selectors. */
 const THEMED_FAMILIES = new Set(['color', 'shadow']);
@@ -28,6 +26,7 @@ const LIST_FAMILY_KEYS = [
   'shadow',
   'borderWidth',
   'zIndex',
+  'motion',
   'typeScale',
 ] as const;
 
@@ -118,7 +117,7 @@ export function compileTokensCss(
 
   return [
     TOKENS_CSS_HEADER,
-    LAYER_ORDER,
+    RUNTIME_LAYER_ORDER,
     '@layer theme {',
     ...block(`:root, [data-theme="${first}"]`, firstTheme, '  '),
     ...laterThemes,

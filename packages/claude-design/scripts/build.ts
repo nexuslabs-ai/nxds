@@ -30,12 +30,12 @@ import {
   renderCoverage,
   renderIndexDts,
 } from '../src/props.ts';
-import { componentReads } from '../src/reads.ts';
+import { componentReads, variablesRead } from '../src/reads.ts';
 import { buildStyles } from '../src/styles.ts';
 import { buildSystemIndex } from '../src/system-index.ts';
 import { buildTokens, typeStyleRules } from '../src/tokens.ts';
 import { compileTokensCss } from '../src/tokens-css.ts';
-import { declaredNames, validateSystem } from '../src/validate.ts';
+import { validateSystem } from '../src/validate.ts';
 
 const packageRoot = path.join(import.meta.dirname, '..');
 const contentDir = path.join(packageRoot, 'content');
@@ -121,7 +121,13 @@ async function main() {
 
   const folders = componentFolders();
   const reads = await componentReads(folders);
-  const tokens = buildTokens({ version, ref: gitRef(), reads });
+  const styles = await buildStyles();
+  const tokens = buildTokens({
+    version,
+    ref: gitRef(),
+    reads,
+    stylesheetReads: variablesRead(styles),
+  });
   const tokensCss = compileTokensCss(tokens, typeStyleRules());
   write('tokens.json', `${JSON.stringify(tokens, null, 2)}\n`);
   write('tokens.css', tokensCss);
@@ -133,7 +139,7 @@ async function main() {
 
   const { code } = await buildBundle(folders);
   write('components/bundle.js', code);
-  write('components/bundle.css', await buildStyles(declaredNames(tokensCss)));
+  write('components/bundle.css', styles);
 
   const parts = flatComponents();
   write('components/index.d.ts', renderIndexDts(parts));

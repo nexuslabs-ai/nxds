@@ -8,9 +8,46 @@ import type { VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 import { toggleVariants } from '../toggle/toggle';
 
+/** A step on the spacing scale. Each one has its own `--nx-spacing-*` variable. */
+type ToggleGroupSpacing =
+  | 0
+  | 0.5
+  | 1
+  | 1.5
+  | 2
+  | 2.5
+  | 3
+  | 3.5
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 14
+  | 16
+  | 20
+  | 24
+  | 28
+  | 32
+  | 36
+  | 40
+  | 44
+  | 48
+  | 52
+  | 56
+  | 60
+  | 64
+  | 72
+  | 80
+  | 96;
+
 const ToggleGroupContext = React.createContext<
   VariantProps<typeof toggleVariants> & {
-    spacing: number;
+    spacing: ToggleGroupSpacing;
     orientation: 'horizontal' | 'vertical';
   }
 >({
@@ -30,7 +67,7 @@ type ToggleGroupProps = React.ComponentProps<typeof ToggleGroupPrimitive.Root> &
      * Gap between items, in spacing-scale units. `0` joins them into one
      * segmented control. A larger value splits them into separate pills.
      */
-    spacing?: number;
+    spacing?: ToggleGroupSpacing;
   };
 
 /**

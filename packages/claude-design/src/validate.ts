@@ -7,6 +7,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import postcss from 'postcss';
 
+import { DYNAMIC_VARIABLE, variablesRead } from './reads.ts';
 import { IDENTIFIER, isPageGenerated, validateIndex } from './system-index.ts';
 import { familyVariable, type TokensFile } from './tokens.ts';
 import { compileTokensCss, listFamilies } from './tokens-css.ts';
@@ -345,8 +346,10 @@ const STYLE_FIELDS: Record<
   'letter-spacing': 'letterSpacing',
 };
 
-// The text style classes read variables, so each one must resolve, through
-// tokens.json, to the literal values its style lists.
+// tokens.css carries each text style's rule, so the compile can't check it.
+// Instead every field the style lists needs a declaration that resolves,
+// through tokens.json, to its value, and every other declaration is the
+// family's variable or a literal.
 function checkStyleValues(
   tokens: TokensFile,
   rules: Map<string, string[]>,
@@ -369,30 +372,42 @@ function checkStyleValues(
   for (const group of tokens.type.groups) {
     for (const style of group.styles) {
       const where = `tokens.css .${style.name}`;
-      for (const line of rules.get(style.name) ?? []) {
-        const [, property = '', value = ''] =
-          /^([\w-]+): (.*);$/.exec(line) ?? [];
-        if (property === 'font-family') {
-          if (
-            value !== `var(${familyVariable(style.family ?? group.family)})`
-          ) {
-            errors.push(`${where}: font-family isn't its family's variable.`);
+      const declarations = new Map(
+        (rules.get(style.name) ?? []).map((line) => {
+          const [, property = '', value = ''] =
+            /^([\w-]+): (.*);$/.exec(line) ?? [];
+          return [property, value];
+        })
+      );
+      const family = `var(${familyVariable(style.family ?? group.family)})`;
+      if (declarations.get('font-family') !== family) {
+        errors.push(`${where}: font-family isn't its family's variable.`);
+      }
+      for (const [property, field] of Object.entries(STYLE_FIELDS)) {
+        if (style[field] !== undefined && !declarations.has(property)) {
+          errors.push(`${where}: declares no ${property}.`);
+        }
+      }
+      for (const [property, value] of declarations) {
+        if (property === 'font-family') continue;
+        const field = STYLE_FIELDS[property];
+        const listed = field ? style[field] : undefined;
+        if (listed === undefined) {
+          if (value.includes('var(')) {
+            errors.push(
+              `${where}: ${property} reads a variable, but tokens.json lists no value for it.`
+            );
           }
           continue;
         }
-        const field = STYLE_FIELDS[property];
-        if (!field) continue;
         const resolved = resolve(value);
         if (resolved.includes('var(')) {
           errors.push(
             `${where}: ${property} reads a variable tokens.json doesn't list.`
           );
-        } else if (
-          style[field] !== undefined &&
-          String(style[field]) !== resolved
-        ) {
+        } else if (String(listed) !== resolved) {
           errors.push(
-            `${where}: ${property} is ${resolved}, but tokens.json lists ${style[field]}.`
+            `${where}: ${property} is ${resolved}, but tokens.json lists ${listed}.`
           );
         }
       }
@@ -417,7 +432,7 @@ function checkTokensCss(tokens: TokensFile, css: string, errors: string[]) {
 }
 
 /** Every custom property `css` declares. */
-export function declaredNames(css: string) {
+function declaredNames(css: string) {
   const names = new Set<string>();
   postcss.parse(css).walkDecls((declaration) => {
     if (declaration.prop.startsWith('--')) names.add(declaration.prop);
@@ -487,8 +502,14 @@ function checkBundle(
 
 // An appearance preset's selector, such as `[data-density='compact']`.
 const PRESET = /\[data-(?!theme=)[\w-]+=/;
-const VARIABLE = /var\((--nx-[\w-]+)\)/g;
-const DYNAMIC_VARIABLE = /var\((--nx-[\w-]*-)\$\{/g;
+
+function inPreset(declaration: postcss.Declaration) {
+  const rule = declaration.parent;
+  return (
+    rule?.type === 'rule' &&
+    (rule as postcss.Rule).selectors.every((selector) => PRESET.test(selector))
+  );
+}
 
 function readText(root: string, file: string) {
   const full = path.join(root, file);
@@ -506,16 +527,7 @@ function checkStylesheet(
   if (/<\/style/i.test(css))
     errors.push('components/bundle.css: contains a literal </style.');
   postcss.parse(css).walkDecls((declaration) => {
-    if (!tokenNames.has(declaration.prop)) return;
-    const rule = declaration.parent;
-    if (
-      rule?.type === 'rule' &&
-      (rule as postcss.Rule).selectors.every((selector) =>
-        PRESET.test(selector)
-      )
-    ) {
-      return;
-    }
+    if (!tokenNames.has(declaration.prop) || inPreset(declaration)) return;
     errors.push(
       `components/bundle.css: declares ${declaration.prop} outside an appearance preset; tokens.css owns its default.`
     );
@@ -527,7 +539,7 @@ function readNames(root: string) {
   const bundle = readText(root, 'components/bundle.js');
   const names = new Set<string>();
   const add = (text: string) => {
-    for (const [, name = ''] of text.matchAll(VARIABLE)) names.add(name);
+    for (const name of variablesRead(text)) names.add(name);
   };
   add(bundle);
   add(readText(root, 'tokens.css'));
@@ -541,7 +553,8 @@ function readNames(root: string) {
 }
 
 // A token no component reads says it is for authors, and nothing the
-// components read is left undeclared.
+// components read is left undeclared. A preset only overrides a value, so
+// what it declares doesn't count.
 function checkReads(
   root: string,
   tokens: TokensFile | undefined,
@@ -561,16 +574,17 @@ function checkReads(
       );
     }
   }
-  const declared = new Set([
-    ...tokenNames,
-    ...declaredNames(readText(root, 'components/bundle.css')),
-  ]);
-  const all = new Set<string>();
-  for (const file of ['components/bundle.js', 'components/bundle.css']) {
-    for (const [, name = ''] of readText(root, file).matchAll(VARIABLE)) {
-      all.add(name);
-    }
-  }
+  const declared = new Set(tokenNames);
+  postcss
+    .parse(readText(root, 'components/bundle.css'))
+    .walkDecls((declaration) => {
+      if (!inPreset(declaration)) declared.add(declaration.prop);
+    });
+  const all = new Set(
+    ['components/bundle.js', 'components/bundle.css'].flatMap((file) => [
+      ...variablesRead(readText(root, file)),
+    ])
+  );
   for (const name of [...all].filter((name) => !declared.has(name)).sort()) {
     errors.push(`components: read ${name}, which no stylesheet declares.`);
   }

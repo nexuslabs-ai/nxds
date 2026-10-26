@@ -1,7 +1,10 @@
 // components/bundle.css: the nxds theme compiled with every `nx:` class the
-// React 18 sources use. tokens.css declares each token's default value, so
-// those declarations leave this file. The appearance presets stay, and
-// `.dark` rules also match the page's `data-theme="dark"`.
+// React 18 sources use. Every catalogue token's default leaves this file:
+// tokens.css declares the ones a component reads, and a read the scanner
+// misses fails validation instead of falling back to a default here. The
+// appearance presets stay, and `.dark` rules also match the page's
+// `data-theme="dark"`.
+import { createTokenCatalogue } from '@nxds/core/catalogue';
 import { react18Src } from '@nxds/source-model/roots.mjs';
 import { compile } from '@tailwindcss/node';
 import { readdirSync, readFileSync } from 'node:fs';
@@ -54,7 +57,7 @@ function candidates() {
 }
 
 // A rule such as `:root, [data-density='default']` splits in two: the preset
-// keeps every declaration, and `:root` loses the ones tokens.css declares.
+// keeps every declaration, and `:root` loses the catalogue tokens.
 function moveDefaultsToTokens(
   rule: postcss.Rule,
   tokenNames: ReadonlySet<string>
@@ -97,8 +100,10 @@ function moveValuesToTokens(css: string, tokenNames: ReadonlySet<string>) {
   return root.toString();
 }
 
-/** `tokenNames` holds every `--name` tokens.css declares. */
-export async function buildStyles(tokenNames: ReadonlySet<string>) {
+export async function buildStyles() {
   const compiler = await compileTheme();
+  const tokenNames = new Set<string>(
+    createTokenCatalogue().map((token) => token.name)
+  );
   return moveValuesToTokens(compiler.build(candidates()), tokenNames);
 }

@@ -18,8 +18,14 @@ export interface ComponentReads {
   prefixes: ReadonlyMap<string, readonly string[]>;
 }
 
-const VARIABLE = /var\((--nx-[\w-]+)\)/g;
-const DYNAMIC_VARIABLE = /var\((--nx-[\w-]*-)\$\{/g;
+// Tailwind's build wraps a long `var()` argument onto its own line.
+export const VARIABLE = /var\(\s*(--nx-[\w-]+)\s*[,)]/g;
+export const DYNAMIC_VARIABLE = /var\(\s*(--nx-[\w-]*-)\$\{/g;
+/** Every `--nx-*` name `text` reads. */
+export function variablesRead(text: string) {
+  return new Set([...text.matchAll(VARIABLE)].map(([, name = '']) => name));
+}
+
 const RELATIVE_IMPORT = /\bfrom\s+'(\.{1,2}\/[^']+)'/g;
 
 function resolveImport(from: string, specifier: string) {
@@ -77,6 +83,8 @@ async function classReads(candidates: readonly string[]) {
   const compiler = await compileTheme();
   const reads = new Map<string, Set<string>>();
   postcss.parse(compiler.build([...candidates])).walkRules((rule) => {
+    // A nested rule's selector names a variant's class, such as `nx:group`.
+    if (rule.parent?.type === 'rule') return;
     const classes = [...rule.selector.matchAll(SELECTOR_CLASS)]
       .map(([, escaped = '']) => escaped.replace(/\\(.)/g, '$1'))
       .filter((name) => name.startsWith('nx:'));

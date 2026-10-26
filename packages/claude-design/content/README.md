@@ -64,7 +64,7 @@ Body copy is 14px. Keep one heading level per region, and step down one size at 
 
 ## Motion
 
-Motion answers input and then gets out of the way. Popovers, menus and routine state changes take 200ms, small fades and indicators 150ms, and pressed states 100ms. Nothing bounces. The tokens file has no motion family, so motion lives in the components.
+Motion answers input and then gets out of the way. Popovers, menus and routine state changes take `nx-motion-duration-default` (200ms), small fades and indicators `nx-motion-duration-fast` (150ms), and pressed states `nx-motion-duration-faster` (100ms). Elements ease in on `nx-motion-ease-enter`. Nothing bounces.
 
 ## Iconography
 
@@ -105,7 +105,7 @@ Brand colour, surface tone and contrast are app-wide settings in nxds apps. They
 Install these files with the system under `project/ds/<folder>/`. Link them in each artboard right after the `support.js` line, in this order:
 
 1. `tokens.css`: every token value, both themes and the text style classes. The components read their variables from it.
-2. `components/bundle.css`: the component styles and the appearance presets. It declares no token values.
+2. `components/bundle.css`: the component styles and the appearance presets. It sets a token only inside a preset attribute.
 3. `components/bundle.js`: the components, as `window.Nxds`. The artboard supplies React 18, so skip `react` and `react-dom`.
 
 ```html
@@ -115,6 +115,8 @@ Install these files with the system under `project/ds/<folder>/`. Link them in e
 ```
 
 Add one `../` in front of each path for each folder the artboard is in.
+
+The System page is read-only for this system. An edit there recompiles tokens.css without the theme layer, the font variables and the text style rules, so presets, fonts and text styles stop applying. Change the token in nxds and export again.
 
 - Switch to dark with `data-theme="dark"` or the `dark` class on the artboard's root.
 - Set a `data-density`, `data-radius`, `data-borderwidth` or `data-shadow` attribute from Appearance on any element to change everything inside it.
