@@ -165,13 +165,14 @@ The file applies in every MCP client, so you don't edit the repo config. A user-
 
 ## Releasing
 
-Releases are driven by [changesets](https://github.com/changesets/changesets) and the [`Release`](.github/workflows/release.yml) workflow. Three packages publish to npm; everything else is either internal or copy/own.
+Releases are driven by [changesets](https://github.com/changesets/changesets) and the [`Release`](.github/workflows/release.yml) workflow. Four packages publish to npm; everything else is either internal or copy/own.
 
 | Package               | Published? | Why                                                                      |
 | --------------------- | ---------- | ------------------------------------------------------------------------ |
 | `@nxds/core`          | **npm**    | Framework-agnostic runtime engine; copied component code imports it      |
 | `@nxds/eslint-plugin` | **npm**    | Lint guardrails consumers install and use                                |
 | `nxds-cli`            | **npm**    | The `nxds` CLI that installs nxds into an app from the nxds.dev registry |
+| `@nxds/claude-design` | **npm**    | The prebuilt Claude Design System that `nxds-cli export` downloads       |
 | `@nxds/tailwind`      | copy/own   | Generated token CSS — consumers regenerate with their own token choices  |
 | `@nxds/react`         | copy/own   | Components are copied and owned; delivered by the `nxds` CLI             |
 | `@nxds/catalog`       | private    | Builds the install catalog and commits one per `@nxds/react` release     |
@@ -194,7 +195,7 @@ The workflow grants `id-token: write` for the OIDC exchange, upgrades npm to a t
 
 ### Day-to-day: adding a changeset
 
-Any PR that changes `@nxds/core`, `@nxds/eslint-plugin`, `nxds-cli` or what `@nxds/react` installs includes a changeset describing the bump. An `@nxds/react` bump is what gives apps a new release to `nxds update` to:
+Any PR that changes `@nxds/core`, `@nxds/eslint-plugin`, `nxds-cli` or what `@nxds/react` installs includes a changeset describing the bump. `@nxds/claude-design` is fixed to `@nxds/react`: they always release together, at the same version. An `@nxds/react` bump is what gives apps a new release to `nxds update` to:
 
 ```bash
 pnpm changeset        # pick packages + semver bump, write a summary
@@ -207,7 +208,7 @@ Commit the generated `.changeset/*.md` file with your PR. Semver is a contract: 
 The `Release` workflow runs on every push to `main`:
 
 1. **Collect** — with unreleased changesets present, it opens/updates a **"Version Packages"** PR that bumps versions and writes `CHANGELOG.md`s. `pnpm version-packages` also commits `packages/catalog/releases/<version>.json` for a new `@nxds/react` version. The docs site serves it at `nxds.dev/r/<version>.json` and as `nxds.dev/r/latest.json`, which is what the `nxds` CLI installs. A release catalog never changes once committed.
-2. **Publish** — when you merge that PR (changesets consumed), the next run builds the packages and runs `changeset publish`, pushing `@nxds/core`, `@nxds/eslint-plugin` and `nxds-cli` to npm with provenance. Private packages are skipped automatically.
+2. **Publish** — when you merge that PR (changesets consumed), the next run builds the packages and runs `changeset publish`, pushing `@nxds/core`, `@nxds/eslint-plugin`, `@nxds/claude-design` and `nxds-cli` to npm with provenance. `@nxds/claude-design` publishes its built `dist/` folder, which its build validates against the Design System format. Private packages are skipped automatically.
 
 `@nxds/core` and `@nxds/eslint-plugin` were bootstrapped at `0.7.2` and `0.4.0` by the manual publish, so those two versions carry no provenance. Provenance starts with the first release the workflow publishes. Verify any release with a fresh external install:
 

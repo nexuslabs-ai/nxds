@@ -169,8 +169,12 @@ function byNameThenSource(a, b) {
   );
 }
 
-function createReactProgram(slugs) {
-  const sourceFiles = slugs
+/**
+ * A TypeScript program over every component source and @nxds/react entry
+ * point, with the public exports and components it declares.
+ */
+export function reactProgram() {
+  const sourceFiles = componentSlugs()
     .flatMap((slug) =>
       collectSourceFiles(path.join(componentsRoot, slug), isComponentSource)
     )
@@ -194,7 +198,9 @@ function createReactProgram(slugs) {
     containingFile: path.join(reactSrc, 'index.ts'),
   });
 
-  return { sourceFiles, compilerOptions, program };
+  const checker = program.getTypeChecker();
+  const exported = publicExports(checker, program, entryPoints);
+  return { sourceFiles, compilerOptions, program, checker, exported };
 }
 
 /** The package a declaration comes from, or nothing for a workspace file. */
@@ -209,13 +215,8 @@ function declaringPackage(declaration) {
  * they do every prop a dependency declares.
  */
 export function reactPackageProps() {
-  const { program } = createReactProgram(componentSlugs());
-  const checker = program.getTypeChecker();
-  const components = publicComponents(
-    checker,
-    publicExports(checker, program, entryPoints),
-    componentsRoot
-  );
+  const { checker, exported } = reactProgram();
+  const components = publicComponents(checker, exported, componentsRoot);
 
   return new Map(
     [...components].map(([name, symbol]) => {
@@ -257,11 +258,9 @@ export function reactPackageProps() {
 /** One props file per component folder that exports a component, in slug order. */
 export function reactPropsFiles() {
   const slugs = componentSlugs();
-  const { sourceFiles, compilerOptions, program } = createReactProgram(slugs);
+  const { sourceFiles, compilerOptions, program, checker, exported } =
+    reactProgram();
   const parsedPaths = new Set(sourceFiles.map(toRepoPath));
-  const checker = program.getTypeChecker();
-
-  const exported = publicExports(checker, program, entryPoints);
   const { expansions, localAliases } = localAliasExpansions(
     checker,
     program,
