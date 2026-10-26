@@ -19,7 +19,7 @@ export interface ComponentReads {
 }
 
 // Tailwind's build wraps a long `var()` argument onto its own line.
-export const VARIABLE = /var\(\s*(--nx-[\w-]+)\s*[,)]/g;
+const VARIABLE = /var\(\s*(--nx-[\w-]+)\s*[,)]/g;
 export const DYNAMIC_VARIABLE = /var\(\s*(--nx-[\w-]*-)\$\{/g;
 /** Every `--nx-*` name `text` reads. */
 export function variablesRead(text: string) {
@@ -78,22 +78,25 @@ function folderModules(slug: string) {
 // An escaped class name in a selector, such as `.nx\:hover\:bg-muted`.
 const SELECTOR_CLASS = /\.((?:\\.|[\w-])+)/g;
 
+function insideRule({ parent }: postcss.Node): boolean {
+  if (!parent) return false;
+  return parent.type === 'rule' || insideRule(parent);
+}
+
 /** The `--nx-*` names each `nx:` class reads, from one compile of `candidates`. */
 async function classReads(candidates: readonly string[]) {
   const compiler = await compileTheme();
   const reads = new Map<string, Set<string>>();
   postcss.parse(compiler.build([...candidates])).walkRules((rule) => {
     // A nested rule's selector names a variant's class, such as `nx:group`.
-    if (rule.parent?.type === 'rule') return;
+    if (insideRule(rule)) return;
     const classes = [...rule.selector.matchAll(SELECTOR_CLASS)]
       .map(([, escaped = '']) => escaped.replace(/\\(.)/g, '$1'))
       .filter((name) => name.startsWith('nx:'));
     if (classes.length === 0) return;
     const names = new Set<string>();
     rule.walkDecls((declaration) => {
-      for (const [, name = ''] of declaration.value.matchAll(VARIABLE)) {
-        names.add(name);
-      }
+      for (const name of variablesRead(declaration.value)) names.add(name);
     });
     for (const name of classes) {
       const set = reads.get(name) ?? new Set();
@@ -134,9 +137,7 @@ export async function componentReads(
         add(readers, variable, name);
       }
     }
-    for (const [, variable = ''] of text.matchAll(VARIABLE)) {
-      add(readers, variable, name);
-    }
+    for (const variable of variablesRead(text)) add(readers, variable, name);
     for (const [, prefix = ''] of text.matchAll(DYNAMIC_VARIABLE)) {
       add(prefixes, prefix, name);
     }

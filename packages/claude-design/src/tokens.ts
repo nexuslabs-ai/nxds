@@ -2,14 +2,12 @@
 // catalogue at the default appearance. A token's name is the custom property
 // the components read, minus `--`. It holds only the tokens a component reads,
 // plus the scales AUTHOR_FAMILIES keeps for laying out artboards and any
-// token a class in bundle.css reads, so authors can use it. The export
-// is read-only: the System page's own compile of this file drops the theme
-// layer, the font variables and the text style rules tokens.css adds.
+// token a class in bundle.css reads, so authors can use it.
 import { DEFAULT_NXDS_APPEARANCE } from '@nxds/core';
 import type { CatalogueToken, CatalogueVariant } from '@nxds/core/catalogue';
 import { createTokenCatalogue } from '@nxds/core/catalogue';
 
-import { type ComponentReads, readersOf, VARIABLE } from './reads.ts';
+import { type ComponentReads, readersOf, variablesRead } from './reads.ts';
 
 export type ThemeId = 'light' | 'dark';
 export type ThemedValue = string | Partial<Record<ThemeId, string>>;
@@ -272,8 +270,7 @@ function typeScaleTokens(context: Context) {
     context.catalogue
       .filter(isTypographyStyle)
       .flatMap((token) => token.variants[0]?.declarations ?? [])
-      .flatMap(({ value }) => [...value.matchAll(VARIABLE)])
-      .map(([, name]) => name)
+      .flatMap(({ value }) => [...variablesRead(value)])
   );
   return context.catalogue.filter(isTypeScaleStep).flatMap((token) => {
     const readers = readersOf(context.reads, token.name);
@@ -300,9 +297,7 @@ function typeStyle(token: CatalogueToken, resolve: Resolver): TypeStyle {
     const value = declarations.get(property);
     return value === undefined ? undefined : resolve(value, 'light');
   };
-  const familyVar = [
-    ...(declarations.get('font-family') ?? '').matchAll(VARIABLE),
-  ][0]?.[1];
+  const [familyVar] = variablesRead(declarations.get('font-family') ?? '');
   const fontSize = length(read('font-size') ?? '');
   if (!fontSize) {
     throw new Error(`tokens.json: ${token.name} has no literal font size.`);

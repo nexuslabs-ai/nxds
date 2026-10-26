@@ -10,4 +10,4 @@ On a Design canvas, `data-density`, `data-radius`, `data-borderwidth` and `data-
 
 Shadows are one variable per elevation step. Each `data-shadow` preset declares `--nx-shadow-sm` and its siblings directly, and `nx:shadow-*` reads them. The `--nx-shadow-*-layer-*` variables are gone. In the token catalogue, shadow styles carry a variant per elevation preset and theme, and the layer primitives are no longer tokens.
 
-`ToggleGroup` applies a half-step `spacing`, such as `0.5`, instead of dropping the gap.
+`ToggleGroup` applies a half-step `spacing`, such as `0.5`, instead of dropping the gap. Its `spacing` takes only spacing-scale steps, typed by the new `SpacingStep` export from `@nxds/core`.
