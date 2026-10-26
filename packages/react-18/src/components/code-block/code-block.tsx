@@ -25,6 +25,9 @@ const codeBlockVariants = cva(
   }
 );
 
+/**
+ * Props for CodeBlock. `variant` sets whether the block draws its own border.
+ */
 type CodeBlockProps = React.ComponentProps<'div'> &
   VariantProps<typeof codeBlockVariants>;
 
@@ -103,6 +106,9 @@ const CodeBlockContent = React.forwardRef<
   );
 });
 
+/**
+ * Props for CodeBlockLine.
+ */
 interface CodeBlockLineProps extends React.ComponentProps<'span'> {
   /** Line number to show in the gutter. Leave it out to show no number. */
   number?: number;
@@ -177,6 +183,10 @@ function codeText(button: HTMLElement) {
   return code?.textContent?.replace(/\n$/, '') ?? '';
 }
 
+/**
+ * Props for CodeBlockCopyButton. It takes the attributes of a button, except
+ * `children` and `onClick`, which it sets itself.
+ */
 type CodeBlockCopyButtonProps = Omit<
   React.ComponentProps<'button'>,
   'children' | 'onClick'
