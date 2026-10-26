@@ -4,7 +4,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import {
   IconArrowRight,
   IconDownload,
-  IconRocket,
+  IconSend,
   IconStar,
 } from '@tabler/icons-react';
 import { expect, fn, userEvent, within } from 'storybook/test';
@@ -280,7 +280,7 @@ export const Disabled: Story = {
 export const Loading: Story = {
   args: {
     loading: true,
-    startIcon: <IconRocket />,
+    startIcon: <IconSend />,
     endIcon: <IconArrowRight />,
     children: 'Submitting',
   },
@@ -504,18 +504,18 @@ export const StartIconSlot: Story = {
     },
   },
   args: {
-    startIcon: <IconRocket data-testid="start-icon" />,
-    children: 'Launch',
+    startIcon: <IconDownload data-testid="start-icon" />,
+    children: 'Download',
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const button = canvas.getByRole('button', { name: 'Launch' });
+    const button = canvas.getByRole('button', { name: 'Download' });
     const startIcon = button.querySelector('[data-slot="button-start-icon"]');
 
     await expect(startIcon).toBeInTheDocument();
     await expect(startIcon).toHaveAttribute('aria-hidden', 'true');
     await expect(canvas.getByTestId('start-icon')).toBeInTheDocument();
-    await expect(button).toHaveAccessibleName('Launch');
+    await expect(button).toHaveAccessibleName('Download');
   },
 };
 
@@ -599,7 +599,7 @@ export const AllVariants: Story = {
           Icon slots
         </h3>
         <div className="nx:flex nx:flex-wrap nx:items-center nx:gap-2">
-          <Button startIcon={<IconRocket />}>Start icon</Button>
+          <Button startIcon={<IconDownload />}>Start icon</Button>
           <Button endIcon={<IconArrowRight />}>End icon</Button>
         </div>
       </div>

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
   IconArrowRight,
   IconDownload,
-  IconRocket,
+  IconSend,
   IconStar,
 } from '@tabler/icons-vue';
 import { expect, fn, type Mock, userEvent, within } from 'storybook/test';
@@ -117,23 +117,23 @@ export const StartIconSlot: Story = {
     },
   },
   render: () => ({
-    components: { Button, IconRocket },
+    components: { Button, IconDownload },
     template: `
       <Button>
-        <template #start-icon><IconRocket data-testid="start-icon" /></template>
-        Launch
+        <template #start-icon><IconDownload data-testid="start-icon" /></template>
+        Download
       </Button>
     `,
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const button = canvas.getByRole('button', { name: 'Launch' });
+    const button = canvas.getByRole('button', { name: 'Download' });
     const startIcon = button.querySelector('[data-slot="button-start-icon"]');
 
     await expect(startIcon).toBeInTheDocument();
     await expect(startIcon).toHaveAttribute('aria-hidden', 'true');
     await expect(canvas.getByTestId('start-icon')).toBeInTheDocument();
-    await expect(button).toHaveAccessibleName('Launch');
+    await expect(button).toHaveAccessibleName('Download');
   },
 };
 
@@ -179,7 +179,7 @@ export const AllVariants: Story = {
     },
   },
   render: () => ({
-    components: { Button, IconArrowRight, IconRocket, IconStar },
+    components: { Button, IconArrowRight, IconDownload, IconStar },
     template: `
       <div class="nx:flex nx:flex-col nx:gap-6">
         <div>
@@ -209,7 +209,7 @@ export const AllVariants: Story = {
         <div>
           <h3 class="nx:text-foreground nx:mb-2 nx:typography-label-default">Icon slots</h3>
           <div class="nx:flex nx:flex-wrap nx:items-center nx:gap-2">
-            <Button><template #start-icon><IconRocket /></template>Start icon</Button>
+            <Button><template #start-icon><IconDownload /></template>Start icon</Button>
             <Button>End icon<template #end-icon><IconArrowRight /></template></Button>
           </div>
         </div>
@@ -244,7 +244,7 @@ export const AllVariants: Story = {
 
 /** A story render that binds the story args, so `args.onClick` stays a spy. */
 const labelled = (template: string) => (args: ButtonArgs) => ({
-  components: { Button, IconArrowRight, IconRocket },
+  components: { Button, IconArrowRight, IconSend },
   setup: () => ({ args }),
   template,
 });
@@ -323,7 +323,7 @@ export const Disabled: Story = {
 export const Loading: Story = {
   render: labelled(`
     <Button v-bind="args" loading>
-      <template #start-icon><IconRocket /></template>
+      <template #start-icon><IconSend /></template>
       Submitting
       <template #end-icon><IconArrowRight /></template>
     </Button>
