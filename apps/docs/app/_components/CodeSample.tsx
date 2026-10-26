@@ -4,11 +4,12 @@ import { type CodeSampleLanguage, highlightSample } from '../_lib/code-sample';
 
 import { CodeBlock } from './CodeBlock';
 import { CodeCard } from './CodeCard';
+import { CodeBlockLine } from './nxds';
 
 /**
  * A code string rendered outside an MDX fence. Tokenised by the same theme the
- * MDX fences use, then handed to the same `pre` those fences render through, so
- * a sample and a fence get the same surface and the same copy control.
+ * MDX fences use, then rendered in the same `CodeBlock` those fences render
+ * through, so a sample and a fence get the same surface and copy control.
  */
 export async function CodeSample({
   lang,
@@ -19,14 +20,20 @@ export async function CodeSample({
   framed?: boolean;
   children: string;
 }) {
-  const html = await highlightSample(lang, children);
+  const lines = await highlightSample(lang, children.trimEnd());
 
   return (
-    <CodeBlock
-      framed={framed}
-      data-language={lang}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <CodeBlock framed={framed} data-language={lang}>
+      {lines.map((tokens, index) => (
+        <CodeBlockLine key={index}>
+          {tokens.map((token, at) => (
+            <span key={at} style={{ color: token.color }}>
+              {token.content}
+            </span>
+          ))}
+        </CodeBlockLine>
+      ))}
+    </CodeBlock>
   );
 }
 

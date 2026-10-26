@@ -77,10 +77,11 @@ function prune(node: Element) {
       });
     }
     // rehype-remark reads a code block's language from its `language-*` class.
-    if (child.tagName === 'pre' && child.properties.dataLanguage) {
-      const code = child.children.find(
-        (inner): inner is Element =>
-          inner.type === 'element' && inner.tagName === 'code'
+    // The language sits on the code block, around its scroll region and `pre`.
+    if (child.properties.dataLanguage) {
+      const code = findElement(
+        child,
+        (inner) => inner.tagName === 'code' && inner !== child
       );
       if (code) {
         code.properties.className = [

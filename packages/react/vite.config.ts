@@ -26,6 +26,10 @@ export default defineConfig({
       entry: {
         index: path.resolve(__dirname, 'src/index.ts'),
         utils: path.resolve(__dirname, 'src/lib/utils.ts'),
+        'code-block-theme': path.resolve(
+          __dirname,
+          'src/components/code-block/code-block-theme.ts'
+        ),
         appearance: path.resolve(
           __dirname,
           'src/components/appearance/provider/index.ts'

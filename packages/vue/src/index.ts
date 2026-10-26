@@ -15,6 +15,7 @@ export * from './components/carousel';
 export * from './components/checkbox';
 export * from './components/choice-card';
 export * from './components/choice-row';
+export * from './components/code-block';
 export * from './components/collapsible';
 export * from './components/context-menu';
 export * from './components/description-list';
