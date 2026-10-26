@@ -267,12 +267,11 @@ function mergeIndex(files: Map<string, Buffer>, currentFile: string) {
   );
 }
 
-// Stages beside `out`, not in it, so an interrupted run leaves nothing in the
-// published root. The old project/ is moved aside, not deleted, until the new
-// one is in place.
+// Stages beside `out`, so the staging folder is never inside the published
+// root. When a write or rename throws, the old project/ is put back.
 function writeProject(out: string, files: Map<string, Buffer>) {
   mkdirSync(out, { recursive: true });
-  const staging = mkdtempSync(path.join(path.dirname(out), '.nxds-project-'));
+  const staging = makeStaging(path.dirname(out), out);
   const next = path.join(staging, 'next');
   const previous = path.join(staging, 'previous');
   const projectDir = path.join(out, 'project');
@@ -282,19 +281,43 @@ function writeProject(out: string, files: Map<string, Buffer>) {
       writeFileSync(path.join(next, file), bytes);
     }
     if (existsSync(projectDir)) renameSync(projectDir, previous);
-    swapIn(next, projectDir, previous);
-  } finally {
+    renameSync(next, projectDir);
+  } catch (error) {
+    restore(previous, projectDir);
     rmSync(staging, { recursive: true, force: true });
+    throw renameError(error, out);
+  }
+  rmSync(staging, { recursive: true, force: true });
+}
+
+function makeStaging(parent: string, out: string) {
+  try {
+    return mkdtempSync(path.join(parent, '.nxds-project-'));
+  } catch (error) {
+    throw new UsageError(
+      `The export stages project/ in ${parent}, beside ${out}, so ${parent} must be writable (${(error as Error).message}).`
+    );
   }
 }
 
-function swapIn(next: string, projectDir: string, previous: string) {
+// Leaves the staging folder in place when the old project/ can't be moved
+// back, since it then holds the only copy.
+function restore(previous: string, projectDir: string) {
+  if (!existsSync(previous)) return;
   try {
-    renameSync(next, projectDir);
+    renameSync(previous, projectDir);
   } catch (error) {
-    if (existsSync(previous)) renameSync(previous, projectDir);
-    throw error;
+    throw new CliError(
+      `The export failed and couldn't put the old project/ back (${(error as Error).message}). It is in ${previous}.`
+    );
   }
+}
+
+function renameError(error: unknown, out: string) {
+  if ((error as NodeJS.ErrnoException).code !== 'EXDEV') return error;
+  return new UsageError(
+    `${out} is on another filesystem from its parent folder, so project/ can't be moved into it. Pass an --out folder inside ${out}.`
+  );
 }
 
 export async function exportClaudeDesign(

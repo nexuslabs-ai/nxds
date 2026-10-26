@@ -7,6 +7,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -304,6 +305,9 @@ describe('nxds-cli export claude-design', () => {
     expect(
       existsSync(path.join(cwd, 'nxds-design-system', 'project', 'stale.md'))
     ).toBe(false);
+    expect(readdirSync(cwd)).not.toContainEqual(
+      expect.stringMatching(/^\.nxds-project-/)
+    );
   });
 
   it("keeps the system's title and creation date from its current index", async () => {
