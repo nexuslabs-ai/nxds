@@ -322,7 +322,7 @@ describe('nxds-cli export claude-design', () => {
       );
 
       expect(exitCode).toBe(EXIT_CODES.usage);
-      expect(body.error).toMatch(/must be writable/);
+      expect(body.error).toContain(`${cwd} must be writable`);
     } finally {
       chmodSync(cwd, 0o755);
     }
