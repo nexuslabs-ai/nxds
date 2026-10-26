@@ -16,9 +16,18 @@ const config: StorybookConfig = {
     const { mergeConfig } = await import('vite');
     const tailwindcss = (await import('@tailwindcss/vite')).default;
 
-    return mergeConfig(config, {
-      plugins: [tailwindcss()],
-    });
+    // The package's type bundle reads dist, which a Storybook build never writes.
+    const plugins = config.plugins?.filter(
+      (plugin) =>
+        !(plugin && 'name' in plugin && plugin.name === 'unplugin-dts')
+    );
+
+    return mergeConfig(
+      { ...config, plugins },
+      {
+        plugins: [tailwindcss()],
+      }
+    );
   },
 };
 
