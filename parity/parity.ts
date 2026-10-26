@@ -8,7 +8,6 @@ export const planned = [
   'attachment',
   'brand-color-field',
   'bubble',
-  'carousel',
   'chart',
   'color-field',
   'combobox',
@@ -40,6 +39,7 @@ export const shared = [
   'button',
   'button-group',
   'card',
+  'carousel',
   'checkbox',
   'choice-card',
   'choice-row',
@@ -100,6 +100,14 @@ export const vueOnlyApi: Record<string, string> = {
   'Button.disabled':
     'native <button> attribute React inherits from its props type; Vue declares it so the spinner state can read it',
   'Button.type':
+    "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
+  'CarouselNext.disabled':
+    'native <button> attribute React inherits from its props type; Vue declares it so a set value overrides the scroll state',
+  'CarouselNext.type':
+    "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
+  'CarouselPrevious.disabled':
+    'native <button> attribute React inherits from its props type; Vue declares it so a set value overrides the scroll state',
+  'CarouselPrevious.type':
     "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
   'Input.defaultValue': NATIVE_DEFAULT_VALUE,
   'Input.modelValue': NATIVE_MODEL_VALUE,
@@ -261,6 +269,10 @@ export const vueOnlyDeclarations: Record<string, string> = {
     'Vue injection key the group provides to its avatars; React passes the same size and shape through context',
   'alert-dialog/index.ts#AlertDialogLayoutKey':
     'Vue injection key the content provides to its header and footer; React passes the same layout through context',
+  'carousel/index.ts#CarouselKey':
+    'Vue injection key the carousel provides to its parts; React passes the same state through context',
+  'carousel/index.ts#injectCarousel':
+    "reads CarouselKey and throws outside a Carousel, as React's context hook does",
   'input-otp/index.ts#InputOTPKey':
     "Vue injection key the root provides so each slot's <input> takes the field's name; React's single <input> carries it",
   'table/index.ts#TableKey':

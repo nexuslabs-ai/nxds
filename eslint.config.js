@@ -184,6 +184,12 @@ export default tseslint.config(
       'vue/one-component-per-file': 'off',
     },
   },
+  // Carousel's region takes no focus; it handles the arrow keys that bubble up
+  // from the focused controls inside it, as React's region does.
+  {
+    files: ['packages/vue/src/components/carousel/Carousel.vue'],
+    rules: { 'vuejs-accessibility/no-static-element-interactions': 'off' },
+  },
   // Field primitives render a bare control; the consumer's Label `for`, or an
   // `aria-label` that falls through, names it. The exemption lives here so
   // copied source lints clean in apps without vuejs-accessibility.

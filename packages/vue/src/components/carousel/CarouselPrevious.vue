@@ -1,0 +1,63 @@
+<script setup lang="ts">
+import { IconArrowLeft } from '@tabler/icons-vue';
+import { reactiveOmit } from '@vueuse/core';
+import type { VNode } from 'vue';
+
+import { cn } from '../../lib/utils';
+import { Button, type ButtonProps, type ButtonVariants } from '../button';
+
+import { carouselControlClasses, injectCarousel } from '.';
+
+export interface CarouselPreviousProps extends Omit<
+  ButtonProps,
+  'variant' | 'size'
+> {
+  variant?: ButtonVariants['variant'];
+  size?: ButtonVariants['size'];
+}
+
+const props = withDefaults(defineProps<CarouselPreviousProps>(), {
+  as: 'button',
+  variant: 'outline',
+  size: 'icon',
+  loading: false,
+  disabled: undefined,
+  type: 'button',
+});
+
+const slots = defineSlots<{
+  'start-icon'?: () => VNode[];
+  'end-icon'?: () => VNode[];
+}>();
+
+const delegated = reactiveOmit(props, 'class', 'disabled');
+
+const { orientation, scrollPrev, canScrollPrev } = injectCarousel();
+</script>
+
+<template>
+  <Button
+    v-bind="delegated"
+    data-slot="carousel-previous"
+    :disabled="disabled ?? !canScrollPrev"
+    :class="
+      cn(
+        carouselControlClasses,
+        orientation === 'horizontal'
+          ? 'nx:top-1/2 nx:-left-12 nx:-translate-y-1/2'
+          : 'nx:-top-12 nx:left-1/2 nx:-translate-x-1/2 nx:rotate-90',
+        props.class
+      )
+    "
+    @click="scrollPrev"
+  >
+    <template v-if="slots['start-icon']" #start-icon>
+      <slot name="start-icon" />
+    </template>
+    <IconArrowLeft />
+    <span class="nx:sr-only">Previous slide</span>
+    <template v-if="slots['end-icon']" #end-icon>
+      <slot name="end-icon" />
+    </template>
+  </Button>
+</template>
