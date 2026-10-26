@@ -2,12 +2,14 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import { SPACING_MODE_FILE_PATTERN } from '../token-source/spacing';
+
 import { SPACING_STEPS } from './spacing-scale';
 
 const SEMANTIC_DIR = resolve(process.cwd(), 'packages/core/tokens/semantic');
 
 const spacingFiles = readdirSync(SEMANTIC_DIR).filter((file) =>
-  /^spacing-.+\.json$/.test(file)
+  SPACING_MODE_FILE_PATTERN.test(file)
 );
 
 describe('spacing scale', () => {
