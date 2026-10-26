@@ -169,16 +169,16 @@ function byNameThenSource(a, b) {
   );
 }
 
-/** One props file per component folder that exports a component, in slug order. */
-export function reactPropsFiles() {
-  const slugs = componentSlugs();
-
-  const sourceFiles = slugs
+/**
+ * A TypeScript program over every component source and @nxds/react entry
+ * point, with the public exports and components it declares.
+ */
+export function reactProgram() {
+  const sourceFiles = componentSlugs()
     .flatMap((slug) =>
       collectSourceFiles(path.join(componentsRoot, slug), isComponentSource)
     )
     .sort();
-  const parsedPaths = new Set(sourceFiles.map(toRepoPath));
 
   const compilerOptions = ts.parseJsonConfigFileContent(
     ts.readConfigFile(reactTsconfig, ts.sys.readFile).config,
@@ -199,8 +199,16 @@ export function reactPropsFiles() {
   });
 
   const checker = program.getTypeChecker();
-
   const exported = publicExports(checker, program, entryPoints);
+  return { sourceFiles, compilerOptions, program, checker, exported };
+}
+
+/** One props file per component folder that exports a component, in slug order. */
+export function reactPropsFiles() {
+  const slugs = componentSlugs();
+  const { sourceFiles, compilerOptions, program, checker, exported } =
+    reactProgram();
+  const parsedPaths = new Set(sourceFiles.map(toRepoPath));
   const { expansions, localAliases } = localAliasExpansions(
     checker,
     program,
