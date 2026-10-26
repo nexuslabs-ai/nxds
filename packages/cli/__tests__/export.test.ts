@@ -174,7 +174,7 @@ function readOut(cwd: string, file: string) {
 async function npmRegistry(
   root: string,
   source: string,
-  { integrity }: { integrity?: string } = {}
+  { integrity, tarballUrl }: { integrity?: string; tarballUrl?: string } = {}
 ) {
   const staging = path.join(root, 'staging');
   cpSync(source, path.join(staging, 'package'), { recursive: true });
@@ -193,7 +193,9 @@ async function npmRegistry(
           versions: {
             [VERSION]: {
               dist: {
-                tarball: `http://127.0.0.1:${port}/claude-design-${VERSION}.tgz`,
+                tarball:
+                  tarballUrl ??
+                  `http://127.0.0.1:${port}/claude-design-${VERSION}.tgz`,
                 integrity: integrity ?? digest,
               },
             },
@@ -281,6 +283,54 @@ describe('nxds-cli export claude-design', () => {
 
     expect(exitCode).toBe(EXIT_CODES.usage);
     expect(body.error).toMatch(/no release 9\.9\.9.*0\.5\.0/);
+  });
+
+  it.each([
+    ['with a user name and password', 'https://user:secret@registry.invalid'],
+    ['without an http scheme', 'user:secret@registry.invalid'],
+  ])(
+    'refuses a registry URL %s, without printing the password',
+    async (_, registry) => {
+      const { cwd } = setup();
+      const { exitCode, stdout, stderr } = await cli(
+        ['export', 'claude-design', '--npm-registry', registry],
+        cwd
+      );
+
+      expect(exitCode).toBe(EXIT_CODES.usage);
+      expect(stdout + stderr).not.toContain('secret');
+    }
+  );
+
+  it('leaves the query out of a registry URL in its errors', async () => {
+    const { root, source, cwd } = setup();
+    const registry = await npmRegistry(root, source);
+    const { exitCode, stdout, stderr } = await cli(
+      [
+        'export',
+        'claude-design',
+        '--npm-registry',
+        `${registry}/?token=secret`,
+      ],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(stdout + stderr).not.toContain('secret');
+  });
+
+  it("leaves a tarball URL's password out of its errors", async () => {
+    const { root, source, cwd } = setup();
+    const registry = await npmRegistry(root, source, {
+      tarballUrl: 'https://user:secret@registry.invalid/claude-design.tgz',
+    });
+    const { exitCode, stdout, stderr } = await cli(
+      ['export', 'claude-design', '--npm-registry', registry],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(stdout + stderr).not.toContain('secret');
   });
 
   it('keeps an existing folder unless asked to overwrite it', async () => {

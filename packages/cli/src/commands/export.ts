@@ -53,7 +53,21 @@ type Packument = {
   >;
 };
 
+/** `url` without its credentials or query, to print in an error. */
+function redactUrl(url: string) {
+  try {
+    const redacted = new URL(url);
+    redacted.username = '';
+    redacted.password = '';
+    redacted.search = '';
+    return redacted.href;
+  } catch {
+    return '<invalid URL>';
+  }
+}
+
 async function download(url: string) {
+  const shown = redactUrl(url);
   let response: Awaited<ReturnType<typeof fetch>>;
   try {
     response = await fetch(url, {
@@ -62,17 +76,34 @@ async function download(url: string) {
     });
   } catch (error) {
     const { message, cause } = error as Error;
-    const reason = cause instanceof Error ? cause.message : message;
+    // undici quotes the URL it was given in some of its messages.
+    const reason = (
+      cause instanceof Error ? cause.message : message
+    ).replaceAll(url, shown);
     throw new CliError(
-      `Could not reach ${url} (${reason}). Check your connection, or set HTTPS_PROXY if you are behind a proxy, then run the command again.`
+      `Could not reach ${shown} (${reason}). Check your connection, or set HTTPS_PROXY if you are behind a proxy, then run the command again.`
     );
   }
   if (!response.ok) {
     throw new CliError(
-      `${url} answered ${response.status}. Run the command again later.`
+      `${shown} answered ${response.status}. Run the command again later.`
     );
   }
   return Buffer.from(await response.arrayBuffer());
+}
+
+function assertRegistry(registry: string) {
+  const url = URL.canParse(registry) ? new URL(registry) : undefined;
+  if (url?.protocol !== 'http:' && url?.protocol !== 'https:') {
+    throw new UsageError(
+      `--npm-registry must be an http or https URL, such as ${DEFAULT_NPM_REGISTRY}.`
+    );
+  }
+  if (url.username || url.password) {
+    throw new UsageError(
+      "--npm-registry can't include a user name or password. Put the token in .npmrc or an environment variable, and pass the registry URL without it."
+    );
+  }
 }
 
 function packageUrl(registry: string) {
@@ -81,6 +112,7 @@ function packageUrl(registry: string) {
 
 /** The tarball and its integrity for `release`, a version or a dist-tag. */
 async function resolveTarball(registry: string, release: string) {
+  assertRegistry(registry);
   const url = packageUrl(registry);
   const body = (await download(url)).toString('utf8');
   let packument: Packument;
@@ -88,7 +120,7 @@ async function resolveTarball(registry: string, release: string) {
     packument = JSON.parse(body) as Packument;
   } catch {
     throw new CliError(
-      `${url} didn't answer with JSON. Check --npm-registry, or your proxy, then run the command again.`
+      `${redactUrl(url)} didn't answer with JSON. Check --npm-registry, or your proxy, then run the command again.`
     );
   }
   const version = packument['dist-tags']?.[release] ?? release;
@@ -111,13 +143,13 @@ function checkIntegrity(bytes: Buffer, integrity: string, tarball: string) {
     .find((entry) => entry.startsWith('sha512-'));
   if (!expected) {
     throw new CliError(
-      `${tarball} has no sha512 integrity to check it against.`
+      `${redactUrl(tarball)} has no sha512 integrity to check it against.`
     );
   }
   const actual = `sha512-${createHash('sha512').update(bytes).digest('base64')}`;
   if (actual !== expected) {
     throw new CliError(
-      `${tarball} doesn't match its published integrity. Run the command again; if it keeps failing, report it.`
+      `${redactUrl(tarball)} doesn't match its published integrity. Run the command again; if it keeps failing, report it.`
     );
   }
 }
