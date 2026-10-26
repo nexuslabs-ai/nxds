@@ -5,6 +5,7 @@ export * from './components/alert';
 export * from './components/alert-dialog';
 export * from './components/appearance';
 export * from './components/aspect-ratio';
+export * from './components/avatar';
 export * from './components/badge';
 export * from './components/breadcrumb';
 export * from './components/button';

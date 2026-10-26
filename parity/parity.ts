@@ -6,7 +6,6 @@
 export const planned = [
   'appearance-settings',
   'attachment',
-  'avatar',
   'brand-color-field',
   'bubble',
   'carousel',
@@ -37,6 +36,7 @@ export const shared = [
   'alert',
   'alert-dialog',
   'aspect-ratio',
+  'avatar',
   'badge',
   'breadcrumb',
   'button',
@@ -161,6 +161,9 @@ export const behaviourOnlyIn: Record<
 const PIN_INPUT =
   'React types into one hidden input; Reka gives each slot its own input, so Vue reads the code from the slots';
 
+const AVATAR_IMAGE_LOAD =
+  'Radix mounts the image once it loads; Reka mounts it hidden at once, so Vue waits for it to show';
+
 const GRACE_AREA =
   "user-event's unhover leaves the pointer at (0, 0); Reka keeps the content open until a pointer move lands outside its trigger-to-content grace area, so Vue moves the pointer away";
 
@@ -169,6 +172,8 @@ const TABS_INDICATOR =
 
 /** Paired play stories whose steps differ by design, as `{slug}/{Story}`. */
 export const behaviourDifferences: Record<string, string> = {
+  'avatar/CroppedImage': AVATAR_IMAGE_LOAD,
+  'avatar/WithDataAttributes': AVATAR_IMAGE_LOAD,
   'hover-card/OpenCloseInteraction': GRACE_AREA,
   'input-otp/KeyboardInteraction': PIN_INPUT,
   'input-otp/Paste': PIN_INPUT,
@@ -184,6 +189,8 @@ export const behaviourDifferences: Record<string, string> = {
 
 /** Parts whose rendered element differs by design, by `data-slot`; the rendered check skips them. */
 export const renderedDifferences: Record<string, string> = {
+  'avatar-image':
+    'Radix mounts the <img> only once it loads; Reka mounts it at once as role="img", hidden until it loads',
   'input-otp':
     "input-otp puts data-slot on its hidden <input>; Vue's root is Reka's PinInputRoot <div>",
   'input-otp-slot':
@@ -222,6 +229,8 @@ export const renderedAttributeDifferences: Record<string, string> = {
 
 /** Top-level values a Vue recipe file declares that React has no twin for, as `{file}#{name}`. */
 export const vueOnlyDeclarations: Record<string, string> = {
+  'avatar/index.ts#AvatarGroupKey':
+    'Vue injection key the group provides to its avatars; React passes the same size and shape through context',
   'alert-dialog/index.ts#AlertDialogLayoutKey':
     'Vue injection key the content provides to its header and footer; React passes the same layout through context',
   'input-otp/index.ts#InputOTPKey':
@@ -259,6 +268,10 @@ export const copies: [react: string, vue: string][] = [
   [
     'packages/react/src/stories/support/story-height-test-utils.ts',
     'packages/vue/src/stories/support/story-height-test-utils.ts',
+  ],
+  [
+    'packages/react/src/components/avatar/avatar-fixtures.ts',
+    'packages/vue/src/stories/support/avatar-fixtures.ts',
   ],
   [
     'packages/react/src/stories/support/overlay-motion-test-utils.ts',
