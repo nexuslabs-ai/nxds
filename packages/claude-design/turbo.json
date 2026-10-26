@@ -1,0 +1,22 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": [
+        "src/**",
+        "scripts/build.ts",
+        "content/**",
+        "package.json",
+        "$TURBO_ROOT$/packages/source-model/src/**",
+        "$TURBO_ROOT$/packages/tailwind/*.css",
+        "$TURBO_ROOT$/packages/react/src/**",
+        "$TURBO_ROOT$/packages/react/package.json",
+        "$TURBO_ROOT$/packages/react/tsconfig.json",
+        "$TURBO_ROOT$/packages/react/.storybook/public/**",
+        "$TURBO_ROOT$/packages/react-18/src/**"
+      ],
+      "outputs": ["dist/**"]
+    }
+  }
+}

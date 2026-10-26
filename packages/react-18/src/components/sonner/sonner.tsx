@@ -22,20 +22,24 @@ import {
 
 /**
  * Track the active theme by observing the `.dark` class on the document root
- * (where nxds toggles dark mode) via MutationObserver, keeping sonner's own
- * `theme` in sync with the design system.
+ * (where nxds toggles dark mode), or `data-theme="dark"` (where a Claude Design
+ * page sets it), via MutationObserver, keeping sonner's own `theme` in sync
+ * with the design system.
  */
 function subscribeToTheme(notify: () => void) {
   const observer = new MutationObserver(notify);
   observer.observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ['class'],
+    attributeFilter: ['class', 'data-theme'],
   });
   return () => observer.disconnect();
 }
 
 function getThemeSnapshot(): 'light' | 'dark' {
-  return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+  const root = document.documentElement;
+  return root.classList.contains('dark') || root.dataset['theme'] === 'dark'
+    ? 'dark'
+    : 'light';
 }
 
 function useToasterTheme(): 'light' | 'dark' {
@@ -139,7 +143,8 @@ type ToasterProps = Omit<SonnerToasterProps, 'id'>;
 
 /**
  * Renders toast notifications. Mount it once near your app root, then call
- * `toast()` from anywhere. It follows the `.dark` class for dark mode.
+ * `toast()` from anywhere. It follows the `.dark` class, or `data-theme="dark"`,
+ * on the document root for dark mode.
  */
 function Toaster({ style, ...props }: ToasterProps) {
   const theme = useToasterTheme();

@@ -1,0 +1,101 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>nxds</title>
+    <style>
+      body {
+        margin: 0;
+        background: var(--nx-color-background);
+      }
+      .cover {
+        position: relative;
+        width: 960px;
+        height: 288px;
+        overflow: hidden;
+        background: var(--nx-color-background);
+      }
+      .cover svg {
+        position: absolute;
+        inset: 0;
+      }
+      .text {
+        position: absolute;
+        left: 48px;
+        bottom: 40px;
+        max-width: 440px;
+      }
+      .name {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 120px;
+        font-weight: 700;
+        line-height: 0.92;
+        letter-spacing: -0.04em;
+        color: var(--nx-color-foreground);
+      }
+      .tagline {
+        margin: 16px 0 0;
+        font-family: var(--font-sans);
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--nx-color-muted-foreground);
+      }
+      .tile {
+        rx: var(--nx-radius-md);
+      }
+      .ink {
+        fill: var(--nx-color-primary-background);
+      }
+      .well {
+        fill: var(--nx-color-muted);
+      }
+      .rail {
+        fill: var(--nx-color-control-background);
+      }
+      .edge {
+        fill: var(--nx-color-border-default);
+      }
+      .signal {
+        fill: var(--nx-color-information-background);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cover">
+      <svg viewBox="0 0 960 288" width="960" height="288" aria-hidden="true">
+        <!--
+      blocks: nx-color-primary-background 184x120 slab and 120x56 bar; nx-color-information-background 56x120; nx-color-muted, nx-color-control-background and nx-color-border-default 56x56 tiles
+      arrangement: a flush modular grid right of x = 496, merged two- and three-wide like the components' grouped controls
+      pattern: tiles cut by the radius scale, from "geometric, modular, dense UI": nxds is a dense product UI built from grouped controls
+      scales: 56px tiles on a 64px pitch (nx-spacing-14 + nx-spacing-2), corners nx-radius-md
+    -->
+        <rect class="tile ink" x="496" y="24" width="184" height="120" />
+        <rect class="tile well" x="688" y="24" width="56" height="56" />
+        <rect class="tile rail" x="752" y="24" width="56" height="56" />
+        <rect class="tile well" x="816" y="24" width="56" height="56" />
+        <rect class="tile edge" x="880" y="24" width="56" height="56" />
+        <rect class="tile rail" x="688" y="88" width="120" height="56" />
+        <rect class="tile signal" x="816" y="88" width="56" height="120" />
+        <rect class="tile well" x="880" y="88" width="56" height="56" />
+        <rect class="tile well" x="496" y="152" width="56" height="56" />
+        <rect class="tile edge" x="560" y="152" width="56" height="56" />
+        <rect class="tile rail" x="624" y="152" width="56" height="56" />
+        <rect class="tile well" x="688" y="152" width="56" height="56" />
+        <rect class="tile well" x="752" y="152" width="56" height="56" />
+        <rect class="tile rail" x="880" y="152" width="56" height="56" />
+        <rect class="tile rail" x="496" y="216" width="56" height="56" />
+        <rect class="tile well" x="560" y="216" width="56" height="56" />
+        <rect class="tile ink" x="624" y="216" width="120" height="56" />
+        <rect class="tile well" x="752" y="216" width="56" height="56" />
+        <rect class="tile edge" x="816" y="216" width="56" height="56" />
+        <rect class="tile well" x="880" y="216" width="56" height="56" />
+      </svg>
+      <div class="text">
+        <p class="name">nxds</p>
+        <p class="tagline">Calm, dense product UI, themed by tokens.</p>
+      </div>
+    </div>
+  </body>
+</html>
