@@ -125,7 +125,7 @@ export const KeyboardInteraction: Story = {
     next.focus();
     // Horizontal carousel ignores ArrowDown — it must stay on the first slide.
     await userEvent.keyboard('{ArrowDown}');
-    expect(keyboardApiRef.current?.selectedScrollSnap()).toBe(0);
+    await expect(keyboardApiRef.current?.selectedScrollSnap()).toBe(0);
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() => expect(prev).toBeEnabled());
   },

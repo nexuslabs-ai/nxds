@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fn, mocked, userEvent, waitFor, within } from 'storybook/test';
 
 import {
   ResizableHandle,
@@ -150,6 +150,8 @@ export const KeyboardInteraction: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const handle = canvas.getByRole('separator');
+    // The separator reports its value once the group has laid out.
+    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '50'));
     handle.focus();
     await expect(handle).toHaveFocus();
     const before = handle.getAttribute('aria-valuenow');
@@ -157,6 +159,41 @@ export const KeyboardInteraction: Story = {
     await waitFor(() => {
       expect(handle.getAttribute('aria-valuenow')).not.toBe(before);
     });
+  },
+};
+
+// A px panel still reports its size as a percentage, in panel order.
+export const LayoutChangeInteraction: Story = {
+  args: { onLayoutChange: fn() },
+  render: (args) => (
+    <ResizablePanelGroup
+      {...args}
+      orientation="horizontal"
+      className={groupClass}
+      style={groupStyle}
+    >
+      <ResizablePanel defaultSize={120} sizeUnit="px" style={panelStyle}>
+        <PanelBody label="One" />
+      </ResizablePanel>
+      <ResizableHandle withHandle aria-label="Resize panels" />
+      <ResizablePanel style={panelStyle}>
+        <PanelBody label="Two" />
+      </ResizablePanel>
+    </ResizablePanelGroup>
+  ),
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const handle = canvas.getByRole('separator');
+    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow'));
+    const onLayoutChange = mocked(args.onLayoutChange!);
+    onLayoutChange.mockClear();
+    handle.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(onLayoutChange).toHaveBeenCalled());
+    const [layout] = onLayoutChange.mock.lastCall!;
+    await expect(layout).toHaveLength(2);
+    await expect(layout[0]).toBeLessThan(50);
+    await expect(layout.reduce((sum, size) => sum + size, 0)).toBeCloseTo(100);
   },
 };
 

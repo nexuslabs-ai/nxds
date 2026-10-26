@@ -1,10 +1,11 @@
 export const description =
-  'Let your AI agent install nxds with nxds-cli, learn its rules from the nxds skills, and read every docs page as Markdown.';
+  'Let your AI agent install nxds with nxds-cli, export it to Claude Design, learn its rules from the nxds skills, and read every docs page as Markdown.';
 
 # AI agents
 
-Your AI agent installs nxds with `nxds-cli`, learns the nxds rules
-from the nxds skills, and reads every docs page as Markdown.
+Your AI agent installs nxds with `nxds-cli`, exports it to Claude Design,
+learns the nxds rules from the nxds skills, and reads every docs page as
+Markdown.
 
 ## Install with the CLI
 
@@ -28,6 +29,26 @@ With `--json`, a command prints one object: `{ "ok": true, "exitCode": 0,
 | `1`       | Error, such as no network or an invalid release                                         |
 | `2`       | Usage error, such as an unknown option or item                                          |
 | `3`       | Done, with something left for you: conflicts, kept files, manual steps or failed checks |
+
+## Use nxds in Claude Design
+
+```bash
+npx nxds-cli@latest export claude-design
+```
+
+The command writes a `nxds-design-system` folder. Ask Claude to publish that
+folder as a Design System artifact, unchanged. Your canvas then mounts every
+nxds component, shows its props as controls and lists the nxds tokens.
+
+| Option              | What it does                                                                     |
+| ------------------- | -------------------------------------------------------------------------------- |
+| `--release <v>`     | Export that nxds release instead of the latest                                   |
+| `--out <path>`      | Write the folder somewhere else                                                  |
+| `--index <path>`    | Keep the title and creation date from your system's current `design-system.json` |
+| `--existing <path>` | List, in `removed.json`, the files your system has that this release drops       |
+
+If you republish over an existing system, remove the files in `removed.json`
+too, so no old component stays on the page.
 
 ## Add the nxds skills
 

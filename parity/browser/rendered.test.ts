@@ -169,11 +169,16 @@ function readTree(slug: string) {
   };
 }
 
-async function settle() {
-  await new Promise((resolve) =>
-    requestAnimationFrame(() => requestAnimationFrame(resolve))
-  );
+/** Waits until `read` returns the same value twice, 100ms apart. */
+async function holdsSteady(read: () => string) {
+  await waitFor(async () => {
+    const before = read();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(read()).toBe(before);
+  });
 }
+
+const partCount = () => String(document.querySelectorAll('[data-slot]').length);
 
 // Radix and Reka class tokens name their own CSS variables for the same value.
 function normalizeClass(token: string) {
@@ -231,13 +236,10 @@ async function openOverlay(
   }
   // Popper places the content after measuring it, which can flip its side,
   // and Radix mounts a navigation indicator once a ResizeObserver reports.
-  const layout = () =>
-    `${content.getAttribute('data-side')}/${content.getAttribute('data-align')}/${document.querySelectorAll('[data-slot]').length}`;
-  await waitFor(async () => {
-    const before = layout();
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    expect(layout()).toBe(before);
-  });
+  await holdsSteady(
+    () =>
+      `${content.getAttribute('data-side')}/${content.getAttribute('data-align')}/${partCount()}`
+  );
   return true;
 }
 
@@ -287,7 +289,8 @@ async function renderTree(
   document.body.append(canvasElement);
 
   const composed = await mount(canvasElement);
-  await settle();
+  // Some parts mount late, such as a scroll area's corner once both scrollbars measure.
+  await holdsSteady(partCount);
 
   const opener = OVERLAYS[slug];
   const opened = opener

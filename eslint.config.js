@@ -178,6 +178,21 @@ export default tseslint.config(
       'vue/require-default-prop': 'off',
     },
   },
+  // A Vue stories file defines its demos as components beside its stories, and
+  // those demos register nxds components by their React names, such as Button.
+  {
+    files: ['packages/vue/src/**/*.stories.ts'],
+    rules: {
+      'vue/no-reserved-component-names': 'off',
+      'vue/one-component-per-file': 'off',
+    },
+  },
+  // Carousel's region takes no focus; it handles the arrow keys that bubble up
+  // from the focused controls inside it, as React's region does.
+  {
+    files: ['packages/vue/src/components/carousel/Carousel.vue'],
+    rules: { 'vuejs-accessibility/no-static-element-interactions': 'off' },
+  },
   // Field primitives render a bare control; the consumer's Label `for`, or an
   // `aria-label` that falls through, names it. The exemption lives here so
   // copied source lints clean in apps without vuejs-accessibility.

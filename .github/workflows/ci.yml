@@ -480,6 +480,58 @@ jobs:
         run: node packages/cli/scripts/check-install.mjs ${{ matrix.app }}
 
   # ============================================
+  # Claude Design System smoke test
+  # ============================================
+  # Loads the built @nxds/claude-design output the way Claude Design does:
+  # React 18 globals, then the bundle as a classic script. Every preview
+  # renders in both themes, overlays open and close, and nothing hits the
+  # network.
+
+  claude-design-smoke:
+    name: Claude Design Smoke
+    # Playwright 1.60 can't install Chromium on ubuntu-latest's 26.04 image.
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: packages
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Playwright system deps
+        run: npx playwright install-deps chromium
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
+
+      - name: Smoke-test the Claude Design System
+        run: pnpm --filter @nxds/claude-design smoke
+
+  # ============================================
   # Aggregator — the single required status check
   # ============================================
   # Runs unconditionally so a status always lands for branch protection. No
@@ -503,6 +555,7 @@ jobs:
       - build-storybook
       - bundle-size
       - cli-install
+      - claude-design-smoke
     steps:
       - name: Fail on any required-job failure or cancellation
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
