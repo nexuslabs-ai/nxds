@@ -13,24 +13,44 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./utils": {
-      "types": "./dist/lib/utils.d.ts",
-      "import": "./dist/utils.mjs",
-      "require": "./dist/utils.cjs"
+      "import": {
+        "types": "./dist/lib/utils.d.ts",
+        "default": "./dist/lib/utils.mjs"
+      },
+      "require": {
+        "types": "./dist/lib/utils.d.cts",
+        "default": "./dist/lib/utils.cjs"
+      }
     },
     "./appearance": {
-      "types": "./dist/components/appearance/provider/index.d.ts",
-      "import": "./dist/appearance.mjs",
-      "require": "./dist/appearance.cjs"
+      "import": {
+        "types": "./dist/components/appearance/provider/index.d.ts",
+        "default": "./dist/components/appearance/provider/index.mjs"
+      },
+      "require": {
+        "types": "./dist/components/appearance/provider/index.d.cts",
+        "default": "./dist/components/appearance/provider/index.cjs"
+      }
     },
     "./appearance/server": {
-      "types": "./dist/components/appearance/provider/server.d.ts",
-      "import": "./dist/appearance-server.mjs",
-      "require": "./dist/appearance-server.cjs"
+      "import": {
+        "types": "./dist/components/appearance/provider/server.d.ts",
+        "default": "./dist/components/appearance/provider/server.mjs"
+      },
+      "require": {
+        "types": "./dist/components/appearance/provider/server.d.cts",
+        "default": "./dist/components/appearance/provider/server.cjs"
+      }
     },
     "./styles.css": "./dist/react.css"
   },
@@ -43,6 +63,7 @@
     "build-storybook": "storybook build"
   },
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.58.9",
     "@storybook/addon-a11y": "^10.1.10",
     "@storybook/addon-docs": "^10.1.10",
     "@storybook/react-vite": "^10.1.10",
@@ -64,7 +85,7 @@
     "typescript": "^5.9.3",
     "vaul": "^1.1.2",
     "vite": "^7.3.0",
-    "vite-plugin-dts": "^5.0.3"
+    "vite-plugin-dts": "^5.1.2"
   },
   "dependencies": {
     "@nxds/core": "workspace:*",

@@ -69,7 +69,7 @@
     },
     {
       "name": "@nxds/react/appearance (ESM)",
-      "path": "packages/react/dist/appearance.mjs",
+      "path": "packages/react/dist/components/appearance/provider/index.mjs",
       "ignore": [
         "@nxds/core",
         "react",

@@ -1,8 +1,20 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import { copyFileSync } from 'fs';
 import path from 'path';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
+
+// Named after the source path, so each entry's bundled types land at the
+// same dist path as its source.
+const entries = Object.fromEntries(
+  [
+    'index',
+    'lib/utils',
+    'components/appearance/provider/index',
+    'components/appearance/provider/server',
+  ].map((name) => [name, path.resolve(__dirname, `src/${name}.ts`)])
+);
 
 export default defineConfig({
   plugins: [
@@ -18,23 +30,20 @@ export default defineConfig({
         'src/blocks/**',
         'src/patterns/**',
       ],
-      outDir: 'dist',
+      bundleTypes: true,
+      afterBuild: () => {
+        for (const name of Object.keys(entries)) {
+          copyFileSync(
+            path.resolve(__dirname, `dist/${name}.d.ts`),
+            path.resolve(__dirname, `dist/${name}.d.cts`)
+          );
+        }
+      },
     }),
   ],
   build: {
     lib: {
-      entry: {
-        index: path.resolve(__dirname, 'src/index.ts'),
-        utils: path.resolve(__dirname, 'src/lib/utils.ts'),
-        appearance: path.resolve(
-          __dirname,
-          'src/components/appearance/provider/index.ts'
-        ),
-        'appearance-server': path.resolve(
-          __dirname,
-          'src/components/appearance/provider/server.ts'
-        ),
-      },
+      entry: entries,
       name: 'NxdsReact',
       formats: ['es', 'cjs'],
       fileName: (format, entryName) =>
@@ -56,7 +65,9 @@ export default defineConfig({
       ],
       output: {
         banner: (chunk) =>
-          chunk.isEntry && chunk.name === 'appearance' ? "'use client';" : '',
+          chunk.isEntry && chunk.name === 'components/appearance/provider/index'
+            ? "'use client';"
+            : '',
         globals: {
           '@nxds/core': 'NxdsCore',
           react: 'React',
