@@ -211,6 +211,12 @@ export default tseslint.config(
     ],
     rules: { 'vuejs-accessibility/label-has-for': 'off' },
   },
+  // The rule reads Reka's `<Select>` root as a native `<select>`; the
+  // SelectTrigger inside it carries the aria-label.
+  {
+    files: ['packages/vue/src/components/filter-builder/Picker.vue'],
+    rules: { 'vuejs-accessibility/form-control-has-label': 'off' },
+  },
   // Command's hidden label names the search input through `for`, as cmdk's
   // does; the input is a sibling, rendered by CommandInput.
   {

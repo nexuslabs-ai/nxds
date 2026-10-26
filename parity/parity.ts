@@ -12,7 +12,6 @@ export const planned = [
   'color-field',
   'config-preview',
   'date-picker',
-  'filter-builder',
   'message',
   'message-scroller',
   'setting-row',
@@ -48,6 +47,7 @@ export const shared = [
   'dropdown-menu',
   'empty-state',
   'field',
+  'filter-builder',
   'filter-chip',
   'filter-condition',
   'hide',
@@ -357,6 +357,10 @@ export const vueOnlyDeclarations: Record<string, string> = {
 export const copies: [react: string, vue: string][] = [
   ['packages/react/src/lib/utils.ts', 'packages/vue/src/lib/utils.ts'],
   ['packages/react/src/lib/motion.ts', 'packages/vue/src/lib/motion.ts'],
+  [
+    'packages/react/src/lib/filter-model.ts',
+    'packages/vue/src/lib/filter-model.ts',
+  ],
   [
     'packages/react/src/lib/field-size.ts',
     'packages/vue/src/lib/field-size.ts',

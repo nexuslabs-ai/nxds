@@ -25,6 +25,7 @@ export * from './components/drawer';
 export * from './components/dropdown-menu';
 export * from './components/empty-state';
 export * from './components/field';
+export * from './components/filter-builder';
 export * from './components/filter-chip';
 export * from './components/filter-condition';
 export * from './components/hide';
@@ -61,3 +62,16 @@ export * from './components/textarea';
 export * from './components/toggle';
 export * from './components/toggle-group';
 export * from './components/tooltip';
+export {
+  type FilterError,
+  type FilterErrorCode,
+  type FilterField,
+  type FilterGroup,
+  type FilterOperator,
+  filterOperatorLabels,
+  type FilterOption,
+  type FilterRule,
+  getFilterErrors,
+  isValuelessOperator,
+  type ValuelessOperator,
+} from './lib/filter-model';
