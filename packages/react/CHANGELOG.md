@@ -1,5 +1,11 @@
 # @nxds/react
 
+## 0.7.0
+
+### Minor Changes
+
+- be76459: A range `DatePicker` shades the days from the start to the hovered or focused day while the range is half-picked. Remove any `preview` modifier and the `onDayMouseEnter` wiring that set it. `FilterBuilder` declares `aria-label`, which defaults to `Filters`.
+
 ## 0.6.0
 
 ### Minor Changes
