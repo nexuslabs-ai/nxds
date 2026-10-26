@@ -141,7 +141,7 @@ function TabsList({
         'nx:relative nx:isolate nx:inline-flex nx:items-center nx:justify-center',
         'nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
         variant === 'default' &&
-          'nx:rounded-md nx:bg-control-background nx:p-1',
+          'nx:rounded-md nx:bg-control-background nx:p-1 nx:nest-outer-md nx:nest-border-none nx:nest-padding-1',
         className
       )}
       {...props}
@@ -153,8 +153,13 @@ function TabsList({
         data-variant={variant}
         className={cn(
           'nx:pointer-events-none nx:absolute nx:z-0 nx:opacity-0',
-          variant === 'default' &&
-            'nx:top-0 nx:left-0 nx:rounded-sm nx:border-default nx:border-border-default nx:bg-background',
+          variant === 'default' && [
+            'nx:top-0 nx:left-0 nx:rounded-nest nx:border-default nx:border-border-default nx:bg-background',
+            'nx:[[data-orientation=horizontal]:has(>[data-slot=tabs-trigger]:first-of-type[data-state=active])>&]:rounded-s-nest-corner',
+            'nx:[[data-orientation=horizontal]:has(>[data-slot=tabs-trigger]:last-of-type[data-state=active])>&]:rounded-e-nest-corner',
+            'nx:[[data-orientation=vertical]:has(>[data-slot=tabs-trigger]:first-of-type[data-state=active])>&]:rounded-t-nest-corner',
+            'nx:[[data-orientation=vertical]:has(>[data-slot=tabs-trigger]:last-of-type[data-state=active])>&]:rounded-b-nest-corner',
+          ],
           variant === 'underline' && [
             'nx:bg-primary-background',
             'nx:[[data-orientation=horizontal]>&]:bottom-0 nx:[[data-orientation=horizontal]>&]:left-0 nx:[[data-orientation=horizontal]>&]:h-(--nx-borderwidth-thick)',
@@ -192,7 +197,9 @@ const tabsTriggerVariants = cva(
        */
       variant: {
         default: [
-          'nx:rounded-sm nx:border-default nx:border-transparent',
+          'nx:rounded-nest nx:border-default nx:border-transparent',
+          'nx:data-[orientation=horizontal]:first-of-type:rounded-s-nest-corner nx:data-[orientation=horizontal]:last-of-type:rounded-e-nest-corner',
+          'nx:data-[orientation=vertical]:first-of-type:rounded-t-nest-corner nx:data-[orientation=vertical]:last-of-type:rounded-b-nest-corner',
           'nx:data-[state=inactive]:hover:bg-control-background-hover',
           'nx:data-[state=active]:text-foreground',
         ],

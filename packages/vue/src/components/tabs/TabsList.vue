@@ -46,7 +46,7 @@ const isVertical = computed(() => orientation.value === 'vertical');
         'nx:relative nx:isolate nx:inline-flex nx:items-center nx:justify-center',
         'nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
         variant === 'default' &&
-          'nx:rounded-md nx:bg-control-background nx:p-1',
+          'nx:rounded-md nx:bg-control-background nx:p-1 nx:nest-outer-md nx:nest-border-none nx:nest-padding-1',
         props.class
       )
     "
@@ -63,7 +63,11 @@ const isVertical = computed(() => orientation.value === 'vertical');
             ? 'nx:top-0 nx:h-(--reka-tabs-indicator-size) nx:translate-y-(--reka-tabs-indicator-position)'
             : 'nx:left-0 nx:w-(--reka-tabs-indicator-size) nx:translate-x-(--reka-tabs-indicator-position)',
           variant === 'default' && [
-            'nx:rounded-sm nx:border-default nx:border-border-default nx:bg-background',
+            'nx:rounded-nest nx:border-default nx:border-border-default nx:bg-background',
+            'nx:[[data-orientation=horizontal]:has(>[data-slot=tabs-trigger]:first-of-type[data-state=active])>&]:rounded-s-nest-corner',
+            'nx:[[data-orientation=horizontal]:has(>[data-slot=tabs-trigger]:last-of-type[data-state=active])>&]:rounded-e-nest-corner',
+            'nx:[[data-orientation=vertical]:has(>[data-slot=tabs-trigger]:first-of-type[data-state=active])>&]:rounded-t-nest-corner',
+            'nx:[[data-orientation=vertical]:has(>[data-slot=tabs-trigger]:last-of-type[data-state=active])>&]:rounded-b-nest-corner',
             isVertical ? 'nx:inset-x-1' : 'nx:inset-y-1',
           ],
           variant === 'underline' && [
