@@ -885,3 +885,37 @@ export const NestedCorners: Story = {
     await userEvent.keyboard('{Escape}');
   },
 };
+
+export const NestedCornersGrouped: Story = {
+  globals: { corners: '12' },
+  render: () => (
+    <Select defaultOpen>
+      <SelectTrigger aria-label="Fruit">
+        <SelectValue placeholder="Choose a fruit" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectItem value="apple">Apple</SelectItem>
+          <SelectItem value="banana">Banana</SelectItem>
+          <SelectItem value="cherry">Cherry</SelectItem>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  ),
+  play: async () => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    const options = await within(document.body).findAllByRole('option');
+    await expect(corners(options[0]!)).toEqual(['7px', '7px', '6px', '6px']);
+    await expect(corners(options[2]!)).toEqual(['6px', '6px', '7px', '7px']);
+    await userEvent.keyboard('{Escape}');
+  },
+};

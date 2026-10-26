@@ -126,7 +126,7 @@ const DropdownMenuSubContent = React.forwardRef<
       className={cn(
         'nx:z-popover nx:min-w-32 nx:overflow-hidden',
         popoverSurfaceClassName,
-        'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:rounded-t-nest-corner nx:[&>:last-child]:rounded-b-nest-corner',
+        'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:rounded-t-nest-corner nx:[&>:last-child]:rounded-b-nest-corner nx:[&>[role=group]:first-child>:first-child]:rounded-t-nest-corner nx:[&>[role=group]:last-child>:last-child]:rounded-b-nest-corner',
         overlayFloatingTransitionClassName,
         className
       )}
@@ -169,7 +169,7 @@ const DropdownMenuContent = React.forwardRef<
           'nx:z-popover nx:max-h-(--radix-dropdown-menu-content-available-height)',
           'nx:min-w-32 nx:overflow-x-hidden nx:overflow-y-auto',
           popoverSurfaceClassName,
-          'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:rounded-t-nest-corner nx:[&>:last-child]:rounded-b-nest-corner',
+          'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:rounded-t-nest-corner nx:[&>:last-child]:rounded-b-nest-corner nx:[&>[role=group]:first-child>:first-child]:rounded-t-nest-corner nx:[&>[role=group]:last-child>:last-child]:rounded-b-nest-corner',
           overlayFloatingTransitionClassName,
           className
         )}

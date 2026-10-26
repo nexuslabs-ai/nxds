@@ -211,7 +211,7 @@ function MultipleValues({
       <PopoverContent
         align="start"
         aria-label={`${field.label} values`}
-        className="nx:w-64 nx:max-w-(--radix-popover-content-available-width) nx:overflow-hidden nx:p-0"
+        className="nx:w-64 nx:max-w-(--radix-popover-content-available-width) nx:overflow-hidden nx:p-0 nx:nest-outer-md"
       >
         <div className="nx:border-b nx:border-border-default nx:p-2">
           <Input

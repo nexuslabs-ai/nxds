@@ -197,7 +197,7 @@ const NavigationMenuContent = React.forwardRef<
     <NavigationMenuPrimitive.Content
       data-slot="navigation-menu-content"
       className={cn(
-        'nx:top-0 nx:left-0 nx:w-full nx:p-2 nx:pr-2.5',
+        'nx:top-0 nx:left-0 nx:w-full nx:p-2 nx:pr-2.5 nx:nest-outer-md',
         'nx:data-[motion=from-end]:slide-in-from-right-[1.5rem] nx:data-[motion=from-start]:slide-in-from-left-[1.5rem]',
         'nx:data-[motion=to-end]:slide-out-to-right-[1.5rem] nx:data-[motion=to-start]:slide-out-to-left-[1.5rem]',
         'nx:duration-fast nx:data-[motion^=from-]:animate-in nx:data-[motion^=from-]:fade-in nx:data-[motion^=to-]:animate-out nx:data-[motion^=to-]:fade-out',

@@ -557,6 +557,9 @@ export const NestedCorners: Story = {
   render: () => (
     <div data-radius="12" className="nx:w-64">
       <Slider aria-label="Volume" defaultValue={[40]} />
+      <div data-radius="4" className="nx:mt-4">
+        <Slider aria-label="Balance" defaultValue={[40]} />
+      </div>
     </div>
   ),
   play: async ({ canvasElement }) => {
@@ -570,7 +573,10 @@ export const NestedCorners: Story = {
       ];
     }
 
-    const range = canvasElement.querySelector('[data-slot="slider-range"]')!;
-    await expect(corners(range)).toEqual(['11px', '0px', '0px', '11px']);
+    const [range12, range4] = canvasElement.querySelectorAll(
+      '[data-slot="slider-range"]'
+    );
+    await expect(corners(range12!)).toEqual(['9px', '0px', '0px', '9px']);
+    await expect(corners(range4!)).toEqual(['2px', '0px', '0px', '2px']);
   },
 };

@@ -798,3 +798,42 @@ export const NestedCornersAfterLabel: Story = {
     await userEvent.keyboard('{Escape}');
   },
 };
+
+export const NestedCornersGrouped: Story = {
+  globals: { corners: '12' },
+  render: () => (
+    <DropdownMenu defaultOpen modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">Actions</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuGroup>
+          <DropdownMenuItem>Rename</DropdownMenuItem>
+          <DropdownMenuItem>Duplicate</DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem>Archive</DropdownMenuItem>
+          <DropdownMenuItem>Delete</DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ),
+  play: async () => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    const items = await within(document.body).findAllByRole('menuitem');
+    await expect(corners(items[0]!)).toEqual(['7px', '7px', '6px', '6px']);
+    await expect(corners(items[1]!)).toEqual(['6px', '6px', '6px', '6px']);
+    await expect(corners(items[3]!)).toEqual(['6px', '6px', '7px', '7px']);
+    await userEvent.keyboard('{Escape}');
+  },
+};
