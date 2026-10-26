@@ -4,7 +4,6 @@
 
 /** React components Vue doesn't ship yet. */
 export const planned = [
-  'accordion',
   'appearance-settings',
   'attachment',
   'avatar',
@@ -12,7 +11,6 @@ export const planned = [
   'bubble',
   'carousel',
   'chart',
-  'collapsible',
   'color-field',
   'combobox',
   'command',
@@ -35,6 +33,7 @@ export const planned = [
 
 /** Components both packages ship, appearance aside: it has its own contract. */
 export const shared = [
+  'accordion',
   'alert',
   'alert-dialog',
   'aspect-ratio',
@@ -46,6 +45,7 @@ export const shared = [
   'checkbox',
   'choice-card',
   'choice-row',
+  'collapsible',
   'context-menu',
   'description-list',
   'dialog',
@@ -139,7 +139,9 @@ export const behaviourOnlyIn: Record<
     'tabs/ListRef': REACT_REF,
   },
   vue: {
+    'accordion/VModel': V_MODEL,
     'checkbox/VModel': V_MODEL,
+    'collapsible/VModel': V_MODEL,
     'input/VModel': V_MODEL,
     'input-otp/SlotNaming':
       "each slot is its own <input>, so Vue forwards the field's name and invalid state to it; React's single <input> carries them",
