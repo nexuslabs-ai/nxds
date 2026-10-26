@@ -1567,6 +1567,70 @@ export function generateTargetUtilitiesCSS() {
 `;
 }
 
+const NEST_OUTER = 'var(--nx-nest-outer, var(--nx-radius-md))';
+const NEST_MINIMUM = `round(calc(${NEST_OUTER} / 2), 1px)`;
+const NEST_CORNER = `max(round(calc(${NEST_OUTER} - var(--nx-nest-border) - var(--nx-nest-padding)), 1px), ${NEST_MINIMUM})`;
+
+/**
+ * Nested corners. A container declares the corner its items share with
+ * `nest-outer-*` (its radius), `nest-border-*` (its border width) and
+ * `nest-padding-*` (the space to its items); it sets all three, so an outer
+ * container's values never leak in. Its items use `rounded-nest`, the minimum
+ * (half the outer radius), and `rounded-{side}-nest-corner` on the corners
+ * that touch the container's corners: outer − border − padding, never below
+ * the minimum. Both round to whole pixels.
+ *
+ * @returns {string} CSS @utility declarations
+ */
+export function generateNestUtilitiesCSS() {
+  return `
+/* ===== NEST UTILITIES ===== */
+@utility nest-outer-* {
+  --nx-nest-outer: --value(--radius-*);
+}
+
+@utility nest-border-* {
+  --nx-nest-border: --value(--border-width-*);
+}
+
+@utility nest-border-none {
+  --nx-nest-border: 0px;
+}
+
+@utility nest-padding-* {
+  --nx-nest-padding: --value(--spacing-*);
+}
+
+@utility rounded-nest {
+  border-radius: ${NEST_MINIMUM};
+}
+
+@utility rounded-nest-corner {
+  border-radius: ${NEST_CORNER};
+}
+
+@utility rounded-s-nest-corner {
+  border-start-start-radius: ${NEST_CORNER};
+  border-end-start-radius: ${NEST_CORNER};
+}
+
+@utility rounded-e-nest-corner {
+  border-start-end-radius: ${NEST_CORNER};
+  border-end-end-radius: ${NEST_CORNER};
+}
+
+@utility rounded-t-nest-corner {
+  border-top-left-radius: ${NEST_CORNER};
+  border-top-right-radius: ${NEST_CORNER};
+}
+
+@utility rounded-b-nest-corner {
+  border-bottom-right-radius: ${NEST_CORNER};
+  border-bottom-left-radius: ${NEST_CORNER};
+}
+`;
+}
+
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 /**

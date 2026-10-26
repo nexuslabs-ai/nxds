@@ -132,3 +132,49 @@ export const ScopeAndPrecedence: Story = {
     }
   },
 };
+
+const mediumOverride: CSSProperties & { '--nx-radius-md': string } = {
+  '--nx-radius-md': '20px',
+};
+
+export const OverrideReachesNestedCorners: Story = {
+  render: () => (
+    <div data-radius="12" style={mediumOverride}>
+      <div className="nx:flex nx:w-fit nx:gap-1 nx:rounded-md nx:border-default nx:border-border-default nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1">
+        <div
+          data-testid="override-first"
+          className="nx:h-8 nx:w-12 nx:bg-muted nx:rounded-nest nx:rounded-s-nest-corner"
+        />
+        <div
+          data-testid="override-middle"
+          className="nx:h-8 nx:w-12 nx:bg-muted nx:rounded-nest"
+        />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    function corners(element: HTMLElement) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    await expect(corners(canvas.getByTestId('override-first'))).toEqual([
+      '15px',
+      '10px',
+      '10px',
+      '15px',
+    ]);
+    await expect(corners(canvas.getByTestId('override-middle'))).toEqual([
+      '10px',
+      '10px',
+      '10px',
+      '10px',
+    ]);
+  },
+};
