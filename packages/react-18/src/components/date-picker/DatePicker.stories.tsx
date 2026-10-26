@@ -314,6 +314,45 @@ export const RangeHoverPreview: Story = {
   },
 };
 
+// The preview drops when the span to the hovered day crosses a disabled day.
+export const RangeHoverPreviewSkipsDisabled: Story = {
+  render: function RangeHoverPreviewSkipsDisabledStory() {
+    const [range, setRange] = React.useState<DateRange | undefined>({
+      from: new Date(2025, 0, 15),
+      to: undefined,
+    });
+
+    return (
+      <Card className="nx:w-fit">
+        <CardContent className="nx:p-0">
+          <DatePicker
+            mode="range"
+            defaultMonth={REFERENCE_MONTH}
+            disabled={new Date(2025, 0, 17)}
+            selected={range}
+            onSelect={setRange}
+          />
+        </CardContent>
+      </Card>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const before = canvas.getByText('13').closest('td');
+    await userEvent.hover(canvas.getByText('13').closest('button')!);
+    await waitFor(() => expect(before).toHaveClass('nx:bg-container-hover'));
+
+    // Day 17 is disabled, so hovering 19 shades nothing.
+    await userEvent.hover(canvas.getByText('19').closest('button')!);
+    await waitFor(() =>
+      expect(before).not.toHaveClass('nx:bg-container-hover')
+    );
+    await expect(canvas.getByText('18').closest('td')).not.toHaveClass(
+      'nx:bg-container-hover'
+    );
+  },
+};
+
 // Multiple discrete dates.
 export const Multiple: Story = {
   tags: ['docs'],

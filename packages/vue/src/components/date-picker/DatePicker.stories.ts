@@ -219,6 +219,40 @@ export const RangeHoverPreview: Story = {
   },
 };
 
+// The preview drops when the span to the hovered day crosses a disabled day.
+export const RangeHoverPreviewSkipsDisabled: Story = {
+  decorators: [inCard],
+  render: () => ({
+    components: { DatePicker },
+    setup: () => ({
+      range: ref({ start: new CalendarDate(2025, 1, 15), end: undefined }),
+      disabledDay: new CalendarDate(2025, 1, 17),
+    }),
+    template: `
+      <DatePicker
+        v-model="range"
+        mode="range"
+        :is-date-disabled="(date) => date.compare(disabledDay) === 0"
+      />
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const before = canvas.getByText('13').closest('td');
+    await userEvent.hover(canvas.getByText('13').closest('button')!);
+    await waitFor(() => expect(before).toHaveClass('nx:bg-container-hover'));
+
+    // Day 17 is disabled, so hovering 19 shades nothing.
+    await userEvent.hover(canvas.getByText('19').closest('button')!);
+    await waitFor(() =>
+      expect(before).not.toHaveClass('nx:bg-container-hover')
+    );
+    await expect(canvas.getByText('18').closest('td')).not.toHaveClass(
+      'nx:bg-container-hover'
+    );
+  },
+};
+
 // Multiple discrete dates.
 export const Multiple: Story = {
   tags: ['docs'],

@@ -8,6 +8,8 @@ import {
   type DayButton,
   DayPicker,
   getDefaultClassNames,
+  type Matcher,
+  rangeContainsModifiers,
   useDayPicker,
   type WeekNumber,
 } from 'react-day-picker';
@@ -300,11 +302,15 @@ function DatePickerWeekNumber({
 const startOfDay = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 
-/** Whether `date` sits between a half-picked range's start and `previewTo`, the start aside. */
+/**
+ * Whether `date` sits between a half-picked range's start and `previewTo`, the
+ * start aside. A span that crosses a `blocked` day has no preview.
+ */
 function isRangePreview(
   date: Date,
   range: DateRange | undefined,
-  previewTo: Date | undefined
+  previewTo: Date | undefined,
+  blocked: Matcher[]
 ) {
   if (!range?.from || !previewTo) return false;
   const from = startOfDay(range.from);
@@ -313,7 +319,8 @@ function isRangePreview(
   const day = startOfDay(date);
   const to = startOfDay(previewTo);
   if (day === from) return false;
-  return day >= Math.min(from, to) && day <= Math.max(from, to);
+  if (day < Math.min(from, to) || day > Math.max(from, to)) return false;
+  return !rangeContainsModifiers({ from: range.from, to: previewTo }, blocked);
 }
 
 /**
@@ -329,9 +336,13 @@ function DatePickerDay({
   void modifiers;
   const { dayPickerProps, selected } = useDayPicker<{ mode: 'range' }>();
   const previewTo = React.useContext(DatePickerPreviewContext);
+  const blocked = [
+    dayPickerProps.disabled ?? [],
+    dayPickerProps.modifiers?.unavailable ?? [],
+  ].flat();
   const preview =
     dayPickerProps.mode === 'range' &&
-    isRangePreview(day.date, selected, previewTo);
+    isRangePreview(day.date, selected, previewTo, blocked);
 
   return (
     <td

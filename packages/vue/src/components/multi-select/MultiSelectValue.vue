@@ -99,8 +99,11 @@ function removeChip(event: MouseEvent, value: string) {
 }
 
 // Reads every option's label in one walk of MultiSelect's slot per render.
-const WithLabels: FunctionalComponent = (_, { slots }) =>
-  slots.default?.({ labels: labels() });
+const WithLabels: FunctionalComponent<
+  Record<string, never>,
+  [],
+  { default: (props: { labels: ReturnType<typeof labels> }) => VNode[] }
+> = (_, { slots }) => slots.default({ labels: labels() });
 
 const ChipLabel: FunctionalComponent<{
   label: (() => VNode[]) | undefined;

@@ -217,7 +217,12 @@ export const vueOnlyApi: Record<string, string> = {
  * Packages whose components Vue rebuilds over Reka rather than inheriting a
  * twin's props. The props check can't see the props React inherits from them.
  */
-export const rebuiltPackages = ['cmdk', 'react-day-picker'];
+export const rebuiltPackages = [
+  'cmdk',
+  'input-otp',
+  'react-day-picker',
+  'react-resizable-panels',
+];
 
 const CMDK_AS_CHILD =
   "cmdk's Radix Primitive asChild; the Vue part renders its own element over Reka's Listbox";
@@ -238,6 +243,15 @@ const DAY_PICKER_DATE_LIB =
   'date-fns option; Reka dates are @internationalized/date values, which carry their own calendar and time zone';
 const DAY_PICKER_NOT_PORTED =
   "react-day-picker option with no twin in Reka's Calendar, so the Vue picker doesn't take it";
+const OTP_HIDDEN_INPUT =
+  "input-otp's tuning for its one hidden <input>; Reka gives each slot its own input";
+const OTP_CODE = 'Vue binds the code with v-model as modelValue';
+const RESIZABLE_REF =
+  'React ref to the DOM node or imperative API; Vue reaches both through a template ref';
+const RESIZABLE_DISABLED =
+  "Reka's Splitter disables a handle, not a panel or group; set disabled on ResizableHandle";
+const RESIZABLE_NOT_PORTED =
+  "react-resizable-panels option with no twin in Reka's Splitter, so the Vue part doesn't take it";
 
 /**
  * Props a React part inherits from a rebuilt package that the Vue part has no
@@ -347,10 +361,34 @@ export const reactOnlyInheritedProps: Record<string, string> = {
   'DatePicker.toYear': DAY_PICKER_BOUNDS,
   'DatePicker.useAdditionalDayOfYearTokens': DAY_PICKER_DATE_LIB,
   'DatePicker.useAdditionalWeekYearTokens': DAY_PICKER_DATE_LIB,
+  'InputOTP.containerClassName':
+    "input-otp's wrapper around its hidden <input>; the Vue root has no wrapper and takes class",
+  'InputOTP.maxLength':
+    'the number of InputOTPSlot parts sets the code length, as Reka counts its inputs',
+  'InputOTP.noScriptCSSFallback': OTP_HIDDEN_INPUT,
+  'InputOTP.onChange': OTP_CODE,
+  'InputOTP.pasteTransformer':
+    "Reka's PinInput has no hook to rewrite pasted text",
+  'InputOTP.pushPasswordManagerStrategy': OTP_HIDDEN_INPUT,
+  'InputOTP.textAlign': OTP_HIDDEN_INPUT,
+  'InputOTP.value': OTP_CODE,
   'MultiSelectGroup.asChild': CMDK_AS_CHILD,
   'MultiSelectGroup.value': CMDK_GROUP_VALUE,
   'MultiSelectItem.asChild': CMDK_AS_CHILD,
   'MultiSelectSeparator.asChild': CMDK_AS_CHILD,
+  'ResizableHandle.disableDoubleClick':
+    "Reka's handle has no double-click reset to turn off",
+  'ResizableHandle.elementRef': RESIZABLE_REF,
+  'ResizablePanel.disabled': RESIZABLE_DISABLED,
+  'ResizablePanel.elementRef': RESIZABLE_REF,
+  'ResizablePanel.groupResizeBehavior': RESIZABLE_NOT_PORTED,
+  'ResizablePanel.panelRef': RESIZABLE_REF,
+  'ResizablePanelGroup.disableCursor': RESIZABLE_NOT_PORTED,
+  'ResizablePanelGroup.disabled': RESIZABLE_DISABLED,
+  'ResizablePanelGroup.elementRef': RESIZABLE_REF,
+  'ResizablePanelGroup.groupRef': RESIZABLE_REF,
+  'ResizablePanelGroup.resizeTargetMinimumSize':
+    "Reka sizes a handle's hit area with hitAreaMargins on ResizableHandle",
 };
 
 const V_MODEL = 'v-model binding, a Vue idiom with no React counterpart';
