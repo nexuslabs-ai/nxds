@@ -267,22 +267,34 @@ function mergeIndex(files: Map<string, Buffer>, currentFile: string) {
   );
 }
 
-// Writes a sibling folder first, so a failed write leaves project/ as it was.
+// Stages beside `out`, not in it, so an interrupted run leaves nothing in the
+// published root. The old project/ is moved aside, not deleted, until the new
+// one is in place.
 function writeProject(out: string, files: Map<string, Buffer>) {
   mkdirSync(out, { recursive: true });
-  const staging = mkdtempSync(path.join(out, '.project-'));
+  const staging = mkdtempSync(path.join(path.dirname(out), '.nxds-project-'));
+  const next = path.join(staging, 'next');
+  const previous = path.join(staging, 'previous');
+  const projectDir = path.join(out, 'project');
   try {
     for (const [file, bytes] of files) {
-      mkdirSync(path.dirname(path.join(staging, file)), { recursive: true });
-      writeFileSync(path.join(staging, file), bytes);
+      mkdirSync(path.dirname(path.join(next, file)), { recursive: true });
+      writeFileSync(path.join(next, file), bytes);
     }
-  } catch (error) {
+    if (existsSync(projectDir)) renameSync(projectDir, previous);
+    swapIn(next, projectDir, previous);
+  } finally {
     rmSync(staging, { recursive: true, force: true });
+  }
+}
+
+function swapIn(next: string, projectDir: string, previous: string) {
+  try {
+    renameSync(next, projectDir);
+  } catch (error) {
+    if (existsSync(previous)) renameSync(previous, projectDir);
     throw error;
   }
-  const projectDir = path.join(out, 'project');
-  rmSync(projectDir, { recursive: true, force: true });
-  renameSync(staging, projectDir);
 }
 
 export async function exportClaudeDesign(
