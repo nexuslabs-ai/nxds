@@ -296,10 +296,10 @@ function makeStaging(parent: string, out: string) {
   try {
     return mkdtempSync(path.join(parent, '.nxds-project-'));
   } catch (error) {
-    const { code } = error as NodeJS.ErrnoException;
+    const { code, message } = error as NodeJS.ErrnoException;
     if (code !== 'EACCES' && code !== 'EPERM' && code !== 'EROFS') throw error;
     throw new UsageError(
-      `The export stages project/ in ${parent}, beside ${out}, so ${parent} must be writable (${(error as Error).message}).`
+      `The export stages project/ in ${parent}, beside ${out}, so ${parent} must be writable (${message}).`
     );
   }
 }

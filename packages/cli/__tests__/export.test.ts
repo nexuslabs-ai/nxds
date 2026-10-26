@@ -3,6 +3,7 @@ import { buildSystemIndex } from '@nxds/claude-design/system-index';
 import { compileTokensCss } from '@nxds/claude-design/tokens-css';
 import { createHash } from 'node:crypto';
 import {
+  chmodSync,
   cpSync,
   existsSync,
   mkdirSync,
@@ -308,6 +309,24 @@ describe('nxds-cli export claude-design', () => {
     expect(readdirSync(cwd)).not.toContainEqual(
       expect.stringMatching(/^\.nxds-project-/)
     );
+  });
+
+  it('names the folder that must be writable when --out has a read-only parent', async () => {
+    const { source, cwd } = setup();
+    mkdirSync(path.join(cwd, 'nxds-design-system'));
+    chmodSync(cwd, 0o555);
+    try {
+      const { exitCode, body } = await cliJson(
+        ['export', 'claude-design', '--source', source],
+        cwd
+      );
+
+      expect(exitCode).toBe(EXIT_CODES.usage);
+      expect(body.error).toMatch(/must be writable/);
+    } finally {
+      chmodSync(cwd, 0o755);
+    }
+    expect(readdirSync(path.join(cwd, 'nxds-design-system'))).toEqual([]);
   });
 
   it("keeps the system's title and creation date from its current index", async () => {
