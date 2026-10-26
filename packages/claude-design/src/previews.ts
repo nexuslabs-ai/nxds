@@ -7,12 +7,12 @@ import {
   docsStoryModule,
   readDocsStories,
 } from '@nxds/source-model/docs-stories.ts';
-import { react18Src } from '@nxds/source-model/roots.mjs';
+import { react18Src, reactStaticRoot } from '@nxds/source-model/roots.mjs';
 import { build, type Plugin } from 'esbuild';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { canvasMarkup } from './canvas-markup.ts';
+import { canvasMarkup, kebab } from './canvas-markup.ts';
 import { ROOT_PARTS } from './groups.ts';
 import type { FlatComponent, FlatProp } from './props.ts';
 import { NAMESPACE } from './system-index.ts';
@@ -44,15 +44,6 @@ const BUNDLE_MODULES: Record<string, string> = {
 const JSX_RUNTIME = path.join(import.meta.dirname, 'jsx-runtime.ts');
 const STORY_MODULE = 'nxds:story';
 
-// The files Storybook serves at `/`, such as the `/avatars/*.svg` stories show.
-const STATIC_DIR = path.join(
-  react18Src,
-  '..',
-  '..',
-  'react',
-  '.storybook',
-  'public'
-);
 const MEDIA_TYPES: Record<string, string> = {
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
@@ -65,7 +56,7 @@ function inlineStaticFiles(source: string) {
   return source.replace(
     /(["'])(\/[\w./-]+\.(?:svg|png|jpg|webp))\1/g,
     (literal, quote, file) => {
-      const absolute = path.join(STATIC_DIR, file);
+      const absolute = path.join(reactStaticRoot, file);
       if (!existsSync(absolute)) return literal;
       const type = MEDIA_TYPES[path.extname(file)];
       return `${quote}data:${type};base64,${readFileSync(absolute).toString('base64')}${quote}`;
@@ -221,11 +212,7 @@ function rootExample(part: FlatComponent) {
         );
       const [option] = options;
       if (!option) return [];
-      const attribute = prop.name.replace(
-        /[A-Z]/g,
-        (char) => `-${char.toLowerCase()}`
-      );
-      return [` ${attribute}=${option}`];
+      return [` ${kebab(prop.name)}=${option}`];
     })
     .join('');
   const hasChildren = part.props.some((prop) => prop.name === 'children');

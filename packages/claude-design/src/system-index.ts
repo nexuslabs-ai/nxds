@@ -1,7 +1,10 @@
-// project/design-system.json, the index the Design System page reads first.
+// project/design-system.json, the index the Design System page reads first,
+// and the paths the page writes for itself.
 export const NAMESPACE = 'Nxds';
 const TITLE = 'nxds';
 const REACT_VERSION = '18.3.1';
+export const IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
+const PAGE_PATHS = ['manifest.json', 'api/'];
 
 export interface LastChange {
   by: string;
@@ -74,4 +77,39 @@ export function mergeSystemIndex(
     libraries: exported.libraries,
     lastChange: exported.lastChange,
   };
+}
+
+/** `file` is relative to `project/`. The page generates it, so an export never writes it. */
+export function isPageGenerated(file: string) {
+  return PAGE_PATHS.some((page) => file === page || file.startsWith(page));
+}
+
+/** What keeps the page from reading `index`, one message per problem. */
+export function validateIndex(index: Record<string, unknown>): string[] {
+  const where = 'design-system.json';
+  const errors: string[] = [];
+  if (index['v'] !== 3 || index['layout'] !== 'files') {
+    errors.push(`${where}: needs "v": 3 and "layout": "files".`);
+  }
+  if (!index['createdOnFiles'] && !index['convertedFrom']) {
+    errors.push(`${where}: needs the createdOnFiles marker.`);
+  }
+  if (typeof index['title'] !== 'string' || !index['title']) {
+    errors.push(`${where}: needs a title.`);
+  }
+  if (
+    typeof index['namespace'] !== 'string' ||
+    !IDENTIFIER.test(index['namespace'])
+  ) {
+    errors.push(`${where}: namespace must be a JS identifier.`);
+  }
+  const lastChange = index['lastChange'] as Record<string, unknown> | undefined;
+  if (
+    !lastChange ||
+    typeof lastChange['by'] !== 'string' ||
+    Number.isNaN(Date.parse(String(lastChange['at'])))
+  ) {
+    errors.push(`${where}: lastChange needs "by" and an ISO-8601 "at".`);
+  }
+  return errors;
 }

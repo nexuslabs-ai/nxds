@@ -14,7 +14,8 @@
         "$TURBO_ROOT$/packages/react/package.json",
         "$TURBO_ROOT$/packages/react/tsconfig.json",
         "$TURBO_ROOT$/packages/react/.storybook/public/**",
-        "$TURBO_ROOT$/packages/react-18/src/**"
+        "$TURBO_ROOT$/packages/react-18/src/**",
+        "$TURBO_ROOT$/packages/react-18/package.json"
       ],
       "outputs": ["dist/**"]
     }

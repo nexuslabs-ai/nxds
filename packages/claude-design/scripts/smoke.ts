@@ -5,6 +5,7 @@
 // changes nothing, an overlay that doesn't open, close and return focus, or
 // a request to the network.
 import type * as ReactModule from 'react';
+import type * as ReactDOMModule from 'react-dom';
 import type * as ReactDOMClient from 'react-dom/client';
 
 import { readdirSync, readFileSync } from 'node:fs';
@@ -62,7 +63,7 @@ const failures: string[] = [];
 /** The page globals the frame preloads, as far as the checks read them. */
 interface PageGlobals {
   React: typeof ReactModule;
-  ReactDOM: typeof ReactDOMClient;
+  ReactDOM: typeof ReactDOMClient & Pick<typeof ReactDOMModule, 'flushSync'>;
   Nxds: Record<string, unknown> & { Icons: Record<string, unknown> };
 }
 
@@ -232,7 +233,7 @@ async function checkOverlay({
 
 async function checkRefs() {
   const { page } = await openPage('Button', LIGHT);
-  const reached = await page.evaluate(async () => {
+  const reached = await page.evaluate(() => {
     const { React, ReactDOM, Nxds } = window as unknown as PageGlobals;
     const results: Record<string, boolean> = {};
     for (const [name, element] of [
@@ -242,10 +243,12 @@ async function checkRefs() {
       const ref = React.createRef<HTMLElement>();
       const host = document.createElement('div');
       document.body.append(host);
-      ReactDOM.createRoot(host).render(
-        React.createElement(Nxds[name] as ReactModule.ElementType, { ref })
+      const root = ReactDOM.createRoot(host);
+      ReactDOM.flushSync(() =>
+        root.render(
+          React.createElement(Nxds[name] as ReactModule.ElementType, { ref })
+        )
       );
-      await new Promise((resolve) => setTimeout(resolve, 50));
       results[name] = ref.current instanceof element;
     }
     return results;

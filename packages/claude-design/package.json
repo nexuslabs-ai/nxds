@@ -25,8 +25,7 @@
   },
   "exports": {
     "./system-index": "./src/system-index.ts",
-    "./tokens-css": "./src/tokens-css.ts",
-    "./validate": "./src/validate.ts"
+    "./tokens-css": "./src/tokens-css.ts"
   },
   "scripts": {
     "build": "node scripts/build.ts",

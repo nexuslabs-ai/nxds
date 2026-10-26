@@ -1,7 +1,7 @@
 ---
 'nxds-cli': minor
 '@nxds/claude-design': minor
-'@nxds/react': patch
+'@nxds/react': minor
 '@nxds/core': patch
 ---
 

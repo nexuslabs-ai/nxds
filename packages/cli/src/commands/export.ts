@@ -1,15 +1,17 @@
 import {
+  isPageGenerated,
   mergeSystemIndex,
   type SystemIndex,
+  validateIndex,
 } from '@nxds/claude-design/system-index';
-import { validateSystem } from '@nxds/claude-design/validate';
 import { createHash } from 'node:crypto';
 import {
-  cpSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -38,6 +40,9 @@ export type ExportOptions = {
   existing?: string;
   overwrite: boolean;
 };
+
+/** `files.json`: each file under `project/`, as the package build wrote it. */
+type Manifest = { path: string; sha256: string }[];
 
 type Packument = {
   'dist-tags'?: Record<string, string>;
@@ -76,9 +81,15 @@ function packageUrl(registry: string) {
 /** The tarball and its integrity for `release`, a version or a dist-tag. */
 async function resolveTarball(registry: string, release: string) {
   const url = packageUrl(registry);
-  const packument = JSON.parse(
-    (await download(url)).toString('utf8')
-  ) as Packument;
+  const body = (await download(url)).toString('utf8');
+  let packument: Packument;
+  try {
+    packument = JSON.parse(body) as Packument;
+  } catch {
+    throw new CliError(
+      `${url} didn't answer with JSON. Check --npm-registry, or your proxy, then run the command again.`
+    );
+  }
   const version = packument['dist-tags']?.[release] ?? release;
   const dist = packument.versions?.[version]?.dist;
   if (!dist?.tarball || !dist.integrity) {
@@ -119,16 +130,25 @@ async function fetchPackage(registry: string, release: string) {
   const bytes = await download(tarball);
   checkIntegrity(bytes, integrity, tarball);
   const folder = mkdtempSync(path.join(tmpdir(), 'nxds-claude-design-'));
-  const file = path.join(folder, 'package.tgz');
-  writeFileSync(file, bytes);
-  const unpacked = path.join(folder, 'package');
-  mkdirSync(unpacked);
-  await extract({ file, cwd: unpacked, strip: 1 });
-  return {
-    version,
-    root: unpacked,
-    cleanup: () => rmSync(folder, { recursive: true, force: true }),
-  };
+  const cleanup = () => rmSync(folder, { recursive: true, force: true });
+  try {
+    const file = path.join(folder, 'package.tgz');
+    writeFileSync(file, bytes);
+    const unpacked = path.join(folder, 'package');
+    mkdirSync(unpacked);
+    await extract({
+      file,
+      cwd: unpacked,
+      strip: 1,
+      filter: (_, entry) =>
+        'type' in entry &&
+        (entry.type === 'File' || entry.type === 'Directory'),
+    });
+    return { version, root: unpacked, cleanup };
+  } catch (error) {
+    cleanup();
+    throw error;
+  }
 }
 
 function localPackage(source: string) {
@@ -148,11 +168,7 @@ function localPackage(source: string) {
 }
 
 function assertWritable(out: string, overwrite: boolean) {
-  if (!existsSync(out) || readdirSync(out).length === 0) return;
-  if (overwrite) {
-    rmSync(path.join(out, 'project'), { recursive: true, force: true });
-    return;
-  }
+  if (!existsSync(out) || readdirSync(out).length === 0 || overwrite) return;
   throw new UsageError(
     `${out} already has files. Pass --overwrite to replace its project/ folder, or choose another --out.`
   );
@@ -177,9 +193,70 @@ function readPaths(file: string): string[] {
 function stalePaths(existing: string[], exported: Set<string>) {
   return existing
     .filter((file) => file.startsWith('project/'))
-    .filter((file) => !/^project\/(?:api\/|manifest\.json$)/.test(file))
+    .filter((file) => !isPageGenerated(file.slice('project/'.length)))
     .filter((file) => !exported.has(file))
     .sort();
+}
+
+// The package build validated exactly the files files.json lists, at its
+// hashes, so those are the only files read.
+function readProject(root: string) {
+  const manifestFile = path.join(root, 'files.json');
+  if (!existsSync(manifestFile)) {
+    throw new CliError(
+      `${root} has no files.json. Export from an @nxds/claude-design release or a built dist folder.`
+    );
+  }
+  const projectDir = path.join(root, 'project');
+  const files = new Map<string, Buffer>();
+  for (const entry of readJson(manifestFile) as Manifest) {
+    const file = path.join(projectDir, entry.path);
+    const relative = path.relative(projectDir, file);
+    if (relative.startsWith('..') || path.isAbsolute(relative)) {
+      throw new CliError(`files.json lists ${entry.path}, outside project/.`);
+    }
+    if (!existsSync(file) || !lstatSync(file).isFile()) {
+      throw new CliError(
+        `project/${entry.path} is missing from the release, or isn't a regular file.`
+      );
+    }
+    const bytes = readFileSync(file);
+    if (createHash('sha256').update(bytes).digest('hex') !== entry.sha256) {
+      throw new CliError(
+        `project/${entry.path} doesn't match the release's files.json, so nothing was written.`
+      );
+    }
+    files.set(entry.path, bytes);
+  }
+  return files;
+}
+
+function mergeIndex(files: Map<string, Buffer>, currentFile: string) {
+  const exported = files.get('design-system.json');
+  if (!exported) throw new CliError('The release has no design-system.json.');
+  const merged = mergeSystemIndex(
+    readJson(currentFile) as Record<string, unknown>,
+    JSON.parse(exported.toString('utf8')) as SystemIndex
+  );
+  const errors = validateIndex(merged);
+  if (errors.length > 0) {
+    throw new UsageError(
+      `${currentFile} merges into an index the page can't read, so nothing was written:\n${errors.map((error) => `  ${error}`).join('\n')}`
+    );
+  }
+  files.set(
+    'design-system.json',
+    Buffer.from(`${JSON.stringify(merged, null, 2)}\n`)
+  );
+}
+
+function writeProject(out: string, files: Map<string, Buffer>) {
+  const projectDir = path.join(out, 'project');
+  rmSync(projectDir, { recursive: true, force: true });
+  for (const [file, bytes] of files) {
+    mkdirSync(path.dirname(path.join(projectDir, file)), { recursive: true });
+    writeFileSync(path.join(projectDir, file), bytes);
+  }
 }
 
 export async function exportClaudeDesign(
@@ -197,32 +274,21 @@ export async function exportClaudeDesign(
       );
 
   try {
-    const projectDir = path.join(out, 'project');
-    mkdirSync(out, { recursive: true });
-    cpSync(path.join(pkg.root, 'project'), projectDir, { recursive: true });
-    const coverage = path.join(pkg.root, 'coverage.md');
-    if (existsSync(coverage)) cpSync(coverage, path.join(out, 'coverage.md'));
-
-    if (options.index) {
-      const indexFile = path.join(projectDir, 'design-system.json');
-      const merged = mergeSystemIndex(
-        readJson(path.resolve(cwd, options.index)) as Record<string, unknown>,
-        readJson(indexFile) as SystemIndex
-      );
-      writeFileSync(indexFile, `${JSON.stringify(merged, null, 2)}\n`);
-    }
-
-    const { errors, files } = validateSystem(projectDir);
-    if (errors.length > 0) {
-      throw new CliError(
-        `The export breaks the Design System format, so it was not written for publishing:\n${errors.map((error) => `  ${error}`).join('\n')}`
-      );
-    }
-
-    const exported = new Set(files.map((file) => `project/${file}`));
+    const files = readProject(pkg.root);
+    if (options.index) mergeIndex(files, path.resolve(cwd, options.index));
+    const exported = new Set(
+      [...files.keys()].map((file) => `project/${file}`)
+    );
     const removed = options.existing
       ? stalePaths(readPaths(path.resolve(cwd, options.existing)), exported)
       : [];
+    const coverageFile = path.join(pkg.root, 'coverage.md');
+    const coverage = existsSync(coverageFile)
+      ? readFileSync(coverageFile)
+      : undefined;
+
+    writeProject(out, files);
+    if (coverage) writeFileSync(path.join(out, 'coverage.md'), coverage);
     if (options.existing) {
       writeFileSync(
         path.join(out, 'removed.json'),
@@ -232,7 +298,7 @@ export async function exportClaudeDesign(
 
     const relative = path.relative(cwd, out) || '.';
     const lines = [
-      `Exported nxds ${pkg.version} as a Claude Design System: ${files.length} files in ${path.join(relative, 'project')}.`,
+      `Exported nxds ${pkg.version} as a Claude Design System: ${files.size} files in ${path.join(relative, 'project')}.`,
       `Publish ${relative} as a Design System artifact in Claude, with ${relative} as the root.`,
     ];
     if (removed.length > 0) {
@@ -240,7 +306,7 @@ export async function exportClaudeDesign(
         `Remove the ${removed.length} files the system has and this release doesn't: they're listed in ${path.join(relative, 'removed.json')}.`
       );
     }
-    if (existsSync(coverage)) {
+    if (coverage) {
       lines.push(
         `The props the canvas can't set are in ${path.join(relative, 'coverage.md')}.`
       );
@@ -248,7 +314,7 @@ export async function exportClaudeDesign(
     return {
       ok: true,
       lines,
-      data: { version: pkg.version, out, files: files.length, removed },
+      data: { version: pkg.version, out, files: files.size, removed },
     };
   } finally {
     pkg.cleanup();

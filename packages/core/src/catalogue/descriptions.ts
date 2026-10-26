@@ -12,58 +12,44 @@ const FAMILY_ROLES: Record<ColorFamily, string> = {
   information: 'neutral guidance or a status update',
 };
 
-function familyDescriptions(family: ColorFamily): [string, string][] {
-  const role = FAMILY_ROLES[family];
-  return [
-    [
-      `${family}-background`,
-      `Solid fill for buttons, badges and other strong emphasis in this family. Pair with ${family}-foreground. Marks ${role}.`,
-    ],
-    [
-      `${family}-background-hover`,
-      `${family}-background while the pointer is over the control.`,
-    ],
-    [
-      `${family}-background-active`,
-      `${family}-background while the control is pressed.`,
-    ],
-    [
-      `${family}-foreground`,
-      `Foreground on ${family}-background. The surface relationship defines this role, not text alone: text and icons share it, and contrasting control parts or indicators may use it on the same surface. Other pairings require contrast coverage.`,
-    ],
-    [
-      `${family}-disabled`,
-      'Fill of a disabled control in this family. Pair with disabled-foreground.',
-    ],
-    [
-      `${family}-subtle`,
-      `Tinted fill for light badges, alerts and selected rows on background or container. Pair with ${family}-subtle-foreground. Marks ${role}.`,
-    ],
-    [
-      `${family}-subtle-foreground`,
-      `Foreground on ${family}-subtle. The surface relationship defines this role, not text alone: text and icons share it, and contrasting indicators may use it on that surface. Use on neutral surfaces only with contrast coverage for the intended content tier.`,
-    ],
-    [
-      `${family}-subtle-hover`,
-      `${family}-subtle while the pointer is over the control.`,
-    ],
-    [
-      `${family}-subtle-active`,
-      `${family}-subtle while the control is pressed.`,
-    ],
-    [
-      `${family}-border`,
-      'Border of an outlined control or alert in this family, on background or container.',
-    ],
-    [
-      `${family}-border-active`,
-      `${family}-border while the control is pressed or selected.`,
-    ],
-    [
-      `border-${family}-active`,
-      `${family}-border while the control is pressed or selected.`,
-    ],
-  ];
+/** Prose for each family colour, keyed by its role after the family name. */
+const FAMILY_TEMPLATES: Record<
+  string,
+  (family: ColorFamily, role: string) => string
+> = {
+  background: (family, role) =>
+    `Solid fill for buttons, badges and other strong emphasis in this family. Pair with ${family}-foreground. Marks ${role}.`,
+  'background-hover': (family) =>
+    `${family}-background while the pointer is over the control.`,
+  'background-active': (family) =>
+    `${family}-background while the control is pressed.`,
+  foreground: (family) =>
+    `Foreground on ${family}-background. The surface relationship defines this role, not text alone: text and icons share it, and contrasting control parts or indicators may use it on the same surface. Other pairings require contrast coverage.`,
+  disabled: () =>
+    'Fill of a disabled control in this family. Pair with disabled-foreground.',
+  subtle: (family, role) =>
+    `Tinted fill for light badges, alerts and selected rows on background or container. Pair with ${family}-subtle-foreground. Marks ${role}.`,
+  'subtle-foreground': (family) =>
+    `Foreground on ${family}-subtle. The surface relationship defines this role, not text alone: text and icons share it, and contrasting indicators may use it on that surface. Use on neutral surfaces only with contrast coverage for the intended content tier.`,
+  'subtle-hover': (family) =>
+    `${family}-subtle while the pointer is over the control.`,
+  'subtle-active': (family) => `${family}-subtle while the control is pressed.`,
+  border: () =>
+    'Border of an outlined control or alert in this family, on background or container.',
+  'border-active': (family) =>
+    `${family}-border while the control is pressed or selected.`,
+};
+
+// `primary-border-active` and `border-error-active` both have the
+// `border-active` role.
+function familyRole(name: string): [ColorFamily, string] | undefined {
+  for (const family of COLOR_FAMILIES) {
+    if (name === `border-${family}-active`) return [family, 'border-active'];
+    if (name.startsWith(`${family}-`)) {
+      return [family, name.slice(family.length + 1)];
+    }
+  }
+  return undefined;
 }
 
 const NEUTRAL_DESCRIPTIONS: Record<string, string> = {
@@ -130,16 +116,43 @@ const NEUTRAL_DESCRIPTIONS: Record<string, string> = {
   'popover-backdrop': 'Backdrop behind a frosted popover.',
 };
 
-const REGISTRY_NAMES = new Set<string>(
-  SEMANTIC_TOKEN_REGISTRY.map((token) => token.name)
+const REGISTRY_NAMES: readonly string[] = SEMANTIC_TOKEN_REGISTRY.map(
+  (token) => token.name
 );
+
+function familyDescriptions(): [string, string][] {
+  const used = new Set<string>();
+  const entries = REGISTRY_NAMES.flatMap((name): [string, string][] => {
+    const [family, role] = familyRole(name) ?? [];
+    const template = role === undefined ? undefined : FAMILY_TEMPLATES[role];
+    if (!family || !role || !template) return [];
+    used.add(role);
+    return [[name, template(family, FAMILY_ROLES[family])]];
+  });
+  const unused = Object.keys(FAMILY_TEMPLATES).filter(
+    (role) => !used.has(role)
+  );
+  if (unused.length > 0) {
+    throw new Error(
+      `FAMILY_TEMPLATES describes ${unused.join(', ')}, which no registry colour has.`
+    );
+  }
+  return entries;
+}
+
+function neutralDescriptions(): [string, string][] {
+  const unknown = Object.keys(NEUTRAL_DESCRIPTIONS).filter(
+    (name) => !REGISTRY_NAMES.includes(name)
+  );
+  if (unknown.length > 0) {
+    throw new Error(
+      `NEUTRAL_DESCRIPTIONS describes ${unknown.join(', ')}, which the registry doesn't have.`
+    );
+  }
+  return Object.entries(NEUTRAL_DESCRIPTIONS);
+}
 
 /** Prose for derived colours, keyed by registry name. Authored leaves use `$description`. */
 export const RUNTIME_COLOR_DESCRIPTIONS: Readonly<
   Partial<Record<string, string>>
-> = Object.fromEntries(
-  [
-    ...Object.entries(NEUTRAL_DESCRIPTIONS),
-    ...COLOR_FAMILIES.flatMap(familyDescriptions),
-  ].filter(([name]) => REGISTRY_NAMES.has(name))
-);
+> = Object.fromEntries([...neutralDescriptions(), ...familyDescriptions()]);

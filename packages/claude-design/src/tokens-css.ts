@@ -13,6 +13,27 @@ const TOKENS_CSS_HEADER = '/* nxds — generated from tokens.json */';
 /** The families tokens.css declares under the theme selectors. */
 const THEMED_FAMILIES = new Set(['color', 'shadow']);
 
+const LIST_FAMILY_KEYS = [
+  'color',
+  'spacing',
+  'radius',
+  'shadow',
+  'borderWidth',
+  'zIndex',
+] as const;
+
+/**
+ * Every family that holds a token list, in page order, with its tokens. The
+ * validator compiles a tokens.json it hasn't checked yet, so a family that
+ * isn't a list is skipped.
+ */
+export function listFamilies(tokens: TokensFile) {
+  return LIST_FAMILY_KEYS.flatMap((key) => {
+    const list = tokens[key]?.tokens;
+    return Array.isArray(list) ? [[key, list] as const] : [];
+  });
+}
+
 function cssValue(value: string) {
   const alias = /^\{(.+)\}$/.exec(value);
   return alias ? `var(--${alias[1]})` : value;
@@ -26,14 +47,6 @@ function valueIn(value: ThemedValue, theme: string, first: string) {
 function block(selector: string, lines: string[]) {
   if (lines.length === 0) return [];
   return [`${selector} {`, ...lines.map((line) => `  ${line}`), '}'];
-}
-
-function listFamilies(tokens: TokensFile) {
-  return Object.entries(tokens).flatMap(([key, family]) => {
-    if (key === 'type' || key === 'meta') return [];
-    const list = (family as { tokens?: ListToken[] } | undefined)?.tokens;
-    return Array.isArray(list) ? [[key, list] as const] : [];
-  });
 }
 
 function styleDeclarations(style: TypeStyle, groupFamily: string) {

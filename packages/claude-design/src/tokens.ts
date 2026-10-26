@@ -35,7 +35,11 @@ export interface TokensFile {
     families: Record<string, string>;
     groups: { name: string; family: string; styles: TypeStyle[] }[];
   };
-  [family: string]: unknown;
+  spacing?: { tokens: ListToken[] };
+  radius?: { tokens: ListToken[] };
+  shadow?: { tokens: ListToken[] };
+  borderWidth?: { tokens: ListToken[] };
+  zIndex?: { tokens: ListToken[] };
 }
 
 const THEMES: { id: ThemeId; name: string }[] = [

@@ -8,7 +8,7 @@ import { NAMESPACE } from './system-index.ts';
 
 const INDENT = '  ';
 
-function kebab(name: string) {
+export function kebab(name: string) {
   if (/^(?:aria|data)-/.test(name)) return name;
   return name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 }
@@ -30,7 +30,6 @@ function attributeValue(initializer: ts.JsxAttributeValue | undefined) {
   }
   if (ts.isNumericLiteral(expression)) return expression.text;
   if (expression.kind === ts.SyntaxKind.TrueKeyword) return '';
-  if (expression.kind === ts.SyntaxKind.FalseKeyword) return 'false';
   return null;
 }
 
@@ -39,6 +38,12 @@ function attributes(node: ts.JsxAttributes, isPart: boolean): string | null {
   for (const property of node.properties) {
     if (!ts.isJsxAttribute(property)) return null;
     const name = property.name.getText();
+    const expression =
+      property.initializer && ts.isJsxExpression(property.initializer)
+        ? property.initializer.expression
+        : undefined;
+    // An attribute that is present reads as true, so `false` is left out.
+    if (expression?.kind === ts.SyntaxKind.FalseKeyword) continue;
     const value = attributeValue(property.initializer);
     if (value === null) return null;
     const attribute = isPart
@@ -51,6 +56,10 @@ function attributes(node: ts.JsxAttributes, isPart: boolean): string | null {
     );
   }
   return parts.map((part) => ` ${part}`).join('');
+}
+
+function escapeText(text: string) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
 
 function decodeEntities(text: string) {
@@ -76,7 +85,9 @@ function children(
     if (ts.isJsxExpression(child)) {
       if (!child.expression) continue;
       if (ts.isStringLiteral(child.expression)) {
-        lines.push(`${INDENT.repeat(depth)}${child.expression.text}`);
+        lines.push(
+          `${INDENT.repeat(depth)}${escapeText(child.expression.text)}`
+        );
         continue;
       }
       return null;

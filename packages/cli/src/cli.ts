@@ -186,7 +186,7 @@ function program(
       '--existing <path>',
       "a JSON list of the system's current file paths, to list the ones this release removes"
     )
-    .option('--overwrite', 'replace the project/ folder in --out')
+    .option('--overwrite', 'replace the project/ folder in --out', false)
     .option(
       '--source <path>',
       'a built @nxds/claude-design dist folder, instead of the npm release'
@@ -199,15 +199,7 @@ function program(
     )
     .action(async (_target: string, _options, command: Command) => {
       const { cwd } = context(command);
-      const options = command.opts<
-        Omit<ExportOptions, 'overwrite'> & { overwrite?: boolean }
-      >();
-      done(
-        await exportClaudeDesign(cwd, {
-          ...options,
-          overwrite: options.overwrite ?? false,
-        })
-      );
+      done(await exportClaudeDesign(cwd, command.opts<ExportOptions>()));
     });
 
   cli

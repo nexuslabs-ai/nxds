@@ -1,6 +1,7 @@
-// Writes dist/: the system's files under dist/project/, the package manifest
-// npm publishes from dist/, and the canvas prop coverage report. Fails when
-// the output breaks the Design System format.
+// Writes dist/: the system's files under dist/project/, files.json listing
+// them with their hashes for nxds-cli, the package manifest npm publishes
+// from dist/, and the canvas prop coverage report. Fails when the output
+// breaks the Design System format.
 import {
   componentLabel,
   exportedComponentSlugs,
@@ -17,7 +18,7 @@ import {
 import path from 'node:path';
 
 import { buildBundle } from '../src/bundle.ts';
-import { GROUPS } from '../src/groups.ts';
+import { EXCLUDED_SLUGS, GROUPS } from '../src/groups.ts';
 import {
   buildPreview,
   type ComponentFolder,
@@ -32,7 +33,7 @@ import {
 import { buildStyles } from '../src/styles.ts';
 import { buildSystemIndex } from '../src/system-index.ts';
 import { buildTokens } from '../src/tokens.ts';
-import { compileTokensCss } from '../src/tokens-css.ts';
+import { compileTokensCss, listFamilies } from '../src/tokens-css.ts';
 import { validateSystem } from '../src/validate.ts';
 
 const packageRoot = path.join(import.meta.dirname, '..');
@@ -46,13 +47,9 @@ const manifest = JSON.parse(
 const version: string = manifest.version;
 
 function gitRef() {
-  try {
-    return execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
-      encoding: 'utf8',
-    }).trim();
-  } catch {
-    return 'unknown';
-  }
+  return execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
+    encoding: 'utf8',
+  }).trim();
 }
 
 function write(relative: string, contents: string) {
@@ -66,7 +63,7 @@ function write(relative: string, contents: string) {
 function componentFolders(): ComponentFolder[] {
   const exported = new Map(
     [...exportedComponentSlugs()]
-      .filter((slug) => slug !== 'appearance')
+      .filter((slug) => !EXCLUDED_SLUGS.has(slug))
       .map((slug) => [componentLabel(slug), slug])
   );
   const grouped = GROUPS.flatMap(([group, names]) =>
@@ -107,8 +104,7 @@ function publishedManifest() {
   };
 }
 
-function fileList() {
-  const { files } = validateSystem(projectDir);
+function fileList(files: readonly string[]) {
   return files.map((file) => ({
     path: file,
     sha256: createHash('sha256')
@@ -132,16 +128,12 @@ async function main() {
   );
 
   const folders = componentFolders();
-  const { code } = await buildBundle(folders.map((folder) => folder.name));
+  const { code } = await buildBundle(folders);
   write('components/bundle.js', code);
 
   const tokenNames = new Set(
-    Object.values(tokens).flatMap((family) =>
-      Array.isArray((family as { tokens?: unknown })?.tokens)
-        ? (family as { tokens: { name: string }[] }).tokens.map(
-            (token) => `--${token.name}`
-          )
-        : []
+    listFamilies(tokens).flatMap(([, list]) =>
+      list.map((token) => `--${token.name}`)
     )
   );
   write('components/bundle.css', await buildStyles(tokenNames));
@@ -149,10 +141,6 @@ async function main() {
   const parts = flatComponents();
   write('components/index.d.ts', renderIndexDts(parts));
   const report = coverage(parts);
-  writeFileSync(
-    path.join(distDir, 'coverage.json'),
-    `${JSON.stringify(report, null, 2)}\n`
-  );
   writeFileSync(path.join(distDir, 'coverage.md'), renderCoverage(report));
 
   const exported = new Set(parts.map((part) => part.name));
@@ -171,7 +159,7 @@ async function main() {
     `${JSON.stringify(buildSystemIndex({ version, at }), null, 2)}\n`
   );
 
-  const { errors } = validateSystem(projectDir);
+  const { errors, files } = validateSystem(projectDir);
   if (errors.length > 0) {
     throw new Error(
       `The export breaks the Design System format:\n${errors.map((error) => `  ${error}`).join('\n')}`
@@ -180,7 +168,7 @@ async function main() {
 
   writeFileSync(
     path.join(distDir, 'files.json'),
-    `${JSON.stringify(fileList(), null, 2)}\n`
+    `${JSON.stringify(fileList(files), null, 2)}\n`
   );
   writeFileSync(
     path.join(distDir, 'package.json'),

@@ -21,18 +21,9 @@ const REACT_GLOBALS: Record<string, string> = {
 const EXPORTS_MODULE = 'nxds:exports';
 const ICONS_MODULE = 'nxds:icons';
 
-// The editors need the appearance provider, which the export leaves out.
-function componentExports() {
-  return readFileSync(path.join(react18Src, 'index.ts'), 'utf8')
-    .split('\n')
-    .filter((line) => !line.includes("'./index.css'"))
-    .filter((line) => !line.includes('./components/appearance/'))
-    .join('\n');
-}
-
-function exportsModule() {
+function exportsModule(slugs: readonly string[]) {
   return [
-    componentExports(),
+    ...slugs.map((slug) => `export * from './components/${slug}/${slug}';`),
     `export * as Icons from '${ICONS_MODULE}';`,
     "export * as Recharts from 'recharts';",
   ].join('\n');
@@ -88,20 +79,23 @@ const pageGlobals: Plugin = {
   },
 };
 
-const virtualModules: Plugin = {
-  name: 'nxds-virtual-modules',
-  setup(builder) {
-    builder.onResolve({ filter: /^nxds:/ }, (args) => ({
-      path: args.path,
-      namespace: 'nxds',
-    }));
-    builder.onLoad({ filter: /.*/, namespace: 'nxds' }, (args) => ({
-      contents: args.path === ICONS_MODULE ? iconsModule() : exportsModule(),
-      loader: 'ts',
-      resolveDir: react18Src,
-    }));
-  },
-};
+function virtualModules(slugs: readonly string[]): Plugin {
+  return {
+    name: 'nxds-virtual-modules',
+    setup(builder) {
+      builder.onResolve({ filter: /^nxds:/ }, (args) => ({
+        path: args.path,
+        namespace: 'nxds',
+      }));
+      builder.onLoad({ filter: /.*/, namespace: 'nxds' }, (args) => ({
+        contents:
+          args.path === ICONS_MODULE ? iconsModule() : exportsModule(slugs),
+        loader: 'ts',
+        resolveDir: react18Src,
+      }));
+    },
+  };
+}
 
 function bundleHeader(components: readonly string[]) {
   const header = {
@@ -112,7 +106,10 @@ function bundleHeader(components: readonly string[]) {
   return `/* @ds-bundle: ${JSON.stringify(header)} */`;
 }
 
-export async function buildBundle(components: readonly string[]) {
+/** `folders` are the component folders, in card order. */
+export async function buildBundle(
+  folders: readonly { name: string; slug: string }[]
+) {
   assertIconsCovered();
   const result = await build({
     stdin: {
@@ -132,8 +129,11 @@ export async function buildBundle(components: readonly string[]) {
     charset: 'utf8',
     define: { 'process.env.NODE_ENV': '"production"' },
     loader: { '.css': 'empty' },
-    banner: { js: bundleHeader(components) },
-    plugins: [pageGlobals, virtualModules],
+    banner: { js: bundleHeader(folders.map((folder) => folder.name)) },
+    plugins: [
+      pageGlobals,
+      virtualModules(folders.map((folder) => folder.slug)),
+    ],
     logOverride: { 'module-level-directive': 'silent' },
     metafile: true,
   });

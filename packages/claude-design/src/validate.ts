@@ -6,6 +6,7 @@ import { parse } from 'acorn';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
+import { IDENTIFIER, isPageGenerated, validateIndex } from './system-index.ts';
 import type { TokensFile } from './tokens.ts';
 import { compileTokensCss } from './tokens-css.ts';
 
@@ -37,7 +38,6 @@ const REFUSED_NAMES = new Set([
   'AGENTS.md',
   'node_modules',
 ]);
-const PAGE_PATHS = ['manifest.json', 'api/'];
 
 const TOKEN_NAME = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
 const HEX = /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
@@ -51,6 +51,7 @@ const FAMILY_STACK = /^[^;{}<>\\()]{1,200}$/;
 const MAX_THEMES = 8;
 const MAX_COLORS = 600;
 const MAX_FAMILY_TOKENS = 60;
+const MAX_TYPE_FAMILIES = 12;
 const MAX_TYPE_GROUPS = 12;
 const MAX_TYPE_STYLES = 80;
 const MAX_EXTRA_FAMILIES = 12;
@@ -60,7 +61,6 @@ const CARD_MARKER =
 const COVER_MARKER = /^<!-- @dsCard height=(\d+) -->$/;
 const FORBIDDEN_TAGS = /<(iframe|frame|object|embed|portal|noscript)\b/i;
 const URL_ATTRIBUTE = /\b(?:src|href)\s*=\s*["'](https?:)?\/\//i;
-const IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 const UNFLATTENED_TYPE =
   /\b(?:VariantProps|ComponentProps|ComponentPropsWithoutRef|Omit|Pick)\s*</;
 
@@ -69,11 +69,16 @@ export interface ValidationResult {
   files: string[];
 }
 
-function listFiles(root: string, dir = ''): string[] {
+// A symlink or other special entry could pull files from outside `root` into
+// the publish, so only directories and regular files are listed.
+function listFiles(root: string, errors: string[], dir = ''): string[] {
   return readdirSync(path.join(root, dir), { withFileTypes: true }).flatMap(
     (entry) => {
       const relative = dir ? `${dir}/${entry.name}` : entry.name;
-      return entry.isDirectory() ? listFiles(root, relative) : [relative];
+      if (entry.isDirectory()) return listFiles(root, errors, relative);
+      if (entry.isFile()) return [relative];
+      errors.push(`${relative}: not a regular file.`);
+      return [];
     }
   );
 }
@@ -93,7 +98,7 @@ function checkPaths(files: string[], errors: string[]) {
     if (segments.some((segment) => /~\d/.test(segment))) {
       errors.push(`${file}: 8.3 names are refused.`);
     }
-    if (PAGE_PATHS.some((page) => file === page || file.startsWith(page))) {
+    if (isPageGenerated(file)) {
       errors.push(`${file}: the page generates this; never write it.`);
     }
     const [top, name] = segments;
@@ -111,7 +116,8 @@ function checkSizes(root: string, files: string[], errors: string[]) {
   let types = 0;
   for (const file of files) {
     const bytes = statSync(path.join(root, file)).size;
-    if (bytes > MAX_FILE_BYTES) errors.push(`${file}: over 15 MiB.`);
+    if (bytes > MAX_FILE_BYTES)
+      errors.push(`${file}: over ${MAX_FILE_BYTES / MB} MiB.`);
     for (const [pattern, cap, what] of CAPS) {
       if (pattern.test(file) && bytes > cap) {
         errors.push(`${file}: ${bytes} bytes; ${what} is capped at ${cap}.`);
@@ -133,37 +139,6 @@ function readJson(root: string, file: string, errors: string[]) {
   } catch (error) {
     errors.push(`${file}: ${(error as Error).message}`);
     return undefined;
-  }
-}
-
-function checkIndex(
-  index: Record<string, unknown> | undefined,
-  errors: string[]
-) {
-  if (!index) return;
-  const where = 'design-system.json';
-  if (index['v'] !== 3 || index['layout'] !== 'files') {
-    errors.push(`${where}: needs "v": 3 and "layout": "files".`);
-  }
-  if (!index['createdOnFiles'] && !index['convertedFrom']) {
-    errors.push(`${where}: needs the createdOnFiles marker.`);
-  }
-  if (typeof index['title'] !== 'string' || !index['title']) {
-    errors.push(`${where}: needs a title.`);
-  }
-  if (
-    typeof index['namespace'] !== 'string' ||
-    !IDENTIFIER.test(index['namespace'])
-  ) {
-    errors.push(`${where}: namespace must be a JS identifier.`);
-  }
-  const lastChange = index['lastChange'] as Record<string, unknown> | undefined;
-  if (
-    !lastChange ||
-    typeof lastChange['by'] !== 'string' ||
-    Number.isNaN(Date.parse(String(lastChange['at'])))
-  ) {
-    errors.push(`${where}: lastChange needs "by" and an ISO-8601 "at".`);
   }
 }
 
@@ -244,7 +219,8 @@ function checkType(type: TokensFile['type'] | undefined, errors: string[]) {
     return;
   }
   const families = Object.entries(type.families ?? {});
-  if (families.length > 12) errors.push('tokens.json type: over 12 families.');
+  if (families.length > MAX_TYPE_FAMILIES)
+    errors.push(`tokens.json type: over ${MAX_TYPE_FAMILIES} families.`);
   for (const [key, stack] of families) {
     if (
       !FAMILY_STACK.test(stack) ||
@@ -255,10 +231,10 @@ function checkType(type: TokensFile['type'] | undefined, errors: string[]) {
   }
   const groups = type.groups ?? [];
   if (groups.length > MAX_TYPE_GROUPS)
-    errors.push('tokens.json type: over 12 groups.');
+    errors.push(`tokens.json type: over ${MAX_TYPE_GROUPS} groups.`);
   const styles = groups.flatMap((group) => group.styles);
   if (styles.length > MAX_TYPE_STYLES)
-    errors.push('tokens.json type: over 80 styles.');
+    errors.push(`tokens.json type: over ${MAX_TYPE_STYLES} styles.`);
   const styleNames = new Set<string>();
   for (const group of groups) {
     for (const style of group.styles) {
@@ -314,7 +290,7 @@ function checkTokens(root: string, errors: string[]) {
       ].includes(key)
   );
   if (extra.length > MAX_EXTRA_FAMILIES)
-    errors.push('tokens.json: over 12 extra families.');
+    errors.push(`tokens.json: over ${MAX_EXTRA_FAMILIES} extra families.`);
 
   for (const [key, family] of Object.entries(tokens)) {
     if (key === 'type' || key === 'meta' || key === 'name' || key === 'version')
@@ -565,13 +541,13 @@ export function validateSystem(root: string): ValidationResult {
   const errors: string[] = [];
   if (!existsSync(root))
     return { errors: [`${root}: no such folder.`], files: [] };
-  const files = listFiles(root).sort();
+  const files = listFiles(root, errors).sort();
   checkPaths(files, errors);
   checkSizes(root, files, errors);
   const index = readJson(root, 'design-system.json', errors) as
     | Record<string, unknown>
     | undefined;
-  checkIndex(index, errors);
+  if (index) errors.push(...validateIndex(index));
   const checked = checkTokens(root, errors);
   const components = checkBundle(root, index, errors);
   checkStylesheet(root, checked?.allNames ?? new Set(), errors);

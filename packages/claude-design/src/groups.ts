@@ -1,3 +1,6 @@
+/** Component folders the export leaves out: the editors need the appearance provider. */
+export const EXCLUDED_SLUGS: ReadonlySet<string> = new Set(['appearance']);
+
 /** The part a card's canvas example mounts, where no part shares the card's name. */
 export const ROOT_PARTS: Readonly<Record<string, string>> = {
   Chart: 'ChartContainer',

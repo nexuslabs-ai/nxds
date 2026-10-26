@@ -6,15 +6,18 @@ import { react18Src } from '@nxds/source-model/roots.mjs';
 import { compile } from '@tailwindcss/node';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import postcss from 'postcss';
 
-const TAILWIND_DIR = path.join(react18Src, '..', '..', 'tailwind');
+const TAILWIND_DIR = path.dirname(
+  fileURLToPath(import.meta.resolve('@nxds/tailwind/nxds.css'))
+);
 
 // The entry the Install page tells consumers to import.
 const ENTRY = [
   "@import './nxds.css';",
   "@import 'tw-animate-css';",
-  "@import '../react-18/src/components/progress/progress.css';",
+  `@import '${path.join(react18Src, 'components', 'progress', 'progress.css')}';`,
 ].join('\n');
 
 const DARK_CLASS = /(?<![\w\\-])\.dark(?![\w-])/g;

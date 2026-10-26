@@ -78,6 +78,26 @@ const BUNDLE = [
   '',
 ].join('\n');
 
+/** The `project/` files of a small system, as the package build writes them. */
+const PROJECT: Record<string, string> = {
+  'design-system.json': JSON.stringify(
+    buildSystemIndex({ version: VERSION, at: '2026-10-26T09:00:00Z' })
+  ),
+  'tokens.json': JSON.stringify(TOKENS),
+  'tokens.css': compileTokensCss(TOKENS),
+  'README.md': 'Set the page on `nx-color-background`.\n',
+  'components/bundle.js': BUNDLE,
+  'components/bundle.css': '.nx\\:p-4 { padding: var(--nx-spacing-4); }\n',
+  'components/index.d.ts':
+    'export interface ButtonProps {\n  variant?: "default" | "outline";\n}\n',
+  'components/Button/README.md':
+    '# Button\n\nButton triggers an action.\n\n<x-import component-from-global-scope="Nxds.Button">Save</x-import>\n',
+  'components/Button/preview.html':
+    '<!-- @dsCard group="Actions" height=120 -->\n<!doctype html>\n<html><body><div id="root"></div></body></html>\n',
+  'components/Cover/preview.html':
+    '<!-- @dsCard height=288 -->\n<!doctype html>\n<html><body><p>nxds</p></body></html>\n',
+};
+
 /** The files of a small system in the @nxds/claude-design package layout. */
 const PACKAGE_FILES: Record<string, string> = {
   'package.json': JSON.stringify({
@@ -85,28 +105,21 @@ const PACKAGE_FILES: Record<string, string> = {
     version: VERSION,
   }),
   'coverage.md': '# Canvas prop coverage\n',
-  'project/design-system.json': JSON.stringify(
-    buildSystemIndex({ version: VERSION, at: '2026-10-26T09:00:00Z' })
+  'files.json': JSON.stringify(
+    Object.entries(PROJECT).map(([file, content]) => ({
+      path: file,
+      sha256: createHash('sha256').update(content).digest('hex'),
+    }))
   ),
-  'project/tokens.json': JSON.stringify(TOKENS),
-  'project/tokens.css': compileTokensCss(TOKENS),
-  'project/README.md': 'Set the page on `nx-color-background`.\n',
-  'project/components/bundle.js': BUNDLE,
-  'project/components/bundle.css':
-    '.nx\\:p-4 { padding: var(--nx-spacing-4); }\n',
-  'project/components/index.d.ts':
-    'export interface ButtonProps {\n  variant?: "default" | "outline";\n}\n',
-  'project/components/Button/README.md':
-    '# Button\n\nButton triggers an action.\n\n<x-import component-from-global-scope="Nxds.Button">Save</x-import>\n',
-  'project/components/Button/preview.html':
-    '<!-- @dsCard group="Actions" height=120 -->\n<!doctype html>\n<html><body><div id="root"></div></body></html>\n',
-  'project/components/Cover/preview.html':
-    '<!-- @dsCard height=288 -->\n<!doctype html>\n<html><body><p>nxds</p></body></html>\n',
+  ...Object.fromEntries(
+    Object.entries(PROJECT).map(([file, content]) => [
+      `project/${file}`,
+      content,
+    ])
+  ),
 };
 
-const PROJECT_FILES = Object.keys(PACKAGE_FILES).filter((file) =>
-  file.startsWith('project/')
-);
+const PROJECT_FILES = Object.keys(PROJECT).map((file) => `project/${file}`);
 
 const roots: string[] = [];
 const servers: Server[] = [];
@@ -350,23 +363,59 @@ describe('nxds-cli export claude-design', () => {
     expect(JSON.parse(readOut(cwd, 'removed.json'))).toEqual(body.data.removed);
   });
 
-  it('fails with the format problem when the package breaks the Design System format', async () => {
-    const { source, cwd } = setup({
-      'project/tokens.json': JSON.stringify({
-        ...TOKENS,
-        spacing: {
-          tokens: [
-            { name: 'nx-spacing-4', value: 'var(--gap)', usage: 'Step 4.' },
-          ],
-        },
-      }),
-    });
+  it('leaves the existing folder alone when a file does not match files.json', async () => {
+    const { source, cwd } = setup();
+    await cli(['export', 'claude-design', '--source', source], cwd);
+    writeFileSync(
+      path.join(source, 'project', 'components', 'bundle.js'),
+      `${BUNDLE}window.tampered = true;\n`
+    );
+
     const { exitCode, body } = await cliJson(
-      ['export', 'claude-design', '--source', source],
+      ['export', 'claude-design', '--source', source, '--overwrite'],
       cwd
     );
 
     expect(exitCode).toBe(EXIT_CODES.error);
-    expect(body.error).toMatch(/nx-spacing-4: value "var\(--gap\)" would drop/);
+    expect(body.error).toMatch(
+      /project\/components\/bundle\.js doesn't match the release's files\.json/
+    );
+    expect(readOut(cwd, 'project/components/bundle.js')).toBe(BUNDLE);
+  });
+
+  it('copies only the files files.json lists', async () => {
+    const { source, cwd } = setup({ 'project/notes.md': '# Draft\n' });
+    const { exitCode } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(
+      existsSync(path.join(cwd, 'nxds-design-system', 'project', 'notes.md'))
+    ).toBe(false);
+  });
+
+  it('refuses a current index that would break the merged one', async () => {
+    const { source, cwd } = setup();
+    writeFileSync(
+      path.join(cwd, 'current.json'),
+      JSON.stringify({ title: 'Acme on nxds' })
+    );
+    const { exitCode, body } = await cliJson(
+      [
+        'export',
+        'claude-design',
+        '--source',
+        source,
+        '--index',
+        'current.json',
+      ],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.usage);
+    expect(body.error).toMatch(/needs "v": 3/);
+    expect(existsSync(path.join(cwd, 'nxds-design-system'))).toBe(false);
   });
 });

@@ -11,6 +11,8 @@ export const reactRoot = path.join(repoRoot, 'packages', 'react');
 export const reactSrc = path.join(reactRoot, 'src');
 export const componentsRoot = path.join(reactSrc, 'components');
 export const blocksRoot = path.join(reactSrc, 'blocks');
+// The files Storybook serves at `/`, such as the `/avatars/*.svg` stories show.
+export const reactStaticRoot = path.join(reactRoot, '.storybook', 'public');
 export const react18Root = path.join(repoRoot, 'packages', 'react-18');
 export const react18Src = path.join(react18Root, 'src');
 export const vueRoot = path.join(repoRoot, 'packages', 'vue');
