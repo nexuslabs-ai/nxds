@@ -724,3 +724,70 @@ export const AllVariants: Story = {
 // A11Y is tested automatically on ALL stories
 // via addon-a11y with test: 'error'
 // ============================================
+
+export const NestedCorners: Story = {
+  render: () => (
+    <div data-radius="12" className="nx:w-72">
+      <Command className="nx:border-default nx:border-border-default">
+        <CommandList>
+          <CommandGroup heading="Pages">
+            <CommandItem>Home</CommandItem>
+            <CommandItem>Settings</CommandItem>
+            <CommandItem>Billing</CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    for (const item of within(canvasElement).getAllByRole('option')) {
+      await expect(corners(item)).toEqual(['6px', '6px', '6px', '6px']);
+    }
+  },
+};
+
+export const DialogNestedCorners: Story = {
+  globals: { corners: '12' },
+  render: WithDialog.render,
+  play: async ({ canvasElement }) => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    await userEvent.click(
+      within(canvasElement).getByRole('button', {
+        name: 'Open Command Palette',
+      })
+    );
+    const dialog = await within(document.body).findByRole('dialog');
+    const command = dialog.querySelector('[data-slot="command"]')!;
+    await expect(command).toHaveClass(
+      'nx:rounded-none',
+      'nx:sm:rounded-nest-corner'
+    );
+    await expect(corners(command)).toEqual(['14px', '14px', '14px', '14px']);
+
+    await userEvent.click(within(dialog).getByRole('combobox'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      const open = document.querySelector('[role="dialog"]');
+      expect(open?.getAttribute('data-state') ?? 'closed').toBe('closed');
+    });
+  },
+};

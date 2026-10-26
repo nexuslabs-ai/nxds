@@ -571,3 +571,31 @@ export const AllVariants: Story = {
     </div>
   ),
 };
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: Default.render,
+  play: async ({ canvasElement }) => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    await userEvent.click(
+      canvasElement.querySelector<HTMLElement>(
+        '[data-slot="multi-select-trigger"]'
+      )!
+    );
+    await within(document.body).findAllByRole('option');
+    const command = document.querySelector(
+      '[data-slot="multi-select-content"] [data-slot="command"]'
+    )!;
+    await expect(corners(command)).toEqual(['11px', '11px', '11px', '11px']);
+    await userEvent.keyboard('{Escape}');
+  },
+};
