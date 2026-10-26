@@ -6,16 +6,33 @@ import {
 
 import { type Shade, SHADES } from './palette';
 
-export type PrimitivePaletteName = Exclude<
-  keyof typeof primitiveColors,
-  'white' | 'black'
->;
-export type PrimitivePaletteRamp = Readonly<Record<Shade, string>>;
+export const PRIMITIVE_PALETTE_NAMES = [
+  'green',
+  'emerald',
+  'teal',
+  'cyan',
+  'sky',
+  'indigo',
+  'violet',
+  'purple',
+  'fuchsia',
+  'pink',
+  'slate',
+  'rose',
+  'lime',
+  'yellow',
+  'blue',
+  'gray',
+  'zinc',
+  'neutral',
+  'stone',
+  'red',
+  'orange',
+  'amber',
+] as const;
 
-export const PRIMITIVE_PALETTE_NAMES: readonly PrimitivePaletteName[] =
-  Object.keys(primitiveColors).filter(
-    (name): name is PrimitivePaletteName => name !== 'white' && name !== 'black'
-  );
+export type PrimitivePaletteName = (typeof PRIMITIVE_PALETTE_NAMES)[number];
+export type PrimitivePaletteRamp = Readonly<Record<Shade, string>>;
 
 const rampCache = new Map<PrimitivePaletteName, PrimitivePaletteRamp>();
 

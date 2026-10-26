@@ -1,14 +1,8 @@
-import type spacingTokens from '../../tokens/semantic/spacing-default.json';
+/** The spacing scale. Each step has its own `--nx-spacing-*` variable. */
+export const SPACING_STEPS = [
+  0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 20, 24,
+  28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 72, 80, 96,
+] as const;
 
-// A JSON key spells a half step with `_` (`0_5`); a step spells it `0.5`.
-type StepName<Key> = Key extends `${infer Whole}_${infer Half}`
-  ? `${Whole}.${Half}`
-  : Key;
-type NumberOf<Name> = Name extends `${infer Step extends number}`
-  ? Step
-  : never;
-
-/** A step on the spacing scale. Each one has its own `--nx-spacing-*` variable. */
-export type SpacingStep = NumberOf<
-  StepName<keyof (typeof spacingTokens)['spacing']>
->;
+/** A step on the spacing scale. */
+export type SpacingStep = (typeof SPACING_STEPS)[number];
