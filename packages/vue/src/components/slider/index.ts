@@ -6,7 +6,7 @@ export const sliderVariants =
   'nx:group/slider nx:relative nx:flex nx:w-full nx:touch-none nx:select-none nx:data-disabled:pointer-events-none nx:data-[orientation=horizontal]:h-8 nx:data-[orientation=horizontal]:items-center nx:data-[orientation=vertical]:h-full nx:data-[orientation=vertical]:min-h-44 nx:data-[orientation=vertical]:w-8 nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:justify-center';
 
 export const sliderTrackVariants = cva(
-  'nx:relative nx:grow nx:overflow-hidden nx:rounded-md nx:border-default nx:border-border-default nx:bg-muted nx:shadow-xs nx:transition-colors nx:duration-fast nx:data-disabled:border-border-disabled nx:data-disabled:bg-disabled',
+  'nx:relative nx:grow nx:overflow-hidden nx:rounded-md nx:nest-outer-md nx:nest-border-default nx:nest-padding-0 nx:border-default nx:border-border-default nx:bg-muted nx:shadow-xs nx:transition-colors nx:duration-fast nx:data-disabled:border-border-disabled nx:data-disabled:bg-disabled',
   {
     variants: {
       size: {

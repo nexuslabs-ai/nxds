@@ -329,8 +329,8 @@ export const Vertical: Story = {
     await expect(range).toHaveAttribute('data-orientation', 'vertical');
     await expect(range).toHaveAttribute('data-range-start', 'true');
     await expect(range).not.toHaveAttribute('data-range-end');
-    await expect(range).toHaveClass('nx:rounded-b-md');
-    await expect(range).not.toHaveClass('nx:rounded-t-md');
+    await expect(range).toHaveClass('nx:rounded-b-nest-corner');
+    await expect(range).not.toHaveClass('nx:rounded-t-nest-corner');
     await expect(
       Number.parseFloat(getComputedStyle(range).borderTopLeftRadius)
     ).toBe(0);
@@ -635,4 +635,29 @@ export const AllVariants: Story = {
       </div>
     `,
   }),
+};
+
+export const NestedCorners: Story = {
+  render: () => ({
+    components: { Slider },
+    template: `
+      <div data-radius="12" class="nx:w-64">
+        <Slider aria-label="Volume" :default-value="[40]" />
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    const range = canvasElement.querySelector('[data-slot="slider-range"]')!;
+    await expect(corners(range)).toEqual(['11px', '0px', '0px', '11px']);
+  },
 };

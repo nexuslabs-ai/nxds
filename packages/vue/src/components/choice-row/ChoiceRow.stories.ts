@@ -455,3 +455,33 @@ export const AllVariants: Story = {
     `,
   }),
 };
+
+export const NestedCorners: Story = {
+  render: () => ({
+    components: { ChoiceRow, ChoiceRowContent, ChoiceRowTitle, Checkbox },
+    template: `
+      <div data-radius="12" class="nx:w-72">
+        <ChoiceRow html-for="nested-corners-terms">
+          <Checkbox id="nested-corners-terms" />
+          <ChoiceRowContent>
+            <ChoiceRowTitle>Accept the terms</ChoiceRowTitle>
+          </ChoiceRowContent>
+        </ChoiceRow>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    const checkbox = within(canvasElement).getByRole('checkbox');
+    await expect(corners(checkbox)).toEqual(['5px', '5px', '5px', '5px']);
+  },
+};

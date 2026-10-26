@@ -698,3 +698,42 @@ export const AllVariants: Story = {
     </div>
   ),
 };
+
+export const NestedCorners: Story = {
+  render: () => (
+    <div data-radius="12" className="nx:grid nx:w-80 nx:gap-3">
+      <InputGroup>
+        <InputGroupInput aria-label="Email" placeholder="you@example.com" />
+        <InputGroupAddon align="inline-end">
+          <InputGroupButton size="xs">Send</InputGroupButton>
+        </InputGroupAddon>
+      </InputGroup>
+      <InputGroup>
+        <InputGroupInput aria-label="Search" placeholder="Search" />
+        <InputGroupAddon align="inline-end">
+          <kbd>K</kbd>
+        </InputGroupAddon>
+      </InputGroup>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    const button = within(canvasElement).getByRole('button', { name: 'Send' });
+    await expect(corners(button)).toEqual(['6px', '6px', '6px', '6px']);
+    await expect(corners(canvasElement.querySelector('kbd')!)).toEqual([
+      '6px',
+      '6px',
+      '6px',
+      '6px',
+    ]);
+  },
+};

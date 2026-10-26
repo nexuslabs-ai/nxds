@@ -178,12 +178,12 @@ const forwarded = useForwardProps(delegated);
             sliderRangeVariants,
             rangeStartsAtMin &&
               (orientation === 'vertical'
-                ? 'nx:rounded-b-md'
-                : 'nx:rounded-l-md'),
+                ? 'nx:rounded-b-nest-corner'
+                : 'nx:rounded-s-nest-corner'),
             rangeEndsAtMax &&
               (orientation === 'vertical'
-                ? 'nx:rounded-t-md'
-                : 'nx:rounded-r-md')
+                ? 'nx:rounded-t-nest-corner'
+                : 'nx:rounded-e-nest-corner')
           )
         "
       />

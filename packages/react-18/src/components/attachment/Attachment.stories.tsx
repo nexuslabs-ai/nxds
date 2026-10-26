@@ -554,3 +554,34 @@ export const AllVariants: Story = {
     </div>
   ),
 };
+
+export const NestedCorners: Story = {
+  render: () => (
+    <div data-radius="12" className="nx:w-80">
+      <Attachment>
+        <AttachmentMedia variant="icon">
+          <IconFile />
+        </AttachmentMedia>
+        <AttachmentContent>
+          <AttachmentTitle>report.pdf</AttachmentTitle>
+        </AttachmentContent>
+      </Attachment>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    const media = canvasElement.querySelector(
+      '[data-slot="attachment-media"]'
+    )!;
+    await expect(corners(media)).toEqual(['6px', '6px', '6px', '6px']);
+  },
+};
