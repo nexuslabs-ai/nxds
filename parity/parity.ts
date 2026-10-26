@@ -22,7 +22,6 @@ export const planned = [
   'message-scroller',
   'multi-select',
   'resizable',
-  'scroll-area',
   'setting-row',
   'sidebar',
   'sonner',
@@ -70,6 +69,7 @@ export const shared = [
   'popover',
   'progress',
   'radio-group',
+  'scroll-area',
   'select',
   'separator',
   'sheet',
@@ -195,6 +195,8 @@ export const renderedDifferences: Record<string, string> = {
     "input-otp puts data-slot on its hidden <input>; Vue's root is Reka's PinInputRoot <div>",
   'input-otp-slot':
     "React's slot is a <div> that shows the character; Vue's slot is Reka's PinInputInput <input>",
+  'scroll-area-corner':
+    'Radix and Reka each mount the corner once both scrollbars have measured, which lands on a different frame in each, so the check reads it at a different time',
   'tabs-indicator':
     "Radix has no indicator, so React measures the active tab and moves a span; Vue renders Reka's TabsIndicator, which reads Reka's CSS variables",
 };
