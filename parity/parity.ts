@@ -6,7 +6,6 @@
 export const planned = [
   'appearance-settings',
   'brand-color-field',
-  'bubble',
   'chart',
   'color-field',
   'config-preview',
@@ -29,6 +28,7 @@ export const shared = [
   'avatar',
   'badge',
   'breadcrumb',
+  'bubble',
   'button',
   'button-group',
   'card',
@@ -450,6 +450,7 @@ export const behaviourDifferences: Record<string, string> = {
   'date-picker/Accessibility':
     "react-day-picker labels a day 'Today, Wednesday, January 15th, 2025, selected'; Reka labels it 'Wednesday, January 15, 2025' and marks selection with aria-selected on the cell, so Vue checks those",
   'avatar/WithDataAttributes': AVATAR_IMAGE_LOAD,
+  'bubble/WithTooltip': GRACE_AREA,
   'hover-card/OpenCloseInteraction': GRACE_AREA,
   'input-otp/KeyboardInteraction': PIN_INPUT,
   'input-otp/Paste': PIN_INPUT,
