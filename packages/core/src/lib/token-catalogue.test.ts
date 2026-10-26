@@ -276,6 +276,13 @@ describe('token catalogue', () => {
     }
   });
 
+  it('describes where every derived colour is used', () => {
+    const undescribed = runtimeColors
+      .filter((token) => !token.description)
+      .map((token) => token.name);
+    expect(undescribed).toEqual([]);
+  });
+
   it('puts the default appearance on :root', () => {
     expect({
       density: cssModes('data-density').root,
