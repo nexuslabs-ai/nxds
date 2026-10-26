@@ -24,7 +24,6 @@ import {
 import { HeroAdoptionStudy } from './HeroAdoptionStudy';
 import { MorphingDock } from './MorphingDock';
 import { NexusAppearanceControls } from './NexusAppearanceControls';
-import { NexusDock } from './NexusDock';
 import { NexusPropertyControls } from './NexusPropertyControls';
 import { NexusToolbar } from './NexusToolbar';
 import { OriginalShowcaseGrid } from './original/ShowcaseGrid';
@@ -145,7 +144,6 @@ export function DockChapterJourney({
         type: 'select',
         options: [
           { value: 'nexus-toolbar', label: 'Nexus Toolbar · new' },
-          { value: 'nexus-owned', label: 'Nexus owned dock · previous' },
           { value: 'nexus-dock', label: 'Nexus Dock · previous' },
           { value: 'straight-bare', label: 'Roomy · bare icons' },
           { value: 'straight-roomy', label: 'Straight expansion · roomy' },
@@ -380,11 +378,7 @@ export function DockChapterJourney({
       ? NexusPropertyControls
       : NexusAppearanceControls;
   const DockComponent =
-    dock.iteration === 'nexus-toolbar'
-      ? NexusToolbar
-      : dock.iteration === 'nexus-owned'
-        ? NexusDock
-        : PreviousNexusDock;
+    dock.iteration === 'nexus-toolbar' ? NexusToolbar : PreviousNexusDock;
   const chapterControls =
     current?.id === 'customize' ? (
       <AppearanceControls
@@ -522,9 +516,7 @@ export function DockChapterJourney({
               />
             </div>
             <div className="story-dock-position">
-              {['nexus-toolbar', 'nexus-owned', 'nexus-dock'].includes(
-                dock.iteration
-              ) ? (
+              {['nexus-toolbar', 'nexus-dock'].includes(dock.iteration) ? (
                 <DockComponent
                   compactOnSmallPhones={dock.phone.toolbar === 'compact'}
                   hugActive={dock.selectedWidth === 'hug'}

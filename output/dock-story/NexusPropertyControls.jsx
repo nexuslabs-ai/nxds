@@ -1,7 +1,5 @@
 import { useId } from 'react';
 
-import { NxdsAppearanceColorField } from '@nexus-dock/color-field';
-import { PropertySlider } from '@nexus-dock/property-slider';
 import {
   BASE_TONE_OPTIONS,
   BRAND_COLOR_PRESETS,
@@ -26,6 +24,8 @@ import {
 } from '@nxds/react';
 
 import { setIconLibrary, useIconLibrary } from './icon-library';
+import { NxdsAppearanceColorField } from './pending-nexus/color-field';
+import { PropertySlider } from './pending-nexus/property-slider';
 
 const rowClass =
   'nx:min-h-10 nx:flex-row nx:items-center nx:gap-2 nx:rounded-md nx:bg-container nx:px-3 nx:py-1';

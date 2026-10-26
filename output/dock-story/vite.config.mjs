@@ -7,7 +7,6 @@ import { defineConfig } from 'vite';
 
 const path = (value) => fileURLToPath(new URL(value, import.meta.url));
 const repo = path('../../');
-const dock = '/Users/temp/.codex/worktrees/nexus-dock/nexus';
 const toolbar = '/Users/temp/.codex/worktrees/toolbar-tools';
 // PR #913 (icon libraries, fonts, Shuffle) until it merges; then point the
 // @nxds aliases back at `repo` and drop the icon and font aliases.
@@ -31,24 +30,12 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
     alias: [
       {
-        find: '@nexus-dock/source',
-        replacement: `${dock}/output/dock-retired/preview-dock.tsx`,
-      },
-      {
         find: '@nexus-toolbar/toolbar',
         replacement: `${toolbar}/packages/react/src/components/toolbar/toolbar.tsx`,
       },
       {
         find: '@nexus-toolbar/tooltip',
         replacement: `${toolbar}/packages/react/src/components/tooltip/tooltip.tsx`,
-      },
-      {
-        find: '@nexus-dock/property-slider',
-        replacement: `${dock}/packages/react/src/components/property-slider/property-slider.tsx`,
-      },
-      {
-        find: '@nexus-dock/color-field',
-        replacement: `${dock}/packages/react/src/components/appearance/color-field/color-field.tsx`,
       },
       {
         find: '@nxds/react/appearance',
@@ -90,5 +77,5 @@ export default defineConfig({
       'hero-adoption-preview/index.html',
     ],
   },
-  server: { fs: { allow: [repo, dock, toolbar, iconsAndFonts] } },
+  server: { fs: { allow: [repo, toolbar, iconsAndFonts] } },
 });
