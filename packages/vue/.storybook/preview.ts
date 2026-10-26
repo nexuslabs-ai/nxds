@@ -1,5 +1,6 @@
 import {
   BASE_TONE_OPTIONS,
+  BRAND_COLOR_PRESETS,
   CORNER_OPTIONS,
   DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
@@ -138,6 +139,17 @@ const preview: Preview = {
       toolbar: {
         icon: 'circlehollow',
         items: toolbarItems(MODE_OPTIONS),
+        dynamicTitle: true,
+      },
+    },
+    brandColor: {
+      name: 'Primary',
+      toolbar: {
+        icon: 'circle',
+        items: BRAND_COLOR_PRESETS.map(({ color, label }) => ({
+          value: color,
+          title: label,
+        })),
         dynamicTitle: true,
       },
     },
