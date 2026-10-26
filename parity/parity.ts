@@ -5,7 +5,6 @@
 /** React components Vue doesn't ship yet. */
 export const planned = [
   'appearance-settings',
-  'attachment',
   'brand-color-field',
   'bubble',
   'chart',
@@ -26,6 +25,7 @@ export const shared = [
   'alert',
   'alert-dialog',
   'aspect-ratio',
+  'attachment',
   'avatar',
   'badge',
   'breadcrumb',
