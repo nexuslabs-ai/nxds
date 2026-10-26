@@ -204,13 +204,14 @@ function variantDefault(
 /**
  * A prop's `withDefaults` value, held to the React props contract: a literal
  * or nothing. A variant prop left unset falls back to its recipe's default.
+ * `undefined` only turns off Vue's boolean casting, so it counts as unset.
  */
 function propDefault(
   vueProgram: VueProgram,
   { name, file }: VuePart,
   prop: PropertyMeta
 ) {
-  if (prop.default === undefined) {
+  if (prop.default === undefined || prop.default === 'undefined') {
     return variantDefault(vueProgram, file, prop.name);
   }
   return literalDefaultValue(prop.default, `${name}.${prop.name}`);
