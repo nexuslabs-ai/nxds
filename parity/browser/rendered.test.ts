@@ -63,7 +63,7 @@ const OVERLAYS: Record<string, Opener> = {
 // Attributes that hold generated ids or inline styles, that Radix, Reka and
 // vaul add for their own bookkeeping, or that `name` already covers (aria-label).
 const SKIPPED_ATTRIBUTE =
-  /^(?:id|style|aria-(?:controls|labelledby|describedby|owns|activedescendant|label)|data-(?:radix|reka)-.*|data-(?:active|dismissable-layer|grace-area-trigger|menu-item|navigation-menu-trigger|panel-group-id|panel-id|panel-resize-handle-id|slider-impl|vaul-animate|vaul-custom-container))$/;
+  /^(?:id|style|aria-(?:controls|labelledby|describedby|owns|activedescendant|label)|data-(?:radix|reka)-.*|data-(?:active|dismissable-layer|grace-area-trigger|menu-item|navigation-menu-trigger|slider-impl|vaul-animate|vaul-custom-container))$/;
 // ARIA states where `"false"` means the same as leaving the attribute out.
 const FALSE_IS_ABSENT =
   /^aria-(?:busy|disabled|hidden|invalid|readonly|required)$/;
@@ -169,11 +169,16 @@ function readTree(slug: string) {
   };
 }
 
-async function settle() {
-  await new Promise((resolve) =>
-    requestAnimationFrame(() => requestAnimationFrame(resolve))
-  );
+/** Waits until `read` returns the same value twice, 100ms apart. */
+async function holdsSteady(read: () => string) {
+  await waitFor(async () => {
+    const before = read();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(read()).toBe(before);
+  });
 }
+
+const partCount = () => String(document.querySelectorAll('[data-slot]').length);
 
 // Radix and Reka class tokens name their own CSS variables for the same value.
 function normalizeClass(token: string) {
@@ -231,13 +236,10 @@ async function openOverlay(
   }
   // Popper places the content after measuring it, which can flip its side,
   // and Radix mounts a navigation indicator once a ResizeObserver reports.
-  const layout = () =>
-    `${content.getAttribute('data-side')}/${content.getAttribute('data-align')}/${document.querySelectorAll('[data-slot]').length}`;
-  await waitFor(async () => {
-    const before = layout();
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    expect(layout()).toBe(before);
-  });
+  await holdsSteady(
+    () =>
+      `${content.getAttribute('data-side')}/${content.getAttribute('data-align')}/${partCount()}`
+  );
   return true;
 }
 
@@ -287,7 +289,8 @@ async function renderTree(
   document.body.append(canvasElement);
 
   const composed = await mount(canvasElement);
-  await settle();
+  // Some parts mount late, such as a scroll area's corner once both scrollbars measure.
+  await holdsSteady(partCount);
 
   const opener = OVERLAYS[slug];
   const opened = opener

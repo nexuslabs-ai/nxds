@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, type HTMLAttributes, provide, type VNode } from 'vue';
+import { type HTMLAttributes, provide, type VNode } from 'vue';
 
 import { flattenedNodes } from '../../lib/slots';
 import { cn } from '../../lib/utils';
@@ -25,20 +25,17 @@ const slots = defineSlots<{ default?: () => VNode[] }>();
 
 provide(AvatarGroupKey, props);
 
-// The visible members, then a +N tile for the rest.
-function Members() {
-  const items = flattenedNodes(slots.default?.());
-  const hasMax = typeof props.max === 'number' && props.max > 0;
-  const visible = hasMax ? items.slice(0, props.max) : items;
-  const overflowCount = items.length - visible.length;
-  if (overflowCount === 0) return visible;
+function members() {
+  return flattenedNodes(slots.default?.());
+}
 
-  return [
-    ...visible,
-    h(Avatar, { role: 'img', 'aria-label': `${overflowCount} more` }, () =>
-      h(AvatarFallback, { 'aria-hidden': 'true' }, () => `+${overflowCount}`)
-    ),
-  ];
+function visibleMembers() {
+  const hasMax = typeof props.max === 'number' && props.max > 0;
+  return hasMax ? members().slice(0, props.max) : members();
+}
+
+function overflowCount() {
+  return members().length - visibleMembers().length;
 }
 </script>
 
@@ -59,6 +56,17 @@ function Members() {
       )
     "
   >
-    <Members />
+    <component
+      :is="member"
+      v-for="(member, index) in visibleMembers()"
+      :key="member.key ?? index"
+    />
+    <Avatar
+      v-if="overflowCount() > 0"
+      role="img"
+      :aria-label="`${overflowCount()} more`"
+    >
+      <AvatarFallback aria-hidden="true">+{{ overflowCount() }}</AvatarFallback>
+    </Avatar>
   </div>
 </template>

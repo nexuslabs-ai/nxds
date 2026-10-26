@@ -48,9 +48,6 @@ const props = withDefaults(defineProps<TableProps>(), {
 });
 
 provide(TableKey, props);
-
-// A wide table overflows horizontally and holds no focusable children, so the
-// container takes tabindex="0" to scroll into view (WCAG 2.1.1).
 </script>
 
 <template>
@@ -65,6 +62,7 @@ provide(TableKey, props);
       )
     "
   >
+    <!-- A wide table overflows horizontally and holds no focusable children, so the container takes tabindex="0" to scroll into view (WCAG 2.1.1). -->
     <table
       v-bind="$attrs"
       data-slot="table"

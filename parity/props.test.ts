@@ -11,7 +11,7 @@ import {
 import {
   componentParts,
   createVueProgram,
-  isOwnDeclaration,
+  ownEvents,
   parseFile,
   partEntry,
   type VueProgram,
@@ -80,9 +80,7 @@ function vueContract(vueProgram: VueProgram, slug: string) {
         .map((slot) => slot.name)
         .filter((name) => name !== 'default'),
       hasDefaultSlot: part.meta.slots.some((slot) => slot.name === 'default'),
-      events: part.meta.events
-        .filter((event) => isOwnDeclaration(event.getDeclarations()))
-        .map((event) => event.name),
+      events: ownEvents(vueProgram, part),
       inheritsAsChild: part.meta.props.some((prop) => prop.name === 'asChild'),
     })
   );

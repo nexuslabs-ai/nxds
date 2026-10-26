@@ -134,14 +134,17 @@ function propType(prop: PropertyMeta, localAliases: Set<string>) {
   return members && members.length > 1 ? members.join(' | ') : type;
 }
 
-/** The type node `defineProps<…>()` takes in a part's compiled script. */
-function definePropsType(sourceFile: ts.SourceFile) {
+/** The type node a macro such as `defineProps<…>()` takes in a part's compiled script. */
+function macroType(
+  sourceFile: ts.SourceFile,
+  macro: 'defineProps' | 'defineEmits'
+) {
   let found: ts.TypeNode | undefined;
   const visit = (node: ts.Node) => {
     if (
       ts.isCallExpression(node) &&
       ts.isIdentifier(node.expression) &&
-      node.expression.text === 'defineProps'
+      node.expression.text === macro
     ) {
       found = node.typeArguments?.[0];
     }
@@ -165,7 +168,7 @@ function variantDefault(
     vueProgram.checker.getProgram() ?? fail('the Vue checker has no program.');
   const typeChecker = program.getTypeChecker();
   const sourceFile = program.getSourceFile(file);
-  const propsType = sourceFile && definePropsType(sourceFile);
+  const propsType = sourceFile && macroType(sourceFile, 'defineProps');
   if (!propsType) return null;
 
   const declaration = typeChecker
@@ -217,8 +220,8 @@ function propDefault(
   return literalDefaultValue(prop.default, `${name}.${prop.name}`);
 }
 
-/** Whether a prop or event is declared in @nxds/vue rather than inherited from a dependency. */
-export function isOwnDeclaration(declarations: { file: string }[]) {
+/** Whether a prop is declared in @nxds/vue rather than inherited from a dependency. */
+function isOwnDeclaration(declarations: { file: string }[]) {
   return declarations.some(({ file }) => isUnder(file, vueSrc));
 }
 
@@ -232,6 +235,30 @@ export function componentParts(vueProgram: VueProgram, slug: string) {
 }
 
 export type VuePart = ReturnType<typeof componentParts>[number];
+
+/**
+ * The events a part's `defineEmits<…>()` declares in @nxds/vue rather than
+ * takes from a dependency's emits type. `vue-component-meta` resolves every
+ * event to Vue's own `defineEmits` signature, so its declarations can't tell.
+ */
+export function ownEvents(vueProgram: VueProgram, { file }: VuePart) {
+  const program =
+    vueProgram.checker.getProgram() ?? fail('the Vue checker has no program.');
+  const sourceFile = program.getSourceFile(file);
+  const emitsType = sourceFile && macroType(sourceFile, 'defineEmits');
+  if (!emitsType) return [];
+
+  return program
+    .getTypeChecker()
+    .getTypeFromTypeNode(emitsType)
+    .getProperties()
+    .filter((event) =>
+      (event.declarations ?? []).some((declaration) =>
+        isUnder(declaration.getSourceFile().fileName, vueSrc)
+      )
+    )
+    .map((event) => event.name);
+}
 
 export function partEntry(
   vueProgram: VueProgram,

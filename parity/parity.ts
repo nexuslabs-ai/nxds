@@ -90,6 +90,10 @@ const NATIVE_MODEL_VALUE =
   "v-model value; React's native value prop is inherited from its props type";
 const NATIVE_DEFAULT_VALUE =
   "starting value without v-model; React's native defaultValue is inherited from its props type";
+const NATIVE_MODEL_UPDATE =
+  "v-model update; React's native onChange is inherited from its props type";
+const HOVER_CARD_EVENT =
+  "Reka exports no type for HoverCardContent's emits, so Vue declares them; React inherits the same handler from Radix's props type";
 
 /**
  * Props, slots and events only the Vue part declares, as `{Part}.{name}`.
@@ -109,26 +113,41 @@ export const vueOnlyApi: Record<string, string> = {
     'native <button> attribute React inherits from its props type; Vue declares it so a set value overrides the scroll state',
   'CarouselPrevious.type':
     "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
+  'HoverCardContent.escapeKeyDown': HOVER_CARD_EVENT,
+  'HoverCardContent.focusOutside': HOVER_CARD_EVENT,
+  'HoverCardContent.interactOutside': HOVER_CARD_EVENT,
+  'HoverCardContent.pointerDownOutside': HOVER_CARD_EVENT,
   'Input.defaultValue': NATIVE_DEFAULT_VALUE,
   'Input.modelValue': NATIVE_MODEL_VALUE,
+  'Input.update:modelValue': NATIVE_MODEL_UPDATE,
   'InputGroupButton.disabled':
     'native <button> attribute React inherits from its props type; Vue declares it to pass on to Button',
   'InputGroupButton.type':
     "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
   'InputGroupInput.defaultValue': NATIVE_DEFAULT_VALUE,
   'InputGroupInput.modelValue': NATIVE_MODEL_VALUE,
+  'InputGroupInput.update:modelValue': NATIVE_MODEL_UPDATE,
   'InputGroupTextarea.defaultValue': NATIVE_DEFAULT_VALUE,
   'InputGroupTextarea.modelValue': NATIVE_MODEL_VALUE,
+  'InputGroupTextarea.update:modelValue': NATIVE_MODEL_UPDATE,
+  'InputOTP.complete':
+    "the code as a string, as React passes it; React's onComplete is inherited from input-otp's props type",
   'InputOTP.defaultValue':
     "starting code without v-model; React's defaultValue is inherited from input-otp's props type",
   'InputOTP.modelValue':
     "v-model code as a string; React's value is inherited from input-otp's props type",
+  'InputOTP.update:modelValue':
+    "v-model update with the code as a string; React's onChange is inherited from input-otp's props type",
   'NativeSelect.defaultValue': NATIVE_DEFAULT_VALUE,
   'NativeSelect.modelValue': NATIVE_MODEL_VALUE,
+  'NativeSelect.update:modelValue': NATIVE_MODEL_UPDATE,
   'Switch.thumb':
     'slot for custom thumb content; React renders the thumb itself with no way to compose it',
   'Textarea.defaultValue': NATIVE_DEFAULT_VALUE,
   'Textarea.modelValue': NATIVE_MODEL_VALUE,
+  'Textarea.update:modelValue': NATIVE_MODEL_UPDATE,
+  'ToggleGroup.update:modelValue':
+    "v-model update narrowed to the string values items take; React's onValueChange is inherited from Radix's props type",
   'ToggleGroupItem.value':
     "string, as Radix types it, so aria-checked matches Reka's pressed state; React inherits value from Radix's props type",
 };
@@ -203,12 +222,12 @@ export const renderedDifferences: Record<string, string> = {
     "input-otp puts data-slot on its hidden <input>; Vue's root is Reka's PinInputRoot <div>",
   'input-otp-slot':
     "React's slot is a <div> that shows the character; Vue's slot is Reka's PinInputInput <input>",
-  'scroll-area-corner':
-    'Radix and Reka each mount the corner once both scrollbars have measured, which lands on a different frame in each, so the check reads it at a different time',
   'tabs-indicator':
     "Radix has no indicator, so React measures the active tab and moves a span; Vue renders Reka's TabsIndicator, which reads Reka's CSS variables",
 };
 
+const SPLITTER_ID =
+  'Reka copies its generated id into its own data attribute; react-resizable-panels sets none';
 const SPLITTER_TEST_ID =
   'react-resizable-panels copies its generated id into data-testid; Reka sets none';
 const SPLITTER_STATE_RRP =
@@ -245,7 +264,9 @@ export const renderedAttributeDifferences: Record<string, string> = {
   'resizable-handle aria-valuemax': SPLITTER_RANGE,
   'resizable-handle aria-valuemin': SPLITTER_RANGE,
   'resizable-handle data-orientation': SPLITTER_STATE_REKA,
+  'resizable-handle data-panel-group-id': SPLITTER_ID,
   'resizable-handle data-panel-resize-handle-enabled': SPLITTER_STATE_REKA,
+  'resizable-handle data-panel-resize-handle-id': SPLITTER_ID,
   'resizable-handle data-resize-handle': SPLITTER_STATE_REKA,
   'resizable-handle data-resize-handle-state': SPLITTER_STATE_REKA,
   'resizable-handle data-separator': SPLITTER_STATE_RRP,
@@ -253,10 +274,13 @@ export const renderedAttributeDifferences: Record<string, string> = {
   'resizable-handle data-testid': SPLITTER_TEST_ID,
   'resizable-panel data-panel':
     'react-resizable-panels sets data-panel to "true"; Reka sets it empty',
+  'resizable-panel data-panel-group-id': SPLITTER_ID,
+  'resizable-panel data-panel-id': SPLITTER_ID,
   'resizable-panel data-panel-size': SPLITTER_STATE_REKA,
   'resizable-panel data-testid': SPLITTER_TEST_ID,
   'resizable-panel-group data-group': SPLITTER_STATE_RRP,
   'resizable-panel-group data-orientation': SPLITTER_STATE_REKA,
+  'resizable-panel-group data-panel-group-id': SPLITTER_ID,
   'resizable-panel-group data-panel-group': SPLITTER_STATE_REKA,
   'resizable-panel-group data-testid': SPLITTER_TEST_ID,
   'popover-content name':

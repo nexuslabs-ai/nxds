@@ -8,9 +8,6 @@ export interface BreadcrumbListProps {
 }
 
 const props = defineProps<BreadcrumbListProps>();
-
-// The current page is a non-focusable <span>, so the list itself takes
-// tabindex="0" to scroll an overflowing trail into view (WCAG 2.1.1).
 </script>
 
 <template>
@@ -24,6 +21,7 @@ const props = defineProps<BreadcrumbListProps>();
       )
     "
   >
+    <!-- The current page is a non-focusable <span>, so the list itself takes tabindex="0" to scroll an overflowing trail into view (WCAG 2.1.1). -->
     <slot />
   </ol>
 </template>

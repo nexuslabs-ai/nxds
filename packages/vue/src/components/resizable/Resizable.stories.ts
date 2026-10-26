@@ -6,13 +6,12 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '.';
 const meta = {
   title: 'Components/Resizable',
   component: ResizablePanelGroup,
-  args: { direction: 'horizontal' },
   parameters: {
     layout: 'padded',
     docs: {
       description: {
         component:
-          'Resizable splits an area into panels that users resize by dragging or with the keyboard. Use it for layouts like a sidebar beside an editor. Set `direction` on the group, and give every `ResizableHandle` an `aria-label`.',
+          'Resizable splits an area into panels that users resize by dragging or with the keyboard. Use it for layouts like a sidebar beside an editor. Give every `ResizableHandle` an `aria-label`.',
       },
     },
   },
@@ -35,7 +34,7 @@ export const Default: Story = {
     components: { ResizableHandle, ResizablePanel, ResizablePanelGroup },
     template: `
       <ResizablePanelGroup
-        direction="horizontal"
+        orientation="horizontal"
         class="nx:max-w-md nx:overflow-hidden nx:rounded-lg nx:border-default nx:border-border-default"
         style="height: 220px"
       >
@@ -65,7 +64,7 @@ export const Vertical: Story = {
     components: { ResizableHandle, ResizablePanel, ResizablePanelGroup },
     template: `
       <ResizablePanelGroup
-        direction="vertical"
+        orientation="vertical"
         class="nx:max-w-md nx:overflow-hidden nx:rounded-lg nx:border-default nx:border-border-default"
         style="height: 220px"
       >
@@ -94,7 +93,7 @@ export const ThreePanels: Story = {
     components: { ResizableHandle, ResizablePanel, ResizablePanelGroup },
     template: `
       <ResizablePanelGroup
-        direction="horizontal"
+        orientation="horizontal"
         class="nx:max-w-md nx:overflow-hidden nx:rounded-lg nx:border-default nx:border-border-default"
         style="height: 220px"
       >
@@ -120,7 +119,7 @@ const TwoPanels = {
   components: resizableComponents,
   template: `
     <ResizablePanelGroup
-      direction="horizontal"
+      orientation="horizontal"
       class="nx:max-w-md nx:overflow-hidden nx:rounded-lg nx:border-default nx:border-border-default"
       style="height: 220px"
     >
@@ -182,7 +181,7 @@ export const AllVariants: Story = {
     template: `
       <div class="nx:flex nx:flex-wrap nx:gap-4">
         <ResizablePanelGroup
-          direction="horizontal"
+          orientation="horizontal"
           class="nx:max-w-md nx:overflow-hidden nx:rounded-lg nx:border-default nx:border-border-default"
           style="height: 220px"
         >
@@ -195,7 +194,7 @@ export const AllVariants: Story = {
           </ResizablePanel>
         </ResizablePanelGroup>
         <ResizablePanelGroup
-          direction="vertical"
+          orientation="vertical"
           class="nx:max-w-md nx:overflow-hidden nx:rounded-lg nx:border-default nx:border-border-default"
           style="height: 220px"
         >
