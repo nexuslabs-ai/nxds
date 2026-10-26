@@ -238,13 +238,14 @@ type ToolbarToolGroupContextValue = {
   panelId: string;
   panels: ReadonlySet<string>;
   activeTool: HTMLButtonElement | null;
-  activeToolRef: React.RefObject<HTMLButtonElement | null>;
-  group: React.RefObject<HTMLDivElement | null>;
-  switching: { current: boolean };
-  restoreFocus: { current: boolean };
   setActiveTool: (tool: HTMLButtonElement | null) => void;
   registerPanel: (value: string) => () => void;
   select: (value: string) => void;
+  /** Returns true when focus should stay on the tool that was just chosen. */
+  panelOpened: () => boolean;
+  panelClosed: () => void;
+  /** Returns true when the press was on a tool, so the panel stays open. */
+  keepsPanelOpen: (target: Node) => boolean;
 };
 
 const ToolbarToolGroupContext =
@@ -345,19 +346,37 @@ const ToolbarToolGroup = React.forwardRef<
     if (nextOpen !== open) setOpen(nextOpen);
   }
 
+  function panelOpened() {
+    restoreFocus.current = true;
+    const keepFocusOnTool = switching.current;
+    switching.current = false;
+    return keepFocusOnTool;
+  }
+
+  function panelClosed() {
+    if (restoreFocus.current)
+      activeToolRef.current?.focus({ preventScroll: true });
+  }
+
+  function keepsPanelOpen(target: Node) {
+    // Tools handle their own clicks, so the panel can stay open while switching.
+    if (group.current?.contains(target)) return true;
+    restoreFocus.current = false;
+    return false;
+  }
+
   const context = {
     value,
     open,
     panelId,
     panels,
     activeTool,
-    activeToolRef,
-    group,
-    switching,
-    restoreFocus,
     setActiveTool,
     registerPanel,
     select,
+    panelOpened,
+    panelClosed,
+    keepsPanelOpen,
   };
 
   return (
@@ -486,19 +505,15 @@ const ToolbarToolPanel = React.forwardRef<
 
   function handleOpenAutoFocus(event: Event) {
     onOpenAutoFocus?.(event);
-    tools.restoreFocus.current = true;
     // Switching tools keeps focus on the tool that was just chosen.
-    if (!tools.switching.current) return;
-    tools.switching.current = false;
-    event.preventDefault();
+    if (tools.panelOpened()) event.preventDefault();
   }
 
   function handleCloseAutoFocus(event: Event) {
     onCloseAutoFocus?.(event);
     if (event.defaultPrevented) return;
     event.preventDefault();
-    if (tools.restoreFocus.current)
-      tools.activeToolRef.current?.focus({ preventScroll: true });
+    tools.panelClosed();
   }
 
   const handleInteractOutside: NonNullable<
@@ -506,12 +521,7 @@ const ToolbarToolPanel = React.forwardRef<
   > = (event) => {
     onInteractOutside?.(event);
     if (event.defaultPrevented) return;
-    // Tools handle their own clicks, so the panel can stay open while switching.
-    if (tools.group.current?.contains(event.target as Node)) {
-      event.preventDefault();
-      return;
-    }
-    tools.restoreFocus.current = false;
+    if (tools.keepsPanelOpen(event.target as Node)) event.preventDefault();
   };
 
   return (
