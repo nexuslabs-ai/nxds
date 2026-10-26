@@ -306,15 +306,21 @@ async function generate() {
   return { output, problems };
 }
 
-/** packages/react-18's package.json: packages/react's dependencies, on React 18. */
+/**
+ * packages/react-18's package.json: packages/react's dependencies, on React 18.
+ * Changesets bumps `version`, so it is kept from the current file.
+ */
 function manifest() {
   const source = JSON.parse(
     fs.readFileSync(path.join(SOURCE, 'package.json'), 'utf8')
   );
+  const current = JSON.parse(
+    fs.readFileSync(path.join(PACKAGE, 'package.json'), 'utf8')
+  );
   const devDependencies = { ...source.devDependencies, ...REACT_18_DEV };
   const next = {
     name: '@nxds/react-18',
-    version: '0.0.0',
+    version: current.version,
     private: true,
     description:
       'nxds React components for React 18, generated from @nxds/react',
