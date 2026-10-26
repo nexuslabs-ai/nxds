@@ -270,12 +270,7 @@ function docComment(lines: string[], indent: string) {
 
 function propLines(prop: FlatProp) {
   const lines = prop.description ? [prop.description] : [];
-  if (prop.defaultValue !== null) {
-    lines.push(
-      `Default: ${prop.defaultValue}.`,
-      `@default ${prop.defaultValue}`
-    );
-  }
+  if (prop.defaultValue !== null) lines.push(`@default ${prop.defaultValue}`);
   const key = /^[A-Za-z_$][\w$]*$/.test(prop.name)
     ? prop.name
     : `'${prop.name}'`;
@@ -307,11 +302,11 @@ function iconProps(icon: string) {
   return [
     `/** Tabler icon, mounted as \`Nxds.Icons.${icon}\`. */`,
     `export interface ${icon}Props {`,
-    '  /** Width and height in px. Default: 24. @default 24 */',
+    '  /** Width and height in px. @default 24 */',
     '  size?: number;',
-    '  /** Stroke width. Default: 2. @default 2 */',
+    '  /** Stroke width. @default 2 */',
     '  stroke?: number;',
-    '  /** Stroke colour. Default: "currentColor". @default "currentColor" */',
+    '  /** Stroke colour. @default "currentColor" */',
     '  color?: string;',
     '  className?: string;',
     '}',
