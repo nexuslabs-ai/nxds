@@ -62,7 +62,12 @@ const ToggleGroup = React.forwardRef<
       orientation={orientation}
       // Spacing-scale gap via the runtime spacing var (nxds resets the base
       // --spacing, so Tailwind's --spacing() function is unavailable here).
-      style={spacing ? { gap: `var(--nx-spacing-${spacing})` } : undefined}
+      // A half step such as 0.5 is named `--nx-spacing-0_5`.
+      style={
+        spacing
+          ? { gap: `var(--nx-spacing-${String(spacing).replace('.', '_')})` }
+          : undefined
+      }
       className={cn(
         'nx:flex nx:w-fit nx:items-center nx:rounded-md nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
         spacing === 0 && 'nx:isolate',

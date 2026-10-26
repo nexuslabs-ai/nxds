@@ -1,10 +1,13 @@
 // tokens.json for the Claude Design System format, from the @nxds/core token
 // catalogue at the default appearance. A token's name is the custom property
 // the components read, minus `--`, so a value edited on the system page
-// reaches them.
+// reaches them. It holds only the tokens a component reads, plus the scales
+// AUTHOR_FAMILIES keeps for laying out artboards.
 import { DEFAULT_NXDS_APPEARANCE } from '@nxds/core';
 import type { CatalogueToken, CatalogueVariant } from '@nxds/core/catalogue';
 import { createTokenCatalogue } from '@nxds/core/catalogue';
+
+import { type ComponentReads, readersOf } from './reads.ts';
 
 export type ThemeId = 'light' | 'dark';
 export type ThemedValue = string | Partial<Record<ThemeId, string>>;
@@ -40,6 +43,7 @@ export interface TokensFile {
   shadow?: { tokens: ListToken[] };
   borderWidth?: { tokens: ListToken[] };
   zIndex?: { tokens: ListToken[] };
+  typeScale?: { tokens: ListToken[] };
 }
 
 const THEMES: { id: ThemeId; name: string }[] = [
@@ -56,12 +60,24 @@ const LIST_FAMILIES = {
   'z-index': 'zIndex',
 } as const;
 
-const TYPE_FAMILY_KEYS: Record<string, string> = {
-  '--nx-typography-family-font-sans': 'sans',
-  '--nx-typography-family-font-heading': 'heading',
-  '--nx-typography-family-font-serif': 'serif',
-  '--nx-typography-family-font-mono': 'mono',
-};
+/** Families whose every token stays, read or not, so authors can lay out artboards with the whole scale. */
+const AUTHOR_FAMILIES: ReadonlySet<string> = new Set(['spacing', 'radius']);
+
+/** Colours an author passes to a component, such as a chart series in `ChartContainer`'s config. */
+const AUTHOR_COLORS = /^--nx-color-chart-categorical-\d+$/;
+
+const FAMILY_VARIABLE = '--nx-typography-family-font-';
+
+/** The variable a `type.families` key's stack is declared under: `sans` is `--nx-typography-family-font-sans`. */
+export function familyVariable(key: string) {
+  return `${FAMILY_VARIABLE}${key}`;
+}
+
+function familyKey(variable: string | undefined) {
+  return variable?.startsWith(FAMILY_VARIABLE)
+    ? variable.slice(FAMILY_VARIABLE.length)
+    : undefined;
+}
 
 const VAR_REFERENCE = /var\((--nx-[\w-]+)\)/g;
 
@@ -141,21 +157,49 @@ function scaleUsage(token: CatalogueToken, value: ThemedValue) {
     case 'borderwidth':
       return `Border width${shown}: \`nx:border-width-${key}\`.`;
     case 'shadow':
-      return `Elevation \`nx:shadow-${key}\`. Components read its layer variables, so an edit here shows on the page only.`;
+      return `Elevation \`nx:shadow-${key}\`.`;
+    case 'typography':
+      return `Type scale ${token.group} \`${key}\`${shown}. The text styles read it.`;
     case 'color':
-      return `Raw ${token.group} palette step${shown}. Components read the semantic colours; use this for one-off fills only.`;
+      return `Raw ${token.group} palette step${shown}.`;
     default:
       return `\`${token.name}\`${shown}.`;
   }
 }
 
-function listToken(token: CatalogueToken, resolve: Resolver): ListToken {
+function readersText(readers: readonly string[]) {
+  if (readers.length <= 4) {
+    return readers.length === 1
+      ? readers[0]
+      : `${readers.slice(0, -1).join(', ')} and ${readers.at(-1)}`;
+  }
+  return `${readers.slice(0, 3).join(', ')} and ${readers.length - 3} more components`;
+}
+
+function listToken(
+  token: CatalogueToken,
+  resolve: Resolver,
+  readers: readonly string[]
+): ListToken {
   const value = tokenValue(token, resolve);
+  const role = token.description ?? scaleUsage(token, value);
   return {
     name: bareName(token.name),
     value,
-    usage: token.description ?? scaleUsage(token, value),
+    usage:
+      readers.length > 0
+        ? `${role} Read by ${readersText(readers)}.`
+        : `For authors: ${role} No component reads it.`,
   };
+}
+
+/** Whether tokens.json keeps `token`: a component reads it, or authors use it. */
+function kept(token: CatalogueToken, readers: readonly string[]) {
+  return (
+    readers.length > 0 ||
+    AUTHOR_FAMILIES.has(token.family) ||
+    AUTHOR_COLORS.test(token.name)
+  );
 }
 
 function isShadowStyle(token: CatalogueToken) {
@@ -166,25 +210,71 @@ function isTypographyStyle(token: CatalogueToken) {
   return token.variants[0]?.source?.file === 'styles/typography.json';
 }
 
+function isTypeScaleStep(token: CatalogueToken) {
+  return (
+    token.family === 'typography' &&
+    token.group !== 'family' &&
+    (token.variants[0]?.source?.file.startsWith('primitives/') ?? false)
+  );
+}
+
+interface Context {
+  catalogue: Catalogue;
+  resolve: Resolver;
+  reads: ComponentReads;
+}
+
+function keptTokens(tokens: Catalogue, { resolve, reads }: Context) {
+  return tokens.flatMap((token) => {
+    const readers = readersOf(reads, token.name);
+    return kept(token, readers) ? [listToken(token, resolve, readers)] : [];
+  });
+}
+
 // Runtime colours first, in registry order, then the primitive palette.
-function colorTokens(catalogue: Catalogue, resolve: Resolver) {
-  const colors = catalogue.filter((token) => token.family === 'color');
+function colorTokens(context: Context) {
+  const colors = context.catalogue.filter((token) => token.family === 'color');
   const derived = colors.filter((token) =>
     token.variants.some((variant) => variant.appearance)
   );
   const primitives = colors.filter((token) => !derived.includes(token));
-  return [...derived, ...primitives].map((token) => listToken(token, resolve));
+  return keptTokens([...derived, ...primitives], context);
 }
 
-function familyTokens(
-  catalogue: Catalogue,
-  family: keyof typeof LIST_FAMILIES,
-  resolve: Resolver
-) {
-  return catalogue
-    .filter((token) => token.family === family)
-    .filter((token) => family !== 'shadow' || isShadowStyle(token))
-    .map((token) => listToken(token, resolve));
+function familyTokens(family: keyof typeof LIST_FAMILIES, context: Context) {
+  return keptTokens(
+    context.catalogue
+      .filter((token) => token.family === family)
+      .filter((token) => family !== 'shadow' || isShadowStyle(token)),
+    context
+  );
+}
+
+/** The type scale steps a component or a text style reads. */
+function typeScaleTokens(context: Context) {
+  const styleReads = new Set(
+    context.catalogue
+      .filter(isTypographyStyle)
+      .flatMap((token) => token.variants[0]?.declarations ?? [])
+      .flatMap(({ value }) => [...value.matchAll(VAR_REFERENCE)])
+      .map(([, name]) => name)
+  );
+  return context.catalogue.filter(isTypeScaleStep).flatMap((token) => {
+    const readers = readersOf(context.reads, token.name);
+    if (readers.length === 0 && !styleReads.has(token.name)) return [];
+    const value = tokenValue(token, context.resolve);
+    const role = token.description ?? scaleUsage(token, value);
+    return [
+      {
+        name: bareName(token.name),
+        value,
+        usage:
+          readers.length > 0
+            ? `${role} Read by ${readersText(readers)}.`
+            : role,
+      },
+    ];
+  });
 }
 
 // `-0.800000011920929px` is a float32 artefact of the source file.
@@ -219,7 +309,7 @@ function typeStyle(token: CatalogueToken, resolve: Resolver): TypeStyle {
       token.description ??
       `Text style \`${utilityNames(token)[0] ?? token.name}\`.`,
   };
-  const family = familyVar ? TYPE_FAMILY_KEYS[familyVar] : undefined;
+  const family = familyKey(familyVar);
   if (family) style.family = family;
   const lineHeight = length(read('line-height') ?? '');
   if (lineHeight) style.lineHeight = lineHeight;
@@ -230,16 +320,10 @@ function typeStyle(token: CatalogueToken, resolve: Resolver): TypeStyle {
   return style;
 }
 
-function typeFamily(catalogue: Catalogue, resolve: Resolver) {
-  const families = Object.fromEntries(
-    Object.entries(TYPE_FAMILY_KEYS).map(([name, key]) => {
-      const token = catalogue.find((candidate) => candidate.name === name);
-      if (!token) throw new Error(`tokens.json: ${name} is missing.`);
-      return [key, resolve(`var(${name})`, 'light')];
-    })
-  );
-
+// The families a text style or a component uses.
+function typeFamily({ catalogue, resolve, reads }: Context) {
   const groups: TokensFile['type']['groups'] = [];
+  const used = new Set<string>();
   for (const token of catalogue.filter(isTypographyStyle)) {
     const style = typeStyle(token, resolve);
     let group = groups.find((candidate) => candidate.name === token.group);
@@ -247,21 +331,58 @@ function typeFamily(catalogue: Catalogue, resolve: Resolver) {
       group = { name: token.group, family: style.family ?? 'sans', styles: [] };
       groups.push(group);
     }
+    used.add(style.family ?? group.family);
     if (style.family === group.family) delete style.family;
     group.styles.push(style);
   }
 
+  const families = Object.fromEntries(
+    catalogue
+      .filter((token) => familyKey(token.name) !== undefined)
+      .filter(
+        (token) =>
+          used.has(familyKey(token.name) ?? '') ||
+          readersOf(reads, token.name).length > 0
+      )
+      .map((token) => [
+        familyKey(token.name),
+        resolve(`var(${token.name})`, 'light'),
+      ])
+  );
+
   return { fonts: [] as never[], families, groups };
+}
+
+/**
+ * Each text style's class body in tokens.css, by style name: the
+ * declarations of the `nx:typography-*` utility it mirrors.
+ */
+export function typeStyleRules(): Map<string, string[]> {
+  return new Map(
+    createTokenCatalogue()
+      .filter(isTypographyStyle)
+      .map((token) => [
+        bareName(token.name).replace(/^nx-/, ''),
+        (token.variants[0]?.declarations ?? []).map(
+          ({ property, value }) => `${property}: ${value};`
+        ),
+      ])
+  );
 }
 
 export interface TokensMeta {
   version: string;
   ref: string;
+  reads: ComponentReads;
 }
 
-export function buildTokens({ version, ref }: TokensMeta): TokensFile {
+export function buildTokens({ version, ref, reads }: TokensMeta): TokensFile {
   const catalogue = createTokenCatalogue();
-  const resolve = createResolver(catalogue);
+  const context: Context = {
+    catalogue,
+    resolve: createResolver(catalogue),
+    reads,
+  };
   const tokens: TokensFile = {
     name: 'nxds',
     version: 1,
@@ -272,17 +393,14 @@ export function buildTokens({ version, ref }: TokensMeta): TokensFile {
       ref,
       appearance: 'default',
     },
-    color: { themes: THEMES, tokens: colorTokens(catalogue, resolve) },
-    type: typeFamily(catalogue, resolve),
+    color: { themes: THEMES, tokens: colorTokens(context) },
+    type: typeFamily(context),
   };
   for (const [family, key] of Object.entries(LIST_FAMILIES)) {
     tokens[key] = {
-      tokens: familyTokens(
-        catalogue,
-        family as keyof typeof LIST_FAMILIES,
-        resolve
-      ),
+      tokens: familyTokens(family as keyof typeof LIST_FAMILIES, context),
     };
   }
+  tokens.typeScale = { tokens: typeScaleTokens(context) };
   return tokens;
 }

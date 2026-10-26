@@ -5,10 +5,11 @@
 import { parse } from 'acorn';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
+import postcss from 'postcss';
 
 import { IDENTIFIER, isPageGenerated, validateIndex } from './system-index.ts';
-import type { TokensFile } from './tokens.ts';
-import { compileTokensCss } from './tokens-css.ts';
+import { familyVariable, type TokensFile } from './tokens.ts';
+import { compileTokensCss, listFamilies } from './tokens-css.ts';
 
 const KB = 1024;
 const MB = 1024 * KB;
@@ -313,10 +314,115 @@ function checkTokens(root: string, errors: string[]) {
   const cssPath = path.join(root, 'tokens.css');
   if (!existsSync(cssPath)) {
     errors.push('tokens.css: missing.');
-  } else if (readFileSync(cssPath, 'utf8') !== compileTokensCss(tokens)) {
-    errors.push('tokens.css: differs from a compile of tokens.json.');
+    return { tokens, allNames };
   }
+  checkTokensCss(tokens, readFileSync(cssPath, 'utf8'), errors);
   return { tokens, allNames };
+}
+
+/** Each top-level `.<style>` rule in tokens.css, by style name. */
+function styleRules(css: string) {
+  const rules = new Map<string, string[]>();
+  for (const node of postcss.parse(css).nodes) {
+    if (node.type !== 'rule' || !node.selector.startsWith('.')) continue;
+    rules.set(
+      node.selector.slice(1),
+      (node.nodes ?? []).flatMap((child) =>
+        child.type === 'decl' ? [`${child.prop}: ${child.value};`] : []
+      )
+    );
+  }
+  return rules;
+}
+
+const STYLE_FIELDS: Record<
+  string,
+  'fontSize' | 'lineHeight' | 'fontWeight' | 'letterSpacing'
+> = {
+  'font-size': 'fontSize',
+  'line-height': 'lineHeight',
+  'font-weight': 'fontWeight',
+  'letter-spacing': 'letterSpacing',
+};
+
+// The text style classes read variables, so each one must resolve, through
+// tokens.json, to the literal values its style lists.
+function checkStyleValues(
+  tokens: TokensFile,
+  rules: Map<string, string[]>,
+  errors: string[]
+) {
+  const values = new Map(
+    listFamilies(tokens).flatMap(([, list]) =>
+      list.flatMap((token) =>
+        typeof token.value === 'string'
+          ? [[`--${token.name}`, token.value]]
+          : []
+      )
+    )
+  );
+  const resolve = (value: string) =>
+    value.replace(
+      /var\((--[\w-]+)\)/g,
+      (reference, name: string) => values.get(name) ?? reference
+    );
+  for (const group of tokens.type.groups) {
+    for (const style of group.styles) {
+      const where = `tokens.css .${style.name}`;
+      for (const line of rules.get(style.name) ?? []) {
+        const [, property = '', value = ''] =
+          /^([\w-]+): (.*);$/.exec(line) ?? [];
+        if (property === 'font-family') {
+          if (
+            value !== `var(${familyVariable(style.family ?? group.family)})`
+          ) {
+            errors.push(`${where}: font-family isn't its family's variable.`);
+          }
+          continue;
+        }
+        const field = STYLE_FIELDS[property];
+        if (!field) continue;
+        const resolved = resolve(value);
+        if (resolved.includes('var(')) {
+          errors.push(
+            `${where}: ${property} reads a variable tokens.json doesn't list.`
+          );
+        } else if (
+          style[field] !== undefined &&
+          String(style[field]) !== resolved
+        ) {
+          errors.push(
+            `${where}: ${property} is ${resolved}, but tokens.json lists ${style[field]}.`
+          );
+        }
+      }
+    }
+  }
+}
+
+function checkTokensCss(tokens: TokensFile, css: string, errors: string[]) {
+  const rules = styleRules(css);
+  let expected: string;
+  try {
+    expected = compileTokensCss(tokens, rules);
+  } catch (error) {
+    errors.push((error as Error).message);
+    return;
+  }
+  if (css !== expected) {
+    errors.push('tokens.css: differs from a compile of tokens.json.');
+    return;
+  }
+  checkStyleValues(tokens, rules, errors);
+}
+
+/** Every custom property `css` declares. */
+export function declaredNames(css: string) {
+  const names = new Set<string>();
+  postcss.parse(css).walkDecls((declaration) => {
+    if (declaration.prop.startsWith('--')) names.add(declaration.prop);
+  });
+  return names;
 }
 
 function bundleHeader(code: string, errors: string[]) {
@@ -379,22 +485,94 @@ function checkBundle(
   return header.components.map((component) => component.name);
 }
 
+// An appearance preset's selector, such as `[data-density='compact']`.
+const PRESET = /\[data-(?!theme=)[\w-]+=/;
+const VARIABLE = /var\((--nx-[\w-]+)\)/g;
+const DYNAMIC_VARIABLE = /var\((--nx-[\w-]*-)\$\{/g;
+
+function readText(root: string, file: string) {
+  const full = path.join(root, file);
+  return existsSync(full) ? readFileSync(full, 'utf8') : '';
+}
+
+// bundle.css may declare a name tokens.css declares only for an appearance
+// preset: tokens.css holds the default.
 function checkStylesheet(
   root: string,
   tokenNames: Set<string>,
   errors: string[]
 ) {
-  const file = path.join(root, 'components', 'bundle.css');
-  if (!existsSync(file)) return;
-  const css = readFileSync(file, 'utf8');
+  const css = readText(root, 'components/bundle.css');
   if (/<\/style/i.test(css))
     errors.push('components/bundle.css: contains a literal </style.');
-  for (const [, name] of css.matchAll(/(?:^|[;{\s])--([\w-]+)\s*:/g)) {
-    if (name && tokenNames.has(name)) {
+  postcss.parse(css).walkDecls((declaration) => {
+    if (!tokenNames.has(declaration.prop)) return;
+    const rule = declaration.parent;
+    if (
+      rule?.type === 'rule' &&
+      (rule as postcss.Rule).selectors.every((selector) =>
+        PRESET.test(selector)
+      )
+    ) {
+      return;
+    }
+    errors.push(
+      `components/bundle.css: declares ${declaration.prop} outside an appearance preset; tokens.css owns its default.`
+    );
+  });
+}
+
+/** The `--nx-*` names the components and text styles read, and the prefixes they build names from. */
+function readNames(root: string) {
+  const bundle = readText(root, 'components/bundle.js');
+  const names = new Set<string>();
+  const add = (text: string) => {
+    for (const [, name = ''] of text.matchAll(VARIABLE)) names.add(name);
+  };
+  add(bundle);
+  add(readText(root, 'tokens.css'));
+  postcss.parse(readText(root, 'components/bundle.css')).walkRules((rule) => {
+    if (rule.selector.includes('.nx\\:')) add(rule.toString());
+  });
+  const prefixes = [...bundle.matchAll(DYNAMIC_VARIABLE)].map(
+    ([, prefix = '']) => prefix
+  );
+  return { names, prefixes };
+}
+
+// A token no component reads says it is for authors, and nothing the
+// components read is left undeclared.
+function checkReads(
+  root: string,
+  tokens: TokensFile | undefined,
+  tokenNames: Set<string>,
+  errors: string[]
+) {
+  const { names, prefixes } = readNames(root);
+  const read = (name: string) =>
+    names.has(name) || prefixes.some((prefix) => name.startsWith(prefix));
+  for (const [key, list] of tokens ? listFamilies(tokens) : []) {
+    for (const token of list) {
+      if (read(`--${token.name}`) || token.usage.startsWith('For authors:')) {
+        continue;
+      }
       errors.push(
-        `components/bundle.css: declares --${name}, which tokens.css owns.`
+        `tokens.json ${key}.${token.name}: no component reads it, so its usage must start with "For authors:".`
       );
     }
+  }
+  const declared = new Set([
+    ...tokenNames,
+    ...declaredNames(readText(root, 'components/bundle.css')),
+  ]);
+  const all = new Set<string>();
+  for (const file of ['components/bundle.js', 'components/bundle.css']) {
+    for (const [, name = ''] of readText(root, file).matchAll(VARIABLE)) {
+      all.add(name);
+    }
+  }
+  for (const name of [...all].filter((name) => !declared.has(name)).sort()) {
+    errors.push(`components: read ${name}, which no stylesheet declares.`);
   }
 }
 
@@ -550,7 +728,9 @@ export function validateSystem(root: string): ValidationResult {
   if (index) errors.push(...validateIndex(index));
   const checked = checkTokens(root, errors);
   const components = checkBundle(root, index, errors);
-  checkStylesheet(root, checked?.allNames ?? new Set(), errors);
+  const tokenNames = declaredNames(readText(root, 'tokens.css'));
+  checkStylesheet(root, tokenNames, errors);
+  checkReads(root, checked?.tokens, tokenNames, errors);
   const declared = checkTypes(root, errors);
   checkComponents(root, files, components, errors);
   checkCanvasExamples(root, files, declared, errors);

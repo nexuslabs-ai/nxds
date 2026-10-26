@@ -51,6 +51,7 @@ const VALIDATION_PROPERTIES: Record<string, string> = {
   duration: 'transition-duration',
   cubicBezier: 'transition-timing-function',
   number: 'z-index',
+  shadow: 'box-shadow',
 };
 
 /** Keywords every property accepts, which leave a custom property invalid. */
@@ -74,10 +75,9 @@ function prefLabel(
     : PREF_LABELS[field];
 }
 
-/** Letter spacing and shadow offsets and spread can be negative. */
-function isSigned({ family, group, name }: ScaleToken): boolean {
-  if (family === 'typography') return group === 'letterspacing';
-  return family === 'shadow' && /-(x|y|spread)$/.test(name);
+/** Letter spacing can be negative. */
+function isSigned({ family, group }: ScaleToken): boolean {
+  return family === 'typography' && group === 'letterspacing';
 }
 
 function validationProperty(token: ScaleToken): string {

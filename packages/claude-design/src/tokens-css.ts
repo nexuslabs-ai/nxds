@@ -1,14 +1,22 @@
-// tokens.css laid out as the Design System page compiles it, so the page's
-// own compile of tokens.json and this file agree. The one addition is `.dark`
-// beside each later theme's selector: nxds switches dark mode with that class.
-import type {
-  ListToken,
-  ThemedValue,
-  TokensFile,
-  TypeStyle,
+// tokens.css laid out as the Design System page compiles it, with three
+// changes. The variables sit in the `theme` layer, so the appearance presets
+// in bundle.css and the provider's `nx-runtime` layer override them. `.dark`
+// stands beside each later theme's selector, since nxds switches dark mode
+// with that class. Each text style's class carries the declarations of the
+// `nx:typography-*` utility it mirrors, so it reads the same variables as the
+// components.
+import {
+  familyVariable,
+  type ListToken,
+  type ThemedValue,
+  type TokensFile,
 } from './tokens.ts';
 
 const TOKENS_CSS_HEADER = '/* nxds — generated from tokens.json */';
+
+/** The order `inRuntimeLayer` from @nxds/core declares, whichever file loads first. */
+const LAYER_ORDER =
+  '@layer properties, theme, base, components, utilities, nx-runtime;';
 
 /** The families tokens.css declares under the theme selectors. */
 const THEMED_FAMILIES = new Set(['color', 'shadow']);
@@ -20,6 +28,7 @@ const LIST_FAMILY_KEYS = [
   'shadow',
   'borderWidth',
   'zIndex',
+  'typeScale',
 ] as const;
 
 /**
@@ -44,25 +53,23 @@ function valueIn(value: ThemedValue, theme: string, first: string) {
   return value[theme as keyof typeof value];
 }
 
-function block(selector: string, lines: string[]) {
+function block(selector: string, lines: string[], indent = '') {
   if (lines.length === 0) return [];
-  return [`${selector} {`, ...lines.map((line) => `  ${line}`), '}'];
-}
-
-function styleDeclarations(style: TypeStyle, groupFamily: string) {
-  const lines = [
-    `font-family: var(--font-${style.family ?? groupFamily});`,
-    `font-size: ${style.fontSize};`,
+  return [
+    `${indent}${selector} {`,
+    ...lines.map((line) => `${indent}  ${line}`),
+    `${indent}}`,
   ];
-  if (style.lineHeight) lines.push(`line-height: ${style.lineHeight};`);
-  if (style.fontWeight) lines.push(`font-weight: ${style.fontWeight};`);
-  if (style.letterSpacing) {
-    lines.push(`letter-spacing: ${style.letterSpacing};`);
-  }
-  return lines;
 }
 
-export function compileTokensCss(tokens: TokensFile): string {
+/**
+ * `styleRules` holds each text style's class body by style name, one
+ * declaration a line.
+ */
+export function compileTokensCss(
+  tokens: TokensFile,
+  styleRules: ReadonlyMap<string, readonly string[]>
+): string {
   const themes = tokens.color.themes.map((theme) => theme.id);
   const [first = 'light', ...later] = themes;
   const families = listFamilies(tokens);
@@ -87,7 +94,8 @@ export function compileTokensCss(tokens: TokensFile): string {
       themedTokens.flatMap((token) => {
         const value = valueIn(token.value, theme, first);
         return value === undefined ? [] : [declare(token, value)];
-      })
+      }),
+      '  '
     )
   );
 
@@ -96,21 +104,26 @@ export function compileTokensCss(tokens: TokensFile): string {
       typeof token.value === 'string' ? [declare(token, token.value)] : []
     ),
     ...Object.entries(tokens.type.families).map(
-      ([key, stack]) => `--font-${key}: ${stack};`
+      ([key, stack]) => `${familyVariable(key)}: ${stack};`
     ),
   ];
 
   const styles = tokens.type.groups.flatMap((group) =>
-    group.styles.flatMap((style) =>
-      block(`.${style.name}`, styleDeclarations(style, group.family))
-    )
+    group.styles.flatMap((style) => {
+      const rule = styleRules.get(style.name);
+      if (!rule) throw new Error(`tokens.css: no rule for ${style.name}.`);
+      return block(`.${style.name}`, [...rule]);
+    })
   );
 
   return [
     TOKENS_CSS_HEADER,
-    ...block(`:root, [data-theme="${first}"]`, firstTheme),
+    LAYER_ORDER,
+    '@layer theme {',
+    ...block(`:root, [data-theme="${first}"]`, firstTheme, '  '),
     ...laterThemes,
-    ...block(':root', root),
+    ...block(':root', root, '  '),
+    '}',
     ...styles,
     '',
   ].join('\n');

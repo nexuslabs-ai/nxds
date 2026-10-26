@@ -51,7 +51,11 @@ function update(value: AcceptableValue | AcceptableValue[]) {
 <template>
   <ToggleGroupRoot
     v-bind="forwarded"
-    :style="spacing ? { gap: `var(--nx-spacing-${spacing})` } : undefined"
+    :style="
+      spacing
+        ? { gap: `var(--nx-spacing-${String(spacing).replace('.', '_')})` }
+        : undefined
+    "
     :class="
       cn(
         'nx:flex nx:w-fit nx:items-center nx:rounded-md nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
