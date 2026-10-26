@@ -11,28 +11,114 @@ import {
 import './hero-adoption-study.css';
 
 const channel = 'nexus-hero-adoption-v1';
-const cases = [
-  {
-    id: 'before',
-    number: '01',
-    title: 'Your HeroUI app',
-    subtitle: 'The starting point',
-  },
-  {
-    id: 'shadcn',
-    number: '02',
-    title: 'Add a shadcn Select',
-    subtitle: 'With its default global styles',
-  },
-  {
-    id: 'nexus',
-    number: '03',
-    title: 'Add a Nexus Select',
-    subtitle: 'With its prefixed styles',
-  },
+
+const shadcnTheming = [
+  'shadcn default theme',
+  'https://ui.shadcn.com/docs/theming',
 ];
+const studies = {
+  HeroUI: {
+    host: 'heroui',
+    other: 'shadcn',
+    otherName: 'shadcn',
+    beforeOutcome:
+      'Blue accent. Readable secondary text. Your existing components.',
+    otherOutcome:
+      'Shared token names can change the accent, text and surface of the existing app.',
+    cause: (
+      <>
+        HeroUI uses <code>--accent</code> for its accent color and{' '}
+        <code>--muted</code> for secondary text. The imported shadcn stylesheet
+        defines those same names.{' '}
+      </>
+    ),
+    sources:
+      'installed HeroUI 3.2.6, the checked-in shadcn Select and default stylesheet',
+    links: [
+      [
+        'HeroUI source anatomy',
+        'https://heroui.com/en/docs/react/components/progress-bar',
+      ],
+      shadcnTheming,
+    ],
+  },
+  MUI: {
+    host: 'mui',
+    other: 'shadcn',
+    otherName: 'shadcn',
+    sources:
+      'installed MUI 9.5.0 with its theme and CssBaseline, the checked-in shadcn Select and default stylesheet',
+    links: [
+      ['MUI theming', 'https://mui.com/material-ui/customization/theming/'],
+      shadcnTheming,
+    ],
+  },
+  'Ant Design': {
+    host: 'antd',
+    other: 'shadcn',
+    otherName: 'shadcn',
+    sources:
+      'installed Ant Design 6.6.7 with its theme and reset stylesheet, the checked-in shadcn Select and default stylesheet',
+    links: [
+      ['Ant Design theming', 'https://ant.design/docs/react/customize-theme'],
+      shadcnTheming,
+    ],
+  },
+  'shadcn/ui': {
+    host: 'shadcn',
+    other: 'heroui',
+    otherName: 'HeroUI',
+    sources:
+      'the checked-in shadcn components and default stylesheet, installed HeroUI 3.2.6 Select and styles',
+    links: [
+      shadcnTheming,
+      [
+        'HeroUI theming',
+        'https://heroui.com/en/docs/react/getting-started/theming',
+      ],
+    ],
+  },
+};
+
+function casesFor(library, study) {
+  return [
+    {
+      id: 'before',
+      number: '01',
+      title: `Your ${library} app`,
+      subtitle: 'The starting point',
+    },
+    {
+      id: study.other,
+      number: '02',
+      title: `Add a ${study.otherName} Select`,
+      subtitle: 'With its default global styles',
+    },
+    {
+      id: 'nexus',
+      number: '03',
+      title: 'Add a Nexus Select',
+      subtitle: 'With its prefixed styles',
+    },
+  ];
+}
+
+function outcome(id, study, changed) {
+  if (id === 'before')
+    return study.beforeOutcome ?? 'Your existing components and styles.';
+  if (changed && id !== 'nexus')
+    return (
+      study.otherOutcome ??
+      'Its default styles changed parts of the existing app.'
+    );
+  if (changed) return 'Its styles changed parts of the existing app.';
+  if (id === 'nexus')
+    return 'The new Select brings its own tokens. The host keeps its original appearance.';
+  return 'The existing app kept its appearance.';
+}
 
 function ComparisonFrame({
+  host,
   id,
   title,
   mode,
@@ -56,7 +142,12 @@ function ComparisonFrame({
         event.data?.channel !== channel
       )
         return;
-      if (event.data.mode !== mode || event.data.integration !== id) return;
+      if (
+        event.data.host !== host ||
+        event.data.mode !== mode ||
+        event.data.integration !== id
+      )
+        return;
       if (event.data.type === 'report') onReport(id, event.data.report);
       if (event.data.type === 'error')
         onReport(id, { error: event.data.message });
@@ -65,19 +156,21 @@ function ComparisonFrame({
     window.addEventListener('message', receive);
     configure();
     return () => window.removeEventListener('message', receive);
-  }, [id, mode, configure, onReport, onRoleChange]);
+  }, [host, id, mode, configure, onReport, onRoleChange]);
   return (
     <iframe
       ref={frame}
       onLoad={configure}
       className="hero-adoption-frame"
       title={title}
-      src={`/hero-adoption-preview/index.html?integration=${id}&mode=${mode}`}
+      src={`/hero-adoption-preview/index.html?host=${host}&integration=${id}&mode=${mode}`}
     />
   );
 }
 
-function Study({ mode, setMode }) {
+function Study({ library, mode, setMode }) {
+  const study = studies[library];
+  const cases = casesFor(library, study);
   const [highlight, setHighlight] = useState(true);
   const [role, setRole] = useState('editor');
   const [reports, setReports] = useState({});
@@ -94,7 +187,7 @@ function Study({ mode, setMode }) {
   return (
     <section
       className="hero-adoption-study"
-      aria-label="HeroUI incremental adoption comparison"
+      aria-label={`${library} incremental adoption comparison`}
     >
       <div className="hero-adoption-intro">
         <div>
@@ -102,8 +195,8 @@ function Study({ mode, setMode }) {
             Add one component. Keep everything else.
           </h2>
           <p className="nx:typography-body-small">
-            The same HeroUI workspace. The same new role selector. Two ways to
-            bring it in.
+            The same {library} workspace. The same new role selector. Two ways
+            to bring it in.
           </p>
         </div>
         <div className="hero-adoption-options">
@@ -152,6 +245,7 @@ function Study({ mode, setMode }) {
               </header>
               <div className="hero-adoption-frame-shell">
                 <ComparisonFrame
+                  host={study.host}
                   id={id}
                   title={title}
                   mode={mode}
@@ -177,11 +271,7 @@ function Study({ mode, setMode }) {
                         : `${report.total} of ${report.total} host elements unchanged`}
               </div>
               <p className="hero-adoption-outcome nx:typography-body-small">
-                {id === 'before'
-                  ? 'Blue accent. Readable secondary text. Your existing components.'
-                  : id === 'shadcn'
-                    ? 'Shared token names can change the accent, text and surface of the existing app.'
-                    : 'The new Select brings its own tokens. The host keeps its original appearance.'}
+                {report?.changes && outcome(id, study, changed)}
               </p>
             </article>
           );
@@ -192,8 +282,8 @@ function Study({ mode, setMode }) {
           Both added Selects work. Choose a role in either one to update both.
         </p>
         <p>
-          This tests default stylesheet imports after HeroUI. A scoped or
-          customized shadcn setup can avoid these collisions.
+          This tests default stylesheet imports after {library}. A scoped or
+          customized {study.otherName} setup can avoid collisions.
         </p>
       </div>
       <details className="hero-adoption-evidence nx:typography-body-small">
@@ -202,17 +292,15 @@ function Study({ mode, setMode }) {
           {baselineMatches
             ? 'All three frames started with identical sampled host styles.'
             : 'Waiting for matching baseline measurements.'}{' '}
-          Each frame contains HeroUI and the added library in the same document.
-          Frames separate the experiments from each other and from the dock;
-          they do not isolate the added component from HeroUI.
+          Each frame contains {library} and the added library in the same
+          document. Frames separate the experiments from each other and from the
+          dock; they do not isolate the added component from {library}.
         </p>
         <p>
-          HeroUI uses <code>--accent</code> for its accent color and{' '}
-          <code>--muted</code> for secondary text. The imported shadcn
-          stylesheet defines those same names. Nexus uses <code>--nx-*</code>{' '}
-          tokens and <code>nx:</code> utilities. Its Select is mounted inside
-          the Nexus Appearance Provider, with the same explicit mode and
-          persistence disabled.
+          {study.cause}Nexus uses <code>--nx-*</code> tokens and{' '}
+          <code>nx:</code> utilities. Its Select is mounted inside the Nexus
+          Appearance Provider, with the same explicit mode and persistence
+          disabled.
         </p>
         <p>
           Red outlines come from computed-style changes, not simulated breakage.
@@ -248,30 +336,29 @@ function Study({ mode, setMode }) {
             ))}
         </div>
         <p>
-          Uses installed HeroUI 3.2.6, the checked-in shadcn Select and default
-          stylesheet, and Nexus source from this checkout.{' '}
-          <a
-            href="https://heroui.com/en/docs/react/components/progress-bar"
-            target="_blank"
-            rel="noreferrer"
-          >
-            HeroUI source anatomy
-          </a>{' '}
-          ·{' '}
-          <a
-            href="https://ui.shadcn.com/docs/theming"
-            target="_blank"
-            rel="noreferrer"
-          >
-            shadcn default theme
-          </a>
+          Uses {study.sources}, and Nexus source from this checkout.{' '}
+          {study.links.map(([label, href], index) => (
+            <span key={href}>
+              {index > 0 && ' · '}
+              <a href={href} target="_blank" rel="noreferrer">
+                {label}
+              </a>
+            </span>
+          ))}
         </p>
       </details>
     </section>
   );
 }
 
-export function HeroAdoptionStudy() {
+export function HeroAdoptionStudy({ library = 'HeroUI' }) {
   const [mode, setMode] = useState('dark');
-  return <Study key={mode} mode={mode} setMode={setMode} />;
+  return (
+    <Study
+      key={`${library}-${mode}`}
+      library={library}
+      mode={mode}
+      setMode={setMode}
+    />
+  );
 }

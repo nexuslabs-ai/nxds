@@ -8,11 +8,26 @@ body {
   display: grid;
   align-content: start;
   gap: 14px;
-  background: var(--background);
-  color: var(--foreground);
   font-family: Arial, sans-serif;
   font-size: 14px;
   line-height: 1.5;
+}
+.adoption-workspace-heroui,
+.adoption-workspace-shadcn {
+  background: var(--background);
+  color: var(--foreground);
+}
+.adoption-card-body {
+  display: grid;
+  gap: 8px;
+}
+.adoption-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.adoption-progress-row > :first-child {
+  flex: 1;
 }
 .adoption-workspace-header {
   display: grid;

@@ -110,15 +110,8 @@ function ChapterCanvas({
   if (chapter === 'explore' && showcaseVersion === 'original')
     return <OriginalShowcaseGrid view={tool} />;
   if (chapter === 'explore') return <ShowcaseGrid view={tool} />;
-  if (chapter === 'coexist' && coexistenceVersion === 'hero-adoption') {
-    if (tool === 'HeroUI') return <HeroAdoptionStudy />;
-    return (
-      <WorkspaceThemeStudy
-        stack={tool}
-        onSelectMui={() => onFrameworkSelect(1)}
-      />
-    );
-  }
+  if (chapter === 'coexist' && coexistenceVersion === 'hero-adoption')
+    return <HeroAdoptionStudy key={tool} library={tool} />;
   if (chapter === 'coexist' && coexistenceVersion === 'theme-match')
     return (
       <WorkspaceThemeStudy
@@ -374,7 +367,7 @@ export function DockChapterJourney({
     coexistence.iteration === 'hero-adoption'
       ? {
           ...chapters[chapter],
-          tabs: ['HeroUI', 'MUI'],
+          tabs: ['HeroUI', 'MUI', 'Ant Design', 'shadcn/ui'],
         }
       : chapters[chapter];
   const activeIndex = Math.min(
