@@ -16,6 +16,13 @@ const config: StorybookConfig = {
     const { mergeConfig } = await import('vite');
     const tailwindcss = (await import('@tailwindcss/vite')).default;
 
+    // Storybook loads vite.config.ts, but its type bundling needs a library
+    // build in dist.
+    config.plugins = config.plugins?.filter(
+      (plugin) =>
+        !(plugin && 'name' in plugin && plugin.name === 'unplugin-dts')
+    );
+
     return mergeConfig(config, {
       plugins: [tailwindcss()],
     });
