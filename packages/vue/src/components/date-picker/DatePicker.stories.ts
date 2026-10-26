@@ -282,7 +282,7 @@ export const RangeSkipsBlockedDays: Story = {
 
     // Enter ends the range at the focused day, not the hovered one.
     day('16').focus();
-    await userEvent.hover(day('19'));
+    await userEvent.hover(day('20'));
     await userEvent.keyboard('{Enter}');
     await expect(day('16')).toHaveAttribute('data-range-end', 'true');
   },

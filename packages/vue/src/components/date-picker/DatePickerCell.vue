@@ -61,7 +61,6 @@ function restartBlockedRange() {
   if (modifiers.value.disabled || modifiers.value.unavailable) return;
   range.focusedValue.value = props.day.copy();
   if (range.highlightedRange.value) return;
-  if (isSameDay(props.day, range.startValue.value)) return;
   range.lastPressedDateValue.value = props.day.copy();
 }
 
