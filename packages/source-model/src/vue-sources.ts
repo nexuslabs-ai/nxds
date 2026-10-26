@@ -134,7 +134,7 @@ function propType(prop: PropertyMeta, localAliases: Set<string>) {
   return members && members.length > 1 ? members.join(' | ') : type;
 }
 
-/** The type node a macro such as `defineProps<…>()` takes in a part's compiled script. */
+/** The `defineProps` / `defineEmits` call in a part's compiled script. */
 function macroCall(
   sourceFile: ts.SourceFile,
   macro: 'defineProps' | 'defineEmits'

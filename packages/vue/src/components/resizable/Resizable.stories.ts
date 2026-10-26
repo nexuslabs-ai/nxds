@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fn, mocked, userEvent, waitFor, within } from 'storybook/test';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '.';
 
@@ -152,6 +152,45 @@ export const KeyboardInteraction: Story = {
     await waitFor(() => {
       expect(handle.getAttribute('aria-valuenow')).not.toBe(before);
     });
+  },
+};
+
+// A px panel still reports its size as a percentage, in panel order.
+export const LayoutChangeInteraction: Story = {
+  args: { 'onLayout-change': fn() },
+  render: (args) => ({
+    components: resizableComponents,
+    setup: () => ({ args }),
+    template: `
+      <ResizablePanelGroup
+        v-bind="args"
+        orientation="horizontal"
+        class="nx:max-w-md nx:overflow-hidden nx:rounded-lg nx:border-default nx:border-border-default"
+        style="height: 220px"
+      >
+        <ResizablePanel :default-size="120" size-unit="px">
+          <div class="nx:p-6 nx:text-center nx:font-semibold">One</div>
+        </ResizablePanel>
+        <ResizableHandle with-handle aria-label="Resize panels" />
+        <ResizablePanel>
+          <div class="nx:p-6 nx:text-center nx:font-semibold">Two</div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    `,
+  }),
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const handle = canvas.getByRole('separator');
+    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow'));
+    const onLayoutChange = mocked(args['onLayout-change']!);
+    onLayoutChange.mockClear();
+    handle.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(onLayoutChange).toHaveBeenCalled());
+    const [layout] = onLayoutChange.mock.lastCall!;
+    await expect(layout).toHaveLength(2);
+    await expect(layout[0]).toBeLessThan(50);
+    await expect(layout.reduce((sum, size) => sum + size, 0)).toBeCloseTo(100);
   },
 };
 
