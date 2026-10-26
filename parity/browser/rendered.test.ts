@@ -63,7 +63,7 @@ const OVERLAYS: Record<string, Opener> = {
 // Attributes that hold generated ids or inline styles, that Radix, Reka and
 // vaul add for their own bookkeeping, or that `name` already covers (aria-label).
 const SKIPPED_ATTRIBUTE =
-  /^(?:id|style|aria-(?:controls|labelledby|describedby|owns|activedescendant|label)|data-(?:radix|reka)-.*|data-(?:active|dismissable-layer|grace-area-trigger|menu-item|navigation-menu-trigger|slider-impl|vaul-animate|vaul-custom-container))$/;
+  /^(?:id|style|aria-(?:controls|labelledby|describedby|owns|activedescendant|label)|data-(?:radix|reka)-.*|data-(?:active|dismissable-layer|grace-area-trigger|menu-item|navigation-menu-trigger|panel-group-id|panel-id|panel-resize-handle-id|slider-impl|vaul-animate|vaul-custom-container))$/;
 // ARIA states where `"false"` means the same as leaving the attribute out.
 const FALSE_IS_ABSENT =
   /^aria-(?:busy|disabled|hidden|invalid|readonly|required)$/;

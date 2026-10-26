@@ -56,11 +56,11 @@ export const Default: Story = {
       className={groupClass}
       style={groupStyle}
     >
-      <ResizablePanel defaultSize={50} style={panelStyle}>
+      <ResizablePanel defaultSize="50%" style={panelStyle}>
         <PanelBody label="One" />
       </ResizablePanel>
       <ResizableHandle withHandle aria-label="Resize panels" />
-      <ResizablePanel defaultSize={50} style={panelStyle}>
+      <ResizablePanel defaultSize="50%" style={panelStyle}>
         <PanelBody label="Two" />
       </ResizablePanel>
     </ResizablePanelGroup>
@@ -84,11 +84,11 @@ export const Vertical: Story = {
       className={groupClass}
       style={groupStyle}
     >
-      <ResizablePanel defaultSize={50} style={panelStyle}>
+      <ResizablePanel defaultSize="50%" style={panelStyle}>
         <PanelBody label="Top" />
       </ResizablePanel>
       <ResizableHandle withHandle aria-label="Resize panels" />
-      <ResizablePanel defaultSize={50} style={panelStyle}>
+      <ResizablePanel defaultSize="50%" style={panelStyle}>
         <PanelBody label="Bottom" />
       </ResizablePanel>
     </ResizablePanelGroup>
@@ -111,15 +111,15 @@ export const ThreePanels: Story = {
       className={groupClass}
       style={groupStyle}
     >
-      <ResizablePanel defaultSize={25} style={panelStyle}>
+      <ResizablePanel defaultSize="25%" style={panelStyle}>
         <PanelBody label="Nav" />
       </ResizablePanel>
       <ResizableHandle aria-label="Resize nav" />
-      <ResizablePanel defaultSize={50} style={panelStyle}>
+      <ResizablePanel defaultSize="50%" style={panelStyle}>
         <PanelBody label="Content" />
       </ResizablePanel>
       <ResizableHandle aria-label="Resize aside" />
-      <ResizablePanel defaultSize={25} style={panelStyle}>
+      <ResizablePanel defaultSize="25%" style={panelStyle}>
         <PanelBody label="Aside" />
       </ResizablePanel>
     </ResizablePanelGroup>
@@ -138,11 +138,11 @@ export const KeyboardInteraction: Story = {
       className={groupClass}
       style={groupStyle}
     >
-      <ResizablePanel defaultSize={50} style={panelStyle}>
+      <ResizablePanel defaultSize="50%" style={panelStyle}>
         <PanelBody label="One" />
       </ResizablePanel>
       <ResizableHandle withHandle aria-label="Resize panels" />
-      <ResizablePanel defaultSize={50} style={panelStyle}>
+      <ResizablePanel defaultSize="50%" style={panelStyle}>
         <PanelBody label="Two" />
       </ResizablePanel>
     </ResizablePanelGroup>
@@ -150,6 +150,8 @@ export const KeyboardInteraction: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const handle = canvas.getByRole('separator');
+    // The separator reports its value once the group has laid out.
+    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '50'));
     handle.focus();
     await expect(handle).toHaveFocus();
     const before = handle.getAttribute('aria-valuenow');
@@ -168,11 +170,11 @@ export const WithDataAttributes: Story = {
       className={groupClass}
       style={groupStyle}
     >
-      <ResizablePanel defaultSize={50} style={panelStyle}>
+      <ResizablePanel defaultSize="50%" style={panelStyle}>
         <PanelBody label="One" />
       </ResizablePanel>
       <ResizableHandle withHandle aria-label="Resize panels" />
-      <ResizablePanel defaultSize={50} style={panelStyle}>
+      <ResizablePanel defaultSize="50%" style={panelStyle}>
         <PanelBody label="Two" />
       </ResizablePanel>
     </ResizablePanelGroup>
@@ -204,11 +206,11 @@ export const AllVariants: Story = {
         className={groupClass}
         style={groupStyle}
       >
-        <ResizablePanel defaultSize={50} style={panelStyle}>
+        <ResizablePanel defaultSize="50%" style={panelStyle}>
           <PanelBody label="One" />
         </ResizablePanel>
         <ResizableHandle withHandle aria-label="Resize columns" />
-        <ResizablePanel defaultSize={50} style={panelStyle}>
+        <ResizablePanel defaultSize="50%" style={panelStyle}>
           <PanelBody label="Two" />
         </ResizablePanel>
       </ResizablePanelGroup>
@@ -217,11 +219,11 @@ export const AllVariants: Story = {
         className={groupClass}
         style={groupStyle}
       >
-        <ResizablePanel defaultSize={50} style={panelStyle}>
+        <ResizablePanel defaultSize="50%" style={panelStyle}>
           <PanelBody label="Top" />
         </ResizablePanel>
         <ResizableHandle withHandle aria-label="Resize rows" />
-        <ResizablePanel defaultSize={50} style={panelStyle}>
+        <ResizablePanel defaultSize="50%" style={panelStyle}>
           <PanelBody label="Bottom" />
         </ResizablePanel>
       </ResizablePanelGroup>

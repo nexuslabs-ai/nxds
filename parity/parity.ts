@@ -21,7 +21,6 @@ export const planned = [
   'message',
   'message-scroller',
   'multi-select',
-  'resizable',
   'setting-row',
   'sidebar',
   'sonner',
@@ -69,6 +68,7 @@ export const shared = [
   'popover',
   'progress',
   'radio-group',
+  'resizable',
   'scroll-area',
   'select',
   'separator',
@@ -201,6 +201,15 @@ export const renderedDifferences: Record<string, string> = {
     "Radix has no indicator, so React measures the active tab and moves a span; Vue renders Reka's TabsIndicator, which reads Reka's CSS variables",
 };
 
+const SPLITTER_TEST_ID =
+  'react-resizable-panels copies its generated id into data-testid; Reka sets none';
+const SPLITTER_STATE_RRP =
+  'react-resizable-panels marks its part with its own data attribute; Reka marks it with its own instead';
+const SPLITTER_RANGE =
+  "react-resizable-panels and Reka work out a handle's range differently once a group holds more than two panels";
+const SPLITTER_STATE_REKA =
+  "Reka's splitter bookkeeping attribute; react-resizable-panels marks the part with its own instead";
+
 const ORIENTATION_ON_ITEMS =
   "Radix's roving focus repeats the menu's orientation on each item; Reka doesn't";
 
@@ -225,6 +234,23 @@ export const renderedAttributeDifferences: Record<string, string> = {
     'Reka gives each menubar menu a generated value; Radix sets none',
   'navigation-menu-content data-state':
     'Reka marks a flyout open inside the shared viewport; Radix sets its state only on a flyout under its own trigger',
+  'resizable-handle aria-valuemax': SPLITTER_RANGE,
+  'resizable-handle aria-valuemin': SPLITTER_RANGE,
+  'resizable-handle data-orientation': SPLITTER_STATE_REKA,
+  'resizable-handle data-panel-resize-handle-enabled': SPLITTER_STATE_REKA,
+  'resizable-handle data-resize-handle': SPLITTER_STATE_REKA,
+  'resizable-handle data-resize-handle-state': SPLITTER_STATE_REKA,
+  'resizable-handle data-separator': SPLITTER_STATE_RRP,
+  'resizable-handle data-state': SPLITTER_STATE_REKA,
+  'resizable-handle data-testid': SPLITTER_TEST_ID,
+  'resizable-panel data-panel':
+    'react-resizable-panels sets data-panel to "true"; Reka sets it empty',
+  'resizable-panel data-panel-size': SPLITTER_STATE_REKA,
+  'resizable-panel data-testid': SPLITTER_TEST_ID,
+  'resizable-panel-group data-group': SPLITTER_STATE_RRP,
+  'resizable-panel-group data-orientation': SPLITTER_STATE_REKA,
+  'resizable-panel-group data-panel-group': SPLITTER_STATE_REKA,
+  'resizable-panel-group data-testid': SPLITTER_TEST_ID,
   'popover-content name':
     "Reka names the popover's dialog after its trigger with aria-labelledby; Radix leaves it unnamed",
 };
