@@ -34,8 +34,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
 <template>
   <PopoverPortal>
     <PopoverContent
-      v-bind="{ ...$attrs, ...forwarded }"
-      data-slot="popover-content"
+      v-bind="{ 'data-slot': 'popover-content', ...$attrs, ...forwarded }"
       :class="
         cn(
           'nx:z-popover nx:w-72 nx:p-container nx:outline-none',

@@ -10,7 +10,7 @@ import {
 } from '@storybook/vue3';
 import { computeAccessibleName } from 'dom-accessibility-api';
 import { fireEvent, userEvent, waitFor, within } from 'storybook/test';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 import reactPreview from '../../packages/react/.storybook/preview';
 import vuePreview from '../../packages/vue/.storybook/preview';
@@ -47,12 +47,14 @@ type Opener =
 /** Components whose content renders only once opened, and how to open them. */
 const OVERLAYS: Record<string, Opener> = {
   'alert-dialog': { role: 'button', open: 'click' },
+  combobox: { role: 'button', open: 'click' },
   'context-menu': { open: 'contextmenu' },
   dialog: { role: 'button', open: 'click' },
   drawer: { role: 'button', open: 'click' },
   'dropdown-menu': { role: 'button', open: 'click' },
   'hover-card': { role: 'button', open: 'focus' },
   menubar: { role: 'menuitem', open: 'click' },
+  'multi-select': { role: 'button', open: 'click' },
   'navigation-menu': { role: 'button', open: 'enter' },
   popover: { role: 'button', open: 'click' },
   select: { role: 'combobox', open: 'click' },
@@ -314,6 +316,17 @@ async function renderTree(
 }
 
 describe('rendered docs stories', () => {
+  // Import every story file before any test clicks: user-event makes
+  // HTMLElement.prototype.focus a getter, and a file that loads Storybook's
+  // docs blocks then can't assign it.
+  beforeAll(async () => {
+    await Promise.all(
+      [...Object.values(reactModules), ...Object.values(vueModules)].map(
+        (importModule) => importModule()
+      )
+    );
+  }, 60_000);
+
   it('reads one story file per shared component in each framework', () => {
     const count = (modules: Record<string, unknown>, slug: string) =>
       Object.keys(modules).filter((file) => slugOf(file) === slug).length;

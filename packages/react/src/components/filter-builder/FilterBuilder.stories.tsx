@@ -168,6 +168,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   tags: ['docs'],
+};
+export const ValueChange: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement),
       page = within(canvasElement.ownerDocument.body);

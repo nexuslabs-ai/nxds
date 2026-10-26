@@ -35,23 +35,6 @@ function resolveSpacingPx(canvasElement: HTMLElement, varName: string) {
   );
 }
 
-// Inclusive ascending list of dates between two days (order-agnostic).
-function daysBetween(a: Date, b: Date) {
-  const [start, end] = a <= b ? [a, b] : [b, a];
-  const days: Date[] = [];
-  const cursor = new Date(
-    start.getFullYear(),
-    start.getMonth(),
-    start.getDate()
-  );
-  const last = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-  while (cursor <= last) {
-    days.push(new Date(cursor));
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return days;
-}
-
 const PRESETS = [
   { label: 'Today', days: 0 },
   { label: 'Tomorrow', days: 1 },
@@ -294,23 +277,13 @@ export const Range: Story = {
 };
 
 // Range hover-preview: while a range is half-selected, hovering paints a
-// tentative rail (the `preview` modifier) from the start to the hovered day.
+// tentative rail from the start to the hovered day.
 export const RangeHoverPreview: Story = {
   render: function RangeHoverPreviewStory() {
     const [range, setRange] = React.useState<DateRange | undefined>({
       from: new Date(2025, 0, 8),
       to: undefined,
     });
-    const [hovered, setHovered] = React.useState<Date | undefined>();
-
-    // Tentative span from the committed start to the hovered day, minus the
-    // start itself (it already shows as the committed endpoint).
-    const preview =
-      range?.from && !range.to && hovered
-        ? daysBetween(range.from, hovered).filter(
-            (d) => d.getTime() !== range.from!.getTime()
-          )
-        : [];
 
     return (
       <Card className="nx:w-fit">
@@ -320,9 +293,6 @@ export const RangeHoverPreview: Story = {
             defaultMonth={REFERENCE_MONTH}
             selected={range}
             onSelect={setRange}
-            modifiers={{ preview }}
-            onDayMouseEnter={(day) => setHovered(day)}
-            onDayMouseLeave={() => setHovered(undefined)}
           />
         </CardContent>
       </Card>
@@ -341,6 +311,80 @@ export const RangeHoverPreview: Story = {
       )
     );
     await expect(cell).toHaveClass('nx:bg-container-hover');
+  },
+};
+
+// A range can't span a disabled or unavailable day: the preview drops, and a
+// click starts a new range instead of ending it.
+export const RangeSkipsBlockedDays: Story = {
+  render: function RangeSkipsBlockedDaysStory() {
+    const [range, setRange] = React.useState<DateRange | undefined>({
+      from: new Date(2025, 0, 15),
+      to: undefined,
+    });
+
+    return (
+      <Card className="nx:w-fit">
+        <CardContent className="nx:p-0">
+          <DatePicker
+            mode="range"
+            defaultMonth={REFERENCE_MONTH}
+            disabled={(date) => date.getDate() === 12}
+            modifiers={{ unavailable: new Date(2025, 0, 17) }}
+            selected={range}
+            onSelect={setRange}
+          />
+        </CardContent>
+      </Card>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const day = (label: string) => canvas.getByText(label).closest('button')!;
+    const cell = (label: string) => canvas.getByText(label).closest('td');
+
+    await userEvent.hover(day('13'));
+    await waitFor(() =>
+      expect(cell('13')).toHaveClass('nx:bg-container-hover')
+    );
+
+    // Day 12 is disabled, so hovering back to 10 shades nothing.
+    await userEvent.hover(day('10'));
+    await waitFor(() =>
+      expect(cell('13')).not.toHaveClass('nx:bg-container-hover')
+    );
+
+    await userEvent.hover(day('16'));
+    await waitFor(() =>
+      expect(cell('16')).toHaveClass('nx:bg-container-hover')
+    );
+
+    // Day 17 is unavailable, so hovering 19 shades nothing.
+    await userEvent.hover(day('19'));
+    await waitFor(() =>
+      expect(cell('16')).not.toHaveClass('nx:bg-container-hover')
+    );
+    await expect(cell('18')).not.toHaveClass('nx:bg-container-hover');
+
+    // Clicking 19 can't end the range across day 17, so it starts a new one.
+    await userEvent.click(day('19'));
+    await expect(
+      canvasElement.querySelector('[data-range-end="true"]')
+    ).toBeNull();
+    await expect(cell('19')).toHaveAttribute('data-selected', 'true');
+    await expect(cell('15')).not.toHaveAttribute('data-selected');
+
+    // Enter on 15 can't end the range across day 17 either, so it restarts it.
+    day('15').focus();
+    await userEvent.keyboard('{Enter}');
+    await expect(cell('15')).toHaveAttribute('data-selected', 'true');
+    await expect(cell('19')).not.toHaveAttribute('data-selected');
+
+    // Enter ends the range at the focused day, not the hovered one.
+    day('16').focus();
+    await userEvent.hover(day('20'));
+    await userEvent.keyboard('{Enter}');
+    await expect(day('16')).toHaveAttribute('data-range-end', 'true');
   },
 };
 
@@ -424,8 +468,8 @@ export const DisabledDays: Story = {
 };
 
 // Unavailable (booked / blackout) days — struck through, distinct from plain
-// disabled. `unavailable` styles the cell; pair it with `disabled` to also block
-// selection (Spectrum's unavailable-vs-disabled distinction).
+// disabled, and they can't be picked (Spectrum's unavailable-vs-disabled
+// distinction).
 export const UnavailableDays: Story = {
   decorators: [inCard],
   render: () => {
@@ -435,7 +479,6 @@ export const UnavailableDays: Story = {
         mode="single"
         defaultMonth={REFERENCE_MONTH}
         selected={new Date(2025, 0, 15)}
-        disabled={booked}
         modifiers={{ unavailable: booked }}
       />
     );
