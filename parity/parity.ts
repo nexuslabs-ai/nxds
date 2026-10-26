@@ -9,7 +9,6 @@ export const planned = [
   'chart',
   'color-field',
   'config-preview',
-  'message-scroller',
   'setting-row',
   'sidebar',
   'sonner',
@@ -60,6 +59,7 @@ export const shared = [
   'marker',
   'menubar',
   'message',
+  'message-scroller',
   'multi-select',
   'native-select',
   'navigation-menu',
@@ -193,6 +193,10 @@ export const vueOnlyApi: Record<string, string> = {
     "v-model code as a string; React's value is inherited from input-otp's props type",
   'InputOTP.update:modelValue':
     "v-model update with the code as a string; React's onChange is inherited from input-otp's props type",
+  'MessageScrollerButton.disabled':
+    'native <button> attribute React inherits from its props type; Vue declares it to pass on to Button',
+  'MessageScrollerButton.type':
+    "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
   'MultiSelectGroup.forceMount': CMDK_PROP,
   'MultiSelectGroup.heading': CMDK_PROP,
   'MultiSelectItem.disabled': CMDK_PROP,
@@ -570,6 +574,12 @@ export const vueOnlyDeclarations: Record<string, string> = {
     "reads DatePickerKey and throws outside a DatePicker, as React's context hook does",
   'input-otp/index.ts#InputOTPKey':
     "Vue injection key the root provides so each slot's <input> takes the field's name; React's single <input> carries it",
+  'message-scroller/index.ts#MessageScrollerKey':
+    'Vue injection key the provider gives its parts and useMessageScroller; React passes the same state and node setters through two contexts',
+  'message-scroller/index.ts#injectMessageScroller':
+    "reads MessageScrollerKey and throws outside a provider, exported as useMessageScroller; React's hook of that name reads its context",
+  'message-scroller/index.ts#injectMessageScrollerNodes':
+    "reads MessageScrollerKey for the viewport and content and throws outside a provider, as React's node-context hook does",
   'multi-select/index.ts#MultiSelectKey':
     'Vue injection key the root provides to its parts; React passes the same selection through context',
   'multi-select/index.ts#injectMultiSelect':

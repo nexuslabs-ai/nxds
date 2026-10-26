@@ -382,6 +382,20 @@ describe('inherited contract', () => {
   });
 });
 
+describe('composable contract', () => {
+  it('useMessageScroller returns what the React hook returns', () => {
+    const interfaceName = 'MessageScrollerContextValue';
+    const react = interfaceKeys(
+      path.join(componentsRoot, 'message-scroller', 'message-scroller.tsx')
+    ).get(interfaceName);
+    const vue = interfaceKeys(
+      path.join(vueComponentsRoot, 'message-scroller', 'index.ts')
+    ).get(interfaceName);
+    expect(react?.length).toBeGreaterThan(0);
+    expect(vue).toEqual(react);
+  });
+});
+
 describe('appearance contract', () => {
   const react = interfaceKeys(
     path.join(componentsRoot, 'appearance', 'provider', 'provider.tsx')
