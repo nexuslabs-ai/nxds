@@ -17,7 +17,6 @@ export const planned = [
   'filter-condition',
   'message',
   'message-scroller',
-  'multi-select',
   'setting-row',
   'sidebar',
   'sonner',
@@ -61,6 +60,7 @@ export const shared = [
   'label',
   'marker',
   'menubar',
+  'multi-select',
   'native-select',
   'navigation-menu',
   'page-header',
@@ -163,6 +163,7 @@ export const vueOnlyApi: Record<string, string> = {
     "v-model code as a string; React's value is inherited from input-otp's props type",
   'InputOTP.update:modelValue':
     "v-model update with the code as a string; React's onChange is inherited from input-otp's props type",
+  'MultiSelectItem.keywords': CMDK_PROP,
   'NativeSelect.defaultValue': NATIVE_DEFAULT_VALUE,
   'NativeSelect.modelValue': NATIVE_MODEL_VALUE,
   'NativeSelect.update:modelValue': NATIVE_MODEL_UPDATE,
@@ -291,6 +292,7 @@ export const renderedAttributeDifferences: Record<string, string> = {
   'menubar-sub-trigger data-orientation': ORIENTATION_ON_ITEMS,
   'menubar-trigger data-value':
     'Reka gives each menubar menu a generated value; Radix sets none',
+  'multi-select-content name': POPOVER_NAME,
   'navigation-menu-content data-state':
     'Reka marks a flyout open inside the shared viewport; Radix sets its state only on a flyout under its own trigger',
   'resizable-handle aria-valuemax': SPLITTER_RANGE,
@@ -337,6 +339,10 @@ export const vueOnlyDeclarations: Record<string, string> = {
     'Vue injection key a group provides to its items; cmdk passes the same group through context',
   'input-otp/index.ts#InputOTPKey':
     "Vue injection key the root provides so each slot's <input> takes the field's name; React's single <input> carries it",
+  'multi-select/index.ts#MultiSelectKey':
+    'Vue injection key the root provides to its parts; React passes the same selection through context',
+  'multi-select/index.ts#injectMultiSelect':
+    "reads MultiSelectKey and throws outside a MultiSelect, as React's context hook does",
   'table/index.ts#TableKey':
     'Vue injection key the table provides to its rows and cells; React passes the same state through context',
   'table/index.ts#tableContextDefaults':

@@ -54,6 +54,7 @@ const OVERLAYS: Record<string, Opener> = {
   'dropdown-menu': { role: 'button', open: 'click' },
   'hover-card': { role: 'button', open: 'focus' },
   menubar: { role: 'menuitem', open: 'click' },
+  'multi-select': { role: 'button', open: 'click' },
   'navigation-menu': { role: 'button', open: 'enter' },
   popover: { role: 'button', open: 'click' },
   select: { role: 'combobox', open: 'click' },
