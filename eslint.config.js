@@ -211,6 +211,12 @@ export default tseslint.config(
     ],
     rules: { 'vuejs-accessibility/label-has-for': 'off' },
   },
+  // Command's hidden label names the search input through `for`, as cmdk's
+  // does; the input is a sibling, rendered by CommandInput.
+  {
+    files: ['packages/vue/src/components/command/Command.vue'],
+    rules: { 'vuejs-accessibility/label-has-for': 'off' },
+  },
 
   // Import sorting
   {

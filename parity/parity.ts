@@ -11,7 +11,6 @@ export const planned = [
   'chart',
   'color-field',
   'combobox',
-  'command',
   'config-preview',
   'date-picker',
   'filter-builder',
@@ -44,6 +43,7 @@ export const shared = [
   'choice-card',
   'choice-row',
   'collapsible',
+  'command',
   'context-menu',
   'description-list',
   'dialog',
@@ -92,6 +92,8 @@ const NATIVE_DEFAULT_VALUE =
   "starting value without v-model; React's native defaultValue is inherited from its props type";
 const NATIVE_MODEL_UPDATE =
   "v-model update; React's native onChange is inherited from its props type";
+const CMDK_PROP =
+  "cmdk prop React inherits from cmdk's props type; Vue declares it over Reka's Listbox";
 const HOVER_CARD_EVENT =
   "Reka exports no type for HoverCardContent's emits, so Vue declares them; React inherits the same handler from Radix's props type";
 
@@ -113,6 +115,25 @@ export const vueOnlyApi: Record<string, string> = {
     'native <button> attribute React inherits from its props type; Vue declares it so a set value overrides the scroll state',
   'CarouselPrevious.type':
     "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
+  'Command.label': CMDK_PROP,
+  'Command.loop': CMDK_PROP,
+  'Command.shouldFilter': CMDK_PROP,
+  'CommandGroup.forceMount': CMDK_PROP,
+  'CommandGroup.heading': CMDK_PROP,
+  'CommandInput.modelValue':
+    "v-model search text; React's cmdk value prop is inherited from its props type",
+  'CommandInput.update:modelValue':
+    "v-model update; React's cmdk onValueChange is inherited from its props type",
+  'CommandItem.disabled': CMDK_PROP,
+  'CommandItem.forceMount': CMDK_PROP,
+  'CommandItem.keywords': CMDK_PROP,
+  'CommandItem.select':
+    "the item's value, as React's cmdk onSelect passes it, inherited from its props type",
+  'CommandItem.value': CMDK_PROP,
+  'CommandList.label': CMDK_PROP,
+  'CommandLoading.label': CMDK_PROP,
+  'CommandLoading.progress': CMDK_PROP,
+  'CommandSeparator.alwaysRender': CMDK_PROP,
   'HoverCardContent.escapeKeyDown': HOVER_CARD_EVENT,
   'HoverCardContent.focusOutside': HOVER_CARD_EVENT,
   'HoverCardContent.interactOutside': HOVER_CARD_EVENT,
@@ -297,6 +318,12 @@ export const vueOnlyDeclarations: Record<string, string> = {
     'Vue injection key the carousel provides to its parts; React passes the same state through context',
   'carousel/index.ts#injectCarousel':
     "reads CarouselKey and throws outside a Carousel, as React's context hook does",
+  'command/index.ts#CommandKey':
+    'Vue injection key the command provides to its parts; cmdk keeps the same search state in its React context',
+  'command/index.ts#injectCommand':
+    "reads CommandKey and throws outside a Command, as cmdk's context hook does",
+  'command/index.ts#CommandGroupKey':
+    'Vue injection key a group provides to its items; cmdk passes the same group through context',
   'input-otp/index.ts#InputOTPKey':
     "Vue injection key the root provides so each slot's <input> takes the field's name; React's single <input> carries it",
   'table/index.ts#TableKey':

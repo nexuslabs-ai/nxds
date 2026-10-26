@@ -29,6 +29,8 @@ interface VuePartApi {
   hasDefaultSlot: boolean;
   events: string[];
   inheritsAsChild: boolean;
+  /** The `class` prop's description. Vue reads `class` as a global prop, so it isn't in `entry`. */
+  classDescription: string | undefined;
 }
 
 interface Contract {
@@ -82,6 +84,8 @@ function vueContract(vueProgram: VueProgram, slug: string) {
       hasDefaultSlot: part.meta.slots.some((slot) => slot.name === 'default'),
       events: ownEvents(vueProgram, part),
       inheritsAsChild: part.meta.props.some((prop) => prop.name === 'asChild'),
+      classDescription: part.meta.props.find((prop) => prop.name === 'class')
+        ?.description,
     })
   );
   return new Map(parts.map((part) => [part.entry.name, part]));
@@ -89,13 +93,14 @@ function vueContract(vueProgram: VueProgram, slug: string) {
 
 interface VueName {
   prop: PropEntry;
-  kind: 'defaultSlot' | 'slot' | 'emit' | 'asChild' | 'prop';
+  kind: 'defaultSlot' | 'slot' | 'emit' | 'asChild' | 'class' | 'prop';
   vueName: string;
 }
 
 /**
  * The Vue API each React prop maps to: the default slot for `children`, a
- * kebab-case slot, an emit, `as-child`, or the same prop.
+ * kebab-case slot, an emit, `as-child`, `class` for `className`, or the same
+ * prop.
  */
 function vueNames(react: ComponentEntry) {
   return react.props.map((prop): VueName => {
@@ -107,6 +112,9 @@ function vueNames(react: ComponentEntry) {
     }
     if (prop.name === 'asChild') {
       return { prop, kind: 'asChild', vueName: prop.name };
+    }
+    if (prop.name === 'className') {
+      return { prop, kind: 'class', vueName: 'class' };
     }
     if (/^on[A-Z]/.test(prop.name)) {
       return { prop, kind: 'emit', vueName: kebab(prop.name.slice(2)) };
@@ -142,6 +150,14 @@ function partDrift(react: ComponentEntry, vue: VuePartApi) {
     }
     if (kind === 'asChild') {
       if (!vue.inheritsAsChild) drift.push(`${at(prop.name)}: missing`);
+      continue;
+    }
+    if (kind === 'class') {
+      if (vue.classDescription !== prop.description) {
+        drift.push(
+          `${at(prop.name)}: description "${prop.description}" vs "${vue.classDescription}"`
+        );
+      }
       continue;
     }
     if (kind === 'emit') {
