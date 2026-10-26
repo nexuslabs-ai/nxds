@@ -273,6 +273,18 @@ export const RangeSkipsBlockedDays: Story = {
     ).toBeNull();
     await expect(cell('19')).toHaveAttribute('data-selected', 'true');
     await expect(cell('15')).not.toHaveAttribute('data-selected');
+
+    // Enter on 15 can't end the range across day 17 either, so it restarts it.
+    day('15').focus();
+    await userEvent.keyboard('{Enter}');
+    await expect(cell('15')).toHaveAttribute('data-selected', 'true');
+    await expect(cell('19')).not.toHaveAttribute('data-selected');
+
+    // Enter ends the range at the focused day, not the hovered one.
+    day('16').focus();
+    await userEvent.hover(day('19'));
+    await userEvent.keyboard('{Enter}');
+    await expect(day('16')).toHaveAttribute('data-range-end', 'true');
   },
 };
 
