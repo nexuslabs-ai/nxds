@@ -11,7 +11,6 @@ export const planned = [
   'chart',
   'color-field',
   'config-preview',
-  'date-picker',
   'message',
   'message-scroller',
   'setting-row',
@@ -41,6 +40,7 @@ export const shared = [
   'combobox',
   'command',
   'context-menu',
+  'date-picker',
   'description-list',
   'dialog',
   'drawer',
@@ -94,6 +94,8 @@ const NATIVE_MODEL_UPDATE =
   "v-model update; React's native onChange is inherited from its props type";
 const CMDK_PROP =
   "cmdk prop React inherits from cmdk's props type; Vue declares it over Reka's Listbox";
+const DAY_PICKER_PROP =
+  "react-day-picker prop React inherits from its props type; Vue declares it over Reka's Calendar and RangeCalendar";
 const HOVER_CARD_EVENT =
   "Reka exports no type for HoverCardContent's emits, so Vue declares them; React inherits the same handler from Radix's props type";
 
@@ -138,6 +140,20 @@ export const vueOnlyApi: Record<string, string> = {
   'CommandLoading.label': CMDK_PROP,
   'CommandLoading.progress': CMDK_PROP,
   'CommandSeparator.alwaysRender': CMDK_PROP,
+  'DatePicker.captionLayout': DAY_PICKER_PROP,
+  'DatePicker.defaultValue': DAY_PICKER_PROP,
+  'DatePicker.footer': DAY_PICKER_PROP,
+  'DatePicker.mode': DAY_PICKER_PROP,
+  'DatePicker.modelValue':
+    "v-model date, dates or range; React's selected is inherited from react-day-picker's props type",
+  'DatePicker.showOutsideDays': DAY_PICKER_PROP,
+  'DatePicker.today': DAY_PICKER_PROP,
+  'DatePicker.update:modelValue':
+    "v-model update; React's onSelect is inherited from react-day-picker's props type",
+  'DatePicker.update:placeholder':
+    "v-model:placeholder update for the shown month; React's onMonthChange is inherited from react-day-picker's props type",
+  'DatePickerDayButton.modifiers':
+    "the day's state; React's modifiers prop is inherited from react-day-picker's DayButton props type",
   'HoverCardContent.escapeKeyDown': HOVER_CARD_EVENT,
   'HoverCardContent.focusOutside': HOVER_CARD_EVENT,
   'HoverCardContent.interactOutside': HOVER_CARD_EVENT,
@@ -226,6 +242,8 @@ const TABS_INDICATOR =
 /** Paired play stories whose steps differ by design, as `{slug}/{Story}`. */
 export const behaviourDifferences: Record<string, string> = {
   'avatar/CroppedImage': AVATAR_IMAGE_LOAD,
+  'date-picker/Accessibility':
+    "react-day-picker labels a day 'Today, Wednesday, January 15th, 2025, selected'; Reka labels it 'Wednesday, January 15, 2025' and marks selection with aria-selected on the cell, so Vue checks those",
   'avatar/WithDataAttributes': AVATAR_IMAGE_LOAD,
   'hover-card/OpenCloseInteraction': GRACE_AREA,
   'input-otp/KeyboardInteraction': PIN_INPUT,
@@ -244,6 +262,8 @@ export const behaviourDifferences: Record<string, string> = {
 export const renderedDifferences: Record<string, string> = {
   'avatar-image':
     'Radix mounts the <img> only once it loads; Reka mounts it at once as role="img", hidden until it loads',
+  'date-picker':
+    "react-day-picker adds its rdp-* classes to the root; Reka names the root and adds a hidden live label, 'Event Date, January 2025'",
   'input-otp':
     "input-otp puts data-slot on its hidden <input>; Vue's root is Reka's PinInputRoot <div>",
   'input-otp-slot':
@@ -337,6 +357,10 @@ export const vueOnlyDeclarations: Record<string, string> = {
     "reads CommandKey and throws outside a Command, as cmdk's context hook does",
   'command/index.ts#CommandGroupKey':
     'Vue injection key a group provides to its items; cmdk passes the same group through context',
+  'date-picker/index.ts#DatePickerKey':
+    'Vue injection key the picker provides to its days and captions; React passes the same options through context and react-day-picker props',
+  'date-picker/index.ts#injectDatePicker':
+    "reads DatePickerKey and throws outside a DatePicker, as React's context hook does",
   'input-otp/index.ts#InputOTPKey':
     "Vue injection key the root provides so each slot's <input> takes the field's name; React's single <input> carries it",
   'multi-select/index.ts#MultiSelectKey':

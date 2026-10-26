@@ -23,6 +23,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@internationalized/date": "^3.5.0",
     "@nxds/core": "workspace:*",
     "@nxds/tailwind": "workspace:*",
     "@tabler/icons-vue": "^3.36.1",

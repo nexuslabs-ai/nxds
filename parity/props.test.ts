@@ -41,6 +41,9 @@ interface Contract {
 }
 
 const REACT_NODE = /^React(?:\.ReactNode|Node)$/;
+/** A `render{Name}` callback prop, which a third-party API forces on React. */
+const RENDER_PROP = /^render[A-Z]/;
+const RETURNS_REACT_NODE = /=> (?:React\.)?ReactNode\)?$/;
 
 /** Vue reads a hyphenated prop such as `aria-label` as `ariaLabel`. */
 const camel = (name: string) =>
@@ -103,8 +106,9 @@ interface VueName {
 
 /**
  * The Vue API each React prop maps to: the default slot for `children`, a
- * kebab-case slot, an emit, `as-child`, `class` for `className`, or the same
- * prop in camelCase.
+ * kebab-case slot for a `ReactNode` prop, a scoped slot for a `render{Name}`
+ * callback, an emit, `as-child`, `class` for `className`, or the same prop in
+ * camelCase.
  */
 function vueNames(react: ComponentEntry) {
   return react.props.map((prop): VueName => {
@@ -113,6 +117,10 @@ function vueNames(react: ComponentEntry) {
     }
     if (REACT_NODE.test(prop.type)) {
       return { prop, kind: 'slot', vueName: kebab(prop.name) };
+    }
+    if (RENDER_PROP.test(prop.name) && RETURNS_REACT_NODE.test(prop.type)) {
+      const name = prop.name.slice('render'.length);
+      return { prop, kind: 'slot', vueName: kebab(name).replace(/^-/, '') };
     }
     if (prop.name === 'asChild') {
       return { prop, kind: 'asChild', vueName: prop.name };
