@@ -92,6 +92,12 @@ export default function Radius() {
           {RADIUS_MODES.slice(0, -1).join(', ')} and {RADIUS_MODES.at(-1)}. The
           other sizes scale with it.
         </p>
+        <p className="nx:typography-body-default nx:text-muted-foreground nx:mt-3 nx:max-w-[64ch]">
+          Items close to a rounded container, such as tabs and menu items, share
+          its corner. Their corner is the container&apos;s radius minus its
+          border and padding, and never less than half of that radius. A radius
+          override on the container reaches them too.
+        </p>
       </section>
 
       {/* ── Border widths ───────────────────────────────────── */}

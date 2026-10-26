@@ -644,7 +644,12 @@ export const NestedCorners: Story = {
       .getAllByRole('checkbox')
       .map((checkbox) => checkbox.closest('[data-slot="choice-row"]')!);
     await expect(corners(rows[0]!)).toEqual(['7px', '7px', '6px', '6px']);
-    await expect(corners(rows.at(-1)!)).toEqual(['6px', '6px', '7px', '7px']);
+    await expect(corners(rows[rows.length - 1]!)).toEqual([
+      '6px',
+      '6px',
+      '7px',
+      '7px',
+    ]);
     await expect(
       corners(page.getByRole('textbox', { name: 'Search Team options' }))
     ).toEqual(['6px', '6px', '6px', '6px']);
