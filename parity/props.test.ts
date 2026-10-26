@@ -42,6 +42,10 @@ interface Contract {
 
 const REACT_NODE = /^React(?:\.ReactNode|Node)$/;
 
+/** Vue reads a hyphenated prop such as `aria-label` as `ariaLabel`. */
+const camel = (name: string) =>
+  name.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
+
 const kebab = (name: string) =>
   name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 
@@ -100,7 +104,7 @@ interface VueName {
 /**
  * The Vue API each React prop maps to: the default slot for `children`, a
  * kebab-case slot, an emit, `as-child`, `class` for `className`, or the same
- * prop.
+ * prop in camelCase.
  */
 function vueNames(react: ComponentEntry) {
   return react.props.map((prop): VueName => {
@@ -119,7 +123,7 @@ function vueNames(react: ComponentEntry) {
     if (/^on[A-Z]/.test(prop.name)) {
       return { prop, kind: 'emit', vueName: kebab(prop.name.slice(2)) };
     }
-    return { prop, kind: 'prop', vueName: prop.name };
+    return { prop, kind: 'prop', vueName: camel(prop.name) };
   });
 }
 

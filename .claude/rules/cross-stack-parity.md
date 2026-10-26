@@ -37,6 +37,7 @@ These are the same API in each framework's idiom, not differences.
 | own `on*` prop         | own emit                    |
 | `asChild` (Radix Slot) | `as-child` (Reka Primitive) |
 | `className`            | `class`                     |
+| `aria-label` prop      | `ariaLabel` prop            |
 | `args.onX` spy in play | `args['onX']` spy in play   |
 | `--radix-*` variable   | `--reka-*` variable         |
 
