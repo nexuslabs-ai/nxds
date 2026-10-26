@@ -12,6 +12,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -198,21 +199,37 @@ function stalePaths(existing: string[], exported: Set<string>) {
     .sort();
 }
 
-// The package build validated exactly the files files.json lists, at its
-// hashes, so those are the only files read.
-function readProject(root: string) {
-  const manifestFile = path.join(root, 'files.json');
-  if (!existsSync(manifestFile)) {
+function readManifest(root: string): Manifest {
+  const file = path.join(root, 'files.json');
+  if (!existsSync(file)) {
     throw new CliError(
       `${root} has no files.json. Export from an @nxds/claude-design release or a built dist folder.`
     );
   }
+  const value = readJson(file);
+  if (
+    !Array.isArray(value) ||
+    !value.every(
+      (entry) =>
+        typeof entry?.path === 'string' && typeof entry.sha256 === 'string'
+    )
+  ) {
+    throw new CliError(
+      `${file} must be a JSON array of { path, sha256 } entries.`
+    );
+  }
+  return value;
+}
+
+// The package build validated exactly the files files.json lists, at its
+// hashes, so those are the only files read.
+function readProject(root: string) {
   const projectDir = path.join(root, 'project');
   const files = new Map<string, Buffer>();
-  for (const entry of readJson(manifestFile) as Manifest) {
+  for (const entry of readManifest(root)) {
     const file = path.join(projectDir, entry.path);
     const relative = path.relative(projectDir, file);
-    if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    if (relative.split(path.sep)[0] === '..' || path.isAbsolute(relative)) {
       throw new CliError(`files.json lists ${entry.path}, outside project/.`);
     }
     if (!existsSync(file) || !lstatSync(file).isFile()) {
@@ -250,13 +267,22 @@ function mergeIndex(files: Map<string, Buffer>, currentFile: string) {
   );
 }
 
+// Writes a sibling folder first, so a failed write leaves project/ as it was.
 function writeProject(out: string, files: Map<string, Buffer>) {
+  mkdirSync(out, { recursive: true });
+  const staging = mkdtempSync(path.join(out, '.project-'));
+  try {
+    for (const [file, bytes] of files) {
+      mkdirSync(path.dirname(path.join(staging, file)), { recursive: true });
+      writeFileSync(path.join(staging, file), bytes);
+    }
+  } catch (error) {
+    rmSync(staging, { recursive: true, force: true });
+    throw error;
+  }
   const projectDir = path.join(out, 'project');
   rmSync(projectDir, { recursive: true, force: true });
-  for (const [file, bytes] of files) {
-    mkdirSync(path.dirname(path.join(projectDir, file)), { recursive: true });
-    writeFileSync(path.join(projectDir, file), bytes);
-  }
+  renameSync(staging, projectDir);
 }
 
 export async function exportClaudeDesign(

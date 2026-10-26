@@ -4,6 +4,7 @@ import { react18Src } from '@nxds/source-model/roots.mjs';
 import { build, type Plugin } from 'esbuild';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import ts from 'typescript';
 
 import { ICONS } from './icons.ts';
 import { NAMESPACE } from './system-index.ts';
@@ -21,8 +22,30 @@ const REACT_GLOBALS: Record<string, string> = {
 const EXPORTS_MODULE = 'nxds:exports';
 const ICONS_MODULE = 'nxds:icons';
 
+// index.ts's utility exports (`getFilterErrors`, `CHART_CATEGORICAL_SERIES`),
+// copied statement by statement.
+function libExports() {
+  const file = path.join(react18Src, 'index.ts');
+  const source = ts.createSourceFile(
+    file,
+    readFileSync(file, 'utf8'),
+    ts.ScriptTarget.Latest,
+    true
+  );
+  return source.statements
+    .filter(
+      (statement) =>
+        ts.isExportDeclaration(statement) &&
+        statement.moduleSpecifier !== undefined &&
+        ts.isStringLiteral(statement.moduleSpecifier) &&
+        statement.moduleSpecifier.text.startsWith('./lib/')
+    )
+    .map((statement) => statement.getText());
+}
+
 function exportsModule(slugs: readonly string[]) {
   return [
+    ...libExports(),
     ...slugs.map((slug) => `export * from './components/${slug}/${slug}';`),
     `export * as Icons from '${ICONS_MODULE}';`,
     "export * as Recharts from 'recharts';",

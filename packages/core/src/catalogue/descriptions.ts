@@ -123,9 +123,11 @@ const REGISTRY_NAMES: readonly string[] = SEMANTIC_TOKEN_REGISTRY.map(
 function familyDescriptions(): [string, string][] {
   const used = new Set<string>();
   const entries = REGISTRY_NAMES.flatMap((name): [string, string][] => {
-    const [family, role] = familyRole(name) ?? [];
-    const template = role === undefined ? undefined : FAMILY_TEMPLATES[role];
-    if (!family || !role || !template) return [];
+    const match = familyRole(name);
+    if (!match) return [];
+    const [family, role] = match;
+    const template = FAMILY_TEMPLATES[role];
+    if (!template) return [];
     used.add(role);
     return [[name, template(family, FAMILY_ROLES[family])]];
   });

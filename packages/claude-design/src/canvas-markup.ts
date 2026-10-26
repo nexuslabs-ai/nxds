@@ -38,12 +38,6 @@ function attributes(node: ts.JsxAttributes, isPart: boolean): string | null {
   for (const property of node.properties) {
     if (!ts.isJsxAttribute(property)) return null;
     const name = property.name.getText();
-    const expression =
-      property.initializer && ts.isJsxExpression(property.initializer)
-        ? property.initializer.expression
-        : undefined;
-    // An attribute that is present reads as true, so `false` is left out.
-    if (expression?.kind === ts.SyntaxKind.FalseKeyword) continue;
     const value = attributeValue(property.initializer);
     if (value === null) return null;
     const attribute = isPart
