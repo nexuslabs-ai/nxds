@@ -52,6 +52,16 @@ function selection(day: DateValue) {
   };
 }
 
+// Reka ignores a first press that would span a blocked day. Marking it as
+// already pressed makes Reka restart the range there, as react-day-picker does.
+function restartBlockedRange() {
+  if (!range?.startValue.value || range.endValue.value) return;
+  if (range.highlightedRange.value) return;
+  if (modifiers.value.disabled || modifiers.value.unavailable) return;
+  if (isSameDay(props.day, range.startValue.value)) return;
+  range.lastPressedDateValue.value = props.day.copy();
+}
+
 const modifiers = computed<DatePickerDayModifiers>(() => {
   const root = range ?? calendar;
   return {
@@ -84,6 +94,9 @@ const modifiers = computed<DatePickerDayModifiers>(() => {
         modifiers.preview && 'nx:bg-container-hover'
       )
     "
+    @click.capture="restartBlockedRange"
+    @keydown.enter.capture="restartBlockedRange"
+    @keydown.space.capture="restartBlockedRange"
     @focusin="focused = true"
     @focusout="focused = false"
   >

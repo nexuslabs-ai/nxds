@@ -135,13 +135,22 @@ const staticDayPickerClassNames = {
   hidden: cn('nx:invisible', defaultClassNames.hidden),
 } satisfies NonNullable<React.ComponentProps<typeof DayPicker>['classNames']>;
 
+// Omits from each mode's props, so `mode` still narrows the rest.
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;
+
 /**
  * DatePickerProps
  *
- * Props for the DatePicker component. Accepts every `react-day-picker` prop,
- * plus the props listed here.
+ * Props for the DatePicker component. Accepts every `react-day-picker` prop
+ * except `excludeDisabled`, which a range always has, plus the props listed
+ * here.
  */
-type DatePickerProps = React.ComponentProps<typeof DayPicker> & {
+type DatePickerProps = DistributiveOmit<
+  React.ComponentProps<typeof DayPicker>,
+  'excludeDisabled'
+> & {
   /**
    * Button variant for the previous and next month arrows.
    */

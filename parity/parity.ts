@@ -305,8 +305,6 @@ export const reactOnlyInheritedProps: Record<string, string> = {
     'Reka takes the starting month as defaultPlaceholder',
   'DatePicker.disableNavigation': DAY_PICKER_NOT_PORTED,
   'DatePicker.endMonth': DAY_PICKER_BOUNDS,
-  'DatePicker.excludeDisabled':
-    "always on in both pickers: React sets it, and Reka's RangeCalendar never spans a disabled or unavailable day",
   'DatePicker.firstWeekContainsDate': DAY_PICKER_DATE_LIB,
   'DatePicker.formatters': DAY_PICKER_PARTS,
   'DatePicker.fromDate': DAY_PICKER_BOUNDS,

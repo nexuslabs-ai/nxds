@@ -220,7 +220,7 @@ export const RangeHoverPreview: Story = {
 };
 
 // A range can't span a disabled or unavailable day: the preview drops, and a
-// click doesn't end the range.
+// click starts a new range instead of ending it.
 export const RangeSkipsBlockedDays: Story = {
   decorators: [inCard],
   render: () => ({
@@ -266,11 +266,13 @@ export const RangeSkipsBlockedDays: Story = {
     );
     await expect(cell('18')).not.toHaveClass('nx:bg-container-hover');
 
-    // Clicking 19 can't end the range across day 17.
+    // Clicking 19 can't end the range across day 17, so it starts a new one.
     await userEvent.click(day('19'));
     await expect(
       canvasElement.querySelector('[data-range-end="true"]')
     ).toBeNull();
+    await expect(cell('19')).toHaveAttribute('data-selected', 'true');
+    await expect(cell('15')).not.toHaveAttribute('data-selected');
   },
 };
 
