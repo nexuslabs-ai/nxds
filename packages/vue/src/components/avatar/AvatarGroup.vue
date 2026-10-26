@@ -25,17 +25,11 @@ const slots = defineSlots<{ default?: () => VNode[] }>();
 
 provide(AvatarGroupKey, props);
 
-function members() {
-  return flattenedNodes(slots.default?.());
-}
-
-function visibleMembers() {
+function splitMembers() {
+  const members = flattenedNodes(slots.default?.());
   const hasMax = typeof props.max === 'number' && props.max > 0;
-  return hasMax ? members().slice(0, props.max) : members();
-}
-
-function overflowCount() {
-  return members().length - visibleMembers().length;
+  const visible = hasMax ? members.slice(0, props.max) : members;
+  return { visible, overflow: members.length - visible.length };
 }
 </script>
 
@@ -56,17 +50,19 @@ function overflowCount() {
       )
     "
   >
-    <component
-      :is="member"
-      v-for="(member, index) in visibleMembers()"
-      :key="member.key ?? index"
-    />
-    <Avatar
-      v-if="overflowCount() > 0"
-      role="img"
-      :aria-label="`${overflowCount()} more`"
+    <!-- A one-item v-for runs the default slot once per render. -->
+    <template
+      v-for="({ visible, overflow }, split) in [splitMembers()]"
+      :key="split"
     >
-      <AvatarFallback aria-hidden="true">+{{ overflowCount() }}</AvatarFallback>
-    </Avatar>
+      <component
+        :is="member"
+        v-for="(member, index) in visible"
+        :key="member.key ?? index"
+      />
+      <Avatar v-if="overflow > 0" role="img" :aria-label="`${overflow} more`">
+        <AvatarFallback aria-hidden="true">+{{ overflow }}</AvatarFallback>
+      </Avatar>
+    </template>
   </div>
 </template>

@@ -1,11 +1,14 @@
+import * as React from 'react';
 import * as ResizablePrimitive from 'react-resizable-panels';
+
+import { useComposedRefs } from '@radix-ui/react-compose-refs';
 
 import { IconGripVertical } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 interface ResizablePanelGroupProps extends Omit<
   ResizablePrimitive.GroupProps,
-  'orientation' | 'onLayoutChange'
+  'orientation' | 'onLayoutChange' | 'onLayoutChanged' | 'defaultLayout'
 > {
   /**
    * The axis the panels split along.
@@ -25,16 +28,27 @@ function ResizablePanelGroup({
   className,
   orientation = 'horizontal',
   onLayoutChange,
+  elementRef,
   ...props
 }: ResizablePanelGroupProps) {
+  const groupRef = React.useRef<HTMLDivElement>(null);
+  const composedRef = useComposedRefs(elementRef, groupRef);
+
+  // The layout is keyed by panel id, and object keys don't keep panel order.
+  function handleLayoutChange(layout: ResizablePrimitive.Layout) {
+    const panels = Array.from(
+      groupRef.current?.querySelectorAll(':scope > [data-panel]') ?? []
+    );
+    onLayoutChange?.(panels.flatMap((panel) => layout[panel.id] ?? []));
+  }
+
   return (
     <ResizablePrimitive.Group
       data-slot="resizable-panel-group"
       className={className}
       orientation={orientation}
-      onLayoutChange={
-        onLayoutChange && ((layout) => onLayoutChange(Object.values(layout)))
-      }
+      elementRef={composedRef}
+      onLayoutChange={onLayoutChange && handleLayoutChange}
       {...props}
     />
   );

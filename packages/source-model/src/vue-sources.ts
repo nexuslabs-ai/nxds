@@ -135,18 +135,18 @@ function propType(prop: PropertyMeta, localAliases: Set<string>) {
 }
 
 /** The type node a macro such as `defineProps<…>()` takes in a part's compiled script. */
-function macroType(
+function macroCall(
   sourceFile: ts.SourceFile,
   macro: 'defineProps' | 'defineEmits'
 ) {
-  let found: ts.TypeNode | undefined;
+  let found: ts.CallExpression | undefined;
   const visit = (node: ts.Node) => {
     if (
       ts.isCallExpression(node) &&
       ts.isIdentifier(node.expression) &&
       node.expression.text === macro
     ) {
-      found = node.typeArguments?.[0];
+      found = node;
     }
     if (!found) ts.forEachChild(node, visit);
   };
@@ -168,7 +168,8 @@ function variantDefault(
     vueProgram.checker.getProgram() ?? fail('the Vue checker has no program.');
   const typeChecker = program.getTypeChecker();
   const sourceFile = program.getSourceFile(file);
-  const propsType = sourceFile && macroType(sourceFile, 'defineProps');
+  const propsType =
+    sourceFile && macroCall(sourceFile, 'defineProps')?.typeArguments?.[0];
   if (!propsType) return null;
 
   const declaration = typeChecker
@@ -245,18 +246,27 @@ export function ownEvents(vueProgram: VueProgram, { file }: VuePart) {
   const program =
     vueProgram.checker.getProgram() ?? fail('the Vue checker has no program.');
   const sourceFile = program.getSourceFile(file);
-  const emitsType = sourceFile && macroType(sourceFile, 'defineEmits');
-  if (!emitsType) return [];
+  const emits = sourceFile && macroCall(sourceFile, 'defineEmits');
+  if (!emits) return [];
 
-  return program
-    .getTypeChecker()
-    .getTypeFromTypeNode(emitsType)
+  const emitsType =
+    emits.typeArguments?.[0] ??
+    fail(`${toRepoPath(file)} calls defineEmits without a type argument.`);
+  const isOwn = (declaration: ts.Declaration) =>
+    isUnder(declaration.getSourceFile().fileName, vueSrc);
+  const type = program.getTypeChecker().getTypeFromTypeNode(emitsType);
+  const hasOwnCallSignature = type
+    .getCallSignatures()
+    .some((signature) => signature.declaration && isOwn(signature.declaration));
+  if (hasOwnCallSignature) {
+    fail(
+      `${toRepoPath(file)} declares its emits as call signatures. Use the named-tuple form, \`{ event: [arg: Type] }\`.`
+    );
+  }
+
+  return type
     .getProperties()
-    .filter((event) =>
-      (event.declarations ?? []).some((declaration) =>
-        isUnder(declaration.getSourceFile().fileName, vueSrc)
-      )
-    )
+    .filter((event) => (event.declarations ?? []).some(isOwn))
     .map((event) => event.name);
 }
 

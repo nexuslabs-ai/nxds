@@ -8,6 +8,9 @@ export interface BreadcrumbEllipsisProps {
 }
 
 const props = defineProps<BreadcrumbEllipsisProps>();
+
+// The template sets the dots with v-text. Prettier would wrap literal text onto
+// its own line, and Vue renders that whitespace as spaces around the dots.
 </script>
 
 <template>
