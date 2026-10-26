@@ -9,6 +9,7 @@ import {
   DayPicker,
   getDefaultClassNames,
   type Matcher,
+  type Months,
   rangeContainsModifiers,
   useDayPicker,
   type WeekNumber,
@@ -49,9 +50,16 @@ const DatePickerDayContentContext =
   React.createContext<DatePickerDayContent | null>(null);
 
 // The day last hovered or focused, which a half-picked range previews up to.
-const DatePickerPreviewContext = React.createContext<Date | undefined>(
+const DatePickerPreviewToContext = React.createContext<Date | undefined>(
   undefined
 );
+
+// The start-of-day times a half-picked range previews, its start aside.
+type DatePickerPreviewSpan = { start: number; from: number; to: number };
+
+const DatePickerPreviewSpanContext = React.createContext<
+  DatePickerPreviewSpan | undefined
+>(undefined);
 
 // react-day-picker's default class names are static — compute once at module load.
 const defaultClassNames = getDefaultClassNames();
@@ -155,7 +163,8 @@ type DatePickerProps = React.ComponentProps<typeof DayPicker> & {
 
 /**
  * A calendar grid for picking one date, a range or several dates. Install
- * `react-day-picker` in your app first.
+ * `react-day-picker` in your app first. Days in `disabled` or
+ * `modifiers.unavailable` can't be picked, and a range can't span them.
  */
 function DatePicker({
   className,
@@ -166,6 +175,8 @@ function DatePicker({
   cellSize = 'default',
   renderDayContent,
   formatters,
+  disabled,
+  modifiers,
   modifiersClassNames,
   components,
   onDayMouseEnter,
@@ -173,28 +184,35 @@ function DatePicker({
   ...props
 }: DatePickerProps) {
   const [previewTo, setPreviewTo] = React.useState<Date>();
+  // A range that crosses a blocked day restarts from the clicked day.
+  const selection =
+    props.mode === 'range' ? { ...props, excludeDisabled: true } : props;
 
   function handleDayMouseEnter(
-    ...[date, modifiers, event]: Parameters<NonNullable<typeof onDayMouseEnter>>
+    ...[date, dayModifiers, event]: Parameters<
+      NonNullable<typeof onDayMouseEnter>
+    >
   ) {
-    if (!modifiers.disabled && !modifiers.unavailable) setPreviewTo(date);
-    onDayMouseEnter?.(date, modifiers, event);
+    if (!dayModifiers.disabled) setPreviewTo(date);
+    onDayMouseEnter?.(date, dayModifiers, event);
   }
 
   function handleDayFocus(
-    ...[date, modifiers, event]: Parameters<NonNullable<typeof onDayFocus>>
+    ...[date, dayModifiers, event]: Parameters<NonNullable<typeof onDayFocus>>
   ) {
-    if (!modifiers.disabled && !modifiers.unavailable) setPreviewTo(date);
-    onDayFocus?.(date, modifiers, event);
+    if (!dayModifiers.disabled) setPreviewTo(date);
+    onDayFocus?.(date, dayModifiers, event);
   }
 
   return (
     <DatePickerDayContentContext.Provider value={renderDayContent ?? null}>
-      <DatePickerPreviewContext.Provider value={previewTo}>
+      <DatePickerPreviewToContext.Provider value={previewTo}>
         <DayPicker
           data-slot="date-picker"
           data-cell-size={cellSize}
           showOutsideDays={showOutsideDays}
+          disabled={[disabled ?? [], modifiers?.unavailable ?? []].flat()}
+          modifiers={modifiers}
           className={cn(
             'nx:group/date-picker nx:bg-background nx:p-3',
             cellSizeClassNames[cellSize],
@@ -207,7 +225,7 @@ function DatePicker({
               date.toLocaleString('default', { month: 'short' }),
             ...formatters,
           }}
-          // `unavailable` (pair with `disabled`) strikes booked or blackout days.
+          // `unavailable` strikes booked or blackout days.
           modifiersClassNames={{
             unavailable: 'nx:text-muted-foreground nx:line-through',
             ...modifiersClassNames,
@@ -245,12 +263,13 @@ function DatePicker({
             Chevron: DatePickerChevron,
             Day: DatePickerDay,
             DayButton: DatePickerDayButton,
+            Months: DatePickerMonths,
             WeekNumber: DatePickerWeekNumber,
             ...components,
           }}
-          {...props}
+          {...selection}
         />
-      </DatePickerPreviewContext.Provider>
+      </DatePickerPreviewToContext.Provider>
     </DatePickerDayContentContext.Provider>
   );
 }
@@ -303,24 +322,42 @@ const startOfDay = (date: Date) =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 
 /**
- * Whether `date` sits between a half-picked range's start and `previewTo`, the
- * start aside. A span that crosses a `blocked` day has no preview.
+ * The days a half-picked range previews up to `previewTo`. A span that crosses
+ * a `blocked` day has no preview.
  */
-function isRangePreview(
-  date: Date,
+function previewSpan(
   range: DateRange | undefined,
   previewTo: Date | undefined,
-  blocked: Matcher[]
-) {
-  if (!range?.from || !previewTo) return false;
-  const from = startOfDay(range.from);
-  if (range.to && startOfDay(range.to) !== from) return false;
+  blocked: Matcher | Matcher[] | undefined
+): DatePickerPreviewSpan | undefined {
+  if (!range?.from || !previewTo) return undefined;
+  const start = startOfDay(range.from);
+  if (range.to && startOfDay(range.to) !== start) return undefined;
 
-  const day = startOfDay(date);
-  const to = startOfDay(previewTo);
-  if (day === from) return false;
-  if (day < Math.min(from, to) || day > Math.max(from, to)) return false;
-  return !rangeContainsModifiers({ from: range.from, to: previewTo }, blocked);
+  const [from, to] =
+    previewTo < range.from ? [previewTo, range.from] : [range.from, previewTo];
+  if (blocked && rangeContainsModifiers({ from, to }, blocked))
+    return undefined;
+  return { start, from: startOfDay(from), to: startOfDay(to) };
+}
+
+/**
+ * The container around the month grids. Works out the range preview once for
+ * every day cell.
+ */
+function DatePickerMonths(props: React.ComponentProps<typeof Months>) {
+  const { dayPickerProps, selected } = useDayPicker<{ mode: 'range' }>();
+  const previewTo = React.useContext(DatePickerPreviewToContext);
+  const span =
+    dayPickerProps.mode === 'range'
+      ? previewSpan(selected, previewTo, dayPickerProps.disabled)
+      : undefined;
+
+  return (
+    <DatePickerPreviewSpanContext.Provider value={span}>
+      <div {...props} />
+    </DatePickerPreviewSpanContext.Provider>
+  );
 }
 
 /**
@@ -334,15 +371,10 @@ function DatePickerDay({
   ...props
 }: React.ComponentProps<typeof Day>) {
   void modifiers;
-  const { dayPickerProps, selected } = useDayPicker<{ mode: 'range' }>();
-  const previewTo = React.useContext(DatePickerPreviewContext);
-  const blocked = [
-    dayPickerProps.disabled ?? [],
-    dayPickerProps.modifiers?.unavailable ?? [],
-  ].flat();
+  const span = React.useContext(DatePickerPreviewSpanContext);
+  const time = startOfDay(day.date);
   const preview =
-    dayPickerProps.mode === 'range' &&
-    isRangePreview(day.date, selected, previewTo, blocked);
+    !!span && time !== span.start && time >= span.from && time <= span.to;
 
   return (
     <td

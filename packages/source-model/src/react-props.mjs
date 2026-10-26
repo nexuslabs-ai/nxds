@@ -197,12 +197,18 @@ function createReactProgram(slugs) {
   return { sourceFiles, compilerOptions, program };
 }
 
+/** The package a declaration comes from, or nothing for a workspace file. */
+function declaringPackage(declaration) {
+  const fileName = declaration.getSourceFile().fileName;
+  return fileName.match(/.*\/node_modules\/((?:@[^/]+\/)?[^/]+)\//)?.[1];
+}
+
 /**
- * The props each public component takes from the types of one of `packages`,
- * by component name. The props files leave these out, as they do every prop a
- * dependency declares.
+ * The props each public component takes from a dependency's types, by
+ * component name and then by package. The props files leave these out, as
+ * they do every prop a dependency declares.
  */
-export function reactPackageProps(packages) {
+export function reactPackageProps() {
   const { program } = createReactProgram(componentSlugs());
   const checker = program.getTypeChecker();
   const components = publicComponents(
@@ -210,16 +216,12 @@ export function reactPackageProps(packages) {
     publicExports(checker, program, entryPoints),
     componentsRoot
   );
-  const isFromPackage = (declaration) =>
-    packages.some((name) =>
-      declaration.getSourceFile().fileName.includes(`/node_modules/${name}/`)
-    );
 
   return new Map(
     [...components].map(([name, symbol]) => {
       const declaration = symbol.declarations[0];
       const type = checker.getTypeOfSymbolAtLocation(symbol, declaration);
-      const props = new Set();
+      const byPackage = new Map();
       for (const signature of checker.getSignaturesOfType(
         type,
         ts.SignatureKind.Call
@@ -234,11 +236,20 @@ export function reactPackageProps(packages) {
         const members = propsType.isUnion() ? propsType.types : [propsType];
         for (const member of members) {
           for (const prop of checker.getPropertiesOfType(member)) {
-            if (prop.declarations?.some(isFromPackage)) props.add(prop.name);
+            for (const declaration of prop.declarations ?? []) {
+              const packageName = declaringPackage(declaration);
+              if (!packageName) continue;
+              const props = byPackage.get(packageName) ?? new Set();
+              byPackage.set(packageName, props.add(prop.name));
+            }
           }
         }
       }
-      return [name, [...props].sort()];
+      const sorted = [...byPackage].map(([packageName, props]) => [
+        packageName,
+        [...props].sort(),
+      ]);
+      return [name, new Map(sorted)];
     })
   );
 }

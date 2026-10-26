@@ -214,6 +214,13 @@ export const vueOnlyApi: Record<string, string> = {
 };
 
 /**
+ * Packages, or a scope of them, whose props a Vue part takes from a twin: the
+ * DOM attributes React's types declare, Radix's from Reka, and Vaul's from
+ * vaul-vue.
+ */
+export const twinPackages = ['@radix-ui', '@types/react', 'vaul'];
+
+/**
  * Packages whose components Vue rebuilds over Reka rather than inheriting a
  * twin's props. The props check can't see the props React inherits from them.
  */
@@ -298,7 +305,8 @@ export const reactOnlyInheritedProps: Record<string, string> = {
     'Reka takes the starting month as defaultPlaceholder',
   'DatePicker.disableNavigation': DAY_PICKER_NOT_PORTED,
   'DatePicker.endMonth': DAY_PICKER_BOUNDS,
-  'DatePicker.excludeDisabled': DAY_PICKER_NOT_PORTED,
+  'DatePicker.excludeDisabled':
+    "always on in both pickers: React sets it, and Reka's RangeCalendar never spans a disabled or unavailable day",
   'DatePicker.firstWeekContainsDate': DAY_PICKER_DATE_LIB,
   'DatePicker.formatters': DAY_PICKER_PARTS,
   'DatePicker.fromDate': DAY_PICKER_BOUNDS,

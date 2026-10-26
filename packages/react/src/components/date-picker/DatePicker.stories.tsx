@@ -314,9 +314,10 @@ export const RangeHoverPreview: Story = {
   },
 };
 
-// The preview drops when the span to the hovered day crosses a disabled day.
-export const RangeHoverPreviewSkipsDisabled: Story = {
-  render: function RangeHoverPreviewSkipsDisabledStory() {
+// A range can't span a disabled or unavailable day: the preview drops, and a
+// click doesn't end the range.
+export const RangeSkipsBlockedDays: Story = {
+  render: function RangeSkipsBlockedDaysStory() {
     const [range, setRange] = React.useState<DateRange | undefined>({
       from: new Date(2025, 0, 15),
       to: undefined,
@@ -328,7 +329,8 @@ export const RangeHoverPreviewSkipsDisabled: Story = {
           <DatePicker
             mode="range"
             defaultMonth={REFERENCE_MONTH}
-            disabled={new Date(2025, 0, 17)}
+            disabled={(date) => date.getDate() === 12}
+            modifiers={{ unavailable: new Date(2025, 0, 17) }}
             selected={range}
             onSelect={setRange}
           />
@@ -338,18 +340,37 @@ export const RangeHoverPreviewSkipsDisabled: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const before = canvas.getByText('13').closest('td');
-    await userEvent.hover(canvas.getByText('13').closest('button')!);
-    await waitFor(() => expect(before).toHaveClass('nx:bg-container-hover'));
+    const day = (label: string) => canvas.getByText(label).closest('button')!;
+    const cell = (label: string) => canvas.getByText(label).closest('td');
 
-    // Day 17 is disabled, so hovering 19 shades nothing.
-    await userEvent.hover(canvas.getByText('19').closest('button')!);
+    await userEvent.hover(day('13'));
     await waitFor(() =>
-      expect(before).not.toHaveClass('nx:bg-container-hover')
+      expect(cell('13')).toHaveClass('nx:bg-container-hover')
     );
-    await expect(canvas.getByText('18').closest('td')).not.toHaveClass(
-      'nx:bg-container-hover'
+
+    // Day 12 is disabled, so hovering back to 10 shades nothing.
+    await userEvent.hover(day('10'));
+    await waitFor(() =>
+      expect(cell('13')).not.toHaveClass('nx:bg-container-hover')
     );
+
+    await userEvent.hover(day('16'));
+    await waitFor(() =>
+      expect(cell('16')).toHaveClass('nx:bg-container-hover')
+    );
+
+    // Day 17 is unavailable, so hovering 19 shades nothing.
+    await userEvent.hover(day('19'));
+    await waitFor(() =>
+      expect(cell('16')).not.toHaveClass('nx:bg-container-hover')
+    );
+    await expect(cell('18')).not.toHaveClass('nx:bg-container-hover');
+
+    // Clicking 19 can't end the range across day 17.
+    await userEvent.click(day('19'));
+    await expect(
+      canvasElement.querySelector('[data-range-end="true"]')
+    ).toBeNull();
   },
 };
 
@@ -433,8 +454,8 @@ export const DisabledDays: Story = {
 };
 
 // Unavailable (booked / blackout) days — struck through, distinct from plain
-// disabled. `unavailable` styles the cell; pair it with `disabled` to also block
-// selection (Spectrum's unavailable-vs-disabled distinction).
+// disabled, and they can't be picked (Spectrum's unavailable-vs-disabled
+// distinction).
 export const UnavailableDays: Story = {
   decorators: [inCard],
   render: () => {
@@ -444,7 +465,6 @@ export const UnavailableDays: Story = {
         mode="single"
         defaultMonth={REFERENCE_MONTH}
         selected={new Date(2025, 0, 15)}
-        disabled={booked}
         modifiers={{ unavailable: booked }}
       />
     );

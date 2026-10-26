@@ -219,37 +219,58 @@ export const RangeHoverPreview: Story = {
   },
 };
 
-// The preview drops when the span to the hovered day crosses a disabled day.
-export const RangeHoverPreviewSkipsDisabled: Story = {
+// A range can't span a disabled or unavailable day: the preview drops, and a
+// click doesn't end the range.
+export const RangeSkipsBlockedDays: Story = {
   decorators: [inCard],
   render: () => ({
     components: { DatePicker },
     setup: () => ({
       range: ref({ start: new CalendarDate(2025, 1, 15), end: undefined }),
-      disabledDay: new CalendarDate(2025, 1, 17),
+      bookedDay: new CalendarDate(2025, 1, 17),
     }),
     template: `
       <DatePicker
         v-model="range"
         mode="range"
-        :is-date-disabled="(date) => date.compare(disabledDay) === 0"
+        :is-date-disabled="(date) => date.day === 12"
+        :is-date-unavailable="(date) => date.compare(bookedDay) === 0"
       />
     `,
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const before = canvas.getByText('13').closest('td');
-    await userEvent.hover(canvas.getByText('13').closest('button')!);
-    await waitFor(() => expect(before).toHaveClass('nx:bg-container-hover'));
+    const day = (label: string) => canvas.getByText(label).closest('button')!;
+    const cell = (label: string) => canvas.getByText(label).closest('td');
 
-    // Day 17 is disabled, so hovering 19 shades nothing.
-    await userEvent.hover(canvas.getByText('19').closest('button')!);
+    await userEvent.hover(day('13'));
     await waitFor(() =>
-      expect(before).not.toHaveClass('nx:bg-container-hover')
+      expect(cell('13')).toHaveClass('nx:bg-container-hover')
     );
-    await expect(canvas.getByText('18').closest('td')).not.toHaveClass(
-      'nx:bg-container-hover'
+
+    // Day 12 is disabled, so hovering back to 10 shades nothing.
+    await userEvent.hover(day('10'));
+    await waitFor(() =>
+      expect(cell('13')).not.toHaveClass('nx:bg-container-hover')
     );
+
+    await userEvent.hover(day('16'));
+    await waitFor(() =>
+      expect(cell('16')).toHaveClass('nx:bg-container-hover')
+    );
+
+    // Day 17 is unavailable, so hovering 19 shades nothing.
+    await userEvent.hover(day('19'));
+    await waitFor(() =>
+      expect(cell('16')).not.toHaveClass('nx:bg-container-hover')
+    );
+    await expect(cell('18')).not.toHaveClass('nx:bg-container-hover');
+
+    // Clicking 19 can't end the range across day 17.
+    await userEvent.click(day('19'));
+    await expect(
+      canvasElement.querySelector('[data-range-end="true"]')
+    ).toBeNull();
   },
 };
 

@@ -27,6 +27,7 @@ import {
   reactOnlyInheritedProps,
   rebuiltPackages,
   shared,
+  twinPackages,
   vueOnlyApi,
 } from './parity.ts';
 
@@ -250,7 +251,7 @@ function vueCandidates(name: string) {
 }
 
 const contracts = new Map<string, Contract>();
-let packageProps: Map<string, string[]>;
+let packageProps: Map<string, Map<string, string[]>>;
 
 beforeAll(() => {
   const vueProgram = createVueProgram();
@@ -266,7 +267,7 @@ beforeAll(() => {
       vueReExports: new Set(packageReExports(slug)),
     });
   }
-  packageProps = reactPackageProps(rebuiltPackages);
+  packageProps = reactPackageProps();
 }, 120_000);
 
 describe('component contract', () => {
@@ -309,11 +310,19 @@ describe('component contract', () => {
 });
 
 describe('inherited contract', () => {
+  /** The props a React part inherits from a rebuilt package. */
+  function rebuiltProps(name: string) {
+    const props = packageProps.get(name);
+    return [
+      ...new Set(rebuiltPackages.flatMap((pkg) => props?.get(pkg) ?? [])),
+    ];
+  }
+
   /** `{Part}.{prop}` for each prop a React part inherits from a rebuilt package that its Vue twin has no name for. */
   function reactOnly() {
     return [...contracts.values()].flatMap(({ vue }) =>
       [...vue].flatMap(([name, part]) =>
-        (packageProps.get(name) ?? [])
+        rebuiltProps(name)
           .filter((prop) =>
             vueCandidates(prop).every((api) => !part.allApi.has(api))
           )
@@ -321,6 +330,43 @@ describe('inherited contract', () => {
       )
     );
   }
+
+  /** Each package a shared React part takes props from, with the part's name. */
+  function partPackages() {
+    return [...contracts.values()].flatMap(({ react }) =>
+      [...react.keys()].flatMap((part) =>
+        [...(packageProps.get(part)?.keys() ?? [])].map((pkg) => ({
+          part,
+          pkg,
+        }))
+      )
+    );
+  }
+
+  /** Whether a package is `entry`, or sits in the scope `entry` names. */
+  const isPackage = (pkg: string, entry: string) =>
+    pkg === entry || pkg.startsWith(`${entry}/`);
+
+  const sortedPackages = [...twinPackages, ...rebuiltPackages];
+
+  it('sorts each package a React part takes props from as a twin or rebuilt', () => {
+    expect(
+      partPackages()
+        .filter(
+          ({ pkg }) => !sortedPackages.some((entry) => isPackage(pkg, entry))
+        )
+        .map(({ part, pkg }) => `${part}: ${pkg}`)
+    ).toEqual([]);
+  });
+
+  it('sorts only packages a React part takes props from', () => {
+    const packages = partPackages().map(({ pkg }) => pkg);
+    expect(
+      sortedPackages.filter(
+        (entry) => !packages.some((pkg) => isPackage(pkg, entry))
+      )
+    ).toEqual([]);
+  });
 
   it('records every inherited prop the Vue part lacks', () => {
     expect(
