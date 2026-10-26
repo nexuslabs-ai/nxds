@@ -17,7 +17,7 @@ function familyDescriptions(family: ColorFamily): [string, string][] {
   return [
     [
       `${family}-background`,
-      `Solid fill for ${role}: solid buttons and badges. Pair with ${family}-foreground.`,
+      `Solid fill for buttons, badges and other strong emphasis in this family. Pair with ${family}-foreground. Marks ${role}.`,
     ],
     [
       `${family}-background-hover`,
@@ -33,11 +33,11 @@ function familyDescriptions(family: ColorFamily): [string, string][] {
     ],
     [
       `${family}-disabled`,
-      `Fill of a disabled ${family} control. Pair with disabled-foreground.`,
+      'Fill of a disabled control in this family. Pair with disabled-foreground.',
     ],
     [
       `${family}-subtle`,
-      `Tinted fill for ${role}: light badges, alerts and selected rows on background or container. Pair with ${family}-subtle-foreground.`,
+      `Tinted fill for light badges, alerts and selected rows on background or container. Pair with ${family}-subtle-foreground. Marks ${role}.`,
     ],
     [
       `${family}-subtle-foreground`,
@@ -53,7 +53,7 @@ function familyDescriptions(family: ColorFamily): [string, string][] {
     ],
     [
       `${family}-border`,
-      `Border of an outlined ${family} control or a ${family} alert, on background or container.`,
+      'Border of an outlined control or alert in this family, on background or container.',
     ],
     [
       `${family}-border-active`,
