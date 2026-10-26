@@ -11,7 +11,6 @@ export const planned = [
   'config-preview',
   'setting-row',
   'sidebar',
-  'sonner',
   'theme-quick-control',
   'toolbar',
 ];
@@ -76,6 +75,7 @@ export const shared = [
   'show',
   'skeleton',
   'slider',
+  'sonner',
   'spinner',
   'switch',
   'table',
@@ -219,10 +219,10 @@ export const vueOnlyApi: Record<string, string> = {
 
 /**
  * Packages, or a scope of them, whose props a Vue part takes from a twin: the
- * DOM attributes React's types declare, Radix's from Reka, and Vaul's from
- * vaul-vue.
+ * DOM attributes React's types declare, Radix's from Reka, Vaul's from
+ * vaul-vue, and Sonner's from vue-sonner.
  */
-export const twinPackages = ['@radix-ui', '@types/react', 'vaul'];
+export const twinPackages = ['@radix-ui', '@types/react', 'sonner', 'vaul'];
 
 /**
  * Packages whose components Vue rebuilds over Reka rather than inheriting a
@@ -469,6 +469,11 @@ export const behaviourDifferences: Record<string, string> = {
     "clearing a single selection emits '' from Radix and undefined from Reka",
 };
 
+/** Parts whose `data-slot` doesn't start with their component's slug, as `{data-slot}: slug`. */
+export const slotOwners: Record<string, string> = {
+  toaster: 'sonner',
+};
+
 /** Parts whose rendered element differs by design, by `data-slot`; the rendered check skips them. */
 export const renderedDifferences: Record<string, string> = {
   'avatar-image':
@@ -584,6 +589,10 @@ export const vueOnlyDeclarations: Record<string, string> = {
     'Vue injection key the root provides to its parts; React passes the same selection through context',
   'multi-select/index.ts#injectMultiSelect':
     "reads MultiSelectKey and throws outside a MultiSelect, as React's context hook does",
+  'sonner/index.ts#nxdsToast':
+    "React's toast, exported as toast; prettier drops the trailing comma React's TSX needs in <ToastData,>, so it can't print the same",
+  'sonner/index.ts#useToastList':
+    "reads vue-sonner's active toasts and keeps the nxds ones, exported as useSonner; React's useNxdsToasts reads sonner's hook",
   'table/index.ts#TableKey':
     'Vue injection key the table provides to its rows and cells; React passes the same state through context',
   'table/index.ts#tableContextDefaults':

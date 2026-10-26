@@ -36,7 +36,8 @@
     "@internationalized/date": "^3.5.0",
     "embla-carousel-vue": "^8.6.0",
     "vaul-vue": "^0.4.1",
-    "vue": "^3.5.0"
+    "vue": "^3.5.0",
+    "vue-sonner": "^2.0.9"
   },
   "peerDependenciesMeta": {
     "@internationalized/date": {
@@ -46,6 +47,9 @@
       "optional": true
     },
     "vaul-vue": {
+      "optional": true
+    },
+    "vue-sonner": {
       "optional": true
     }
   },
@@ -66,6 +70,7 @@
     "vite": "^7.3.0",
     "vite-plugin-dts": "^5.0.3",
     "vue": "^3.5.44",
+    "vue-sonner": "^2.0.9",
     "vue-tsc": "^3.3.13"
   },
   "files": [
