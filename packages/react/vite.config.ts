@@ -38,7 +38,7 @@ export default defineConfig({
       name: 'NxdsReact',
       formats: ['es', 'cjs'],
       fileName: (format, entryName) =>
-        `${entryName}.${format === 'es' ? 'mjs' : 'js'}`,
+        `${entryName}.${format === 'es' ? 'mjs' : 'cjs'}`,
       cssFileName: 'react',
     },
     rollupOptions: {
@@ -56,10 +56,7 @@ export default defineConfig({
       ],
       output: {
         banner: (chunk) =>
-          chunk.fileName === 'appearance.mjs' ||
-          chunk.fileName === 'appearance.js'
-            ? "'use client';"
-            : '',
+          chunk.isEntry && chunk.name === 'appearance' ? "'use client';" : '',
         globals: {
           '@nxds/core': 'NxdsCore',
           react: 'React',
