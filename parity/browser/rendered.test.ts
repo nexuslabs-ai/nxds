@@ -47,6 +47,7 @@ type Opener =
 /** Components whose content renders only once opened, and how to open them. */
 const OVERLAYS: Record<string, Opener> = {
   'alert-dialog': { role: 'button', open: 'click' },
+  combobox: { role: 'button', open: 'click' },
   'context-menu': { open: 'contextmenu' },
   dialog: { role: 'button', open: 'click' },
   drawer: { role: 'button', open: 'click' },

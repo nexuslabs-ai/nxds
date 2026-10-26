@@ -10,7 +10,6 @@ export const planned = [
   'bubble',
   'chart',
   'color-field',
-  'combobox',
   'config-preview',
   'date-picker',
   'filter-builder',
@@ -43,6 +42,7 @@ export const shared = [
   'choice-card',
   'choice-row',
   'collapsible',
+  'combobox',
   'command',
   'context-menu',
   'description-list',
@@ -114,6 +114,10 @@ export const vueOnlyApi: Record<string, string> = {
   'CarouselPrevious.disabled':
     'native <button> attribute React inherits from its props type; Vue declares it so a set value overrides the scroll state',
   'CarouselPrevious.type':
+    "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
+  'ComboboxTrigger.disabled':
+    'native <button> attribute React inherits from its props type; Vue declares it to pass on to Button',
+  'ComboboxTrigger.type':
     "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
   'Command.label': CMDK_PROP,
   'Command.loop': CMDK_PROP,
@@ -258,6 +262,11 @@ const SPLITTER_RANGE =
 const SPLITTER_STATE_REKA =
   "Reka's splitter bookkeeping attribute; react-resizable-panels marks the part with its own instead";
 
+const GROUP_VALUE =
+  'cmdk sets data-value to the string "undefined" on a group without a heading; Vue leaves it off';
+const POPOVER_NAME =
+  "Reka names the popover's dialog after its trigger with aria-labelledby, over the aria-label React's name comes from";
+
 const ORIENTATION_ON_ITEMS =
   "Radix's roving focus repeats the menu's orientation on each item; Reka doesn't";
 
@@ -266,6 +275,8 @@ const ORIENTATION_ON_ITEMS =
  * with `name` for the accessible name; the rendered check compares the rest.
  */
 export const renderedAttributeDifferences: Record<string, string> = {
+  'combobox-content name': POPOVER_NAME,
+  'combobox-group data-value': GROUP_VALUE,
   'context-menu-checkbox-item data-orientation': ORIENTATION_ON_ITEMS,
   'context-menu-item data-orientation': ORIENTATION_ON_ITEMS,
   'context-menu-radio-item data-orientation': ORIENTATION_ON_ITEMS,
@@ -363,6 +374,10 @@ export const copies: [react: string, vue: string][] = [
   [
     'packages/react/src/components/avatar/avatar-fixtures.ts',
     'packages/vue/src/stories/support/avatar-fixtures.ts',
+  ],
+  [
+    'packages/react/src/stories/support/motion-test-utils.ts',
+    'packages/vue/src/stories/support/motion-test-utils.ts',
   ],
   [
     'packages/react/src/stories/support/overlay-motion-test-utils.ts',
