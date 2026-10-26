@@ -25,12 +25,17 @@ const COPY_MESSAGES = {
 
 type CopyState = keyof typeof COPY_MESSAGES;
 
-// Each line ends in a newline. Drop the last, so a pasted command doesn't run.
+// Each line ends in a newline. Removed diff lines stay out, and so does the
+// last newline, so a pasted command doesn't run.
 function codeText(button: HTMLElement) {
-  const code = button
+  const lines = button
     .closest('[data-slot="code-block"]')
-    ?.querySelector('code');
-  return code?.textContent?.replace(/\n$/, '') ?? '';
+    ?.querySelectorAll(
+      '[data-slot="code-block-line"]:not([data-diff="removed"])'
+    );
+  return Array.from(lines ?? [], (line) => line.textContent)
+    .join('')
+    .replace(/\n$/, '');
 }
 
 const state = ref<CopyState>('idle');

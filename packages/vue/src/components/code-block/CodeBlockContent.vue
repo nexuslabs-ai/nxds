@@ -30,7 +30,7 @@ const delegated = reactiveOmit(props, 'class');
   >
     <pre
       class="nx:m-0"
-    ><code class="nx:grid nx:grid-cols-[auto_minmax(0,1fr)] nx:py-4 nx:typography-code-block"><slot /></code></pre>
+    ><code class="nx:grid nx:grid-cols-[auto_auto_minmax(0,1fr)] nx:py-4 nx:typography-code-block"><slot /></code></pre>
     <ScrollBar orientation="horizontal" />
   </ScrollArea>
 </template>

@@ -80,7 +80,7 @@ function CodeBlockContent({
       {...props}
     >
       <pre className="nx:m-0">
-        <code className="nx:grid nx:grid-cols-[auto_minmax(0,1fr)] nx:py-4 nx:typography-code-block">
+        <code className="nx:grid nx:grid-cols-[auto_auto_minmax(0,1fr)] nx:py-4 nx:typography-code-block">
           {children}
         </code>
       </pre>
@@ -88,6 +88,9 @@ function CodeBlockContent({
     </ScrollArea>
   );
 }
+
+const codeBlockDiffClasses =
+  "nx:data-diff:after:col-start-2 nx:data-diff:after:row-start-1 nx:data-diff:after:me-2 nx:data-[diff=added]:bg-success-subtle nx:data-[diff=added]:after:text-success-subtle-foreground nx:data-[diff=added]:after:content-['+'] nx:data-[diff=removed]:bg-error-subtle nx:data-[diff=removed]:after:text-error-subtle-foreground nx:data-[diff=removed]:after:content-['−']";
 
 /**
  * Props for CodeBlockLine.
@@ -102,6 +105,12 @@ interface CodeBlockLineProps extends React.ComponentProps<'span'> {
    * well, because some readers can't see the colour.
    */
   status?: 'success' | 'error';
+  /**
+   * Marks the line as added or removed in a diff. The line gets a green or
+   * red tint and a `+` or `−` before the code. The copy button leaves out
+   * removed lines.
+   */
+  diff?: 'added' | 'removed';
 }
 
 /**
@@ -112,6 +121,7 @@ function CodeBlockLine({
   number,
   highlighted = false,
   status,
+  diff,
   children,
   ...props
 }: CodeBlockLineProps) {
@@ -121,17 +131,19 @@ function CodeBlockLine({
       data-number={number}
       data-highlighted={highlighted || undefined}
       data-status={status}
+      data-diff={diff}
       className={cn(
         'nx:col-span-full nx:grid nx:min-h-lh nx:grid-cols-subgrid nx:border-width-s-thick nx:border-transparent nx:px-4 nx:transition-colors nx:duration-fast',
         'nx:before:text-end nx:before:text-muted-foreground-subtle nx:before:content-[attr(data-number)] nx:data-number:before:me-4',
-        'nx:data-highlighted:bg-container-hover nx:data-highlighted:before:text-muted-foreground nx:data-highlighted:not-data-status:border-foreground',
+        'nx:data-highlighted:not-data-diff:bg-container-hover nx:data-highlighted:before:text-muted-foreground nx:data-highlighted:not-data-status:border-foreground',
         'nx:data-[status=error]:border-error-subtle-foreground nx:data-[status=success]:border-success-subtle-foreground',
+        codeBlockDiffClasses,
         'nx:group-has-data-[slot=code-block-copy-button]/code-block:pe-14',
         className
       )}
       {...props}
     >
-      <span>{children}</span>
+      <span className="nx:col-start-3">{children}</span>
       {/* A grid doesn't render this newline, but the code's text keeps it. */}
       {'\n'}
     </span>
@@ -150,12 +162,17 @@ const COPY_MESSAGES = {
 
 type CopyState = keyof typeof COPY_MESSAGES;
 
-// Each line ends in a newline. Drop the last, so a pasted command doesn't run.
+// Each line ends in a newline. Removed diff lines stay out, and so does the
+// last newline, so a pasted command doesn't run.
 function codeText(button: HTMLElement) {
-  const code = button
+  const lines = button
     .closest('[data-slot="code-block"]')
-    ?.querySelector('code');
-  return code?.textContent?.replace(/\n$/, '') ?? '';
+    ?.querySelectorAll(
+      '[data-slot="code-block-line"]:not([data-diff="removed"])'
+    );
+  return Array.from(lines ?? [], (line) => line.textContent)
+    .join('')
+    .replace(/\n$/, '');
 }
 
 /**

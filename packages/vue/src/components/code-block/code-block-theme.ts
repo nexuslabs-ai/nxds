@@ -41,7 +41,8 @@ const TOKEN_COLORS = Object.entries(SCOPES).map(([token, scope]) => ({
 
 /**
  * Shiki theme for CodeBlock. Each syntax colour is a theme token that stays
- * legible on the CodeBlock surface, in light and dark mode.
+ * legible on the CodeBlock surface and on its diff tints, in light and dark
+ * mode.
  */
 const codeBlockTheme = {
   name: 'nxds',
