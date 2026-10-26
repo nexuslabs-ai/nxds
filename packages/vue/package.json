@@ -9,9 +9,14 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./styles.css": "./dist/vue.css"
   },
@@ -46,6 +51,7 @@
     }
   },
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.58.9",
     "@storybook/addon-a11y": "^10.4.2",
     "@storybook/addon-docs": "^10.4.2",
     "@storybook/addon-vitest": "^10.4.2",
@@ -59,7 +65,7 @@
     "typescript": "^5.9.3",
     "vaul-vue": "^0.4.1",
     "vite": "^7.3.0",
-    "vite-plugin-dts": "^5.0.3",
+    "vite-plugin-dts": "^5.1.2",
     "vue": "^3.5.44",
     "vue-tsc": "^3.3.13"
   },
