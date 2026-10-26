@@ -268,7 +268,7 @@ function mergeIndex(files: Map<string, Buffer>, currentFile: string) {
 }
 
 // Stages beside `out`, so the staging folder is never inside the published
-// root. When a write or rename throws, the old project/ is put back.
+// root. When a write or rename throws, it tries to put the old project/ back.
 function writeProject(out: string, files: Map<string, Buffer>) {
   mkdirSync(out, { recursive: true });
   const staging = makeStaging(path.dirname(out), out);
@@ -283,7 +283,9 @@ function writeProject(out: string, files: Map<string, Buffer>) {
     if (existsSync(projectDir)) renameSync(projectDir, previous);
     renameSync(next, projectDir);
   } catch (error) {
-    restore(previous, projectDir);
+    // A failed restore throws before rmSync, so the staging folder, which
+    // then holds the only copy of the old project/, stays.
+    restore(previous, projectDir, error);
     rmSync(staging, { recursive: true, force: true });
     throw renameError(error, out);
   }
@@ -294,21 +296,21 @@ function makeStaging(parent: string, out: string) {
   try {
     return mkdtempSync(path.join(parent, '.nxds-project-'));
   } catch (error) {
+    const { code } = error as NodeJS.ErrnoException;
+    if (code !== 'EACCES' && code !== 'EPERM' && code !== 'EROFS') throw error;
     throw new UsageError(
       `The export stages project/ in ${parent}, beside ${out}, so ${parent} must be writable (${(error as Error).message}).`
     );
   }
 }
 
-// Leaves the staging folder in place when the old project/ can't be moved
-// back, since it then holds the only copy.
-function restore(previous: string, projectDir: string) {
+function restore(previous: string, projectDir: string, cause: unknown) {
   if (!existsSync(previous)) return;
   try {
     renameSync(previous, projectDir);
   } catch (error) {
     throw new CliError(
-      `The export failed and couldn't put the old project/ back (${(error as Error).message}). It is in ${previous}.`
+      `The export failed (${(cause as Error).message}) and couldn't put the old project/ back (${(error as Error).message}). It is in ${previous}.`
     );
   }
 }
