@@ -1,8 +1,13 @@
-/* The chosen app's name, then the other library and Nexus side by side. */
+/* On desktop, tall enough for the tallest example, so the cards keep their
+   size when the visitor switches apps. */
+@utility coexist-lanes-canvas {
+  @media (width >= 64rem) {
+    --preview-min: 32rem;
+  }
+}
+
 @utility coexist-lanes-chapter {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: var(--nx-spacing-4);
   inline-size: 100%;
   block-size: 100%;
   min-block-size: 0;
@@ -10,15 +15,36 @@
   padding-block-end: var(--story-toolbar-clearance);
 }
 
-@utility coexist-lanes-label {
-  margin: 0;
-  color: var(--nx-color-muted-foreground);
-  font-size: var(--nx-typography-size-sm);
-  line-height: var(--nx-typography-line-height-sm);
-  text-align: center;
+/* Your app: a box with the app's name, holding the other library and Nexus
+   side by side. */
+@utility coexist-lanes-host {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--nx-spacing-4);
+  min-block-size: 0;
+  padding: var(--nx-spacing-3);
+  border: var(--nx-borderwidth-default) solid var(--nx-color-border-default);
+  border-radius: var(--nx-radius-xl);
+
+  @container (min-width: 48rem) {
+    gap: var(--nx-spacing-5);
+    padding: var(--nx-spacing-5);
+  }
 }
 
-/* Both cards share their four rows through subgrid, so the library, the
+@utility coexist-lanes-host-title {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-spacing-2);
+  margin: 0;
+
+  & > svg {
+    inline-size: var(--nx-spacing-5);
+    block-size: var(--nx-spacing-5);
+  }
+}
+
+/* Both columns share their four rows through subgrid, so the library, the
    names, the app and the verdict line up across the two. */
 @utility coexist-lanes {
   display: grid;
@@ -27,15 +53,13 @@
   min-block-size: 0;
 }
 
-@utility coexist-lanes-card {
+/* One library: its name on top, then its card. */
+@utility coexist-lanes-column {
   display: grid;
   grid-row: span 4;
   grid-template-rows: subgrid;
-  row-gap: var(--nx-spacing-4);
+  row-gap: var(--nx-spacing-3);
   min-inline-size: 0;
-  padding: var(--nx-spacing-5);
-  border-radius: var(--nx-radius-xl);
-  background: var(--nx-color-muted);
 
   /* The other library writes names or rules your app depends on. A chip
      keeps its lane's colours: this outranks Toggle's hover and on states. */
@@ -59,11 +83,22 @@
   }
 }
 
+@utility coexist-lanes-card {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  row-gap: var(--nx-spacing-4);
+  padding: var(--nx-spacing-4);
+  border-radius: var(--nx-radius-lg);
+  background: var(--nx-color-muted);
+}
+
 /* The library: its mark, its name and the file you add. */
 @utility coexist-lanes-library {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--nx-spacing-2);
+  gap: 0 var(--nx-spacing-2);
 
   & > svg {
     inline-size: var(--nx-spacing-5);
