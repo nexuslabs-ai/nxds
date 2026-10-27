@@ -16,7 +16,7 @@ import { EnvHttpProxyAgent, fetch } from 'undici';
 
 import { CLI_COMMAND } from './cli-command';
 import { CliError, readJson, UsageError } from './errors';
-import { assertRegistryUrl, httpUrl } from './url';
+import { assertRegistryUrl } from './url';
 
 export type {
   Catalog,
@@ -41,8 +41,10 @@ const FETCH_TIMEOUT_MS = 30_000;
 // Honours HTTPS_PROXY, HTTP_PROXY and NO_PROXY.
 const dispatcher = new EnvHttpProxyAgent();
 
+// Any value with a URI scheme, even one URL can't parse. Two or more letters,
+// so a Windows drive such as `C:` stays a path.
 function isUrl(registry: string) {
-  return httpUrl(registry) !== undefined;
+  return /^\s*[a-z][a-z\d+.-]+:/i.test(registry);
 }
 
 /** The `--registry` value as a URL, or as an absolute folder path. */

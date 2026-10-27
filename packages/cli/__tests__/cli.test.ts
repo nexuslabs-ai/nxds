@@ -585,6 +585,10 @@ describe('errors', () => {
   it.each([
     ['a user name and password', 'https://user:secret@registry.invalid/r'],
     ['an upper-case scheme', 'HTTPS://user:secret@registry.invalid/r'],
+    ['a leading space', ' https://user:secret@registry.invalid/r'],
+    ['a slash in the password', 'https://user:secret/1@registry.invalid/r'],
+    ['a scheme other than http', 'ftp://user:secret@registry.invalid/r'],
+    ['no scheme', 'user:secret@registry.invalid/r'],
     ['a query', 'https://registry.invalid/r?token=secret'],
     ['an empty query', 'https://registry.invalid/r?'],
     ['a fragment', 'https://registry.invalid/r#secret'],
