@@ -131,19 +131,40 @@ export function ChapterPreview<T extends ToolName>({
 
   return (
     <>
-      <div
-        className="nx:chapter-canvas"
-        data-grows={grows || undefined}
-        role="region"
-        aria-labelledby={toolId(tools.indexOf(selected))}
-      >
+      <ChapterCanvas grows={grows} labelledBy={toolId(tools.indexOf(selected))}>
         {children}
-      </div>
+      </ChapterCanvas>
       <div className="nx:chapter-toolbar" data-active={active}>
         <Toolbar variant="floating" aria-label={label}>
           {toolsAndActions ?? toolGroup}
         </Toolbar>
       </div>
     </>
+  );
+}
+
+/**
+ * The area under a chapter's title block that shows its preview. With a
+ * toolbar, it is a region named by the selected tool.
+ */
+export function ChapterCanvas({
+  grows = false,
+  labelledBy,
+  children,
+}: {
+  /** Below `lg`, the canvas takes its content's height, not the screen's. */
+  grows?: boolean;
+  labelledBy?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className="nx:chapter-canvas"
+      data-grows={grows || undefined}
+      role={labelledBy ? 'region' : undefined}
+      aria-labelledby={labelledBy}
+    >
+      {children}
+    </div>
   );
 }

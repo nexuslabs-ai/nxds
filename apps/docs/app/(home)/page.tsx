@@ -117,7 +117,7 @@ export default async function Home() {
             />
           }
         >
-          <FrameworksPreview chapter="frameworks" />
+          <FrameworksPreview />
         </ChapterSection>
         <ChapterSection
           id="stories"

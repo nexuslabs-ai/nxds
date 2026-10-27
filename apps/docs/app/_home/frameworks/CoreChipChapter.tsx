@@ -55,8 +55,8 @@ const modules = [
   },
 ];
 
-/** The Frameworks chapter's toolbar tools, in toolbar order. */
-export const frameworkTabs = [
+/** The frameworks the diagram ends in, in order. */
+export const frameworks = [
   'React',
   'Vue',
   'Svelte',
@@ -64,7 +64,7 @@ export const frameworkTabs = [
   'React Native',
 ] as const satisfies readonly ToolName[];
 
-export type Framework = (typeof frameworkTabs)[number];
+export type Framework = (typeof frameworks)[number];
 
 const frameworkStatus: Record<Framework, string> = {
   React: 'Components',
@@ -108,9 +108,9 @@ export function CoreChipChapter({
   framework,
   onSelect,
 }: {
-  /** The selected toolbar tool. */
+  /** The pressed framework. */
   framework: Framework;
-  /** Selects this framework's toolbar tool. */
+  /** Presses this framework. */
   onSelect: (framework: Framework) => void;
 }) {
   const [hovered, setHovered] = useState<string | null>(null);
@@ -120,7 +120,7 @@ export function CoreChipChapter({
     items.some(({ name }) => name === active)
   );
   const activeModule = modules.find(({ name }) => name === active);
-  const activeFramework = frameworkTabs.find((name) => name === active);
+  const activeFramework = frameworks.find((name) => name === active);
   const allLanes = activeModule?.lane === 'shared' || Boolean(activeFramework);
   const activeLane = activeGroup?.lane ?? activeModule?.lane;
   const themeFlow = allLanes || activeLane === 'theme';
@@ -230,7 +230,7 @@ export function CoreChipChapter({
         <div className="nx:framework-output-group">
           <span className="nx:framework-column-label">Frameworks</span>
           <div className="nx:chip-destinations">
-            {frameworkTabs.map((name) => {
+            {frameworks.map((name) => {
               const Icon = toolIcons[name];
               const status = frameworkStatus[name];
               const flowing =
