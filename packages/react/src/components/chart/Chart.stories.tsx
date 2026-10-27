@@ -62,17 +62,21 @@ const config = {
 
 const shortMonth = (value: string) => value.slice(0, 3);
 
-/** The elements inside `chart` that its `nx:[&_{selector}]:{utility}` class styles. */
+/** The elements inside `chart` that its `nx:[&_{selector}]:{utility}` classes style. */
 function styledBy(chart: Element | null, utility: string) {
   if (!chart) return [];
   const prefix = 'nx:[&_';
   const suffix = `]:${utility}`;
-  const name = Array.from(chart.classList).find(
-    (className) => className.startsWith(prefix) && className.endsWith(suffix)
-  );
-  if (!name) return [];
-  const selector = name.slice(prefix.length, -suffix.length).replace(/_/g, ' ');
-  return Array.from(chart.querySelectorAll(selector));
+  return Array.from(chart.classList)
+    .filter(
+      (className) => className.startsWith(prefix) && className.endsWith(suffix)
+    )
+    .flatMap((className) => {
+      const selector = className
+        .slice(prefix.length, -suffix.length)
+        .replace(/_/g, ' ');
+      return Array.from(chart.querySelectorAll(selector));
+    });
 }
 
 function AreaExample() {
