@@ -297,9 +297,7 @@ export const IconSize: Story = {
     for (const button of canvas.getAllByRole('button')) {
       const svg = button.querySelector('svg');
       await expect(svg?.getBoundingClientRect().height).toBe(iconToken);
-      await expect(
-        parseFloat(svg ? getComputedStyle(svg).strokeWidth : '')
-      ).toBeLessThan(Number(svg?.getAttribute('stroke-width')));
+      await expect(svg ? getComputedStyle(svg).strokeWidth : '').toBe('1.75px');
     }
   },
 };
