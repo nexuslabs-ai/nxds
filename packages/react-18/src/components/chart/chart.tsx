@@ -89,7 +89,10 @@ const ChartContainer = React.forwardRef<
         style={chartStyle}
         {...props}
       >
-        <RechartsPrimitive.ResponsiveContainer>
+        {/* Recharts warns on its -1 × -1 default before the first measure. */}
+        <RechartsPrimitive.ResponsiveContainer
+          initialDimension={{ width: 1, height: 1 }}
+        >
           {children}
         </RechartsPrimitive.ResponsiveContainer>
       </div>

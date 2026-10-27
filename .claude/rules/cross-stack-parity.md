@@ -34,9 +34,11 @@ These are the same API in each framework's idiom, not differences.
 | ---------------------- | --------------------------- |
 | `children` prop        | default slot                |
 | `ReactNode` prop       | kebab-case slot             |
+| `render{Name}` prop    | scoped kebab-case slot      |
 | own `on*` prop         | own emit                    |
 | `asChild` (Radix Slot) | `as-child` (Reka Primitive) |
 | `className`            | `class`                     |
+| `aria-label` prop      | `ariaLabel` prop            |
 | `args.onX` spy in play | `args['onX']` spy in play   |
 | `--radix-*` variable   | `--reka-*` variable         |
 

@@ -16,13 +16,19 @@ export * from './components/checkbox';
 export * from './components/choice-card';
 export * from './components/choice-row';
 export * from './components/collapsible';
+export * from './components/combobox';
+export * from './components/command';
 export * from './components/context-menu';
+export * from './components/date-picker';
 export * from './components/description-list';
 export * from './components/dialog';
 export * from './components/drawer';
 export * from './components/dropdown-menu';
 export * from './components/empty-state';
 export * from './components/field';
+export * from './components/filter-builder';
+export * from './components/filter-chip';
+export * from './components/filter-condition';
 export * from './components/hide';
 export * from './components/hover-card';
 export * from './components/input';
@@ -33,6 +39,7 @@ export * from './components/kbd';
 export * from './components/label';
 export * from './components/marker';
 export * from './components/menubar';
+export * from './components/multi-select';
 export * from './components/native-select';
 export * from './components/navigation-menu';
 export * from './components/page-header';
@@ -56,3 +63,16 @@ export * from './components/textarea';
 export * from './components/toggle';
 export * from './components/toggle-group';
 export * from './components/tooltip';
+export {
+  type FilterError,
+  type FilterErrorCode,
+  type FilterField,
+  type FilterGroup,
+  type FilterOperator,
+  filterOperatorLabels,
+  type FilterOption,
+  type FilterRule,
+  getFilterErrors,
+  isValuelessOperator,
+  type ValuelessOperator,
+} from './lib/filter-model';

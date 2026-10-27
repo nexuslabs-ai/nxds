@@ -2,9 +2,17 @@
 
 import * as React from 'react';
 import {
+  type Chevron,
+  type DateRange,
+  type Day,
   type DayButton,
   DayPicker,
   getDefaultClassNames,
+  type Matcher,
+  type Months,
+  rangeContainsModifiers,
+  useDayPicker,
+  type WeekNumber,
 } from 'react-day-picker';
 
 import {
@@ -40,6 +48,18 @@ const cellSizeClassNames: Record<DatePickerCellSize, string> = {
 
 const DatePickerDayContentContext =
   React.createContext<DatePickerDayContent | null>(null);
+
+// The day last hovered or focused, which a half-picked range previews up to.
+const DatePickerPreviewToContext = React.createContext<Date | undefined>(
+  undefined
+);
+
+// The start-of-day times a half-picked range previews, its start aside.
+type DatePickerPreviewSpan = { start: number; from: number; to: number };
+
+const DatePickerPreviewSpanContext = React.createContext<
+  DatePickerPreviewSpan | undefined
+>(undefined);
 
 // react-day-picker's default class names are static — compute once at module load.
 const defaultClassNames = getDefaultClassNames();
@@ -115,13 +135,22 @@ const staticDayPickerClassNames = {
   hidden: cn('nx:invisible', defaultClassNames.hidden),
 } satisfies NonNullable<React.ComponentProps<typeof DayPicker>['classNames']>;
 
+// Omits from each mode's props, so `mode` still narrows the rest.
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;
+
 /**
  * DatePickerProps
  *
- * Props for the DatePicker component. Accepts every `react-day-picker` prop,
- * plus the props listed here.
+ * Props for the DatePicker component. Accepts every `react-day-picker` prop
+ * except `excludeDisabled`, which a range always has, plus the props listed
+ * here.
  */
-type DatePickerProps = React.ComponentProps<typeof DayPicker> & {
+type DatePickerProps = DistributiveOmit<
+  React.ComponentProps<typeof DayPicker>,
+  'excludeDisabled'
+> & {
   /**
    * Button variant for the previous and next month arrows.
    */
@@ -143,7 +172,8 @@ type DatePickerProps = React.ComponentProps<typeof DayPicker> & {
 
 /**
  * A calendar grid for picking one date, a range or several dates. Install
- * `react-day-picker` in your app first.
+ * `react-day-picker` in your app first. Days in `disabled` or
+ * `modifiers.unavailable` can't be picked, and a range can't span them.
  */
 function DatePicker({
   className,
@@ -154,124 +184,212 @@ function DatePicker({
   cellSize = 'default',
   renderDayContent,
   formatters,
+  disabled,
+  modifiers,
   modifiersClassNames,
   components,
+  onDayMouseEnter,
+  onDayFocus,
   ...props
 }: DatePickerProps) {
+  const [previewTo, setPreviewTo] = React.useState<Date>();
+  // A range that crosses a blocked day restarts from the clicked day.
+  const selection =
+    props.mode === 'range' ? { ...props, excludeDisabled: true } : props;
+
+  function handleDayMouseEnter(
+    ...[date, dayModifiers, event]: Parameters<
+      NonNullable<typeof onDayMouseEnter>
+    >
+  ) {
+    if (!dayModifiers.disabled) setPreviewTo(date);
+    onDayMouseEnter?.(date, dayModifiers, event);
+  }
+
+  function handleDayFocus(
+    ...[date, dayModifiers, event]: Parameters<NonNullable<typeof onDayFocus>>
+  ) {
+    if (!dayModifiers.disabled) setPreviewTo(date);
+    onDayFocus?.(date, dayModifiers, event);
+  }
+
   return (
     <DatePickerDayContentContext.Provider value={renderDayContent ?? null}>
-      <DayPicker
-        showOutsideDays={showOutsideDays}
-        className={cn(
-          'nx:group/date-picker nx:bg-background nx:p-3',
-          cellSizeClassNames[cellSize],
-          'nx:in-data-[slot=card-content]:bg-transparent nx:in-data-[slot=popover-content]:bg-transparent',
-          className
-        )}
-        captionLayout={captionLayout}
-        formatters={{
-          formatMonthDropdown: (date) =>
-            date.toLocaleString('default', { month: 'short' }),
-          ...formatters,
-        }}
-        // Cell-level modifiers a consumer opts into. `unavailable` (pair with
-        // `disabled`) strikes booked/blackout days; `preview` paints a tentative
-        // range rail while a range is half-selected (wire via onDayMouseEnter).
-        modifiersClassNames={{
-          unavailable: 'nx:text-muted-foreground nx:line-through',
-          preview: 'nx:bg-container-hover',
-          ...modifiersClassNames,
-        }}
-        classNames={{
-          ...staticDayPickerClassNames,
-          button_previous: cn(
-            buttonVariants({ variant: buttonVariant, size: 'icon' }),
-            'nx:size-(--cell-size) nx:p-0 nx:select-none nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
-            defaultClassNames.button_previous
-          ),
-          button_next: cn(
-            buttonVariants({ variant: buttonVariant, size: 'icon' }),
-            'nx:size-(--cell-size) nx:p-0 nx:select-none nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
-            defaultClassNames.button_next
-          ),
-          caption_label: cn(
-            'nx:typography-label-default nx:select-none',
-            captionLayout !== 'label' &&
-              'nx:flex nx:h-8 nx:items-center nx:gap-1 nx:rounded-md nx:pr-1 nx:pl-2 nx:[&>svg]:size-3.5 nx:[&>svg]:text-muted-foreground',
-            defaultClassNames.caption_label
-          ),
-          day: cn(
-            'nx:group/day nx:relative nx:flex nx:aspect-square nx:h-full nx:w-full nx:items-center nx:justify-center nx:p-0 nx:text-center nx:select-none nx:[&:last-child[data-selected=true]_button]:rounded-r-md',
-            props.showWeekNumber
-              ? 'nx:[&:nth-child(2)[data-selected=true]_button]:rounded-l-md'
-              : 'nx:[&:first-child[data-selected=true]_button]:rounded-l-md',
-            defaultClassNames.day
-          ),
-          ...classNames,
-        }}
-        components={{
-          Root: ({ className, rootRef, ...props }) => {
-            return (
-              <div
-                data-slot="date-picker"
-                data-cell-size={cellSize}
-                ref={rootRef}
-                className={className}
-                {...props}
-              />
-            );
-          },
-          Chevron: ({ className, orientation, ...props }) => {
-            if (orientation === 'left') {
-              return (
-                <IconChevronLeft
-                  className={cn(
-                    'nx:size-4 nx:text-muted-foreground',
-                    className
-                  )}
-                  {...props}
-                />
-              );
-            }
+      <DatePickerPreviewToContext.Provider value={previewTo}>
+        <DayPicker
+          data-slot="date-picker"
+          data-cell-size={cellSize}
+          showOutsideDays={showOutsideDays}
+          disabled={[disabled ?? [], modifiers?.unavailable ?? []].flat()}
+          modifiers={modifiers}
+          className={cn(
+            'nx:group/date-picker nx:bg-background nx:p-3',
+            cellSizeClassNames[cellSize],
+            'nx:in-data-[slot=card-content]:bg-transparent nx:in-data-[slot=popover-content]:bg-transparent',
+            className
+          )}
+          captionLayout={captionLayout}
+          formatters={{
+            formatMonthDropdown: (date) =>
+              date.toLocaleString('default', { month: 'short' }),
+            ...formatters,
+          }}
+          // `unavailable` strikes booked or blackout days.
+          modifiersClassNames={{
+            unavailable: 'nx:text-muted-foreground nx:line-through',
+            ...modifiersClassNames,
+          }}
+          onDayMouseEnter={handleDayMouseEnter}
+          onDayFocus={handleDayFocus}
+          classNames={{
+            ...staticDayPickerClassNames,
+            button_previous: cn(
+              buttonVariants({ variant: buttonVariant, size: 'icon' }),
+              'nx:size-(--cell-size) nx:p-0 nx:select-none nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
+              defaultClassNames.button_previous
+            ),
+            button_next: cn(
+              buttonVariants({ variant: buttonVariant, size: 'icon' }),
+              'nx:size-(--cell-size) nx:p-0 nx:select-none nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
+              defaultClassNames.button_next
+            ),
+            caption_label: cn(
+              'nx:typography-label-default nx:select-none',
+              captionLayout !== 'label' &&
+                'nx:flex nx:h-8 nx:items-center nx:gap-1 nx:rounded-md nx:pr-1 nx:pl-2 nx:[&>svg]:size-3.5 nx:[&>svg]:text-muted-foreground',
+              defaultClassNames.caption_label
+            ),
+            day: cn(
+              'nx:group/day nx:relative nx:flex nx:aspect-square nx:h-full nx:w-full nx:items-center nx:justify-center nx:p-0 nx:text-center nx:select-none nx:[&:last-child[data-selected=true]_button]:rounded-r-md',
+              props.showWeekNumber
+                ? 'nx:[&:nth-child(2)[data-selected=true]_button]:rounded-l-md'
+                : 'nx:[&:first-child[data-selected=true]_button]:rounded-l-md',
+              defaultClassNames.day
+            ),
+            ...classNames,
+          }}
+          components={{
+            Chevron: DatePickerChevron,
+            Day: DatePickerDay,
+            DayButton: DatePickerDayButton,
+            Months: DatePickerMonths,
+            WeekNumber: DatePickerWeekNumber,
+            ...components,
+          }}
+          {...selection}
+        />
+      </DatePickerPreviewToContext.Provider>
+    </DatePickerDayContentContext.Provider>
+  );
+}
 
-            if (orientation === 'right') {
-              return (
-                <IconChevronRight
-                  className={cn(
-                    'nx:size-4 nx:text-muted-foreground',
-                    className
-                  )}
-                  {...props}
-                />
-              );
-            }
-
-            return (
-              <IconChevronDown
-                className={cn('nx:size-4', className)}
-                {...props}
-              />
-            );
-          },
-          DayButton: DatePickerDayButton,
-          // react-day-picker passes `scope="row"` / `role="rowheader"`, valid
-          // only on a <th> — match its default element (and drop the non-DOM
-          // `week` prop) so the cell stays accessible.
-          WeekNumber: ({ week, children, ...props }) => {
-            void week;
-            return (
-              <th {...props}>
-                <div className="nx:flex nx:size-(--cell-size) nx:items-center nx:justify-center nx:text-center">
-                  {children}
-                </div>
-              </th>
-            );
-          },
-          ...components,
-        }}
+function DatePickerChevron({
+  className,
+  orientation,
+  ...props
+}: React.ComponentProps<typeof Chevron>) {
+  if (orientation === 'left') {
+    return (
+      <IconChevronLeft
+        className={cn('nx:size-4 nx:text-muted-foreground', className)}
         {...props}
       />
-    </DatePickerDayContentContext.Provider>
+    );
+  }
+
+  if (orientation === 'right') {
+    return (
+      <IconChevronRight
+        className={cn('nx:size-4 nx:text-muted-foreground', className)}
+        {...props}
+      />
+    );
+  }
+
+  return <IconChevronDown className={cn('nx:size-4', className)} {...props} />;
+}
+
+// react-day-picker passes `scope="row"` / `role="rowheader"`, valid only on a
+// <th> — match its default element (and drop the non-DOM `week` prop) so the
+// cell stays accessible.
+function DatePickerWeekNumber({
+  week,
+  children,
+  ...props
+}: React.ComponentProps<typeof WeekNumber>) {
+  void week;
+  return (
+    <th {...props}>
+      <div className="nx:flex nx:size-(--cell-size) nx:items-center nx:justify-center nx:text-center">
+        {children}
+      </div>
+    </th>
+  );
+}
+
+const startOfDay = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+
+/**
+ * The days a half-picked range previews up to `previewTo`. A span that crosses
+ * a `blocked` day has no preview.
+ */
+function previewSpan(
+  range: DateRange | undefined,
+  previewTo: Date | undefined,
+  blocked: Matcher | Matcher[] | undefined
+): DatePickerPreviewSpan | undefined {
+  if (!range?.from || !previewTo) return undefined;
+  const start = startOfDay(range.from);
+  if (range.to && startOfDay(range.to) !== start) return undefined;
+
+  const [from, to] =
+    previewTo < range.from ? [previewTo, range.from] : [range.from, previewTo];
+  if (blocked && rangeContainsModifiers({ from, to }, blocked))
+    return undefined;
+  return { start, from: startOfDay(from), to: startOfDay(to) };
+}
+
+/**
+ * The container around the month grids. Works out the range preview once for
+ * every day cell.
+ */
+function DatePickerMonths(props: React.ComponentProps<typeof Months>) {
+  const { dayPickerProps, selected } = useDayPicker<{ mode: 'range' }>();
+  const previewTo = React.useContext(DatePickerPreviewToContext);
+  const span =
+    dayPickerProps.mode === 'range'
+      ? previewSpan(selected, previewTo, dayPickerProps.disabled)
+      : undefined;
+
+  return (
+    <DatePickerPreviewSpanContext.Provider value={span}>
+      <div {...props} />
+    </DatePickerPreviewSpanContext.Provider>
+  );
+}
+
+/**
+ * The cell for each day. While a range is half-picked, it shades the days up
+ * to the hovered or focused day.
+ */
+function DatePickerDay({
+  day,
+  modifiers,
+  className,
+  ...props
+}: React.ComponentProps<typeof Day>) {
+  void modifiers;
+  const span = React.useContext(DatePickerPreviewSpanContext);
+  const time = startOfDay(day.date);
+  const preview =
+    !!span && time !== span.start && time >= span.from && time <= span.to;
+
+  return (
+    <td
+      className={cn(className, preview && 'nx:bg-container-hover')}
+      {...props}
+    />
   );
 }
 
