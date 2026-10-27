@@ -23,7 +23,11 @@ function spacingSteps() {
     if (!SPACING_MODE_FILE_PATTERN.test(file)) continue;
     const { spacing } = readJson(path.join(SEMANTIC_DIR, file));
     for (const key of Object.keys(spacing)) {
-      steps.add(Number(key.replace('_', '.')));
+      const step = Number(key.replace('_', '.'));
+      if (!Number.isFinite(step)) {
+        throw new Error(`${file}: spacing key "${key}" is not a number.`);
+      }
+      steps.add(step);
     }
   }
   return [...steps].sort((a, b) => a - b);

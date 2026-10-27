@@ -13,7 +13,6 @@ import {
   createNxdsThemeContract,
   DEFAULT_NXDS_APPEARANCE,
   deriveTheme,
-  type NxdsAppearanceDataAttr,
   themeToCss,
 } from '@nxds/core';
 import { readdirSync, readFileSync } from 'node:fs';
@@ -441,23 +440,12 @@ const TOKEN_CASES: (Probe & { family: string; name: string; value: string })[] =
     },
   ];
 
-/**
- * The tokens.json family each appearance attribute swaps. A preset changes
- * only some of a family's tokens, so the check reads them all; TOKEN_CASES
- * proves components read each family.
- */
-const PRESET_FAMILIES: Record<NxdsAppearanceDataAttr, string> = {
-  'data-density': 'spacing',
-  'data-radius': 'radius',
-  'data-borderwidth': 'borderWidth',
-  'data-shadow': 'shadow',
-};
-
-// Each attribute's values, the default first.
+// Each attribute's values, the default first. A preset changes only some of
+// its family's tokens, so the check reads them all.
 const PRESET_CASES = Object.entries(PRESETS).map(
-  ([attribute, { options, initial }]) => ({
+  ([attribute, { options, initial, family }]) => ({
     attribute,
-    family: PRESET_FAMILIES[attribute as NxdsAppearanceDataAttr],
+    family,
     values: [
       initial,
       ...options.map(({ value }) => value).filter((value) => value !== initial),
