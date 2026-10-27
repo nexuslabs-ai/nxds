@@ -1,6 +1,6 @@
 {
   "name": "@nxds/claude-design",
-  "version": "0.5.0",
+  "version": "0.7.0",
   "description": "nxds as a Claude Design System: tokens, a live React 18 component bundle, prop types and previews, ready to publish.",
   "keywords": [
     "nxds",

@@ -163,7 +163,10 @@ function destructuringDefaults(
   return parameter.name.elements.flatMap(
     ({ dotDotDotToken, initializer, name, propertyName }) => {
       if (!initializer || dotDotDotToken) return [];
-      const key = (propertyName ?? name).getText();
+      const keyNode = propertyName ?? name;
+      const key = ts.isStringLiteral(keyNode)
+        ? keyNode.text
+        : keyNode.getText();
       return [
         [key, () => literalDefault(checker, initializer, `${owner}.${key}`)],
       ];
