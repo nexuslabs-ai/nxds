@@ -1,10 +1,16 @@
-import { Command, CommanderError, Option } from 'commander';
+import { Argument, Command, CommanderError, Option } from 'commander';
 import path from 'node:path';
 
 import { resolveRegistry } from './catalog';
 import { CLI_COMMAND } from './cli-command';
 import { info, list, search, view } from './commands/browse';
 import { diff, doctor } from './commands/check';
+import {
+  DEFAULT_EXPORT_DIR,
+  DEFAULT_NPM_REGISTRY,
+  exportClaudeDesign,
+  type ExportOptions,
+} from './commands/export';
 import { add, init, update } from './commands/install';
 import type { CommandResult } from './commands/result';
 import { CliError, EXIT_CODES, type ExitCode } from './errors';
@@ -179,6 +185,40 @@ function program(
     .action(async (items: string[], _options, command: Command) => {
       const { cwd, registry } = context(command);
       done(await diff(cwd, registry, items));
+    });
+
+  cli
+    .command('export')
+    .description(
+      'export nxds as a Claude Design System folder, ready to publish'
+    )
+    .addArgument(
+      new Argument('<target>', 'what to export').choices(['claude-design'])
+    )
+    .option('--out <path>', `folder to write (default: ${DEFAULT_EXPORT_DIR})`)
+    .option('--release <version>', 'nxds release to export (default: latest)')
+    .option(
+      '--index <path>',
+      "the system's current design-system.json, to keep its title and creation date"
+    )
+    .option(
+      '--existing <path>',
+      "a JSON list of the system's current file paths, to list the ones this release removes"
+    )
+    .option('--overwrite', 'replace the project/ folder in --out', false)
+    .option(
+      '--source <path>',
+      'a built @nxds/claude-design dist folder, instead of the npm release'
+    )
+    .addOption(
+      new Option(
+        '--npm-registry <url>',
+        `npm registry to download from (default: ${DEFAULT_NPM_REGISTRY})`
+      ).env('npm_config_registry')
+    )
+    .action(async (_target: string, _options, command: Command) => {
+      const { cwd } = context(command);
+      done(await exportClaudeDesign(cwd, command.opts<ExportOptions>()));
     });
 
   cli

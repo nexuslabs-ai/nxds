@@ -9,12 +9,17 @@ import {
   type StoryObj as VueStory,
 } from '@storybook/vue3';
 import { computeAccessibleName } from 'dom-accessibility-api';
-import { userEvent, waitFor, within } from 'storybook/test';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, userEvent, waitFor, within } from 'storybook/test';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 import reactPreview from '../../packages/react/.storybook/preview';
 import vuePreview from '../../packages/vue/.storybook/preview';
-import { renderedDifferences, shared } from '../parity.ts';
+import {
+  renderedAttributeDifferences,
+  renderedDifferences,
+  shared,
+  slotOwners,
+} from '../parity.ts';
 
 /** A stories file: its meta as `default`, and its stories. */
 type StoryModule<TMeta, TStory> = { default: TMeta } & Partial<
@@ -30,13 +35,38 @@ const vueModules = import.meta.glob<VueModule>(
   '../../packages/vue/src/components/*/*.stories.ts'
 );
 
-/** Components whose content portals into `document.body` once opened. */
-const OVERLAYS = new Set(['dialog']);
+type Opener =
+  | {
+      /** The trigger's role; the first trigger in the story opens. */
+      role: 'button' | 'combobox' | 'menuitem';
+      /** Focus opens a tooltip at once, without its hover delay; Enter then opens a navigation flyout. */
+      open: 'click' | 'focus' | 'enter';
+    }
+  /** Right-clicks the context menu's trigger area. */
+  | { open: 'contextmenu' };
 
-// Attributes that hold generated ids or inline styles, that Radix and Reka add
-// for their own bookkeeping, or that `name` already covers (aria-label).
+/** Components whose content renders only once opened, and how to open them. */
+const OVERLAYS: Record<string, Opener> = {
+  'alert-dialog': { role: 'button', open: 'click' },
+  combobox: { role: 'button', open: 'click' },
+  'context-menu': { open: 'contextmenu' },
+  dialog: { role: 'button', open: 'click' },
+  drawer: { role: 'button', open: 'click' },
+  'dropdown-menu': { role: 'button', open: 'click' },
+  'hover-card': { role: 'button', open: 'focus' },
+  menubar: { role: 'menuitem', open: 'click' },
+  'multi-select': { role: 'button', open: 'click' },
+  'navigation-menu': { role: 'button', open: 'enter' },
+  popover: { role: 'button', open: 'click' },
+  select: { role: 'combobox', open: 'click' },
+  sheet: { role: 'button', open: 'click' },
+  tooltip: { role: 'button', open: 'focus' },
+};
+
+// Attributes that hold generated ids or inline styles, that Radix, Reka and
+// vaul add for their own bookkeeping, or that `name` already covers (aria-label).
 const SKIPPED_ATTRIBUTE =
-  /^(?:id|style|aria-(?:controls|labelledby|describedby|owns|activedescendant|label)|data-(?:radix|reka)-.*|data-(?:active|dismissable-layer))$/;
+  /^(?:id|style|aria-(?:controls|labelledby|describedby|owns|activedescendant|label)|data-(?:radix|reka)-.*|data-(?:active|dismissable-layer|grace-area-trigger|menu-item|navigation-menu-trigger|slider-impl|vaul-animate|vaul-custom-container))$/;
 // ARIA states where `"false"` means the same as leaving the attribute out.
 const FALSE_IS_ABSENT =
   /^aria-(?:busy|disabled|hidden|invalid|readonly|required)$/;
@@ -64,14 +94,36 @@ function docsStories<TStory extends { tags?: string[] }>(
   );
 }
 
+/**
+ * The shared component a part belongs to: the one `slotOwners` names, or the
+ * longest slug its `data-slot` starts with.
+ */
+function ownerOf(slot: string) {
+  const named = slotOwners[slot];
+  if (named) return shared.includes(named) ? named : undefined;
+  return shared
+    .filter((slug) => slot === slug || slot.startsWith(`${slug}-`))
+    .reduce<
+      string | undefined
+    >((longest, slug) => (!longest || slug.length > longest.length ? slug : longest), undefined);
+}
+
 function isOwnSlot(slot: string, slug: string) {
-  return slot === slug || slot.startsWith(`${slug}-`);
+  return ownerOf(slot) === slug;
+}
+
+/** `element`'s text without the CSS Radix and Reka inject as a <style> into a select's viewport. */
+function visibleText(element: Element) {
+  const copy = element.cloneNode(true) as Element;
+  for (const style of copy.querySelectorAll('style')) style.remove();
+  return copy.textContent;
 }
 
 /** One element as a line, so a mismatch prints as a readable line diff. */
 function describeElement(element: Element) {
   // Reka repeats a native `disabled` as `aria-disabled="true"`; Radix doesn't.
   const isNativelyDisabled = element.hasAttribute('disabled');
+  const slot = element.getAttribute('data-slot') ?? '';
   const attributes = [...element.attributes]
     .filter(({ name }) => /^(?:data-|aria-|role$)/.test(name))
     .filter(({ name }) => !SKIPPED_ATTRIBUTE.test(name))
@@ -79,41 +131,124 @@ function describeElement(element: Element) {
       ({ name, value }) => !(FALSE_IS_ABSENT.test(name) && value === 'false')
     )
     .filter(({ name }) => !(name === 'aria-disabled' && isNativelyDisabled))
+    .filter(({ name }) => !(`${slot} ${name}` in renderedAttributeDifferences))
     .map(({ name, value }) => `${name}="${value}"`)
     .sort();
-  const classes = [...element.classList].sort().join(' ');
-  const name = computeAccessibleName(element);
+  const classes = [...element.classList].map(normalizeClass).sort().join(' ');
+  const name =
+    `${slot} name` in renderedAttributeDifferences
+      ? '(see renderedAttributeDifferences)'
+      : computeAccessibleName(element);
   // A textarea shows its value; its text content is only the default value.
   const content =
     element instanceof HTMLTextAreaElement
       ? element.value
-      : element.textContent;
+      : visibleText(element);
   const text = content?.replace(/\s+/g, ' ').trim() ?? '';
   return `<${element.tagName.toLowerCase()} ${attributes.join(' ')}> class="${classes}" name="${name}" text="${text}"`;
 }
 
 /**
- * Every element of `slug`'s own parts on the page, in document order, and the
- * `renderedDifferences` slots it skipped.
+ * Every element of `slug`'s own parts on the page, in document order, the
+ * `renderedDifferences` slots it skipped, and the value of each
+ * `renderedAttributeDifferences` entry it left out, by entry.
  */
 function readTree(slug: string) {
   const own = [...document.body.querySelectorAll('[data-slot]')].filter(
     (element) => isOwnSlot(element.getAttribute('data-slot') ?? '', slug)
   );
-  const differs = (element: Element) =>
-    (element.getAttribute('data-slot') ?? '') in renderedDifferences;
+  const slotOf = (element: Element) => element.getAttribute('data-slot') ?? '';
+  const differs = (element: Element) => slotOf(element) in renderedDifferences;
   return {
     tree: own.filter((element) => !differs(element)).map(describeElement),
-    skipped: own
-      .filter(differs)
-      .map((element) => element.getAttribute('data-slot') ?? ''),
+    skipped: own.filter(differs).map(slotOf),
+    leftOut: own.flatMap((element) =>
+      Object.keys(renderedAttributeDifferences)
+        .filter((entry) => entry.startsWith(`${slotOf(element)} `))
+        .map((entry) => {
+          const attribute = entry.slice(slotOf(element).length + 1);
+          const value =
+            attribute === 'name'
+              ? computeAccessibleName(element)
+              : element.getAttribute(attribute);
+          return [entry, value] as const;
+        })
+    ),
   };
 }
 
-async function settle() {
-  await new Promise((resolve) =>
-    requestAnimationFrame(() => requestAnimationFrame(resolve))
+/** Waits until `read` returns the same value twice, 100ms apart. */
+async function holdsSteady(read: () => string) {
+  await waitFor(async () => {
+    const before = read();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(read()).toBe(before);
+  });
+}
+
+const partCount = () => String(document.querySelectorAll('[data-slot]').length);
+
+// Radix and Reka class tokens name their own CSS variables for the same value.
+function normalizeClass(token: string) {
+  return token.replaceAll('--radix-', '--reka-');
+}
+
+/** Opens the story's first trigger; false when it has none that can open, such as plain links or a disabled trigger. */
+async function openTrigger(canvasElement: HTMLElement, opener: Opener) {
+  if (opener.open === 'contextmenu') {
+    const area = canvasElement.querySelector(
+      '[data-slot="context-menu-trigger"]'
+    );
+    if (!area) return false;
+    fireEvent.contextMenu(area, {
+      clientX: 20,
+      clientY: 20,
+    });
+    return true;
+  }
+  const [trigger] = within(canvasElement).queryAllByRole(opener.role);
+  if (!trigger || trigger.matches(':disabled')) return false;
+  if (opener.open === 'click') {
+    await userEvent.click(trigger);
+    return true;
+  }
+  trigger.focus();
+  if (opener.open === 'enter') await userEvent.keyboard('{Enter}');
+  return true;
+}
+
+/**
+ * Opens `slug`'s first trigger and waits until its content stops moving;
+ * false when the story has no trigger that can open.
+ */
+async function openOverlay(
+  canvasElement: HTMLElement,
+  slug: string,
+  opener: Opener
+) {
+  if (!(await openTrigger(canvasElement, opener))) return false;
+
+  const content = await waitFor(
+    () => {
+      const found = document.querySelector(`[data-slot="${slug}-content"]`);
+      expect(found).not.toBeNull();
+      return found!;
+    },
+    { timeout: 2000 }
   );
+  // A menu moves focus into itself once open, which can highlight an item.
+  if (content.matches('[role="menu"], [role="listbox"]')) {
+    await waitFor(() =>
+      expect(content.contains(document.activeElement)).toBe(true)
+    );
+  }
+  // Popper places the content after measuring it, which can flip its side,
+  // and Radix mounts a navigation indicator once a ResizeObserver reports.
+  await holdsSteady(
+    () =>
+      `${content.getAttribute('data-side')}/${content.getAttribute('data-align')}/${partCount()}`
+  );
+  return true;
 }
 
 // `run` mounts the story; without its play function both frameworks read the same initial state.
@@ -153,44 +288,51 @@ async function renderTree(
   mount: (canvasElement: HTMLElement) => Promise<{ load: () => Promise<void> }>,
   slug: string
 ) {
-  const root = document.documentElement;
-  const rootAttributes = [...root.attributes].map(({ name, value }) => [
-    name,
-    value,
-  ]);
+  // Stories set appearance attributes on <html>, and modal overlays lock <body>.
+  const pageElements = [document.documentElement, document.body];
+  const pageAttributes = pageElements.map((element) =>
+    [...element.attributes].map(({ name, value }) => [name, value] as const)
+  );
   const canvasElement = document.createElement('div');
   document.body.append(canvasElement);
 
   const composed = await mount(canvasElement);
-  await settle();
+  // Some parts mount late, such as a scroll area's corner once both scrollbars measure.
+  await holdsSteady(partCount);
 
-  if (OVERLAYS.has(slug)) {
-    const triggers = within(canvasElement).getAllByRole('button');
-    expect(triggers).toHaveLength(1);
-    await userEvent.click(triggers[0]!);
-    await waitFor(() =>
-      expect(
-        document.querySelector(`[data-slot="${slug}-content"]`)
-      ).not.toBeNull()
-    );
-    await settle();
-  }
+  const opener = OVERLAYS[slug];
+  const opened = opener
+    ? await openOverlay(canvasElement, slug, opener)
+    : false;
 
-  const tree = readTree(slug);
+  const tree = { ...readTree(slug), opened };
 
   // A composed story queues its unmount; the next `load` runs it.
   await composed.load();
   canvasElement.remove();
   await waitFor(() => expect(document.querySelector('[data-slot]')).toBeNull());
-  for (const { name: attribute } of [...root.attributes])
-    root.removeAttribute(attribute);
-  for (const [attribute, value] of rootAttributes)
-    root.setAttribute(attribute!, value!);
+  pageElements.forEach((element, index) => {
+    for (const { name } of [...element.attributes])
+      element.removeAttribute(name);
+    for (const [name, value] of pageAttributes[index]!)
+      element.setAttribute(name, value);
+  });
 
   return tree;
 }
 
 describe('rendered docs stories', () => {
+  // Import every story file before any test clicks: user-event makes
+  // HTMLElement.prototype.focus a getter, and a file that loads Storybook's
+  // docs blocks then can't assign it.
+  beforeAll(async () => {
+    await Promise.all(
+      [...Object.values(reactModules), ...Object.values(vueModules)].map(
+        (importModule) => importModule()
+      )
+    );
+  }, 60_000);
+
   it('reads one story file per shared component in each framework', () => {
     const count = (modules: Record<string, unknown>, slug: string) =>
       Object.keys(modules).filter((file) => slugOf(file) === slug).length;
@@ -200,10 +342,19 @@ describe('rendered docs stories', () => {
     expect(unread).toEqual([]);
   });
 
+  it('names only owners that are shared components', () => {
+    expect(
+      Object.entries(slotOwners).filter(([, slug]) => !shared.includes(slug))
+    ).toEqual([]);
+  });
+
   it('allows only rendered differences that belong to a shared component', () => {
-    const unowned = Object.keys(renderedDifferences).filter(
-      (slot) => !shared.some((slug) => isOwnSlot(slot, slug))
-    );
+    const unowned = [
+      ...Object.keys(renderedDifferences),
+      ...Object.keys(renderedAttributeDifferences).map(
+        (entry) => entry.split(' ')[0]!
+      ),
+    ].filter((slot) => !shared.some((slug) => isOwnSlot(slot, slug)));
     expect(unowned).toEqual([]);
   });
 
@@ -214,6 +365,8 @@ describe('rendered docs stories', () => {
       const vue = await load(vueModules, slug);
       const vueStories = new Map(docsStories(vue));
       const skipped = new Set<string>();
+      const differing = new Set<string>();
+      let opened = false;
 
       for (const [name, story] of docsStories(react)) {
         const vueStory = vueStories.get(name);
@@ -228,8 +381,15 @@ describe('rendered docs stories', () => {
           (canvasElement) => mountVue(vue, name, vueStory, canvasElement),
           slug
         );
+        opened ||= reactTree.opened && vueTree.opened;
         for (const slot of [...reactTree.skipped, ...vueTree.skipped]) {
           skipped.add(slot);
+        }
+        const reactValues = new Map(reactTree.leftOut);
+        for (const [entry, value] of vueTree.leftOut) {
+          if (reactValues.has(entry) && reactValues.get(entry) !== value) {
+            differing.add(entry);
+          }
         }
 
         expect(
@@ -239,10 +399,22 @@ describe('rendered docs stories', () => {
         expect(vueTree.tree, `${slug}/${name}`).toEqual(reactTree.tree);
       }
 
+      if (slug in OVERLAYS) {
+        expect(opened, `no ${slug} docs story opens its content`).toBe(true);
+      }
+
       const stale = Object.keys(renderedDifferences).filter(
         (slot) => isOwnSlot(slot, slug) && !skipped.has(slot)
       );
       expect(stale, 'rendered differences that no longer render').toEqual([]);
+
+      const agreeing = Object.keys(renderedAttributeDifferences).filter(
+        (entry) =>
+          isOwnSlot(entry.split(' ')[0]!, slug) && !differing.has(entry)
+      );
+      expect(agreeing, 'attribute differences that no longer differ').toEqual(
+        []
+      );
     },
     60_000
   );

@@ -5,17 +5,12 @@ import {
 } from '../token-source/perceptual-grid';
 
 import { type Shade, SHADES } from './palette';
+import {
+  PRIMITIVE_PALETTE_NAMES,
+  type PrimitivePaletteName,
+} from './token-scales.generated';
 
-export type PrimitivePaletteName = Exclude<
-  keyof typeof primitiveColors,
-  'white' | 'black'
->;
 export type PrimitivePaletteRamp = Readonly<Record<Shade, string>>;
-
-export const PRIMITIVE_PALETTE_NAMES: readonly PrimitivePaletteName[] =
-  Object.keys(primitiveColors).filter(
-    (name): name is PrimitivePaletteName => name !== 'white' && name !== 'black'
-  );
 
 const rampCache = new Map<PrimitivePaletteName, PrimitivePaletteRamp>();
 

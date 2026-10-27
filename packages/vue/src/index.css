@@ -9,4 +9,5 @@
 @source './components';
 @source './lib';
 @reference '@nxds/tailwind';
+@import 'tw-animate-css';
 @import './components/progress/progress.css';

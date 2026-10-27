@@ -87,6 +87,11 @@ const AUDIENCES = [
     desc: 'Every page as Markdown, indexed in /llms.txt.',
     href: requirePage('getting-started', 'ai-agents').route,
   },
+  {
+    title: 'Team on another UI library',
+    desc: 'Add nxds next to MUI, shadcn/ui or Bootstrap, one component at a time.',
+    href: requirePage('integrations', 'overview').route,
+  },
 ];
 
 // requireSection, not the literal: a renamed section fails the build here.
@@ -150,7 +155,7 @@ export default function Home() {
 
       {/* Audience cards */}
       <h2 className="nx:typography-heading-small nx:mt-4 nx:mb-3">I am a…</h2>
-      <div className="nx:grid nx:grid-cols-1 nx:md:grid-cols-2 nx:gap-4">
+      <div className="nx:grid nx:grid-cols-1 nx:md:grid-cols-3 nx:gap-4">
         {AUDIENCES.map((a) => (
           <Link
             key={a.title}

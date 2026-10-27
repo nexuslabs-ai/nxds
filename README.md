@@ -15,7 +15,7 @@ npx nxds-cli@latest init
 npx nxds-cli@latest add button
 ```
 
-To give Claude Code the nxds skill, run `/plugin install nxds --marketplace nexuslabs-ai/nxds`.
+To give Claude Code the nxds skills, run `/plugin install nxds --marketplace nexuslabs-ai/nxds`.
 
 Storybook hosts the component catalog and runs both visual docs and interaction tests against the real components. The catalog is published from `main` at **<https://storybook.nxds.dev>**.
 
@@ -36,14 +36,15 @@ make dev          # Storybook — the component catalog & dev surface
 
 ## Workspace layout
 
-| Path                | Purpose                                                       |
-| ------------------- | ------------------------------------------------------------- |
-| `packages/core`     | Internal design tokens and theme definitions (not published)  |
-| `packages/tailwind` | Tailwind CSS theme with `nx:` prefix                          |
-| `packages/react`    | React components built with Radix UI and Tailwind CSS         |
-| `packages/cli`      | `nxds-cli`, which installs nxds into an app                   |
-| `apps/docs`         | Documentation site (Next.js — IA shell + live theme explorer) |
-| `plugins/nxds`      | The nxds skill for Claude Code and other AI agents            |
+| Path                     | Purpose                                                       |
+| ------------------------ | ------------------------------------------------------------- |
+| `packages/core`          | Internal design tokens and theme definitions (not published)  |
+| `packages/tailwind`      | Tailwind CSS theme with `nx:` prefix                          |
+| `packages/react`         | React components built with Radix UI and Tailwind CSS         |
+| `packages/cli`           | `nxds-cli`, which installs nxds into an app                   |
+| `packages/claude-design` | nxds as a Claude Design System, built on every release        |
+| `apps/docs`              | Documentation site (Next.js — IA shell + live theme explorer) |
+| `plugins/nxds`           | The nxds skills for Claude Code and other AI agents           |
 
 ## Where to learn more
 

@@ -15,9 +15,12 @@ import { importSpecifiers } from './files.mjs';
 import { publicExports } from './props-contract.mjs';
 import {
   type ComponentEntry,
+  cvaDefaultVariants,
   literalDefaultValue,
   type PropsFile,
+  symbolAt,
   toPropsFile,
+  typeofArgument,
 } from './props-entries.ts';
 import {
   isUnder,
@@ -30,6 +33,7 @@ import {
 const COMPONENT_SPECIFIER = './components/';
 
 export type VueProgram = ReturnType<typeof createVueProgram>;
+export type { PropertyMetaSchema };
 
 function fail(message: string): never {
   throw new Error(`vue-sources: ${message}`);
@@ -131,15 +135,95 @@ function propType(prop: PropertyMeta, localAliases: Set<string>) {
   return members && members.length > 1 ? members.join(' | ') : type;
 }
 
-/** A prop's `withDefaults` value, held to the React props contract: a literal or nothing. */
-function propDefault(prop: PropertyMeta, owner: string) {
-  return prop.default === undefined
-    ? null
-    : literalDefaultValue(prop.default, owner);
+/** The `defineProps` / `defineEmits` call in a part's compiled script. */
+function macroCall(
+  sourceFile: ts.SourceFile,
+  macro: 'defineProps' | 'defineEmits'
+) {
+  let found: ts.CallExpression | undefined;
+  const visit = (node: ts.Node) => {
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === macro
+    ) {
+      found = node;
+    }
+    if (!found) ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
+  return found;
 }
 
-/** Whether a prop or event is declared in @nxds/vue rather than inherited from a dependency. */
-export function isOwnDeclaration(declarations: { file: string }[]) {
+/**
+ * The cva `defaultVariants` value for a prop typed `XVariants['key']`, where
+ * `XVariants` is `VariantProps<typeof x>`: the default React reads from the
+ * same recipe when its component leaves the prop unset.
+ */
+function variantDefault(
+  vueProgram: VueProgram,
+  file: string,
+  propName: string
+) {
+  const program =
+    vueProgram.checker.getProgram() ?? fail('the Vue checker has no program.');
+  const typeChecker = program.getTypeChecker();
+  const sourceFile = program.getSourceFile(file);
+  const propsType =
+    sourceFile && macroCall(sourceFile, 'defineProps')?.typeArguments?.[0];
+  if (!propsType) return null;
+
+  const declaration = typeChecker
+    .getTypeFromTypeNode(propsType)
+    .getProperty(propName)?.declarations?.[0];
+  const type =
+    declaration && ts.isPropertySignature(declaration)
+      ? declaration.type
+      : undefined;
+  if (
+    !type ||
+    !ts.isIndexedAccessTypeNode(type) ||
+    !ts.isTypeReferenceNode(type.objectType) ||
+    !ts.isLiteralTypeNode(type.indexType) ||
+    !ts.isStringLiteral(type.indexType.literal)
+  ) {
+    return null;
+  }
+
+  const key = type.indexType.literal.text;
+  const alias = symbolAt(
+    typeChecker,
+    type.objectType.typeName
+  )?.declarations?.find(ts.isTypeAliasDeclaration);
+  const variants = alias && typeofArgument(alias.type);
+  const cva =
+    variants?.kind === 'variants'
+      ? symbolAt(typeChecker, variants.query.exprName)
+      : undefined;
+  if (!cva) return null;
+
+  const defaults = new Map(cvaDefaultVariants(typeChecker, cva));
+  return defaults.get(key)?.() ?? null;
+}
+
+/**
+ * A prop's `withDefaults` value, held to the React props contract: a literal
+ * or nothing. A variant prop left unset falls back to its recipe's default.
+ * `undefined` only turns off Vue's boolean casting, so it counts as unset.
+ */
+function propDefault(
+  vueProgram: VueProgram,
+  { name, file }: VuePart,
+  prop: PropertyMeta
+) {
+  if (prop.default === undefined || prop.default === 'undefined') {
+    return variantDefault(vueProgram, file, prop.name);
+  }
+  return literalDefaultValue(prop.default, `${name}.${prop.name}`);
+}
+
+/** Whether a prop is declared in @nxds/vue rather than inherited from a dependency. */
+function isOwnDeclaration(declarations: { file: string }[]) {
   return declarations.some(({ file }) => isUnder(file, vueSrc));
 }
 
@@ -154,10 +238,44 @@ export function componentParts(vueProgram: VueProgram, slug: string) {
 
 export type VuePart = ReturnType<typeof componentParts>[number];
 
+/**
+ * The events a part's `defineEmits<…>()` declares in @nxds/vue rather than
+ * takes from a dependency's emits type. `vue-component-meta` resolves every
+ * event to Vue's own `defineEmits` signature, so its declarations can't tell.
+ */
+export function ownEvents(vueProgram: VueProgram, { file }: VuePart) {
+  const program =
+    vueProgram.checker.getProgram() ?? fail('the Vue checker has no program.');
+  const sourceFile = program.getSourceFile(file);
+  const emits = sourceFile && macroCall(sourceFile, 'defineEmits');
+  if (!emits) return [];
+
+  const emitsType =
+    emits.typeArguments?.[0] ??
+    fail(`${toRepoPath(file)} calls defineEmits without a type argument.`);
+  const isOwn = (declaration: ts.Declaration) =>
+    isUnder(declaration.getSourceFile().fileName, vueSrc);
+  const type = program.getTypeChecker().getTypeFromTypeNode(emitsType);
+  const hasOwnCallSignature = type
+    .getCallSignatures()
+    .some((signature) => signature.declaration && isOwn(signature.declaration));
+  if (hasOwnCallSignature) {
+    fail(
+      `${toRepoPath(file)} declares its emits as call signatures. Use the named-tuple form, \`{ event: [arg: Type] }\`.`
+    );
+  }
+
+  return type
+    .getProperties()
+    .filter((event) => (event.declarations ?? []).some(isOwn))
+    .map((event) => event.name);
+}
+
 export function partEntry(
-  { name, file, meta }: VuePart,
-  localAliases: Set<string>
+  vueProgram: VueProgram,
+  part: VuePart
 ): ComponentEntry {
+  const { name, file, meta } = part;
   return {
     name,
     description: '',
@@ -168,9 +286,9 @@ export function partEntry(
       )
       .map((prop) => ({
         name: prop.name,
-        type: propType(prop, localAliases),
+        type: propType(prop, vueProgram.localAliases),
         required: prop.required,
-        defaultValue: propDefault(prop, `${name}.${prop.name}`),
+        defaultValue: propDefault(vueProgram, part, prop),
         description: prop.description,
       }))
       .sort((a, b) => a.name.localeCompare(b.name, 'en')),
@@ -183,9 +301,7 @@ export function componentProps(
 ): PropsFile {
   return toPropsFile(
     slug,
-    componentParts(vueProgram, slug).map((part) =>
-      partEntry(part, vueProgram.localAliases)
-    )
+    componentParts(vueProgram, slug).map((part) => partEntry(vueProgram, part))
   );
 }
 

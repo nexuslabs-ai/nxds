@@ -266,6 +266,9 @@ function FieldSeparator({
   );
 }
 
+/** Validation errors for a field, in the shape form libraries report them. */
+type FieldErrors = Array<{ message?: string } | undefined>;
+
 /**
  * FieldErrorProps
  *
@@ -274,9 +277,9 @@ function FieldSeparator({
 interface FieldErrorProps extends React.ComponentProps<'div'> {
   /**
    * Validation errors to show. Duplicate messages show once, and several render
-   * as a list. Ignored when `children` is set.
+   * as a list. Ignored when the error has content of its own.
    */
-  errors?: Array<{ message?: string } | undefined>;
+  errors?: FieldErrors;
 }
 
 /**
@@ -316,7 +319,7 @@ function FieldError({
 }
 
 /** Unique, non-empty error messages in first-seen order. */
-function dedupeErrorMessages(errors: FieldErrorProps['errors']): string[] {
+function dedupeErrorMessages(errors: FieldErrors | undefined): string[] {
   const seen = new Map<string, string>();
   for (const error of errors ?? []) {
     if (error?.message) seen.set(error.message, error.message);
@@ -341,6 +344,7 @@ export {
   FieldDescription,
   FieldError,
   type FieldErrorProps,
+  type FieldErrors,
   FieldGroup,
   FieldLabel,
   FieldLegend,

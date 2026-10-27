@@ -21,9 +21,10 @@ nxds brings Tailwind into the app for the first time.
 | `/settings` | An MUI settings page with nxds sections dropped in |
 | `/overlays` | An MUI dialog holding nxds select, popover, menu and tooltip, and the reverse. MUI's Snackbar beside nxds's toast |
 
-The app bar's theme switch drives both theme systems: MUI's `useColorScheme`
-and the nxds appearance provider. MUI uses `colorSchemeSelector: 'class'`, so
-both share the `.dark` class on `<html>`.
+The app bar's theme switch sets the nxds mode, and MUI follows it through
+`useColorScheme` (`MuiFollowsNxds` in `src/main.tsx`). MUI uses
+`colorSchemeSelector: 'class'`, so both read the `.dark` class nxds writes on
+`<html>`.
 
 ## Run it
 

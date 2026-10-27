@@ -30,15 +30,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <NxdsAppearanceScript storageKey={APPEARANCE_STORAGE_KEY} defaultState={DEFAULT_NXDS_APPEARANCE} />
       </head>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
-          <NxdsAppearanceProvider storageKey={APPEARANCE_STORAGE_KEY} defaultState={DEFAULT_NXDS_APPEARANCE}>
+        <NxdsAppearanceProvider storageKey={APPEARANCE_STORAGE_KEY} defaultState={DEFAULT_NXDS_APPEARANCE}>
+          <ThemeProvider attribute="class" defaultTheme={DEFAULT_NXDS_APPEARANCE.mode} disableTransitionOnChange>
             <TooltipProvider>
               <AppShell>{children}</AppShell>
               <Toaster />
               <NxdsToaster />
             </TooltipProvider>
-          </NxdsAppearanceProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </NxdsAppearanceProvider>
       </body>
     </html>
   )

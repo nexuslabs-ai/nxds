@@ -1,5 +1,109 @@
 # @nxds/vue
 
+## 0.7.0
+
+### Minor Changes
+
+- 4181e9b: Add chat components that match their React counterparts.
+
+  | Component       | Parts                                                                                                                                                                               | Notes                                                                                                   |
+  | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+  | Attachment      | `Attachment`, `AttachmentMedia`, `AttachmentContent`, `AttachmentTitle`, `AttachmentDescription`, `AttachmentActions`, `AttachmentProgress`, `AttachmentTrigger`, `AttachmentGroup` | Put a badge after the file name in `AttachmentTitle`'s `#trailing` slot                                 |
+  | Bubble          | `Bubble`, `BubbleGroup`, `BubbleContent`, `BubbleReactions`                                                                                                                         |                                                                                                         |
+  | Message         | `Message`, `MessageGroup`, `MessageAvatar`, `MessageContent`, `MessageHeader`, `MessageFooter`                                                                                      |                                                                                                         |
+  | MessageScroller | `MessageScrollerProvider`, `MessageScroller`, `MessageScrollerViewport`, `MessageScrollerContent`, `MessageScrollerItem`, `MessageScrollerButton`                                   | Read the scroll state with `useMessageScroller`, or from `MessageScrollerProvider`'s default slot props |
+  | Sonner          | `Toaster`, `toast`, `useSonner`                                                                                                                                                     | Install `vue-sonner` in your app to use it                                                              |
+
+### Patch Changes
+
+- Updated dependencies [bfd0509]
+  - @nxds/core@0.10.0
+
+## 0.6.0
+
+### Minor Changes
+
+- be76459: Add command and filter components that match their React counterparts.
+
+  | Component       | Parts                                                                                                                                                             | Notes                                                                                                |
+  | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+  | Command         | `Command`, `CommandDialog`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandLoading`, `CommandGroup`, `CommandSeparator`, `CommandItem`, `CommandShortcut` | Bind the search with `v-model` on `CommandInput`. `select` passes the item's value                   |
+  | Combobox        | `Combobox`, `ComboboxTrigger`, `ComboboxContent`, `ComboboxInput`, `ComboboxList`, `ComboboxEmpty`, `ComboboxGroup`, `ComboboxSeparator`, `ComboboxItem`          | Binds the open state with `v-model:open`                                                             |
+  | MultiSelect     | `MultiSelect`, `MultiSelectTrigger`, `MultiSelectValue`, `MultiSelectContent`, `MultiSelectItem`, `MultiSelectGroup`, `MultiSelectSeparator`                      | Emits `values-change` with the selected values                                                       |
+  | FilterChip      | `FilterChip`                                                                                                                                                      |                                                                                                      |
+  | FilterCondition | `FilterCondition`, `FilterConditionField`, `FilterConditionSegment`, `FilterConditionRemove`                                                                      |                                                                                                      |
+  | FilterBuilder   | `FilterBuilder`                                                                                                                                                   | Emits `value-change` with the new tree. `getFilterErrors` validates it                               |
+  | DatePicker      | `DatePicker`, `DatePickerDayButton`                                                                                                                               | Set `mode` to `single`, `multiple` or `range`. Install `@internationalized/date` for its date values |
+
+## 0.5.0
+
+### Minor Changes
+
+- 222a488: Add layout and data-display components that match their React counterparts.
+
+  | Component       | Parts                                                                                                                                                                  | Notes                                                            |
+  | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+  | Accordion       | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`                                                                                                   | Binds the open items with `v-model`                              |
+  | Collapsible     | `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent`                                                                                                              | Binds the open state with `v-model:open`                         |
+  | Avatar          | `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarStatus`, `AvatarGroup`                                                                                               | An Avatar in an AvatarGroup takes the group's `size` and `shape` |
+  | Breadcrumb      | `Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage`, `BreadcrumbSeparator`, `BreadcrumbEllipsis`, `BreadcrumbMenuTrigger`             |                                                                  |
+  | Item            | `Item`, `ItemGroup`, `ItemSeparator`, `ItemMedia`, `ItemContent`, `ItemTitle`, `ItemDescription`, `ItemActions`, `ItemHeader`, `ItemFooter`                            |                                                                  |
+  | EmptyState      | `EmptyState`, `EmptyStateHeader`, `EmptyStateMedia`, `EmptyStateTitle`, `EmptyStateDescription`, `EmptyStateContent`                                                   |                                                                  |
+  | DescriptionList | `DescriptionList`, `DescriptionListItem`, `DescriptionListTerm`, `DescriptionListDescription`                                                                          |                                                                  |
+  | Marker          | `Marker`, `MarkerIcon`, `MarkerContent`                                                                                                                                |                                                                  |
+  | Pagination      | `Pagination`, `PaginationContent`, `PaginationItem`, `PaginationLink`, `PaginationPrevious`, `PaginationNext`, `PaginationEllipsis`                                    |                                                                  |
+  | PageHeader      | `PageHeader`, `PageHeaderContent`, `PageHeaderMeta`, `PageHeaderTitleRow`, `PageHeaderTitle`, `PageHeaderDescription`, `PageHeaderActions`                             |                                                                  |
+  | ScrollArea      | `ScrollArea`, `ScrollBar`                                                                                                                                              |                                                                  |
+  | Resizable       | `ResizablePanelGroup`, `ResizablePanel`, `ResizableHandle`                                                                                                             |                                                                  |
+  | Table           | `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `TableRowHeader`, `TableCaption`, `TableSelectionHead`, `TableSelectionCell` |                                                                  |
+  | Carousel        | `Carousel`, `CarouselContent`, `CarouselItem`, `CarouselPrevious`, `CarouselNext`                                                                                      | Install `embla-carousel-vue` in your app to use it               |
+
+### Patch Changes
+
+- Updated dependencies [5daa687]
+  - @nxds/core@0.9.1
+
+## 0.4.0
+
+### Minor Changes
+
+- 5d0711d: Add overlay components that match their React counterparts.
+
+  | Component      | Parts                                                                                                                                                                                                                                                                                                                                                   | Notes                                                               |
+  | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+  | Popover        | `Popover`, `PopoverTrigger`, `PopoverAnchor`, `PopoverContent`                                                                                                                                                                                                                                                                                          |                                                                     |
+  | Tooltip        | `Tooltip`, `TooltipTrigger`, `TooltipContent`, `TooltipProvider`                                                                                                                                                                                                                                                                                        | A Tooltip works on its own and joins a `TooltipProvider` above it   |
+  | HoverCard      | `HoverCard`, `HoverCardTrigger`, `HoverCardContent`                                                                                                                                                                                                                                                                                                     |                                                                     |
+  | DropdownMenu   | `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuCheckboxItem`, `DropdownMenuRadioGroup`, `DropdownMenuRadioItem`, `DropdownMenuLabel`, `DropdownMenuSeparator`, `DropdownMenuShortcut`, `DropdownMenuGroup`, `DropdownMenuSub`, `DropdownMenuSubTrigger`, `DropdownMenuSubContent`, `DropdownMenuPortal` | Checkbox items and radio groups bind with `v-model`                 |
+  | ContextMenu    | The same parts as DropdownMenu, named `ContextMenu*`                                                                                                                                                                                                                                                                                                    | Opens on right-click                                                |
+  | Menubar        | The same parts as DropdownMenu, named `Menubar*`, plus `Menubar` and `MenubarMenu`                                                                                                                                                                                                                                                                      |                                                                     |
+  | AlertDialog    | `AlertDialog`, `AlertDialogTrigger`, `AlertDialogContent`, `AlertDialogHeader`, `AlertDialogBody`, `AlertDialogFooter`, `AlertDialogTitle`, `AlertDialogDescription`, `AlertDialogAction`, `AlertDialogCancel`, `AlertDialogOverlay`, `AlertDialogPortal`                                                                                               | `variant="center"` centers the header and stacks full-width actions |
+  | Sheet          | `Sheet`, `SheetTrigger`, `SheetClose`, `SheetContent`, `SheetHeader`, `SheetBody`, `SheetFooter`, `SheetTitle`, `SheetDescription`, `SheetOverlay`, `SheetPortal`                                                                                                                                                                                       | `side` picks the edge it slides from                                |
+  | Select         | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`, `SelectScrollUpButton`, `SelectScrollDownButton`                                                                                                                                                                              | Binds the value with `v-model`                                      |
+  | NavigationMenu | `NavigationMenu`, `NavigationMenuList`, `NavigationMenuItem`, `NavigationMenuTrigger`, `NavigationMenuContent`, `NavigationMenuLink`, `NavigationMenuIndicator`, `NavigationMenuViewport`                                                                                                                                                               | Set `:viewport="false"` to open each flyout under its own trigger   |
+  | Drawer         | `Drawer`, `DrawerTrigger`, `DrawerClose`, `DrawerContent`, `DrawerHeader`, `DrawerBody`, `DrawerFooter`, `DrawerTitle`, `DrawerDescription`, `DrawerOverlay`, `DrawerPortal`                                                                                                                                                                            | Install `vaul-vue` in your app to use it                            |
+
+  The component styles now import `tw-animate-css`, which NavigationMenu uses for its flyout motion. Install it in your app and import it after the token CSS.
+
+## 0.3.0
+
+### Minor Changes
+
+- 407ff12: Add form composites that match their React counterparts.
+
+  | Component   | Parts                                                                                                                                                                      | Notes                                                               |
+  | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+  | ButtonGroup | `ButtonGroup`, `ButtonGroupText`, `ButtonGroupSeparator`                                                                                                                   | `size` reaches every Button and ButtonGroupText in the group        |
+  | Field       | `Field`, `FieldSet`, `FieldLegend`, `FieldGroup`, `FieldContent`, `FieldLabel`, `FieldTitle`, `FieldDescription`, `FieldSeparator`, `FieldError`, `FieldRequiredIndicator` | Pass `errors` to FieldError, or put the message in its slot         |
+  | ChoiceRow   | `ChoiceRow`, `ChoiceRowContent`, `ChoiceRowTitle`, `ChoiceRowDescription`                                                                                                  | Set `for` to the nested control's `id`                              |
+  | ChoiceCard  | `ChoiceCard`, `ChoiceCardContent`, `ChoiceCardTitle`, `ChoiceCardDescription`                                                                                              | Set `for` to the nested control's `id`                              |
+  | InputGroup  | `InputGroup`, `InputGroupAddon`, `InputGroupButton`, `InputGroupText`, `InputGroupInput`, `InputGroupTextarea`                                                             | InputGroupInput and InputGroupTextarea bind with `v-model`          |
+  | ToggleGroup | `ToggleGroup`, `ToggleGroupItem`                                                                                                                                           | Binds with `v-model`; a `type="single"` group's items are radios    |
+  | Slider      | `Slider`                                                                                                                                                                   | Binds the values with `v-model`; one thumb per value                |
+  | InputOTP    | `InputOTP`, `InputOTPGroup`, `InputOTPSlot`, `InputOTPSeparator`                                                                                                           | Built on Reka PinInput; binds one character per slot with `v-model` |
+
+  A `Button` without its own `size` now takes the size of the `ButtonGroup` around it, even when another element wraps it.
+
 ## 0.2.0
 
 ### Minor Changes

@@ -86,7 +86,7 @@ const SETUP_SOURCES = {
   },
   vue: {
     roots: ['components/appearance/index.ts', 'lib/utils.ts'],
-    packages: [],
+    packages: ['tw-animate-css'],
     steps: [],
   },
 };

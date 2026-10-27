@@ -15,7 +15,6 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material'
-import { useColorScheme } from '@mui/material/styles'
 import { Link, Route, Routes, useLocation } from 'react-router'
 
 import { useNxdsAppearance } from './components/nxds/components/appearance/provider'
@@ -32,17 +31,12 @@ const NAV = [
   { to: '/overlays', label: 'Overlays', icon: <LayersIcon /> },
 ]
 
-// One switch drives both theme systems, so they never disagree about the
-// shared .dark class on <html>.
 function ThemeToggle() {
-  const { mode, setMode } = useColorScheme()
-  const { setState } = useNxdsAppearance()
-  const dark = mode === 'dark'
+  const { setState, resolvedMode } = useNxdsAppearance()
+  const dark = resolvedMode === 'dark'
 
   function toggleTheme() {
-    const next = dark ? 'light' : 'dark'
-    setMode(next)
-    setState((current) => ({ ...current, mode: next }))
+    setState((current) => ({ ...current, mode: dark ? 'light' : 'dark' }))
   }
 
   return (

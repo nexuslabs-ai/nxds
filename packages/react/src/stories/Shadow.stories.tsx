@@ -7,41 +7,19 @@ import {
 } from './support/runtime-token-values';
 
 const RUNTIME_SHADOW_TIERS = [
-  { name: '2xs', className: 'nx:shadow-2xs', layers: 1 },
-  { name: 'xs', className: 'nx:shadow-xs', layers: 1 },
-  { name: 'sm', className: 'nx:shadow-sm', layers: 2 },
-  { name: 'base', className: 'nx:shadow-base', layers: 2 },
-  { name: 'md', className: 'nx:shadow-md', layers: 2 },
-  { name: 'lg', className: 'nx:shadow-lg', layers: 2 },
-  { name: 'xl', className: 'nx:shadow-xl', layers: 2 },
-  { name: '2xl', className: 'nx:shadow-2xl', layers: 1 },
+  { name: '2xs', className: 'nx:shadow-2xs' },
+  { name: 'xs', className: 'nx:shadow-xs' },
+  { name: 'sm', className: 'nx:shadow-sm' },
+  { name: 'base', className: 'nx:shadow-base' },
+  { name: 'md', className: 'nx:shadow-md' },
+  { name: 'lg', className: 'nx:shadow-lg' },
+  { name: 'xl', className: 'nx:shadow-xl' },
+  { name: '2xl', className: 'nx:shadow-2xl' },
 ] as const;
 
-const SHADOW_PARTS = ['x', 'y', 'blur', 'spread', 'color'] as const;
-const SHADOW_TOKEN_NAMES = RUNTIME_SHADOW_TIERS.flatMap((tier) =>
-  Array.from({ length: tier.layers }, (_, index) =>
-    SHADOW_PARTS.map(
-      (part) => `--nx-shadow-${tier.name}-layer-${index + 1}-${part}`
-    )
-  ).flat()
+const SHADOW_TOKEN_NAMES = RUNTIME_SHADOW_TIERS.map(
+  (tier) => `--nx-shadow-${tier.name}`
 );
-
-function composeShadowSummary(
-  tier: (typeof RUNTIME_SHADOW_TIERS)[number],
-  values: Record<string, string>
-): string {
-  return Array.from({ length: tier.layers }, (_, index) => {
-    const layer = index + 1;
-    const prefix = `--nx-shadow-${tier.name}-layer-${layer}`;
-    return [
-      tokenValue(values, `${prefix}-x`),
-      tokenValue(values, `${prefix}-y`),
-      tokenValue(values, `${prefix}-blur`),
-      tokenValue(values, `${prefix}-spread`),
-      tokenValue(values, `${prefix}-color`),
-    ].join(' ');
-  }).join(', ');
-}
 
 function RuntimeUtilityCard({
   tier,
@@ -93,7 +71,7 @@ function RuntimeUtilitiesStory() {
             key={tier.name}
             tier={tier.name}
             className={tier.className}
-            shadowValue={composeShadowSummary(tier, values)}
+            shadowValue={tokenValue(values, `--nx-shadow-${tier.name}`)}
           />
         ))}
       </div>
@@ -109,7 +87,7 @@ const meta: Meta = {
     docs: {
       description: {
         component:
-          'Shadow primitives rendered through the public runtime utilities. Elevation is controlled by the Storybook toolbar; token-only modes such as flat and soft are intentionally not exposed as public Appearance options.',
+          'Shadow styles rendered through the public runtime utilities. Elevation is controlled by the Storybook toolbar; token-only modes such as flat and soft are intentionally not exposed as public Appearance options.',
       },
     },
   },

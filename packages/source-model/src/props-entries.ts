@@ -83,7 +83,7 @@ function literalDefault(
   );
 }
 
-function symbolAt(
+export function symbolAt(
   checker: ts.TypeChecker,
   node: ts.Node
 ): ts.Symbol | undefined {
@@ -102,7 +102,7 @@ function componentFunction(symbol: ts.Symbol) {
 }
 
 // The `typeof x` in `VariantProps<typeof x>` or `ComponentProps<typeof x>`.
-function typeofArgument(
+export function typeofArgument(
   node: ts.Node
 ): { kind: 'variants' | 'component'; query: ts.TypeQueryNode } | undefined {
   if (
@@ -126,7 +126,7 @@ function typeofArgument(
   return undefined;
 }
 
-function cvaDefaultVariants(
+export function cvaDefaultVariants(
   checker: ts.TypeChecker,
   cva: ts.Symbol
 ): [string, LazyDefault][] {
@@ -163,7 +163,10 @@ function destructuringDefaults(
   return parameter.name.elements.flatMap(
     ({ dotDotDotToken, initializer, name, propertyName }) => {
       if (!initializer || dotDotDotToken) return [];
-      const key = (propertyName ?? name).getText();
+      const keyNode = propertyName ?? name;
+      const key = ts.isStringLiteral(keyNode)
+        ? keyNode.text
+        : keyNode.getText();
       return [
         [key, () => literalDefault(checker, initializer, `${owner}.${key}`)],
       ];

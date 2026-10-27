@@ -2,12 +2,17 @@ import {
   componentsRoot,
   vueComponentsRoot,
 } from '@nxds/source-model/roots.mjs';
-import { readFileSync } from 'node:fs';
+import { readVueScript } from '@nxds/source-model/vue-sources.ts';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
-import { shared, vueOnlyDeclarations } from './parity.ts';
+import {
+  frameworkDeclarations,
+  shared,
+  vueOnlyDeclarations,
+} from './parity.ts';
 
 const printer = ts.createPrinter({ removeComments: true });
 
@@ -25,17 +30,27 @@ const RECIPE_FILES: [react: string, vue: string][] = [
   ],
 ];
 
+/** `[react, vue]` pairs of each shared component's file and its Vue SFCs, which copy React's private helpers. */
+const SFC_FILES: [react: string, vue: string][] = shared.flatMap((slug) =>
+  readdirSync(path.join(vueComponentsRoot, slug))
+    .filter((file) => file.endsWith('.vue'))
+    .map((file): [string, string] => [
+      path.join(componentsRoot, slug, `${slug}.tsx`),
+      path.join(vueComponentsRoot, slug, file),
+    ])
+);
+
 function withoutExport(modifiers: ts.NodeArray<ts.ModifierLike> | undefined) {
   return modifiers?.filter(
     (modifier) => modifier.kind !== ts.SyntaxKind.ExportKeyword
   );
 }
 
-/** Each top-level `const` and `function` in `file`, printed without `export` or comments. */
+/** Each top-level `const` and `function` in `file`, or in a `.vue` file's scripts, printed without `export` or comments. */
 function valueDeclarations(file: string) {
   const source = ts.createSourceFile(
     file,
-    readFileSync(file, 'utf8'),
+    readVueScript(file),
     ts.ScriptTarget.Latest,
     true,
     file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
@@ -67,18 +82,27 @@ function valueDeclarations(file: string) {
   return declared;
 }
 
-const declarations = RECIPE_FILES.flatMap(([reactFile, vueFile]) => {
-  const react = valueDeclarations(reactFile);
-  const key = path.relative(vueComponentsRoot, vueFile);
-  return [...valueDeclarations(vueFile)].map(([name, vue]) => ({
-    id: `${key}#${name}`,
-    vueFile,
-    vue,
-    react: react.get(name),
-  }));
-});
+/** Each declaration in the Vue files, with its React twin of the same name. */
+function declarationPairs(files: [react: string, vue: string][]) {
+  return files.flatMap(([reactFile, vueFile]) => {
+    const react = valueDeclarations(reactFile);
+    const key = path.relative(vueComponentsRoot, vueFile);
+    return [...valueDeclarations(vueFile)].map(([name, vue]) => ({
+      id: `${key}#${name}`,
+      vueFile,
+      vue,
+      react: react.get(name),
+    }));
+  });
+}
 
-const paired = declarations.filter(({ react }) => react !== undefined);
+const declarations = declarationPairs(RECIPE_FILES);
+
+// An SFC also declares its props, emits and state, so only the helpers React
+// declares by the same name are compared.
+const paired = [...declarations, ...declarationPairs(SFC_FILES)].filter(
+  ({ react }) => react !== undefined
+);
 
 /** The source of each shared component's React file, where its recipes are used. */
 const sharedReactSources = shared.map((slug) =>
@@ -134,7 +158,23 @@ describe('class recipes', () => {
     expect(recipeFiles.length).toBeGreaterThan(0);
   });
 
-  it.each(paired)('$id matches React', ({ vue, react }) => {
-    expect(vue).toBe(react);
+  it('allows only framework declarations that still differ from React', () => {
+    const stale = Object.keys(frameworkDeclarations).filter(
+      (id) =>
+        !declarations.some(
+          (declaration) =>
+            declaration.id === id &&
+            declaration.react !== undefined &&
+            declaration.vue !== declaration.react
+        )
+    );
+    expect(stale).toEqual([]);
   });
+
+  it.each(paired.filter(({ id }) => !(id in frameworkDeclarations)))(
+    '$id matches React',
+    ({ vue, react }) => {
+      expect(vue).toBe(react);
+    }
+  );
 });

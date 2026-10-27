@@ -6,7 +6,7 @@
     {
       "name": "nxds",
       "source": "./plugins/nxds",
-      "description": "Add and use nxds components with the nxds CLI."
+      "description": "Add and use nxds components with the nxds CLI, on their own or next to another UI library."
     }
   ]
 }

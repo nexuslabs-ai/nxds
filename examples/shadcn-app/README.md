@@ -20,8 +20,8 @@ and what adding nxds changes in the app.
 | `/settings` | A shadcn settings page with nxds sections dropped in: an nxds notifications card, an nxds table inside a shadcn card, an nxds dialog |
 | `/overlays` | A shadcn dialog holding nxds select, popover, menu and tooltip, and the reverse. Toasts from both systems |
 
-The header's theme switch drives both theme systems: the app's `next-themes`
-and the nxds appearance provider.
+The header's theme switch sets the nxds mode, and the app's `next-themes`
+follows it (`NextThemesFollowsNxds` in `components/theme-provider.tsx`).
 
 ## Run it
 
@@ -47,8 +47,9 @@ then shows what changed for consumers.
    own `@import "tailwindcss"`.
 4. `app/layout.tsx` adds `NxdsAppearanceScript`, `NxdsAppearanceProvider` and
    nxds's `Toaster`.
-5. The header's theme switch sets both `next-themes` and the nxds provider, so
-   they agree on the shared `.dark` class.
+5. `next-themes` moves inside the nxds provider and follows the nxds mode, so
+   both agree on the shared `.dark` class. The header's theme switch sets only
+   the nxds mode.
 
 ## Check it
 
