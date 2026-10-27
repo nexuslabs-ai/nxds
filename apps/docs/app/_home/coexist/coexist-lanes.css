@@ -104,7 +104,6 @@
    card across the row gap. */
 @utility coexist-lanes-library {
   position: relative;
-  justify-self: center;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
