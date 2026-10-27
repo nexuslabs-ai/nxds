@@ -28,6 +28,7 @@ const FAMILIES: Record<ScaleFamily, string> = {
   shadow: 'Shadow',
   typography: 'Typography',
   motion: 'Motion',
+  icon: 'Icon size',
   'z-index': 'Z-index',
   breakpoint: 'Breakpoints',
 };

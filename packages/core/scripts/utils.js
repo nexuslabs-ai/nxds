@@ -22,6 +22,7 @@ import {
   borderWidthAliasUtilities,
   DEFAULT_TRANSITION,
   durationUtility,
+  iconSizeUtility,
 } from '../src/token-source/utilities.ts';
 
 /**
@@ -420,6 +421,25 @@ export function generateBorderWidthUtilitiesCSS(tokens) {
   css += rules.map(formatUtilityRule).join('');
 
   return { css, count: rules.length };
+}
+
+/**
+ * Generate the `size-icon-{name}` utilities for every icon token. They read
+ * the fixed `--nx-icon-*` variables, so icons keep their size at every
+ * density.
+ *
+ * @param {object[]} tokens - Array of icon tokens with cssName property (e.g., "nx-icon-glyph-default")
+ * @returns {{ css: string, count: number }} Generated CSS and utility count
+ */
+export function generateIconUtilitiesCSS(tokens) {
+  const rules = tokens.map((token) =>
+    iconSizeUtility(token.cssName.replace('nx-icon-', ''))
+  );
+
+  return {
+    css: `/* Icon Size Utilities */\n\n${rules.map(formatUtilityRule).join('')}`,
+    count: rules.length,
+  };
 }
 
 /**
