@@ -22,6 +22,7 @@ import { Skeleton } from '../skeleton/skeleton';
 import {
   Tooltip,
   TooltipContent,
+  type TooltipContentProps,
   TooltipProvider,
   TooltipTrigger,
 } from '../tooltip/tooltip';
@@ -86,7 +87,7 @@ interface SidebarProviderProps extends React.ComponentProps<'div'> {
    */
   open?: boolean;
   /**
-   * Called when the open state changes in controlled mode.
+   * Called when the open state changes.
    */
   onOpenChange?: (open: boolean) => void;
 }
@@ -115,22 +116,20 @@ const SidebarProvider = React.forwardRef<
   const isNarrow = useIsNarrow();
   const [openNarrow, setOpenNarrow] = React.useState(false);
 
-  // Internal open state; openProp/setOpenProp take over when controlled.
+  // Internal open state; openProp takes over when controlled.
   const [_open, _setOpen] = React.useState(defaultOpen);
   const open = openProp ?? _open;
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === 'function' ? value(open) : value;
-      if (setOpenProp) {
-        setOpenProp(openState);
-        return;
-      }
+      setOpenProp?.(openState);
+      if (openProp !== undefined) return;
 
       _setOpen(openState);
       // Persist non-sensitive uncontrolled open state for server-side restore.
       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}; SameSite=Lax`;
     },
-    [setOpenProp, open]
+    [setOpenProp, openProp, open]
   );
 
   const toggleSidebar = React.useCallback(() => {
@@ -888,7 +887,7 @@ interface SidebarMenuButtonProps
   /**
    * Tooltip shown only on the icon rail. A string or `TooltipContent` props.
    */
-  tooltip?: string | React.ComponentProps<typeof TooltipContent>;
+  tooltip?: string | TooltipContentProps;
 }
 
 /**

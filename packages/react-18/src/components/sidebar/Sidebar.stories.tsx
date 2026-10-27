@@ -17,7 +17,7 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 import { useArgs } from 'storybook/preview-api';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
 
@@ -216,6 +216,35 @@ export const InteractiveControls: ControlsStory = {
   },
 };
 
+const onOpenChange = fn();
+export const Controlled: Story = {
+  beforeEach: () => {
+    onOpenChange.mockClear();
+    document.cookie = 'sidebar_state=; path=/; max-age=0';
+  },
+  render: () => (
+    <SidebarProvider open onOpenChange={onOpenChange}>
+      <DemoSidebar />
+      <DemoInset />
+    </SidebarProvider>
+  ),
+  play: async ({ canvasElement }) => {
+    // A controlled provider reports the change and leaves the state to `open`.
+    const sidebar = canvasElement.querySelector(
+      '[data-slot="sidebar"][data-state]'
+    );
+    const trigger = canvasElement.querySelector<HTMLButtonElement>(
+      '[data-slot="sidebar-trigger"]'
+    );
+    await expect(sidebar).toHaveAttribute('data-state', 'expanded');
+
+    await userEvent.click(trigger!);
+    await expect(onOpenChange).toHaveBeenCalledWith(false);
+    await expect(sidebar).toHaveAttribute('data-state', 'expanded');
+    await expect(document.cookie).not.toContain('sidebar_state');
+  },
+};
+
 /**
  * Every `SidebarMenuButton` variant and size, plus an `asChild` link, in an inline panel.
  */
@@ -393,14 +422,14 @@ export const LoadingSkeleton: Story = {
 };
 
 export const NarrowDrawer: Story = {
-  parameters: {
-    viewport: { defaultViewport: 'mobile1' },
+  globals: {
+    viewport: { value: 'mobile', isRotated: false },
   },
   render: () => (
     <SidebarProvider>
       <DemoSidebar />
       <DemoInset>
-        Below the Standard floor (1024px) the sidebar becomes a drawer — tap the
+        Below the md breakpoint (768px) the sidebar becomes a drawer — tap the
         toggle to open it.
       </DemoInset>
     </SidebarProvider>
@@ -416,7 +445,7 @@ export const WithDataAttributes: Story = {
   ),
   play: async ({ canvasElement }) => {
     // data-state / data-variant / data-side live on the desktop docked panel,
-    // which renders because the test viewport is above the `lg` floor.
+    // which renders because the test viewport is at or above `md`.
     const sidebar = canvasElement.querySelector(
       '[data-slot="sidebar"][data-state]'
     );
@@ -450,7 +479,7 @@ export const ClickInteraction: Story = {
     </SidebarProvider>
   ),
   play: async ({ canvasElement }) => {
-    // data-state lives on the desktop docked panel (test viewport ≥ `lg`).
+    // data-state lives on the desktop docked panel (test viewport ≥ `md`).
     const sidebar = canvasElement.querySelector(
       '[data-slot="sidebar"][data-state]'
     );
@@ -475,7 +504,7 @@ export const KeyboardInteraction: Story = {
     </SidebarProvider>
   ),
   play: async ({ canvasElement }) => {
-    // data-state lives on the desktop docked panel (test viewport ≥ `lg`).
+    // data-state lives on the desktop docked panel (test viewport ≥ `md`).
     const sidebar = canvasElement.querySelector(
       '[data-slot="sidebar"][data-state]'
     );
