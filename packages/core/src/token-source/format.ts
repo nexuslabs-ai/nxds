@@ -215,7 +215,7 @@ export function formatTypographyDeclarations(
     declarations.push({ property, value: css });
   }
 
-  if (tokenPath[0] === 'heading') {
+  if (tokenPath[0] === 'display' || tokenPath[0] === 'heading') {
     declarations.push({ property: 'text-wrap', value: 'balance' });
   }
 
