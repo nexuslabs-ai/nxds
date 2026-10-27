@@ -36,7 +36,6 @@ type LaneName = 'other' | 'nexus';
 type Lane = Library & {
   lane: LaneName;
   writes: readonly Write[];
-  note: string;
   verdict: string;
   verdictIcon: ReactNode;
 };
@@ -202,7 +201,6 @@ const hosts = [
       ['--background', 'surface'],
       ['--radius', 'surface'],
     ],
-    note: 'The same names your HeroUI app reads.',
     Sketch: TokensSketch,
   },
   {
@@ -212,7 +210,6 @@ const hosts = [
       ['h1–h6 { font-size: inherit }', 'heading'],
       ['ul { list-style: none }', 'list'],
     ],
-    note: 'Global rules for the plain HTML in your app. MUI components keep their look.',
     Sketch: ResetSketch,
   },
   {
@@ -222,14 +219,12 @@ const hosts = [
       ['h1–h6 { font-size: inherit }', 'heading'],
       ['ul { list-style: none }', 'list'],
     ],
-    note: 'Global rules that the Ant Design reset leaves open.',
     Sketch: ResetSketch,
   },
   {
     tab: 'Bootstrap',
     adds: shadcnSelect,
     writes: [['.collapse { visibility: collapse }', 'nav']],
-    note: 'The class your Bootstrap navbar already uses. Its links stay in place but disappear.',
     Sketch: NavSketch,
   },
   {
@@ -243,7 +238,6 @@ const hosts = [
       ['.bg-primary { background-color: … !important }', 'primary'],
       ['button { border-radius: 0 }', 'action'],
     ],
-    note: 'The same class name your Tailwind uses, and a reset outside Tailwind’s layers.',
     Sketch: PrimarySketch,
   },
 ] as const;
@@ -262,7 +256,6 @@ const nexusLane: Lane = {
     ['--nx-*', null],
     ['.nx:*', null],
   ],
-  note: 'Only its own names. No global rules.',
   verdict: 'Your app stays the same',
   verdictIcon: <IconCircleCheck className="nx:size-4" aria-hidden="true" />,
 };
@@ -285,7 +278,6 @@ function HostLanes({ host }: { host: Host }) {
       lane: 'other',
       ...host.adds,
       writes: host.writes,
-      note: host.note,
       verdict: 'Your app changed',
       verdictIcon: (
         <IconAlertTriangle className="nx:size-4" aria-hidden="true" />
@@ -298,7 +290,7 @@ function HostLanes({ host }: { host: Host }) {
       <p className="nx:coexist-lanes-label">Your {host.tab} app</p>
       <div className="nx:coexist-lanes nx:@3xl:grid-cols-2">
         {lanes.map(
-          ({ lane, icon, name, file, writes, note, verdict, verdictIcon }) => (
+          ({ lane, icon, name, file, writes, verdict, verdictIcon }) => (
             <div key={lane} className="nx:coexist-lanes-card" data-lane={lane}>
               <div className="nx:coexist-lanes-library">
                 {icon}
@@ -307,34 +299,30 @@ function HostLanes({ host }: { host: Host }) {
                   {file}
                 </span>
               </div>
-              <div className="nx:coexist-lanes-writes">
-                <span className="nx:typography-body-small nx:text-muted-foreground">
-                  Writes on the page
-                </span>
-                <div className="nx:coexist-lanes-chips">
-                  {writes.map(([written, part]) => {
-                    const target: Target = { lane, written, part };
-                    return (
-                      <Toggle
-                        key={written}
-                        size="sm"
-                        className="nx:coexist-lanes-chip nx:h-auto nx:whitespace-normal nx:typography-code-inline"
-                        pressed={pinned?.written === written}
-                        onPressedChange={(on) => setPinned(on ? target : null)}
-                        data-active={pointed?.written === written || undefined}
-                        onPointerEnter={() => setHovered(target)}
-                        onPointerLeave={() => setHovered(null)}
-                        onFocus={() => setHovered(target)}
-                        onBlur={() => setHovered(null)}
-                      >
-                        {written}
-                      </Toggle>
-                    );
-                  })}
-                </div>
-                <p className="nx:coexist-lanes-note nx:typography-body-small">
-                  {note}
-                </p>
+              <div
+                className="nx:coexist-lanes-chips"
+                role="group"
+                aria-label="Writes on the page"
+              >
+                {writes.map(([written, part]) => {
+                  const target: Target = { lane, written, part };
+                  return (
+                    <Toggle
+                      key={written}
+                      size="sm"
+                      className="nx:coexist-lanes-chip nx:h-auto nx:whitespace-normal nx:typography-code-inline"
+                      pressed={pinned?.written === written}
+                      onPressedChange={(on) => setPinned(on ? target : null)}
+                      data-active={pointed?.written === written || undefined}
+                      onPointerEnter={() => setHovered(target)}
+                      onPointerLeave={() => setHovered(null)}
+                      onFocus={() => setHovered(target)}
+                      onBlur={() => setHovered(null)}
+                    >
+                      {written}
+                    </Toggle>
+                  );
+                })}
               </div>
               <div className="nx:coexist-lanes-stage nx:dotted-stage">
                 <Sketch

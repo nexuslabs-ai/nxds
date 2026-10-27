@@ -1,11 +1,3 @@
-/* On desktop, tall enough for the tallest example, so the cards keep their
-   size when the visitor switches apps. */
-@utility coexist-lanes-canvas {
-  @media (width >= 64rem) {
-    --preview-min: 32rem;
-  }
-}
-
 /* The chosen app's name, then the other library and Nexus side by side. */
 @utility coexist-lanes-chapter {
   display: grid;
@@ -79,15 +71,10 @@
   }
 }
 
-@utility coexist-lanes-writes {
-  display: grid;
-  align-content: start;
-  gap: var(--nx-spacing-2);
-}
-
 @utility coexist-lanes-chips {
   display: flex;
   flex-wrap: wrap;
+  align-content: start;
   gap: var(--nx-spacing-2);
   margin: 0;
 }
@@ -106,11 +93,6 @@
   &[data-state]:focus-visible {
     outline: var(--nx-borderwidth-thick) solid var(--nx-color-border-focus);
   }
-}
-
-@utility coexist-lanes-note {
-  margin: 0;
-  color: var(--nx-color-muted-foreground);
 }
 
 /* The app sits centred on its stage, which takes the card's spare height. */
