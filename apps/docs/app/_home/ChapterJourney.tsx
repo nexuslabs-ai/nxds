@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { cn } from '@nxds/react/utils';
 import Link from 'next/link';
 
 import { Button } from '@/components/button/button';
@@ -214,7 +215,10 @@ function Chapter({
         </div>
       </div>
       <div
-        className="nx:story-canvas"
+        className={cn(
+          'nx:story-canvas',
+          chapter.id === 'coexist' && 'nx:story-canvas-grows'
+        )}
         role="region"
         aria-labelledby={`story-tab-${index}-${selected}`}
       >

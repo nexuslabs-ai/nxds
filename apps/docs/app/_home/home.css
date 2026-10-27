@@ -114,6 +114,21 @@
   }
 }
 
+/* Below lg a stacked chapter grows its preview, and its section, to fit, so
+   it never scrolls inside. Outranks story-canvas's fixed-size preview. */
+@utility story-canvas-grows {
+  @media (width < 64rem) {
+    &.nx\:story-canvas {
+      container-type: inline-size;
+      flex: none;
+      min-block-size: auto;
+    }
+    &.nx\:story-canvas > * {
+      position: static;
+    }
+  }
+}
+
 /* The bottom fade under the toolbar. */
 @utility preview-fade {
   mask-image: linear-gradient(

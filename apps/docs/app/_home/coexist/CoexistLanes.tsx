@@ -74,15 +74,17 @@ function TokensSketch({ broken, pointed }: SketchProps) {
       data-active={isPointed(pointed, 'surface')}
       aria-hidden="true"
     >
-      <span className="nx:typography-label-default">Design team</span>
-      <span
-        className="nx:coexist-lanes-app-text nx:typography-body-small"
-        data-active={isPointed(pointed, 'muted')}
-      >
-        8 of 10 seats used
+      <span className="nx:grid nx:gap-1">
+        <span className="nx:typography-label-default">Design team</span>
+        <span
+          className="nx:coexist-lanes-app-text nx:typography-body-small"
+          data-active={isPointed(pointed, 'muted')}
+        >
+          8 of 10 seats used
+        </span>
       </span>
       <span
-        className="nx:coexist-lanes-app-button nx:typography-label-small"
+        className="nx:coexist-lanes-app-button nx:typography-label-default"
         data-active={isPointed(pointed, 'accent')}
       >
         Invite teammate
@@ -100,19 +102,21 @@ function ResetSketch({ broken, pointed }: SketchProps) {
       data-broken={broken}
       aria-hidden="true"
     >
-      <span
-        className="nx:coexist-lanes-app-heading nx:typography-heading-small"
-        data-active={isPointed(pointed, 'heading')}
-      >
-        Release notes
-      </span>
-      <ul
-        className="nx:coexist-lanes-app-list nx:typography-body-small"
-        data-active={isPointed(pointed, 'list')}
-      >
-        <li>Faster search</li>
-        <li>New roles</li>
-      </ul>
+      <div className="nx:grid nx:gap-2">
+        <span
+          className="nx:coexist-lanes-app-heading nx:typography-heading-small"
+          data-active={isPointed(pointed, 'heading')}
+        >
+          Release notes
+        </span>
+        <ul
+          className="nx:coexist-lanes-app-list nx:typography-body-small"
+          data-active={isPointed(pointed, 'list')}
+        >
+          <li>Faster search</li>
+          <li>New roles</li>
+        </ul>
+      </div>
     </div>
   );
 }
@@ -157,7 +161,7 @@ function PrimarySketch({ broken, pointed }: SketchProps) {
         </span>
       </span>
       <span
-        className="nx:coexist-lanes-app-primary nx:coexist-lanes-app-action nx:typography-label-small"
+        className="nx:coexist-lanes-app-primary nx:coexist-lanes-app-action nx:typography-label-default"
         data-active={isPointed(pointed, 'primary', 'action')}
       >
         Invite teammate
@@ -351,10 +355,6 @@ function HostLanes({ host }: { host: Host }) {
                 data-lane={lane}
                 aria-label={`${name}: your ${host.tab} app ${lane === 'other' ? 'changed' : 'stays the same'}`}
               >
-                <p className="nx:coexist-lanes-verdict nx:typography-label-default">
-                  {verdictIcon}
-                  {verdict}
-                </p>
                 <p className="nx:coexist-lanes-with nx:typography-body-small nx:@3xl:hidden">
                   With a {name}
                 </p>
@@ -362,6 +362,10 @@ function HostLanes({ host }: { host: Host }) {
                   broken={lane === 'other'}
                   pointed={pointed?.part ?? null}
                 />
+                <p className="nx:coexist-lanes-verdict nx:typography-label-default">
+                  {verdictIcon}
+                  {verdict}
+                </p>
               </section>
             ))}
           </div>

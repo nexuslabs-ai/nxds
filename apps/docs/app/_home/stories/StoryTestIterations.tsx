@@ -429,7 +429,7 @@ export function StoryTestIterations({
         </div>
       </div>
       <div
-        className="nx:story-canvas nx:story-tests-canvas"
+        className="nx:story-canvas nx:story-canvas-grows"
         role="region"
         aria-labelledby={`story-tab-${CHAPTER}-${modeIndex}`}
       >

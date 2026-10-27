@@ -5,21 +5,23 @@
   overflow: hidden;
 }
 
+/* The label row and two tile rows, shared by every column through subgrid,
+   so a row's tiles line up and grow together. */
 @utility coexist-lanes {
   --lane-gap: var(--grid-gap);
   --lane-pad: var(--nx-spacing-3);
   display: grid;
-  gap: var(--lane-gap);
+  grid-template-rows: auto repeat(2, minmax(min-content, 1fr));
+  gap: var(--nx-spacing-6) var(--lane-gap);
   block-size: 100%;
   min-block-size: 0;
   padding-block-end: var(--story-toolbar-clearance);
 }
 
 @utility coexist-lanes-column {
-  grid-template-rows: auto minmax(min-content, 1fr);
-  gap: var(--nx-spacing-6);
+  grid-row: span 3;
+  grid-template-rows: subgrid;
   min-inline-size: 0;
-  min-block-size: 0;
 }
 
 @utility coexist-lanes-label {
@@ -31,9 +33,9 @@
 
 @utility coexist-lanes-panel {
   display: grid;
-  grid-template-rows: repeat(2, minmax(min-content, 1fr));
-  gap: var(--lane-pad);
-  min-block-size: 0;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  row-gap: var(--lane-pad);
   padding: var(--lane-pad);
   border-radius: var(--nx-radius-xl);
   background: var(--nx-color-muted);
@@ -150,12 +152,16 @@
   margin: 0;
 }
 
-/* A sketch of your app, intact or as it looks once the select is added. */
+/* A sketch of your app, intact or as it looks once the select is added. It
+   fills its tile: its parts sit in one row and wrap when the tile is narrow. */
 @utility coexist-lanes-app {
-  display: grid;
-  justify-items: start;
-  gap: var(--nx-spacing-1);
-  padding: var(--nx-spacing-3);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nx-spacing-3);
+  justify-self: stretch;
+  padding: var(--nx-spacing-4);
   border: var(--nx-borderwidth-default) solid var(--nx-color-success-border);
   border-radius: var(--nx-radius-lg);
   background: var(--nx-color-background);
@@ -189,8 +195,7 @@
 }
 
 @utility coexist-lanes-app-button {
-  margin-block-start: var(--nx-spacing-1);
-  padding: var(--nx-spacing-1) var(--nx-spacing-3);
+  padding: var(--nx-spacing-2) var(--nx-spacing-4);
   border-radius: var(--nx-radius-full);
   background: var(--nx-color-information-background);
   color: var(--nx-color-information-foreground);
@@ -252,8 +257,7 @@
 }
 
 @utility coexist-lanes-app-action {
-  margin-block-start: var(--nx-spacing-1);
-  padding: var(--nx-spacing-1) var(--nx-spacing-3);
+  padding: var(--nx-spacing-2) var(--nx-spacing-4);
   border-radius: var(--nx-radius-md);
 
   [data-broken='true'] & {
