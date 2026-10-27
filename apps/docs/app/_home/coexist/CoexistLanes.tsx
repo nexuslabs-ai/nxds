@@ -4,6 +4,7 @@ import { type ReactNode, useState } from 'react';
 
 import {
   IconAlertTriangle,
+  IconChevronDown,
   IconCircleCheck,
   IconStackPush,
 } from '@tabler/icons-react';
@@ -62,8 +63,21 @@ function isPointed(pointed: Part | null, ...parts: Part[]) {
 }
 
 // Each sketch draws the part of your app that the example touches, as it
-// looks after the component is added. `data-active` outlines the parts that
-// read the name the visitor points at.
+// looks after the component is added, with that component in its place.
+// `data-active` outlines the parts that read the name the visitor points at.
+
+/** The component the visitor adds, drawn where your app would use it. */
+function AddedSelect({ children }: { children: ReactNode }) {
+  return (
+    <span className="nx:coexist-lanes-app-select nx:typography-label-default">
+      {children}
+      <IconChevronDown className="nx:size-4" aria-hidden="true" />
+      <span className="nx:coexist-lanes-app-new nx:typography-label-small">
+        New
+      </span>
+    </span>
+  );
+}
 
 // shadcn/ui's globals.css redefines names the host reads.
 function TokensSketch({ broken, pointed }: SketchProps) {
@@ -83,11 +97,14 @@ function TokensSketch({ broken, pointed }: SketchProps) {
           8 of 10 seats used
         </span>
       </span>
-      <span
-        className="nx:coexist-lanes-app-button nx:typography-label-default"
-        data-active={isPointed(pointed, 'accent')}
-      >
-        Invite teammate
+      <span className="nx:coexist-lanes-app-row">
+        <AddedSelect>Member</AddedSelect>
+        <span
+          className="nx:coexist-lanes-app-button nx:typography-label-default"
+          data-active={isPointed(pointed, 'accent')}
+        >
+          Invite
+        </span>
       </span>
     </div>
   );
@@ -117,6 +134,7 @@ function ResetSketch({ broken, pointed }: SketchProps) {
           <li>New roles</li>
         </ul>
       </div>
+      <AddedSelect>v2.4</AddedSelect>
     </div>
   );
 }
@@ -138,6 +156,7 @@ function NavSketch({ broken, pointed }: SketchProps) {
         <span>Pricing</span>
         <span>Blog</span>
       </span>
+      <AddedSelect>English</AddedSelect>
     </div>
   );
 }
@@ -160,11 +179,14 @@ function PrimarySketch({ broken, pointed }: SketchProps) {
           Pro
         </span>
       </span>
-      <span
-        className="nx:coexist-lanes-app-primary nx:coexist-lanes-app-action nx:typography-label-default"
-        data-active={isPointed(pointed, 'primary', 'action')}
-      >
-        Invite teammate
+      <span className="nx:coexist-lanes-app-row">
+        <AddedSelect>Actions</AddedSelect>
+        <span
+          className="nx:coexist-lanes-app-primary nx:coexist-lanes-app-action nx:typography-label-default"
+          data-active={isPointed(pointed, 'primary', 'action')}
+        >
+          Invite
+        </span>
       </span>
     </div>
   );

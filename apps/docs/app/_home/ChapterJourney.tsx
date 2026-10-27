@@ -217,7 +217,8 @@ function Chapter({
       <div
         className={cn(
           'nx:story-canvas',
-          chapter.id === 'coexist' && 'nx:story-canvas-grows'
+          chapter.id === 'coexist' &&
+            'nx:story-canvas-grows nx:coexist-lanes-canvas'
         )}
         role="region"
         aria-labelledby={`story-tab-${index}-${selected}`}

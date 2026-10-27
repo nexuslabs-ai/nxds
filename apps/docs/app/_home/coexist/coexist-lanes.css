@@ -1,3 +1,11 @@
+/* On desktop, tall enough for the tallest example, so the tiles keep their
+   size when the visitor switches apps. */
+@utility coexist-lanes-canvas {
+  @media (width >= 64rem) {
+    --preview-min: 37rem;
+  }
+}
+
 @utility coexist-lanes-chapter {
   inline-size: 100%;
   block-size: 100%;
@@ -239,6 +247,29 @@
   display: flex;
   align-items: center;
   gap: var(--nx-spacing-3);
+}
+
+/* The component the visitor adds, with a tag that points it out. */
+@utility coexist-lanes-app-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nx-spacing-1_5);
+  padding: var(--nx-spacing-2) var(--nx-spacing-3);
+  border: var(--nx-borderwidth-default) solid var(--nx-color-border-default);
+  border-radius: var(--nx-radius-md);
+  background: var(--nx-color-background);
+  color: var(--nx-color-foreground);
+}
+@utility coexist-lanes-app-new {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  translate: 25% -50%;
+  padding-inline: var(--nx-spacing-1_5);
+  border-radius: var(--nx-radius-full);
+  background: var(--nx-color-information-subtle);
+  color: var(--nx-color-information-subtle-foreground);
 }
 
 @utility coexist-lanes-app-primary {
