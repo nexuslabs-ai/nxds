@@ -7,11 +7,6 @@ import { cn } from '../../lib/utils';
 import { TooltipGroupKey } from '../tooltip/tooltip-group';
 import TooltipProvider from '../tooltip/TooltipProvider.vue';
 
-/**
- * Label the toolbar with aria-label or aria-labelledby. Controls wrap in DOM
- * order. Its tooltips form one group, so moving across the buttons skips the
- * open delay. Inside a `TooltipProvider` it joins that group instead.
- */
 export interface ToolbarProps extends ToolbarRootProps {
   class?: HTMLAttributes['class'];
 }

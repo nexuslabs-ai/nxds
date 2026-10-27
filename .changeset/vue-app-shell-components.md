@@ -1,0 +1,14 @@
+---
+'@nxds/vue': minor
+'@nxds/react': patch
+'@nxds/react-18': patch
+---
+
+Add app-shell components to `@nxds/vue` that match their React counterparts.
+
+| Component | Parts                                                                                                                                                                                                                                                                                                                                                                                                                                          | Notes                                                                                                                                                                                    |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sidebar   | `SidebarProvider`, `Sidebar`, `SidebarTrigger`, `SidebarRail`, `SidebarInset`, `SidebarInput`, `SidebarHeader`, `SidebarFooter`, `SidebarSeparator`, `SidebarContent`, `SidebarGroup`, `SidebarGroupLabel`, `SidebarGroupAction`, `SidebarGroupContent`, `SidebarMenu`, `SidebarMenuItem`, `SidebarMenuButton`, `SidebarMenuAction`, `SidebarMenuBadge`, `SidebarMenuSkeleton`, `SidebarMenuSub`, `SidebarMenuSubItem`, `SidebarMenuSubButton` | Read the state with `useSidebar`. Listen for `open-change` on `SidebarProvider`. With `TooltipContent` props as `tooltip`, put the tooltip text in `SidebarMenuButton`'s `#tooltip` slot |
+| Toolbar   | `Toolbar`, `ToolbarButton`, `ToolbarLink`, `ToolbarGroup`, `ToolbarToggleGroup`, `ToolbarToggleItem`, `ToolbarSeparator`                                                                                                                                                                                                                                                                                                                       | Bind a toggle group's value with `v-model`                                                                                                                                               |
+
+In `@nxds/react`, `SidebarProvider` is controlled only when you pass `open`. It now calls `onOpenChange` in both modes, so passing `onOpenChange` alone no longer stops the sidebar from toggling.

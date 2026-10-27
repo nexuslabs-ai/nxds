@@ -31,7 +31,7 @@ const selectionAttrs = useToggleGroupSelectionAttrs(() => props.value);
 // Reka's toolbar wrapper reads only the item's own disabled, so an item of a
 // disabled group stays in the arrow-key order without data-disabled.
 const group = injectToggleGroupRootContext();
-const disabled = computed(() => group.disabled.value || props.disabled);
+const disabled = computed(() => group.disabled?.value || props.disabled);
 
 const delegated = reactiveOmit(props, 'class', 'size');
 const forwarded = useForwardProps(delegated);

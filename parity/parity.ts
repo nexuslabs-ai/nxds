@@ -10,7 +10,6 @@ export const planned = [
   'color-field',
   'config-preview',
   'setting-row',
-  'sidebar',
   'theme-quick-control',
 ];
 
@@ -72,6 +71,7 @@ export const shared = [
   'separator',
   'sheet',
   'show',
+  'sidebar',
   'skeleton',
   'slider',
   'sonner',
@@ -226,6 +226,10 @@ export const vueOnlyApi: Record<string, string> = {
   'ResizablePanel.default.isExpanded': REKA_SLOT_PROP,
   'ResizablePanel.default.resize': REKA_SLOT_PROP,
   'ResizablePanelGroup.default.layout': REKA_SLOT_PROP,
+  'SidebarTrigger.disabled':
+    'native <button> attribute React inherits from its props type; Vue declares it to pass on to Button',
+  'SidebarTrigger.type':
+    "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
   'Switch.thumb':
     'slot for custom thumb content; React renders the thumb itself with no way to compose it',
   'Textarea.defaultValue': NATIVE_DEFAULT_VALUE,
@@ -622,6 +626,8 @@ export const vueOnlyDeclarations: Record<string, string> = {
 /** Top-level values a Vue recipe file declares under React's name with a body only its framework can write, as `{file}#{name}`. */
 export const frameworkDeclarations: Record<string, string> = {
   'message-scroller/index.ts#useMessageScroller':
+    "injects the provider's state; React's hook reads its context",
+  'sidebar/index.ts#useSidebar':
     "injects the provider's state; React's hook reads its context",
   'sonner/index.ts#useNxdsToasts':
     "filters vue-sonner's active toasts in a computed; React's hook filters sonner's useSonner list",
