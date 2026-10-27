@@ -5,8 +5,9 @@ import {
   ICON_LIBRARY_OPTIONS,
   shuffleNxdsAppearance,
 } from '@nxds/core';
-import { Button } from '@nxds/react';
 import { useNxdsAppearance } from '@nxds/react/appearance';
+
+import { Button } from '@/components/button/button';
 
 import { setIconLibrary } from '../_lib/icon-library';
 

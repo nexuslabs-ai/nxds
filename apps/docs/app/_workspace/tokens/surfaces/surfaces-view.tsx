@@ -8,9 +8,10 @@ import {
   LIGHT_SURFACE_LADDER,
   SURFACE_TOKENS,
 } from '@nxds/core/catalogue';
+
+import { Badge } from '@/components/badge/badge';
+import { Input } from '@/components/input/input';
 import {
-  Badge,
-  Input,
   Table,
   TableBody,
   TableCell,
@@ -18,7 +19,7 @@ import {
   TableHeader,
   TableRow,
   TableRowHeader,
-} from '@nxds/react';
+} from '@/components/table/table';
 
 import { PageHeading } from '../../page-heading';
 import { useWorkspaceLocation } from '../../use-workspace-location';

@@ -3,8 +3,9 @@
 import { useState } from 'react';
 
 import type { Mode, TokenMap } from '@nxds/core';
-import { Button } from '@nxds/react';
 import { useNxdsAppearance } from '@nxds/react/appearance';
+
+import { Button } from '@/components/button/button';
 
 import { AppearanceControls } from '../../appearance-controls';
 import { useAppearanceHistory } from '../../appearance-state';

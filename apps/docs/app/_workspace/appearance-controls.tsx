@@ -15,15 +15,16 @@ import {
   type NxdsResolvedAppearanceMode,
   STROKE_OPTIONS,
 } from '@nxds/core';
+
+import { NxdsAppearanceBrandColorField } from '@/components/appearance/brand-color-field/brand-color-field';
+import { Input } from '@/components/input/input';
+import { Label } from '@/components/label/label';
 import {
-  Input,
-  Label,
   NativeSelect,
   NativeSelectOption,
-  NxdsAppearanceBrandColorField,
-  Slider,
-  Switch,
-} from '@nxds/react';
+} from '@/components/native-select/native-select';
+import { Slider } from '@/components/slider/slider';
+import { Switch } from '@/components/switch/switch';
 
 import {
   CONTRAST_RANGE,
