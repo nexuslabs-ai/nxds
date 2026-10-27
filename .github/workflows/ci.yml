@@ -303,6 +303,9 @@ jobs:
       - name: Check canonical step set freshness
         run: pnpm --filter @nxds/eslint-plugin refresh:canonical-set --check
 
+      - name: Check token scales freshness
+        run: pnpm --filter @nxds/core generate:scales --check
+
       - name: Regenerate token outputs (tailwind)
         id: regen
         run: |

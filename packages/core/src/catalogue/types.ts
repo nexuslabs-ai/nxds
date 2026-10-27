@@ -27,8 +27,8 @@ export type CatalogueFamily =
 
 /**
  * Canonical identity: an identifier in the `--nx-*` custom property scheme.
- * Most tokens declare it in the generated CSS. Typography and shadow styles
- * and breakpoints do not; they declare a theme property or a utility instead.
+ * Most tokens declare it in the generated CSS. Typography styles and
+ * breakpoints do not; they declare a utility or a theme property instead.
  */
 export type CatalogueTokenName = `--nx-${string}`;
 
@@ -69,7 +69,7 @@ export interface CatalogueDeclaration {
 export interface CatalogueVariant {
   /**
    * The theme mode the value applies in (`light` / `dark` for a runtime
-   * colour or a shadow layer), or `null` when it applies in both.
+   * colour or a shadow), or `null` when it applies in both.
    */
   readonly mode: Mode | null;
   /**
@@ -85,8 +85,8 @@ export interface CatalogueVariant {
   readonly authoredValue: TokenValue | null;
   /**
    * What the generated CSS declares: one custom property for a scalar or a
-   * shadow style (`--nx-spacing-4`, or `--breakpoint-md` and `--shadow-sm` for
-   * a token declared only under `@theme`), or the `@utility` body for a
+   * shadow style (`--nx-spacing-4`, `--nx-shadow-sm`, or `--breakpoint-md`
+   * for a token declared only under `@theme`), or the `@utility` body for a
    * typography style.
    */
   readonly declarations: readonly CatalogueDeclaration[];

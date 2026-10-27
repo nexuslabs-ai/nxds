@@ -3,7 +3,7 @@ import { formatHex, parse } from 'culori';
 import primitiveColors from '../../tokens/primitives/color.json';
 
 import { DEFAULT_BRAND_COLOR } from './appearance-model';
-import type { PrimitivePaletteName } from './primitive-palette';
+import type { PrimitivePaletteName } from './token-scales.generated';
 
 const BRAND_PRESET_FAMILIES = [
   'indigo',
