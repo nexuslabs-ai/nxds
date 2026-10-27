@@ -2,7 +2,7 @@
    size when the visitor switches apps. */
 @utility coexist-lanes-canvas {
   @media (width >= 64rem) {
-    --preview-min: 32rem;
+    --preview-min: 33rem;
   }
 }
 
@@ -35,6 +35,7 @@
 @utility coexist-lanes-host-title {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--nx-spacing-2);
   margin: 0;
 
@@ -53,12 +54,12 @@
   min-block-size: 0;
 }
 
-/* One library: its name on top, then its card. */
+/* One library: its box on top, joined by a line to its card. */
 @utility coexist-lanes-column {
   display: grid;
   grid-row: span 4;
   grid-template-rows: subgrid;
-  row-gap: var(--nx-spacing-3);
+  row-gap: var(--nx-spacing-6);
   min-inline-size: 0;
 
   /* The other library writes names or rules your app depends on. A chip
@@ -71,6 +72,9 @@
   &[data-lane='other'] .nx\:coexist-lanes-verdict {
     color: var(--nx-color-error-subtle-foreground);
   }
+  &[data-lane='other'] .nx\:coexist-lanes-library::after {
+    border-color: var(--nx-color-error-border);
+  }
 
   /* Nexus writes names only it reads: nothing reaches your app. */
   &[data-lane='nexus'] .nx\:coexist-lanes-chip[data-state] {
@@ -80,6 +84,9 @@
   }
   &[data-lane='nexus'] .nx\:coexist-lanes-verdict {
     color: var(--nx-color-success-subtle-foreground);
+  }
+  &[data-lane='nexus'] .nx\:coexist-lanes-library::after {
+    border-color: var(--nx-color-success-border);
   }
 }
 
@@ -93,12 +100,28 @@
   background: var(--nx-color-muted);
 }
 
-/* The library: its mark, its name and the file you add. */
+/* The library you add: its mark, name and file, in a box with a line down
+   to its card across the row gap. */
 @utility coexist-lanes-library {
+  position: relative;
+  justify-self: center;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 0 var(--nx-spacing-2);
+  padding: var(--nx-spacing-2) var(--nx-spacing-4);
+  border-radius: var(--nx-radius-lg);
+  background: var(--nx-color-muted);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 100%;
+    inset-inline-start: 50%;
+    block-size: var(--nx-spacing-6);
+    border-inline-start: var(--nx-borderwidth-default) solid;
+  }
 
   & > svg {
     inline-size: var(--nx-spacing-5);
