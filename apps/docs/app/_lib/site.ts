@@ -37,6 +37,16 @@ export const SITE_OPEN_GRAPH = {
   locale: 'en_US',
 } as const;
 
+/** The metadata both root layouts (the docs and the homepage) start from. */
+export const SITE_METADATA: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: { default: SITE_TITLE, template: `%s — ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  openGraph: { ...SITE_OPEN_GRAPH, images: SITE_IMAGE },
+  twitter: { card: 'summary_large_image' },
+};
+
 /**
  * A page's title, description, canonical URL and Open Graph tags. Next replaces
  * the layout's `openGraph` instead of merging it, so this repeats the site-wide

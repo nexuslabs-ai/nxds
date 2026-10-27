@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { PAGE_MANIFEST } from '../_lib/manifest';
-import { PLAYGROUND_VIEWS } from '../_lib/playground-views';
+import { SEARCH_INDEX } from '../_lib/search-index';
 
 import {
   CommandDialog,
@@ -17,26 +16,9 @@ import {
 } from './nxds';
 
 /**
- * ⌘K command-palette search over the docs IA. Indexes the Playground routes
- * and every page in the generated manifest (the same source the nav + routes
- * read), so it stays in sync as pages are added. Built on the nxds Command
- * (cmdk) surface.
+ * ⌘K command-palette search over the docs IA (`SEARCH_INDEX`). Built on the
+ * nxds Command (cmdk) surface.
  */
-
-const INDEX = [
-  {
-    title: 'Playground',
-    items: PLAYGROUND_VIEWS,
-  },
-  ...PAGE_MANIFEST.map((section) => ({
-    title: section.title,
-    items: section.pages.map((page) => ({
-      label: page.label,
-      href: page.route,
-    })),
-  })),
-];
-
 export function SearchPalette() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -78,7 +60,7 @@ export function SearchPalette() {
         <CommandInput placeholder="Search the docs…" />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
-          {INDEX.map((group) => (
+          {SEARCH_INDEX.map((group) => (
             <CommandGroup key={group.title} heading={group.title}>
               {group.items.map((item) => (
                 <CommandItem

@@ -52,7 +52,7 @@ if (overlong) {
   process.exit(1);
 }
 
-// A static export renders `redirect()` in app/(docs)/[section]/page.tsx as a
+// A static export renders `redirect()` in app/(site)/(docs)/[section]/page.tsx as a
 // client-side redirect only; these give each section a real HTTP redirect.
 const redirectLines = PAGE_MANIFEST.filter(
   (section) => section.pages.length > 0

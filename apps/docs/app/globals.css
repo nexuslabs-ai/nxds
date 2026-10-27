@@ -18,6 +18,8 @@
 @import '@fontsource-variable/playfair-display';
 @import '@fontsource-variable/geist-mono';
 @import '@fontsource-variable/jetbrains-mono';
+/* The homepage's own utilities (nx:chapter-stage, …). */
+@import './_home/home.css';
 
 /* Generate the nx: utilities used in MDX content and in the shipped
    @nxds/react components by scanning their source directly. We deliberately do

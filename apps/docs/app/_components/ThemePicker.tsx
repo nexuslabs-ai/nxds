@@ -4,7 +4,6 @@ import { useEffect, useId, useRef, useState } from 'react';
 
 import { useNxdsAppearance } from '@nxds/react/appearance';
 import { cn } from '@nxds/react/utils';
-import { usePathname } from 'next/navigation';
 
 import {
   getThemeModeOptions,
@@ -29,15 +28,6 @@ import {
 const EXPAND_QUERY = '(min-width: 64rem)';
 
 export function ThemePicker() {
-  const pathname = usePathname();
-
-  // The landing page ships its own theme swapper, which this would overlap.
-  if (pathname === '/') return null;
-
-  return <ThemePanel />;
-}
-
-function ThemePanel() {
   const { state, setState } = useNxdsAppearance();
   const expandedByDefault = useMediaQuery(EXPAND_QUERY);
   const [expandedOverride, setExpandedOverride] = useState<boolean | null>(

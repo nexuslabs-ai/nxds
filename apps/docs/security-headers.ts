@@ -4,6 +4,7 @@ import {
 } from '@nxds/core';
 import { createHash } from 'node:crypto';
 
+import { HOME_APPEARANCE } from './app/_home/appearance';
 import {
   DOCS_APPEARANCE_DEFAULT_STATE,
   DOCS_APPEARANCE_STORAGE_KEY,
@@ -17,13 +18,18 @@ const DOCS_APPEARANCE_BOOTSTRAP_SCRIPT = createNxdsAppearanceBootstrapScript({
   ),
 });
 
+const HOME_APPEARANCE_BOOTSTRAP_SCRIPT = createNxdsAppearanceBootstrapScript({
+  storageKey: false,
+  defaultSnapshot: createNxdsAppearanceSnapshotFromState(HOME_APPEARANCE),
+});
+
 function cspHash(script: string) {
   return `'sha256-${createHash('sha256').update(script).digest('base64')}'`;
 }
 
 const CONTENT_SECURITY_POLICY_REPORT_ONLY = [
   "default-src 'self'",
-  `script-src 'self' ${cspHash(DOCS_APPEARANCE_BOOTSTRAP_SCRIPT)} ${cspHash(FRAMEWORK_BOOTSTRAP_SCRIPT)} 'report-sample'`,
+  `script-src 'self' ${cspHash(DOCS_APPEARANCE_BOOTSTRAP_SCRIPT)} ${cspHash(HOME_APPEARANCE_BOOTSTRAP_SCRIPT)} ${cspHash(FRAMEWORK_BOOTSTRAP_SCRIPT)} 'report-sample'`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",

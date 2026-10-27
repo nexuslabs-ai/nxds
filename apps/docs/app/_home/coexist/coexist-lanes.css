@@ -1,0 +1,262 @@
+@utility coexist-lanes-chapter {
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 0;
+  overflow: auto;
+}
+
+@utility coexist-lanes {
+  --lane-gap: var(--nx-spacing-10);
+  --lane-pad: var(--nx-spacing-3);
+  display: grid;
+  gap: var(--lane-gap);
+  block-size: 100%;
+  min-block-size: 0;
+  padding-block-end: var(--story-toolbar-clearance);
+}
+
+@utility coexist-lanes-column {
+  grid-template-rows: auto minmax(min-content, 1fr);
+  gap: var(--nx-spacing-6);
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+@utility coexist-lanes-label {
+  color: var(--nx-color-muted-foreground);
+  font-size: var(--nx-typography-size-sm);
+  line-height: var(--nx-typography-line-height-sm);
+  text-align: center;
+}
+
+@utility coexist-lanes-panel {
+  display: grid;
+  grid-template-rows: repeat(2, minmax(min-content, 1fr));
+  gap: var(--lane-pad);
+  min-block-size: 0;
+  padding: var(--lane-pad);
+  border-radius: var(--nx-radius-xl);
+  background: var(--nx-color-muted);
+}
+
+@utility coexist-lanes-tile {
+  /* Every tile sits in a lane. The attribute outranks Item's own layout. */
+  &[data-lane] {
+    position: relative;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: var(--nx-spacing-3);
+    min-block-size: 0;
+    padding: var(--nx-spacing-4);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-color-control-background);
+    text-align: center;
+  }
+
+  /* The row the visitor points into lights its traces. */
+  &[data-hot] .nx\:coexist-lanes-trace {
+    border-block-start-width: var(--nx-borderwidth-thick);
+  }
+
+  /* The other library writes names or rules your app depends on. */
+  &[data-lane='other'][data-hot] .nx\:coexist-lanes-trace {
+    border-color: var(--nx-color-error-border);
+  }
+  &[data-lane='other'] .nx\:coexist-lanes-verdict {
+    color: var(--nx-color-error-subtle-foreground);
+  }
+
+  /* Nexus writes names only it reads: nothing reaches your app. */
+  &[data-lane='nexus'] .nx\:coexist-lanes-verdict {
+    color: var(--nx-color-success-subtle-foreground);
+  }
+}
+
+@utility coexist-lanes-lib {
+  &[data-lane='nexus'][data-hot] .nx\:coexist-lanes-trace {
+    border-color: var(--nx-color-success-border);
+  }
+}
+
+@utility coexist-lanes-names {
+  &[data-lane='nexus'] .nx\:coexist-lanes-trace {
+    border-block-start-style: dashed;
+  }
+
+  /* A chip keeps its lane's colours. Outranks Toggle's hover and on states. */
+  &[data-lane='other'] .nx\:coexist-lanes-chip[data-state] {
+    border-color: var(--nx-color-error-border);
+    background: var(--nx-color-error-subtle);
+    color: var(--nx-color-error-subtle-foreground);
+  }
+  &[data-lane='nexus'] .nx\:coexist-lanes-chip[data-state] {
+    border-color: var(--nx-color-success-border);
+    background: var(--nx-color-success-subtle);
+    color: var(--nx-color-success-subtle-foreground);
+  }
+}
+
+/* A trace runs from a tile to the tile in the same row of the next column. */
+@utility coexist-lanes-trace {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 100%;
+  inline-size: calc(var(--lane-gap) + 2 * var(--lane-pad));
+  border-block-start: var(--nx-borderwidth-default) solid
+    var(--nx-color-border-default);
+  transition: border-color var(--nx-motion-duration-default)
+    var(--nx-motion-ease-enter);
+}
+
+@utility coexist-lanes-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--nx-spacing-2);
+  margin: 0;
+}
+
+@utility coexist-lanes-chip {
+  /* Toggle always sets data-state. The attribute outranks its padding and border. */
+  &[data-state] {
+    padding: var(--nx-spacing-1) var(--nx-spacing-2);
+    border: var(--nx-borderwidth-default) solid;
+    border-radius: var(--nx-radius-md);
+    outline-offset: var(--nx-spacing-0_5);
+  }
+  &[data-active] {
+    outline: var(--nx-borderwidth-thick) solid currentColor;
+  }
+  &[data-state]:focus-visible {
+    outline: var(--nx-borderwidth-thick) solid var(--nx-color-border-focus);
+  }
+}
+
+@utility coexist-lanes-note {
+  margin: 0;
+  color: var(--nx-color-muted-foreground);
+}
+
+@utility coexist-lanes-with {
+  margin: 0;
+  color: var(--nx-color-muted-foreground);
+}
+
+@utility coexist-lanes-verdict {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-spacing-2);
+  margin: 0;
+}
+
+/* A sketch of your app, intact or as it looks once the select is added. */
+@utility coexist-lanes-app {
+  display: grid;
+  justify-items: start;
+  gap: var(--nx-spacing-1);
+  padding: var(--nx-spacing-3);
+  border: var(--nx-borderwidth-default) solid var(--nx-color-success-border);
+  border-radius: var(--nx-radius-lg);
+  background: var(--nx-color-background);
+  color: var(--nx-color-foreground);
+  text-align: start;
+
+  &[data-broken='true'] {
+    border-color: var(--nx-color-error-border);
+  }
+
+  /* The part of your app that reads the name the visitor points at. */
+  & [data-active],
+  &[data-active] {
+    outline: var(--nx-borderwidth-thick) solid var(--nx-color-success-border);
+    outline-offset: var(--nx-spacing-0_5);
+  }
+  &[data-broken='true'] [data-active],
+  &[data-broken='true'][data-active] {
+    outline-color: var(--nx-color-error-border);
+  }
+}
+
+/* Each part below shows, under [data-broken='true'], what the other library
+   did to it. */
+@utility coexist-lanes-app-text {
+  color: var(--nx-color-muted-foreground);
+
+  [data-broken='true'] & {
+    color: var(--nx-color-border-default);
+  }
+}
+
+@utility coexist-lanes-app-button {
+  margin-block-start: var(--nx-spacing-1);
+  padding: var(--nx-spacing-1) var(--nx-spacing-3);
+  border-radius: var(--nx-radius-full);
+  background: var(--nx-color-information-background);
+  color: var(--nx-color-information-foreground);
+
+  [data-broken='true'] & {
+    background: var(--nx-color-muted);
+    color: var(--nx-color-muted-foreground);
+  }
+}
+
+@utility coexist-lanes-app-heading {
+  [data-broken='true'] & {
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+  }
+}
+
+@utility coexist-lanes-app-list {
+  margin: 0;
+  padding-inline-start: var(--nx-spacing-5);
+  list-style: disc;
+
+  [data-broken='true'] & {
+    padding-inline-start: 0;
+    list-style: none;
+  }
+}
+
+@utility coexist-lanes-app-nav {
+  display: flex;
+  gap: var(--nx-spacing-4);
+  color: var(--nx-color-information-background);
+
+  [data-broken='true'] & {
+    visibility: hidden;
+  }
+}
+
+@utility coexist-lanes-app-row {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-spacing-3);
+}
+
+@utility coexist-lanes-app-primary {
+  background: var(--nx-color-primary-background);
+  color: var(--nx-color-primary-foreground);
+
+  [data-broken='true'] & {
+    background: var(--nx-color-information-background);
+    color: var(--nx-color-information-foreground);
+  }
+}
+
+@utility coexist-lanes-app-pill {
+  padding: 0 var(--nx-spacing-2);
+  border-radius: var(--nx-radius-full);
+}
+
+@utility coexist-lanes-app-action {
+  margin-block-start: var(--nx-spacing-1);
+  padding: var(--nx-spacing-1) var(--nx-spacing-3);
+  border-radius: var(--nx-radius-md);
+
+  [data-broken='true'] & {
+    border-radius: 0;
+  }
+}

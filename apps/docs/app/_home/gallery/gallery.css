@@ -1,0 +1,113 @@
+/* Gallery chapter: the showcase wall and its example cards. Each card is a
+   showcase-card container, so the card rules follow the card's width. */
+
+/* Wall: columns of content-height cards. The canvas clips them under the bottom fade. */
+@utility showcase-wall {
+  /* Outranks nx:story-box-grid's grid. */
+  &.nx\:story-box-grid {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--nx-spacing-6);
+    overflow: hidden;
+    scroll-padding-block-end: var(--story-toolbar-clearance);
+  }
+  /* Scroll room, so focus can bring a column's last control above the toolbar. */
+  & > div {
+    padding-block-end: var(--story-toolbar-clearance);
+  }
+
+  /* Phones: one wall column at a time. Swipe sideways; the next one peeks in. */
+  @media (max-width: 700px) {
+    &.nx\:story-box-grid {
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+    }
+    & > div {
+      display: flex;
+      flex: 0 0 86%;
+      scroll-snap-align: start;
+    }
+  }
+}
+
+@utility showcase-body {
+  @container showcase-card (max-width: 210px) {
+    & button {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+}
+
+@utility showcase-heading {
+  margin-bottom: var(--nx-spacing-4);
+
+  @container showcase-card (max-width: 300px) {
+    margin-bottom: var(--nx-spacing-3);
+  }
+}
+
+@utility showcase-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nx-spacing-3);
+
+  @container showcase-card (max-width: 300px) {
+    flex-wrap: wrap;
+  }
+}
+
+@utility showcase-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nx-spacing-3);
+
+  @container showcase-card (max-width: 210px) {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@utility showcase-composer {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-spacing-2);
+
+  & input {
+    min-width: 0;
+  }
+  & button {
+    flex-shrink: 0;
+  }
+  @container showcase-card (max-width: 210px) {
+    flex-wrap: wrap;
+  }
+}
+
+/* A narrow card drops a person's detail and gives their actions a full row. */
+@utility nexus-showcase-person {
+  @container showcase-card (max-width: 210px) {
+    & [data-slot='item-description'] {
+      display: none;
+    }
+    & [data-slot='item-actions'] {
+      flex-basis: 100%;
+    }
+  }
+}
+
+@utility nexus-showcase-message-scroll {
+  max-height: 124px;
+  overflow: auto;
+  padding: var(--nx-spacing-0_5);
+  margin-bottom: var(--nx-spacing-3);
+
+  @container showcase-card (max-width: 210px) {
+    & [data-slot='message-avatar'] {
+      display: none;
+    }
+  }
+}

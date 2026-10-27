@@ -1,0 +1,65 @@
+/* Customize: the component wall on the canvas and the corner choices in the
+   Radius panel. */
+
+@utility customize-canvas {
+  display: block;
+
+  /* Outranks story-box-grid's grid, whichever utility comes first. */
+  &.nx\:story-box-grid {
+    display: block;
+  }
+}
+
+@utility component-wall {
+  container: component-wall / inline-size;
+  block-size: 100%;
+  overflow: auto;
+  scroll-padding-block: var(--nx-spacing-6) var(--nx-spacing-36);
+}
+
+@utility component-wall-grid {
+  columns: 1;
+  column-gap: var(--nx-spacing-4);
+  max-inline-size: 96rem;
+  margin-inline: auto;
+  padding: var(--nx-spacing-6) var(--nx-spacing-4) var(--nx-spacing-36);
+
+  @container component-wall (min-width: 40rem) {
+    columns: 2;
+    padding-inline: var(--nx-spacing-6);
+  }
+  @container component-wall (min-width: 60rem) {
+    columns: 3;
+  }
+  @container component-wall (min-width: 74rem) {
+    columns: 4;
+  }
+}
+
+@utility component-wall-tile {
+  break-inside: avoid;
+  margin-block-end: var(--nx-spacing-4);
+}
+
+@utility appearance-corner-options {
+  /* Outranks ToggleGroup's own flex row. */
+  &[data-slot='toggle-group'] {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
+  }
+  @container (max-width: 14rem) {
+    &[data-slot='toggle-group'] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+@utility appearance-corner-sample {
+  width: var(--nx-spacing-7);
+  height: var(--nx-spacing-7);
+  background: var(--nx-color-secondary-background);
+  border-top: var(--nx-borderwidth-thick) solid currentColor;
+  border-left: var(--nx-borderwidth-thick) solid currentColor;
+  border-top-left-radius: var(--nx-radius-base);
+}

@@ -441,11 +441,13 @@ export default tseslint.config(
   },
 
   {
-    // The playground previews the reader's icon library, which only the
-    // components built from source can draw (see apps/docs/next.config.ts).
+    // The playground and the homepage preview the reader's icon library, which
+    // only the components built from source can draw (see
+    // apps/docs/next.config.ts).
     files: [
       'apps/docs/app/_lib/switchable-icons.tsx',
       'apps/docs/app/_workspace/sampler.tsx',
+      'apps/docs/app/_home/**/*.{ts,tsx}',
     ],
     rules: { 'no-restricted-imports': 'off' },
   },
