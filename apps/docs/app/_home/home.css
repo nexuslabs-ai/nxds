@@ -5,29 +5,6 @@
 @import './coexist/coexist-lanes.css';
 @import './frameworks/core-chip-chapter.css';
 
-/* Display headings for the chapter titles, from the Nexus type tokens. */
-@utility typography-display-large {
-  font-family: var(--nx-typography-family-font-heading);
-  font-size: var(--nx-typography-size-5xl);
-  font-weight: var(--nx-typography-weight-semibold);
-  line-height: var(--nx-typography-line-height-5xl);
-  letter-spacing: var(--nx-typography-letterspacing-tighter);
-}
-@utility typography-display-medium {
-  font-family: var(--nx-typography-family-font-heading);
-  font-size: var(--nx-typography-size-4xl);
-  font-weight: var(--nx-typography-weight-semibold);
-  line-height: var(--nx-typography-line-height-4xl);
-  letter-spacing: var(--nx-typography-letterspacing-tighter);
-}
-@utility typography-display-small {
-  font-family: var(--nx-typography-family-font-heading);
-  font-size: var(--nx-typography-size-3xl);
-  font-weight: var(--nx-typography-weight-semibold);
-  line-height: var(--nx-typography-line-height-3xl);
-  letter-spacing: var(--nx-typography-letterspacing-tighter);
-}
-
 /* The homepage: chapters as sections of one scrolling page, on one 12-column
    grid inside the site column. */
 @utility home-journey {
@@ -70,7 +47,6 @@
 
   & :is(h1, h2) {
     @apply nx:typography-display-small nx:md:typography-display-medium nx:lg:typography-display-large;
-    text-wrap: balance;
     margin: 0 0 var(--nx-spacing-7);
   }
 
