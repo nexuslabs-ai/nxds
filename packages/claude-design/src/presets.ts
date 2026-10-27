@@ -9,11 +9,13 @@ import {
   STROKE_OPTIONS,
 } from '@nxds/core';
 
+import type { ListFamily } from './tokens.ts';
+
 export interface Preset {
   options: readonly { value: string }[];
   initial: string;
   /** The tokens.json family the attribute swaps. */
-  family: string;
+  family: ListFamily;
 }
 
 export const PRESETS: Record<NxdsAppearanceDataAttr, Preset> = {

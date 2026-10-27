@@ -62,6 +62,9 @@ const LIST_FAMILIES = {
   motion: 'motion',
 } as const;
 
+/** A tokens.json list family key, such as `borderWidth`. */
+export type ListFamily = (typeof LIST_FAMILIES)[keyof typeof LIST_FAMILIES];
+
 /** Families whose every token stays, read or not, so authors can lay out artboards with the whole scale. */
 const AUTHOR_FAMILIES: ReadonlySet<string> = new Set(['spacing', 'radius']);
 
