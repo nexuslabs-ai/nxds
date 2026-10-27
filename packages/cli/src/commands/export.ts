@@ -53,17 +53,22 @@ type Packument = {
   >;
 };
 
+/** `value` as a URL, if it is an http or https one. */
+function httpUrl(value: string) {
+  const url = URL.canParse(value) ? new URL(value) : undefined;
+  return url?.protocol === 'http:' || url?.protocol === 'https:'
+    ? url
+    : undefined;
+}
+
 /** `url` without its credentials or query, to print in an error. */
 function redactUrl(url: string) {
-  try {
-    const redacted = new URL(url);
-    redacted.username = '';
-    redacted.password = '';
-    redacted.search = '';
-    return redacted.href;
-  } catch {
-    return '<invalid URL>';
-  }
+  const redacted = httpUrl(url);
+  if (!redacted) return '<invalid URL>';
+  redacted.username = '';
+  redacted.password = '';
+  redacted.search = '';
+  return redacted.href;
 }
 
 async function download(url: string) {
@@ -76,10 +81,11 @@ async function download(url: string) {
     });
   } catch (error) {
     const { message, cause } = error as Error;
-    // undici quotes the URL it was given in some of its messages.
+    // undici quotes the URL it was given in some of its messages. A function
+    // replacement keeps a `$&` in the URL from inserting the match.
     const reason = (
       cause instanceof Error ? cause.message : message
-    ).replaceAll(url, shown);
+    ).replaceAll(url, () => shown);
     throw new CliError(
       `Could not reach ${shown} (${reason}). Check your connection, or set HTTPS_PROXY if you are behind a proxy, then run the command again.`
     );
@@ -93,15 +99,15 @@ async function download(url: string) {
 }
 
 function assertRegistry(registry: string) {
-  const url = URL.canParse(registry) ? new URL(registry) : undefined;
-  if (url?.protocol !== 'http:' && url?.protocol !== 'https:') {
+  const url = httpUrl(registry);
+  if (!url || url.search || url.hash) {
     throw new UsageError(
-      `--npm-registry must be an http or https URL, such as ${DEFAULT_NPM_REGISTRY}.`
+      `--npm-registry must be an http or https URL with no query or fragment, such as ${DEFAULT_NPM_REGISTRY}.`
     );
   }
   if (url.username || url.password) {
     throw new UsageError(
-      "--npm-registry can't include a user name or password. Put the token in .npmrc or an environment variable, and pass the registry URL without it."
+      `--npm-registry can't include a user name or password, because nxds-cli sends no registry login. For a private registry, unpack the tarball from \`npm pack ${CLAUDE_DESIGN_PACKAGE}\` and pass its package folder with --source.`
     );
   }
 }
