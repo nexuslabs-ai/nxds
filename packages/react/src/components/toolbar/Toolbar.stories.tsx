@@ -61,7 +61,7 @@ const meta: Meta<typeof Toolbar> = {
           '',
           '- Label the toolbar with `aria-label` or `aria-labelledby`.',
           '- Build it from ToolbarButton, ToolbarLink, ToolbarToggleGroup and ToolbarToggleItem so every control joins the arrow-key order.',
-          '- For tools with options, use ToolbarToolGroup, ToolbarTool and ToolbarToolPanel. Choosing another tool swaps the open panel, and closing it returns focus to the tool.',
+          '- For tools with options, use ToolbarToolGroup, ToolbarTool and ToolbarToolPanel. Choosing another tool swaps the open panel. Escape returns focus to the tool.',
           '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading` or icon slots.',
           '- Use `variant="floating"` for a toolbar that sits over content, like a canvas.',
           '- Use `asChild` to make a toolbar control a menu trigger.',
@@ -555,8 +555,19 @@ export const Floating: Story = {
 export const GroupSpacing: Story = {
   render: () => (
     <div className="nx:grid nx:gap-6">
-      {(['default', 'floating'] as const).map((variant) => (
-        <Toolbar key={variant} variant={variant} aria-label={`${variant} bar`}>
+      {(
+        [
+          ['default', undefined],
+          ['floating', undefined],
+          ['default', 'nx:gap-4'],
+        ] as const
+      ).map(([variant, className]) => (
+        <Toolbar
+          key={`${variant}-${className}`}
+          variant={variant}
+          className={className}
+          aria-label={`${variant} bar`}
+        >
           <ToolbarToolGroup aria-label="Tools" defaultValue="select">
             <ToolbarTool value="select" size="icon-sm" aria-label="Select">
               <IconPointer aria-hidden="true" />
@@ -595,6 +606,44 @@ export const GroupSpacing: Story = {
             .columnGap
         ).toBe(barGap);
       }
+    }
+  },
+};
+
+export const VerticalTools: Story = {
+  render: () => (
+    <Toolbar orientation="vertical" aria-label="Canvas tools">
+      <ToolbarToolGroup aria-label="Tools" defaultValue="select">
+        <ToolbarTool value="select" size="icon-sm" aria-label="Select">
+          <IconPointer aria-hidden="true" />
+        </ToolbarTool>
+        <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
+          <IconPencil aria-hidden="true" />
+        </ToolbarTool>
+      </ToolbarToolGroup>
+      <ToolbarGroup aria-label="History">
+        <ToolbarButton size="icon-sm" aria-label="Undo">
+          <IconArrowBackUp aria-hidden="true" />
+        </ToolbarButton>
+        <ToolbarButton size="icon-sm" aria-label="Clear canvas">
+          <IconEraser aria-hidden="true" />
+        </ToolbarButton>
+      </ToolbarGroup>
+    </Toolbar>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const [first, second] of [
+      ['Select', 'Draw'],
+      ['Undo', 'Clear canvas'],
+    ]) {
+      const above = canvas
+        .getByRole('button', { name: first })
+        .getBoundingClientRect();
+      const below = canvas
+        .getByRole('button', { name: second })
+        .getBoundingClientRect();
+      await expect(below.top).toBeGreaterThanOrEqual(above.bottom);
     }
   },
 };
@@ -903,7 +952,7 @@ function SelectionExample() {
             >
               {selected.length} selected
             </span>
-            <ToolbarSeparator className="nx:self-stretch nx:data-[orientation=vertical]:h-auto" />
+            <ToolbarSeparator />
             <ToolbarButton onClick={archiveSelection}>
               <IconArchive aria-hidden="true" />
               Archive
@@ -1238,5 +1287,64 @@ export const ControlledTools: ToolStory = {
     await userEvent.click(canvas.getByRole('button', { name: 'Erase' }));
     await expect(args.onValueChange).toHaveBeenLastCalledWith('erase');
     await expect(draw).toHaveAttribute('data-state', 'on');
+  },
+};
+
+function SwitchFromPanelDemo({
+  onDrawPanelClose,
+}: {
+  onDrawPanelClose: () => void;
+}) {
+  const id = React.useId();
+  const [value, setValue] = React.useState('draw');
+  return (
+    <div className="nx:flex nx:min-h-64 nx:items-end">
+      <Toolbar aria-label="Canvas">
+        <ToolbarToolGroup
+          aria-label="Drawing tools"
+          value={value}
+          onValueChange={setValue}
+          defaultOpen
+        >
+          <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
+            <IconPencil aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
+            <IconEraser aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarToolPanel
+            value="draw"
+            side="top"
+            onCloseAutoFocus={onDrawPanelClose}
+          >
+            <Button size="sm" onClick={() => setValue('erase')}>
+              Switch to eraser
+            </Button>
+          </ToolbarToolPanel>
+          <ToolbarToolPanel value="erase" side="top">
+            <div className="nx:flex nx:items-center nx:gap-2">
+              <Checkbox id={`${id}-whole`} />
+              <Label htmlFor={`${id}-whole`}>Erase whole strokes</Label>
+            </div>
+          </ToolbarToolPanel>
+        </ToolbarToolGroup>
+      </Toolbar>
+    </div>
+  );
+}
+
+export const SwitchFromPanel: StoryObj<typeof SwitchFromPanelDemo> = {
+  args: { onDrawPanelClose: fn() },
+  render: (args) => <SwitchFromPanelDemo {...args} />,
+  play: async ({ canvasElement, args }) => {
+    const page = within(canvasElement.ownerDocument.body);
+    await userEvent.click(
+      await page.findByRole('button', { name: 'Switch to eraser' })
+    );
+    const panel = await page.findByRole('dialog', { name: 'Erase' });
+    await waitFor(() => expect(args.onDrawPanelClose).toHaveBeenCalled());
+    await expect(panel).toContainElement(
+      canvasElement.ownerDocument.activeElement as HTMLElement
+    );
   },
 };
