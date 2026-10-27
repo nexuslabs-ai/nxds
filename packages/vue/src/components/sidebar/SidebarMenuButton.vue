@@ -39,7 +39,7 @@ const props = withDefaults(defineProps<SidebarMenuButtonProps>(), {
   size: 'default',
 });
 
-// With `TooltipContent` props as `tooltip`, the tooltip text goes in this slot.
+// Unless `tooltip` is a string, the tooltip text goes in this slot.
 defineSlots<{
   default?: () => VNode[];
   tooltip?: () => VNode[];
@@ -63,7 +63,10 @@ const button = computed(() => ({
 </script>
 
 <template>
-  <Tooltip v-if="tooltip">
+  <Tooltip
+    v-if="tooltip || $slots.tooltip"
+    v-bind="state === 'collapsed' && !isNarrow ? {} : { open: false }"
+  >
     <TooltipTrigger as-child>
       <Primitive v-bind="{ ...button, ...$attrs }">
         <slot />
@@ -72,8 +75,7 @@ const button = computed(() => ({
     <TooltipContent
       side="right"
       align="center"
-      :hidden="state !== 'collapsed' || isNarrow"
-      v-bind="typeof tooltip === 'string' ? {} : tooltip"
+      v-bind="typeof tooltip === 'object' ? tooltip : {}"
     >
       <template v-if="typeof tooltip === 'string'">{{ tooltip }}</template>
       <slot v-else name="tooltip" />

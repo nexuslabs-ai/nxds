@@ -31,7 +31,7 @@ export interface SidebarProviderProps {
    */
   defaultOpen?: boolean;
   /**
-   * Controlled open state. Pair it with `onOpenChange`.
+   * Controlled open state.
    */
   open?: boolean;
   class?: HTMLAttributes['class'];

@@ -12,3 +12,5 @@ Add app-shell components to `@nxds/vue` that match their React counterparts.
 | Toolbar   | `Toolbar`, `ToolbarButton`, `ToolbarLink`, `ToolbarGroup`, `ToolbarToggleGroup`, `ToolbarToggleItem`, `ToolbarSeparator`                                                                                                                                                                                                                                                                                                                       | Bind a toggle group's value with `v-model`                                                                                                                                               |
 
 In `@nxds/react`, `SidebarProvider` is controlled only when you pass `open`. It now calls `onOpenChange` in both modes, so passing `onOpenChange` alone no longer stops the sidebar from toggling.
+
+Closing the narrow-viewport sidebar drawer returns focus to the control that opened it. The first Escape closes the drawer, because a `SidebarMenuButton` tooltip no longer opens unless the sidebar is collapsed to its icon rail.

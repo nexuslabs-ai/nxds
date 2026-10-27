@@ -17,7 +17,7 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 import { useArgs } from 'storybook/preview-api';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
 
@@ -434,6 +434,19 @@ export const NarrowDrawer: Story = {
       </DemoInset>
     </SidebarProvider>
   ),
+  play: async ({ canvasElement }) => {
+    const trigger = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="sidebar-trigger"]'
+    );
+    await userEvent.click(trigger!);
+    const drawer = await within(canvasElement.ownerDocument.body).findByRole(
+      'dialog'
+    );
+    await expect(drawer).toHaveAttribute('data-slot', 'sidebar');
+    await expect(drawer).toHaveAttribute('data-narrow', 'true');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(trigger).toHaveFocus());
+  },
 };
 
 export const WithDataAttributes: Story = {

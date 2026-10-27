@@ -40,6 +40,19 @@ const props = withDefaults(defineProps<SidebarProps>(), {
 });
 
 const { isNarrow, state, openNarrow, setOpenNarrow } = useSidebar();
+
+// The drawer opens from state, not a SheetTrigger, so it has no trigger to
+// return focus to. Return it to whatever had focus when it opened.
+let returnFocus: HTMLElement | null = null;
+
+function rememberFocus() {
+  returnFocus = document.activeElement as HTMLElement | null;
+}
+
+function restoreFocus(event: Event) {
+  event.preventDefault();
+  returnFocus?.focus();
+}
 </script>
 
 <template>
@@ -72,6 +85,8 @@ const { isNarrow, state, openNarrow, setOpenNarrow } = useSidebar();
       "
       :style="{ '--sidebar-width': SIDEBAR_WIDTH_NARROW }"
       v-bind="$attrs"
+      @open-auto-focus="rememberFocus"
+      @close-auto-focus="restoreFocus"
     >
       <SheetHeader class="nx:sr-only">
         <SheetTitle>Sidebar</SheetTitle>

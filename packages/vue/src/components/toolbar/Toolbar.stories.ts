@@ -12,7 +12,7 @@ import {
   IconX,
 } from '@tabler/icons-vue';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
-import { type Component, ref, useId } from 'vue';
+import { reactive, ref, useId } from 'vue';
 
 import { Button } from '../button';
 import { Checkbox } from '../checkbox';
@@ -777,11 +777,40 @@ export const Selection: Story = {
     setup: () => ({
       selectionId: useId(),
       files: ['Project brief', 'Research notes', 'Launch checklist'],
-      selected: ref(['Project brief', 'Research notes']),
-      archived: ref<string[]>([]),
-      message: ref(''),
-      focusById: (id: string) => document.getElementById(id)?.focus(),
+      selection: reactive({
+        selected: ['Project brief', 'Research notes'],
+        archived: [] as string[],
+        message: '',
+      }),
       heading: ref<HTMLElement | null>(null),
+      toggleSelection: (
+        selection: { selected: string[]; message: string },
+        name: string,
+        checked: boolean | 'indeterminate'
+      ) => {
+        selection.selected =
+          checked === true
+            ? [...selection.selected, name]
+            : selection.selected.filter((item) => item !== name);
+        selection.message = '';
+      },
+      clearSelection: (
+        selection: { selected: string[] },
+        firstCheckboxId: string
+      ) => {
+        selection.selected = [];
+        document.getElementById(firstCheckboxId)?.focus();
+      },
+      archiveSelection: (
+        selection: { selected: string[]; archived: string[]; message: string },
+        heading: HTMLElement | null
+      ) => {
+        const count = selection.selected.length;
+        selection.message = `${count} document${count === 1 ? '' : 's'} archived.`;
+        selection.archived = [...selection.archived, ...selection.selected];
+        selection.selected = [];
+        heading?.focus();
+      },
     }),
     template: `
       <section class="nx:grid nx:gap-4">
@@ -791,21 +820,21 @@ export const Selection: Story = {
         </div>
         <div class="nx:rounded-lg nx:border-default nx:border-border-default nx:bg-container nx:p-3">
           <Label
-            v-for="(name, index) in files.filter((file) => !archived.includes(file))"
+            v-for="(name, index) in files.filter((file) => !selection.archived.includes(file))"
             :key="name"
             :for="selectionId + '-' + index"
             class="nx:flex nx:min-h-10 nx:cursor-pointer nx:items-center nx:gap-3 nx:px-2 nx:typography-body-default"
           >
             <Checkbox
               :id="selectionId + '-' + index"
-              :model-value="selected.includes(name)"
-              @update:model-value="(checked) => { selected = checked === true ? [...selected, name] : selected.filter((item) => item !== name); message = '' }"
+              :model-value="selection.selected.includes(name)"
+              @update:model-value="(checked) => toggleSelection(selection, name, checked)"
             />{{ name }}</Label>
-          <p v-if="archived.length === files.length" class="nx:p-2 nx:typography-body-default nx:text-muted-foreground">No documents remaining.</p>
+          <p v-if="selection.archived.length === files.length" class="nx:p-2 nx:typography-body-default nx:text-muted-foreground">No documents remaining.</p>
         </div>
         <div class="nx:flex nx:min-h-16 nx:justify-center">
           <Toolbar
-            v-if="selected.length > 0"
+            v-if="selection.selected.length > 0"
             aria-label="Selected document actions"
             class="nx:h-fit nx:justify-center nx:gap-0 nx:bg-popover nx:p-0"
           >
@@ -815,22 +844,20 @@ export const Selection: Story = {
                   size="icon-sm"
                   aria-label="Clear selection"
                   class="nx:text-muted-foreground"
-                  @click="selected = []; focusById(selectionId + '-0')"
+                  @click="clearSelection(selection, selectionId + '-0')"
                 >
                   <IconX aria-hidden="true" />
                 </ToolbarButton>
               </TooltipTrigger>
               <TooltipContent>Clear selection</TooltipContent>
             </Tooltip>
-            <span class="nx:px-2 nx:typography-label-default nx:whitespace-nowrap" aria-live="polite">{{ selected.length }} selected</span>
+            <span class="nx:px-2 nx:typography-label-default nx:whitespace-nowrap" aria-live="polite">{{ selection.selected.length }} selected</span>
             <ToolbarSeparator class="nx:self-stretch nx:data-[orientation=vertical]:h-auto" />
-            <ToolbarButton
-              @click="message = selected.length + (selected.length === 1 ? ' document' : ' documents') + ' archived.'; archived = [...archived, ...selected]; selected = []; heading?.focus()"
-            >
+            <ToolbarButton @click="archiveSelection(selection, heading)">
               <IconArchive aria-hidden="true" />Archive</ToolbarButton>
           </Toolbar>
         </div>
-        <p role="status" class="nx:typography-body-small nx:text-muted-foreground">{{ message }}</p>
+        <p role="status" class="nx:typography-body-small nx:text-muted-foreground">{{ selection.message }}</p>
       </section>
     `,
   }),
@@ -856,9 +883,9 @@ export const Selection: Story = {
 export const AllVariants: Story = {
   render: () => ({
     components: {
-      InlineExample: Inline.render!({}, {} as never) as Component,
-      AttachedExample: Attached.render!({}, {} as never) as Component,
-      SelectionExample: Selection.render!({}, {} as never) as Component,
+      InlineExample: Inline.render!({}, {} as never),
+      AttachedExample: Attached.render!({}, {} as never),
+      SelectionExample: Selection.render!({}, {} as never),
     },
     template: `
       <div class="nx:grid nx:gap-10">

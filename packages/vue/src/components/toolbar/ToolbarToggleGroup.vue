@@ -2,15 +2,18 @@
 import { reactiveOmit } from '@vueuse/core';
 import {
   type AcceptableValue,
+  type ToggleGroupRootProps,
   ToolbarToggleGroup,
-  type ToolbarToggleGroupProps as RekaToolbarToggleGroupProps,
   useForwardProps,
 } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
 
-export interface ToolbarToggleGroupProps extends RekaToolbarToggleGroupProps {
+export interface ToolbarToggleGroupProps
+  extends
+    Required<Pick<ToggleGroupRootProps<string | string[]>, 'type'>>,
+    Omit<ToggleGroupRootProps<string | string[]>, 'type'> {
   class?: HTMLAttributes['class'];
 }
 

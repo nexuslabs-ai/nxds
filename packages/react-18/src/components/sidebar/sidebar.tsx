@@ -83,7 +83,7 @@ interface SidebarProviderProps extends React.ComponentProps<'div'> {
    */
   defaultOpen?: boolean;
   /**
-   * Controlled open state. Pair it with `onOpenChange`.
+   * Controlled open state.
    */
   open?: boolean;
   /**
@@ -235,6 +235,18 @@ const Sidebar = React.forwardRef<
     ? propsWithoutRef
     : { ...propsWithoutRef, ref: forwardedRef };
   const { isNarrow, state, openNarrow, setOpenNarrow } = useSidebar();
+  // The drawer opens from state, not a SheetTrigger, so it has no trigger to
+  // return focus to. Return it to whatever had focus when it opened.
+  const returnFocus = React.useRef<HTMLElement | null>(null);
+
+  function rememberFocus() {
+    returnFocus.current = document.activeElement as HTMLElement | null;
+  }
+
+  function restoreFocus(event: Event) {
+    event.preventDefault();
+    returnFocus.current?.focus();
+  }
 
   if (collapsible === 'none') {
     return (
@@ -259,6 +271,8 @@ const Sidebar = React.forwardRef<
           data-slot="sidebar"
           data-narrow="true"
           side={side}
+          onOpenAutoFocus={rememberFocus}
+          onCloseAutoFocus={restoreFocus}
           className={cn(
             'nx:inset-y-2 nx:h-auto nx:w-(--sidebar-width) nx:max-w-[calc(100vw-1rem)] nx:rounded-lg nx:border-default nx:border-nav-border nx:bg-nav-background nx:p-0 nx:text-nav-foreground',
             side === 'left'
@@ -934,14 +948,9 @@ const SidebarMenuButton = React.forwardRef<
     typeof tooltip === 'string' ? { children: tooltip } : tooltip;
 
   return (
-    <Tooltip>
+    <Tooltip open={state === 'collapsed' && !isNarrow ? undefined : false}>
       <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent
-        side="right"
-        align="center"
-        hidden={state !== 'collapsed' || isNarrow}
-        {...tooltipProps}
-      />
+      <TooltipContent side="right" align="center" {...tooltipProps} />
     </Tooltip>
   );
 });
