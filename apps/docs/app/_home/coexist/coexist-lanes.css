@@ -100,8 +100,8 @@
   background: var(--nx-color-muted);
 }
 
-/* The library you add: its mark, name and file, in a box with a line down
-   to its card across the row gap. */
+/* The library you add: its name and file, in a box with a line down to its
+   card across the row gap. */
 @utility coexist-lanes-library {
   position: relative;
   justify-self: center;
@@ -121,11 +121,6 @@
     inset-inline-start: 50%;
     block-size: var(--nx-spacing-6);
     border-inline-start: var(--nx-borderwidth-default) solid;
-  }
-
-  & > svg {
-    inline-size: var(--nx-spacing-5);
-    block-size: var(--nx-spacing-5);
   }
 }
 

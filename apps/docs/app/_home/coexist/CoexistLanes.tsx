@@ -6,12 +6,10 @@ import {
   IconAlertTriangle,
   IconChevronDown,
   IconCircleCheck,
-  IconStackPush,
 } from '@tabler/icons-react';
 
 import { Toggle } from '@/components/toggle/toggle';
 
-import { BootstrapLogo, ShadcnLogo } from '../ecosystem-logos';
 import { toolIcons, type ToolName } from '../tool-icons';
 
 /** A part of the host app's sketch that reads a name a library writes. */
@@ -28,7 +26,7 @@ type Part =
 /** A name or rule a library writes, and the sketch part that reads it. */
 type Write = readonly [written: string, part: Part | null];
 
-type Library = { name: string; file: string; icon: ReactNode };
+type Library = { name: string; file: string };
 
 type LaneName = 'other' | 'nexus';
 
@@ -187,7 +185,6 @@ function PrimarySketch({ broken, pointed }: SketchProps) {
 const shadcnSelect: Library = {
   name: 'shadcn/ui Select',
   file: 'globals.css',
-  icon: <ShadcnLogo aria-hidden="true" />,
 };
 
 // One example per host app.
@@ -232,7 +229,6 @@ const hosts = [
     adds: {
       name: 'react-bootstrap Dropdown',
       file: 'bootstrap.min.css',
-      icon: <BootstrapLogo aria-hidden="true" />,
     },
     writes: [
       ['.bg-primary { background-color: … !important }', 'primary'],
@@ -251,7 +247,6 @@ const nexusLane: Lane = {
   lane: 'nexus',
   name: 'Nexus Select',
   file: 'nxds.css',
-  icon: <IconStackPush aria-hidden="true" />,
   writes: [
     ['--nx-*', null],
     ['.nx:*', null],
@@ -294,64 +289,57 @@ function HostLanes({ host }: { host: Host }) {
           Your {host.tab} app
         </h3>
         <div className="nx:coexist-lanes nx:@3xl:grid-cols-2">
-          {lanes.map(
-            ({ lane, icon, name, file, writes, verdict, verdictIcon }) => (
-              <div
-                key={lane}
-                className="nx:coexist-lanes-column"
-                data-lane={lane}
-              >
-                <div className="nx:coexist-lanes-library">
-                  {icon}
-                  <h4 className="nx:m-0 nx:typography-label-default">{name}</h4>
-                  <span className="nx:typography-body-small nx:text-muted-foreground">
-                    {file}
-                  </span>
-                </div>
-                <div className="nx:coexist-lanes-card">
-                  <div
-                    className="nx:coexist-lanes-chips"
-                    role="group"
-                    aria-label="Writes on the page"
-                  >
-                    {writes.map(([written, part]) => {
-                      const target: Target = { lane, written, part };
-                      return (
-                        <Toggle
-                          key={written}
-                          size="sm"
-                          className="nx:coexist-lanes-chip nx:h-auto nx:whitespace-normal nx:typography-code-inline"
-                          pressed={pinned?.written === written}
-                          onPressedChange={(on) =>
-                            setPinned(on ? target : null)
-                          }
-                          data-active={
-                            pointed?.written === written || undefined
-                          }
-                          onPointerEnter={() => setHovered(target)}
-                          onPointerLeave={() => setHovered(null)}
-                          onFocus={() => setHovered(target)}
-                          onBlur={() => setHovered(null)}
-                        >
-                          {written}
-                        </Toggle>
-                      );
-                    })}
-                  </div>
-                  <div className="nx:coexist-lanes-stage nx:dotted-stage">
-                    <Sketch
-                      broken={lane === 'other'}
-                      pointed={pointed?.part ?? null}
-                    />
-                  </div>
-                  <p className="nx:coexist-lanes-verdict nx:typography-label-default">
-                    {verdictIcon}
-                    {verdict}
-                  </p>
-                </div>
+          {lanes.map(({ lane, name, file, writes, verdict, verdictIcon }) => (
+            <div
+              key={lane}
+              className="nx:coexist-lanes-column"
+              data-lane={lane}
+            >
+              <div className="nx:coexist-lanes-library">
+                <h4 className="nx:m-0 nx:typography-label-default">{name}</h4>
+                <span className="nx:typography-body-small nx:text-muted-foreground">
+                  {file}
+                </span>
               </div>
-            )
-          )}
+              <div className="nx:coexist-lanes-card">
+                <div
+                  className="nx:coexist-lanes-chips"
+                  role="group"
+                  aria-label="Writes on the page"
+                >
+                  {writes.map(([written, part]) => {
+                    const target: Target = { lane, written, part };
+                    return (
+                      <Toggle
+                        key={written}
+                        size="sm"
+                        className="nx:coexist-lanes-chip nx:h-auto nx:whitespace-normal nx:typography-code-inline"
+                        pressed={pinned?.written === written}
+                        onPressedChange={(on) => setPinned(on ? target : null)}
+                        data-active={pointed?.written === written || undefined}
+                        onPointerEnter={() => setHovered(target)}
+                        onPointerLeave={() => setHovered(null)}
+                        onFocus={() => setHovered(target)}
+                        onBlur={() => setHovered(null)}
+                      >
+                        {written}
+                      </Toggle>
+                    );
+                  })}
+                </div>
+                <div className="nx:coexist-lanes-stage nx:dotted-stage">
+                  <Sketch
+                    broken={lane === 'other'}
+                    pointed={pointed?.part ?? null}
+                  />
+                </div>
+                <p className="nx:coexist-lanes-verdict nx:typography-label-default">
+                  {verdictIcon}
+                  {verdict}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
