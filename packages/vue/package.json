@@ -24,6 +24,7 @@
     "build": "vite build",
     "clean": "rm -rf dist",
     "typecheck": "vue-tsc --noEmit",
+    "typecheck:dist": "node scripts/typecheck-dist.mjs",
     "storybook": "storybook dev -p 6007",
     "build-storybook": "storybook build"
   },
