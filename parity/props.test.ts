@@ -1,3 +1,4 @@
+import { publicExports } from '@nxds/source-model/props-contract.mjs';
 import type {
   ComponentEntry,
   PropEntry,
@@ -5,11 +6,13 @@ import type {
 } from '@nxds/source-model/props-entries.ts';
 import {
   reactPackageProps,
+  reactProgram,
   reactPropsFiles,
 } from '@nxds/source-model/react-props.mjs';
 import {
   componentsRoot,
   vueComponentsRoot,
+  vueSrc,
 } from '@nxds/source-model/roots.mjs';
 import {
   componentParts,
@@ -17,6 +20,7 @@ import {
   ownEvents,
   parseFile,
   partEntry,
+  type PropertyMetaSchema,
   type VueProgram,
 } from '@nxds/source-model/vue-sources.ts';
 import path from 'node:path';
@@ -36,6 +40,8 @@ interface VuePartApi {
   /** Named slots; the default slot is `hasDefaultSlot`. */
   slots: string[];
   hasDefaultSlot: boolean;
+  /** Props the default slot passes, as `default.{name}`. React's `children` passes none. */
+  defaultSlotProps: string[];
   events: string[];
   inheritsAsChild: boolean;
   /** The `class` prop's description. Vue reads `class` as a global prop, so it isn't in `entry`. */
@@ -92,6 +98,14 @@ function packageReExports(slug: string) {
   });
 }
 
+/** The props a slot passes, read from its schema. */
+function slotProps(schema: PropertyMetaSchema | undefined): string[] {
+  if (!schema || typeof schema === 'string') return [];
+  if (schema.kind === 'object') return Object.keys(schema.schema ?? {});
+  if (schema.kind === 'enum') return (schema.schema ?? []).flatMap(slotProps);
+  return [];
+}
+
 function vueContract(vueProgram: VueProgram, slug: string) {
   const parts = componentParts(vueProgram, slug).map(
     (part): VuePartApi => ({
@@ -100,6 +114,9 @@ function vueContract(vueProgram: VueProgram, slug: string) {
         .map((slot) => slot.name)
         .filter((name) => name !== 'default'),
       hasDefaultSlot: part.meta.slots.some((slot) => slot.name === 'default'),
+      defaultSlotProps: slotProps(
+        part.meta.slots.find((slot) => slot.name === 'default')?.schema
+      ).map((name) => `default.${name}`),
       events: ownEvents(vueProgram, part),
       inheritsAsChild: part.meta.props.some((prop) => prop.name === 'asChild'),
       classDescription: part.meta.props.find((prop) => prop.name === 'class')
@@ -203,9 +220,12 @@ function partDrift(react: ComponentEntry, vue: VuePartApi) {
   }
 
   const mapped = mappedNames(react);
-  const vueOnly = [...vueProps.keys(), ...vue.slots, ...vue.events].filter(
-    (name) => !mapped.has(name) && !(at(name) in vueOnlyApi)
-  );
+  const vueOnly = [
+    ...vueProps.keys(),
+    ...vue.slots,
+    ...vue.defaultSlotProps,
+    ...vue.events,
+  ].filter((name) => !mapped.has(name) && !(at(name) in vueOnlyApi));
   drift.push(...vueOnly.map((name) => `${at(name)}: Vue only`));
   return drift;
 }
@@ -250,11 +270,48 @@ function vueCandidates(name: string) {
   return candidates;
 }
 
+/** Each public `use*` export declared in a component folder, by slug, with the keys its return value holds. */
+function hooksBySlug(
+  checker: ts.TypeChecker,
+  exported: Map<string, ts.Symbol>,
+  root: string
+) {
+  const bySlug = new Map<string, Map<string, string[]>>();
+  for (const [name, symbol] of exported) {
+    const declaration = symbol.declarations?.[0];
+    if (!/^use[A-Z]/.test(name) || !declaration) continue;
+    const file = path.relative(root, declaration.getSourceFile().fileName);
+    if (file.startsWith('..')) continue;
+
+    const [slug = ''] = file.split(path.sep);
+    const type = checker.getTypeOfSymbolAtLocation(symbol, declaration);
+    const keys = checker
+      .getSignaturesOfType(type, ts.SignatureKind.Call)
+      .flatMap((signature) =>
+        checker.getPropertiesOfType(checker.getReturnTypeOfSignature(signature))
+      )
+      .map((property) => property.name);
+    const hooks = bySlug.get(slug) ?? new Map<string, string[]>();
+    bySlug.set(slug, hooks.set(name, [...new Set(keys)].sort()));
+  }
+  return bySlug;
+}
+
 const contracts = new Map<string, Contract>();
 let packageProps: Map<string, Map<string, string[]>>;
+let reactHooks: Map<string, Map<string, string[]>>;
+let vueHooks: Map<string, Map<string, string[]>>;
 
 beforeAll(() => {
   const vueProgram = createVueProgram();
+  const vueTsProgram = vueProgram.checker.getProgram();
+  if (!vueTsProgram) throw new Error('the Vue checker has no program.');
+  const vueChecker = vueTsProgram.getTypeChecker();
+  vueHooks = hooksBySlug(
+    vueChecker,
+    publicExports(vueChecker, vueTsProgram, [path.join(vueSrc, 'index.ts')]),
+    vueComponentsRoot
+  );
   const reactFiles = new Map(
     (reactPropsFiles() as PropsFile[]).map((file) => [file.slug, file])
   );
@@ -267,7 +324,9 @@ beforeAll(() => {
       vueReExports: new Set(packageReExports(slug)),
     });
   }
-  packageProps = reactPackageProps();
+  const react = reactProgram();
+  packageProps = reactPackageProps(react);
+  reactHooks = hooksBySlug(react.checker, react.exported, componentsRoot);
 }, 120_000);
 
 describe('component contract', () => {
@@ -296,6 +355,7 @@ describe('component contract', () => {
           return [
             ...part.entry.props.map((prop) => prop.name),
             ...part.slots,
+            ...part.defaultSlotProps,
             ...part.events,
           ]
             .filter((api) => !mapped.has(api))
@@ -383,16 +443,25 @@ describe('inherited contract', () => {
 });
 
 describe('composable contract', () => {
-  it('useMessageScroller returns what the React hook returns', () => {
-    const interfaceName = 'MessageScrollerContextValue';
-    const react = interfaceKeys(
-      path.join(componentsRoot, 'message-scroller', 'message-scroller.tsx')
-    ).get(interfaceName);
-    const vue = interfaceKeys(
-      path.join(vueComponentsRoot, 'message-scroller', 'index.ts')
-    ).get(interfaceName);
-    expect(react?.length).toBeGreaterThan(0);
+  it.each(shared)('%s exports the hooks React exports', (slug) => {
+    const react = [...(reactHooks.get(slug)?.keys() ?? [])].sort();
+    const vue = [...(vueHooks.get(slug)?.keys() ?? [])].sort();
     expect(vue).toEqual(react);
+  });
+
+  it('checks at least one hook', () => {
+    expect([...reactHooks.values()].some((hooks) => hooks.size > 0)).toBe(true);
+  });
+
+  it.each(shared)('%s composables return what its hooks return', (slug) => {
+    const vue = vueHooks.get(slug) ?? new Map<string, string[]>();
+    const drift = [...vue].flatMap(([name, keys]) => {
+      const react = reactHooks.get(slug)?.get(name);
+      return react && keys.join() !== react.join()
+        ? [`${name}: ${keys.join()} ≠ ${react.join()}`]
+        : [];
+    });
+    expect(drift).toEqual([]);
   });
 });
 

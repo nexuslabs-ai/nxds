@@ -7,11 +7,9 @@ import {
   useVueSonner,
 } from 'vue-sonner';
 
-export { default as Toaster, type ToasterProps } from './Toaster.vue';
+import { NXDS_TOASTER_ID } from './toaster-id';
 
-// nxds toasts render only in the nxds Toaster, and a host app's own sonner
-// Toaster never shows them, so mounting both never doubles a toast.
-export const NXDS_TOASTER_ID = 'nxds';
+export { default as Toaster, type ToasterProps } from './Toaster.vue';
 
 function inNxdsToaster<Data extends object>(data?: Data) {
   return { ...data, toasterId: NXDS_TOASTER_ID };
@@ -21,32 +19,34 @@ function isNxdsToast(entry: ToastT | ToastToDismiss): entry is ToastT {
   return 'toasterId' in entry && entry.toasterId === NXDS_TOASTER_ID;
 }
 
-type ToastMessage = Parameters<typeof sonnerToast.success>[0];
+type Message = Parameters<typeof sonnerToast.success>[0];
 
-const nxdsToast = Object.assign(
+const toast = Object.assign(
   (message: Parameters<typeof sonnerToast>[0], data?: ExternalToast) =>
     sonnerToast(message, inNxdsToaster(data)),
   {
-    success: (message: ToastMessage, data?: ExternalToast) =>
+    success: (message: Message, data?: ExternalToast) =>
       sonnerToast.success(message, inNxdsToaster(data)),
-    info: (message: ToastMessage, data?: ExternalToast) =>
+    info: (message: Message, data?: ExternalToast) =>
       sonnerToast.info(message, inNxdsToaster(data)),
-    warning: (message: ToastMessage, data?: ExternalToast) =>
+    warning: (message: Message, data?: ExternalToast) =>
       sonnerToast.warning(message, inNxdsToaster(data)),
-    error: (message: ToastMessage, data?: ExternalToast) =>
+    error: (message: Message, data?: ExternalToast) =>
       sonnerToast.error(message, inNxdsToaster(data)),
-    message: (message: ToastMessage, data?: ExternalToast) =>
+    message: (message: Message, data?: ExternalToast) =>
       sonnerToast.message(message, inNxdsToaster(data)),
-    loading: (message: ToastMessage, data?: ExternalToast) =>
+    loading: (message: Message, data?: ExternalToast) =>
       sonnerToast.loading(message, inNxdsToaster(data)),
     custom: (
-      component: Parameters<typeof sonnerToast.custom>[0],
+      content: Parameters<typeof sonnerToast.custom>[0],
       data?: ExternalToast
-    ) => sonnerToast.custom(component, inNxdsToaster(data)),
-    promise: <ToastData>(
+    ) => sonnerToast.custom(content, inNxdsToaster(data)),
+    promise<ToastData>(
       promise: Parameters<typeof sonnerToast.promise<ToastData>>[0],
       data?: Parameters<typeof sonnerToast.promise<ToastData>>[1]
-    ) => sonnerToast.promise(promise, data && inNxdsToaster(data)),
+    ) {
+      return sonnerToast.promise(promise, data && inNxdsToaster(data));
+    },
     // Without an id, dismisses every nxds toast and leaves the host's alone.
     dismiss: (id?: number | string) => {
       if (id !== undefined) return sonnerToast.dismiss(id);
@@ -60,9 +60,9 @@ const nxdsToast = Object.assign(
 );
 
 /** The nxds toasts currently on screen. Call it during a component's setup. */
-function useToastList() {
+function useNxdsToasts() {
   const { activeToasts } = useVueSonner();
   return { toasts: computed(() => activeToasts.value.filter(isNxdsToast)) };
 }
 
-export { nxdsToast as toast, useToastList as useSonner };
+export { toast, useNxdsToasts as useSonner };

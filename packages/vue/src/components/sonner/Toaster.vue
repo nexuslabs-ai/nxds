@@ -19,9 +19,9 @@ import {
   type ToasterProps as SonnerToasterProps,
 } from 'vue-sonner';
 
-import 'vue-sonner/style.css';
+import { NXDS_TOASTER_ID } from './toaster-id';
 
-import { NXDS_TOASTER_ID } from '.';
+import 'vue-sonner/style.css';
 
 export type ToasterProps = Omit<SonnerToasterProps, 'id'>;
 

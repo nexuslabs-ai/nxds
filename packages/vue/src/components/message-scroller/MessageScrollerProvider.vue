@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { provide, readonly, ref, shallowRef, type VNode, watch } from 'vue';
 
-import { MessageScrollerKey } from '.';
+import { MessageScrollerKey } from './message-scroller-context';
 
 export type MessageScrollerProviderProps = Record<string, never>;
 

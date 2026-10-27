@@ -127,6 +127,9 @@
     "recharts": {
       "optional": true
     },
+    "sonner": {
+      "optional": true
+    },
     "vaul": {
       "optional": true
     }

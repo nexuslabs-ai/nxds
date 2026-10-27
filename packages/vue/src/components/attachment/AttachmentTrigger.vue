@@ -24,7 +24,7 @@ const props = withDefaults(defineProps<AttachmentTriggerProps>(), {
     data-slot="attachment-trigger"
     :as="as"
     :as-child="asChild"
-    :type="asChild ? undefined : 'button'"
+    :type="as === 'button' && !asChild ? 'button' : undefined"
     :class="
       cn(
         'nx:absolute nx:inset-0 nx:z-10 nx:cursor-pointer nx:rounded-[inherit] nx:border-0 nx:bg-transparent nx:p-0 nx:no-underline',

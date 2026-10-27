@@ -3,11 +3,13 @@ import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
 
-export interface AttachmentGroupProps {
-  ariaLabel?: string;
-  ariaLabelledby?: string;
+type AttachmentGroupLabel =
+  | { ariaLabel: string; ariaLabelledby?: never }
+  | { ariaLabelledby: string; ariaLabel?: never };
+
+export type AttachmentGroupProps = AttachmentGroupLabel & {
   class?: HTMLAttributes['class'];
-}
+};
 
 const props = defineProps<AttachmentGroupProps>();
 </script>

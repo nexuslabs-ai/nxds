@@ -3,7 +3,7 @@ import type { ComponentPublicInstance, HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
 
-import { injectMessageScrollerNodes } from '.';
+import { useMessageScrollerNodes } from './message-scroller-context';
 
 export interface MessageScrollerContentProps {
   class?: HTMLAttributes['class'];
@@ -11,7 +11,7 @@ export interface MessageScrollerContentProps {
 
 const props = defineProps<MessageScrollerContentProps>();
 
-const { setContent } = injectMessageScrollerNodes();
+const { setContent } = useMessageScrollerNodes();
 
 function registerContent(node: Element | ComponentPublicInstance | null) {
   setContent(node instanceof HTMLElement ? node : null);
