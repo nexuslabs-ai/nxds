@@ -14,7 +14,7 @@ import { Badge } from '@/components/badge/badge';
 import { Button } from '@/components/button/button';
 import { Toggle } from '@/components/toggle/toggle';
 
-import { toolIcons } from '../tool-icons';
+import { toolIcons, type ToolName } from '../tool-icons';
 
 const inputGroups = [
   {
@@ -55,16 +55,24 @@ const modules = [
   },
 ];
 
-// In the toolbar's order: a chip's index selects the toolbar tool.
-const frameworks = [
-  { name: 'React', status: 'Components' },
-  { name: 'Vue', status: 'Growing library' },
-  { name: 'Svelte', status: 'Planned' },
-  { name: 'Angular', status: 'Planned' },
-  { name: 'React Native', status: 'Planned' },
-] as const;
+/** The Frameworks chapter's toolbar tools, in toolbar order. */
+export const frameworkTabs = [
+  'React',
+  'Vue',
+  'Svelte',
+  'Angular',
+  'React Native',
+] as const satisfies readonly ToolName[];
 
-type Framework = (typeof frameworks)[number]['name'];
+export type Framework = (typeof frameworkTabs)[number];
+
+const frameworkStatus: Record<Framework, string> = {
+  React: 'Components',
+  Vue: 'Growing library',
+  Svelte: 'Planned',
+  Angular: 'Planned',
+  'React Native': 'Planned',
+};
 
 // Diagram nodes stretch to fill their grid cell and anchor their flow traces.
 const nodeClassName =
@@ -101,9 +109,9 @@ export function CoreChipChapter({
   onSelect,
 }: {
   /** The selected toolbar tool. */
-  framework: Framework | undefined;
-  /** Selects the toolbar tool at this index. */
-  onSelect: (index: number) => void;
+  framework: Framework;
+  /** Selects this framework's toolbar tool. */
+  onSelect: (framework: Framework) => void;
 }) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [focused, setFocused] = useState<string | null>(null);
@@ -112,7 +120,7 @@ export function CoreChipChapter({
     items.some(({ name }) => name === active)
   );
   const activeModule = modules.find(({ name }) => name === active);
-  const activeFramework = frameworks.find(({ name }) => name === active);
+  const activeFramework = frameworkTabs.find((name) => name === active);
   const allLanes = activeModule?.lane === 'shared' || Boolean(activeFramework);
   const activeLane = activeGroup?.lane ?? activeModule?.lane;
   const themeFlow = allLanes || activeLane === 'theme';
@@ -222,15 +230,16 @@ export function CoreChipChapter({
         <div className="nx:framework-output-group">
           <span className="nx:framework-column-label">Frameworks</span>
           <div className="nx:chip-destinations">
-            {frameworks.map(({ name, status }, index) => {
+            {frameworkTabs.map((name) => {
               const Icon = toolIcons[name];
+              const status = frameworkStatus[name];
               const flowing =
                 Boolean(active) && (!activeFramework || active === name);
               return (
                 <Toggle
                   className={`nx:chip-destination ${nodeClassName} nx:rounded-xl nx:bg-muted nx:data-[flowing=true]:bg-control-background nx:[&_svg]:size-(--chip-icon-size)`}
                   pressed={name === framework}
-                  onPressedChange={() => onSelect(index)}
+                  onPressedChange={() => onSelect(name)}
                   aria-label={`${name}, ${status}`}
                   data-planned={status === 'Planned' || undefined}
                   data-flow-node={name}

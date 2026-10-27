@@ -25,13 +25,12 @@ import {
   Switch,
 } from '@nxds/react';
 
-import { THEME_MODE_OPTIONS } from '../_lib/appearance-controls';
+import {
+  CONTRAST_RANGE,
+  THEME_MODE_OPTIONS,
+  UI_FONT_SIZE_RANGE,
+} from '../_lib/appearance-controls';
 import { setIconLibrary, useIconLibrary } from '../_lib/icon-library';
-
-const CONTRAST_MIN = 0;
-const CONTRAST_MAX = 100;
-const FONT_SIZE_MIN = 8;
-const FONT_SIZE_MAX = 32;
 
 const LABEL_CLASS = 'nx:typography-label-default';
 const FIELD_CLASS = 'nx:flex nx:flex-col nx:gap-2';
@@ -176,8 +175,8 @@ function ContrastField({
       </div>
       <Slider
         aria-labelledby={`${labelId} ${noteId}`}
-        min={CONTRAST_MIN}
-        max={CONTRAST_MAX}
+        min={CONTRAST_RANGE.min}
+        max={CONTRAST_RANGE.max}
         step={1}
         value={[shown]}
         onPointerDown={() => setDraft(value)}
@@ -214,7 +213,7 @@ function FontSizeField({
     setDraft(text);
     const next = Number(text);
     if (text === '' || !Number.isInteger(next) || next === value) return;
-    if (next < FONT_SIZE_MIN || next > FONT_SIZE_MAX) return;
+    if (next < UI_FONT_SIZE_RANGE.min || next > UI_FONT_SIZE_RANGE.max) return;
     onChange(next);
   }
 
@@ -225,8 +224,8 @@ function FontSizeField({
         id={id}
         type="number"
         inputMode="numeric"
-        min={FONT_SIZE_MIN}
-        max={FONT_SIZE_MAX}
+        min={UI_FONT_SIZE_RANGE.min}
+        max={UI_FONT_SIZE_RANGE.max}
         value={draft ?? value}
         onChange={handleChange}
         onBlur={() => setDraft(null)}

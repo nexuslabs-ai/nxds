@@ -6,7 +6,6 @@ import { flushSync } from 'react-dom';
 import { useNxdsAppearance } from '@nxds/react/appearance';
 
 import { Badge, type BadgeProps } from '@/components/badge/badge';
-import { Button } from '@/components/button/button';
 import {
   Card,
   CardAction,
@@ -50,7 +49,8 @@ import {
   IconMinus,
   IconX,
 } from '../../_lib/switchable-icons';
-import { ChapterToolbar } from '../ChapterToolbar';
+import { ChapterPreview } from '../ChapterPreview';
+import type { ToolName } from '../tool-icons';
 
 import type { StoryCode } from './story-code';
 import {
@@ -64,10 +64,6 @@ import {
   type StoryModeId,
   storyModes,
 } from './story-test-model';
-
-// Stories' place in the walkthrough. The toolbar names its tools
-// `story-tab-{chapter}-{index}`, and the canvas is labelled by the active one.
-const CHAPTER = 4;
 
 const tabs = storyModes.map(({ label }) => label);
 
@@ -124,17 +120,13 @@ function stepDelay(reduceMotion: boolean) {
  * that picks the story and runs its checks on the live example.
  */
 export function StoryTestIterations({
-  cta,
-  href,
+  chapter,
   storyCode,
-  active,
 }: {
-  cta: string;
-  href: string;
+  /** The id of the section this preview sits in. */
+  chapter: string;
   /** Every story's highlighted source, from `highlightStories()`. */
   storyCode: StoryCode;
-  /** Whether this chapter is the one on screen. */
-  active: boolean;
 }) {
   const { state } = useNxdsAppearance();
   const [modeIndex, setModeIndex] = useState(1);
@@ -191,7 +183,8 @@ export function StoryTestIterations({
     );
   }
 
-  function selectMode(index: number) {
+  function selectMode(label: ToolName) {
+    const index = tabs.indexOf(label);
     if (index === modeIndex) return;
     const nextMode = storyModeAt(index).id;
     reset(nextMode, choices[nextMode]);
@@ -407,216 +400,194 @@ export function StoryTestIterations({
     return check && lineStatuses[check.status];
   }
 
+  const runButton = (
+    <ToolbarButton
+      variant="default"
+      size="lg"
+      onClick={runExample}
+      disabled={running}
+    >
+      Run
+    </ToolbarButton>
+  );
+  const modePanel = (
+    <div className="nx:flex nx:min-w-0 nx:flex-col nx:gap-3">
+      <p className="nx:m-0 nx:typography-body-small nx:text-muted-foreground">
+        {mode.description}
+      </p>
+      <Field>
+        <FieldLabel htmlFor={`${id}-choice`}>{mode.field}</FieldLabel>
+        <NativeSelect
+          id={`${id}-choice`}
+          size="sm"
+          value={choice}
+          onChange={(event) => selectChoice(event.target.value)}
+        >
+          {mode.options.map((option) => (
+            <NativeSelectOption key={option.value} value={option.value}>
+              {option.label}
+            </NativeSelectOption>
+          ))}
+        </NativeSelect>
+      </Field>
+      <p className="nx:m-0 nx:typography-body-small nx:text-muted-foreground">
+        {mode.id === 'accessibility'
+          ? 'Name check only · not an axe audit.'
+          : 'Runs on the live example above.'}
+      </p>
+    </div>
+  );
+
   return (
-    <>
-      <div className="nx:chapter-heading">
-        <h2 id="stories-title">Stories are the tests.</h2>
-        <p className="nx:m-0 nx:-mt-3 nx:mb-6 nx:typography-body-small nx:text-balance nx:text-muted-foreground">
-          The example you explore is the example we check.
-        </p>
-        <div className="nx:story-ctas">
-          <Button variant="outline" asChild>
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${cta} (opens in a new tab)`}
-            >
-              <img src="/brand/storybook.svg" alt="" className="nx:size-3.5" />
-              {cta}
-            </a>
-          </Button>
-        </div>
-      </div>
-      <div
-        className="nx:story-canvas nx:story-canvas-grows"
-        role="region"
-        aria-labelledby={`story-tab-${CHAPTER}-${modeIndex}`}
-      >
-        <div className="nx:flex nx:flex-col nx:gap-4 nx:@3xl:h-full">
-          <Card className="nx:flex nx:flex-col nx:@3xl:grid nx:@3xl:min-h-0 nx:@3xl:flex-1 nx:@3xl:grid-cols-2">
-            <div
-              className="nx:flex nx:min-h-0 nx:flex-col"
-              aria-label="Live switch example"
-              role="group"
-            >
-              <CardHeader className="nx:items-center nx:py-4">
-                <CardTitle>Live example</CardTitle>
-                <CardAction className="nx:row-span-1 nx:self-center">
-                  <Badge role="status" variant={outcomeBadge(checks)}>
-                    {status}
-                  </Badge>
-                </CardAction>
-              </CardHeader>
-              <Separator />
-              <div className="nx:dotted-stage nx:flex nx:flex-1 nx:flex-col nx:gap-6 nx:p-6">
-                <div className="nx:flex nx:flex-1 nx:items-center nx:justify-center">
-                  <Field
-                    orientation="horizontal"
-                    className="nx:max-w-sm"
-                    data-invalid={invalid || undefined}
-                  >
-                    <FieldContent>
-                      <FieldLabel htmlFor={nameless ? undefined : id}>
-                        Email notifications
-                      </FieldLabel>
-                      <FieldDescription id={`${id}-description`}>
-                        Product updates, on your terms.
-                      </FieldDescription>
-                      {invalid && (
-                        <FieldError id={`${id}-error`}>
-                          Choose a notification preference.
-                        </FieldError>
-                      )}
-                      {nameless && (
-                        <FieldError>
-                          The visible label is deliberately disconnected in this
-                          example.
-                        </FieldError>
-                      )}
-                    </FieldContent>
-                    <Switch
-                      ref={example}
-                      id={id}
-                      checked={checked}
-                      disabled={disabled}
-                      aria-invalid={invalid || undefined}
-                      aria-describedby={
-                        invalid ? `${id}-error` : `${id}-description`
-                      }
-                      onCheckedChange={onCheckedChange}
-                      onKeyDown={onKeyDown}
-                      onKeyUp={onKeyUp}
-                      onPointerDown={cancelKeyboard}
-                      onBlur={cancelKeyboard}
-                    />
-                  </Field>
-                </div>
-                <p className="nx:m-0 nx:flex nx:flex-wrap nx:gap-x-4 nx:typography-body-small nx:text-muted-foreground">
-                  <span>
-                    State{' '}
-                    <code className="nx:typography-code-inline nx:text-foreground">
-                      {checked ? 'on' : 'off'}
-                      {disabled ? ' · disabled' : ''}
-                    </code>
-                  </span>
-                  <span>
-                    Callback{' '}
-                    <code className="nx:typography-code-inline nx:text-foreground">
-                      {calls.length ? String(calls.at(-1)) : '—'}
-                    </code>
-                  </span>
-                </p>
-              </div>
-              <Separator />
-              <ItemGroup role="list" aria-label="Checks" className="nx:p-2">
-                {checks.map((check, index) => {
-                  const { label, ...badge } = checkBadges[check.status];
-                  return (
-                    <Item key={story.labels[index]} role="listitem" size="sm">
-                      <ItemMedia>
-                        <CheckIcon status={check.status} />
-                      </ItemMedia>
-                      <ItemContent>
-                        <ItemTitle>{story.labels[index]}</ItemTitle>
-                        {detailed.includes(check.status) && (
-                          <ItemDescription>{check.detail}</ItemDescription>
-                        )}
-                      </ItemContent>
-                      <ItemActions>
-                        <Badge {...badge}>{label}</Badge>
-                      </ItemActions>
-                    </Item>
-                  );
-                })}
-              </ItemGroup>
-            </div>
-            <div
-              className="nx:flex nx:min-h-0 nx:flex-col nx:border-t-default nx:border-border-default nx:@3xl:border-t-0 nx:@3xl:border-l-default"
-              aria-label="Storybook source excerpt"
-              role="group"
-            >
-              <CardHeader className="nx:items-center nx:py-4">
-                <CardTitle>Switch.stories.tsx</CardTitle>
-                <CardAction className="nx:row-span-1 nx:self-center">
-                  <code className="nx:typography-code-inline nx:text-muted-foreground">
-                    {story.name}
-                  </code>
-                </CardAction>
-              </CardHeader>
-              <Separator />
-              <CodeBlock variant="flush" className="nx:min-h-0 nx:flex-1">
-                <CodeBlockContent className="nx:h-full">
-                  {storyCode[story.name]?.map((tokens, index) => (
-                    <CodeBlockLine
-                      key={index}
-                      number={index + 1}
-                      highlighted={activeLine === index}
-                      status={lineStatus(index)}
-                    >
-                      {tokens.map((token, at) => (
-                        <span key={at} style={{ color: token.color }}>
-                          {token.content}
-                        </span>
-                      ))}
-                    </CodeBlockLine>
-                  ))}
-                </CodeBlockContent>
-              </CodeBlock>
-            </div>
-          </Card>
-          <p className="nx:m-0 nx:text-center nx:typography-body-small nx:text-muted-foreground">
-            Read the action. See its effect. Inspect the result.{' '}
-            {mode.id === 'accessibility'
-              ? 'Accessible-name check only. Automated checks are one part of accessibility testing.'
-              : 'Interactive prototype · local checks, not the Nexus CI suite.'}
-          </p>
-        </div>
-      </div>
-      <ChapterToolbar
-        chapter={CHAPTER}
-        title="Explore the stories"
-        tabs={tabs}
-        selected={modeIndex}
-        onSelect={selectMode}
-        active={active}
-        actions={
-          <ToolbarButton
-            variant="default"
-            size="lg"
-            onClick={runExample}
-            disabled={running}
+    <ChapterPreview
+      chapter={chapter}
+      label="Stories"
+      tools={tabs}
+      selected={mode.label}
+      onSelect={selectMode}
+      grows
+      actions={runButton}
+      panel={modePanel}
+    >
+      <div className="nx:flex nx:flex-col nx:gap-4 nx:@3xl:h-full">
+        <Card className="nx:flex nx:flex-col nx:@3xl:grid nx:@3xl:min-h-0 nx:@3xl:flex-1 nx:@3xl:grid-cols-2">
+          <div
+            className="nx:flex nx:min-h-0 nx:flex-col"
+            aria-label="Live switch example"
+            role="group"
           >
-            Run
-          </ToolbarButton>
-        }
-      >
-        <div className="nx:flex nx:min-w-0 nx:flex-col nx:gap-3">
-          <p className="nx:m-0 nx:typography-body-small nx:text-muted-foreground">
-            {mode.description}
-          </p>
-          <Field>
-            <FieldLabel htmlFor={`${id}-choice`}>{mode.field}</FieldLabel>
-            <NativeSelect
-              id={`${id}-choice`}
-              size="sm"
-              value={choice}
-              onChange={(event) => selectChoice(event.target.value)}
-            >
-              {mode.options.map((option) => (
-                <NativeSelectOption key={option.value} value={option.value}>
-                  {option.label}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </Field>
-          <p className="nx:m-0 nx:typography-body-small nx:text-muted-foreground">
-            {mode.id === 'accessibility'
-              ? 'Name check only · not an axe audit.'
-              : 'Runs on the live example above.'}
-          </p>
-        </div>
-      </ChapterToolbar>
-    </>
+            <CardHeader className="nx:items-center nx:py-4">
+              <CardTitle>Live example</CardTitle>
+              <CardAction className="nx:row-span-1 nx:self-center">
+                <Badge role="status" variant={outcomeBadge(checks)}>
+                  {status}
+                </Badge>
+              </CardAction>
+            </CardHeader>
+            <Separator />
+            <div className="nx:dotted-stage nx:flex nx:flex-1 nx:flex-col nx:gap-6 nx:p-6">
+              <div className="nx:flex nx:flex-1 nx:items-center nx:justify-center">
+                <Field
+                  orientation="horizontal"
+                  className="nx:max-w-sm"
+                  data-invalid={invalid || undefined}
+                >
+                  <FieldContent>
+                    <FieldLabel htmlFor={nameless ? undefined : id}>
+                      Email notifications
+                    </FieldLabel>
+                    <FieldDescription id={`${id}-description`}>
+                      Product updates, on your terms.
+                    </FieldDescription>
+                    {invalid && (
+                      <FieldError id={`${id}-error`}>
+                        Choose a notification preference.
+                      </FieldError>
+                    )}
+                    {nameless && (
+                      <FieldError>
+                        The visible label is deliberately disconnected in this
+                        example.
+                      </FieldError>
+                    )}
+                  </FieldContent>
+                  <Switch
+                    ref={example}
+                    id={id}
+                    checked={checked}
+                    disabled={disabled}
+                    aria-invalid={invalid || undefined}
+                    aria-describedby={
+                      invalid ? `${id}-error` : `${id}-description`
+                    }
+                    onCheckedChange={onCheckedChange}
+                    onKeyDown={onKeyDown}
+                    onKeyUp={onKeyUp}
+                    onPointerDown={cancelKeyboard}
+                    onBlur={cancelKeyboard}
+                  />
+                </Field>
+              </div>
+              <p className="nx:m-0 nx:flex nx:flex-wrap nx:gap-x-4 nx:typography-body-small nx:text-muted-foreground">
+                <span>
+                  State{' '}
+                  <code className="nx:typography-code-inline nx:text-foreground">
+                    {checked ? 'on' : 'off'}
+                    {disabled ? ' · disabled' : ''}
+                  </code>
+                </span>
+                <span>
+                  Callback{' '}
+                  <code className="nx:typography-code-inline nx:text-foreground">
+                    {calls.length ? String(calls.at(-1)) : '—'}
+                  </code>
+                </span>
+              </p>
+            </div>
+            <Separator />
+            <ItemGroup role="list" aria-label="Checks" className="nx:p-2">
+              {checks.map((check, index) => {
+                const { label, ...badge } = checkBadges[check.status];
+                return (
+                  <Item key={story.labels[index]} role="listitem" size="sm">
+                    <ItemMedia>
+                      <CheckIcon status={check.status} />
+                    </ItemMedia>
+                    <ItemContent>
+                      <ItemTitle>{story.labels[index]}</ItemTitle>
+                      {detailed.includes(check.status) && (
+                        <ItemDescription>{check.detail}</ItemDescription>
+                      )}
+                    </ItemContent>
+                    <ItemActions>
+                      <Badge {...badge}>{label}</Badge>
+                    </ItemActions>
+                  </Item>
+                );
+              })}
+            </ItemGroup>
+          </div>
+          <div
+            className="nx:flex nx:min-h-0 nx:flex-col nx:border-t-default nx:border-border-default nx:@3xl:border-t-0 nx:@3xl:border-l-default"
+            aria-label="Storybook source excerpt"
+            role="group"
+          >
+            <CardHeader className="nx:items-center nx:py-4">
+              <CardTitle>Switch.stories.tsx</CardTitle>
+              <CardAction className="nx:row-span-1 nx:self-center">
+                <code className="nx:typography-code-inline nx:text-muted-foreground">
+                  {story.name}
+                </code>
+              </CardAction>
+            </CardHeader>
+            <Separator />
+            <CodeBlock variant="flush" className="nx:min-h-0 nx:flex-1">
+              <CodeBlockContent className="nx:h-full">
+                {storyCode[story.name]?.map((tokens, index) => (
+                  <CodeBlockLine
+                    key={index}
+                    number={index + 1}
+                    highlighted={activeLine === index}
+                    status={lineStatus(index)}
+                  >
+                    {tokens.map((token, at) => (
+                      <span key={at} style={{ color: token.color }}>
+                        {token.content}
+                      </span>
+                    ))}
+                  </CodeBlockLine>
+                ))}
+              </CodeBlockContent>
+            </CodeBlock>
+          </div>
+        </Card>
+        <p className="nx:m-0 nx:text-center nx:typography-body-small nx:text-muted-foreground">
+          Read the action. See its effect. Inspect the result.{' '}
+          {mode.id === 'accessibility'
+            ? 'Accessible-name check only. Automated checks are one part of accessibility testing.'
+            : 'Interactive prototype · local checks, not the Nexus CI suite.'}
+        </p>
+      </div>
+    </ChapterPreview>
   );
 }

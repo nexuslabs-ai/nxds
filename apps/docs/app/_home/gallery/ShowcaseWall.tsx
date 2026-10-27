@@ -4,6 +4,8 @@ import type { ComponentType, FocusEvent } from 'react';
 
 import { cn } from '@nxds/react/utils';
 
+import type { ToolName } from '../tool-icons';
+
 import {
   ActivityCard,
   BillingCard,
@@ -21,13 +23,17 @@ import {
   TransactionsCard,
 } from './ShowcaseCards';
 
-export type ShowcaseView =
-  | 'Components'
-  | 'Dashboard'
-  | 'Mail'
-  | 'Chat'
-  | 'Finances'
-  | 'CRM';
+/** The Gallery's views, in toolbar order. */
+export const showcaseViews = [
+  'Components',
+  'Dashboard',
+  'Mail',
+  'Chat',
+  'Finances',
+  'CRM',
+] as const satisfies readonly ToolName[];
+
+export type ShowcaseView = (typeof showcaseViews)[number];
 
 // Three columns per view. The first card of each column is the one above the
 // fold; the short columns get a fourth card so no column ends above the
@@ -65,12 +71,9 @@ const views: Record<ShowcaseView, ComponentType[][]> = {
   ],
 };
 
-// Each column joins the wall at the next Nexus breakpoint.
-const columnVisibility = [
-  'nx:flex',
-  'nx:hidden nx:md:flex',
-  'nx:hidden nx:lg:flex',
-];
+// Phones swipe through every column. From md the wall shows two, from lg all
+// three.
+const columnVisibility = ['', '', 'nx:md:hidden nx:lg:flex'];
 
 // On a phone the wall swipes between columns. Chrome leaves a control unscrolled
 // when a sliver of it shows in the peek, so snap to the column that takes focus.
@@ -101,7 +104,7 @@ export function ShowcaseWall({ view }: { view: ShowcaseView }) {
         <div
           key={column}
           className={cn(
-            'nx:min-w-0 nx:flex-1 nx:flex-col nx:gap-6',
+            'nx:flex nx:min-w-0 nx:flex-1 nx:flex-col nx:gap-6',
             columnVisibility[column]
           )}
         >

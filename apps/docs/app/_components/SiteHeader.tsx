@@ -52,7 +52,7 @@ export function SiteHeader() {
             Nexus Design System
           </Link>
         </Button>
-        <Show above="lg">
+        <Show above="lg" as="div">
           <nav aria-label="Main navigation" className="nx:flex nx:gap-6">
             {HEADER_LINKS.map(({ label, href }) => (
               <Button

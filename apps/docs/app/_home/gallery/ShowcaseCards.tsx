@@ -4,9 +4,7 @@ import {
   type ComponentProps,
   type FormEvent,
   type ReactNode,
-  useEffect,
   useId,
-  useRef,
   useState,
 } from 'react';
 
@@ -122,7 +120,7 @@ function ShowcaseCard({
       <div className="nx:showcase-body nx:p-container">
         <CardHeader className="nx:showcase-heading nx:items-center nx:p-0">
           <CardTitle asChild>
-            <h2 id={id}>{title}</h2>
+            <h3 id={id}>{title}</h3>
           </CardTitle>
           {action && (
             <CardAction className="nx:row-span-1 nx:self-center">
@@ -380,13 +378,7 @@ export function TeamCard() {
 
 export function ConversationCard() {
   const id = useId();
-  const log = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<string[]>([]);
-  useEffect(() => {
-    const node = log.current;
-    if (!messages.length || !node) return;
-    node.scrollTop = node.scrollHeight;
-  }, [messages]);
   function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -398,11 +390,9 @@ export function ConversationCard() {
   return (
     <ShowcaseCard title="Design review">
       <MessageGroup
-        ref={log}
         announce
         aria-label="Design review conversation"
-        aria-live="polite"
-        className="nx:nexus-showcase-message-scroll"
+        className="nx:showcase-messages"
       >
         <Message>
           <MessageAvatar aria-hidden="true">

@@ -78,113 +78,146 @@ type Story = {
   labels: string[];
 };
 
-const clickSource = [
+/** A line of story source, or one that runs the named check. */
+type SourceLine = string | { code: string; check: string };
+
+/** A story whose checks are marked on the lines that run them. */
+function story(
+  name: string,
+  source: readonly SourceLine[],
+  labels: string[]
+): Story {
+  return {
+    name,
+    source: source.map((line) => (typeof line === 'string' ? line : line.code)),
+    lines: labels.map((label) =>
+      source.findIndex(
+        (line) => typeof line !== 'string' && line.check === label
+      )
+    ),
+    labels,
+  };
+}
+
+const clickSource: SourceLine[] = [
   'play: async ({ canvas, args }) => {',
   '  const el = canvas.getByRole("switch");',
-  '  await expect(el).not.toBeChecked();',
+  { code: '  await expect(el).not.toBeChecked();', check: 'Starts off' },
   '  await userEvent.click(el);',
-  '  await expect(el).toBeChecked();',
+  { code: '  await expect(el).toBeChecked();', check: 'Click turns on' },
   '  await userEvent.click(el);',
-  '  await expect(el).not.toBeChecked();',
+  { code: '  await expect(el).not.toBeChecked();', check: 'Click turns off' },
   '};',
 ];
 
 export function describeStory(mode: StoryModeId, choice: string): Story {
   if (mode === 'states')
-    return {
-      name: choice.charAt(0).toUpperCase() + choice.slice(1),
-      source: [
+    return story(
+      choice.charAt(0).toUpperCase() + choice.slice(1),
+      [
         'args: {',
-        `  defaultChecked: ${choice === 'on'},`,
-        `  disabled: ${choice === 'disabled'},`,
-        `  "aria-invalid": ${choice === 'invalid'},`,
+        {
+          code: `  defaultChecked: ${choice === 'on'},`,
+          check: 'Visible state',
+        },
+        {
+          code: `  disabled: ${choice === 'disabled'},`,
+          check: 'Disabled behavior',
+        },
+        {
+          code: `  "aria-invalid": ${choice === 'invalid'},`,
+          check: 'Validation state',
+        },
         '},',
         '',
         '// Each state is a living example.',
         '// Run the example to verify it.',
       ],
-      lines: [1, 2, 3],
-      labels: ['Visible state', 'Disabled behavior', 'Validation state'],
-    };
+      ['Visible state', 'Disabled behavior', 'Validation state']
+    );
   if (mode === 'callbacks')
-    return {
-      name: 'CallbackContract',
-      source: [
+    return story(
+      'CallbackContract',
+      [
         'args: { onCheckedChange: fn() },',
         '',
         'play: async ({ canvas, args }) => {',
         '  const el = canvas.getByRole("switch");',
         '  await userEvent.click(el);',
-        '  await expect(el).toBeChecked();',
+        { code: '  await expect(el).toBeChecked();', check: 'Switch is on' },
         '  await expect(args.onCheckedChange)',
-        '    .toHaveBeenCalledTimes(1);',
+        { code: '    .toHaveBeenCalledTimes(1);', check: 'One callback' },
         '  await expect(args.onCheckedChange)',
-        '    .toHaveBeenCalledWith(true);',
+        { code: '    .toHaveBeenCalledWith(true);', check: 'Callback is true' },
         '};',
       ],
-      lines: [5, 7, 9],
-      labels: ['Switch is on', 'One callback', 'Callback is true'],
-    };
+      ['Switch is on', 'One callback', 'Callback is true']
+    );
   if (mode === 'accessibility')
-    return {
-      name: 'AccessibleName',
-      source: [
+    return story(
+      'AccessibleName',
+      [
         '// Storybook can also run axe checks.',
         'parameters: { a11y: { test: "error" } },',
         '',
         '// This demo checks the name only:',
         'play: async ({ canvas }) => {',
         '  const el = canvas.getByRole("switch");',
-        '  await expect(el).toHaveAccessibleName(',
+        {
+          code: '  await expect(el).toHaveAccessibleName(',
+          check: 'Accessible name',
+        },
         '    "Email notifications"',
         '  );',
         '};',
         '// Manual accessibility review matters too.',
       ],
-      lines: [6, -1, -1],
-      labels: ['Accessible name', 'Keyboard review', 'Screen-reader review'],
-    };
+      ['Accessible name', 'Keyboard review', 'Screen-reader review']
+    );
   if (choice === 'disabled')
-    return {
-      name: 'DisabledInteraction',
-      source: [
+    return story(
+      'DisabledInteraction',
+      [
         'args: { disabled: true, onCheckedChange: fn() },',
         '',
         'play: async ({ canvas, args }) => {',
         '  const el = canvas.getByRole("switch");',
-        '  await expect(el).toBeDisabled();',
+        { code: '  await expect(el).toBeDisabled();', check: 'Is disabled' },
         '  await userEvent.click(el);',
-        '  await expect(el).not.toBeChecked();',
+        { code: '  await expect(el).not.toBeChecked();', check: 'Stays off' },
         '  await expect(args.onCheckedChange)',
-        '    .not.toHaveBeenCalled();',
+        { code: '    .not.toHaveBeenCalled();', check: 'No callback' },
         '};',
       ],
-      lines: [4, 6, 8],
-      labels: ['Is disabled', 'Stays off', 'No callback'],
-    };
+      ['Is disabled', 'Stays off', 'No callback']
+    );
   if (choice === 'keyboard')
-    return {
-      name: 'KeyboardInteraction',
-      source: [
+    return story(
+      'KeyboardInteraction',
+      [
         'play: async ({ canvas, args }) => {',
         '  const el = canvas.getByRole("switch");',
         '  await userEvent.tab();',
-        '  await expect(el).toHaveFocus();',
+        { code: '  await expect(el).toHaveFocus();', check: 'Receives focus' },
         '  await userEvent.keyboard(" ");',
-        '  await expect(el).toBeChecked();',
+        {
+          code: '  await expect(el).toBeChecked();',
+          check: 'Space turns it on',
+        },
         '  await expect(args.onCheckedChange)',
-        '    .toHaveBeenCalledWith(true);',
+        {
+          code: '    .toHaveBeenCalledWith(true);',
+          check: 'Reports new value',
+        },
         '};',
       ],
-      lines: [3, 5, 7],
-      labels: ['Receives focus', 'Space turns it on', 'Reports new value'],
-    };
-  return {
-    name: 'ClickInteraction',
-    source: clickSource,
-    lines: [2, 4, 6],
-    labels: ['Starts off', 'Click turns on', 'Click turns off'],
-  };
+      ['Receives focus', 'Space turns it on', 'Reports new value']
+    );
+  return story('ClickInteraction', clickSource, [
+    'Starts off',
+    'Click turns on',
+    'Click turns off',
+  ]);
 }
 
 export type CheckStatus = 'pending' | 'running' | 'pass' | 'fail' | 'manual';

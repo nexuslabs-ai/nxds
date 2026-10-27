@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useId, useState } from 'react';
+import { type MouseEvent, type ReactNode, useId, useState } from 'react';
 
 import { Bar, BarChart, XAxis } from 'recharts';
 
@@ -266,13 +266,18 @@ const FAQ = [
   },
 ];
 
+// The demo links have nowhere to go, so a click leaves the page where it is.
+function stayInPlace(event: MouseEvent<HTMLAnchorElement>) {
+  event.preventDefault();
+}
+
 function Tile({ name, children }: { name: string; children: ReactNode }) {
   return (
     <Card className="nx:component-wall-tile">
       <CardHeader>
-        <h2 className="nx:m-0 nx:typography-label-small nx:text-muted-foreground">
+        <h3 className="nx:m-0 nx:typography-label-small nx:text-muted-foreground">
           {name}
-        </h2>
+        </h3>
       </CardHeader>
       <CardContent className="nx:flex nx:min-w-0 nx:flex-col nx:gap-3">
         {children}
@@ -470,13 +475,18 @@ function MultiSelectTile() {
   );
 }
 
+// A fixed day, so the calendar prerendered at build time matches the one the
+// browser renders on any later day.
+const CALENDAR_DAY = new Date(2026, 5, 15);
+
 function DatePickerTile() {
-  const [date, setDate] = useState<Date | undefined>(() => new Date());
+  const [date, setDate] = useState<Date | undefined>(CALENDAR_DAY);
   return (
     <Tile name="Date picker">
       <DatePicker
         mode="single"
-        defaultMonth={date}
+        today={CALENDAR_DAY}
+        defaultMonth={CALENDAR_DAY}
         selected={date}
         onSelect={setDate}
         className="nx:self-center"
@@ -634,11 +644,15 @@ function BreadcrumbTile() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="#">Home</BreadcrumbLink>
+            <BreadcrumbLink href="#" onClick={stayInPlace}>
+              Home
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="#">Projects</BreadcrumbLink>
+            <BreadcrumbLink href="#" onClick={stayInPlace}>
+              Projects
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -656,26 +670,30 @@ function PaginationTile() {
       <Pagination>
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious href="#" size="icon">
+            <PaginationPrevious href="#" onClick={stayInPlace} size="icon">
               <IconChevronLeft aria-hidden="true" />
             </PaginationPrevious>
           </PaginationItem>
           <PaginationItem>
-            <PaginationLink href="#">1</PaginationLink>
+            <PaginationLink href="#" onClick={stayInPlace}>
+              1
+            </PaginationLink>
           </PaginationItem>
           <PaginationItem>
-            <PaginationLink href="#" isActive>
+            <PaginationLink href="#" onClick={stayInPlace} isActive>
               2
             </PaginationLink>
           </PaginationItem>
           <PaginationItem>
-            <PaginationLink href="#">3</PaginationLink>
+            <PaginationLink href="#" onClick={stayInPlace}>
+              3
+            </PaginationLink>
           </PaginationItem>
           <PaginationItem>
             <PaginationEllipsis />
           </PaginationItem>
           <PaginationItem>
-            <PaginationNext href="#" size="icon">
+            <PaginationNext href="#" onClick={stayInPlace} size="icon">
               <IconChevronRight aria-hidden="true" />
             </PaginationNext>
           </PaginationItem>
@@ -696,14 +714,18 @@ function NavigationMenuTile() {
               <ul className="nx:m-0 nx:grid nx:w-56 nx:list-none nx:gap-1 nx:p-2">
                 {['Analytics', 'Automation', 'Reports'].map((link) => (
                   <li key={link}>
-                    <NavigationMenuLink href="#">{link}</NavigationMenuLink>
+                    <NavigationMenuLink href="#" onClick={stayInPlace}>
+                      {link}
+                    </NavigationMenuLink>
                   </li>
                 ))}
               </ul>
             </NavigationMenuContent>
           </NavigationMenuItem>
           <NavigationMenuItem>
-            <NavigationMenuLink href="#">Pricing</NavigationMenuLink>
+            <NavigationMenuLink href="#" onClick={stayInPlace}>
+              Pricing
+            </NavigationMenuLink>
           </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>

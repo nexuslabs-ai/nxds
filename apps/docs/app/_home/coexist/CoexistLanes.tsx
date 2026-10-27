@@ -42,7 +42,7 @@ type Lane = Library & {
 };
 
 /** The name the visitor points at. */
-type Target = { lane: LaneName; written: string; part: Part | null };
+type Target = { written: string; part: Part | null };
 
 type SketchProps = {
   /** True for the sketch after the other library, false after Nexus. */
@@ -190,10 +190,29 @@ const shadcnSelect: Library = {
   file: 'globals.css',
 };
 
+/** The Coexist chapter's toolbar tools, one per host app, in toolbar order. */
+export const hostTabs = [
+  'shadcn/ui',
+  'MUI',
+  'Ant Design',
+  'Bootstrap',
+  'HeroUI',
+] as const satisfies readonly ToolName[];
+
+export type HostTab = (typeof hostTabs)[number];
+
+/** What another library does to one host app. */
+type HostExample = {
+  /** The kind of conflict. */
+  clash: string;
+  adds: Library;
+  writes: readonly Write[];
+  Sketch: typeof TokensSketch;
+};
+
 // One example per host app.
-const hosts = [
-  {
-    tab: 'shadcn/ui',
+const hosts: Record<HostTab, HostExample> = {
+  'shadcn/ui': {
     clash: 'Specificity clash',
     adds: {
       name: 'react-bootstrap Dropdown',
@@ -205,8 +224,7 @@ const hosts = [
     ],
     Sketch: PrimarySketch,
   },
-  {
-    tab: 'MUI',
+  MUI: {
     clash: 'Global reset',
     adds: shadcnSelect,
     writes: [
@@ -215,8 +233,7 @@ const hosts = [
     ],
     Sketch: ResetSketch,
   },
-  {
-    tab: 'Ant Design',
+  'Ant Design': {
     clash: 'Global reset',
     adds: shadcnSelect,
     writes: [
@@ -225,15 +242,13 @@ const hosts = [
     ],
     Sketch: ResetSketch,
   },
-  {
-    tab: 'Bootstrap',
+  Bootstrap: {
     clash: 'Class name clash',
     adds: shadcnSelect,
     writes: [['.collapse { visibility: collapse }', 'nav']],
     Sketch: NavSketch,
   },
-  {
-    tab: 'HeroUI',
+  HeroUI: {
     clash: 'Token name clash',
     adds: shadcnSelect,
     writes: [
@@ -244,49 +259,47 @@ const hosts = [
     ],
     Sketch: TokensSketch,
   },
-] as const;
-
-type Host = (typeof hosts)[number];
-
-/** The Coexist chapter's toolbar tools, one per host app. */
-export const hostTabs: readonly ToolName[] = hosts.map(({ tab }) => tab);
+};
 
 const nexusLane: Lane = {
   lane: 'nexus',
   name: 'Nexus Select',
   file: 'nxds.css',
+  // The provider owns light and dark mode: it sets `.dark` on <html>, which
+  // shadcn/ui and HeroUI read too, so they follow the same mode.
   writes: [
     ['--nx-*', null],
     ['.nx:*', null],
+    ['html.dark (shared mode)', null],
+    ['html[data-*]', null],
   ],
   verdict: 'Your app stays the same',
   verdictIcon: <IconCircleCheck className="nx:size-4" aria-hidden="true" />,
 };
 
 /** Another library and a Nexus Select, each added to the chosen host app. */
-export function CoexistLanes({ tab }: { tab: ToolName | undefined }) {
-  const host = hosts.find((entry) => entry.tab === tab) ?? hosts[0];
-  return <HostLanes key={host.tab} host={host} />;
+export function CoexistLanes({ host }: { host: HostTab }) {
+  return <HostLanes key={host} tab={host} example={hosts[host]} />;
 }
 
 // Pointing at a name outlines, in both apps, the part that reads it. Nexus
 // names reach no part. Hover or focus previews a name; pressing it pins it.
-function HostLanes({ host }: { host: Host }) {
+function HostLanes({ tab, example }: { tab: HostTab; example: HostExample }) {
   const [hovered, setHovered] = useState<Target | null>(null);
   const [pinned, setPinned] = useState<Target | null>(null);
   const pointed = hovered ?? pinned;
-  const { Sketch } = host;
-  const HostIcon = toolIcons[host.tab];
+  const { Sketch } = example;
+  const HostIcon = toolIcons[tab];
   const lanes: readonly Lane[] = [
     {
       lane: 'other',
-      ...host.adds,
-      writes: host.writes,
+      ...example.adds,
+      writes: example.writes,
       verdict: 'Your app changed',
       verdictIcon: (
         <IconAlertTriangle className="nx:size-4" aria-hidden="true" />
       ),
-      clash: host.clash,
+      clash: example.clash,
     },
     nexusLane,
   ];
@@ -295,7 +308,7 @@ function HostLanes({ host }: { host: Host }) {
       <div className="nx:coexist-lanes-host">
         <h3 className="nx:coexist-lanes-host-title nx:typography-label-default">
           <HostIcon aria-hidden="true" />
-          Your {host.tab} app
+          Your {tab} app
         </h3>
         <div className="nx:coexist-lanes nx:@3xl:grid-cols-2">
           {lanes.map(
@@ -320,10 +333,10 @@ function HostLanes({ host }: { host: Host }) {
                   <div
                     className="nx:coexist-lanes-chips"
                     role="group"
-                    aria-label="Writes on the page"
+                    aria-label={`${name} writes on the page`}
                   >
                     {writes.map(([written, part]) => {
-                      const target: Target = { lane, written, part };
+                      const target: Target = { written, part };
                       return (
                         <Toggle
                           key={written}

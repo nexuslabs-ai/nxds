@@ -15,6 +15,7 @@ export function Community() {
   return (
     <section
       id="community"
+      data-home-section
       className="nx:site-column nx:home-section"
       aria-labelledby="community-title"
     >

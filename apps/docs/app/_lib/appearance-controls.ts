@@ -29,6 +29,10 @@ export const DOCS_APPEARANCE_DEFAULT_STATE = {
   },
 } satisfies NxdsAppearanceState;
 
+/** The values the Playground and the homepage Customize panel both allow. */
+export const CONTRAST_RANGE = { min: 0, max: 100 } as const;
+export const UI_FONT_SIZE_RANGE = { min: 8, max: 32 } as const;
+
 export const THEME_MODE_KEYS = [
   'mode',
   'base',

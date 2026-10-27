@@ -128,7 +128,7 @@ function SectionDisclosure({
   onToggle: () => void;
   onNavigate: () => void;
 }) {
-  const listId = `mobile-nav-${section.slug}`;
+  const listId = `site-menu-${section.slug}`;
   return (
     <>
       <button

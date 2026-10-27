@@ -1,6 +1,12 @@
 'use client';
 
-import { type ChangeEvent, type KeyboardEvent, useId, useState } from 'react';
+import {
+  type ChangeEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  useId,
+  useState,
+} from 'react';
 
 import {
   BASE_TONE_OPTIONS,
@@ -27,6 +33,10 @@ import { NativeSelect } from '@/components/native-select/native-select';
 import { Slider } from '@/components/slider/slider';
 import { Switch } from '@/components/switch/switch';
 
+import {
+  CONTRAST_RANGE,
+  UI_FONT_SIZE_RANGE,
+} from '../../_lib/appearance-controls';
 import { setIconLibrary, useIconLibrary } from '../../_lib/icon-library';
 import type { ToolName } from '../tool-icons';
 
@@ -241,13 +251,21 @@ function BrandColorField({
   );
 }
 
-/** The Customize panel for one toolbar tool. It edits the page's appearance. */
-export function AppearanceControls({ tool }: { tool: ToolName }) {
-  const id = useId();
+/** The Customize tools, in toolbar order. */
+export const customizeTools = [
+  'Theme',
+  'Colors',
+  'Typography',
+  'Spacing',
+  'Radius',
+  'More',
+] as const satisfies readonly ToolName[];
+
+export type CustomizeTool = (typeof customizeTools)[number];
+
+/** The page's appearance, with setters for one field of it. */
+function useAppearanceEditor() {
   const { state, setState, resolvedMode } = useNxdsAppearance();
-  const iconLibrary = useIconLibrary();
-  const contrastKey =
-    resolvedMode === 'dark' ? 'darkContrast' : 'lightContrast';
   function update<K extends keyof NxdsAppearanceState>(
     name: K,
     value: NxdsAppearanceState[K]
@@ -263,116 +281,158 @@ export function AppearanceControls({ tool }: { tool: ToolName }) {
       prefs: { ...current.prefs, [name]: value },
     }));
   }
+  return { state, resolvedMode, update, updatePrefs };
+}
+
+function ThemePanel() {
+  const id = useId();
+  const { state, resolvedMode, update } = useAppearanceEditor();
+  const contrastKey =
+    resolvedMode === 'dark' ? 'darkContrast' : 'lightContrast';
+  return (
+    <>
+      <Field orientation="horizontal" className={rowClass}>
+        <FieldLabel htmlFor={id} className={labelClass}>
+          Dark mode
+        </FieldLabel>
+        <Switch
+          id={id}
+          checked={resolvedMode === 'dark'}
+          onCheckedChange={(checked) =>
+            update('mode', checked ? 'dark' : 'light')
+          }
+        />
+      </Field>
+      <FieldDescription className={descriptionClass}>
+        Updates the whole site, not only this page.
+      </FieldDescription>
+      <AppearanceRange
+        label="Contrast"
+        value={state[contrastKey]}
+        {...CONTRAST_RANGE}
+        onChange={(value) => update(contrastKey, value)}
+      />
+    </>
+  );
+}
+
+function ColorsPanel() {
+  const { state, update } = useAppearanceEditor();
+  return (
+    <>
+      <AppearanceSelect
+        label="Brand preset"
+        value={state.brandColor}
+        options={brandOptions(state.brandColor)}
+        onChange={(value) => update('brandColor', value)}
+      />
+      <BrandColorField
+        value={state.brandColor}
+        onChange={(value) => update('brandColor', value)}
+      />
+      <AppearanceSelect
+        label="Gray family"
+        value={state.surfaceTone}
+        options={BASE_TONE_OPTIONS}
+        onChange={(value) => update('surfaceTone', value)}
+      />
+    </>
+  );
+}
+
+function TypographyPanel() {
+  const { state, updatePrefs } = useAppearanceEditor();
+  const iconLibrary = useIconLibrary();
+  return (
+    <>
+      <AppearanceSelect
+        label="Font"
+        value={state.prefs.uiFont}
+        options={UI_FONTS}
+        onChange={(value) => updatePrefs('uiFont', value)}
+      />
+      <AppearanceSelect
+        label="Heading font"
+        value={state.prefs.headingFont ?? ''}
+        options={HEADING_FONTS}
+        onChange={(value) => updatePrefs('headingFont', value || null)}
+      />
+      <AppearanceSelect
+        label="Icons"
+        value={iconLibrary}
+        options={ICON_LIBRARY_OPTIONS}
+        onChange={setIconLibrary}
+      />
+      <AppearanceRange
+        label="UI size"
+        value={state.prefs.uiFontSize}
+        {...UI_FONT_SIZE_RANGE}
+        unit="px"
+        onChange={(value) => updatePrefs('uiFontSize', value)}
+      />
+    </>
+  );
+}
+
+function SpacingPanel() {
+  const { state, update } = useAppearanceEditor();
+  return (
+    <AppearanceSelect
+      label="Density"
+      value={state.density}
+      options={DENSITY_OPTIONS}
+      onChange={(value) => update('density', value)}
+      description="Changes component spacing. The grid stays in place."
+    />
+  );
+}
+
+function RadiusPanel() {
+  const { state, update } = useAppearanceEditor();
+  return (
+    <CornerChoices
+      value={state.corners}
+      onChange={(corners) => update('corners', corners)}
+    />
+  );
+}
+
+function MorePanel() {
+  const { state, update } = useAppearanceEditor();
+  return (
+    <>
+      <AppearanceSelect
+        label="Elevation"
+        value={state.elevation}
+        options={ELEVATION_OPTIONS}
+        onChange={(value) => update('elevation', value)}
+      />
+      <AppearanceSelect
+        label="Stroke"
+        value={state.stroke}
+        options={STROKE_OPTIONS}
+        onChange={(value) => update('stroke', value)}
+      />
+    </>
+  );
+}
+
+const panels: Record<CustomizeTool, () => ReactNode> = {
+  Theme: ThemePanel,
+  Colors: ColorsPanel,
+  Typography: TypographyPanel,
+  Spacing: SpacingPanel,
+  Radius: RadiusPanel,
+  More: MorePanel,
+};
+
+/** The Customize panel for one toolbar tool. It edits the page's appearance. */
+export function AppearanceControls({ tool }: { tool: CustomizeTool }) {
+  const Panel = panels[tool];
   return (
     <div className="nx:min-w-0 nx:overflow-y-auto nx:p-1">
       <FieldGroup className="nx:gap-2">
-        {tool === 'Theme' && (
-          <>
-            <Field orientation="horizontal" className={rowClass}>
-              <FieldLabel htmlFor={id} className={labelClass}>
-                Dark mode
-              </FieldLabel>
-              <Switch
-                id={id}
-                checked={resolvedMode === 'dark'}
-                onCheckedChange={(checked) =>
-                  update('mode', checked ? 'dark' : 'light')
-                }
-              />
-            </Field>
-            <FieldDescription className={descriptionClass}>
-              Updates the whole site, not only this page.
-            </FieldDescription>
-            <AppearanceRange
-              label="Contrast"
-              value={state[contrastKey]}
-              min={0}
-              max={100}
-              onChange={(value) => update(contrastKey, value)}
-            />
-          </>
-        )}
-        {tool === 'Colors' && (
-          <>
-            <AppearanceSelect
-              label="Brand preset"
-              value={state.brandColor}
-              options={brandOptions(state.brandColor)}
-              onChange={(value) => update('brandColor', value)}
-            />
-            <BrandColorField
-              value={state.brandColor}
-              onChange={(value) => update('brandColor', value)}
-            />
-            <AppearanceSelect
-              label="Gray family"
-              value={state.surfaceTone}
-              options={BASE_TONE_OPTIONS}
-              onChange={(value) => update('surfaceTone', value)}
-            />
-          </>
-        )}
-        {tool === 'Typography' && (
-          <>
-            <AppearanceSelect
-              label="Font"
-              value={state.prefs.uiFont}
-              options={UI_FONTS}
-              onChange={(value) => updatePrefs('uiFont', value)}
-            />
-            <AppearanceSelect
-              label="Heading font"
-              value={state.prefs.headingFont ?? ''}
-              options={HEADING_FONTS}
-              onChange={(value) => updatePrefs('headingFont', value || null)}
-            />
-            <AppearanceSelect
-              label="Icons"
-              value={iconLibrary}
-              options={ICON_LIBRARY_OPTIONS}
-              onChange={setIconLibrary}
-            />
-            <AppearanceRange
-              label="UI size"
-              value={state.prefs.uiFontSize}
-              min={12}
-              max={20}
-              unit="px"
-              onChange={(value) => updatePrefs('uiFontSize', value)}
-            />
-          </>
-        )}
-        {tool === 'Spacing' && (
-          <AppearanceSelect
-            label="Density"
-            value={state.density}
-            options={DENSITY_OPTIONS}
-            onChange={(value) => update('density', value)}
-            description="Changes component spacing. The grid stays in place."
-          />
-        )}
-        {tool === 'Radius' && (
-          <CornerChoices
-            value={state.corners}
-            onChange={(corners) => update('corners', corners)}
-          />
-        )}
-        {tool === 'More' && (
-          <>
-            <AppearanceSelect
-              label="Elevation"
-              value={state.elevation}
-              options={ELEVATION_OPTIONS}
-              onChange={(value) => update('elevation', value)}
-            />
-            <AppearanceSelect
-              label="Stroke"
-              value={state.stroke}
-              options={STROKE_OPTIONS}
-              onChange={(value) => update('stroke', value)}
-            />
-          </>
-        )}
+        <Panel />
       </FieldGroup>
     </div>
   );
