@@ -9,9 +9,9 @@ export function httpUrl(value: string) {
 }
 
 /**
- * Refuses a registry URL that is not http or https, or that has a user name,
- * password, query or fragment. `privateRegistryHint` says what to do instead
- * of a login.
+ * Refuses a registry URL that is not a valid http or https URL, or that has a
+ * user name, password, query or fragment. Each error ends with
+ * `privateRegistryHint`, which says what to do instead.
  */
 export function assertRegistryUrl(
   flag: string,
@@ -20,7 +20,9 @@ export function assertRegistryUrl(
 ) {
   const url = httpUrl(value);
   if (!url) {
-    throw new UsageError(`${flag} must be an http or https URL.`);
+    throw new UsageError(
+      `${flag} is not a valid http or https URL. ${privateRegistryHint}`
+    );
   }
   if (url.username || url.password || /[?#]/.test(value)) {
     throw new UsageError(

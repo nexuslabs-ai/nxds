@@ -41,8 +41,8 @@ const FETCH_TIMEOUT_MS = 30_000;
 // Honours HTTPS_PROXY, HTTP_PROXY and NO_PROXY.
 const dispatcher = new EnvHttpProxyAgent();
 
-// Any value with a URI scheme, even one URL can't parse. Two or more letters,
-// so a Windows drive such as `C:` stays a path.
+// Any value with a URI scheme of two or more characters, after any leading
+// space, even one URL can't parse. A Windows drive such as `C:` stays a path.
 function isUrl(registry: string) {
   return /^\s*[a-z][a-z\d+.-]+:/i.test(registry);
 }
