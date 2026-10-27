@@ -2,6 +2,8 @@
 
 import { type CSSProperties, useEffect, useRef, useState } from 'react';
 
+import Link from 'next/link';
+
 import { Button } from '@/components/button/button';
 
 import { SiteFooter } from '../_components/SiteFooter';
@@ -27,21 +29,21 @@ const chapters = [
     id: 'explore',
     title: 'Your design system starts here.',
     cta: 'View components',
-    href: requirePage('components', 'button').route,
+    href: requireSection('components').href,
     tabs: ['Components', 'Dashboard', 'Mail', 'Chat', 'Finances', 'CRM'],
   },
   {
     id: 'customize',
     title: 'Customize every detail.',
-    cta: 'Explore foundations',
-    href: requirePage('foundations', 'tokens').route,
+    cta: 'Open Playground',
+    href: '/playground',
     tabs: ['Theme', 'Colors', 'Typography', 'Spacing', 'Radius', 'More'],
   },
   {
     id: 'coexist',
     title: 'Your next component shouldn’t change the rest.',
-    cta: 'Explore integration',
-    href: requirePage('getting-started', 'install').route,
+    cta: 'Explore integrations',
+    href: requirePage('integrations', 'overview').route,
     tabs: hostTabs,
   },
   {
@@ -220,10 +222,10 @@ function Chapter({
         )}
         <div className="nx:story-ctas">
           <Button asChild>
-            <a href={GET_STARTED_HREF}>Get started</a>
+            <Link href={GET_STARTED_HREF}>Get started</Link>
           </Button>
           <Button variant="outline" asChild>
-            <a href={chapter.href}>{chapter.cta}</a>
+            <Link href={chapter.href}>{chapter.cta}</Link>
           </Button>
         </div>
       </div>
