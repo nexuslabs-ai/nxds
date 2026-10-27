@@ -5,6 +5,7 @@ import {
   expectExitBeforeUnmount,
   expectInterruptibleOverlayMotion,
 } from '../../stories/support/overlay-motion-test-utils';
+import { Avatar, AvatarFallback, AvatarImage } from '../avatar';
 import { Button } from '../button';
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '.';
@@ -47,7 +48,6 @@ export const Default: Story = {
 };
 
 // A richer preview: avatar, bio and join date.
-// TODO(#898): render Avatar in place of the initials once Vue ships it.
 export const ProfileCard: Story = {
   tags: ['docs'],
   parameters: {
@@ -58,7 +58,15 @@ export const ProfileCard: Story = {
     },
   },
   render: () => ({
-    components: { Button, HoverCard, HoverCardContent, HoverCardTrigger },
+    components: {
+      Avatar,
+      AvatarFallback,
+      AvatarImage,
+      Button,
+      HoverCard,
+      HoverCardContent,
+      HoverCardTrigger,
+    },
     template: `
       <HoverCard>
         <HoverCardTrigger as-child>
@@ -66,7 +74,10 @@ export const ProfileCard: Story = {
         </HoverCardTrigger>
         <HoverCardContent class="nx:w-80">
           <div class="nx:flex nx:gap-4">
-            <span class="nx:flex nx:size-10 nx:shrink-0 nx:items-center nx:justify-center nx:rounded-full nx:bg-muted nx:typography-label-default">AL</span>
+            <Avatar>
+              <AvatarImage src="/avatars/ada.svg" alt="Ada Lovelace" />
+              <AvatarFallback>AL</AvatarFallback>
+            </Avatar>
             <div class="nx:flex nx:flex-col nx:gap-1">
               <p class="nx:typography-label-default nx:font-semibold nx:text-foreground">Ada Lovelace</p>
               <p class="nx:typography-body-default nx:text-muted-foreground">Wrote the first program for the Analytical Engine.</p>

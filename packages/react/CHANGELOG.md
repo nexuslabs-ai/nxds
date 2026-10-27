@@ -1,5 +1,24 @@
 # @nxds/react
 
+## 0.7.0
+
+### Minor Changes
+
+- be76459: A range `DatePicker` shades the days from the start to the hovered or focused day while the range is half-picked. Remove any `preview` modifier and the `onDayMouseEnter` wiring that set it. `FilterBuilder` declares `aria-label`, which defaults to `Filters`.
+
+## 0.6.0
+
+### Minor Changes
+
+- 5daa687: Export nxds as a Claude Design System. `npx nxds-cli export claude-design` writes a folder to publish as a Design System artifact in Claude: every token in Light and Dark, every component as a live React 18 bundle, one props interface per part for the canvas controls, and a preview and README per component. The new `@nxds/claude-design` package carries the prebuilt files and releases with `@nxds/react`.
+
+  The Toaster follows `data-theme="dark"` as well as the `.dark` class. Charts no longer log a size warning on their first render. Every runtime colour token has a usage description.
+
+### Patch Changes
+
+- Updated dependencies [5daa687]
+  - @nxds/core@0.9.1
+
 ## 0.5.0
 
 ### Minor Changes

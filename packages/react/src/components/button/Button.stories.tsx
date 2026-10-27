@@ -25,7 +25,7 @@ Button triggers an action. Use it for short, visible labels.
 - Use one decorative icon slot at most: \`startIcon\` or \`endIcon\`.
 - A loading button shows only a spinner and hides its icons.
 - Icon-only buttons need \`aria-label\` or \`aria-labelledby\`.
-- Icon-only buttons show 16, 18 or 20px icons with a medium line, by size.
+- Icons are 16px at every size and density.
         `,
       },
     },
@@ -235,6 +235,12 @@ export const IconSize: Story = {
           <IconStar />
         </Button>
       </div>
+      <div data-density="compact" className="nx:flex nx:items-center nx:gap-2">
+        <Button startIcon={<IconDownload />}>Download</Button>
+        <Button size="icon" aria-label="Compact icon">
+          <IconStar />
+        </Button>
+      </div>
     </div>
   ),
   play: async ({ canvasElement }) => {
@@ -244,12 +250,15 @@ export const IconSize: Story = {
         '--nx-icon-glyph-default'
       )
     );
-    for (const button of canvas.getAllByRole('button')) {
-      const svg = button.querySelector('svg');
-      await expect(svg?.getBoundingClientRect().height).toBe(iconToken);
-      await expect(
-        parseFloat(svg ? getComputedStyle(svg).strokeWidth : '')
-      ).toBeLessThan(Number(svg?.getAttribute('stroke-width')));
+    const icons = canvasElement.querySelectorAll('button svg');
+    await expect(icons).toHaveLength(canvas.getAllByRole('button').length);
+    for (const svg of icons) {
+      const { width, height } = svg.getBoundingClientRect();
+      await expect(width).toBe(iconToken);
+      await expect(height).toBe(iconToken);
+      await expect(parseFloat(getComputedStyle(svg).strokeWidth)).toBeLessThan(
+        Number(svg.getAttribute('stroke-width'))
+      );
     }
   },
 };

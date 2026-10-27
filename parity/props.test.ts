@@ -1,34 +1,53 @@
+import { publicExports } from '@nxds/source-model/props-contract.mjs';
 import type {
   ComponentEntry,
   PropEntry,
   PropsFile,
 } from '@nxds/source-model/props-entries.ts';
-import { reactPropsFiles } from '@nxds/source-model/react-props.mjs';
+import {
+  reactPackageProps,
+  reactProgram,
+  reactPropsFiles,
+} from '@nxds/source-model/react-props.mjs';
 import {
   componentsRoot,
   vueComponentsRoot,
+  vueSrc,
 } from '@nxds/source-model/roots.mjs';
 import {
   componentParts,
   createVueProgram,
-  isOwnDeclaration,
+  ownEvents,
   parseFile,
   partEntry,
+  type PropertyMetaSchema,
   type VueProgram,
 } from '@nxds/source-model/vue-sources.ts';
 import path from 'node:path';
 import ts from 'typescript';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { shared, vueOnlyApi } from './parity.ts';
+import {
+  reactOnlyInheritedProps,
+  rebuiltPackages,
+  shared,
+  twinPackages,
+  vueOnlyApi,
+} from './parity.ts';
 
 interface VuePartApi {
   entry: ComponentEntry;
   /** Named slots; the default slot is `hasDefaultSlot`. */
   slots: string[];
   hasDefaultSlot: boolean;
+  /** Props the default slot passes, as `default.{name}`. React's `children` passes none. */
+  defaultSlotProps: string[];
   events: string[];
   inheritsAsChild: boolean;
+  /** The `class` prop's description. Vue reads `class` as a global prop, so it isn't in `entry`. */
+  classDescription: string | undefined;
+  /** Every prop, slot and event name, including those Vue inherits from Reka and its global `class` and `style`. */
+  allApi: Set<string>;
 }
 
 interface Contract {
@@ -39,6 +58,13 @@ interface Contract {
 }
 
 const REACT_NODE = /^React(?:\.ReactNode|Node)$/;
+/** A `render{Name}` callback prop, which a third-party API forces on React. */
+const RENDER_PROP = /^render[A-Z]/;
+const RETURNS_REACT_NODE = /=> (?:React\.)?ReactNode\)?$/;
+
+/** Vue reads a hyphenated prop such as `aria-label` as `ariaLabel`. */
+const camel = (name: string) =>
+  name.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
 
 const kebab = (name: string) =>
   name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
@@ -72,6 +98,14 @@ function packageReExports(slug: string) {
   });
 }
 
+/** The props a slot passes, read from its schema. */
+function slotProps(schema: PropertyMetaSchema | undefined): string[] {
+  if (!schema || typeof schema === 'string') return [];
+  if (schema.kind === 'object') return Object.keys(schema.schema ?? {});
+  if (schema.kind === 'enum') return (schema.schema ?? []).flatMap(slotProps);
+  return [];
+}
+
 function vueContract(vueProgram: VueProgram, slug: string) {
   const parts = componentParts(vueProgram, slug).map(
     (part): VuePartApi => ({
@@ -80,10 +114,18 @@ function vueContract(vueProgram: VueProgram, slug: string) {
         .map((slot) => slot.name)
         .filter((name) => name !== 'default'),
       hasDefaultSlot: part.meta.slots.some((slot) => slot.name === 'default'),
-      events: part.meta.events
-        .filter((event) => isOwnDeclaration(event.getDeclarations()))
-        .map((event) => event.name),
+      defaultSlotProps: slotProps(
+        part.meta.slots.find((slot) => slot.name === 'default')?.schema
+      ).map((name) => `default.${name}`),
+      events: ownEvents(vueProgram, part),
       inheritsAsChild: part.meta.props.some((prop) => prop.name === 'asChild'),
+      classDescription: part.meta.props.find((prop) => prop.name === 'class')
+        ?.description,
+      allApi: new Set([
+        ...part.meta.props.map((prop) => prop.name),
+        ...part.meta.slots.map((slot) => slot.name),
+        ...part.meta.events.map((event) => event.name),
+      ]),
     })
   );
   return new Map(parts.map((part) => [part.entry.name, part]));
@@ -91,13 +133,15 @@ function vueContract(vueProgram: VueProgram, slug: string) {
 
 interface VueName {
   prop: PropEntry;
-  kind: 'defaultSlot' | 'slot' | 'emit' | 'asChild' | 'prop';
+  kind: 'defaultSlot' | 'slot' | 'emit' | 'asChild' | 'class' | 'prop';
   vueName: string;
 }
 
 /**
  * The Vue API each React prop maps to: the default slot for `children`, a
- * kebab-case slot, an emit, `as-child`, or the same prop.
+ * kebab-case slot for a `ReactNode` prop, a scoped slot for a `render{Name}`
+ * callback, an emit, `as-child`, `class` for `className`, or the same prop in
+ * camelCase.
  */
 function vueNames(react: ComponentEntry) {
   return react.props.map((prop): VueName => {
@@ -107,13 +151,20 @@ function vueNames(react: ComponentEntry) {
     if (REACT_NODE.test(prop.type)) {
       return { prop, kind: 'slot', vueName: kebab(prop.name) };
     }
+    if (RENDER_PROP.test(prop.name) && RETURNS_REACT_NODE.test(prop.type)) {
+      const name = prop.name.slice('render'.length);
+      return { prop, kind: 'slot', vueName: kebab(name) };
+    }
     if (prop.name === 'asChild') {
       return { prop, kind: 'asChild', vueName: prop.name };
+    }
+    if (prop.name === 'className') {
+      return { prop, kind: 'class', vueName: 'class' };
     }
     if (/^on[A-Z]/.test(prop.name)) {
       return { prop, kind: 'emit', vueName: kebab(prop.name.slice(2)) };
     }
-    return { prop, kind: 'prop', vueName: prop.name };
+    return { prop, kind: 'prop', vueName: camel(prop.name) };
   });
 }
 
@@ -146,6 +197,14 @@ function partDrift(react: ComponentEntry, vue: VuePartApi) {
       if (!vue.inheritsAsChild) drift.push(`${at(prop.name)}: missing`);
       continue;
     }
+    if (kind === 'class') {
+      if (vue.classDescription !== prop.description) {
+        drift.push(
+          `${at(prop.name)}: description "${prop.description}" vs "${vue.classDescription}"`
+        );
+      }
+      continue;
+    }
     if (kind === 'emit') {
       if (!vue.events.includes(vueName)) {
         drift.push(`${at(prop.name)}: no '${vueName}' emit`);
@@ -161,9 +220,12 @@ function partDrift(react: ComponentEntry, vue: VuePartApi) {
   }
 
   const mapped = mappedNames(react);
-  const vueOnly = [...vueProps.keys(), ...vue.slots, ...vue.events].filter(
-    (name) => !mapped.has(name) && !(at(name) in vueOnlyApi)
-  );
+  const vueOnly = [
+    ...vueProps.keys(),
+    ...vue.slots,
+    ...vue.defaultSlotProps,
+    ...vue.events,
+  ].filter((name) => !mapped.has(name) && !(at(name) in vueOnlyApi));
   drift.push(...vueOnly.map((name) => `${at(name)}: Vue only`));
   return drift;
 }
@@ -199,10 +261,57 @@ function interfaceKeys(file: string) {
   return keys;
 }
 
+/** The Vue names a React prop could take: the same prop, a slot or an emit. */
+function vueCandidates(name: string) {
+  if (name === 'children') return ['default'];
+  if (name === 'className') return ['class'];
+  const candidates = [camel(name), kebab(name)];
+  if (/^on[A-Z]/.test(name)) candidates.push(kebab(name.slice(2)));
+  return candidates;
+}
+
+/** Each public `use*` export declared in a component folder, by slug, with the keys its return value holds. */
+function hooksBySlug(
+  checker: ts.TypeChecker,
+  exported: Map<string, ts.Symbol>,
+  root: string
+) {
+  const bySlug = new Map<string, Map<string, string[]>>();
+  for (const [name, symbol] of exported) {
+    const declaration = symbol.declarations?.[0];
+    if (!/^use[A-Z]/.test(name) || !declaration) continue;
+    const file = path.relative(root, declaration.getSourceFile().fileName);
+    if (file.startsWith('..')) continue;
+
+    const [slug = ''] = file.split(path.sep);
+    const type = checker.getTypeOfSymbolAtLocation(symbol, declaration);
+    const keys = checker
+      .getSignaturesOfType(type, ts.SignatureKind.Call)
+      .flatMap((signature) =>
+        checker.getPropertiesOfType(checker.getReturnTypeOfSignature(signature))
+      )
+      .map((property) => property.name);
+    const hooks = bySlug.get(slug) ?? new Map<string, string[]>();
+    bySlug.set(slug, hooks.set(name, [...new Set(keys)].sort()));
+  }
+  return bySlug;
+}
+
 const contracts = new Map<string, Contract>();
+let packageProps: Map<string, Map<string, string[]>>;
+let reactHooks: Map<string, Map<string, string[]>>;
+let vueHooks: Map<string, Map<string, string[]>>;
 
 beforeAll(() => {
   const vueProgram = createVueProgram();
+  const vueTsProgram = vueProgram.checker.getProgram();
+  if (!vueTsProgram) throw new Error('the Vue checker has no program.');
+  const vueChecker = vueTsProgram.getTypeChecker();
+  vueHooks = hooksBySlug(
+    vueChecker,
+    publicExports(vueChecker, vueTsProgram, [path.join(vueSrc, 'index.ts')]),
+    vueComponentsRoot
+  );
   const reactFiles = new Map(
     (reactPropsFiles() as PropsFile[]).map((file) => [file.slug, file])
   );
@@ -215,6 +324,9 @@ beforeAll(() => {
       vueReExports: new Set(packageReExports(slug)),
     });
   }
+  const react = reactProgram();
+  packageProps = reactPackageProps(react);
+  reactHooks = hooksBySlug(react.checker, react.exported, componentsRoot);
 }, 120_000);
 
 describe('component contract', () => {
@@ -243,6 +355,7 @@ describe('component contract', () => {
           return [
             ...part.entry.props.map((prop) => prop.name),
             ...part.slots,
+            ...part.defaultSlotProps,
             ...part.events,
           ]
             .filter((api) => !mapped.has(api))
@@ -253,6 +366,102 @@ describe('component contract', () => {
     expect(Object.keys(vueOnlyApi).filter((key) => !vueOnly.has(key))).toEqual(
       []
     );
+  });
+});
+
+describe('inherited contract', () => {
+  /** The props a React part inherits from a rebuilt package. */
+  function rebuiltProps(name: string) {
+    const props = packageProps.get(name);
+    return [
+      ...new Set(rebuiltPackages.flatMap((pkg) => props?.get(pkg) ?? [])),
+    ];
+  }
+
+  /** `{Part}.{prop}` for each prop a React part inherits from a rebuilt package that its Vue twin has no name for. */
+  function reactOnly() {
+    return [...contracts.values()].flatMap(({ vue }) =>
+      [...vue].flatMap(([name, part]) =>
+        rebuiltProps(name)
+          .filter((prop) =>
+            vueCandidates(prop).every((api) => !part.allApi.has(api))
+          )
+          .map((prop) => `${name}.${prop}`)
+      )
+    );
+  }
+
+  /** Each package a shared React part takes props from, with the part's name. */
+  function partPackages() {
+    return [...contracts.values()].flatMap(({ react }) =>
+      [...react.keys()].flatMap((part) =>
+        [...(packageProps.get(part)?.keys() ?? [])].map((pkg) => ({
+          part,
+          pkg,
+        }))
+      )
+    );
+  }
+
+  /** Whether a package is `entry`, or sits in the scope `entry` names. */
+  const isPackage = (pkg: string, entry: string) =>
+    pkg === entry || pkg.startsWith(`${entry}/`);
+
+  const sortedPackages = [...twinPackages, ...rebuiltPackages];
+
+  it('sorts each package a React part takes props from as a twin or rebuilt', () => {
+    expect(
+      partPackages()
+        .filter(
+          ({ pkg }) => !sortedPackages.some((entry) => isPackage(pkg, entry))
+        )
+        .map(({ part, pkg }) => `${part}: ${pkg}`)
+    ).toEqual([]);
+  });
+
+  it('sorts only packages a React part takes props from', () => {
+    const packages = partPackages().map(({ pkg }) => pkg);
+    expect(
+      sortedPackages.filter(
+        (entry) => !packages.some((pkg) => isPackage(pkg, entry))
+      )
+    ).toEqual([]);
+  });
+
+  it('records every inherited prop the Vue part lacks', () => {
+    expect(
+      reactOnly().filter((key) => !(key in reactOnlyInheritedProps))
+    ).toEqual([]);
+  });
+
+  it('records only inherited props the Vue part lacks', () => {
+    const lacking = new Set(reactOnly());
+    expect(
+      Object.keys(reactOnlyInheritedProps).filter((key) => !lacking.has(key))
+    ).toEqual([]);
+  });
+});
+
+describe('composable contract', () => {
+  it.each(shared)('%s exports the hooks React exports', (slug) => {
+    const react = [...(reactHooks.get(slug)?.keys() ?? [])].sort();
+    const vue = [...(vueHooks.get(slug)?.keys() ?? [])].sort();
+    expect(vue).toEqual(react);
+  });
+
+  it('checks at least one hook', () => {
+    expect([...reactHooks.values()].some((hooks) => hooks.size > 0)).toBe(true);
+  });
+
+  it.each(shared)('%s composables return what its hooks return', (slug) => {
+    const vue = vueHooks.get(slug) ?? new Map<string, string[]>();
+    const drift = [...vue].flatMap(([name, keys]) => {
+      const react = reactHooks.get(slug)?.get(name);
+      return react && keys.join() !== react.join()
+        ? [`${name}: ${keys.join()} ≠ ${react.join()}`]
+        : [];
+    });
+    expect(drift).toEqual([]);
   });
 });
 

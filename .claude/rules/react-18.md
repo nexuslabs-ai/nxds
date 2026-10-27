@@ -14,6 +14,8 @@ nothing else.
   Commit both.
 - Never edit `packages/react-18/src` or its copied `.storybook` files by hand.
   `pnpm --filter @nxds/react-18 check` fails on any difference, and CI runs it.
+  Changesets owns `package.json`'s `version` and `CHANGELOG.md`, so the
+  generator leaves them alone.
 - Don't use what React 18 lacks in `packages/react`. `@nxds/no-react-19-only`
   reports the APIs, and the React 18 story lane catches the rest.
 - Write a component that takes `ref` as a function declaration with typed

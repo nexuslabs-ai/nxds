@@ -8,7 +8,11 @@ import path from 'node:path';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
-import { shared, vueOnlyDeclarations } from './parity.ts';
+import {
+  frameworkDeclarations,
+  shared,
+  vueOnlyDeclarations,
+} from './parity.ts';
 
 const printer = ts.createPrinter({ removeComments: true });
 
@@ -154,7 +158,23 @@ describe('class recipes', () => {
     expect(recipeFiles.length).toBeGreaterThan(0);
   });
 
-  it.each(paired)('$id matches React', ({ vue, react }) => {
-    expect(vue).toBe(react);
+  it('allows only framework declarations that still differ from React', () => {
+    const stale = Object.keys(frameworkDeclarations).filter(
+      (id) =>
+        !declarations.some(
+          (declaration) =>
+            declaration.id === id &&
+            declaration.react !== undefined &&
+            declaration.vue !== declaration.react
+        )
+    );
+    expect(stale).toEqual([]);
   });
+
+  it.each(paired.filter(({ id }) => !(id in frameworkDeclarations)))(
+    '$id matches React',
+    ({ vue, react }) => {
+      expect(vue).toBe(react);
+    }
+  );
 });

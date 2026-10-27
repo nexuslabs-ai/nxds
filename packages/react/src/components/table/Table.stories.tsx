@@ -441,7 +441,7 @@ export const WithActions: Story = {
 
 export const WithDataAttributes: Story = {
   render: () => (
-    <Table>
+    <Table aria-label="Invoices">
       <TableHeader>
         <TableRow>
           <TableSelectionHead>
@@ -472,6 +472,8 @@ export const WithDataAttributes: Story = {
     // The scroll container is focusable so keyboard users can scroll it.
     await expect(container).toHaveAttribute('tabindex', '0');
     await expect(table?.tagName).toBe('TABLE');
+    // Attributes go on the <table>, not on its scroll container.
+    await expect(table).toHaveAttribute('aria-label', 'Invoices');
 
     // Every structural part carries its own data-slot hook.
     for (const slot of [

@@ -277,6 +277,13 @@ describe('token catalogue', () => {
     }
   });
 
+  it('describes where every derived colour is used', () => {
+    const undescribed = runtimeColors
+      .filter((token) => !token.description)
+      .map((token) => token.name);
+    expect(undescribed).toEqual([]);
+  });
+
   it('puts the default appearance on :root', () => {
     expect({
       density: cssModes('data-density').root,
@@ -299,26 +306,6 @@ describe('token catalogue', () => {
     for (const token of primitives) {
       expect(root.get(token.name), token.name).toBe(
         variantValue(token, rootVariant(token))
-      );
-    }
-  });
-
-  it('overrides only the diverging dark shadow primitives in variables.css', () => {
-    const light = blockDeclarations(variablesTheme, ':root');
-    const dark = blockDeclarations(variablesTheme, '.dark');
-    const { root } = cssModes('data-shadow');
-    const rootDark: VariantKey = { preset: root, mode: 'dark' };
-    const diverging = familyTokens('shadow').filter(
-      (token) =>
-        token.variants.some((v) => v.preset === root && v.mode === 'dark') &&
-        variantValue(token, rootDark) !== light.get(token.name)
-    );
-    expect([...dark.keys()].sort()).toEqual(
-      diverging.map((token) => token.name).sort()
-    );
-    for (const token of diverging) {
-      expect(dark.get(token.name), token.name).toBe(
-        variantValue(token, rootDark)
       );
     }
   });
@@ -368,6 +355,7 @@ describe('token catalogue', () => {
         primitives.includes(token) ||
         runtimeColors.includes(token) ||
         token.family === 'spacing' ||
+        token.family === 'shadow' ||
         token.family === 'z-index'
           ? `var(${token.name})`
           : variantValue(token, rootVariant(token));

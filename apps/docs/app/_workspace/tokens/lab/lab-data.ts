@@ -22,9 +22,9 @@ export interface ScaleToken {
   /** The appearance setting that writes it, or `null` when nothing does. */
   control: CatalogueControl | null;
   /**
-   * The catalogue value for a token the page can't override: a typography or
-   * shadow style composed from other tokens, or a breakpoint compiled into
-   * media queries. `null` for a runtime variable, which the lab reads live.
+   * The catalogue value for a token the page can't override: a typography
+   * style composed from other tokens, or a breakpoint compiled into media
+   * queries. `null` for a runtime variable, which the lab reads live.
    */
   fixedValue: string | null;
 }
@@ -40,7 +40,7 @@ const isPrimitive = (token: CatalogueToken) =>
   );
 
 function fixedValue(token: CatalogueToken): string | null {
-  const isComposite = token.type === 'typography' || token.type === 'shadow';
+  const isComposite = token.type === 'typography';
   if (!isComposite && token.family !== 'breakpoint') return null;
   return token.variants
     .flatMap(({ declarations }) =>

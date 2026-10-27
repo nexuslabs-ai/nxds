@@ -1,6 +1,6 @@
 {
   "name": "@nxds/react-18",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "nxds React components for React 18, generated from @nxds/react",
   "type": "module",
@@ -97,6 +97,9 @@
       "optional": true
     },
     "recharts": {
+      "optional": true
+    },
+    "sonner": {
       "optional": true
     },
     "vaul": {
