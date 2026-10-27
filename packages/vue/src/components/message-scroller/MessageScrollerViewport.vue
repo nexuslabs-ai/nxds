@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
 import { ScrollAreaViewport, type ScrollAreaViewportProps } from 'reka-ui';
-import { type HTMLAttributes, useTemplateRef, watch } from 'vue';
+import {
+  type HTMLAttributes,
+  onBeforeUnmount,
+  useTemplateRef,
+  watch,
+} from 'vue';
 
 import { cn } from '../../lib/utils';
 
@@ -29,6 +34,7 @@ watch(() => viewport.value?.viewportElement ?? null, setViewport, {
   immediate: true,
   flush: 'post',
 });
+onBeforeUnmount(() => setViewport(null));
 </script>
 
 <template>

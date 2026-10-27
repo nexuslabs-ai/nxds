@@ -536,7 +536,7 @@ export const SendFromComposer: Story = {
     docs: {
       description: {
         story:
-          "Call `scrollToEnd` from the provider's slot props in a composer to jump to the new turn on send.",
+          "Call `scrollToEnd` from the provider's slot props in a composer to jump to the new turn on send. A child component of the provider reads the same state from `useMessageScroller`.",
       },
     },
   },

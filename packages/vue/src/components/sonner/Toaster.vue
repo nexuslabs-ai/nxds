@@ -1,3 +1,9 @@
+<script lang="ts">
+// nxds toasts render only in the nxds Toaster, and a host app's own sonner
+// Toaster never shows them, so mounting both never doubles a toast.
+export const NXDS_TOASTER_ID = 'nxds';
+</script>
+
 <script setup lang="ts">
 import {
   IconAlertCircle,
@@ -18,8 +24,6 @@ import {
   Toaster as Sonner,
   type ToasterProps as SonnerToasterProps,
 } from 'vue-sonner';
-
-import { NXDS_TOASTER_ID } from './toaster-id';
 
 import 'vue-sonner/style.css';
 

@@ -7,7 +7,7 @@ import {
   useVueSonner,
 } from 'vue-sonner';
 
-import { NXDS_TOASTER_ID } from './toaster-id';
+import { NXDS_TOASTER_ID } from './Toaster.vue';
 
 export { default as Toaster, type ToasterProps } from './Toaster.vue';
 
