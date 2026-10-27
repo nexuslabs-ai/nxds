@@ -1,5 +1,49 @@
 # @nxds/vue
 
+## 0.6.0
+
+### Minor Changes
+
+- be76459: Add command and filter components that match their React counterparts.
+
+  | Component       | Parts                                                                                                                                                             | Notes                                                                                                |
+  | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+  | Command         | `Command`, `CommandDialog`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandLoading`, `CommandGroup`, `CommandSeparator`, `CommandItem`, `CommandShortcut` | Bind the search with `v-model` on `CommandInput`. `select` passes the item's value                   |
+  | Combobox        | `Combobox`, `ComboboxTrigger`, `ComboboxContent`, `ComboboxInput`, `ComboboxList`, `ComboboxEmpty`, `ComboboxGroup`, `ComboboxSeparator`, `ComboboxItem`          | Binds the open state with `v-model:open`                                                             |
+  | MultiSelect     | `MultiSelect`, `MultiSelectTrigger`, `MultiSelectValue`, `MultiSelectContent`, `MultiSelectItem`, `MultiSelectGroup`, `MultiSelectSeparator`                      | Emits `values-change` with the selected values                                                       |
+  | FilterChip      | `FilterChip`                                                                                                                                                      |                                                                                                      |
+  | FilterCondition | `FilterCondition`, `FilterConditionField`, `FilterConditionSegment`, `FilterConditionRemove`                                                                      |                                                                                                      |
+  | FilterBuilder   | `FilterBuilder`                                                                                                                                                   | Emits `value-change` with the new tree. `getFilterErrors` validates it                               |
+  | DatePicker      | `DatePicker`, `DatePickerDayButton`                                                                                                                               | Set `mode` to `single`, `multiple` or `range`. Install `@internationalized/date` for its date values |
+
+## 0.5.0
+
+### Minor Changes
+
+- 222a488: Add layout and data-display components that match their React counterparts.
+
+  | Component       | Parts                                                                                                                                                                  | Notes                                                            |
+  | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+  | Accordion       | `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`                                                                                                   | Binds the open items with `v-model`                              |
+  | Collapsible     | `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent`                                                                                                              | Binds the open state with `v-model:open`                         |
+  | Avatar          | `Avatar`, `AvatarImage`, `AvatarFallback`, `AvatarStatus`, `AvatarGroup`                                                                                               | An Avatar in an AvatarGroup takes the group's `size` and `shape` |
+  | Breadcrumb      | `Breadcrumb`, `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage`, `BreadcrumbSeparator`, `BreadcrumbEllipsis`, `BreadcrumbMenuTrigger`             |                                                                  |
+  | Item            | `Item`, `ItemGroup`, `ItemSeparator`, `ItemMedia`, `ItemContent`, `ItemTitle`, `ItemDescription`, `ItemActions`, `ItemHeader`, `ItemFooter`                            |                                                                  |
+  | EmptyState      | `EmptyState`, `EmptyStateHeader`, `EmptyStateMedia`, `EmptyStateTitle`, `EmptyStateDescription`, `EmptyStateContent`                                                   |                                                                  |
+  | DescriptionList | `DescriptionList`, `DescriptionListItem`, `DescriptionListTerm`, `DescriptionListDescription`                                                                          |                                                                  |
+  | Marker          | `Marker`, `MarkerIcon`, `MarkerContent`                                                                                                                                |                                                                  |
+  | Pagination      | `Pagination`, `PaginationContent`, `PaginationItem`, `PaginationLink`, `PaginationPrevious`, `PaginationNext`, `PaginationEllipsis`                                    |                                                                  |
+  | PageHeader      | `PageHeader`, `PageHeaderContent`, `PageHeaderMeta`, `PageHeaderTitleRow`, `PageHeaderTitle`, `PageHeaderDescription`, `PageHeaderActions`                             |                                                                  |
+  | ScrollArea      | `ScrollArea`, `ScrollBar`                                                                                                                                              |                                                                  |
+  | Resizable       | `ResizablePanelGroup`, `ResizablePanel`, `ResizableHandle`                                                                                                             |                                                                  |
+  | Table           | `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `TableRowHeader`, `TableCaption`, `TableSelectionHead`, `TableSelectionCell` |                                                                  |
+  | Carousel        | `Carousel`, `CarouselContent`, `CarouselItem`, `CarouselPrevious`, `CarouselNext`                                                                                      | Install `embla-carousel-vue` in your app to use it               |
+
+### Patch Changes
+
+- Updated dependencies [5daa687]
+  - @nxds/core@0.9.1
+
 ## 0.4.0
 
 ### Minor Changes
