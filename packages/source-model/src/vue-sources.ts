@@ -33,6 +33,7 @@ import {
 const COMPONENT_SPECIFIER = './components/';
 
 export type VueProgram = ReturnType<typeof createVueProgram>;
+export type { PropertyMetaSchema };
 
 function fail(message: string): never {
   throw new Error(`vue-sources: ${message}`);
@@ -134,16 +135,19 @@ function propType(prop: PropertyMeta, localAliases: Set<string>) {
   return members && members.length > 1 ? members.join(' | ') : type;
 }
 
-/** The type node `defineProps<…>()` takes in a part's compiled script. */
-function definePropsType(sourceFile: ts.SourceFile) {
-  let found: ts.TypeNode | undefined;
+/** The `defineProps` / `defineEmits` call in a part's compiled script. */
+function macroCall(
+  sourceFile: ts.SourceFile,
+  macro: 'defineProps' | 'defineEmits'
+) {
+  let found: ts.CallExpression | undefined;
   const visit = (node: ts.Node) => {
     if (
       ts.isCallExpression(node) &&
       ts.isIdentifier(node.expression) &&
-      node.expression.text === 'defineProps'
+      node.expression.text === macro
     ) {
-      found = node.typeArguments?.[0];
+      found = node;
     }
     if (!found) ts.forEachChild(node, visit);
   };
@@ -165,7 +169,8 @@ function variantDefault(
     vueProgram.checker.getProgram() ?? fail('the Vue checker has no program.');
   const typeChecker = program.getTypeChecker();
   const sourceFile = program.getSourceFile(file);
-  const propsType = sourceFile && definePropsType(sourceFile);
+  const propsType =
+    sourceFile && macroCall(sourceFile, 'defineProps')?.typeArguments?.[0];
   if (!propsType) return null;
 
   const declaration = typeChecker
@@ -204,20 +209,21 @@ function variantDefault(
 /**
  * A prop's `withDefaults` value, held to the React props contract: a literal
  * or nothing. A variant prop left unset falls back to its recipe's default.
+ * `undefined` only turns off Vue's boolean casting, so it counts as unset.
  */
 function propDefault(
   vueProgram: VueProgram,
   { name, file }: VuePart,
   prop: PropertyMeta
 ) {
-  if (prop.default === undefined) {
+  if (prop.default === undefined || prop.default === 'undefined') {
     return variantDefault(vueProgram, file, prop.name);
   }
   return literalDefaultValue(prop.default, `${name}.${prop.name}`);
 }
 
-/** Whether a prop or event is declared in @nxds/vue rather than inherited from a dependency. */
-export function isOwnDeclaration(declarations: { file: string }[]) {
+/** Whether a prop is declared in @nxds/vue rather than inherited from a dependency. */
+function isOwnDeclaration(declarations: { file: string }[]) {
   return declarations.some(({ file }) => isUnder(file, vueSrc));
 }
 
@@ -231,6 +237,39 @@ export function componentParts(vueProgram: VueProgram, slug: string) {
 }
 
 export type VuePart = ReturnType<typeof componentParts>[number];
+
+/**
+ * The events a part's `defineEmits<…>()` declares in @nxds/vue rather than
+ * takes from a dependency's emits type. `vue-component-meta` resolves every
+ * event to Vue's own `defineEmits` signature, so its declarations can't tell.
+ */
+export function ownEvents(vueProgram: VueProgram, { file }: VuePart) {
+  const program =
+    vueProgram.checker.getProgram() ?? fail('the Vue checker has no program.');
+  const sourceFile = program.getSourceFile(file);
+  const emits = sourceFile && macroCall(sourceFile, 'defineEmits');
+  if (!emits) return [];
+
+  const emitsType =
+    emits.typeArguments?.[0] ??
+    fail(`${toRepoPath(file)} calls defineEmits without a type argument.`);
+  const isOwn = (declaration: ts.Declaration) =>
+    isUnder(declaration.getSourceFile().fileName, vueSrc);
+  const type = program.getTypeChecker().getTypeFromTypeNode(emitsType);
+  const hasOwnCallSignature = type
+    .getCallSignatures()
+    .some((signature) => signature.declaration && isOwn(signature.declaration));
+  if (hasOwnCallSignature) {
+    fail(
+      `${toRepoPath(file)} declares its emits as call signatures. Use the named-tuple form, \`{ event: [arg: Type] }\`.`
+    );
+  }
+
+  return type
+    .getProperties()
+    .filter((event) => (event.declarations ?? []).some(isOwn))
+    .map((event) => event.name);
+}
 
 export function partEntry(
   vueProgram: VueProgram,

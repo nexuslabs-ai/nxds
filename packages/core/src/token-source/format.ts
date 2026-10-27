@@ -184,6 +184,23 @@ export function formatShadowStyle(
   return formatShadowComposite(value, primitiveMap, isInset);
 }
 
+/**
+ * Replace each `var(--name)` in `value` with its literal in `values`, keyed
+ * by `--name`. Throws on a variable `values` doesn't hold.
+ */
+export function inlineVariables(
+  value: string,
+  values: ReadonlyMap<string, string>
+): string {
+  return value.replace(/var\((--[\w-]+)\)/g, (reference, name: string) => {
+    const literal = values.get(name);
+    if (literal === undefined) {
+      throw new Error(`inlineVariables: ${reference} has no value`);
+    }
+    return literal;
+  });
+}
+
 const TYPOGRAPHY_PROPERTIES = [
   ['fontFamily', 'font-family'],
   ['fontSize', 'font-size'],

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Comment, Fragment, type HTMLAttributes, Text, type VNode } from 'vue';
+import type { HTMLAttributes, VNode } from 'vue';
 
+import { flattenedNodes } from '../../lib/slots';
 import { cn } from '../../lib/utils';
 
 import {
@@ -38,23 +39,11 @@ const slots = defineSlots<{
   'right-icon'?: () => VNode[];
 }>();
 
-function hasRenderableNodes(nodes: VNode[]): boolean {
-  return nodes.some((node) => {
-    if (node.type === Comment) return false;
-    if (node.type === Text) return String(node.children).trim().length > 0;
-    if (node.type !== Fragment) return true;
-    return (
-      Array.isArray(node.children) &&
-      hasRenderableNodes(node.children as VNode[])
-    );
-  });
-}
-
 function isIconOnly(): boolean {
   return (
     !props.isNumber &&
     Boolean(slots['left-icon'] || slots['right-icon']) &&
-    !hasRenderableNodes(slots.default?.() ?? [])
+    flattenedNodes(slots.default?.()).length === 0
   );
 }
 </script>

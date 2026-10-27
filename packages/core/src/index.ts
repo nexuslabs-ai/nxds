@@ -20,6 +20,7 @@ export { deriveTheme, themeToCss } from './lib/derive-theme';
 export type { Mode, NxdsSurfaceTone, Tier } from './lib/palette';
 export { PALETTE_KEYS, TIER_THRESHOLDS } from './lib/palette';
 export { isColor } from './lib/perceptual-ramp';
+export { RUNTIME_LAYER_ORDER } from './lib/runtime-layer';
 export type { SurfaceToken } from './lib/surface-ladder';
 export type { ThemeContrastCheck } from './lib/theme-contrast';
 export { measureThemeContrast } from './lib/theme-contrast';
@@ -29,3 +30,4 @@ export {
   type SemanticTokenMeta,
   type TokenCategory,
 } from './lib/token-registry';
+export type { SpacingStep } from './lib/token-scales.generated';

@@ -404,11 +404,11 @@ export const KeyboardInteraction: Story = {
     await userEvent.keyboard('{ArrowUp}');
     await expect(triggers[0]).toHaveFocus();
 
-    // Home moves to first trigger
+    // End moves to last trigger
     await userEvent.keyboard('{End}');
     await expect(triggers[2]).toHaveFocus();
 
-    // End moves to last trigger
+    // Home moves to first trigger
     await userEvent.keyboard('{Home}');
     await expect(triggers[0]).toHaveFocus();
   },

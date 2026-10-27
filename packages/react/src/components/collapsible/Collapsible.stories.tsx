@@ -154,6 +154,28 @@ export const Disabled: Story = {
       },
     },
   },
+  render: () => (
+    <Collapsible disabled className="nx:flex nx:w-72 nx:flex-col">
+      <CollapsibleTrigger asChild>
+        <Button variant="outline">Toggle details</Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="nx:mt-2 nx:rounded-md nx:border-default nx:border-border-default nx:px-4 nx:py-2 nx:typography-label-default nx:text-foreground">
+          Unreachable while disabled.
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole('button', { name: 'Toggle details' });
+    await expect(trigger).toBeDisabled();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  },
+};
+
+// Clicking a disabled trigger neither opens the content nor fires onOpenChange.
+export const DisabledInteraction: Story = {
   args: { onOpenChange: fn() },
   render: (args) => (
     <Collapsible
@@ -174,9 +196,9 @@ export const Disabled: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     const trigger = canvas.getByRole('button', { name: 'Toggle details' });
-    // No click: a disabled trigger stays closed; the disabled attribute and
-    // the never-fired onOpenChange are the signals.
-    await expect(trigger).toBeDisabled();
+    // user-event refuses to click through `pointer-events: none`, so the check is
+    // bypassed to prove the disabled trigger ignores the click itself.
+    await userEvent.click(trigger, { pointerEventsCheck: 0 });
     await expect(trigger).toHaveAttribute('aria-expanded', 'false');
     await expect(args.onOpenChange).not.toHaveBeenCalled();
   },

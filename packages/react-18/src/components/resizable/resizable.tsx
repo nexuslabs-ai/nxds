@@ -1,7 +1,24 @@
+import * as React from 'react';
 import * as ResizablePrimitive from 'react-resizable-panels';
+
+import { useComposedRefs } from '@radix-ui/react-compose-refs';
 
 import { IconGripVertical } from '../../lib/icons';
 import { cn } from '../../lib/utils';
+
+interface ResizablePanelGroupProps extends Omit<
+  ResizablePrimitive.GroupProps,
+  'orientation' | 'onLayoutChange' | 'onLayoutChanged' | 'defaultLayout'
+> {
+  /**
+   * The axis the panels split along.
+   */
+  orientation?: 'horizontal' | 'vertical';
+  /**
+   * Called with each panel's size, as a percentage, while the layout changes.
+   */
+  onLayoutChange?: (layout: number[]) => void;
+}
 
 /**
  * Holds a set of resizable panels. `orientation` sets the split axis.
@@ -9,22 +26,85 @@ import { cn } from '../../lib/utils';
  */
 function ResizablePanelGroup({
   className,
+  orientation = 'horizontal',
+  onLayoutChange,
+  elementRef,
   ...props
-}: ResizablePrimitive.GroupProps) {
+}: ResizablePanelGroupProps) {
+  const groupRef = React.useRef<HTMLDivElement>(null);
+  const composedRef = useComposedRefs(elementRef, groupRef);
+
+  // The layout is keyed by panel id, and object keys don't keep panel order.
+  function handleLayoutChange(layout: ResizablePrimitive.Layout) {
+    const panels = Array.from(
+      groupRef.current?.querySelectorAll(':scope > [data-panel]') ?? []
+    );
+    onLayoutChange?.(panels.flatMap((panel) => layout[panel.id] ?? []));
+  }
+
   return (
     <ResizablePrimitive.Group
       data-slot="resizable-panel-group"
       className={className}
+      orientation={orientation}
+      elementRef={composedRef}
+      onLayoutChange={onLayoutChange && handleLayoutChange}
       {...props}
     />
   );
 }
 
+interface ResizablePanelProps extends Omit<
+  ResizablePrimitive.PanelProps,
+  'defaultSize' | 'minSize' | 'maxSize' | 'collapsedSize'
+> {
+  /**
+   * Starting size, in `sizeUnit`.
+   */
+  defaultSize?: number;
+  /**
+   * Smallest size, in `sizeUnit`.
+   */
+  minSize?: number;
+  /**
+   * Largest size, in `sizeUnit`.
+   */
+  maxSize?: number;
+  /**
+   * Size when collapsed, in `sizeUnit`.
+   */
+  collapsedSize?: number;
+  /**
+   * Unit for every size prop: a percentage of the group, or pixels.
+   */
+  sizeUnit?: '%' | 'px';
+}
+
 /**
  * One panel inside a `ResizablePanelGroup`.
  */
-function ResizablePanel({ ...props }: ResizablePrimitive.PanelProps) {
-  return <ResizablePrimitive.Panel data-slot="resizable-panel" {...props} />;
+function ResizablePanel({
+  defaultSize,
+  minSize = 0,
+  maxSize,
+  collapsedSize,
+  sizeUnit = '%',
+  ...props
+}: ResizablePanelProps) {
+  // react-resizable-panels reads a bare number as pixels, so every size carries its unit.
+  const withUnit = (size: number | undefined) =>
+    size === undefined ? undefined : `${size}${sizeUnit}`;
+
+  return (
+    <ResizablePrimitive.Panel
+      data-slot="resizable-panel"
+      defaultSize={withUnit(defaultSize)}
+      minSize={withUnit(minSize)}
+      maxSize={withUnit(maxSize)}
+      collapsedSize={withUnit(collapsedSize)}
+      {...props}
+    />
+  );
 }
 
 /**

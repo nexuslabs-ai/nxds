@@ -1,0 +1,281 @@
+import type { Meta, StoryObj } from '@storybook/vue3-vite';
+import { expect, within } from 'storybook/test';
+
+import { Badge } from '../badge';
+
+import {
+  DescriptionList,
+  DescriptionListDescription,
+  DescriptionListItem,
+  DescriptionListTerm,
+} from '.';
+
+const meta = {
+  title: 'Components/DescriptionList',
+  component: DescriptionList,
+  parameters: {
+    docs: {
+      description: {
+        component:
+          'DescriptionList shows metadata as term and value pairs.\n\n- Wrap each term and its value in a DescriptionListItem.\n- Format values and missing-value text yourself.\n- Put actions inside DescriptionListDescription.\n- Rows stack in narrow containers and form two columns when the list has room.',
+      },
+    },
+  },
+} satisfies Meta<typeof DescriptionList>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+const listComponents = {
+  DescriptionList,
+  DescriptionListDescription,
+  DescriptionListItem,
+  DescriptionListTerm,
+};
+
+const ProfileDetails = {
+  components: listComponents,
+  template: `
+    <DescriptionList>
+      <DescriptionListItem>
+        <DescriptionListTerm>Name</DescriptionListTerm>
+        <DescriptionListDescription>Priya Shah</DescriptionListDescription>
+      </DescriptionListItem>
+      <DescriptionListItem>
+        <DescriptionListTerm>Email</DescriptionListTerm>
+        <DescriptionListDescription>priya@example.com</DescriptionListDescription>
+      </DescriptionListItem>
+    </DescriptionList>
+  `,
+};
+
+// Docs stories: the docs site shows these, in this order.
+
+export const Default: Story = {
+  tags: ['docs'],
+  render: () => ({
+    components: {
+      DescriptionList,
+      DescriptionListDescription,
+      DescriptionListItem,
+      DescriptionListTerm,
+    },
+    template: `
+      <DescriptionList>
+        <DescriptionListItem>
+          <DescriptionListTerm>Name</DescriptionListTerm>
+          <DescriptionListDescription>Priya Shah</DescriptionListDescription>
+        </DescriptionListItem>
+        <DescriptionListItem>
+          <DescriptionListTerm>Email</DescriptionListTerm>
+          <DescriptionListDescription>priya@example.com</DescriptionListDescription>
+        </DescriptionListItem>
+      </DescriptionList>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const list = canvasElement.querySelector('dl');
+    await expect(list).not.toBeNull();
+    await expect(list?.children).toHaveLength(2);
+    for (const item of Array.from(list!.children)) {
+      await expect(item.tagName).toBe('DIV');
+      await expect(Array.from(item.children, (child) => child.tagName)).toEqual(
+        ['DT', 'DD']
+      );
+    }
+  },
+};
+
+export const FileMetadata: Story = {
+  tags: ['docs'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'List file details, with a `time` element for the modified date.',
+      },
+    },
+  },
+  render: () => ({
+    components: {
+      DescriptionList,
+      DescriptionListDescription,
+      DescriptionListItem,
+      DescriptionListTerm,
+    },
+    template: `
+      <DescriptionList>
+        <DescriptionListItem>
+          <DescriptionListTerm>Filename</DescriptionListTerm>
+          <DescriptionListDescription>Research findings.pdf</DescriptionListDescription>
+        </DescriptionListItem>
+        <DescriptionListItem>
+          <DescriptionListTerm>Size</DescriptionListTerm>
+          <DescriptionListDescription>2.4 MB</DescriptionListDescription>
+        </DescriptionListItem>
+        <DescriptionListItem>
+          <DescriptionListTerm>Modified</DescriptionListTerm>
+          <DescriptionListDescription>
+            <time datetime="2026-09-24">24 September 2026</time>
+          </DescriptionListDescription>
+        </DescriptionListItem>
+      </DescriptionList>
+    `,
+  }),
+};
+
+export const Configuration: Story = {
+  tags: ['docs'],
+  parameters: {
+    docs: {
+      description: {
+        story: 'Mix plain text and a Badge to show settings and their status.',
+      },
+    },
+  },
+  render: () => ({
+    components: {
+      Badge,
+      DescriptionList,
+      DescriptionListDescription,
+      DescriptionListItem,
+      DescriptionListTerm,
+    },
+    template: `
+      <DescriptionList>
+        <DescriptionListItem>
+          <DescriptionListTerm>Region</DescriptionListTerm>
+          <DescriptionListDescription>Mumbai</DescriptionListDescription>
+        </DescriptionListItem>
+        <DescriptionListItem>
+          <DescriptionListTerm>Backups</DescriptionListTerm>
+          <DescriptionListDescription>
+            <Badge variant="secondary">Enabled</Badge>
+          </DescriptionListDescription>
+        </DescriptionListItem>
+        <DescriptionListItem>
+          <DescriptionListTerm>Retention override</DescriptionListTerm>
+          <DescriptionListDescription>Not configured</DescriptionListDescription>
+        </DescriptionListItem>
+      </DescriptionList>
+    `,
+  }),
+};
+
+// Behaviour stories: tests and Storybook only.
+
+export const ContainerLayouts: Story = {
+  render: () => ({
+    components: { ProfileDetails },
+    template: `
+      <div class="nx:flex nx:flex-wrap nx:gap-8">
+        <div style="width: 280px" data-testid="narrow"><ProfileDetails /></div>
+        <div style="width: 640px" data-testid="wide"><ProfileDetails /></div>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const narrow = canvas.getByTestId('narrow');
+    const wide = canvas.getByTestId('wide');
+    const termNarrow = narrow.querySelector('dt')!;
+    const valueNarrow = narrow.querySelector('dd')!;
+    const termWide = wide.querySelector('dt')!;
+    const valueWide = wide.querySelector('dd')!;
+    await expect(narrow.getBoundingClientRect().width).toBeLessThan(448);
+    await expect(wide.getBoundingClientRect().width).toBeGreaterThan(448);
+    await expect(
+      valueNarrow.getBoundingClientRect().top
+    ).toBeGreaterThanOrEqual(termNarrow.getBoundingClientRect().bottom);
+    await expect(valueWide.getBoundingClientRect().left).toBeGreaterThan(
+      termWide.getBoundingClientRect().left
+    );
+    await expect(
+      Math.abs(
+        valueWide.getBoundingClientRect().top -
+          termWide.getBoundingClientRect().top
+      )
+    ).toBeLessThan(2);
+  },
+};
+
+export const LongContent: Story = {
+  render: () => ({
+    components: listComponents,
+    setup: () => ({ widths: [280, 640] }),
+    template: `
+      <div class="nx:grid nx:gap-8">
+        <div v-for="width in widths" :key="width" :style="{ width: width + 'px' }">
+          <DescriptionList>
+            <DescriptionListItem>
+              <DescriptionListTerm>RegionalDisasterRecoveryBackupConfigurationIdentifier</DescriptionListTerm>
+              <DescriptionListDescription>production-archive-2026-09-24-regional-backup-retention-configuration-7d841b239aca38ce</DescriptionListDescription>
+            </DescriptionListItem>
+            <DescriptionListItem>
+              <DescriptionListTerm>Delivery address</DescriptionListTerm>
+              <DescriptionListDescription>
+                24 Riverside Road
+                <br />
+                Mumbai
+                <br />
+                Maharashtra
+              </DescriptionListDescription>
+            </DescriptionListItem>
+          </DescriptionList>
+        </div>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    for (const list of canvasElement.querySelectorAll('dl')) {
+      await expect(list.scrollWidth).toBeLessThanOrEqual(list.clientWidth + 1);
+      for (const cell of list.querySelectorAll('dt, dd')) {
+        await expect(cell.scrollWidth).toBeLessThanOrEqual(
+          cell.clientWidth + 1
+        );
+      }
+    }
+  },
+};
+
+export const WithDataAttributes: Story = {
+  render: () => ({
+    components: { ProfileDetails },
+    template: '<ProfileDetails />',
+  }),
+  play: async ({ canvasElement }) => {
+    for (const slot of [
+      'description-list',
+      'description-list-item',
+      'description-list-term',
+      'description-list-description',
+    ]) {
+      await expect(
+        canvasElement.querySelector(`[data-slot="${slot}"]`)
+      ).not.toBeNull();
+    }
+  },
+};
+
+export const AllVariants: Story = {
+  render: () => ({
+    components: { ...listComponents, Badge, ProfileDetails },
+    template: `
+      <div class="nx:grid nx:w-full nx:max-w-3xl nx:gap-8">
+        <ProfileDetails />
+        <DescriptionList>
+          <DescriptionListItem>
+            <DescriptionListTerm>Backups</DescriptionListTerm>
+            <DescriptionListDescription>
+              <Badge variant="secondary">Enabled</Badge>
+            </DescriptionListDescription>
+          </DescriptionListItem>
+          <DescriptionListItem>
+            <DescriptionListTerm>Retention override</DescriptionListTerm>
+            <DescriptionListDescription>Not configured</DescriptionListDescription>
+          </DescriptionListItem>
+        </DescriptionList>
+      </div>
+    `,
+  }),
+};

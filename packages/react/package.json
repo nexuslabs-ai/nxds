@@ -1,6 +1,6 @@
 {
   "name": "@nxds/react",
-  "version": "0.5.0",
+  "version": "0.7.0",
   "private": true,
   "description": "React components built with Radix UI and Tailwind CSS",
   "//": [
@@ -125,6 +125,9 @@
       "optional": true
     },
     "recharts": {
+      "optional": true
+    },
+    "sonner": {
       "optional": true
     },
     "vaul": {
