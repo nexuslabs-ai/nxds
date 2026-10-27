@@ -1,17 +1,17 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
-  IconAlertTriangle,
-  IconCircleCheckFilled,
-  IconDownload,
-  IconFile,
-  IconFileTypeDocx,
-  IconFileTypePdf,
-  IconFileTypeTxt,
-  IconFileTypeZip,
-  IconRefresh,
-  IconUpload,
-  IconX,
-} from '@tabler/icons-vue';
+  PhArrowClockwise,
+  PhCheckCircle,
+  PhDownloadSimple,
+  PhFile,
+  PhFileDoc,
+  PhFilePdf,
+  PhFileTxt,
+  PhFileZip,
+  PhUploadSimple,
+  PhWarning,
+  PhX,
+} from '@phosphor-icons/vue';
+import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Button } from '../button';
@@ -82,19 +82,19 @@ export const Default: Story = {
       AttachmentMedia,
       AttachmentTitle,
       Button,
-      IconFileTypePdf,
-      IconX,
+      PhFilePdf,
+      PhX,
     },
     template: `
       <Attachment class="nx:w-80">
-        <AttachmentMedia variant="icon"><IconFileTypePdf /></AttachmentMedia>
+        <AttachmentMedia variant="icon"><PhFilePdf /></AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>report.pdf</AttachmentTitle>
           <AttachmentDescription>2.4 MB</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
           <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf">
-            <IconX />
+            <PhX />
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -122,32 +122,32 @@ export const States: Story = {
       AttachmentProgress,
       AttachmentTitle,
       Button,
-      IconAlertTriangle,
-      IconCircleCheckFilled,
-      IconDownload,
-      IconFileTypePdf,
-      IconFileTypeTxt,
-      IconRefresh,
-      IconUpload,
-      IconX,
+      PhWarning,
+      PhCheckCircle,
+      PhDownloadSimple,
+      PhFilePdf,
+      PhFileTxt,
+      PhArrowClockwise,
+      PhUploadSimple,
+      PhX,
       Spinner,
     },
     template: `
       <div class="nx:flex nx:w-80 nx:flex-col nx:gap-3">
         <Attachment state="idle">
-          <AttachmentMedia variant="icon"><IconUpload /></AttachmentMedia>
+          <AttachmentMedia variant="icon"><PhUploadSimple /></AttachmentMedia>
           <AttachmentContent>
             <AttachmentTitle>Drop a file here</AttachmentTitle>
             <AttachmentDescription>PDF or PNG, up to 10 MB</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
             <Button variant="ghost" size="icon-sm" aria-label="Dismiss">
-              <IconX />
+              <PhX />
             </Button>
           </AttachmentActions>
         </Attachment>
         <Attachment state="uploading">
-          <AttachmentMedia variant="icon"><IconFileTypePdf /></AttachmentMedia>
+          <AttachmentMedia variant="icon"><PhFilePdf /></AttachmentMedia>
           <AttachmentContent>
             <AttachmentTitle>report.pdf</AttachmentTitle>
             <AttachmentDescription>62% of 2.4 MB</AttachmentDescription>
@@ -155,7 +155,7 @@ export const States: Story = {
           </AttachmentContent>
           <AttachmentActions>
             <Button variant="ghost" size="icon-sm" aria-label="Cancel upload of report.pdf">
-              <IconX />
+              <PhX />
             </Button>
           </AttachmentActions>
         </Attachment>
@@ -167,39 +167,39 @@ export const States: Story = {
           </AttachmentContent>
           <AttachmentActions>
             <Button variant="ghost" size="icon-sm" aria-label="Cancel processing of scan.png">
-              <IconX />
+              <PhX />
             </Button>
           </AttachmentActions>
         </Attachment>
         <Attachment state="error">
-          <AttachmentMedia variant="icon"><IconAlertTriangle /></AttachmentMedia>
+          <AttachmentMedia variant="icon"><PhWarning /></AttachmentMedia>
           <AttachmentContent>
             <AttachmentTitle>archive.zip</AttachmentTitle>
             <AttachmentDescription>Upload failed — file too large</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
             <Button variant="ghost" size="icon-sm" aria-label="Retry upload of archive.zip">
-              <IconRefresh />
+              <PhArrowClockwise />
             </Button>
             <Button variant="ghost" size="icon-sm" aria-label="Dismiss archive.zip">
-              <IconX />
+              <PhX />
             </Button>
           </AttachmentActions>
         </Attachment>
         <Attachment state="done">
-          <AttachmentMedia variant="icon"><IconFileTypeTxt /></AttachmentMedia>
+          <AttachmentMedia variant="icon"><PhFileTxt /></AttachmentMedia>
           <AttachmentContent>
             <AttachmentTitle>notes.txt<template #trailing>
-                <IconCircleCheckFilled class="nx:size-4 nx:text-success-subtle-foreground" />
+                <PhCheckCircle weight="fill" class="nx:size-4 nx:text-success-subtle-foreground" />
               </template></AttachmentTitle>
             <AttachmentDescription>8 KB · Uploaded just now</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
             <Button variant="ghost" size="icon-sm" aria-label="Download notes.txt">
-              <IconDownload />
+              <PhDownloadSimple />
             </Button>
             <Button variant="ghost" size="icon-sm" aria-label="Remove notes.txt">
-              <IconX />
+              <PhX />
             </Button>
           </AttachmentActions>
         </Attachment>
@@ -227,33 +227,33 @@ export const Sizes: Story = {
       AttachmentMedia,
       AttachmentTitle,
       Button,
-      IconFileTypePdf,
-      IconFileTypeTxt,
-      IconX,
+      PhFilePdf,
+      PhFileTxt,
+      PhX,
     },
     template: `
       <div class="nx:flex nx:w-80 nx:flex-col nx:gap-3">
         <Attachment size="default">
-          <AttachmentMedia variant="icon"><IconFileTypePdf /></AttachmentMedia>
+          <AttachmentMedia variant="icon"><PhFilePdf /></AttachmentMedia>
           <AttachmentContent>
             <AttachmentTitle>report.pdf</AttachmentTitle>
             <AttachmentDescription>2.4 MB</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
             <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf">
-              <IconX />
+              <PhX />
             </Button>
           </AttachmentActions>
         </Attachment>
         <Attachment size="sm">
-          <AttachmentMedia variant="icon"><IconFileTypeTxt /></AttachmentMedia>
+          <AttachmentMedia variant="icon"><PhFileTxt /></AttachmentMedia>
           <AttachmentContent>
             <AttachmentTitle>notes.txt</AttachmentTitle>
             <AttachmentDescription>8 KB</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
             <Button variant="ghost" size="icon-sm" aria-label="Remove notes.txt">
-              <IconX />
+              <PhX />
             </Button>
           </AttachmentActions>
         </Attachment>
@@ -280,10 +280,10 @@ export const Grouped: Story = {
       AttachmentGroup,
       AttachmentMedia,
       AttachmentTitle,
-      IconFileTypeDocx,
-      IconFileTypePdf,
-      IconFileTypeTxt,
-      IconFileTypeZip,
+      PhFileDoc,
+      PhFilePdf,
+      PhFileTxt,
+      PhFileZip,
     },
     setup: () => ({
       thumb:
@@ -301,10 +301,10 @@ export const Grouped: Story = {
         <Attachment v-for="file in files" :key="file.name" orientation="vertical">
           <AttachmentMedia :variant="file.name.endsWith('.png') ? 'image' : 'icon'">
             <img v-if="file.name.endsWith('.png')" :src="thumb" alt="" />
-            <IconFileTypePdf v-else-if="file.name.endsWith('.pdf')" />
-            <IconFileTypeTxt v-else-if="file.name.endsWith('.txt')" />
-            <IconFileTypeZip v-else-if="file.name.endsWith('.zip')" />
-            <IconFileTypeDocx v-else />
+            <PhFilePdf v-else-if="file.name.endsWith('.pdf')" />
+            <PhFileTxt v-else-if="file.name.endsWith('.txt')" />
+            <PhFileZip v-else-if="file.name.endsWith('.zip')" />
+            <PhFileDoc v-else />
           </AttachmentMedia>
           <AttachmentContent>
             <AttachmentTitle>{{ file.name }}</AttachmentTitle>
@@ -322,14 +322,14 @@ export const Grouped: Story = {
 // no card inside it is focusable.
 export const GroupKeyboardInteraction: Story = {
   render: () => ({
-    components: { ...attachmentComponents, AttachmentGroup, IconFile },
+    components: { ...attachmentComponents, AttachmentGroup, PhFile },
     setup: () => ({
       names: ['cover.png', 'report.pdf', 'notes.txt', 'archive.zip'],
     }),
     template: `
       <AttachmentGroup aria-label="Attached files" class="nx:w-80">
         <Attachment v-for="name in names" :key="name" orientation="vertical">
-          <AttachmentMedia variant="icon"><IconFile /></AttachmentMedia>
+          <AttachmentMedia variant="icon"><PhFile /></AttachmentMedia>
           <AttachmentContent>
             <AttachmentTitle>{{ name }}</AttachmentTitle>
           </AttachmentContent>
@@ -360,8 +360,8 @@ export const LongFileName: Story = {
       ...attachmentComponents,
       AttachmentTrigger,
       Button,
-      IconFileTypePdf,
-      IconX,
+      PhFilePdf,
+      PhX,
       Tooltip,
       TooltipContent,
       TooltipProvider,
@@ -379,14 +379,14 @@ export const LongFileName: Story = {
             </TooltipTrigger>
             <TooltipContent>{{ name }}</TooltipContent>
           </Tooltip>
-          <AttachmentMedia variant="icon"><IconFileTypePdf /></AttachmentMedia>
+          <AttachmentMedia variant="icon"><PhFilePdf /></AttachmentMedia>
           <AttachmentContent>
             <AttachmentTitle>{{ name }}</AttachmentTitle>
             <AttachmentDescription>2.4 MB</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
             <Button variant="ghost" size="icon-sm" :aria-label="'Remove ' + name">
-              <IconX />
+              <PhX />
             </Button>
           </AttachmentActions>
         </Attachment>
@@ -409,8 +409,8 @@ export const ClickInteraction: ActionStory = {
       ...attachmentComponents,
       AttachmentTrigger,
       Button,
-      IconFileTypePdf,
-      IconX,
+      PhFilePdf,
+      PhX,
     },
     setup: () => ({ args }),
     template: `
@@ -418,14 +418,14 @@ export const ClickInteraction: ActionStory = {
         <AttachmentTrigger @click="args.onOpen">
           <span class="nx:sr-only">Open report.pdf</span>
         </AttachmentTrigger>
-        <AttachmentMedia variant="icon"><IconFileTypePdf /></AttachmentMedia>
+        <AttachmentMedia variant="icon"><PhFilePdf /></AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>report.pdf</AttachmentTitle>
           <AttachmentDescription>2.4 MB</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
           <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf" @click="args.onRemove">
-            <IconX />
+            <PhX />
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -478,7 +478,7 @@ export const KeyboardInteraction: ActionStory = {
 export const Disabled: ActionStory = {
   args: { onRemove: fn() },
   render: (args) => ({
-    components: { ...attachmentComponents, Button, IconX },
+    components: { ...attachmentComponents, Button, PhX },
     setup: () => ({ args }),
     template: `
       <Attachment state="uploading" class="nx:w-80">
@@ -488,7 +488,7 @@ export const Disabled: ActionStory = {
         </AttachmentContent>
         <AttachmentActions>
           <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf" disabled @click="args.onRemove">
-            <IconX />
+            <PhX />
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -513,22 +513,22 @@ export const WithDataAttributes: Story = {
       ...attachmentComponents,
       AttachmentTrigger,
       Button,
-      IconFileTypePdf,
-      IconX,
+      PhFilePdf,
+      PhX,
     },
     template: `
       <Attachment state="uploading" orientation="vertical">
         <AttachmentTrigger as-child>
           <a href="#report"><span class="nx:sr-only">Open report.pdf</span></a>
         </AttachmentTrigger>
-        <AttachmentMedia variant="icon"><IconFileTypePdf /></AttachmentMedia>
+        <AttachmentMedia variant="icon"><PhFilePdf /></AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>report.pdf</AttachmentTitle>
           <AttachmentDescription>2.4 MB</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
           <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf">
-            <IconX />
+            <PhX />
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -580,7 +580,7 @@ export const WithDataAttributes: Story = {
 // Visual grid reference.
 export const AllVariants: Story = {
   render: () => ({
-    components: { ...attachmentComponents, AttachmentGroup, IconFile },
+    components: { ...attachmentComponents, AttachmentGroup, PhFile },
     setup: () => ({
       thumb: THUMB,
       states: ['idle', 'uploading', 'processing', 'error', 'done'],
@@ -590,7 +590,7 @@ export const AllVariants: Story = {
       <div class="nx:flex nx:flex-col nx:gap-6">
         <div class="nx:flex nx:w-80 nx:flex-col nx:gap-3">
           <Attachment v-for="state in states" :key="state" :state="state">
-            <AttachmentMedia variant="icon"><IconFile /></AttachmentMedia>
+            <AttachmentMedia variant="icon"><PhFile /></AttachmentMedia>
             <AttachmentContent>
               <AttachmentTitle>{{ state }}</AttachmentTitle>
               <AttachmentDescription>2.4 MB</AttachmentDescription>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { IconChevronRight } from '@tabler/icons-vue';
 import { reactiveOmit } from '@vueuse/core';
 import {
   ContextMenuSubTrigger,
@@ -8,6 +7,7 @@ import {
 } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
+import { IconChevronRight } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 export interface ContextMenuSubTriggerProps extends RekaContextMenuSubTriggerProps {

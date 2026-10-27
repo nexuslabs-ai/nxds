@@ -6,13 +6,6 @@ export const NXDS_TOASTER_ID = 'nxds';
 
 <script setup lang="ts">
 import {
-  IconAlertCircle,
-  IconAlertTriangle,
-  IconCircleCheck,
-  IconInfoCircle,
-  IconLoader2,
-} from '@tabler/icons-vue';
-import {
   computed,
   type CSSProperties,
   onBeforeUnmount,
@@ -24,6 +17,14 @@ import {
   Toaster as Sonner,
   type ToasterProps as SonnerToasterProps,
 } from 'vue-sonner';
+
+import {
+  IconAlertCircle,
+  IconAlertTriangle,
+  IconCircleCheck,
+  IconInfoCircle,
+  IconLoader2,
+} from '../../lib/icons';
 
 import 'vue-sonner/style.css';
 

@@ -566,10 +566,10 @@ export const HalfStepSpacing: Story = {
       aria-label="Text alignment"
     >
       <ToggleGroupItem value="left" aria-label="Align left">
-        <IconAlignLeft />
+        <TextAlignLeftIcon />
       </ToggleGroupItem>
       <ToggleGroupItem value="right" aria-label="Align right">
-        <IconAlignRight />
+        <TextAlignRightIcon />
       </ToggleGroupItem>
     </ToggleGroup>
   ),
