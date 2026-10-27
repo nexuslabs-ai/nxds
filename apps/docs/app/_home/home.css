@@ -29,11 +29,6 @@
   letter-spacing: var(--nx-typography-letterspacing-tighter);
 }
 
-/* HomePage overwrites this with the header's measured height. */
-:root {
-  --story-header-height: var(--nx-spacing-16);
-}
-
 @keyframes story-arrive {
   from {
     opacity: 0;
@@ -47,7 +42,7 @@
 
 @utility chapter-track {
   height: calc(
-    (var(--story-chapter-count) + 1) * 100svh - var(--story-header-height)
+    (var(--story-chapter-count) + 1) * 100svh - var(--site-header-h)
   );
 }
 
@@ -56,8 +51,8 @@
   --story-toolbar-clearance: var(--nx-spacing-28);
   container: chapter / size;
   position: sticky;
-  top: var(--story-header-height);
-  height: calc(100svh - var(--story-header-height));
+  top: var(--site-header-h);
+  height: calc(100svh - var(--site-header-h));
   min-height: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;

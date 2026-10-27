@@ -1,4 +1,4 @@
-import { HomePage } from '../_home/HomePage';
+import { ChapterJourney } from '../_home/ChapterJourney';
 import { highlightStories } from '../_home/stories/story-code';
 import {
   NPM_CORE_URL,
@@ -61,7 +61,7 @@ export default async function Home() {
           __html: JSON.stringify(STRUCTURED_DATA).replaceAll('<', '\\u003c'),
         }}
       />
-      <HomePage storyCode={await highlightStories()} />
+      <ChapterJourney storyCode={await highlightStories()} />
     </>
   );
 }

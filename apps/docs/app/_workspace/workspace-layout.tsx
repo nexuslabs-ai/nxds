@@ -41,7 +41,7 @@ export function WorkspaceLayout({
   return (
     <div
       data-slot="workspace-layout"
-      className="nx:flex nx:flex-col nx:lg:flex-row nx:h-[calc(100svh-var(--docs-header-h))] nx:min-h-0"
+      className="nx:flex nx:flex-col nx:lg:flex-row nx:h-[calc(100svh-var(--site-header-h))] nx:min-h-0"
     >
       <Show above="lg" as="div">
         <aside

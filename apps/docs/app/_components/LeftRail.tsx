@@ -8,7 +8,7 @@ export function LeftRail({ section }: { section: ManifestSection }) {
   return (
     <nav
       aria-labelledby={RAIL_HEADING_ID}
-      className="nx:hidden nx:lg:block nx:sticky nx:top-(--docs-header-h) nx:self-start nx:max-h-[calc(100svh-var(--docs-header-h))] nx:overflow-y-auto nx:pr-2"
+      className="nx:hidden nx:lg:block nx:sticky nx:top-(--site-header-h) nx:self-start nx:max-h-[calc(100svh-var(--site-header-h))] nx:overflow-y-auto nx:pr-2"
     >
       <h3
         id={RAIL_HEADING_ID}

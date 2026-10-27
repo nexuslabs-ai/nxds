@@ -33,8 +33,8 @@
 @source '../../../packages/vue/src';
 
 :root {
-  --docs-header-h: 3.5rem;
-  --docs-scroll-offset: calc(var(--docs-header-h) + 1.5rem);
+  --site-header-h: 4rem;
+  --docs-scroll-offset: calc(var(--site-header-h) + 1.5rem);
   /* ThemePicker overwrites this with the panel's measured height. */
   --docs-panel-offset: 0px;
 }

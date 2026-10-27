@@ -77,12 +77,12 @@ import {
 } from '@/components/tabs/tabs';
 import { Textarea } from '@/components/textarea/textarea';
 
-import { IconPlus } from '../../_lib/switchable-icons';
 import {
   SiteArrowUpRightIcon,
   SiteFileIcon,
   SiteSendIcon,
-} from '../site-icons';
+} from '../../_lib/site-icons';
+import { IconPlus } from '../../_lib/switchable-icons';
 
 const statusClassName =
   'nx:m-0 nx:typography-body-small nx:text-muted-foreground nx:wrap-anywhere';

@@ -69,7 +69,7 @@ export function RightRail() {
     <nav
       ref={navRef}
       aria-labelledby={TOC_HEADING_ID}
-      className="nx:sticky nx:top-(--docs-header-h) nx:self-start nx:hidden nx:lg:block nx:max-h-[calc(100svh-var(--docs-header-h))] nx:overflow-y-auto"
+      className="nx:sticky nx:top-(--site-header-h) nx:self-start nx:hidden nx:lg:block nx:max-h-[calc(100svh-var(--site-header-h))] nx:overflow-y-auto"
     >
       <h3
         id={TOC_HEADING_ID}

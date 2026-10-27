@@ -1,6 +1,6 @@
 import { Footer } from '../_components/Footer';
+import { SiteHeader } from '../_components/SiteHeader';
 import { ThemePicker } from '../_components/ThemePicker';
-import { TopNav } from '../_components/TopNav';
 
 export default function DocsLayout({
   children,
@@ -9,8 +9,8 @@ export default function DocsLayout({
 }) {
   return (
     <>
-      <TopNav />
-      <main>{children}</main>
+      <SiteHeader />
+      <main id="main">{children}</main>
       <ThemePicker />
       <Footer />
     </>

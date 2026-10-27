@@ -53,7 +53,7 @@ import {
 } from '@tabler/icons-react';
 import { ArrowUpRight, LucideFile, Menu, Moon, Send, Sun } from 'lucide-react';
 
-import { useIconLibrary } from '../_lib/icon-library';
+import { useIconLibrary } from './icon-library';
 
 type SiteIconProps = Omit<
   ComponentPropsWithoutRef<'svg'>,

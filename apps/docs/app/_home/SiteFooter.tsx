@@ -1,19 +1,17 @@
 import { Button } from '@/components/button/button';
 
-import { NPM_CORE_URL } from '../_lib/site';
-
-import { DiscordMark, GitHubMark, XMark } from './site-icons';
+import { NPM_CORE_URL, REPO_URL } from '../_lib/site';
+import { DiscordMark, GitHubMark, XMark } from '../_lib/site-icons';
 import {
   brandLinkClassName,
   DISCORD_URL,
-  GITHUB_URL,
   LICENSE_URL,
   navLinkClassName,
   X_URL,
-} from './site-links';
+} from '../_lib/site-links';
 
 const communityLinks = [
-  { name: 'GitHub', href: GITHUB_URL, Mark: GitHubMark },
+  { name: 'GitHub', href: REPO_URL, Mark: GitHubMark },
   { name: 'Discord', href: DISCORD_URL, Mark: DiscordMark },
   { name: 'X', href: X_URL, Mark: XMark },
 ];
@@ -22,7 +20,7 @@ const footerLinks = [
   { label: 'Documentation', href: '/getting-started/introduction' },
   { label: 'npm', href: NPM_CORE_URL, external: true },
   { label: 'MIT License', href: LICENSE_URL, external: true },
-  { label: 'GitHub', href: GITHUB_URL, external: true },
+  { label: 'GitHub', href: REPO_URL, external: true },
 ];
 
 /** The last stage of the story: the community links, then the site footer. */
@@ -68,7 +66,7 @@ export function SiteFooter() {
             size="sm"
             className={brandLinkClassName}
           >
-            <a href="#top">Nexus Design System</a>
+            <a href="/">Nexus Design System</a>
           </Button>
           <p className="nx:m-0 nx:typography-body-small nx:text-muted-foreground">
             © 2026 Nexus Labs
