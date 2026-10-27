@@ -9,13 +9,6 @@ import {
   IconStackPush,
 } from '@tabler/icons-react';
 
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from '@/components/item/item';
 import { Toggle } from '@/components/toggle/toggle';
 
 import { BootstrapLogo, ShadcnLogo } from '../ecosystem-logos';
@@ -274,19 +267,14 @@ const nexusLane: Lane = {
   verdictIcon: <IconCircleCheck className="nx:size-4" aria-hidden="true" />,
 };
 
-// Phones keep only the "Your app" column, as the Frameworks chapter keeps
-// only its frameworks.
-const sideColumnClass = 'nx:coexist-lanes-column nx:hidden nx:@3xl:grid';
-
 /** Another library and a Nexus Select, each added to the chosen host app. */
 export function CoexistLanes({ tab }: { tab: ToolName | undefined }) {
   const host = hosts.find((entry) => entry.tab === tab) ?? hosts[0];
   return <HostLanes key={host.tab} host={host} />;
 }
 
-// Pointing at a name lights its row's traces and outlines, in both sketches,
-// the part of your app that reads it. Nexus names reach no part. Hover or
-// focus previews a name; pressing it pins the link.
+// Pointing at a name outlines, in both apps, the part that reads it. Nexus
+// names reach no part. Hover or focus previews a name; pressing it pins it.
 function HostLanes({ host }: { host: Host }) {
   const [hovered, setHovered] = useState<Target | null>(null);
   const [pinned, setPinned] = useState<Target | null>(null);
@@ -307,37 +295,22 @@ function HostLanes({ host }: { host: Host }) {
   ];
   return (
     <div className="nx:coexist-lanes-chapter nx:@container">
-      <div className="nx:coexist-lanes nx:@3xl:grid-cols-3">
-        <div className={sideColumnClass}>
-          <span className="nx:coexist-lanes-label">You add</span>
-          <div className="nx:coexist-lanes-panel">
-            {lanes.map(({ lane, icon, name, file }) => (
-              <Item
-                key={lane}
-                className="nx:coexist-lanes-tile nx:coexist-lanes-lib"
-                data-lane={lane}
-                data-hot={pointed?.lane === lane || undefined}
-              >
-                <ItemMedia className="nx:[&_svg]:size-10">{icon}</ItemMedia>
-                <ItemContent className="nx:flex-none nx:items-center">
-                  <ItemTitle>{name}</ItemTitle>
-                  <ItemDescription>{file}</ItemDescription>
-                </ItemContent>
-                <span className="nx:coexist-lanes-trace" aria-hidden="true" />
-              </Item>
-            ))}
-          </div>
-        </div>
-        <div className={sideColumnClass}>
-          <span className="nx:coexist-lanes-label">It writes on the page</span>
-          <div className="nx:coexist-lanes-panel">
-            {lanes.map(({ lane, writes, note }) => (
-              <div
-                key={lane}
-                className="nx:coexist-lanes-tile nx:coexist-lanes-names"
-                data-lane={lane}
-                data-hot={pointed?.lane === lane || undefined}
-              >
+      <p className="nx:coexist-lanes-label">Your {host.tab} app</p>
+      <div className="nx:coexist-lanes nx:@3xl:grid-cols-2">
+        {lanes.map(
+          ({ lane, icon, name, file, writes, note, verdict, verdictIcon }) => (
+            <div key={lane} className="nx:coexist-lanes-card" data-lane={lane}>
+              <div className="nx:coexist-lanes-library">
+                {icon}
+                <h3 className="nx:m-0 nx:typography-label-default">{name}</h3>
+                <span className="nx:typography-body-small nx:text-muted-foreground">
+                  {file}
+                </span>
+              </div>
+              <div className="nx:coexist-lanes-writes">
+                <span className="nx:typography-body-small nx:text-muted-foreground">
+                  Writes on the page
+                </span>
                 <div className="nx:coexist-lanes-chips">
                   {writes.map(([written, part]) => {
                     const target: Target = { lane, written, part };
@@ -362,36 +335,20 @@ function HostLanes({ host }: { host: Host }) {
                 <p className="nx:coexist-lanes-note nx:typography-body-small">
                   {note}
                 </p>
-                <span className="nx:coexist-lanes-trace" aria-hidden="true" />
               </div>
-            ))}
-          </div>
-        </div>
-        <div className="nx:coexist-lanes-column nx:grid">
-          <span className="nx:coexist-lanes-label">Your {host.tab} app</span>
-          <div className="nx:coexist-lanes-panel">
-            {lanes.map(({ lane, name, verdict, verdictIcon }) => (
-              <section
-                key={lane}
-                className="nx:coexist-lanes-tile"
-                data-lane={lane}
-                aria-label={`${name}: your ${host.tab} app ${lane === 'other' ? 'changed' : 'stays the same'}`}
-              >
-                <p className="nx:coexist-lanes-with nx:typography-body-small nx:@3xl:hidden">
-                  With a {name}
-                </p>
+              <div className="nx:coexist-lanes-stage nx:dotted-stage">
                 <Sketch
                   broken={lane === 'other'}
                   pointed={pointed?.part ?? null}
                 />
-                <p className="nx:coexist-lanes-verdict nx:typography-label-default">
-                  {verdictIcon}
-                  {verdict}
-                </p>
-              </section>
-            ))}
-          </div>
-        </div>
+              </div>
+              <p className="nx:coexist-lanes-verdict nx:typography-label-default">
+                {verdictIcon}
+                {verdict}
+              </p>
+            </div>
+          )
+        )}
       </div>
     </div>
   );

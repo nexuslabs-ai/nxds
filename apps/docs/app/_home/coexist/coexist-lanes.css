@@ -1,128 +1,93 @@
-/* On desktop, tall enough for the tallest example, so the tiles keep their
+/* On desktop, tall enough for the tallest example, so the cards keep their
    size when the visitor switches apps. */
 @utility coexist-lanes-canvas {
   @media (width >= 64rem) {
-    --preview-min: 37rem;
+    --preview-min: 32rem;
   }
 }
 
+/* The chosen app's name, then the other library and Nexus side by side. */
 @utility coexist-lanes-chapter {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--nx-spacing-4);
   inline-size: 100%;
   block-size: 100%;
   min-block-size: 0;
   overflow: hidden;
-}
-
-/* The label row and two tile rows, shared by every column through subgrid,
-   so a row's tiles line up and grow together. */
-@utility coexist-lanes {
-  --lane-gap: var(--grid-gap);
-  --lane-pad: var(--nx-spacing-3);
-  display: grid;
-  grid-template-rows: auto repeat(2, minmax(min-content, 1fr));
-  gap: var(--nx-spacing-6) var(--lane-gap);
-  block-size: 100%;
-  min-block-size: 0;
   padding-block-end: var(--story-toolbar-clearance);
 }
 
-@utility coexist-lanes-column {
-  grid-row: span 3;
-  grid-template-rows: subgrid;
-  min-inline-size: 0;
-}
-
 @utility coexist-lanes-label {
+  margin: 0;
   color: var(--nx-color-muted-foreground);
   font-size: var(--nx-typography-size-sm);
   line-height: var(--nx-typography-line-height-sm);
   text-align: center;
 }
 
-@utility coexist-lanes-panel {
+/* Both cards share their four rows through subgrid, so the library, the
+   names, the app and the verdict line up across the two. */
+@utility coexist-lanes {
   display: grid;
-  grid-row: span 2;
-  grid-template-rows: subgrid;
-  row-gap: var(--lane-pad);
-  padding: var(--lane-pad);
-  border-radius: var(--nx-radius-xl);
-  background: var(--nx-color-muted);
+  grid-template-rows: auto auto minmax(min-content, 1fr) auto;
+  gap: var(--grid-gap);
+  min-block-size: 0;
 }
 
-@utility coexist-lanes-tile {
-  /* Every tile sits in a lane. The attribute outranks Item's own layout. */
-  &[data-lane] {
-    position: relative;
-    display: grid;
-    align-content: center;
-    justify-items: center;
-    gap: var(--nx-spacing-3);
-    min-block-size: 0;
-    padding: var(--nx-spacing-4);
-    border-radius: var(--nx-radius-lg);
-    background: var(--nx-color-control-background);
-    text-align: center;
-  }
+@utility coexist-lanes-card {
+  display: grid;
+  grid-row: span 4;
+  grid-template-rows: subgrid;
+  row-gap: var(--nx-spacing-4);
+  min-inline-size: 0;
+  padding: var(--nx-spacing-5);
+  border-radius: var(--nx-radius-xl);
+  background: var(--nx-color-muted);
 
-  /* The row the visitor points into lights its traces. */
-  &[data-hot] .nx\:coexist-lanes-trace {
-    border-block-start-width: var(--nx-borderwidth-thick);
-  }
-
-  /* The other library writes names or rules your app depends on. */
-  &[data-lane='other'][data-hot] .nx\:coexist-lanes-trace {
+  /* The other library writes names or rules your app depends on. A chip
+     keeps its lane's colours: this outranks Toggle's hover and on states. */
+  &[data-lane='other'] .nx\:coexist-lanes-chip[data-state] {
     border-color: var(--nx-color-error-border);
+    background: var(--nx-color-error-subtle);
+    color: var(--nx-color-error-subtle-foreground);
   }
   &[data-lane='other'] .nx\:coexist-lanes-verdict {
     color: var(--nx-color-error-subtle-foreground);
   }
 
   /* Nexus writes names only it reads: nothing reaches your app. */
-  &[data-lane='nexus'] .nx\:coexist-lanes-verdict {
-    color: var(--nx-color-success-subtle-foreground);
-  }
-}
-
-@utility coexist-lanes-lib {
-  &[data-lane='nexus'][data-hot] .nx\:coexist-lanes-trace {
-    border-color: var(--nx-color-success-border);
-  }
-}
-
-@utility coexist-lanes-names {
-  &[data-lane='nexus'] .nx\:coexist-lanes-trace {
-    border-block-start-style: dashed;
-  }
-
-  /* A chip keeps its lane's colours. Outranks Toggle's hover and on states. */
-  &[data-lane='other'] .nx\:coexist-lanes-chip[data-state] {
-    border-color: var(--nx-color-error-border);
-    background: var(--nx-color-error-subtle);
-    color: var(--nx-color-error-subtle-foreground);
-  }
   &[data-lane='nexus'] .nx\:coexist-lanes-chip[data-state] {
     border-color: var(--nx-color-success-border);
     background: var(--nx-color-success-subtle);
     color: var(--nx-color-success-subtle-foreground);
   }
+  &[data-lane='nexus'] .nx\:coexist-lanes-verdict {
+    color: var(--nx-color-success-subtle-foreground);
+  }
 }
 
-/* A trace runs from a tile to the tile in the same row of the next column. */
-@utility coexist-lanes-trace {
-  position: absolute;
-  inset-block-start: 50%;
-  inset-inline-start: 100%;
-  inline-size: calc(var(--lane-gap) + 2 * var(--lane-pad));
-  border-block-start: var(--nx-borderwidth-default) solid
-    var(--nx-color-border-default);
-  transition: border-color var(--nx-motion-duration-default)
-    var(--nx-motion-ease-enter);
+/* The library: its mark, its name and the file you add. */
+@utility coexist-lanes-library {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-spacing-2);
+
+  & > svg {
+    inline-size: var(--nx-spacing-5);
+    block-size: var(--nx-spacing-5);
+  }
+}
+
+@utility coexist-lanes-writes {
+  display: grid;
+  align-content: start;
+  gap: var(--nx-spacing-2);
 }
 
 @utility coexist-lanes-chips {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: var(--nx-spacing-2);
   margin: 0;
 }
@@ -148,9 +113,12 @@
   color: var(--nx-color-muted-foreground);
 }
 
-@utility coexist-lanes-with {
-  margin: 0;
-  color: var(--nx-color-muted-foreground);
+/* The app sits centred on its stage, which takes the card's spare height. */
+@utility coexist-lanes-stage {
+  display: grid;
+  align-content: center;
+  padding: var(--nx-spacing-5);
+  border-radius: var(--nx-radius-lg);
 }
 
 @utility coexist-lanes-verdict {

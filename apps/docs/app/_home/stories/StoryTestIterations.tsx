@@ -449,7 +449,7 @@ export function StoryTestIterations({
                 </CardAction>
               </CardHeader>
               <Separator />
-              <div className="nx:story-test-canvas nx:flex nx:flex-1 nx:flex-col nx:gap-6 nx:p-6">
+              <div className="nx:dotted-stage nx:flex nx:flex-1 nx:flex-col nx:gap-6 nx:p-6">
                 <div className="nx:flex nx:flex-1 nx:items-center nx:justify-center">
                   <Field
                     orientation="horizontal"

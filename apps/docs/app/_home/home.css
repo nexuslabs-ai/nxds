@@ -4,7 +4,6 @@
 @import './customize/customize.css';
 @import './coexist/coexist-lanes.css';
 @import './frameworks/core-chip-chapter.css';
-@import './stories/story-test-iterations.css';
 
 /* The planned Nexus display headings. Delete these when Nexus ships them. */
 @utility typography-display-large {
@@ -127,6 +126,16 @@
       position: static;
     }
   }
+}
+
+/* A dotted stage a live example or an app sketch sits on. */
+@utility dotted-stage {
+  background-color: var(--nx-color-background);
+  background-image: radial-gradient(
+    var(--nx-color-border-default) var(--nx-borderwidth-default),
+    transparent 0
+  );
+  background-size: var(--nx-spacing-4) var(--nx-spacing-4);
 }
 
 /* The bottom fade under the toolbar. */

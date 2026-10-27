@@ -1,8 +1,0 @@
-@utility story-test-canvas {
-  background-color: var(--nx-color-background);
-  background-image: radial-gradient(
-    var(--nx-color-border-default) var(--nx-borderwidth-default),
-    transparent 0
-  );
-  background-size: var(--nx-spacing-4) var(--nx-spacing-4);
-}
