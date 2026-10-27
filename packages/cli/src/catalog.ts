@@ -16,6 +16,7 @@ import { EnvHttpProxyAgent, fetch } from 'undici';
 
 import { CLI_COMMAND } from './cli-command';
 import { CliError, readJson, UsageError } from './errors';
+import { assertRegistryUrl } from './url';
 
 export type {
   Catalog,
@@ -47,7 +48,13 @@ function isUrl(registry: string) {
 /** The `--registry` value as a URL, or as an absolute folder path. */
 export function resolveRegistry(option: string | undefined) {
   if (!option) return DEFAULT_REGISTRY;
-  return isUrl(option) ? option.replace(/\/+$/, '') : path.resolve(option);
+  if (!isUrl(option)) return path.resolve(option);
+  assertRegistryUrl(
+    '--registry',
+    option,
+    'For a private registry, download its release files to a folder and pass the folder with --registry.'
+  );
+  return option.replace(/\/+$/, '');
 }
 
 /** The timeout's signal also aborts reading the body, so both steps check for it. */

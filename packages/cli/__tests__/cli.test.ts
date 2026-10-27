@@ -582,6 +582,21 @@ describe('errors', () => {
     expect(run.stderr).toMatch(/has no item named "buton"/);
   });
 
+  it.each([
+    ['a user name and password', 'https://user:secret@registry.invalid/r'],
+    ['a query', 'https://registry.invalid/r?token=secret'],
+    ['an empty query', 'https://registry.invalid/r?'],
+    ['a fragment', 'https://registry.invalid/r#secret'],
+  ])('refuses a --registry URL with %s', async (_, registry) => {
+    const { app } = setup();
+
+    const run = await cli(['list'], { app, registry });
+
+    expect(run.exitCode).toBe(EXIT_CODES.usage);
+    expect(run.stderr).toContain('--registry');
+    expect(run.stdout + run.stderr).not.toContain('secret');
+  });
+
   it('names each invalid field of a broken release', async () => {
     const broken = structuredClone(RELEASE);
     const file = buttonSource(broken);
