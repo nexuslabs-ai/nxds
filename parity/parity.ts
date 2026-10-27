@@ -12,7 +12,6 @@ export const planned = [
   'setting-row',
   'sidebar',
   'theme-quick-control',
-  'toolbar',
 ];
 
 /** Components both packages ship, appearance aside: it has its own contract. */
@@ -83,6 +82,7 @@ export const shared = [
   'textarea',
   'toggle',
   'toggle-group',
+  'toolbar',
   'tooltip',
 ];
 
@@ -234,6 +234,10 @@ export const vueOnlyApi: Record<string, string> = {
   'ToggleGroup.update:modelValue':
     "v-model update narrowed to the string values items take; React's onValueChange is inherited from Radix's props type",
   'ToggleGroupItem.value':
+    "string, as Radix types it, so aria-checked matches Reka's pressed state; React inherits value from Radix's props type",
+  'ToolbarToggleGroup.update:modelValue':
+    "v-model update narrowed to the string values items take; React's onValueChange is inherited from Radix's props type",
+  'ToolbarToggleItem.value':
     "string, as Radix types it, so aria-checked matches Reka's pressed state; React inherits value from Radix's props type",
 };
 
@@ -573,6 +577,8 @@ export const renderedAttributeDifferences: Record<string, string> = {
   'resizable-panel-group data-panel-group-id': SPLITTER_ID,
   'resizable-panel-group data-panel-group': SPLITTER_STATE_REKA,
   'resizable-panel-group data-testid': SPLITTER_TEST_ID,
+  'toolbar-button data-disabled':
+    "Reka's roving focus marks an item it skips with data-disabled; Radix's toolbar button sets none",
   'popover-content name':
     "Reka names the popover's dialog after its trigger with aria-labelledby; Radix leaves it unnamed",
 };
