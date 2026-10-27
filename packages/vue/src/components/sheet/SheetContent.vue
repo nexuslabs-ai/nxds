@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { IconX } from '@tabler/icons-vue';
 import { reactiveOmit } from '@vueuse/core';
 import {
   DialogClose,
@@ -11,6 +10,7 @@ import {
 } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
+import { IconX } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 import { overlayCloseButtonClassName } from '../overlay-layout/overlay-layout';
 

@@ -23,7 +23,6 @@ function errorMessage(code: FilterErrorCode, maxDepth: number) {
 </script>
 
 <script setup lang="ts">
-import { IconPlus, IconX } from '@tabler/icons-vue';
 import { computed, useTemplateRef } from 'vue';
 
 import {
@@ -34,6 +33,7 @@ import {
   type FilterRule,
   getFilterOperators,
 } from '../../lib/filter-model';
+import { IconPlus, IconX } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 import { Button } from '../button';
 

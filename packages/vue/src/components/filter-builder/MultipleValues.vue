@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { IconChevronDown } from '@tabler/icons-vue';
 import { PopoverRoot, PopoverTrigger } from 'reka-ui';
 import { computed, ref, useId } from 'vue';
 
 import type { FilterField } from '../../lib/filter-model';
+import { IconChevronDown } from '../../lib/icons';
 import { Button } from '../button';
 import { Checkbox } from '../checkbox';
 import { ChoiceRow } from '../choice-row';
