@@ -158,8 +158,9 @@
 
 @utility coexist-lanes-verdict {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--nx-spacing-2);
+  gap: var(--nx-spacing-1) var(--nx-spacing-2);
   margin: 0;
 }
 
