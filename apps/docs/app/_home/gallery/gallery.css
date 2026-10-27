@@ -3,14 +3,12 @@
 
 /* Wall: columns of content-height cards. The canvas clips them under the bottom fade. */
 @utility showcase-wall {
-  /* Outranks nx:story-box-grid's grid. */
-  &.nx\:story-box-grid {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--nx-spacing-6);
-    overflow: hidden;
-    scroll-padding-block-end: var(--story-toolbar-clearance);
-  }
+  display: flex;
+  align-items: flex-start;
+  gap: var(--grid-gap);
+  overflow: hidden;
+  scroll-padding-block-end: var(--story-toolbar-clearance);
+
   /* Scroll room, so focus can bring a column's last control above the toolbar. */
   & > div {
     padding-block-end: var(--story-toolbar-clearance);
@@ -18,11 +16,10 @@
 
   /* Phones: one wall column at a time. Swipe sideways; the next one peeks in. */
   @media (max-width: 700px) {
-    &.nx\:story-box-grid {
-      overflow-x: auto;
-      overscroll-behavior-x: contain;
-      scroll-snap-type: x mandatory;
-    }
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+
     & > div {
       display: flex;
       flex: 0 0 86%;

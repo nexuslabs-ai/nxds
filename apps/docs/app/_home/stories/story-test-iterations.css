@@ -1,6 +1,16 @@
 @utility story-tests-canvas {
-  overflow: auto;
-  padding-block-end: var(--story-toolbar-clearance);
+  /* Below lg the example, checks and code stack, so the section grows to
+     show them all. Outranks story-canvas's fixed-size preview. */
+  @media (width < 64rem) {
+    &.nx\:story-canvas {
+      container-type: inline-size;
+      flex: none;
+      min-block-size: auto;
+    }
+    &.nx\:story-canvas > * {
+      position: static;
+    }
+  }
 }
 @utility story-test-canvas {
   background-color: var(--nx-color-background);

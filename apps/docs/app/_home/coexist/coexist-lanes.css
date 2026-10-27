@@ -2,11 +2,11 @@
   inline-size: 100%;
   block-size: 100%;
   min-block-size: 0;
-  overflow: auto;
+  overflow: hidden;
 }
 
 @utility coexist-lanes {
-  --lane-gap: var(--nx-spacing-10);
+  --lane-gap: var(--grid-gap);
   --lane-pad: var(--nx-spacing-3);
   display: grid;
   gap: var(--lane-gap);

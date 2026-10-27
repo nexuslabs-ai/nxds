@@ -36,11 +36,13 @@
   --chip-row-gap: var(--nx-spacing-2);
   --chip-output-gap: var(--nx-spacing-4);
   --chip-icon-size: var(--nx-spacing-6);
+  --chip-column-gap: var(--grid-gap);
   position: relative;
   isolation: isolate;
   display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 2fr) minmax(0, 0.8fr);
-  gap: var(--chip-space);
+  /* Tokens, core and frameworks on 3, 6 and 3 of the 12 grid columns. */
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--chip-column-gap);
   inline-size: 100%;
   block-size: 100%;
   min-block-size: 0;
@@ -80,11 +82,15 @@
     & > .nx\:framework-core-column {
       display: none;
     }
+    & > .nx\:framework-output-group {
+      grid-column: auto;
+    }
   }
 }
 
 /* A diagram column: its label above its content. */
 @utility framework-token-group {
+  grid-column: span 3;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: var(--chip-label-gap);
@@ -93,6 +99,7 @@
 }
 @utility framework-core-column {
   @apply nx:framework-token-group;
+  grid-column: span 6;
 }
 @utility framework-output-group {
   @apply nx:framework-token-group;
@@ -198,13 +205,14 @@
   &[data-flowing='true'] {
     background: var(--nx-color-border-focus);
   }
+  /* Across both containers' padding and the column gap. */
   &[data-trace='input'] {
-    inline-size: calc(3 * var(--chip-space));
+    inline-size: calc(2 * var(--chip-space) + var(--chip-column-gap));
   }
   &[data-trace='output'] {
     inset-inline-start: auto;
     inset-inline-end: 100%;
-    inline-size: calc(2 * var(--chip-space));
+    inline-size: calc(var(--chip-space) + var(--chip-column-gap));
     --chip-phase: 660ms;
   }
   /* The horizontal trace, turned so its signal rises from the appearance

@@ -29,45 +29,39 @@ export type ShowcaseView =
   | 'Finances'
   | 'CRM';
 
-// Four columns per view, using every card once. The first card of each column
-// is the one above the fold; the short columns get a fourth card so no column
-// ends above the bottom fade.
+// Three columns per view. The first card of each column is the one above the
+// fold; the short columns get a fourth card so no column ends above the
+// bottom fade.
 const views: Record<ShowcaseView, ComponentType[][]> = {
   Components: [
     [ProjectCard, PreferencesCard, InboxCard],
     [ActivityCard, ConversationCard, NotesCard, ComposeCard],
     [TeamCard, TasksCard, ContactCard],
-    [BillingCard, PipelineCard, TransactionsCard, FilesCard],
   ],
   Dashboard: [
     [TasksCard, TeamCard, InboxCard],
     [ActivityCard, TransactionsCard, FilesCard, NotesCard],
     [BillingCard, PreferencesCard, ConversationCard, ComposeCard],
-    [PipelineCard, ContactCard, ProjectCard],
   ],
   Mail: [
     [InboxCard, FilesCard, NotesCard],
     [ComposeCard, ProjectCard, TasksCard],
     [ConversationCard, TeamCard, ActivityCard, PreferencesCard],
-    [ContactCard, PipelineCard, BillingCard, TransactionsCard],
   ],
   Chat: [
     [ConversationCard, ContactCard, TasksCard],
     [TeamCard, NotesCard, ActivityCard, ProjectCard],
     [ComposeCard, PreferencesCard, BillingCard, TransactionsCard],
-    [InboxCard, PipelineCard, FilesCard],
   ],
   Finances: [
     [BillingCard, TasksCard, InboxCard],
     [ActivityCard, PipelineCard, NotesCard, TeamCard],
     [TransactionsCard, PreferencesCard, FilesCard, ComposeCard],
-    [ContactCard, ConversationCard, ProjectCard],
   ],
   CRM: [
     [ContactCard, NotesCard, FilesCard],
     [PipelineCard, TeamCard, PreferencesCard, ProjectCard],
     [TasksCard, TransactionsCard, InboxCard],
-    [ActivityCard, ConversationCard, BillingCard, ComposeCard],
   ],
 };
 
@@ -76,7 +70,6 @@ const columnVisibility = [
   'nx:flex',
   'nx:hidden nx:md:flex',
   'nx:hidden nx:lg:flex',
-  'nx:hidden nx:2xl:flex',
 ];
 
 // On a phone the wall swipes between columns. Chrome leaves a control unscrolled
@@ -99,7 +92,7 @@ export function ShowcaseWall({ view }: { view: ShowcaseView }) {
   return (
     <div
       key={view}
-      className="nx:story-box-grid nx:showcase-wall"
+      className="nx:preview-fade nx:showcase-wall"
       role="group"
       aria-label={`${view} examples`}
       onFocus={revealFocusedColumn}

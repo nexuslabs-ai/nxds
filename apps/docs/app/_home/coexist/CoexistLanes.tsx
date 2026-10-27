@@ -281,7 +281,7 @@ function HostLanes({ host }: { host: Host }) {
   ];
   return (
     <div className="nx:coexist-lanes-chapter nx:@container">
-      <div className="nx:coexist-lanes nx:@3xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)]">
+      <div className="nx:coexist-lanes nx:@3xl:grid-cols-3">
         <div className={sideColumnClass}>
           <span className="nx:coexist-lanes-label">You add</span>
           <div className="nx:coexist-lanes-panel">

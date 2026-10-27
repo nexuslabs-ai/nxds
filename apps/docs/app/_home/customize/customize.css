@@ -1,44 +1,31 @@
 /* Customize: the component wall on the canvas and the corner choices in the
    Radius panel. */
 
-@utility customize-canvas {
-  display: block;
-
-  /* Outranks story-box-grid's grid, whichever utility comes first. */
-  &.nx\:story-box-grid {
-    display: block;
-  }
-}
-
+/* Clipped under the bottom fade, like the Gallery wall. */
 @utility component-wall {
   container: component-wall / inline-size;
   block-size: 100%;
-  overflow: auto;
-  scroll-padding-block: var(--nx-spacing-6) var(--nx-spacing-36);
+  overflow: hidden;
+  scroll-padding-block-end: var(--story-toolbar-clearance);
 }
 
 @utility component-wall-grid {
   columns: 1;
-  column-gap: var(--nx-spacing-4);
-  max-inline-size: 96rem;
-  margin-inline: auto;
-  padding: var(--nx-spacing-6) var(--nx-spacing-4) var(--nx-spacing-36);
+  column-gap: var(--grid-gap);
+  /* Scroll room, so focus can bring the last tiles above the toolbar. */
+  padding-block-end: var(--story-toolbar-clearance);
 
   @container component-wall (min-width: 40rem) {
     columns: 2;
-    padding-inline: var(--nx-spacing-6);
   }
   @container component-wall (min-width: 60rem) {
     columns: 3;
-  }
-  @container component-wall (min-width: 74rem) {
-    columns: 4;
   }
 }
 
 @utility component-wall-tile {
   break-inside: avoid;
-  margin-block-end: var(--nx-spacing-4);
+  margin-block-end: var(--grid-gap);
 }
 
 @utility appearance-corner-options {
