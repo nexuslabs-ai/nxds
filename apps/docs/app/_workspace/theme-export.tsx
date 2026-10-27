@@ -19,7 +19,7 @@ import {
 import { useNxdsAppearance } from '@nxds/react/appearance';
 import Link from 'next/link';
 
-import { CodeBlock } from '../_components/CodeBlock';
+import { DocsCodeBlock } from '../_components/CodeBlock';
 
 function configurationSource(state: NxdsAppearanceState) {
   return `import type { NxdsAppearanceState } from '@nxds/core';
@@ -41,14 +41,14 @@ function ExportFiles() {
   return files.map((file) => (
     <section key={file.name} className="nx:space-y-2">
       <h3 className="nx:typography-label-default">{file.name}</h3>
-      <CodeBlock className="nx:max-h-64">
+      <DocsCodeBlock className="nx:max-h-64">
         {file.code
           .trimEnd()
           .split('\n')
           .map((line, index) => (
             <CodeBlockLine key={index}>{line}</CodeBlockLine>
           ))}
-      </CodeBlock>
+      </DocsCodeBlock>
     </section>
   ));
 }

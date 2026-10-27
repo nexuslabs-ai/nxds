@@ -63,7 +63,15 @@ const CodeBlock = React.forwardRef<
  * Props for CodeBlockContent, from ScrollArea. `type` sets when the
  * scrollbars show.
  */
-type CodeBlockContentProps = React.ComponentProps<typeof ScrollArea>;
+interface CodeBlockContentProps extends React.ComponentProps<
+  typeof ScrollArea
+> {
+  /**
+   * Language of the code, such as `tsx`. It sets the `language-*` class on
+   * `code`, which Markdown converters and reader tools read.
+   */
+  language?: string;
+}
 
 /**
  * Scrollable code region that holds the `CodeBlockLine` rows. It scrolls
@@ -76,6 +84,7 @@ const CodeBlockContent = React.forwardRef<
 >(function CodeBlockContent(propsWithoutRef, forwardedRef) {
   const {
     className,
+    language,
     children,
     ...props
   }: React.PropsWithoutRef<CodeBlockContentProps> & {
@@ -97,7 +106,12 @@ const CodeBlockContent = React.forwardRef<
       {...props}
     >
       <pre className="nx:m-0">
-        <code className="nx:grid nx:grid-cols-[auto_minmax(0,1fr)] nx:py-4 nx:typography-code-block">
+        <code
+          className={cn(
+            'nx:grid nx:grid-cols-[auto_minmax(0,1fr)] nx:py-4 nx:typography-code-block',
+            language && `language-${language}`
+          )}
+        >
           {children}
         </code>
       </pre>
@@ -179,17 +193,17 @@ type CopyState = keyof typeof COPY_MESSAGES;
 function codeText(button: HTMLElement) {
   const code = button
     .closest('[data-slot="code-block"]')
-    ?.querySelector('code');
+    ?.querySelector('[data-slot="code-block-content"] code');
   return code?.textContent?.replace(/\n$/, '') ?? '';
 }
 
 /**
  * Props for CodeBlockCopyButton. It takes the attributes of a button, except
- * `children` and `onClick`, which it sets itself.
+ * `children`, which it sets itself. `onClick` runs before the copy.
  */
 type CodeBlockCopyButtonProps = Omit<
   React.ComponentProps<'button'>,
-  'children' | 'onClick'
+  'children'
 >;
 
 /**
@@ -202,6 +216,7 @@ const CodeBlockCopyButton = React.forwardRef<
 >(function CodeBlockCopyButton(propsWithoutRef, forwardedRef) {
   const {
     className,
+    onClick,
     ...props
   }: React.PropsWithoutRef<CodeBlockCopyButtonProps> & {
     ref?: React.ForwardedRef<HTMLButtonElement>;
@@ -228,6 +243,7 @@ const CodeBlockCopyButton = React.forwardRef<
   };
 
   const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(event);
     const text = codeText(event.currentTarget);
     if (!text) {
       settle('failed');

@@ -29,7 +29,7 @@ type CopyState = keyof typeof COPY_MESSAGES;
 function codeText(button: HTMLElement) {
   const code = button
     .closest('[data-slot="code-block"]')
-    ?.querySelector('code');
+    ?.querySelector('[data-slot="code-block-content"] code');
   return code?.textContent?.replace(/\n$/, '') ?? '';
 }
 
