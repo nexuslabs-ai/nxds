@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { IconCheck, IconCopy, IconX } from '@tabler/icons-vue';
 import { type HTMLAttributes, onBeforeUnmount, ref } from 'vue';
 
+import { IconCheck, IconCopy, IconX } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 import Button from '../button/Button.vue';
 

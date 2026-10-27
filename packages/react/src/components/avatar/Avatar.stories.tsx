@@ -1,5 +1,5 @@
+import { UserIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconUser } from '@tabler/icons-react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import {
@@ -136,7 +136,7 @@ export const WithIcon: Story = {
   render: (_args) => (
     <Avatar role="img" aria-label="Unknown user">
       <AvatarFallback aria-hidden="true">
-        <IconUser aria-hidden="true" className="nx:size-5" />
+        <UserIcon aria-hidden="true" className="nx:size-5" />
       </AvatarFallback>
     </Avatar>
   ),
@@ -499,7 +499,7 @@ export const AllSizes: Story = {
           <div className="nx:flex nx:flex-col nx:items-center nx:gap-2">
             <Avatar size="xl" role="img" aria-label="Unknown user">
               <AvatarFallback aria-hidden="true">
-                <IconUser aria-hidden="true" className="nx:size-6" />
+                <UserIcon aria-hidden="true" className="nx:size-6" />
               </AvatarFallback>
             </Avatar>
             <span className="nx:typography-label-small nx:text-muted-foreground">

@@ -1,8 +1,8 @@
 import * as React from 'react';
 import type { DateRange } from 'react-day-picker';
 
+import { ClockIcon } from '@phosphor-icons/react/ssr';
 import type { Decorator, Meta, StoryObj } from '@storybook/react';
-import { IconClock } from '@tabler/icons-react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -675,7 +675,7 @@ export const WithPresets: Story = {
 
 // Calendar in a Card with start/end time inputs in the footer (shadcn's
 // CalendarWithTime). The time fields use Field + InputGroup with a trailing
-// clock addon; the consumer supplies the icon (here from @tabler/icons-react).
+// clock addon; the consumer supplies the icon (here from @phosphor-icons/react).
 export const WithTime: Story = {
   render: function WithTimeStory() {
     const [date, setDate] = React.useState<Date | undefined>(
@@ -705,7 +705,7 @@ export const WithTime: Story = {
                   className="nx:appearance-none nx:[&::-webkit-calendar-picker-indicator]:hidden"
                 />
                 <InputGroupAddon align="inline-end">
-                  <IconClock />
+                  <ClockIcon />
                 </InputGroupAddon>
               </InputGroup>
             </Field>
@@ -720,7 +720,7 @@ export const WithTime: Story = {
                   className="nx:appearance-none nx:[&::-webkit-calendar-picker-indicator]:hidden"
                 />
                 <InputGroupAddon align="inline-end">
-                  <IconClock />
+                  <ClockIcon />
                 </InputGroupAddon>
               </InputGroup>
             </Field>

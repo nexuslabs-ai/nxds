@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconBold,
-  IconChevronDown,
-  IconItalic,
-  IconLink,
-  IconUnderline,
-} from '@tabler/icons-react';
+  CaretDownIcon,
+  LinkIcon,
+  TextBIcon,
+  TextItalicIcon,
+  TextUnderlineIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -162,17 +162,17 @@ export const WithSeparator: Story = {
   render: () => (
     <ButtonGroup>
       <Button variant="ghost" size="icon" aria-label="Bold">
-        <IconBold />
+        <TextBIcon />
       </Button>
       <Button variant="ghost" size="icon" aria-label="Italic">
-        <IconItalic />
+        <TextItalicIcon />
       </Button>
       <Button variant="ghost" size="icon" aria-label="Underline">
-        <IconUnderline />
+        <TextUnderlineIcon />
       </Button>
       <ButtonGroupSeparator />
       <Button variant="ghost" size="icon" aria-label="Add link">
-        <IconLink />
+        <LinkIcon />
       </Button>
     </ButtonGroup>
   ),
@@ -277,7 +277,7 @@ export const SplitButton: Story = {
       <Button>Deploy</Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button endIcon={<IconChevronDown />}>Options</Button>
+          <Button endIcon={<CaretDownIcon />}>Options</Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem>Deploy to staging</DropdownMenuItem>

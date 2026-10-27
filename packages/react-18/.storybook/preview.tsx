@@ -34,6 +34,7 @@ type AppearanceGlobalKey =
   | 'elevation'
   | 'stroke'
   | 'uiFont'
+  | 'headingFont'
   | 'codeFont'
   | 'uiFontSize'
   | 'codeFontSize'
@@ -52,6 +53,7 @@ const APPEARANCE_GLOBAL_KEYS: AppearanceGlobalKey[] = [
   'elevation',
   'stroke',
   'uiFont',
+  'headingFont',
   'codeFont',
   'uiFontSize',
   'codeFontSize',
@@ -118,6 +120,10 @@ function appearanceStateFromGlobals(
     prefs: {
       uiFont:
         typeof globals.uiFont === 'string' ? globals.uiFont : prefs.uiFont,
+      headingFont:
+        typeof globals.headingFont === 'string'
+          ? globals.headingFont
+          : prefs.headingFont,
       codeFont:
         typeof globals.codeFont === 'string'
           ? globals.codeFont
@@ -148,7 +154,7 @@ function appearanceStateFromGlobals(
 
 function globalsFromAppearanceState(
   state: NxdsAppearanceState
-): Record<AppearanceGlobalKey, string | number | boolean> {
+): Record<AppearanceGlobalKey, string | number | boolean | null> {
   return {
     mode: state.mode,
     brandColor: state.brandColor,
@@ -160,6 +166,7 @@ function globalsFromAppearanceState(
     elevation: state.elevation,
     stroke: state.stroke,
     uiFont: state.prefs.uiFont,
+    headingFont: state.prefs.headingFont,
     codeFont: state.prefs.codeFont,
     uiFontSize: state.prefs.uiFontSize,
     codeFontSize: state.prefs.codeFontSize,
@@ -209,7 +216,7 @@ const AppearanceDecorator: Decorator = (Story, context) => {
 
       const nextGlobals = globalsFromAppearanceState(nextState);
       const changedGlobals: Partial<
-        Record<AppearanceGlobalKey, string | number | boolean>
+        Record<AppearanceGlobalKey, string | number | boolean | null>
       > = {};
 
       for (const key of APPEARANCE_GLOBAL_KEYS) {
@@ -319,6 +326,7 @@ const preview: Preview = {
     elevation: DEFAULT_NXDS_APPEARANCE.elevation,
     stroke: DEFAULT_NXDS_APPEARANCE.stroke,
     uiFont: DEFAULT_NXDS_APPEARANCE.prefs.uiFont,
+    headingFont: DEFAULT_NXDS_APPEARANCE.prefs.headingFont,
     codeFont: DEFAULT_NXDS_APPEARANCE.prefs.codeFont,
     uiFontSize: DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize,
     codeFontSize: DEFAULT_NXDS_APPEARANCE.prefs.codeFontSize,

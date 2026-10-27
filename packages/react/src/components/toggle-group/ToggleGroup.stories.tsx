@@ -1,14 +1,14 @@
 import { useId, useState } from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconAlignCenter,
-  IconAlignLeft,
-  IconAlignRight,
-  IconBold,
-  IconItalic,
-  IconUnderline,
-} from '@tabler/icons-react';
+  TextAlignCenterIcon,
+  TextAlignLeftIcon,
+  TextAlignRightIcon,
+  TextBIcon,
+  TextItalicIcon,
+  TextUnderlineIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -40,13 +40,13 @@ export const Default: Story = {
   render: () => (
     <ToggleGroup type="single" defaultValue="left">
       <ToggleGroupItem value="left" aria-label="Align left">
-        <IconAlignLeft />
+        <TextAlignLeftIcon />
       </ToggleGroupItem>
       <ToggleGroupItem value="center" aria-label="Align center">
-        <IconAlignCenter />
+        <TextAlignCenterIcon />
       </ToggleGroupItem>
       <ToggleGroupItem value="right" aria-label="Align right">
-        <IconAlignRight />
+        <TextAlignRightIcon />
       </ToggleGroupItem>
     </ToggleGroup>
   ),
@@ -74,13 +74,13 @@ export const Multiple: Story = {
   render: () => (
     <ToggleGroup type="multiple" defaultValue={['bold']}>
       <ToggleGroupItem value="bold" aria-label="Bold">
-        <IconBold />
+        <TextBIcon />
       </ToggleGroupItem>
       <ToggleGroupItem value="italic" aria-label="Italic">
-        <IconItalic />
+        <TextItalicIcon />
       </ToggleGroupItem>
       <ToggleGroupItem value="underline" aria-label="Underline">
-        <IconUnderline />
+        <TextUnderlineIcon />
       </ToggleGroupItem>
     </ToggleGroup>
   ),
@@ -99,13 +99,13 @@ export const Outline: Story = {
   render: () => (
     <ToggleGroup type="single" variant="outline" defaultValue="left">
       <ToggleGroupItem value="left" aria-label="Align left">
-        <IconAlignLeft />
+        <TextAlignLeftIcon />
       </ToggleGroupItem>
       <ToggleGroupItem value="center" aria-label="Align center">
-        <IconAlignCenter />
+        <TextAlignCenterIcon />
       </ToggleGroupItem>
       <ToggleGroupItem value="right" aria-label="Align right">
-        <IconAlignRight />
+        <TextAlignRightIcon />
       </ToggleGroupItem>
     </ToggleGroup>
   ),
@@ -126,13 +126,13 @@ export const Spacing: Story = {
     <div className="nx:flex nx:flex-col nx:gap-4">
       <ToggleGroup type="single" variant="outline" defaultValue="left">
         <ToggleGroupItem value="left" aria-label="Align left">
-          <IconAlignLeft />
+          <TextAlignLeftIcon />
         </ToggleGroupItem>
         <ToggleGroupItem value="center" aria-label="Align center">
-          <IconAlignCenter />
+          <TextAlignCenterIcon />
         </ToggleGroupItem>
         <ToggleGroupItem value="right" aria-label="Align right">
-          <IconAlignRight />
+          <TextAlignRightIcon />
         </ToggleGroupItem>
       </ToggleGroup>
       <ToggleGroup
@@ -142,13 +142,13 @@ export const Spacing: Story = {
         defaultValue="left"
       >
         <ToggleGroupItem value="left" aria-label="Align left (spaced)">
-          <IconAlignLeft />
+          <TextAlignLeftIcon />
         </ToggleGroupItem>
         <ToggleGroupItem value="center" aria-label="Align center (spaced)">
-          <IconAlignCenter />
+          <TextAlignCenterIcon />
         </ToggleGroupItem>
         <ToggleGroupItem value="right" aria-label="Align right (spaced)">
-          <IconAlignRight />
+          <TextAlignRightIcon />
         </ToggleGroupItem>
       </ToggleGroup>
       <ToggleGroup
@@ -157,16 +157,16 @@ export const Spacing: Story = {
         defaultValue={['bold', 'italic']}
       >
         <ToggleGroupItem value="bold" aria-label="Outline primary bold">
-          <IconBold />
+          <TextBIcon />
         </ToggleGroupItem>
         <ToggleGroupItem value="italic" aria-label="Outline primary italic">
-          <IconItalic />
+          <TextItalicIcon />
         </ToggleGroupItem>
         <ToggleGroupItem
           value="underline"
           aria-label="Outline primary underline"
         >
-          <IconUnderline />
+          <TextUnderlineIcon />
         </ToggleGroupItem>
       </ToggleGroup>
     </div>
@@ -502,13 +502,13 @@ export const FormattingSettings: Story = {
             aria-label="Text formatting"
           >
             <ToggleGroupItem value="bold" aria-label="Bold">
-              <IconBold />
+              <TextBIcon />
             </ToggleGroupItem>
             <ToggleGroupItem value="italic" aria-label="Italic">
-              <IconItalic />
+              <TextItalicIcon />
             </ToggleGroupItem>
             <ToggleGroupItem value="underline" aria-label="Underline">
-              <IconUnderline />
+              <TextUnderlineIcon />
             </ToggleGroupItem>
           </ToggleGroup>
           <Button variant="outline">Reset formatting</Button>
@@ -534,13 +534,13 @@ export const ClickInteraction: Story = {
   render: () => (
     <ToggleGroup type="single" defaultValue="left">
       <ToggleGroupItem value="left" aria-label="Align left">
-        <IconAlignLeft />
+        <TextAlignLeftIcon />
       </ToggleGroupItem>
       <ToggleGroupItem value="center" aria-label="Align center">
-        <IconAlignCenter />
+        <TextAlignCenterIcon />
       </ToggleGroupItem>
       <ToggleGroupItem value="right" aria-label="Align right">
-        <IconAlignRight />
+        <TextAlignRightIcon />
       </ToggleGroupItem>
     </ToggleGroup>
   ),
@@ -569,10 +569,10 @@ export const Disabled: Story = {
   render: () => (
     <ToggleGroup type="single" defaultValue="left" disabled>
       <ToggleGroupItem value="left" aria-label="Align left">
-        <IconAlignLeft />
+        <TextAlignLeftIcon />
       </ToggleGroupItem>
       <ToggleGroupItem value="center" aria-label="Align center">
-        <IconAlignCenter />
+        <TextAlignCenterIcon />
       </ToggleGroupItem>
     </ToggleGroup>
   ),
@@ -590,14 +590,14 @@ export const WithDataAttributes: Story = {
   render: () => (
     <ToggleGroup type="single" variant="outline" size="sm" defaultValue="left">
       <ToggleGroupItem value="left" aria-label="Align left">
-        <IconAlignLeft />
+        <TextAlignLeftIcon />
       </ToggleGroupItem>
       <ToggleGroupItem
         value="center"
         variant="default"
         aria-label="Align center"
       >
-        <IconAlignCenter />
+        <TextAlignCenterIcon />
       </ToggleGroupItem>
     </ToggleGroup>
   ),
@@ -631,38 +631,38 @@ export const AllVariants: Story = {
         defaultValue={['bold', 'italic']}
       >
         <ToggleGroupItem value="bold" aria-label="Outline primary bold">
-          <IconBold />
+          <TextBIcon />
         </ToggleGroupItem>
         <ToggleGroupItem value="italic" aria-label="Outline primary italic">
-          <IconItalic />
+          <TextItalicIcon />
         </ToggleGroupItem>
         <ToggleGroupItem
           value="underline"
           aria-label="Outline primary underline"
         >
-          <IconUnderline />
+          <TextUnderlineIcon />
         </ToggleGroupItem>
       </ToggleGroup>
       <ToggleGroup type="single" defaultValue="left">
         <ToggleGroupItem value="left" aria-label="Align left">
-          <IconAlignLeft />
+          <TextAlignLeftIcon />
         </ToggleGroupItem>
         <ToggleGroupItem value="center" aria-label="Align center">
-          <IconAlignCenter />
+          <TextAlignCenterIcon />
         </ToggleGroupItem>
         <ToggleGroupItem value="right" aria-label="Align right">
-          <IconAlignRight />
+          <TextAlignRightIcon />
         </ToggleGroupItem>
       </ToggleGroup>
       <ToggleGroup type="multiple" variant="outline" defaultValue={['bold']}>
         <ToggleGroupItem value="bold" aria-label="Bold">
-          <IconBold />
+          <TextBIcon />
         </ToggleGroupItem>
         <ToggleGroupItem value="italic" aria-label="Italic">
-          <IconItalic />
+          <TextItalicIcon />
         </ToggleGroupItem>
         <ToggleGroupItem value="underline" aria-label="Underline">
-          <IconUnderline />
+          <TextUnderlineIcon />
         </ToggleGroupItem>
       </ToggleGroup>
       <ToggleGroup
@@ -672,10 +672,10 @@ export const AllVariants: Story = {
         defaultValue="left"
       >
         <ToggleGroupItem value="left" aria-label="Spaced left">
-          <IconAlignLeft />
+          <TextAlignLeftIcon />
         </ToggleGroupItem>
         <ToggleGroupItem value="center" aria-label="Spaced center">
-          <IconAlignCenter />
+          <TextAlignCenterIcon />
         </ToggleGroupItem>
       </ToggleGroup>
     </div>

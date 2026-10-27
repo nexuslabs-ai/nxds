@@ -205,6 +205,30 @@ const catalogItemSchema = z.discriminatedUnion('kind', [
 
 export type CatalogItem = z.infer<typeof catalogItemSchema>;
 
+const iconLibrarySchema = z.object({
+  name: z.string(),
+  label: z.string(),
+  /** `lib/icons.ts`, drawn by this library. */
+  file: catalogFileSchema,
+  /** The packages `file` imports. */
+  npm: npmPackagesSchema,
+});
+
+export type IconLibrary = z.infer<typeof iconLibrarySchema>;
+
+const fontSchema = z.object({
+  name: z.string(),
+  label: z.string(),
+  category: z.enum(['sans', 'serif', 'mono']),
+  /** The `font-family` stack the appearance prefs store. */
+  family: z.string(),
+  /** The Fontsource package that self-hosts the font, and its range. */
+  package: npmNameSchema,
+  range: rangeSchema,
+});
+
+export type Font = z.infer<typeof fontSchema>;
+
 /** The `schema` this package writes and the CLI reads. */
 export const CATALOG_SCHEMA = 1;
 
@@ -219,6 +243,10 @@ export const catalogSchema = z.object({
   /** The React majors this release has files for. Releases from before React 18 support leave it out, and have React 19 files only. */
   reactMajors: z.array(reactMajorSchema).nonempty().default([19]),
   items: z.array(catalogItemSchema),
+  /** The libraries React's `lib/icons.ts` can draw. Items carry the first one's file. Releases from before icon libraries leave it out. */
+  iconLibraries: z.array(iconLibrarySchema).default([]),
+  /** The fonts an app can start with. Releases from before fonts leave it out. */
+  fonts: z.array(fontSchema).default([]),
 });
 
 export type Catalog = z.infer<typeof catalogSchema>;
@@ -256,6 +284,67 @@ function releaseItem(item: CatalogItem, frameworks: Framework[]): CatalogItem {
     return { ...item, variants: installedVariants(item.variants, frameworks) };
   }
   return { ...item, variants: installedVariants(item.variants, frameworks) };
+}
+
+/** `variant` with `library`'s `lib/icons.ts` and packages in place of `fallback`'s. */
+function withIconLibrary<V extends Variant>(
+  variant: V,
+  library: IconLibrary,
+  fallback: IconLibrary
+): V {
+  if (!variant.files.some((file) => file.path === library.file.path)) {
+    return variant;
+  }
+  const npm = Object.fromEntries(
+    Object.entries(variant.packages.npm).filter(
+      ([pkg]) => !(pkg in fallback.npm)
+    )
+  );
+  return {
+    ...variant,
+    files: variant.files.map((file) =>
+      file.path === library.file.path ? library.file : file
+    ),
+    packages: { ...variant.packages, npm: { ...npm, ...library.npm } },
+  };
+}
+
+/** `item` with `library`'s `lib/icons.ts`. Setup never carries the file. */
+function itemWithIconLibrary(
+  item: CatalogItem,
+  library: IconLibrary,
+  fallback: IconLibrary
+): CatalogItem {
+  if (item.kind === 'setup') return item;
+  const { react } = item.variants;
+  if (!react) return item;
+  return {
+    ...item,
+    variants: {
+      ...item.variants,
+      react: withIconLibrary(react, library, fallback),
+    },
+  };
+}
+
+/**
+ * `catalog` with every React `lib/icons.ts` drawn by the icon library `name`:
+ * each item that carries the file gets that library's copy and packages in
+ * place of the default library's.
+ */
+export function catalogWithIconLibrary(
+  catalog: Catalog,
+  name: string
+): Catalog {
+  const [fallback] = catalog.iconLibraries;
+  const library = catalog.iconLibraries.find((entry) => entry.name === name);
+  if (!fallback || !library || library === fallback) return catalog;
+  return {
+    ...catalog,
+    items: catalog.items.map((item) =>
+      itemWithIconLibrary(item, library, fallback)
+    ),
+  };
 }
 
 /** `catalog` with only the variants the CLI installs: what a release publishes. */

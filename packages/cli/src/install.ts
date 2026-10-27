@@ -1,12 +1,12 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { type Catalog, resolveItems, variantFor } from './catalog';
+import { type Catalog, chosenFonts, resolveItems, variantFor } from './catalog';
 import type { Config } from './config';
 import { type PreviousFiles, writeFiles, type WriteResult } from './files';
 import { installPackages, packagesToInstall } from './packages';
 import type { Project } from './project';
-import { cssImportLine } from './setup/react';
+import { cssImportLine, fontImportLine } from './setup/react';
 
 export type InstallOptions = {
   overwrite: boolean;
@@ -40,15 +40,13 @@ export function emptyInstallResult(): InstallResult {
 function addCssImports(
   project: Project,
   config: Config,
-  files: string[],
+  lines: string[],
   dryRun: boolean
 ) {
-  if (files.length === 0) return [];
+  if (lines.length === 0) return [];
   const entry = path.join(project.root, config.css);
   const current = existsSync(entry) ? readFileSync(entry, 'utf8') : '';
-  const added = [...new Set(files)]
-    .map((file) => cssImportLine(config, file))
-    .filter((line) => !current.includes(line));
+  const added = [...new Set(lines)].filter((line) => !current.includes(line));
   if (added.length > 0 && !dryRun) {
     writeFileSync(entry, `${current.trimEnd()}\n${added.join('\n')}\n`);
   }
@@ -57,7 +55,7 @@ function addCssImports(
 
 /**
  * Installs `names` and everything they need: files, npm packages and
- * component stylesheet imports. A file that matches `previous` is replaced;
+ * component stylesheet imports, plus the fonts `config` set up. A file that matches `previous` is replaced;
  * nxds's changes are merged into any other changed file (see `writeFiles`).
  * Updates `config` in place.
  */
@@ -86,9 +84,16 @@ export function installItems(
     { ...options, version: catalog.version }
   );
 
+  const fonts = Object.values(chosenFonts(catalog, config)).filter(
+    (font) => font !== undefined
+  );
   const packages = packagesToInstall(
     project,
-    Object.assign({}, ...variants.map((variant) => variant.packages.npm))
+    Object.assign(
+      {},
+      ...variants.map((variant) => variant.packages.npm),
+      ...fonts.map((font) => ({ [font.package]: font.range }))
+    )
   );
   if (options.install && !options.dryRun) {
     installPackages(project, packages, { dev: false });
@@ -97,7 +102,12 @@ export function installItems(
   const cssImports = addCssImports(
     project,
     config,
-    variants.flatMap((variant) => variant.css),
+    [
+      ...variants
+        .flatMap((variant) => variant.css)
+        .map((file) => cssImportLine(config, file)),
+      ...fonts.map(fontImportLine),
+    ],
     options.dryRun
   );
 

@@ -631,9 +631,12 @@ export const copies: [react: string, vue: string][] = [
 
 /** Dependencies both packages declare, as `[react, vue]` names, which must take the same range. */
 export const dependencies: [react: string, vue: string][] = [
+  ['@hugeicons/core-free-icons', '@hugeicons/core-free-icons'],
   ['@nxds/core', '@nxds/core'],
   ['@nxds/tailwind', '@nxds/tailwind'],
+  ['@remixicon/react', '@remixicon/vue'],
   ['@tabler/icons-react', '@tabler/icons-vue'],
+  ['lucide-react', '@lucide/vue'],
   ['class-variance-authority', 'class-variance-authority'],
   ['clsx', 'clsx'],
   ['tailwind-merge', 'tailwind-merge'],

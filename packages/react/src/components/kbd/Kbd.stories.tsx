@@ -1,5 +1,5 @@
+import { MagnifyingGlassIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconSearch } from '@tabler/icons-react';
 import { expect } from 'storybook/test';
 
 import { Kbd, KbdGroup } from './kbd';
@@ -88,7 +88,7 @@ export const WithIcon: Story = {
   },
   render: () => (
     <Kbd>
-      <IconSearch aria-hidden />K
+      <MagnifyingGlassIcon aria-hidden />K
     </Kbd>
   ),
 };

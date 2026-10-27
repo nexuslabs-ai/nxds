@@ -4,14 +4,17 @@ import path from 'node:path';
 import { major, satisfies } from 'semver';
 
 import {
+  type Catalog,
   type CatalogFile,
   type CatalogItem,
+  chosenFonts,
   fetchRelease,
   loadRelease,
   releaseFiles,
   resolveItems,
   splitInstalled,
   variantFor,
+  withIconLibrary,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
 import { type Config, readConfig, requireConfig } from '../config';
@@ -46,8 +49,12 @@ export async function diff(
   const config = requireConfig(cwd);
   // `update` installs the app's React major, which may differ from the files'.
   const target = { ...config, react: reactMajor(readProject(cwd)) };
-  const latest = await loadRelease(registry, 'latest', target.react);
-  const previous = await fetchRelease(registry, config.version);
+  const release = await loadRelease(registry, 'latest', target.react);
+  // As `update` does: an app from before icon libraries gets the default.
+  const library = config.iconLibrary ?? release.iconLibraries[0]?.name;
+  const latest = withIconLibrary(release, library);
+  const fetched = await fetchRelease(registry, config.version);
+  const previous = fetched && withIconLibrary(fetched, library);
   const previousFiles = previous && releaseFiles(previous, config);
   const { known, removed } = splitInstalled(latest, config.items);
   const items = resolveItems(
@@ -202,15 +209,20 @@ function reactChecks(project: Project, config: Config): Check[] {
   return checks;
 }
 
-/** Each package the installed items need that is missing or below range. */
+/** Each package the installed items and fonts need that is missing or below range. */
 function packageProblems(
   project: Project,
   config: Config,
+  catalog: Catalog,
   items: CatalogItem[]
 ) {
+  const fonts = Object.values(chosenFonts(catalog, config)).filter(
+    (font) => font !== undefined
+  );
   const needed: Record<string, string> = Object.assign(
     {},
-    ...items.map((item) => variantFor(item, config).packages.npm)
+    ...items.map((item) => variantFor(item, config).packages.npm),
+    ...fonts.map((font) => ({ [font.package]: font.range }))
   );
   return Object.entries(needed).flatMap(([name, range]) => {
     if (!(name in project.dependencies))
@@ -246,7 +258,8 @@ export async function doctor(
   }
   if (!config || !project.setup) return report(checks);
 
-  const catalog = await fetchRelease(registry, config.version);
+  const fetched = await fetchRelease(registry, config.version);
+  const catalog = fetched && withIconLibrary(fetched, config.iconLibrary);
   check(
     'release',
     catalog !== null,
@@ -356,7 +369,7 @@ export async function doctor(
       : `Resolve the <<<<<<< markers in ${conflicted.join(', ')}.`
   );
 
-  const problems = packageProblems(project, config, items);
+  const problems = packageProblems(project, config, catalog, items);
   check(
     'packages',
     problems.length === 0,
