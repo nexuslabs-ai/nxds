@@ -91,12 +91,7 @@ This system shows the default nxds appearance: a near-black brand colour on zinc
 
 Set an attribute on any element to change density, corners, elevation or stroke for everything inside it:
 
-| Attribute          | Values                                                              |
-| ------------------ | ------------------------------------------------------------------- |
-| `data-density`     | `tight`, `compact`, `default`, `comfortable`, `relaxed`, `spacious` |
-| `data-radius`      | `square`, `subtle`, `smooth`, `round`, `extra-round`                |
-| `data-shadow`      | `flat`, `quiet`, `soft`, `standard`, `strong`                       |
-| `data-borderwidth` | `fine`, `normal`, `strong`                                          |
+<!-- appearance-presets -->
 
 Brand colour, surface tone and contrast are app-wide settings in nxds apps. They have no attribute.
 

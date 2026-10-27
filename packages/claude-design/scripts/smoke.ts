@@ -10,19 +10,18 @@ import type * as ReactDOMModule from 'react-dom';
 import type * as ReactDOMClient from 'react-dom/client';
 
 import {
-  CORNER_OPTIONS,
   createNxdsThemeContract,
   DEFAULT_NXDS_APPEARANCE,
-  DENSITY_OPTIONS,
   deriveTheme,
-  ELEVATION_OPTIONS,
-  STROKE_OPTIONS,
+  type NxdsAppearanceDataAttr,
   themeToCss,
 } from '@nxds/core';
 import { readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { chromium, type Page } from 'playwright';
+
+import { PRESETS } from '../src/presets.ts';
 
 const packageRoot = path.join(import.meta.dirname, '..');
 const projectDir = path.join(packageRoot, 'dist', 'project');
@@ -442,41 +441,29 @@ const TOKEN_CASES: (Probe & { family: string; name: string; value: string })[] =
     },
   ];
 
-function presetValues(options: readonly { value: string }[], initial: string) {
-  return [
-    initial,
-    ...options.map(({ value }) => value).filter((value) => value !== initial),
-  ];
-}
-
 /**
- * Each appearance attribute, its values with the default first, and the
- * tokens.json family it swaps. A preset changes only some of a family's
- * tokens, so the check reads them all; TOKEN_CASES proves components read
- * each family.
+ * The tokens.json family each appearance attribute swaps. A preset changes
+ * only some of a family's tokens, so the check reads them all; TOKEN_CASES
+ * proves components read each family.
  */
-const PRESET_CASES = [
-  {
-    attribute: 'data-density',
-    family: 'spacing',
-    values: presetValues(DENSITY_OPTIONS, DEFAULT_NXDS_APPEARANCE.density),
-  },
-  {
-    attribute: 'data-radius',
-    family: 'radius',
-    values: presetValues(CORNER_OPTIONS, DEFAULT_NXDS_APPEARANCE.corners),
-  },
-  {
-    attribute: 'data-borderwidth',
-    family: 'borderWidth',
-    values: presetValues(STROKE_OPTIONS, DEFAULT_NXDS_APPEARANCE.stroke),
-  },
-  {
-    attribute: 'data-shadow',
-    family: 'shadow',
-    values: presetValues(ELEVATION_OPTIONS, DEFAULT_NXDS_APPEARANCE.elevation),
-  },
-];
+const PRESET_FAMILIES: Record<NxdsAppearanceDataAttr, string> = {
+  'data-density': 'spacing',
+  'data-radius': 'radius',
+  'data-borderwidth': 'borderWidth',
+  'data-shadow': 'shadow',
+};
+
+// Each attribute's values, the default first.
+const PRESET_CASES = Object.entries(PRESETS).map(
+  ([attribute, { options, initial }]) => ({
+    attribute,
+    family: PRESET_FAMILIES[attribute as NxdsAppearanceDataAttr],
+    values: [
+      initial,
+      ...options.map(({ value }) => value).filter((value) => value !== initial),
+    ],
+  })
+);
 
 // Renders `probe.tree` inside a wrapper carrying `scope`, and reads the
 // target's computed `probe.property`.

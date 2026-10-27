@@ -19,6 +19,7 @@ import path from 'node:path';
 
 import { buildBundle } from '../src/bundle.ts';
 import { EXCLUDED_SLUGS, GROUPS } from '../src/groups.ts';
+import { withPresetTable } from '../src/presets.ts';
 import {
   buildPreview,
   type ComponentFolder,
@@ -131,7 +132,10 @@ async function main() {
   const tokensCss = compileTokensCss(tokens, typeStyleRules());
   write('tokens.json', `${JSON.stringify(tokens, null, 2)}\n`);
   write('tokens.css', tokensCss);
-  write('README.md', readFileSync(path.join(contentDir, 'README.md'), 'utf8'));
+  write(
+    'README.md',
+    withPresetTable(readFileSync(path.join(contentDir, 'README.md'), 'utf8'))
+  );
   write(
     'components/Cover/preview.html',
     readFileSync(path.join(contentDir, 'cover.html'), 'utf8')

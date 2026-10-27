@@ -1,0 +1,51 @@
+// The appearance attributes an element on a canvas can carry, with their
+// values and defaults from @nxds/core.
+import {
+  CORNER_OPTIONS,
+  DEFAULT_NXDS_APPEARANCE,
+  DENSITY_OPTIONS,
+  ELEVATION_OPTIONS,
+  type NxdsAppearanceDataAttr,
+  STROKE_OPTIONS,
+} from '@nxds/core';
+
+export interface Preset {
+  options: readonly { value: string }[];
+  initial: string;
+}
+
+export const PRESETS: Record<NxdsAppearanceDataAttr, Preset> = {
+  'data-density': {
+    options: DENSITY_OPTIONS,
+    initial: DEFAULT_NXDS_APPEARANCE.density,
+  },
+  'data-radius': {
+    options: CORNER_OPTIONS,
+    initial: DEFAULT_NXDS_APPEARANCE.corners,
+  },
+  'data-shadow': {
+    options: ELEVATION_OPTIONS,
+    initial: DEFAULT_NXDS_APPEARANCE.elevation,
+  },
+  'data-borderwidth': {
+    options: STROKE_OPTIONS,
+    initial: DEFAULT_NXDS_APPEARANCE.stroke,
+  },
+};
+
+const TABLE_MARKER = '<!-- appearance-presets -->';
+
+/** `readme` with its preset marker replaced by a table of each attribute and its values. */
+export function withPresetTable(readme: string) {
+  if (!readme.includes(TABLE_MARKER)) {
+    throw new Error(`README.md: no ${TABLE_MARKER} line for the preset table.`);
+  }
+  const rows = Object.entries(PRESETS).map(
+    ([attribute, { options }]) =>
+      `| \`${attribute}\` | ${options.map(({ value }) => `\`${value}\``).join(', ')} |`
+  );
+  return readme.replace(
+    TABLE_MARKER,
+    ['| Attribute | Values |', '| --- | --- |', ...rows].join('\n')
+  );
+}

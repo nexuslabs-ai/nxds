@@ -5,33 +5,11 @@ import {
 } from '../token-source/perceptual-grid';
 
 import { type Shade, SHADES } from './palette';
+import {
+  PRIMITIVE_PALETTE_NAMES,
+  type PrimitivePaletteName,
+} from './token-scales.generated';
 
-export const PRIMITIVE_PALETTE_NAMES = [
-  'green',
-  'emerald',
-  'teal',
-  'cyan',
-  'sky',
-  'indigo',
-  'violet',
-  'purple',
-  'fuchsia',
-  'pink',
-  'slate',
-  'rose',
-  'lime',
-  'yellow',
-  'blue',
-  'gray',
-  'zinc',
-  'neutral',
-  'stone',
-  'red',
-  'orange',
-  'amber',
-] as const;
-
-export type PrimitivePaletteName = (typeof PRIMITIVE_PALETTE_NAMES)[number];
 export type PrimitivePaletteRamp = Readonly<Record<Shade, string>>;
 
 const rampCache = new Map<PrimitivePaletteName, PrimitivePaletteRamp>();
