@@ -10,15 +10,16 @@ const communityLinks = [
   { name: 'X', href: X_URL, Mark: XMark },
 ];
 
-/** The last stage of the story, above the site footer: the community links. */
+/** The last section of the homepage, above the site footer: the community links. */
 export function Community() {
   return (
     <section
-      className="nx:story-community nx:mx-auto nx:w-full nx:max-w-4xl nx:px-4 nx:md:px-8"
-      aria-labelledby="story-community-title"
+      id="community"
+      className="nx:site-column nx:py-24"
+      aria-labelledby="community-title"
     >
       <div className="nx:chapter-heading">
-        <h1 id="story-community-title">Build Nexus with us.</h1>
+        <h2 id="community-title">Build Nexus with us.</h2>
         <p className="nx:m-0 nx:typography-body-default nx:text-muted-foreground">
           Join the community. Ask, share and help shape what comes next.
         </p>

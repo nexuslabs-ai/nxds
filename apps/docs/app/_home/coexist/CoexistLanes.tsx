@@ -280,7 +280,7 @@ function HostLanes({ host }: { host: Host }) {
     nexusLane,
   ];
   return (
-    <div className="nx:coexist-lanes-chapter nx:story-chapter-content nx:@container">
+    <div className="nx:coexist-lanes-chapter nx:@container">
       <div className="nx:coexist-lanes nx:@3xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className={sideColumnClass}>
           <span className="nx:coexist-lanes-label">You add</span>

@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useSyncExternalStore } from 'react';
+import { type ReactNode, useState, useSyncExternalStore } from 'react';
 
 import { Show, type ShowProps } from '@/components/show/show';
 import {
@@ -37,13 +37,17 @@ function useSmallPhone() {
   );
 }
 
-/** The floating toolbar under each chapter: one tool per view of the canvas. */
+/**
+ * The floating toolbar of one chapter: one tool per view of the canvas. It
+ * sits at the bottom of the screen and shows only while its chapter is active.
+ */
 export function ChapterToolbar({
   chapter,
   title,
   tabs,
   selected,
   onSelect,
+  active,
   actions,
   toolsAbove,
   children,
@@ -53,6 +57,8 @@ export function ChapterToolbar({
   tabs: readonly ToolName[];
   selected: number;
   onSelect: (index: number) => void;
+  /** Whether this chapter is the one on screen. */
+  active: boolean;
   /** Buttons after the tools, behind a separator. */
   actions?: ReactNode;
   /** Hides the tools below this viewport width, leaving only `actions`. */
@@ -62,6 +68,7 @@ export function ChapterToolbar({
 }) {
   const smallPhone = useSmallPhone();
   const toolSize = smallPhone ? 'icon' : 'icon-lg';
+  const [open, setOpen] = useState(false);
   const tools = (
     <ToolbarToolGroup
       aria-label={`${title} tools`}
@@ -69,6 +76,8 @@ export function ChapterToolbar({
       onValueChange={(value) =>
         onSelect(tabs.findIndex((tab) => tab === value))
       }
+      open={open && active}
+      onOpenChange={setOpen}
     >
       {tabs.map((tab, index) => {
         const Icon = toolIcons[tab];
@@ -98,20 +107,14 @@ export function ChapterToolbar({
         ))}
     </ToolbarToolGroup>
   );
-  if (!actions)
-    return (
-      <Toolbar variant="floating" aria-label={title}>
-        {tools}
-      </Toolbar>
-    );
   const toolsAndSeparator = (
     <>
       {tools}
       <ToolbarSeparator />
     </>
   );
-  return (
-    <Toolbar variant="floating" aria-label={title}>
+  const toolsAndActions = actions && (
+    <>
       {toolsAbove ? (
         <Show above={toolsAbove} as="div">
           {toolsAndSeparator}
@@ -120,6 +123,13 @@ export function ChapterToolbar({
         toolsAndSeparator
       )}
       <ToolbarGroup aria-label={`${title} actions`}>{actions}</ToolbarGroup>
-    </Toolbar>
+    </>
+  );
+  return (
+    <div className="nx:story-toolbar-position" data-active={active}>
+      <Toolbar variant="floating" aria-label={title}>
+        {toolsAndActions ?? tools}
+      </Toolbar>
+    </div>
   );
 }

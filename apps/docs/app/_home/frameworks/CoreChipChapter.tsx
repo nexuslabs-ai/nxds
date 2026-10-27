@@ -154,7 +154,7 @@ export function CoreChipChapter({
   };
 
   return (
-    <div className="nx:framework-chapter nx:story-chapter-content">
+    <div className="nx:framework-chapter">
       <div className="nx:chip-flow" data-flow-motion={Boolean(hovered)}>
         <div className="nx:framework-token-group">
           <span className="nx:framework-column-label">Design tokens</span>

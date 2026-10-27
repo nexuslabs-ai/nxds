@@ -1,3 +1,4 @@
+import { SiteFooter } from '../_components/SiteFooter';
 import { SiteHeader } from '../_components/SiteHeader';
 
 export default function HomeLayout({
@@ -9,6 +10,7 @@ export default function HomeLayout({
     <>
       <SiteHeader />
       <main id="main">{children}</main>
+      <SiteFooter />
     </>
   );
 }

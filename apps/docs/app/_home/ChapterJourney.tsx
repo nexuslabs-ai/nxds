@@ -1,12 +1,11 @@
 'use client';
 
-import { type CSSProperties, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Link from 'next/link';
 
 import { Button } from '@/components/button/button';
 
-import { SiteFooter } from '../_components/SiteFooter';
 import { requirePage, requireSection } from '../_lib/manifest';
 import { STORYBOOK_URL } from '../_lib/site';
 
@@ -62,10 +61,10 @@ const chapters = [
   },
 ] as const;
 
-/** Every chapter but Stories, which lays out its own stage. */
+/** Every chapter but Stories, which lays out its own section. */
 type ToolbarChapter = Exclude<(typeof chapters)[number], { id: 'stories' }>;
 
-/** The selected tool. `index` is already clamped to `tools`. */
+/** The selected tool. `index` is always one of `tools`' indexes. */
 function toolAt<T>(tools: readonly [T, ...T[]], index: number): T {
   return tools[index] ?? tools[0];
 }
@@ -97,95 +96,77 @@ function ChapterCanvas({
 }
 
 /**
- * One sticky stage that scrolls through the chapters: the scroll position
- * picks the chapter, and each chapter keeps its own selected tool.
+ * The chapters as sections of one scrolling page. Each chapter keeps its own
+ * selected tool. Only the chapter on the screen's middle line, or the one
+ * holding focus, shows its toolbar.
  */
 export function ChapterJourney({ storyCode }: { storyCode: StoryCode }) {
-  const track = useRef<HTMLElement>(null);
-  const stage = useRef<HTMLDivElement>(null);
-  const [chapter, setChapter] = useState(0);
+  const journey = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState<string>(chapters[0].id);
   const [selected, setSelected] = useState(() => chapters.map(() => 0));
 
   useEffect(() => {
-    const trackElement = track.current;
-    const stageElement = stage.current;
-    if (!trackElement || !stageElement) return;
+    const root = journey.current;
+    if (!root) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActive(entry.target.id);
+        }
+      },
+      { rootMargin: '-50% 0px -50% 0px' }
+    );
+    const sections = Array.from(root.children);
+    for (const section of sections) observer.observe(section);
 
-    let frame = 0;
-    function measure() {
-      if (!trackElement || !stageElement) return;
-      frame = 0;
-      const inset = parseFloat(getComputedStyle(stageElement).top) || 0;
-      const distance = trackElement.offsetHeight - stageElement.offsetHeight;
-      const progress =
-        (inset - trackElement.getBoundingClientRect().top) /
-        Math.max(1, distance);
-      setChapter(
-        Math.min(
-          chapters.length,
-          Math.max(0, Math.floor(progress * (chapters.length + 1)))
-        )
+    function activateFocusedSection(event: FocusEvent) {
+      const section = sections.find((child) =>
+        child.contains(event.target as Node)
       );
+      if (section) setActive(section.id);
     }
-    function schedule() {
-      if (!frame) frame = requestAnimationFrame(measure);
-    }
-    const observer = new ResizeObserver(schedule);
-    observer.observe(trackElement);
-    observer.observe(stageElement);
-    window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
-    schedule();
+    root.addEventListener('focusin', activateFocusedSection);
     return () => {
-      cancelAnimationFrame(frame);
       observer.disconnect();
-      window.removeEventListener('scroll', schedule);
-      window.removeEventListener('resize', schedule);
+      root.removeEventListener('focusin', activateFocusedSection);
     };
   }, []);
 
-  function selectTab(index: number) {
+  function selectTool(chapter: number, tool: number) {
     setSelected((current) =>
-      current.map((value, i) => (i === chapter ? index : value))
+      current.map((value, i) => (i === chapter ? tool : value))
     );
   }
 
-  // Past the last chapter, the stage shows the footer.
-  const current = chapters[chapter];
-  const trackStyle: CSSProperties & Record<'--story-chapter-count', number> = {
-    '--story-chapter-count': chapters.length + 1,
-  };
-
   return (
-    <section
-      className="nx:chapter-track"
-      ref={track}
-      aria-label="Design system walkthrough"
-      style={trackStyle}
-    >
-      <div className="nx:chapter-stage" data-footer={!current} ref={stage}>
-        {!current ? (
-          <>
-            <Community />
-            <SiteFooter className="nx:story-chapter-content" />
-          </>
-        ) : current.id === 'stories' ? (
-          <StoryTestIterations
-            cta={current.cta}
-            href={current.href}
-            storyCode={storyCode}
-          />
-        ) : (
-          <Chapter
-            key={chapter}
-            index={chapter}
-            chapter={current}
-            selected={Math.min(selected[chapter] ?? 0, current.tabs.length - 1)}
-            onSelect={selectTab}
-          />
-        )}
-      </div>
-    </section>
+    <div className="nx:home-journey" ref={journey}>
+      {chapters.map((chapter, index) => (
+        <section
+          key={chapter.id}
+          id={chapter.id}
+          aria-labelledby={`${chapter.id}-title`}
+          className="nx:site-column nx:home-section"
+        >
+          {chapter.id === 'stories' ? (
+            <StoryTestIterations
+              cta={chapter.cta}
+              href={chapter.href}
+              storyCode={storyCode}
+              active={active === chapter.id}
+            />
+          ) : (
+            <Chapter
+              index={index}
+              chapter={chapter}
+              selected={selected[index] ?? 0}
+              onSelect={(tool) => selectTool(index, tool)}
+              active={active === chapter.id}
+            />
+          )}
+        </section>
+      ))}
+      <Community />
+    </div>
   );
 }
 
@@ -194,12 +175,15 @@ function Chapter({
   chapter,
   selected,
   onSelect,
+  active,
 }: {
   index: number;
   chapter: ToolbarChapter;
   selected: number;
   onSelect: (index: number) => void;
+  active: boolean;
 }) {
+  const Title = index === 0 ? 'h1' : 'h2';
   const customize = chapter.id === 'customize';
   const controls =
     chapter.id === 'customize' ? (
@@ -208,7 +192,7 @@ function Chapter({
   return (
     <>
       <div className="nx:chapter-heading">
-        <h1>{chapter.title}</h1>
+        <Title id={`${chapter.id}-title`}>{chapter.title}</Title>
         {customize && (
           <p className="nx:customize-subtitle">
             Change one setting. See your system respond.
@@ -232,7 +216,6 @@ function Chapter({
       <div
         className="nx:story-canvas"
         role="region"
-        id="story-panel"
         aria-labelledby={`story-tab-${index}-${selected}`}
       >
         <ChapterCanvas
@@ -241,19 +224,18 @@ function Chapter({
           onSelect={onSelect}
         />
       </div>
-      <div className="nx:story-toolbar-position">
-        <ChapterToolbar
-          chapter={index}
-          title={chapter.title}
-          tabs={chapter.tabs}
-          selected={selected}
-          onSelect={onSelect}
-          actions={customize ? <AppearanceActions /> : undefined}
-          toolsAbove={customize ? 'sm' : undefined}
-        >
-          {controls}
-        </ChapterToolbar>
-      </div>
+      <ChapterToolbar
+        chapter={index}
+        title={chapter.title}
+        tabs={chapter.tabs}
+        selected={selected}
+        onSelect={onSelect}
+        active={active}
+        actions={customize ? <AppearanceActions /> : undefined}
+        toolsAbove={customize ? 'sm' : undefined}
+      >
+        {controls}
+      </ChapterToolbar>
     </>
   );
 }

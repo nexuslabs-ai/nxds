@@ -127,11 +127,14 @@ export function StoryTestIterations({
   cta,
   href,
   storyCode,
+  active,
 }: {
   cta: string;
   href: string;
   /** Every story's highlighted source, from `highlightStories()`. */
   storyCode: StoryCode;
+  /** Whether this chapter is the one on screen. */
+  active: boolean;
 }) {
   const { state } = useNxdsAppearance();
   const [modeIndex, setModeIndex] = useState(1);
@@ -407,7 +410,7 @@ export function StoryTestIterations({
   return (
     <>
       <div className="nx:chapter-heading">
-        <h1>Stories are the tests.</h1>
+        <h2 id="stories-title">Stories are the tests.</h2>
         <p className="nx:m-0 nx:-mt-3 nx:mb-6 nx:typography-body-small nx:text-balance nx:text-muted-foreground">
           The example you explore is the example we check.
         </p>
@@ -427,7 +430,6 @@ export function StoryTestIterations({
       </div>
       <div
         className="nx:story-canvas nx:story-tests-canvas"
-        id="story-panel"
         role="region"
         aria-labelledby={`story-tab-${CHAPTER}-${modeIndex}`}
       >
@@ -571,51 +573,50 @@ export function StoryTestIterations({
           </p>
         </div>
       </div>
-      <div className="nx:story-toolbar-position">
-        <ChapterToolbar
-          chapter={CHAPTER}
-          title="Explore the stories"
-          tabs={tabs}
-          selected={modeIndex}
-          onSelect={selectMode}
-          actions={
-            <ToolbarButton
-              variant="default"
-              size="lg"
-              onClick={runExample}
-              disabled={running}
+      <ChapterToolbar
+        chapter={CHAPTER}
+        title="Explore the stories"
+        tabs={tabs}
+        selected={modeIndex}
+        onSelect={selectMode}
+        active={active}
+        actions={
+          <ToolbarButton
+            variant="default"
+            size="lg"
+            onClick={runExample}
+            disabled={running}
+          >
+            Run
+          </ToolbarButton>
+        }
+      >
+        <div className="nx:flex nx:min-w-0 nx:flex-col nx:gap-3">
+          <p className="nx:m-0 nx:typography-body-small nx:text-muted-foreground">
+            {mode.description}
+          </p>
+          <Field>
+            <FieldLabel htmlFor={`${id}-choice`}>{mode.field}</FieldLabel>
+            <NativeSelect
+              id={`${id}-choice`}
+              size="sm"
+              value={choice}
+              onChange={(event) => selectChoice(event.target.value)}
             >
-              Run
-            </ToolbarButton>
-          }
-        >
-          <div className="nx:flex nx:min-w-0 nx:flex-col nx:gap-3">
-            <p className="nx:m-0 nx:typography-body-small nx:text-muted-foreground">
-              {mode.description}
-            </p>
-            <Field>
-              <FieldLabel htmlFor={`${id}-choice`}>{mode.field}</FieldLabel>
-              <NativeSelect
-                id={`${id}-choice`}
-                size="sm"
-                value={choice}
-                onChange={(event) => selectChoice(event.target.value)}
-              >
-                {mode.options.map((option) => (
-                  <NativeSelectOption key={option.value} value={option.value}>
-                    {option.label}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
-            </Field>
-            <p className="nx:m-0 nx:typography-body-small nx:text-muted-foreground">
-              {mode.id === 'accessibility'
-                ? 'Name check only · not an axe audit.'
-                : 'Runs on the live example above.'}
-            </p>
-          </div>
-        </ChapterToolbar>
-      </div>
+              {mode.options.map((option) => (
+                <NativeSelectOption key={option.value} value={option.value}>
+                  {option.label}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </Field>
+          <p className="nx:m-0 nx:typography-body-small nx:text-muted-foreground">
+            {mode.id === 'accessibility'
+              ? 'Name check only · not an axe audit.'
+              : 'Runs on the live example above.'}
+          </p>
+        </div>
+      </ChapterToolbar>
     </>
   );
 }

@@ -29,80 +29,57 @@
   letter-spacing: var(--nx-typography-letterspacing-tighter);
 }
 
-@keyframes story-arrive {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@utility chapter-track {
-  height: calc(
-    (var(--story-chapter-count) + 1) * 100svh - var(--site-header-h)
-  );
-}
-
-@utility chapter-stage {
-  --story-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr);
+/* The homepage: chapters as sections of one scrolling page, on one 12-column
+   grid inside the site column. */
+@utility home-journey {
+  --grid-gap: var(--nx-spacing-6);
   --story-toolbar-clearance: var(--nx-spacing-28);
-  container: chapter / size;
-  position: sticky;
-  top: var(--site-header-h);
-  height: calc(100svh - var(--site-header-h));
-  min-height: 0;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: var(--nx-spacing-4);
-  padding: var(--nx-spacing-6) var(--nx-spacing-8) 0;
+  --preview-min: 24rem;
+  --preview-max: none;
 
-  /* The last stage: the community links, then the full-width site footer. */
-  &[data-footer='true'] {
-    grid-template-rows: minmax(0, 1fr) auto;
-    padding-inline: 0;
+  /* Desktop previews stop at 60% of the column's width. */
+  @media (width >= 64rem) {
+    --preview-min: 30rem;
+    --preview-max: calc(
+      0.6 * min(100vw - 2 * var(--nx-spacing-8), var(--site-column))
+    );
   }
-  @media (max-width: 700px) {
-    padding-inline: var(--nx-spacing-4);
+}
+
+/* At least one screen below the header: the title block, then the preview
+   in the rest. A capped preview centers with its title. */
+@utility home-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-block-size: calc(100svh - var(--site-header-h));
+  padding-block-start: var(--nx-spacing-8);
+  /* Land right under the header, not with the docs headings' extra space. */
+  scroll-margin-block-start: calc(
+    var(--site-header-h) - var(--docs-scroll-offset)
+  );
+
+  @media (width >= 64rem) {
+    padding-block-start: var(--nx-spacing-12);
   }
 }
 
 @utility chapter-heading {
   text-align: center;
-  animation: story-arrive var(--nx-motion-duration-slow)
-    var(--nx-motion-ease-enter) both;
-  padding-block: var(--nx-spacing-3) var(--nx-spacing-10);
+  padding-block-end: var(--nx-spacing-10);
 
-  & h1 {
-    @apply nx:typography-display-small nx:@2xl/chapter:typography-display-medium nx:@5xl/chapter:typography-display-large;
+  & :is(h1, h2) {
+    @apply nx:typography-display-small nx:md:typography-display-medium nx:lg:typography-display-large;
     text-wrap: balance;
     margin: 0 0 var(--nx-spacing-7);
   }
-  @container chapter (min-height: 1040px) {
-    padding-block: var(--nx-spacing-24) var(--nx-spacing-20);
-  }
-  @container chapter (max-height: 760px) {
-    padding-block: 0 var(--nx-spacing-4);
 
-    & h1 {
-      margin-bottom: var(--nx-spacing-5);
-    }
-  }
-  @container chapter (max-height: 560px) {
-    padding-bottom: var(--nx-spacing-2);
-
-    & h1 {
-      margin-bottom: var(--nx-spacing-4);
-    }
-  }
-  @container chapter (max-width: 700px) {
-    & h1 {
-      min-block-size: 2lh;
-      display: grid;
-      align-content: center;
-    }
+  /* 8 of the 12 grid columns. */
+  @media (width >= 64rem) {
+    inline-size: calc(
+      (100% - 11 * var(--grid-gap)) / 12 * 8 + 7 * var(--grid-gap)
+    );
+    margin-inline: auto;
   }
 }
 
@@ -124,11 +101,17 @@
 
 @utility story-canvas {
   container: story-canvas / size;
-  grid-area: 2 / 1 / 4 / 2;
   position: relative;
   isolation: isolate;
-  min-height: 0;
-  min-width: 0;
+  flex: 1 1 0;
+  min-block-size: var(--preview-min);
+  max-block-size: var(--preview-max);
+
+  /* The chapter fills the preview, whatever height the section gives it. */
+  & > * {
+    position: absolute;
+    inset: 0;
+  }
 }
 
 @utility story-box-grid {
@@ -152,29 +135,29 @@
   }
 }
 
+/* Every chapter's toolbar sits at the bottom of the screen. Only the active
+   chapter's bar shows: the old bar goes at once and the new one fades in. */
 @utility story-toolbar-position {
-  grid-area: 3 / 1 / 4 / 2;
-  z-index: 1;
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: var(--nx-spacing-5);
+  z-index: 20;
   display: grid;
   justify-items: center;
-  gap: var(--nx-spacing-3_5);
-  margin-block-end: var(--nx-spacing-5);
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
 
-  @media (max-width: 700px) {
-    margin-block-end: var(--nx-spacing-4);
+  & > * {
+    pointer-events: auto;
   }
-}
-
-@utility story-chapter-content {
-  animation: story-arrive var(--nx-motion-duration-slow)
-    var(--nx-motion-ease-enter) both;
-}
-
-@utility story-community {
-  align-self: center;
-
-  /* Outranks the narrow chapter-heading rule that reserves two lines. */
-  & .nx\:chapter-heading h1 {
-    min-block-size: auto;
+  &[data-active='true'] {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity var(--nx-motion-duration-default)
+      var(--nx-motion-ease-enter);
+  }
+  @media (max-width: 700px) {
+    inset-block-end: var(--nx-spacing-4);
   }
 }
