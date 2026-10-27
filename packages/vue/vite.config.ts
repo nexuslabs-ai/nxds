@@ -1,6 +1,5 @@
 import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
-import { copyFileSync } from 'fs';
 import path from 'path';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
@@ -20,6 +19,7 @@ export default defineConfig({
       include: ['src'],
       exclude: ['**/*.stories.ts', 'src/stories/**'],
       bundleTypes: true,
+      outDirs: ['dist', { dir: 'dist', moduleFormat: 'cjs' }],
       // API Extractor drops `declare var`, which vue-tsc uses for slot props.
       beforeWriteFile: (_filePath, content) => ({
         content: content.replaceAll(
@@ -27,11 +27,6 @@ export default defineConfig({
           'declare const __VLS_'
         ),
       }),
-      afterBuild: () =>
-        copyFileSync(
-          path.resolve(__dirname, 'dist/index.d.ts'),
-          path.resolve(__dirname, 'dist/index.d.cts')
-        ),
     }),
   ],
   build: {

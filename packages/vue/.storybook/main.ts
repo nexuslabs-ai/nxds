@@ -16,7 +16,8 @@ const config: StorybookConfig = {
     const { mergeConfig } = await import('vite');
     const tailwindcss = (await import('@tailwindcss/vite')).default;
 
-    // The package's type bundle reads dist, which a Storybook build never writes.
+    // Storybook loads vite.config.ts. Remove vite-plugin-dts (plugin name
+    // `unplugin-dts`): only the library build writes the types in dist.
     const plugins = config.plugins?.filter(
       (plugin) =>
         !(plugin && 'name' in plugin && plugin.name === 'unplugin-dts')
