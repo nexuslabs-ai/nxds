@@ -1,4 +1,7 @@
-import { CHART_PALETTE_REFERENCES } from './semantic-palette-references';
+import {
+  CHART_PALETTE_REFERENCES,
+  SYNTAX_PALETTE_REFERENCES,
+} from './semantic-palette-references';
 
 export type ApcaTier = 'body' | 'ui' | 'incidental';
 
@@ -42,6 +45,10 @@ const CATEGORICAL_INDICES = CHART_PALETTE_REFERENCES.map(
 const CHART_STAGGER_LC = 4.5;
 
 const DIFF_SURFACES = ['success-subtle', 'error-subtle'] as const;
+
+// CodeBlock draws code on its own surface, on a highlighted line and on the
+// diff tints.
+const CODE_SURFACES = ['container', 'container-hover', ...DIFF_SURFACES];
 
 const FOCUS_SURFACES = [
   'background',
@@ -104,18 +111,19 @@ export const APCA_PAIRS = [
     ink(`${family}-subtle-foreground`, `${family}-subtle-active`, 'ui'),
   ]),
   ...CATEGORICAL_INDICES.flatMap((index) =>
-    ['container', 'container-hover', 'background'].map((bg) => ({
+    ['container', 'background'].map((bg) => ({
       ...ink(`chart-categorical-${index}`, bg, 'ui'),
       offset: (index - 1) * CHART_STAGGER_LC,
     }))
   ),
-  // A CodeBlock diff line tints the whole line, so its syntax colors
-  // (codeBlockTheme) must read on the success and error tints too.
+  ...CODE_SURFACES.flatMap((bg) =>
+    Object.keys(SYNTAX_PALETTE_REFERENCES).map((role) =>
+      ink(`syntax-${role}`, bg, 'ui')
+    )
+  ),
+  // codeBlockTheme also colours code with the text tokens, which already read
+  // on container and container-hover.
   ...DIFF_SURFACES.flatMap((bg) => [
-    ...CATEGORICAL_INDICES.map((index) => ({
-      ...ink(`chart-categorical-${index}`, bg, 'ui'),
-      offset: (index - 1) * CHART_STAGGER_LC,
-    })),
     text('foreground', bg, 'ui'),
     text('muted-foreground', bg, 'ui'),
     text('muted-foreground-subtle', bg, 'incidental'),

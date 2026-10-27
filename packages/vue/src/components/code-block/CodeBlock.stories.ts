@@ -329,7 +329,7 @@ export const SyntaxHighlighting: Story = {
 
     await expect(keyword).toHaveAttribute(
       'style',
-      expect.stringContaining('var(--nx-color-chart-categorical-4)')
+      expect.stringContaining('var(--nx-color-syntax-keyword)')
     );
   },
 };

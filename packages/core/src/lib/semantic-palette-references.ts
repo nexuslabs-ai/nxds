@@ -19,3 +19,12 @@ export const CHART_PALETTE_REFERENCES = [
   light: Shade;
   dark: Shade;
 }[];
+
+/** CodeBlock syntax colours by token role. Each takes a chart series' hue. */
+export const SYNTAX_PALETTE_REFERENCES = {
+  keyword: CHART_PALETTE_REFERENCES[3],
+  string: CHART_PALETTE_REFERENCES[1],
+  function: CHART_PALETTE_REFERENCES[4],
+  type: CHART_PALETTE_REFERENCES[0],
+  constant: CHART_PALETTE_REFERENCES[2],
+} as const;

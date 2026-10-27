@@ -1,5 +1,5 @@
 const SCOPES = {
-  'chart-categorical-4': [
+  'syntax-keyword': [
     'keyword',
     'storage',
     'storage.type',
@@ -7,25 +7,25 @@ const SCOPES = {
     'keyword.control',
     'variable.language',
   ],
-  'chart-categorical-2': [
+  'syntax-string': [
     'string',
     'constant.character.escape',
     'punctuation.definition.string',
   ],
-  'chart-categorical-5': [
+  'syntax-function': [
     'entity.name.function',
     'support.function',
     'meta.function-call',
     'entity.other.attribute-name',
   ],
-  'chart-categorical-1': [
+  'syntax-type': [
     'entity.name.type',
     'entity.name.class',
     'entity.name.tag',
     'support.type',
     'support.class',
   ],
-  'chart-categorical-3': [
+  'syntax-constant': [
     'constant.numeric',
     'constant.language',
     'constant.other',
@@ -41,8 +41,8 @@ const TOKEN_COLORS = Object.entries(SCOPES).map(([token, scope]) => ({
 
 /**
  * Shiki theme for CodeBlock. Each syntax colour is a theme token that stays
- * legible on the CodeBlock surface and on its diff tints, in light and dark
- * mode.
+ * legible on the CodeBlock surface, a highlighted line and the diff tints, in
+ * light and dark mode.
  */
 const codeBlockTheme = {
   name: 'nxds',
