@@ -12,7 +12,7 @@ import {
   IconX,
 } from '@tabler/icons-vue';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
-import { reactive, ref, useId } from 'vue';
+import { defineComponent, ref, useId } from 'vue';
 
 import { Button } from '../button';
 import { Checkbox } from '../checkbox';
@@ -552,6 +552,56 @@ export const DisabledToggles: Story = {
   },
 };
 
+const InlineExample = defineComponent({
+  components: {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    IconChevronDown,
+    Toolbar,
+    ToolbarButton,
+    ToolbarToggleGroup,
+    ToolbarToggleItem,
+  },
+  setup: () => ({ view: ref('all') }),
+  template: `
+    <section class="nx:grid nx:gap-4">
+      <div>
+        <h2 class="nx:typography-heading-small">Documents</h2>
+        <p class="nx:typography-body-default nx:text-muted-foreground">Keep your working files close at hand.</p>
+      </div>
+      <Toolbar
+        aria-label="Document view"
+        class="nx:w-full nx:rounded-none nx:border-0 nx:border-b-default nx:shadow-none nx:bg-transparent nx:p-0 nx:pb-3"
+      >
+        <ToolbarToggleGroup
+          type="single"
+          :model-value="view"
+          aria-label="Show documents"
+          @update:model-value="(value) => value && (view = value)"
+        >
+          <ToolbarToggleItem value="all">All documents</ToolbarToggleItem>
+          <ToolbarToggleItem value="recent">Recent</ToolbarToggleItem>
+        </ToolbarToggleGroup>
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <ToolbarButton class="nx:ms-auto">Show <IconChevronDown aria-hidden="true" /></ToolbarButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem @select="view = 'all'">All documents</DropdownMenuItem>
+            <DropdownMenuItem @select="view = 'recent'">Recent documents</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </Toolbar>
+      <ul class="nx:grid nx:gap-3 nx:typography-body-default">
+        <li>Project brief <span class="nx:text-muted-foreground">· Today</span></li>
+        <li v-if="view === 'all'">Research notes <span class="nx:text-muted-foreground">· Last week</span></li>
+      </ul>
+    </section>
+  `,
+});
+
 export const Inline: Story = {
   tags: ['docs'],
   parameters: {
@@ -562,55 +612,7 @@ export const Inline: Story = {
       },
     },
   },
-  render: () => ({
-    components: {
-      DropdownMenu,
-      DropdownMenuContent,
-      DropdownMenuItem,
-      DropdownMenuTrigger,
-      IconChevronDown,
-      Toolbar,
-      ToolbarButton,
-      ToolbarToggleGroup,
-      ToolbarToggleItem,
-    },
-    setup: () => ({ view: ref('all') }),
-    template: `
-      <section class="nx:grid nx:gap-4">
-        <div>
-          <h2 class="nx:typography-heading-small">Documents</h2>
-          <p class="nx:typography-body-default nx:text-muted-foreground">Keep your working files close at hand.</p>
-        </div>
-        <Toolbar
-          aria-label="Document view"
-          class="nx:w-full nx:rounded-none nx:border-0 nx:border-b-default nx:shadow-none nx:bg-transparent nx:p-0 nx:pb-3"
-        >
-          <ToolbarToggleGroup
-            type="single"
-            :model-value="view"
-            aria-label="Show documents"
-            @update:model-value="(value) => value && (view = value)"
-          >
-            <ToolbarToggleItem value="all">All documents</ToolbarToggleItem>
-            <ToolbarToggleItem value="recent">Recent</ToolbarToggleItem>
-          </ToolbarToggleGroup>
-          <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-              <ToolbarButton class="nx:ms-auto">Show <IconChevronDown aria-hidden="true" /></ToolbarButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem @select="view = 'all'">All documents</DropdownMenuItem>
-              <DropdownMenuItem @select="view = 'recent'">Recent documents</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </Toolbar>
-        <ul class="nx:grid nx:gap-3 nx:typography-body-default">
-          <li>Project brief <span class="nx:text-muted-foreground">· Today</span></li>
-          <li v-if="view === 'all'">Research notes <span class="nx:text-muted-foreground">· Last week</span></li>
-        </ul>
-      </section>
-    `,
-  }),
+  render: () => InlineExample,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('radio', { name: 'Recent' }));
@@ -624,6 +626,92 @@ export const Inline: Story = {
   },
 };
 
+const AttachedExample = defineComponent({
+  components: {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    IconChevronDown,
+    Toolbar,
+    ToolbarButton,
+    ToolbarSeparator,
+    ToolbarToggleGroup,
+    ToolbarToggleItem,
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+  },
+  setup: () => ({
+    formatting: ref<string[]>([]),
+    text: ref('Good tools stay close to the work. Draft your next idea here.'),
+  }),
+  template: `
+    <section class="nx:grid nx:gap-3">
+      <h2 class="nx:typography-heading-small">Draft a note</h2>
+      <div class="nx:rounded-lg nx:border-default nx:border-border-default nx:bg-container">
+        <Toolbar
+          aria-label="Note formatting"
+          class="nx:w-full nx:rounded-none nx:rounded-t-lg nx:border-0 nx:border-b-default nx:border-border-default nx:shadow-none nx:bg-background nx:p-2"
+        >
+          <ToolbarToggleGroup v-model="formatting" type="multiple" aria-label="Note style">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <span class="nx:inline-flex">
+                  <ToolbarToggleItem value="bold" size="icon-sm" aria-label="Bold note">
+                    <span class="nx:font-bold">B</span>
+                  </ToolbarToggleItem>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Bold</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <span class="nx:inline-flex">
+                  <ToolbarToggleItem value="italic" size="icon-sm" aria-label="Italic note">
+                    <span class="nx:italic">I</span>
+                  </ToolbarToggleItem>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Italic</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <span class="nx:inline-flex">
+                  <ToolbarToggleItem value="underline" size="icon-sm" aria-label="Underline note">
+                    <span class="nx:underline">U</span>
+                  </ToolbarToggleItem>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Underline</TooltipContent>
+            </Tooltip>
+          </ToolbarToggleGroup>
+          <ToolbarSeparator />
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <ToolbarButton>More <IconChevronDown aria-hidden="true" /></ToolbarButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem @select="formatting = []">Clear formatting</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </Toolbar>
+        <textarea
+          v-model="text"
+          aria-label="Note"
+          class="nx:block nx:min-h-32 nx:w-full nx:resize-y nx:rounded-b-lg nx:bg-transparent nx:p-4 nx:typography-body-default nx:text-foreground nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default"
+          :style="{
+            fontWeight: formatting.includes('bold') ? 700 : undefined,
+            fontStyle: formatting.includes('italic') ? 'italic' : undefined,
+            textDecoration: formatting.includes('underline') ? 'underline' : undefined,
+          }"
+        />
+      </div>
+      <p class="nx:typography-body-small nx:text-muted-foreground">Formatting applies to the whole note.</p>
+    </section>
+  `,
+});
+
 export const Attached: Story = {
   tags: ['docs'],
   parameters: {
@@ -634,93 +722,7 @@ export const Attached: Story = {
       },
     },
   },
-  render: () => ({
-    components: {
-      DropdownMenu,
-      DropdownMenuContent,
-      DropdownMenuItem,
-      DropdownMenuTrigger,
-      IconChevronDown,
-      Toolbar,
-      ToolbarButton,
-      ToolbarSeparator,
-      ToolbarToggleGroup,
-      ToolbarToggleItem,
-      Tooltip,
-      TooltipContent,
-      TooltipTrigger,
-    },
-    setup: () => ({
-      formatting: ref<string[]>([]),
-      text: ref(
-        'Good tools stay close to the work. Draft your next idea here.'
-      ),
-    }),
-    template: `
-      <section class="nx:grid nx:gap-3">
-        <h2 class="nx:typography-heading-small">Draft a note</h2>
-        <div class="nx:rounded-lg nx:border-default nx:border-border-default nx:bg-container">
-          <Toolbar
-            aria-label="Note formatting"
-            class="nx:w-full nx:rounded-none nx:rounded-t-lg nx:border-0 nx:border-b-default nx:border-border-default nx:shadow-none nx:bg-background nx:p-2"
-          >
-            <ToolbarToggleGroup v-model="formatting" type="multiple" aria-label="Note style">
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <span class="nx:inline-flex">
-                    <ToolbarToggleItem value="bold" size="icon-sm" aria-label="Bold note">
-                      <span class="nx:font-bold">B</span>
-                    </ToolbarToggleItem>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>Bold</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <span class="nx:inline-flex">
-                    <ToolbarToggleItem value="italic" size="icon-sm" aria-label="Italic note">
-                      <span class="nx:italic">I</span>
-                    </ToolbarToggleItem>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>Italic</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <span class="nx:inline-flex">
-                    <ToolbarToggleItem value="underline" size="icon-sm" aria-label="Underline note">
-                      <span class="nx:underline">U</span>
-                    </ToolbarToggleItem>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>Underline</TooltipContent>
-              </Tooltip>
-            </ToolbarToggleGroup>
-            <ToolbarSeparator />
-            <DropdownMenu>
-              <DropdownMenuTrigger as-child>
-                <ToolbarButton>More <IconChevronDown aria-hidden="true" /></ToolbarButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem @select="formatting = []">Clear formatting</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </Toolbar>
-          <textarea
-            v-model="text"
-            aria-label="Note"
-            class="nx:block nx:min-h-32 nx:w-full nx:resize-y nx:rounded-b-lg nx:bg-transparent nx:p-4 nx:typography-body-default nx:text-foreground nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default"
-            :style="{
-              fontWeight: formatting.includes('bold') ? 700 : undefined,
-              fontStyle: formatting.includes('italic') ? 'italic' : undefined,
-              textDecoration: formatting.includes('underline') ? 'underline' : undefined,
-            }"
-          />
-        </div>
-        <p class="nx:typography-body-small nx:text-muted-foreground">Formatting applies to the whole note.</p>
-      </section>
-    `,
-  }),
+  render: () => AttachedExample,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Bold note' }));
@@ -752,6 +754,106 @@ export const Attached: Story = {
   },
 };
 
+const SelectionExample = defineComponent({
+  components: {
+    Checkbox,
+    IconArchive,
+    IconX,
+    Label,
+    Toolbar,
+    ToolbarButton,
+    ToolbarSeparator,
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+  },
+  setup() {
+    const selectionId = useId();
+    const files = ['Project brief', 'Research notes', 'Launch checklist'];
+    const selected = ref<string[]>(['Project brief', 'Research notes']);
+    const archived = ref<string[]>([]);
+    const message = ref('');
+    const heading = ref<HTMLElement | null>(null);
+    function clearSelection() {
+      selected.value = [];
+      document.getElementById(`${selectionId}-0`)?.focus();
+    }
+    function archiveSelection() {
+      const count = selected.value.length;
+      message.value = `${count} document${count === 1 ? '' : 's'} archived.`;
+      archived.value = [...archived.value, ...selected.value];
+      selected.value = [];
+      heading.value?.focus();
+    }
+    function toggleSelection(name: string, checked: boolean | 'indeterminate') {
+      selected.value =
+        checked === true
+          ? [...selected.value, name]
+          : selected.value.filter((item) => item !== name);
+      message.value = '';
+    }
+    return {
+      selectionId,
+      files,
+      selected,
+      archived,
+      message,
+      heading,
+      clearSelection,
+      archiveSelection,
+      toggleSelection,
+    };
+  },
+  template: `
+    <section class="nx:grid nx:gap-4">
+      <div>
+        <h2 ref="heading" tabindex="-1" class="nx:typography-heading-small nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default">Select documents</h2>
+        <p class="nx:typography-body-default nx:text-muted-foreground">Actions appear when documents are selected.</p>
+      </div>
+      <div class="nx:rounded-lg nx:border-default nx:border-border-default nx:bg-container nx:p-3">
+        <Label
+          v-for="(name, index) in files.filter((file) => !archived.includes(file))"
+          :key="name"
+          :for="selectionId + '-' + index"
+          class="nx:flex nx:min-h-10 nx:cursor-pointer nx:items-center nx:gap-3 nx:px-2 nx:typography-body-default"
+        >
+          <Checkbox
+            :id="selectionId + '-' + index"
+            :model-value="selected.includes(name)"
+            @update:model-value="(checked) => toggleSelection(name, checked)"
+          />{{ name }}</Label>
+        <p v-if="archived.length === files.length" class="nx:p-2 nx:typography-body-default nx:text-muted-foreground">No documents remaining.</p>
+      </div>
+      <div class="nx:flex nx:min-h-16 nx:justify-center">
+        <Toolbar
+          v-if="selected.length > 0"
+          aria-label="Selected document actions"
+          class="nx:h-fit nx:justify-center nx:gap-0 nx:bg-popover nx:p-0"
+        >
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <ToolbarButton
+                size="icon-sm"
+                aria-label="Clear selection"
+                class="nx:text-muted-foreground"
+                @click="clearSelection"
+              >
+                <IconX aria-hidden="true" />
+              </ToolbarButton>
+            </TooltipTrigger>
+            <TooltipContent>Clear selection</TooltipContent>
+          </Tooltip>
+          <span class="nx:px-2 nx:typography-label-default nx:whitespace-nowrap" aria-live="polite">{{ selected.length }} selected</span>
+          <ToolbarSeparator class="nx:self-stretch nx:data-[orientation=vertical]:h-auto" />
+          <ToolbarButton @click="archiveSelection">
+            <IconArchive aria-hidden="true" />Archive</ToolbarButton>
+        </Toolbar>
+      </div>
+      <p role="status" class="nx:typography-body-small nx:text-muted-foreground">{{ message }}</p>
+    </section>
+  `,
+});
+
 export const Selection: Story = {
   tags: ['docs'],
   parameters: {
@@ -761,106 +863,7 @@ export const Selection: Story = {
       },
     },
   },
-  render: () => ({
-    components: {
-      Checkbox,
-      IconArchive,
-      IconX,
-      Label,
-      Toolbar,
-      ToolbarButton,
-      ToolbarSeparator,
-      Tooltip,
-      TooltipContent,
-      TooltipTrigger,
-    },
-    setup: () => ({
-      selectionId: useId(),
-      files: ['Project brief', 'Research notes', 'Launch checklist'],
-      selection: reactive({
-        selected: ['Project brief', 'Research notes'],
-        archived: [] as string[],
-        message: '',
-      }),
-      heading: ref<HTMLElement | null>(null),
-      toggleSelection: (
-        selection: { selected: string[]; message: string },
-        name: string,
-        checked: boolean | 'indeterminate'
-      ) => {
-        selection.selected =
-          checked === true
-            ? [...selection.selected, name]
-            : selection.selected.filter((item) => item !== name);
-        selection.message = '';
-      },
-      clearSelection: (
-        selection: { selected: string[] },
-        firstCheckboxId: string
-      ) => {
-        selection.selected = [];
-        document.getElementById(firstCheckboxId)?.focus();
-      },
-      archiveSelection: (
-        selection: { selected: string[]; archived: string[]; message: string },
-        heading: HTMLElement | null
-      ) => {
-        const count = selection.selected.length;
-        selection.message = `${count} document${count === 1 ? '' : 's'} archived.`;
-        selection.archived = [...selection.archived, ...selection.selected];
-        selection.selected = [];
-        heading?.focus();
-      },
-    }),
-    template: `
-      <section class="nx:grid nx:gap-4">
-        <div>
-          <h2 ref="heading" tabindex="-1" class="nx:typography-heading-small nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default">Select documents</h2>
-          <p class="nx:typography-body-default nx:text-muted-foreground">Actions appear when documents are selected.</p>
-        </div>
-        <div class="nx:rounded-lg nx:border-default nx:border-border-default nx:bg-container nx:p-3">
-          <Label
-            v-for="(name, index) in files.filter((file) => !selection.archived.includes(file))"
-            :key="name"
-            :for="selectionId + '-' + index"
-            class="nx:flex nx:min-h-10 nx:cursor-pointer nx:items-center nx:gap-3 nx:px-2 nx:typography-body-default"
-          >
-            <Checkbox
-              :id="selectionId + '-' + index"
-              :model-value="selection.selected.includes(name)"
-              @update:model-value="(checked) => toggleSelection(selection, name, checked)"
-            />{{ name }}</Label>
-          <p v-if="selection.archived.length === files.length" class="nx:p-2 nx:typography-body-default nx:text-muted-foreground">No documents remaining.</p>
-        </div>
-        <div class="nx:flex nx:min-h-16 nx:justify-center">
-          <Toolbar
-            v-if="selection.selected.length > 0"
-            aria-label="Selected document actions"
-            class="nx:h-fit nx:justify-center nx:gap-0 nx:bg-popover nx:p-0"
-          >
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <ToolbarButton
-                  size="icon-sm"
-                  aria-label="Clear selection"
-                  class="nx:text-muted-foreground"
-                  @click="clearSelection(selection, selectionId + '-0')"
-                >
-                  <IconX aria-hidden="true" />
-                </ToolbarButton>
-              </TooltipTrigger>
-              <TooltipContent>Clear selection</TooltipContent>
-            </Tooltip>
-            <span class="nx:px-2 nx:typography-label-default nx:whitespace-nowrap" aria-live="polite">{{ selection.selected.length }} selected</span>
-            <ToolbarSeparator class="nx:self-stretch nx:data-[orientation=vertical]:h-auto" />
-            <ToolbarButton @click="archiveSelection(selection, heading)">
-              <IconArchive aria-hidden="true" />Archive</ToolbarButton>
-          </Toolbar>
-        </div>
-        <p role="status" class="nx:typography-body-small nx:text-muted-foreground">{{ selection.message }}</p>
-      </section>
-    `,
-  }),
+  render: () => SelectionExample,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
@@ -882,11 +885,7 @@ export const Selection: Story = {
 
 export const AllVariants: Story = {
   render: () => ({
-    components: {
-      InlineExample: Inline.render!({}, {} as never),
-      AttachedExample: Attached.render!({}, {} as never),
-      SelectionExample: Selection.render!({}, {} as never),
-    },
+    components: { AttachedExample, InlineExample, SelectionExample },
     template: `
       <div class="nx:grid nx:gap-10">
         <InlineExample />

@@ -350,6 +350,34 @@ export const Collapsed: Story = {
   }),
 };
 
+export const CollapsedTooltip: Story = {
+  render: () => ({
+    components: { DemoInset, DemoSidebar, SidebarProvider },
+    template: `
+      <SidebarProvider>
+        <DemoSidebar collapsible="icon" />
+        <DemoInset />
+      </SidebarProvider>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const sidebar = canvasElement.querySelector(
+      '[data-slot="sidebar"][data-state]'
+    );
+    const trigger = canvasElement.querySelector<HTMLButtonElement>(
+      '[data-slot="sidebar-trigger"]'
+    );
+    await userEvent.click(trigger!);
+    await expect(sidebar).toHaveAttribute('data-state', 'collapsed');
+
+    canvas.getByRole('button', { name: 'Inbox' }).focus();
+    await expect(
+      await within(canvasElement.ownerDocument.body).findByRole('tooltip')
+    ).toHaveTextContent('Inbox');
+  },
+};
+
 export const WithSubmenu: Story = {
   tags: ['docs'],
   parameters: {

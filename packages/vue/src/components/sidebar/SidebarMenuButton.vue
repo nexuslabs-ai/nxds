@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Primitive, type PrimitiveProps } from 'reka-ui';
-import { computed, type HTMLAttributes, type VNode } from 'vue';
+import { computed, type HTMLAttributes, ref, type VNode } from 'vue';
 
 import { cn } from '../../lib/utils';
 import {
@@ -46,6 +46,8 @@ defineSlots<{
 }>();
 
 const { isNarrow, state } = useSidebar();
+const isRail = computed(() => state.value === 'collapsed' && !isNarrow.value);
+const open = ref(false);
 
 const button = computed(() => ({
   as: props.as,
@@ -65,7 +67,8 @@ const button = computed(() => ({
 <template>
   <Tooltip
     v-if="tooltip || $slots.tooltip"
-    v-bind="state === 'collapsed' && !isNarrow ? {} : { open: false }"
+    :open="open && isRail"
+    @update:open="open = $event"
   >
     <TooltipTrigger as-child>
       <Primitive v-bind="{ ...button, ...$attrs }">

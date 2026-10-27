@@ -46,12 +46,14 @@ const { isNarrow, state, openNarrow, setOpenNarrow } = useSidebar();
 let returnFocus: HTMLElement | null = null;
 
 function rememberFocus() {
-  returnFocus = document.activeElement as HTMLElement | null;
+  const opener = document.activeElement;
+  returnFocus = opener instanceof HTMLElement ? opener : null;
 }
 
 function restoreFocus(event: Event) {
+  if (!returnFocus?.isConnected) return;
   event.preventDefault();
-  returnFocus?.focus();
+  returnFocus.focus();
 }
 </script>
 

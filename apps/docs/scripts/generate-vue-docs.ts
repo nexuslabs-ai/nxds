@@ -30,9 +30,10 @@ import ts from 'typescript';
 
 import { docsRoot } from './docs-root.mjs';
 
-interface SetupValue {
-  name: string;
-  value: ts.Expression;
+/** One line of a demo's `<script setup>`, and the node its imports are read from. */
+interface ScriptLine {
+  code: string;
+  node: ts.Node;
 }
 
 interface DocsStory {
@@ -159,6 +160,7 @@ function readDocsStories(slug: string) {
   const imported = new Map<string, string>();
   let meta: ts.ObjectLiteralExpression | undefined;
   const stories: { name: string; object: ts.ObjectLiteralExpression }[] = [];
+  const examples = new Map<string, ts.ObjectLiteralExpression>();
 
   for (const statement of source.statements) {
     if (ts.isImportDeclaration(statement)) {
@@ -175,8 +177,14 @@ function readDocsStories(slug: string) {
 
     for (const declaration of statement.declarationList.declarations) {
       const init = declaration.initializer && unwrap(declaration.initializer);
-      if (!init || !ts.isObjectLiteralExpression(init)) continue;
+      if (!init) continue;
       const name = declaration.name.getText();
+      const example = definedComponent(init);
+      if (example) {
+        examples.set(name, example);
+        continue;
+      }
+      if (!ts.isObjectLiteralExpression(init)) continue;
       if (name === 'meta') {
         meta = init;
         continue;
@@ -198,9 +206,85 @@ function readDocsStories(slug: string) {
   return {
     description: docsDescription(meta, 'component') ?? '',
     stories: stories.map(({ name, object }) =>
-      readStory(slug, name, object, imported)
+      readStory(slug, name, object, imported, examples)
     ),
   };
+}
+
+/** The options object of `defineComponent({ … })`, or null. */
+function definedComponent(node: ts.Expression) {
+  if (!ts.isCallExpression(node)) return null;
+  if (node.expression.getText() !== 'defineComponent') return null;
+  const [options] = node.arguments;
+  return options && ts.isObjectLiteralExpression(options) ? options : null;
+}
+
+/**
+ * A story's `setup` as `<script setup>` lines. `() => ({ name: value })` gives
+ * one `const` per value. A block body keeps its statements and ends in
+ * `return { … }`, which may list them by name.
+ */
+function setupScript(
+  where: string,
+  body: ts.ObjectLiteralExpression
+): ScriptLine[] {
+  const setup = body.properties.find(
+    (prop) => prop.name?.getText() === 'setup'
+  );
+  if (!setup) return [];
+
+  const fn = ts.isPropertyAssignment(setup) ? unwrap(setup.initializer) : setup;
+  if (
+    !(ts.isArrowFunction(fn) || ts.isMethodDeclaration(fn)) ||
+    fn.parameters.length > 0 ||
+    !fn.body
+  ) {
+    fail(
+      `${where}: setup must be \`() => ({ name: value })\` or \`setup() { …; return { … } }\`.`
+    );
+  }
+  if (!ts.isBlock(fn.body)) {
+    const returned = unwrap(fn.body);
+    if (!ts.isObjectLiteralExpression(returned)) {
+      fail(`${where}: setup must return an object literal.`);
+    }
+    return returnedValues(where, returned, false);
+  }
+
+  const statements = [...fn.body.statements];
+  const last = statements.pop();
+  const returned =
+    last && ts.isReturnStatement(last) && last.expression
+      ? unwrap(last.expression)
+      : undefined;
+  if (!returned || !ts.isObjectLiteralExpression(returned)) {
+    fail(`${where}: a setup block must end in \`return { … }\`.`);
+  }
+  return [
+    ...statements.map((node) => ({ code: node.getText(), node })),
+    ...returnedValues(where, returned, true),
+  ];
+}
+
+function returnedValues(
+  where: string,
+  returned: ts.ObjectLiteralExpression,
+  byName: boolean
+): ScriptLine[] {
+  return returned.properties.flatMap((prop) => {
+    if (byName && ts.isShorthandPropertyAssignment(prop)) return [];
+    if (!ts.isPropertyAssignment(prop)) {
+      fail(
+        `${where}: setup values need a name and a value, as \`open: ref(true)\`.`
+      );
+    }
+    return [
+      {
+        code: `const ${prop.name.getText()} = ${prop.initializer.getText()};`,
+        node: prop.initializer,
+      },
+    ];
+  });
 }
 
 /** One docs story as an SFC: its components' imports, its setup state and its template. */
@@ -208,7 +292,8 @@ function readStory(
   slug: string,
   name: string,
   object: ts.ObjectLiteralExpression,
-  imported: Map<string, string>
+  imported: Map<string, string>,
+  examples: Map<string, ts.ObjectLiteralExpression>
 ): DocsStory {
   const where = `${slug}/${name}`;
   const render = property(object, 'render');
@@ -222,9 +307,15 @@ function readStory(
       `${where}: a docs story needs its own \`render: () => ({ … })\`, with no args.`
     );
   }
-  const body = unwrap(render.body);
+  const returned = unwrap(render.body);
+  const body = ts.isIdentifier(returned)
+    ? (examples.get(returned.text) ??
+      fail(
+        `${where}: \`${returned.text}\` must be a \`defineComponent({ … })\` in the story file.`
+      ))
+    : returned;
   if (!ts.isObjectLiteralExpression(body)) {
-    fail(`${where}: render must return an object literal.`);
+    fail(`${where}: render must return an object literal or a component.`);
   }
 
   const template = property(body, 'template');
@@ -249,28 +340,9 @@ function readStory(
     return prop.name.text;
   });
 
-  const state: SetupValue[] = [];
-  const setup = property(body, 'setup');
-  if (setup) {
-    const returned =
-      ts.isArrowFunction(setup) &&
-      !ts.isBlock(setup.body) &&
-      unwrap(setup.body);
-    if (!returned || !ts.isObjectLiteralExpression(returned)) {
-      fail(`${where}: setup must be \`() => ({ name: value })\`.`);
-    }
-    for (const prop of returned.properties) {
-      if (!ts.isPropertyAssignment(prop)) {
-        fail(
-          `${where}: setup values need a name and a value, as \`open: ref(true)\`.`
-        );
-      }
-      state.push({ name: prop.name.getText(), value: prop.initializer });
-    }
-  }
-
+  const setup = setupScript(where, body);
   const stateNames = new Set(
-    state.flatMap(({ value }) => [...referencedNames(value)])
+    setup.flatMap(({ node }) => [...referencedNames(node)])
   );
   const used = [
     ...componentNames,
@@ -291,13 +363,13 @@ function readStory(
     title: humanize(kebab(name)),
     description: docsDescription(object, 'story'),
     byModule,
-    source: sfc(byModule, state, dedent(template.text)),
+    source: sfc(byModule, setup, dedent(template.text)),
   };
 }
 
 function sfc(
   byModule: Map<string, string[]>,
-  state: SetupValue[],
+  setup: ScriptLine[],
   template: string
 ) {
   const line = (module: string) =>
@@ -311,9 +383,7 @@ function sfc(
   const script = [
     packages.join('\n'),
     local.join('\n'),
-    state
-      .map(({ name, value }) => `const ${name} = ${value.getText()};`)
-      .join('\n'),
+    setup.map(({ code }) => code).join('\n'),
   ].filter(Boolean);
 
   const indented = template

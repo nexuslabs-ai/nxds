@@ -240,12 +240,14 @@ const Sidebar = React.forwardRef<
   const returnFocus = React.useRef<HTMLElement | null>(null);
 
   function rememberFocus() {
-    returnFocus.current = document.activeElement as HTMLElement | null;
+    const opener = document.activeElement;
+    returnFocus.current = opener instanceof HTMLElement ? opener : null;
   }
 
   function restoreFocus(event: Event) {
+    if (!returnFocus.current?.isConnected) return;
     event.preventDefault();
-    returnFocus.current?.focus();
+    returnFocus.current.focus();
   }
 
   if (collapsible === 'none') {
@@ -927,6 +929,8 @@ const SidebarMenuButton = React.forwardRef<
     : { ...propsWithoutRef, ref: forwardedRef };
   const Comp = asChild ? Slot : 'button';
   const { isNarrow, state } = useSidebar();
+  const [open, setOpen] = React.useState(false);
+  const isRail = state === 'collapsed' && !isNarrow;
 
   const button = (
     <Comp
@@ -948,7 +952,7 @@ const SidebarMenuButton = React.forwardRef<
     typeof tooltip === 'string' ? { children: tooltip } : tooltip;
 
   return (
-    <Tooltip open={state === 'collapsed' && !isNarrow ? undefined : false}>
+    <Tooltip open={open && isRail} onOpenChange={setOpen}>
       <TooltipTrigger asChild>{button}</TooltipTrigger>
       <TooltipContent side="right" align="center" {...tooltipProps} />
     </Tooltip>
