@@ -98,7 +98,7 @@ function packageUrl(registry: string) {
 /** The tarball and its integrity for `release`, a version or a dist-tag. */
 async function resolveTarball(registry: string, release: string) {
   assertRegistryUrl(
-    '--npm-registry',
+    '--npm-registry (or npm_config_registry)',
     registry,
     `For a private registry, unpack the tarball from \`npm pack ${CLAUDE_DESIGN_PACKAGE}\` and pass its package folder with --source.`
   );

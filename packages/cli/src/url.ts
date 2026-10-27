@@ -9,24 +9,22 @@ export function httpUrl(value: string) {
 }
 
 /**
- * Refuses a registry URL that is not http or https, or that has a query,
- * fragment, user name or password. `privateRegistry` says what to do instead
+ * Refuses a registry URL that is not http or https, or that has a user name,
+ * password, query or fragment. `privateRegistryHint` says what to do instead
  * of a login.
  */
 export function assertRegistryUrl(
   flag: string,
   value: string,
-  privateRegistry: string
+  privateRegistryHint: string
 ) {
   const url = httpUrl(value);
-  if (!url || /[?#]/.test(value)) {
-    throw new UsageError(
-      `${flag} must be an http or https URL with no query or fragment.`
-    );
+  if (!url) {
+    throw new UsageError(`${flag} must be an http or https URL.`);
   }
-  if (url.username || url.password) {
+  if (url.username || url.password || /[?#]/.test(value)) {
     throw new UsageError(
-      `${flag} can't include a user name or password, because nxds-cli sends no registry login. ${privateRegistry}`
+      `${flag} can't include a user name, password, query or fragment. nxds-cli sends no registry login, and it adds file paths to the URL. ${privateRegistryHint}`
     );
   }
 }

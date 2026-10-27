@@ -16,7 +16,7 @@ import { EnvHttpProxyAgent, fetch } from 'undici';
 
 import { CLI_COMMAND } from './cli-command';
 import { CliError, readJson, UsageError } from './errors';
-import { assertRegistryUrl } from './url';
+import { assertRegistryUrl, httpUrl } from './url';
 
 export type {
   Catalog,
@@ -42,7 +42,7 @@ const FETCH_TIMEOUT_MS = 30_000;
 const dispatcher = new EnvHttpProxyAgent();
 
 function isUrl(registry: string) {
-  return /^https?:\/\//.test(registry);
+  return httpUrl(registry) !== undefined;
 }
 
 /** The `--registry` value as a URL, or as an absolute folder path. */
@@ -50,9 +50,9 @@ export function resolveRegistry(option: string | undefined) {
   if (!option) return DEFAULT_REGISTRY;
   if (!isUrl(option)) return path.resolve(option);
   assertRegistryUrl(
-    '--registry',
+    '--registry (or NXDS_REGISTRY_URL)',
     option,
-    'For a private registry, download its release files to a folder and pass the folder with --registry.'
+    'For a private registry, download its latest.json and <version>.json files to a folder, and pass the folder with --registry.'
   );
   return option.replace(/\/+$/, '');
 }

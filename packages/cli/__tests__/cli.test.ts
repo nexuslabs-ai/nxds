@@ -584,6 +584,7 @@ describe('errors', () => {
 
   it.each([
     ['a user name and password', 'https://user:secret@registry.invalid/r'],
+    ['an upper-case scheme', 'HTTPS://user:secret@registry.invalid/r'],
     ['a query', 'https://registry.invalid/r?token=secret'],
     ['an empty query', 'https://registry.invalid/r?'],
     ['a fragment', 'https://registry.invalid/r#secret'],
@@ -595,6 +596,17 @@ describe('errors', () => {
     expect(run.exitCode).toBe(EXIT_CODES.usage);
     expect(run.stderr).toContain('--registry');
     expect(run.stdout + run.stderr).not.toContain('secret');
+  });
+
+  it('ignores a refused --registry URL in a command that does not read it', async () => {
+    const { app } = setup();
+
+    const run = await cli(['info'], {
+      app,
+      registry: 'https://user:secret@registry.invalid/r',
+    });
+
+    expect(run.exitCode).toBe(EXIT_CODES.ok);
   });
 
   it('names each invalid field of a broken release', async () => {
