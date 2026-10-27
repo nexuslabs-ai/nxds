@@ -32,12 +32,20 @@
    grid inside the site column. */
 @utility home-journey {
   --grid-gap: var(--nx-spacing-6);
-  --story-toolbar-clearance: var(--nx-spacing-28);
+  /* Every section has the same space above its title and below its preview,
+     so the gap between any two sections is the same. The space below also
+     keeps the floating toolbar clear of the preview. */
+  --section-space-top: var(--nx-spacing-8);
+  --section-space-bottom: var(--nx-spacing-24);
+  /* About one title block, so a section is about one screen tall. */
+  --heading-allowance: 11rem;
+  --preview-fade: var(--nx-spacing-24);
   --preview-min: 24rem;
-  --preview-max: none;
+  --preview-max: 100svh;
 
   /* Desktop previews stop at 60% of the column's width. */
   @media (width >= 64rem) {
+    --section-space-top: var(--nx-spacing-12);
     --preview-min: 30rem;
     --preview-max: calc(
       0.6 * min(100vw - 2 * var(--nx-spacing-8), var(--site-column))
@@ -45,22 +53,15 @@
   }
 }
 
-/* At least one screen below the header: the title block, then the preview
-   in the rest. A capped preview centers with its title. */
+/* The title block, then the preview. */
 @utility home-section {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  min-block-size: calc(100svh - var(--site-header-h));
-  padding-block-start: var(--nx-spacing-8);
+  padding-block: var(--section-space-top) var(--section-space-bottom);
   /* Land right under the header, not with the docs headings' extra space. */
   scroll-margin-block-start: calc(
     var(--site-header-h) - var(--docs-scroll-offset)
   );
-
-  @media (width >= 64rem) {
-    padding-block-start: var(--nx-spacing-12);
-  }
 }
 
 @utility chapter-heading {
@@ -98,13 +99,20 @@
   gap: var(--nx-spacing-3);
 }
 
+/* The rest of the screen below the header, the section's spaces and a title
+   block, kept between the minimum and the desktop cap. */
 @utility story-canvas {
   container: story-canvas / size;
   position: relative;
   isolation: isolate;
-  flex: 1 1 0;
-  min-block-size: var(--preview-min);
-  max-block-size: var(--preview-max);
+  block-size: max(
+    var(--preview-min),
+    min(
+      100svh - var(--site-header-h) - var(--section-space-top) -
+        var(--section-space-bottom) - var(--heading-allowance),
+      var(--preview-max)
+    )
+  );
 
   /* The chapter fills the preview, whatever height the section gives it. */
   & > * {
@@ -119,8 +127,7 @@
   @media (width < 64rem) {
     &.nx\:story-canvas {
       container-type: inline-size;
-      flex: none;
-      min-block-size: auto;
+      block-size: auto;
     }
     &.nx\:story-canvas > * {
       position: static;
@@ -163,8 +170,8 @@
 @utility preview-fade {
   mask-image: linear-gradient(
     to bottom,
-    #000 calc(100% - var(--story-toolbar-clearance)),
-    #000a calc(100% - var(--story-toolbar-clearance) / 2),
+    #000 calc(100% - var(--preview-fade)),
+    #000a calc(100% - var(--preview-fade) / 2),
     transparent 100%
   );
 }

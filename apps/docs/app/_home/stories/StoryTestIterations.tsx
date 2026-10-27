@@ -433,7 +433,7 @@ export function StoryTestIterations({
         role="region"
         aria-labelledby={`story-tab-${CHAPTER}-${modeIndex}`}
       >
-        <div className="nx:flex nx:flex-col nx:gap-4 nx:pb-(--story-toolbar-clearance) nx:@3xl:h-full">
+        <div className="nx:flex nx:flex-col nx:gap-4 nx:@3xl:h-full">
           <Card className="nx:flex nx:flex-col nx:@3xl:grid nx:@3xl:min-h-0 nx:@3xl:flex-1 nx:@3xl:grid-cols-2">
             <div
               className="nx:flex nx:min-h-0 nx:flex-col"

@@ -193,16 +193,17 @@ const shadcnSelect: Library = {
 // One example per host app.
 const hosts = [
   {
-    tab: 'HeroUI',
-    clash: 'Token name clash',
-    adds: shadcnSelect,
+    tab: 'shadcn/ui',
+    clash: 'Specificity clash',
+    adds: {
+      name: 'react-bootstrap Dropdown',
+      file: 'bootstrap.min.css',
+    },
     writes: [
-      ['--accent', 'accent'],
-      ['--muted', 'muted'],
-      ['--background', 'surface'],
-      ['--radius', 'surface'],
+      ['.bg-primary { background-color: … !important }', 'primary'],
+      ['button { border-radius: 0 }', 'action'],
     ],
-    Sketch: TokensSketch,
+    Sketch: PrimarySketch,
   },
   {
     tab: 'MUI',
@@ -232,17 +233,16 @@ const hosts = [
     Sketch: NavSketch,
   },
   {
-    tab: 'shadcn/ui',
-    clash: 'Specificity clash',
-    adds: {
-      name: 'react-bootstrap Dropdown',
-      file: 'bootstrap.min.css',
-    },
+    tab: 'HeroUI',
+    clash: 'Token name clash',
+    adds: shadcnSelect,
     writes: [
-      ['.bg-primary { background-color: … !important }', 'primary'],
-      ['button { border-radius: 0 }', 'action'],
+      ['--accent', 'accent'],
+      ['--muted', 'muted'],
+      ['--background', 'surface'],
+      ['--radius', 'surface'],
     ],
-    Sketch: PrimarySketch,
+    Sketch: TokensSketch,
   },
 ] as const;
 

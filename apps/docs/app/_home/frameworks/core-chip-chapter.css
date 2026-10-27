@@ -27,13 +27,6 @@
   inline-size: 100%;
   block-size: 100%;
   min-block-size: 0;
-  padding-block-end: var(--story-toolbar-clearance);
-  mask-image: linear-gradient(
-    to bottom,
-    #000 calc(100% - var(--story-toolbar-clearance)),
-    #000a calc(100% - var(--story-toolbar-clearance) / 2),
-    transparent 100%
-  );
 
   &[data-flow-motion='true'] .nx\:chip-trace[data-flowing='true'] > i {
     animation: flow-signal 2200ms linear infinite;

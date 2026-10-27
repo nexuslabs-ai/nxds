@@ -15,7 +15,7 @@ export function Community() {
   return (
     <section
       id="community"
-      className="nx:site-column nx:py-24"
+      className="nx:site-column nx:home-section"
       aria-labelledby="community-title"
     >
       <div className="nx:chapter-heading">

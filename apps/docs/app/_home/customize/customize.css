@@ -6,14 +6,14 @@
   container: component-wall / inline-size;
   block-size: 100%;
   overflow: hidden;
-  scroll-padding-block-end: var(--story-toolbar-clearance);
+  scroll-padding-block-end: var(--preview-fade);
 }
 
 @utility component-wall-grid {
   columns: 1;
   column-gap: var(--grid-gap);
-  /* Scroll room, so focus can bring the last tiles above the toolbar. */
-  padding-block-end: var(--story-toolbar-clearance);
+  /* Scroll room, so focus can bring the last tiles above the fade. */
+  padding-block-end: var(--preview-fade);
 
   @container component-wall (min-width: 40rem) {
     columns: 2;

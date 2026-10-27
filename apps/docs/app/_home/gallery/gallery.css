@@ -7,11 +7,11 @@
   align-items: flex-start;
   gap: var(--grid-gap);
   overflow: hidden;
-  scroll-padding-block-end: var(--story-toolbar-clearance);
+  scroll-padding-block-end: var(--preview-fade);
 
-  /* Scroll room, so focus can bring a column's last control above the toolbar. */
+  /* Scroll room, so focus can bring a column's last control above the fade. */
   & > div {
-    padding-block-end: var(--story-toolbar-clearance);
+    padding-block-end: var(--preview-fade);
   }
 
   /* Phones: one wall column at a time. Swipe sideways; the next one peeks in. */

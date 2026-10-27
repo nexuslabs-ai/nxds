@@ -12,7 +12,6 @@
   block-size: 100%;
   min-block-size: 0;
   overflow: hidden;
-  padding-block-end: var(--story-toolbar-clearance);
 }
 
 /* Your app: a box with the app's name, holding the other library and Nexus
