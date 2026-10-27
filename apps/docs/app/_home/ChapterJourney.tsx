@@ -4,17 +4,18 @@ import { type CSSProperties, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/button/button';
 
+import { SiteFooter } from '../_components/SiteFooter';
 import { requirePage, requireSection } from '../_lib/manifest';
 import { STORYBOOK_URL } from '../_lib/site';
 
 import { ChapterToolbar } from './ChapterToolbar';
 import { CoexistLanes, hostTabs } from './coexist/CoexistLanes';
+import { Community } from './Community';
 import { AppearanceActions } from './customize/AppearanceActions';
 import { AppearanceControls } from './customize/AppearanceControls';
 import { CustomizeCanvas } from './customize/CustomizeCanvas';
 import { CoreChipChapter } from './frameworks/CoreChipChapter';
 import { ShowcaseWall } from './gallery/ShowcaseWall';
-import { SiteFooter } from './SiteFooter';
 import type { StoryCode } from './stories/story-code';
 import { storyModes } from './stories/story-test-model';
 import { StoryTestIterations } from './stories/StoryTestIterations';
@@ -162,7 +163,10 @@ export function ChapterJourney({ storyCode }: { storyCode: StoryCode }) {
     >
       <div className="nx:chapter-stage" data-footer={!current} ref={stage}>
         {!current ? (
-          <SiteFooter key="footer" />
+          <>
+            <Community />
+            <SiteFooter className="nx:story-chapter-content" />
+          </>
         ) : current.id === 'stories' ? (
           <StoryTestIterations
             cta={current.cta}

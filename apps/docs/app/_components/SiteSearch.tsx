@@ -4,25 +4,27 @@ import { useEffect, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { PAGE_MANIFEST } from '../_lib/manifest';
-import { PLAYGROUND_VIEWS } from '../_lib/playground-views';
-import { IconSearch } from '../_lib/switchable-icons';
-
+import { Button } from '@/components/button/button';
 import {
-  Button,
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
+} from '@/components/command/command';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
   DialogTrigger,
-  Kbd,
-} from './nxds';
+} from '@/components/dialog/dialog';
+import { Kbd } from '@/components/kbd/kbd';
+
+import { PAGE_MANIFEST } from '../_lib/manifest';
+import { PLAYGROUND_VIEWS } from '../_lib/playground-views';
+import { IconSearch } from '../_lib/switchable-icons';
 
 // The Playground routes and every page in the generated manifest (the same
 // source the nav and routes read), so search stays in sync as pages are added.

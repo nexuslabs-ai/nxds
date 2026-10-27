@@ -4,12 +4,15 @@ import { useNxdsAppearance } from '@nxds/react/appearance';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { Button } from '@/components/button/button';
+import { Hide } from '@/components/hide/hide';
+import { Show } from '@/components/show/show';
+
 import { HEADER_LINKS, isActive } from '../_lib/nav-links';
 import { REPO_URL } from '../_lib/site';
 import { GitHubMark, SiteMoonIcon, SiteSunIcon } from '../_lib/site-icons';
 import { brandLinkClassName, navLinkClassName } from '../_lib/site-links';
 
-import { Button, Hide, Show } from './nxds';
 import { SiteMenu } from './SiteMenu';
 import { SiteSearch } from './SiteSearch';
 

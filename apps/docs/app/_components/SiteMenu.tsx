@@ -7,20 +7,21 @@ import { CaretDownIcon } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import type { ManifestSection } from '../_lib/manifest';
-import { isActive, NAV_LINKS } from '../_lib/nav-links';
-import { REPO_URL } from '../_lib/site';
-import { GitHubMark, SiteMenuIcon } from '../_lib/site-icons';
-
+import { Button } from '@/components/button/button';
 import {
-  Button,
   Sheet,
   SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from './nxds';
+} from '@/components/sheet/sheet';
+
+import type { ManifestSection } from '../_lib/manifest';
+import { isActive, NAV_LINKS } from '../_lib/nav-links';
+import { REPO_URL } from '../_lib/site';
+import { GitHubMark, SiteMenuIcon } from '../_lib/site-icons';
+
 import { SectionPageList } from './SectionPageList';
 
 const ROW_BASE =

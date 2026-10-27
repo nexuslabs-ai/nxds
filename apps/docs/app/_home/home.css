@@ -59,8 +59,10 @@
   gap: var(--nx-spacing-4);
   padding: var(--nx-spacing-6) var(--nx-spacing-8) 0;
 
+  /* The last stage: the community links, then the full-width site footer. */
   &[data-footer='true'] {
     grid-template-rows: minmax(0, 1fr) auto;
+    padding-inline: 0;
   }
   @media (max-width: 700px) {
     padding-inline: var(--nx-spacing-4);
@@ -174,26 +176,5 @@
   /* Outranks the narrow chapter-heading rule that reserves two lines. */
   & .nx\:chapter-heading h1 {
     min-block-size: auto;
-  }
-}
-
-@utility story-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--nx-spacing-8);
-  padding-block: var(--nx-spacing-8);
-  border-top: var(--nx-borderwidth-default) solid var(--nx-color-border-default);
-  animation: story-arrive var(--nx-motion-duration-slow)
-    var(--nx-motion-ease-enter) both;
-
-  & nav {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--nx-spacing-2) var(--nx-spacing-6);
-  }
-  @media (max-width: 700px) {
-    flex-direction: column;
   }
 }

@@ -443,11 +443,13 @@ export default tseslint.config(
   {
     // The playground and the homepage preview the reader's icon library, which
     // only the components built from source can draw (see
-    // apps/docs/next.config.ts).
+    // apps/docs/next.config.ts). The site header and footer share the
+    // homepage's source-built parts, so the homepage loads one copy of each.
     files: [
       'apps/docs/app/_lib/switchable-icons.tsx',
       'apps/docs/app/_workspace/sampler.tsx',
       'apps/docs/app/_home/**/*.{ts,tsx}',
+      'apps/docs/app/_components/Site*.tsx',
     ],
     rules: { 'no-restricted-imports': 'off' },
   },
