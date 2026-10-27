@@ -34,7 +34,20 @@
 
 :root {
   --site-header-h: 4rem;
+  --site-column: 80rem;
   --docs-scroll-offset: calc(var(--site-header-h) + 1.5rem);
   /* ThemePicker overwrites this with the panel's measured height. */
   --docs-panel-offset: 0px;
+}
+
+/* The one content column of the site: header, footer, docs and homepage. */
+@utility site-column {
+  inline-size: 100%;
+  max-inline-size: calc(var(--site-column) + 2 * var(--nx-spacing-8));
+  margin-inline: auto;
+  padding-inline: var(--nx-spacing-4);
+
+  @media (width >= 48rem) {
+    padding-inline: var(--nx-spacing-8);
+  }
 }

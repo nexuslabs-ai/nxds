@@ -71,7 +71,7 @@ export function SiteFooter({ className }: { className?: string }) {
         className
       )}
     >
-      <div className="nx:flex nx:flex-col nx:gap-8 nx:px-4 nx:py-8 nx:md:flex-row nx:md:justify-between nx:md:px-8">
+      <div className="nx:site-column nx:flex nx:flex-col nx:gap-8 nx:py-8 nx:md:flex-row nx:md:justify-between">
         <div className="nx:flex nx:flex-col nx:gap-1">
           <Button
             asChild
