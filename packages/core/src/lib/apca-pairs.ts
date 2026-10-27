@@ -41,6 +41,8 @@ const CATEGORICAL_INDICES = CHART_PALETTE_REFERENCES.map(
 // categories differ in lightness as well as hue.
 const CHART_STAGGER_LC = 4.5;
 
+const DIFF_SURFACES = ['success-subtle', 'error-subtle'] as const;
+
 const FOCUS_SURFACES = [
   'background',
   'container',
@@ -107,6 +109,17 @@ export const APCA_PAIRS = [
       offset: (index - 1) * CHART_STAGGER_LC,
     }))
   ),
+  // A CodeBlock diff line tints the whole line, so its syntax colors
+  // (codeBlockTheme) must read on the success and error tints too.
+  ...DIFF_SURFACES.flatMap((bg) => [
+    ...CATEGORICAL_INDICES.map((index) => ({
+      ...ink(`chart-categorical-${index}`, bg, 'ui'),
+      offset: (index - 1) * CHART_STAGGER_LC,
+    })),
+    text('foreground', bg, 'ui'),
+    text('muted-foreground', bg, 'ui'),
+    text('muted-foreground-subtle', bg, 'incidental'),
+  ]),
   // Focus is the primary accent (components.md § Focus States), so it shares
   // one solved color with primary-subtle-foreground.
   ...FOCUS_SURFACES.flatMap((surface) => [

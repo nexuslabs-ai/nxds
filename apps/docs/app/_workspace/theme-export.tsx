@@ -6,6 +6,7 @@ import {
 } from '@nxds/core';
 import {
   Button,
+  CodeBlockLine,
   Dialog,
   DialogBody,
   DialogContent,
@@ -40,8 +41,13 @@ function ExportFiles() {
   return files.map((file) => (
     <section key={file.name} className="nx:space-y-2">
       <h3 className="nx:typography-label-default">{file.name}</h3>
-      <CodeBlock className="nx:max-h-64 nx:overflow-y-auto">
-        <code>{file.code}</code>
+      <CodeBlock className="nx:max-h-64">
+        {file.code
+          .trimEnd()
+          .split('\n')
+          .map((line, index) => (
+            <CodeBlockLine key={index}>{line}</CodeBlockLine>
+          ))}
       </CodeBlock>
     </section>
   ));

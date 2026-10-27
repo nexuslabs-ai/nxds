@@ -1,10 +1,9 @@
 import type { NextMDXOptions } from '@next/mdx';
+import { codeBlockTheme } from '@nxds/react/code-block-theme';
 import type { Options } from 'rehype-pretty-code';
 
-import { NXDS_CODE_THEME } from './code-theme';
-
 const SHIKI_OPTIONS = {
-  theme: NXDS_CODE_THEME,
+  theme: codeBlockTheme,
   keepBackground: false,
   grid: false,
   // Only fills in a fence that declares no language; an unknown grammar is

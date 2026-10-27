@@ -1,103 +1,68 @@
-'use client';
-
 import * as React from 'react';
 
 import { cn } from '@nxds/react/utils';
-import { IconCheck, IconCopy, IconX } from '@tabler/icons-react';
 
-import { useCopyAnnouncer } from './CopyAnnouncer';
-import { Button } from './nxds';
+import {
+  CodeBlock as NxdsCodeBlock,
+  CodeBlockContent,
+  CodeBlockCopyButton,
+  CodeBlockLine,
+} from './nxds';
 
-const RESET_DELAY_MS = 2000;
-
-const COPY_STATUS = {
-  idle: { icon: <IconCopy /> },
-  copied: { icon: <IconCheck />, message: 'Code copied to clipboard' },
-  failed: { icon: <IconX />, message: 'Could not copy code' },
-};
-
-type CopyStatus = keyof typeof COPY_STATUS;
-
-// Every docs code block — MDX fence and `CodeSample` alike —
-// renders through here, so this is the one code-block surface. `bg-container`
-// is the surface the syntax colours are APCA-gated against; `pe-14` keeps the
-// copy control clear of the code; the `code` resets undo the inline-code
-// styling the MDX `code` override applies inside a fence.
-const PRE_CLASS =
-  'nx:typography-code-block nx:bg-container nx:border nx:border-border-default nx:rounded-md nx:p-4 nx:pe-14 nx:overflow-x-auto nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:[&_code]:bg-transparent nx:[&_code]:p-0 nx:[&_code]:typography-code-block';
-
-// Inside a card the block sits flush, so its outline is inset to survive the
-// card's `overflow-hidden`.
-const FRAMED_PRE_CLASS =
-  'nx:rounded-none nx:border-0 nx:focus-visible:-outline-offset-2';
-
-const BUTTON_CLASS =
-  'nx:absolute nx:top-2 nx:end-2 nx:data-[copy-status=copied]:text-success-subtle-foreground nx:data-[copy-status=failed]:text-error-subtle-foreground';
-
-/** The MDX `<pre>` override: the code block plus a control that copies it. */
+/**
+ * Every docs code block — MDX fence, `CodeSample` and plain text alike —
+ * renders through here, so the docs have one code-block surface, each with a
+ * copy control.
+ */
 export function CodeBlock({
-  children,
-  className,
   framed = false,
+  className,
+  children,
   ...props
-}: Omit<React.ComponentProps<'pre'>, 'tabIndex' | 'ref'> & {
+}: {
   /** Sits flush inside a bordered card instead of standing on its own. */
   framed?: boolean;
+  /** Classes for the scroll region, such as a max height. */
+  className?: string;
+  /** One `CodeBlockLine` per line. */
+  children: React.ReactNode;
+  [dataAttribute: `data-${string}`]: string | undefined;
 }) {
-  const preRef = React.useRef<HTMLPreElement>(null);
-  const timerRef = React.useRef<number | undefined>(undefined);
-  const [status, setStatus] = React.useState<CopyStatus>('idle');
-  const announce = useCopyAnnouncer();
+  return (
+    <NxdsCodeBlock
+      variant={framed ? 'flush' : 'default'}
+      className={cn(!framed && 'nx:mb-4')}
+      {...props}
+    >
+      <CodeBlockContent className={className}>{children}</CodeBlockContent>
+      <CodeBlockCopyButton />
+    </NxdsCodeBlock>
+  );
+}
 
-  React.useEffect(() => () => window.clearTimeout(timerRef.current), []);
+type FenceLine = React.ReactElement<{ children?: React.ReactNode }>;
 
-  const settle = (next: Exclude<CopyStatus, 'idle'>) => {
-    setStatus(next);
-    announce(COPY_STATUS[next].message);
-    window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(
-      () => setStatus('idle'),
-      RESET_DELAY_MS
-    );
-  };
-
-  const handleCopy = async () => {
-    const source = preRef.current?.textContent;
-    if (!source) {
-      settle('failed');
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(source);
-      settle('copied');
-    } catch {
-      settle('failed');
-    }
-  };
+/**
+ * The MDX `<pre>` override. rehype-pretty-code renders a fence as a `code`
+ * of one `span` per line, with a newline between them; each span becomes a
+ * `CodeBlockLine`.
+ */
+export function MdxCodeBlock({
+  children,
+  'data-language': language,
+}: React.ComponentProps<'pre'> & { 'data-language'?: string }) {
+  const code = React.isValidElement<{ children?: React.ReactNode }>(children)
+    ? children.props.children
+    : children;
+  const lines = React.Children.toArray(code).filter((line): line is FenceLine =>
+    React.isValidElement(line)
+  );
 
   return (
-    <div className={cn('nx:relative', !framed && 'nx:mb-4')}>
-      <pre
-        className={cn(PRE_CLASS, framed && FRAMED_PRE_CLASS, className)}
-        {...props}
-        ref={preRef}
-        // Below the spread so an injected `tabIndex` cannot replace this one.
-        // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrolling code block needs a tab stop to scroll by keyboard (WCAG 2.1.1)
-        tabIndex={0}
-      >
-        {children}
-      </pre>
-      <Button
-        variant="outline"
-        size="icon-sm"
-        aria-label="Copy code"
-        data-copy-status={status}
-        className={BUTTON_CLASS}
-        onClick={handleCopy}
-      >
-        {COPY_STATUS[status].icon}
-      </Button>
-    </div>
+    <CodeBlock data-language={language}>
+      {lines.map((line, index) => (
+        <CodeBlockLine key={index}>{line.props.children}</CodeBlockLine>
+      ))}
+    </CodeBlock>
   );
 }
