@@ -13,8 +13,12 @@ import { Toggle } from '@/components/toggle/toggle';
 
 import { toolIcons, type ToolName } from '../tool-icons';
 
-/** A part of the host app's sketch that reads a name a library writes. */
+/**
+ * A part of the host app's sketch that reads a name a library writes. `mode`
+ * is the whole app, which follows the light or dark mode.
+ */
 type Part =
+  | 'mode'
   | 'accent'
   | 'muted'
   | 'surface'
@@ -78,7 +82,7 @@ function TokensSketch({ broken, pointed }: SketchProps) {
     <div
       className="nx:coexist-lanes-app"
       data-broken={broken}
-      data-active={isPointed(pointed, 'surface')}
+      data-active={isPointed(pointed, 'mode', 'surface')}
       aria-hidden="true"
     >
       <span className="nx:grid nx:gap-1">
@@ -110,6 +114,7 @@ function ResetSketch({ broken, pointed }: SketchProps) {
     <div
       className="nx:coexist-lanes-app"
       data-broken={broken}
+      data-active={isPointed(pointed, 'mode')}
       aria-hidden="true"
     >
       <div className="nx:grid nx:gap-2">
@@ -138,6 +143,7 @@ function NavSketch({ broken, pointed }: SketchProps) {
     <div
       className="nx:coexist-lanes-app"
       data-broken={broken}
+      data-active={isPointed(pointed, 'mode')}
       aria-hidden="true"
     >
       <span className="nx:typography-label-default">Acme</span>
@@ -161,6 +167,7 @@ function PrimarySketch({ broken, pointed }: SketchProps) {
     <div
       className="nx:coexist-lanes-app"
       data-broken={broken}
+      data-active={isPointed(pointed, 'mode')}
       aria-hidden="true"
     >
       <span className="nx:coexist-lanes-app-row">
@@ -207,6 +214,8 @@ type HostExample = {
   clash: string;
   adds: Library;
   writes: readonly Write[];
+  /** The app reads `.dark` on `<html>`, so it follows the mode Nexus sets. */
+  readsDark: boolean;
   Sketch: typeof TokensSketch;
 };
 
@@ -222,6 +231,7 @@ const hosts: Record<HostTab, HostExample> = {
       ['.bg-primary { background-color: … !important }', 'primary'],
       ['button { border-radius: 0 }', 'action'],
     ],
+    readsDark: true,
     Sketch: PrimarySketch,
   },
   MUI: {
@@ -231,6 +241,7 @@ const hosts: Record<HostTab, HostExample> = {
       ['h1–h6 { font-size: inherit }', 'heading'],
       ['ul { list-style: none }', 'list'],
     ],
+    readsDark: false,
     Sketch: ResetSketch,
   },
   'Ant Design': {
@@ -240,12 +251,14 @@ const hosts: Record<HostTab, HostExample> = {
       ['h1–h6 { font-size: inherit }', 'heading'],
       ['ul { list-style: none }', 'list'],
     ],
+    readsDark: false,
     Sketch: ResetSketch,
   },
   Bootstrap: {
     clash: 'Class name clash',
     adds: shadcnSelect,
     writes: [['.collapse { visibility: collapse }', 'nav']],
+    readsDark: false,
     Sketch: NavSketch,
   },
   HeroUI: {
@@ -257,25 +270,28 @@ const hosts: Record<HostTab, HostExample> = {
       ['--background', 'surface'],
       ['--radius', 'surface'],
     ],
+    readsDark: true,
     Sketch: TokensSketch,
   },
 };
 
-const nexusLane: Lane = {
-  lane: 'nexus',
-  name: 'Nexus Select',
-  file: 'nxds.css',
-  // The provider owns light and dark mode: it sets `.dark` on <html>, which
-  // shadcn/ui and HeroUI read too, so they follow the same mode.
-  writes: [
-    ['--nx-*', null],
-    ['.nx:*', null],
-    ['html.dark (shared mode)', null],
-    ['html[data-*]', null],
-  ],
-  verdict: 'Your app stays the same',
-  verdictIcon: <IconCircleCheck className="nx:size-4" aria-hidden="true" />,
-};
+// The provider owns light and dark mode: it sets `.dark` on <html>. An app
+// that reads `.dark` too follows the same mode.
+function nexusLane(readsDark: boolean): Lane {
+  return {
+    lane: 'nexus',
+    name: 'Nexus Select',
+    file: 'nxds.css',
+    writes: [
+      ['--nx-*', null],
+      ['.nx:*', null],
+      ['html.dark (shared mode)', readsDark ? 'mode' : null],
+      ['html[data-*]', null],
+    ],
+    verdict: 'Your app stays the same',
+    verdictIcon: <IconCircleCheck className="nx:size-4" aria-hidden="true" />,
+  };
+}
 
 /** Another library and a Nexus Select, each added to the chosen host app. */
 export function CoexistLanes({ host }: { host: HostTab }) {
@@ -283,7 +299,8 @@ export function CoexistLanes({ host }: { host: HostTab }) {
 }
 
 // Pointing at a name outlines, in both apps, the part that reads it. Nexus
-// names reach no part. Hover or focus previews a name; pressing it pins it.
+// names reach no part, except the shared mode in an app that reads `.dark`.
+// Hover or focus previews a name; pressing it pins it.
 function HostLanes({ tab, example }: { tab: HostTab; example: HostExample }) {
   const [hovered, setHovered] = useState<Target | null>(null);
   const [pinned, setPinned] = useState<Target | null>(null);
@@ -301,7 +318,7 @@ function HostLanes({ tab, example }: { tab: HostTab; example: HostExample }) {
       ),
       clash: example.clash,
     },
-    nexusLane,
+    nexusLane(example.readsDark),
   ];
   return (
     <div className="nx:coexist-lanes-chapter nx:@container">

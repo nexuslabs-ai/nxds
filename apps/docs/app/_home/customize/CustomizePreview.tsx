@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import type { HomeSection } from '../active-section';
 import { ChapterPreview } from '../ChapterPreview';
 
 import { AppearanceActions } from './AppearanceActions';
@@ -16,7 +17,7 @@ import { ComponentWall } from './ComponentWall';
  * The Customize chapter's preview: the component wall, in the page's own
  * appearance, and the toolbar that edits it.
  */
-export function CustomizePreview({ chapter }: { chapter: string }) {
+export function CustomizePreview({ chapter }: { chapter: HomeSection }) {
   const [tool, setTool] = useState<CustomizeTool>(customizeTools[0]);
   return (
     <ChapterPreview

@@ -4,6 +4,11 @@ import { type SyntheticEvent, useState } from 'react';
 
 import {
   IconBorderAll,
+  IconBrandAngular,
+  IconBrandReact,
+  IconBrandReactNative,
+  IconBrandSvelte,
+  IconBrandVue,
   IconBrightness,
   IconShadow,
   IconStack2,
@@ -14,7 +19,7 @@ import { Badge } from '@/components/badge/badge';
 import { Button } from '@/components/button/button';
 import { Toggle } from '@/components/toggle/toggle';
 
-import { toolIcons, type ToolName } from '../tool-icons';
+import { toolIcons } from '../tool-icons';
 
 const inputGroups = [
   {
@@ -62,9 +67,17 @@ export const frameworks = [
   'Svelte',
   'Angular',
   'React Native',
-] as const satisfies readonly ToolName[];
+] as const;
 
 export type Framework = (typeof frameworks)[number];
+
+const frameworkIcons = {
+  React: IconBrandReact,
+  Vue: IconBrandVue,
+  Svelte: IconBrandSvelte,
+  Angular: IconBrandAngular,
+  'React Native': IconBrandReactNative,
+};
 
 const frameworkStatus: Record<Framework, string> = {
   React: 'Components',
@@ -231,7 +244,7 @@ export function CoreChipChapter({
           <span className="nx:framework-column-label">Frameworks</span>
           <div className="nx:chip-destinations">
             {frameworks.map((name) => {
-              const Icon = toolIcons[name];
+              const Icon = frameworkIcons[name];
               const status = frameworkStatus[name];
               const flowing =
                 Boolean(active) && (!activeFramework || active === name);

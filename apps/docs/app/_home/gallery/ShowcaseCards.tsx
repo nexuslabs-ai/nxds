@@ -120,7 +120,7 @@ function ShowcaseCard({
       <div className="nx:showcase-body nx:p-container">
         <CardHeader className="nx:showcase-heading nx:items-center nx:p-0">
           <CardTitle asChild>
-            <h3 id={id}>{title}</h3>
+            <h2 id={id}>{title}</h2>
           </CardTitle>
           {action && (
             <CardAction className="nx:row-span-1 nx:self-center">

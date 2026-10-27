@@ -15,7 +15,7 @@ export type StoryCode = Record<string, StoryCodeToken[][]>;
  */
 export async function highlightStories(): Promise<StoryCode> {
   const sources = new Map<string, string>();
-  for (const mode of storyModes)
+  for (const mode of Object.values(storyModes))
     for (const { value } of mode.options) {
       const { name, source } = describeStory(mode.id, value);
       const code = source.join('\n');

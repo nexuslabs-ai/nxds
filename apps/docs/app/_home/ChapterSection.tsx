@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 
 import { requireSection } from '../_lib/manifest';
 
+import type { HomeSection } from './active-section';
+
 const GET_STARTED_HREF = requireSection('getting-started').href;
 
 /** One homepage chapter: its title block, then its preview as `children`. */
@@ -19,7 +21,7 @@ export function ChapterSection({
   className,
   children,
 }: {
-  id: string;
+  id: HomeSection;
   title: string;
   /** The page's first chapter title is its `h1`. */
   level?: 1 | 2;

@@ -4,23 +4,27 @@ import { REPO_URL } from '../_lib/site';
 import { DiscordMark, GitHubMark, XMark } from '../_lib/site-icons';
 import { DISCORD_URL, X_URL } from '../_lib/site-links';
 
+import type { HomeSection } from './active-section';
+
 const communityLinks = [
   { name: 'GitHub', href: REPO_URL, Mark: GitHubMark },
   { name: 'Discord', href: DISCORD_URL, Mark: DiscordMark },
   { name: 'X', href: X_URL, Mark: XMark },
 ];
 
+const SECTION: HomeSection = 'community';
+
 /** The last section of the homepage, above the site footer: the community links. */
 export function Community() {
   return (
     <section
-      id="community"
+      id={SECTION}
       data-home-section
       className="nx:site-column nx:home-section"
-      aria-labelledby="community-title"
+      aria-labelledby={`${SECTION}-title`}
     >
       <div className="nx:chapter-heading">
-        <h2 id="community-title">Build Nexus with us.</h2>
+        <h2 id={`${SECTION}-title`}>Build Nexus with us.</h2>
         <p className="nx:m-0 nx:typography-body-default nx:text-muted-foreground">
           Join the community. Ask, share and help shape what comes next.
         </p>

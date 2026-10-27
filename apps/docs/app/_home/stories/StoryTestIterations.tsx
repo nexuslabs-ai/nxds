@@ -49,8 +49,8 @@ import {
   IconMinus,
   IconX,
 } from '../../_lib/switchable-icons';
+import type { HomeSection } from '../active-section';
 import { ChapterPreview } from '../ChapterPreview';
-import type { ToolName } from '../tool-icons';
 
 import type { StoryCode } from './story-code';
 import {
@@ -60,12 +60,11 @@ import {
   initialChecks,
   result,
   resultSummary,
-  storyModeAt,
   type StoryModeId,
   storyModes,
+  type StoryTool,
+  storyTools,
 } from './story-test-model';
-
-const tabs = storyModes.map(({ label }) => label);
 
 const checkBadges: Record<
   CheckStatus,
@@ -124,12 +123,12 @@ export function StoryTestIterations({
   storyCode,
 }: {
   /** The id of the section this preview sits in. */
-  chapter: string;
+  chapter: HomeSection;
   /** Every story's highlighted source, from `highlightStories()`. */
   storyCode: StoryCode;
 }) {
   const { state } = useNxdsAppearance();
-  const [modeIndex, setModeIndex] = useState(1);
+  const [tool, setTool] = useState<StoryTool>('Interactions');
   const [choices, setChoices] = useState<Record<StoryModeId, string>>({
     states: 'off',
     interactions: 'click',
@@ -150,7 +149,7 @@ export function StoryTestIterations({
   const spacePressed = useRef(false);
   const frame = useRef(0);
   const id = useId();
-  const mode = storyModeAt(modeIndex);
+  const mode = storyModes[tool];
   const choice = choices[mode.id];
   const story = describeStory(mode.id, choice);
   const disabled =
@@ -183,12 +182,11 @@ export function StoryTestIterations({
     );
   }
 
-  function selectMode(label: ToolName) {
-    const index = tabs.indexOf(label);
-    if (index === modeIndex) return;
-    const nextMode = storyModeAt(index).id;
+  function selectTool(next: StoryTool) {
+    if (next === tool) return;
+    const nextMode = storyModes[next].id;
     reset(nextMode, choices[nextMode]);
-    setModeIndex(index);
+    setTool(next);
   }
 
   function selectChoice(value: string) {
@@ -442,9 +440,9 @@ export function StoryTestIterations({
     <ChapterPreview
       chapter={chapter}
       label="Stories"
-      tools={tabs}
-      selected={mode.label}
-      onSelect={selectMode}
+      tools={storyTools}
+      selected={tool}
+      onSelect={selectTool}
       grows
       actions={runButton}
       panel={modePanel}

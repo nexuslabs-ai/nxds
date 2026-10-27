@@ -17,7 +17,7 @@ import {
   TooltipTrigger,
 } from '@/components/tooltip/tooltip';
 
-import { useActiveSection } from './active-section';
+import { type HomeSection, useActiveSection } from './active-section';
 import { toolIcons, type ToolName } from './tool-icons';
 
 /**
@@ -38,7 +38,7 @@ export function ChapterPreview<T extends ToolName>({
   children,
 }: {
   /** The id of the section this preview sits in. */
-  chapter: string;
+  chapter: HomeSection;
   /** Names the toolbar and its tools. */
   label: string;
   tools: readonly T[];

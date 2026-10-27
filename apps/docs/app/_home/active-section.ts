@@ -5,9 +5,21 @@ import { useSyncExternalStore } from 'react';
 // The homepage section on the screen's middle line, or the one holding focus.
 // One observer serves every chapter toolbar.
 
-const FIRST_SECTION = 'explore';
+/** The homepage sections, in page order. */
+const homeSections = [
+  'explore',
+  'customize',
+  'coexist',
+  'frameworks',
+  'stories',
+  'community',
+] as const;
 
-let active = FIRST_SECTION;
+export type HomeSection = (typeof homeSections)[number];
+
+const FIRST_SECTION: HomeSection = homeSections[0];
+
+let active: string = FIRST_SECTION;
 const listeners = new Set<() => void>();
 let stopWatching: (() => void) | undefined;
 
@@ -51,11 +63,12 @@ function subscribe(listener: () => void) {
     if (listeners.size > 0) return;
     stopWatching?.();
     stopWatching = undefined;
+    active = FIRST_SECTION;
   };
 }
 
 /** Whether the homepage section `id` is the active one. */
-export function useActiveSection(id: string): boolean {
+export function useActiveSection(id: HomeSection): boolean {
   return useSyncExternalStore(
     subscribe,
     () => active === id,

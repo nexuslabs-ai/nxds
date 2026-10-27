@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 
+import type { HomeSection } from '../active-section';
 import { ChapterPreview } from '../ChapterPreview';
 
 import { CoexistLanes, type HostTab, hostTabs } from './CoexistLanes';
 
 /** The Coexist chapter's preview: one host app, and the app it picks. */
-export function CoexistPreview({ chapter }: { chapter: string }) {
+export function CoexistPreview({ chapter }: { chapter: HomeSection }) {
   const [host, setHost] = useState<HostTab>(hostTabs[0]);
   return (
     <ChapterPreview
