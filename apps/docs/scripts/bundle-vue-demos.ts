@@ -27,7 +27,7 @@ await build({
   build: {
     outDir: bundleDir,
     emptyOutDir: true,
-    lib: { entry, formats: ['es'], fileName: 'entry' },
+    lib: { entry, formats: ['es'], fileName: 'entry', cssFileName: 'entry' },
   },
 });
 

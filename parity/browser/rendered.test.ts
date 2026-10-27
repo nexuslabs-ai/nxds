@@ -18,6 +18,7 @@ import {
   renderedAttributeDifferences,
   renderedDifferences,
   shared,
+  slotOwners,
 } from '../parity.ts';
 
 /** A stories file: its meta as `default`, and its stories. */
@@ -93,8 +94,13 @@ function docsStories<TStory extends { tags?: string[] }>(
   );
 }
 
-/** The shared component a part belongs to: the longest slug its `data-slot` starts with. */
+/**
+ * The shared component a part belongs to: the one `slotOwners` names, or the
+ * longest slug its `data-slot` starts with.
+ */
 function ownerOf(slot: string) {
+  const named = slotOwners[slot];
+  if (named) return shared.includes(named) ? named : undefined;
   return shared
     .filter((slug) => slot === slug || slot.startsWith(`${slug}-`))
     .reduce<
@@ -334,6 +340,12 @@ describe('rendered docs stories', () => {
       (slug) => count(reactModules, slug) !== 1 || count(vueModules, slug) !== 1
     );
     expect(unread).toEqual([]);
+  });
+
+  it('names only owners that are shared components', () => {
+    expect(
+      Object.entries(slotOwners).filter(([, slug]) => !shared.includes(slug))
+    ).toEqual([]);
   });
 
   it('allows only rendered differences that belong to a shared component', () => {

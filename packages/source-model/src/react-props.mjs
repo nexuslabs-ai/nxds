@@ -214,8 +214,7 @@ function declaringPackage(declaration) {
  * component name and then by package. The props files leave these out, as
  * they do every prop a dependency declares.
  */
-export function reactPackageProps() {
-  const { checker, exported } = reactProgram();
+export function reactPackageProps({ checker, exported } = reactProgram()) {
   const components = publicComponents(checker, exported, componentsRoot);
 
   return new Map(
