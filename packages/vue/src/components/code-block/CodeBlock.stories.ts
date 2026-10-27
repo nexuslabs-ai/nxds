@@ -499,10 +499,10 @@ export const DiffLinesCopy: Story = {
     template: `
       <CodeBlock class="nx:max-w-xl">
         <CodeBlockContent>
-          <CodeBlockLine>{{ '<Button' }}</CodeBlockLine>
-          <CodeBlockLine diff="removed">{{ '  disabled={saving}' }}</CodeBlockLine>
-          <CodeBlockLine diff="added">{{ '  loading={saving}' }}</CodeBlockLine>
-          <CodeBlockLine>{{ '>' }}</CodeBlockLine>
+          <CodeBlockLine :number="1">{{ '<Button' }}</CodeBlockLine>
+          <CodeBlockLine :number="2" diff="removed">{{ '  disabled={saving}' }}</CodeBlockLine>
+          <CodeBlockLine :number="3" diff="added" highlighted>{{ '  loading={saving}' }}</CodeBlockLine>
+          <CodeBlockLine :number="4">{{ '>' }}</CodeBlockLine>
         </CodeBlockContent>
         <CodeBlockCopyButton />
       </CodeBlock>
@@ -516,8 +516,16 @@ export const DiffLinesCopy: Story = {
 
     await expect(lines[1]).toHaveAttribute('data-diff', 'removed');
     await expect(lines[2]).toHaveAttribute('data-diff', 'added');
-    await expect(getComputedStyle(lines[1]!, '::after').content).toBe('"−"');
-    await expect(getComputedStyle(lines[2]!, '::after').content).toBe('"+"');
+    // The marker comes before the code, so readers hear it first.
+    await expect(
+      getComputedStyle(lines[1]!.firstElementChild!, '::before').content
+    ).toBe('"−"');
+    await expect(
+      getComputedStyle(lines[2]!.firstElementChild!, '::before').content
+    ).toBe('"+"');
+    // The marker shares the line's row, so a diff line is one line tall.
+    await expect(lines[1]!.offsetHeight).toBe(lines[0]!.offsetHeight);
+    await expect(lines[2]!.offsetHeight).toBe(lines[0]!.offsetHeight);
     await userEvent.click(canvas.getByRole('button', { name: 'Copy code' }));
     await expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
       '<Button\n  loading={saving}\n>'
@@ -646,6 +654,16 @@ export const AllVariants: Story = {
               <CodeBlockCopyButton />
             </CodeBlock>
           </Card>
+        </div>
+        <div class="nx:flex nx:flex-col nx:gap-2">
+          <span class="nx:text-muted-foreground">Diff lines</span>
+          <CodeBlock>
+            <CodeBlockContent>
+              <CodeBlockLine :number="1" diff="removed">{{ 'npx nxds-cli@latest add card' }}</CodeBlockLine>
+              <CodeBlockLine :number="2" diff="added">{{ installCommand }}</CodeBlockLine>
+            </CodeBlockContent>
+            <CodeBlockCopyButton />
+          </CodeBlock>
         </div>
       </div>
     `,

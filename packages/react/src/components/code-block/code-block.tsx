@@ -103,8 +103,10 @@ function CodeBlockContent({
   );
 }
 
-const codeBlockDiffClasses =
-  "nx:data-diff:after:col-start-2 nx:data-diff:after:row-start-1 nx:data-diff:after:me-2 nx:data-[diff=added]:bg-success-subtle nx:data-[diff=added]:after:text-success-subtle-foreground nx:data-[diff=added]:after:content-['+'] nx:data-[diff=removed]:bg-error-subtle nx:data-[diff=removed]:after:text-error-subtle-foreground nx:data-[diff=removed]:after:content-['−']";
+const codeBlockDiffClasses = {
+  added: "nx:text-success-subtle-foreground nx:before:content-['+']",
+  removed: "nx:text-error-subtle-foreground nx:before:content-['−']",
+};
 
 /**
  * Props for CodeBlockLine.
@@ -121,8 +123,9 @@ interface CodeBlockLineProps extends React.ComponentProps<'span'> {
   status?: 'success' | 'error';
   /**
    * Marks the line as added or removed in a diff. The line gets a green or
-   * red tint and a `+` or `−` before the code. The copy button leaves out
-   * removed lines.
+   * red tint and a `+` or `−` before the code. The tint replaces the
+   * `highlighted` shade, and a `status` edge replaces the highlight edge. The
+   * copy button leaves out removed lines.
    */
   diff?: 'added' | 'removed';
 }
@@ -151,12 +154,17 @@ function CodeBlockLine({
         'nx:before:text-end nx:before:text-muted-foreground-subtle nx:before:content-[attr(data-number)] nx:data-number:before:me-4',
         'nx:data-highlighted:not-data-diff:bg-container-hover nx:data-highlighted:before:text-muted-foreground nx:data-highlighted:not-data-status:border-foreground',
         'nx:data-[status=error]:border-error-subtle-foreground nx:data-[status=success]:border-success-subtle-foreground',
-        codeBlockDiffClasses,
+        'nx:data-[diff=added]:bg-success-subtle nx:data-[diff=removed]:bg-error-subtle',
         'nx:group-has-data-[slot=code-block-copy-button]/code-block:pe-14',
         className
       )}
       {...props}
     >
+      {diff && (
+        <span
+          className={cn('nx:col-start-2 nx:me-2', codeBlockDiffClasses[diff])}
+        />
+      )}
       <span className="nx:col-start-3">{children}</span>
       {/* A grid doesn't render this newline, but the code's text keeps it. */}
       {'\n'}
