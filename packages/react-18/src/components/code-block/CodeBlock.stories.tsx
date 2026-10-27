@@ -2,7 +2,7 @@ import tsx from '@shikijs/langs/tsx';
 import type { Meta, StoryObj } from '@storybook/react';
 import { createHighlighterCoreSync } from 'shiki/core';
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
-import { expect, spyOn, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fn, spyOn, userEvent, waitFor, within } from 'storybook/test';
 
 import { Card, CardHeader, CardTitle } from '../card/card';
 
@@ -281,8 +281,11 @@ export const SyntaxHighlighting: Story = {
 // INTERACTION STORIES
 // ============================================
 
+const onCopyClick = fn();
+
 export const CopyInteraction: Story = {
   beforeEach: () => {
+    onCopyClick.mockClear();
     const writeText = spyOn(navigator.clipboard, 'writeText');
     writeText.mockResolvedValue(undefined);
     return () => writeText.mockRestore();
@@ -296,25 +299,33 @@ export const CopyInteraction: Story = {
         <CodeBlockLine number={2} />
         <CodeBlockLine number={3}>{'export { Button };'}</CodeBlockLine>
       </CodeBlockContent>
-      <CodeBlockCopyButton />
+      <CodeBlockCopyButton onClick={onCopyClick} />
     </CodeBlock>
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const button = canvas.getByRole('button', { name: 'Copy code' });
+    const status = canvas.getByRole('status');
 
     await userEvent.click(button);
     await expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
       "import { Button } from './button';\n\nexport { Button };"
     );
     await expect(button).toHaveAttribute('data-state', 'copied');
-    await expect(canvas.getByRole('status')).toHaveTextContent(
-      'Code copied to clipboard'
+    await expect(status).toHaveTextContent('Code copied to clipboard');
+
+    // A second copy remounts the message, so screen readers announce it again.
+    const firstMessage = status.firstElementChild;
+    await userEvent.click(button);
+    await waitFor(() =>
+      expect(status.firstElementChild).not.toBe(firstMessage)
     );
+    await expect(status).toHaveTextContent('Code copied to clipboard');
+    await expect(onCopyClick).toHaveBeenCalledTimes(2);
     await waitFor(() => expect(button).toHaveAttribute('data-state', 'idle'), {
       timeout: 3000,
     });
-    await expect(canvas.getByRole('status')).toHaveTextContent('');
+    await expect(status).toHaveTextContent('');
   },
 };
 
@@ -337,6 +348,34 @@ export const CopyFailure: Story = {
     const button = canvas.getByRole('button', { name: 'Copy code' });
 
     await userEvent.click(button);
+    await expect(button).toHaveAttribute('data-state', 'failed');
+    await expect(canvas.getByRole('status')).toHaveTextContent(
+      'Could not copy code'
+    );
+  },
+};
+
+// With no code in the block, the copy fails instead of copying nothing.
+export const CopyEmptyCode: Story = {
+  beforeEach: () => {
+    const writeText = spyOn(navigator.clipboard, 'writeText');
+    writeText.mockResolvedValue(undefined);
+    return () => writeText.mockRestore();
+  },
+  render: () => (
+    <CodeBlock className="nx:max-w-xl">
+      <CodeBlockContent>
+        <CodeBlockLine />
+      </CodeBlockContent>
+      <CodeBlockCopyButton />
+    </CodeBlock>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Copy code' });
+
+    await userEvent.click(button);
+    await expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
     await expect(button).toHaveAttribute('data-state', 'failed');
     await expect(canvas.getByRole('status')).toHaveTextContent(
       'Could not copy code'
@@ -470,7 +509,7 @@ export const EmptyLine: Story = {
 export const WithDataAttributes: Story = {
   render: () => (
     <CodeBlock variant="flush" className="nx:max-w-xl">
-      <CodeBlockContent>
+      <CodeBlockContent language="ts">
         <CodeBlockLine number={1} highlighted status="success">
           {'await userEvent.click(toggle);'}
         </CodeBlockLine>
@@ -494,7 +533,7 @@ export const WithDataAttributes: Story = {
     );
 
     await expect(root).toHaveAttribute('data-variant', 'flush');
-    await expect(content).toBeInTheDocument();
+    await expect(content!.querySelector('code')).toHaveClass('language-ts');
     await expect(lines[0]).toHaveAttribute('data-number', '1');
     await expect(lines[0]).toHaveAttribute('data-highlighted');
     await expect(lines[0]).toHaveAttribute('data-status', 'success');

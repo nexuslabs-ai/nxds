@@ -55,7 +55,15 @@ function CodeBlock({
  * Props for CodeBlockContent, from ScrollArea. `type` sets when the
  * scrollbars show.
  */
-type CodeBlockContentProps = React.ComponentProps<typeof ScrollArea>;
+interface CodeBlockContentProps extends React.ComponentProps<
+  typeof ScrollArea
+> {
+  /**
+   * Language of the code, such as `tsx`. It sets the `language-*` class on
+   * `code`, which Markdown converters and reader tools read.
+   */
+  language?: string;
+}
 
 /**
  * Scrollable code region that holds the `CodeBlockLine` rows. It scrolls
@@ -64,6 +72,7 @@ type CodeBlockContentProps = React.ComponentProps<typeof ScrollArea>;
  */
 function CodeBlockContent({
   className,
+  language,
   children,
   ...props
 }: CodeBlockContentProps) {
@@ -80,7 +89,12 @@ function CodeBlockContent({
       {...props}
     >
       <pre className="nx:m-0">
-        <code className="nx:grid nx:grid-cols-[auto_auto_minmax(0,1fr)] nx:py-4 nx:typography-code-block">
+        <code
+          className={cn(
+            'nx:grid nx:grid-cols-[auto_auto_minmax(0,1fr)] nx:py-4 nx:typography-code-block',
+            language && `language-${language}`
+          )}
+        >
           {children}
         </code>
       </pre>
@@ -168,7 +182,7 @@ function codeText(button: HTMLElement) {
   const lines = button
     .closest('[data-slot="code-block"]')
     ?.querySelectorAll(
-      '[data-slot="code-block-line"]:not([data-diff="removed"])'
+      '[data-slot="code-block-content"] [data-slot="code-block-line"]:not([data-diff="removed"])'
     );
   return Array.from(lines ?? [], (line) => line.textContent)
     .join('')
@@ -177,11 +191,11 @@ function codeText(button: HTMLElement) {
 
 /**
  * Props for CodeBlockCopyButton. It takes the attributes of a button, except
- * `children` and `onClick`, which it sets itself.
+ * `children`, which it sets itself. `onClick` runs before the copy.
  */
 type CodeBlockCopyButtonProps = Omit<
   React.ComponentProps<'button'>,
-  'children' | 'onClick'
+  'children'
 >;
 
 /**
@@ -190,6 +204,7 @@ type CodeBlockCopyButtonProps = Omit<
  */
 function CodeBlockCopyButton({
   className,
+  onClick,
   ...props
 }: CodeBlockCopyButtonProps) {
   // `seq` remounts the message, so a second copy announces again.
@@ -211,6 +226,7 @@ function CodeBlockCopyButton({
   };
 
   const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(event);
     const text = codeText(event.currentTarget);
     if (!text) {
       settle('failed');
