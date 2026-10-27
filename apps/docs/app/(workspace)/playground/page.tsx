@@ -1,5 +1,5 @@
-import { pageMetadata, SITE_IMAGE } from '../../../_lib/site';
-import { PlaygroundWorkspace } from '../../../_workspace/playground-workspace';
+import { pageMetadata, SITE_IMAGE } from '../../_lib/site';
+import { PlaygroundWorkspace } from '../../_workspace/playground-workspace';
 
 export const metadata = pageMetadata({
   title: 'Theme playground',

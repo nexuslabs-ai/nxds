@@ -1,5 +1,5 @@
-import { pageMetadata, SITE_IMAGE } from '../../../../_lib/site';
-import { SurfaceWorkspace } from '../../../../_workspace/tokens/surfaces/surface-workspace';
+import { pageMetadata, SITE_IMAGE } from '../../../_lib/site';
+import { SurfaceWorkspace } from '../../../_workspace/tokens/surfaces/surface-workspace';
 
 export const metadata = pageMetadata({
   title: 'Surface tokens',

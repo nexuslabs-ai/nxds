@@ -1,5 +1,5 @@
-import { Breadcrumb } from '../../../_components/Breadcrumb';
-import { pageMetadata, REPO_URL, SITE_IMAGE } from '../../../_lib/site';
+import { Breadcrumb } from '../../_components/Breadcrumb';
+import { pageMetadata, REPO_URL, SITE_IMAGE } from '../../_lib/site';
 
 /**
  * Changelog. Pre-1.0 — grouped by date, not semver, until the first tagged

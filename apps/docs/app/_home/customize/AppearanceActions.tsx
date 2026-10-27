@@ -11,13 +11,13 @@ import { IconArrowsShuffle, IconRestore } from '@tabler/icons-react';
 import { Show } from '@/components/show/show';
 import { ToolbarButton } from '@/components/toolbar/toolbar';
 
+import { DOCS_APPEARANCE_DEFAULT_STATE } from '../../_lib/appearance-controls';
 import { setIconLibrary } from '../../_lib/icon-library';
-import { homeAppearance } from '../appearance';
 
 const actionClass =
   'nx:typography-label-default nx:sm:w-auto nx:sm:gap-2 nx:sm:px-3.5';
 
-/** Shuffle and Reset in the Customize toolbar. They change the whole page. */
+/** Shuffle and Reset in the Customize toolbar. They change the whole site. */
 export function AppearanceActions() {
   const { state, setState } = useNxdsAppearance();
   function shuffle() {
@@ -27,7 +27,7 @@ export function AppearanceActions() {
     if (option) setIconLibrary(option.value);
   }
   function reset() {
-    setState(homeAppearance(state.mode));
+    setState({ ...DOCS_APPEARANCE_DEFAULT_STATE, mode: state.mode });
     setIconLibrary(DEFAULT_ICON_LIBRARY);
   }
   return (

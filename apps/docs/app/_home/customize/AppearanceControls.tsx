@@ -281,7 +281,7 @@ export function AppearanceControls({ tool }: { tool: ToolName }) {
               />
             </Field>
             <FieldDescription className={descriptionClass}>
-              Updates the toolbar and the components together.
+              Updates the whole site, not only this page.
             </FieldDescription>
             <AppearanceRange
               label="Contrast"

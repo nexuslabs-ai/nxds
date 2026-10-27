@@ -1,20 +1,20 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-import { BlockPage } from '../../../../_components/BlockPage';
-import { Breadcrumb } from '../../../../_components/Breadcrumb';
-import { ComponentPage } from '../../../../_components/ComponentPage';
+import { BlockPage } from '../../../_components/BlockPage';
+import { Breadcrumb } from '../../../_components/Breadcrumb';
+import { ComponentPage } from '../../../_components/ComponentPage';
 import {
   docsPageParams,
   findDocsPage,
   type ManifestPage,
-} from '../../../../_lib/manifest';
+} from '../../../_lib/manifest';
 import {
   describePage,
   loadWrittenPage,
   type WrittenManifestPage,
-} from '../../../../_lib/page-content';
-import { docsPageImage, pageMetadata } from '../../../../_lib/site';
+} from '../../../_lib/page-content';
+import { docsPageImage, pageMetadata } from '../../../_lib/site';
 
 type PageProps = { params: Promise<{ section: string; page: string }> };
 

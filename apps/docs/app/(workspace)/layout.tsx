@@ -1,4 +1,4 @@
-import { TopNav } from '../../_components/TopNav';
+import { TopNav } from '../_components/TopNav';
 
 export default function WorkspaceGroupLayout({
   children,
