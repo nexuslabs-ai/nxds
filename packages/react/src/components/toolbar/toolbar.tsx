@@ -125,10 +125,7 @@ function ToolbarToggleGroup({ className, ...props }: ToolbarToggleGroupProps) {
     <ToolbarPrimitive.ToggleGroup
       data-slot="toolbar-toggle-group"
       role={props.type === 'single' ? 'radiogroup' : 'group'}
-      className={cn(
-        'nx:flex nx:min-w-0 nx:flex-wrap nx:items-center nx:gap-[inherit] nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
-        className
-      )}
+      className={cn(toolbarGroupLayout, className)}
       {...props}
     />
   );

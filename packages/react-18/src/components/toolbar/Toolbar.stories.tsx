@@ -28,7 +28,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../dropdown-menu/dropdown-menu';
+import { Hide } from '../hide/hide';
 import { Label } from '../label/label';
+import { Show } from '../show/show';
 import {
   Tooltip,
   TooltipContent,
@@ -610,6 +612,39 @@ export const GroupSpacing: Story = {
   },
 };
 
+function HistoryGroup() {
+  return (
+    <ToolbarGroup aria-label="History">
+      <ToolbarButton size="icon-sm" aria-label="Undo">
+        <IconArrowBackUp aria-hidden="true" />
+      </ToolbarButton>
+      <ToolbarButton size="icon-sm" aria-label="Clear canvas">
+        <IconEraser aria-hidden="true" />
+      </ToolbarButton>
+    </ToolbarGroup>
+  );
+}
+
+export const GroupInShowHide: Story = {
+  render: () => (
+    <Toolbar variant="floating" aria-label="Canvas tools">
+      <Show above="md" as="div">
+        <HistoryGroup />
+      </Show>
+      <Hide above="md" as="div">
+        <HistoryGroup />
+      </Hide>
+    </Toolbar>
+  ),
+  play: async ({ canvasElement }) => {
+    const toolbar = within(canvasElement).getByRole('toolbar');
+    await expect(
+      getComputedStyle(within(toolbar).getByRole('group', { name: 'History' }))
+        .columnGap
+    ).toBe(getComputedStyle(toolbar).columnGap);
+  },
+};
+
 export const VerticalTools: Story = {
   render: () => (
     <Toolbar orientation="vertical" aria-label="Canvas tools">
@@ -1122,7 +1157,12 @@ export const ToolsWithPanels: Story = {
 
 type ToolStory = StoryObj<typeof ToolbarToolGroup>;
 
-function CanvasTools(props: React.ComponentProps<typeof ToolbarToolGroup>) {
+function CanvasTools({
+  onDrawPanelClose,
+  ...props
+}: React.ComponentProps<typeof ToolbarToolGroup> & {
+  onDrawPanelClose?: () => void;
+}) {
   const id = React.useId();
   return (
     <div className="nx:flex nx:min-h-64 nx:items-end nx:gap-4">
@@ -1144,7 +1184,11 @@ function CanvasTools(props: React.ComponentProps<typeof ToolbarToolGroup>) {
           <ToolbarTool value="text" size="icon-sm" aria-label="Text" disabled>
             <IconItalic aria-hidden="true" />
           </ToolbarTool>
-          <ToolbarToolPanel value="draw" side="top">
+          <ToolbarToolPanel
+            value="draw"
+            side="top"
+            onCloseAutoFocus={onDrawPanelClose}
+          >
             <div className="nx:flex nx:items-center nx:gap-2">
               <Checkbox id={`${id}-smooth`} defaultChecked />
               <Label htmlFor={`${id}-smooth`}>Smooth strokes</Label>
@@ -1241,9 +1285,10 @@ export const ToolWithoutPanel: ToolStory = {
   },
 };
 
-export const ToolPanelOutsideClick: ToolStory = {
+export const ToolPanelOutsideClick: StoryObj<typeof CanvasTools> = {
+  args: { onDrawPanelClose: fn() },
   render: (args) => <CanvasTools {...args} />,
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     const page = within(canvasElement.ownerDocument.body);
     const draw = canvas.getByRole('button', { name: 'Draw' });
@@ -1251,11 +1296,14 @@ export const ToolPanelOutsideClick: ToolStory = {
     await userEvent.click(draw);
     await page.findByRole('dialog', { name: 'Draw' });
     await userEvent.click(done);
-    await waitFor(() =>
-      expect(page.queryByRole('dialog')).not.toBeInTheDocument()
-    );
+    await waitFor(() => expect(args.onDrawPanelClose).toHaveBeenCalledTimes(1));
     await expect(done).toHaveFocus();
     await expect(draw).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(draw);
+    await page.findByRole('dialog', { name: 'Draw' });
+    await userEvent.click(canvasElement);
+    await waitFor(() => expect(args.onDrawPanelClose).toHaveBeenCalledTimes(2));
+    await expect(draw).not.toHaveFocus();
   },
 };
 
