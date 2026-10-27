@@ -100,7 +100,7 @@ async function download(url: string) {
 
 function assertRegistry(registry: string) {
   const url = httpUrl(registry);
-  if (!url || url.search || url.hash) {
+  if (!url || /[?#]/.test(registry)) {
     throw new UsageError(
       `--npm-registry must be an http or https URL with no query or fragment, such as ${DEFAULT_NPM_REGISTRY}.`
     );

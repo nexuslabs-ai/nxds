@@ -293,20 +293,19 @@ describe('nxds-cli export claude-design', () => {
     ['with a user name and password', 'https://user:secret@registry.invalid'],
     ['without an http scheme', 'user:secret@registry.invalid'],
     ['with a query', 'https://registry.invalid/?token=secret'],
-  ])(
-    'refuses a registry URL %s, without printing the secret',
-    async (_, registry) => {
-      const { cwd } = setup();
-      const { exitCode, stdout, stderr } = await cli(
-        ['export', 'claude-design', '--npm-registry', registry],
-        cwd
-      );
+    ['with an empty query', 'https://registry.invalid/?'],
+    ['with an empty fragment', 'https://registry.invalid/#'],
+  ])('refuses a registry URL %s', async (_, registry) => {
+    const { cwd } = setup();
+    const { exitCode, stdout, stderr } = await cli(
+      ['export', 'claude-design', '--npm-registry', registry],
+      cwd
+    );
 
-      expect(exitCode).toBe(EXIT_CODES.usage);
-      expect(stdout + stderr).toContain('--npm-registry');
-      expect(stdout + stderr).not.toContain('secret');
-    }
-  );
+    expect(exitCode).toBe(EXIT_CODES.usage);
+    expect(stdout + stderr).toContain('--npm-registry');
+    expect(stdout + stderr).not.toContain('secret');
+  });
 
   it.each([
     [
