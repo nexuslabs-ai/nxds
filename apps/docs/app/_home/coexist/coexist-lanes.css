@@ -54,12 +54,13 @@
   min-block-size: 0;
 }
 
-/* One library: its box on top, joined by a line to its card. */
+/* One library: its box on top, joined by a flow line to its card. */
 @utility coexist-lanes-column {
+  --lane-flow: var(--nx-spacing-4);
   display: grid;
   grid-row: span 4;
   grid-template-rows: subgrid;
-  row-gap: var(--nx-spacing-6);
+  row-gap: var(--lane-flow);
   min-inline-size: 0;
 
   /* The other library writes names or rules your app depends on. A chip
@@ -72,8 +73,8 @@
   &[data-lane='other'] .nx\:coexist-lanes-verdict {
     color: var(--nx-color-error-subtle-foreground);
   }
-  &[data-lane='other'] .nx\:coexist-lanes-library::after {
-    border-color: var(--nx-color-error-border);
+  &[data-lane='other'] .nx\:coexist-lanes-flow {
+    background: var(--nx-color-error-border);
   }
 
   /* Nexus writes names only it reads: nothing reaches your app. */
@@ -85,8 +86,8 @@
   &[data-lane='nexus'] .nx\:coexist-lanes-verdict {
     color: var(--nx-color-success-subtle-foreground);
   }
-  &[data-lane='nexus'] .nx\:coexist-lanes-library::after {
-    border-color: var(--nx-color-success-border);
+  &[data-lane='nexus'] .nx\:coexist-lanes-flow {
+    background: var(--nx-color-success-border);
   }
 }
 
@@ -100,8 +101,8 @@
   background: var(--nx-color-muted);
 }
 
-/* The library you add: its name and file, in a box with a line down to its
-   card across the row gap. */
+/* The library you add: its name and file, in a box with a flow line down to
+   its card across the row gap. */
 @utility coexist-lanes-library {
   position: relative;
   display: flex;
@@ -112,14 +113,33 @@
   padding: var(--nx-spacing-2) var(--nx-spacing-4);
   border-radius: var(--nx-radius-lg);
   background: var(--nx-color-muted);
+}
 
-  &::after {
-    content: '';
-    position: absolute;
-    inset-block-start: 100%;
-    inset-inline-start: 50%;
-    block-size: var(--nx-spacing-6);
-    border-inline-start: var(--nx-borderwidth-default) solid;
+/* The Frameworks flow line, drawn sideways and turned to point down, so the
+   same signal runs from the library into its card. */
+@utility coexist-lanes-flow {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline-start: 50%;
+  inline-size: var(--lane-flow);
+  block-size: var(--nx-borderwidth-default);
+  overflow: hidden;
+  transform-origin: 0 50%;
+  rotate: 90deg;
+
+  & > i {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--nx-color-foreground),
+      transparent
+    );
+    opacity: 0;
+    transform: translateX(-100%);
+    animation: flow-signal 2200ms linear infinite;
   }
 }
 

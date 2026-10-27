@@ -306,9 +306,14 @@ function HostLanes({ host }: { host: Host }) {
                 data-lane={lane}
               >
                 <div className="nx:coexist-lanes-library">
-                  <h4 className="nx:m-0 nx:typography-label-default">{name}</h4>
+                  <h4 className="nx:m-0 nx:typography-label-default">
+                    <span className="nx:text-muted-foreground">Add</span> {name}
+                  </h4>
                   <span className="nx:typography-body-small nx:text-muted-foreground">
                     {file}
+                  </span>
+                  <span className="nx:coexist-lanes-flow" aria-hidden="true">
+                    <i />
                   </span>
                 </div>
                 <div className="nx:coexist-lanes-card">

@@ -128,6 +128,27 @@
   }
 }
 
+/* A light signal that runs along a flow line, then rests. Frameworks and
+   Coexist draw their lines sideways and run it on the child <i>. */
+@keyframes flow-signal {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  5% {
+    opacity: 0.85;
+  }
+  25% {
+    opacity: 0.85;
+    transform: translateX(100%);
+  }
+  26%,
+  100% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
 /* A dotted stage a live example or an app sketch sits on. */
 @utility dotted-stage {
   background-color: var(--nx-color-background);

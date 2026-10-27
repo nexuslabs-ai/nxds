@@ -2,25 +2,6 @@
    A rule that overrides a Nexus part's own utilities also selects the part's
    data-slot, so it wins whatever order Tailwind emits the utilities in. */
 
-@keyframes frameworks-chip-signal {
-  0% {
-    opacity: 0;
-    transform: translateX(-100%);
-  }
-  5% {
-    opacity: 0.85;
-  }
-  25% {
-    opacity: 0.85;
-    transform: translateX(100%);
-  }
-  26%,
-  100% {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-}
-
 @utility framework-chapter {
   container: framework / size;
   inline-size: 100%;
@@ -55,7 +36,7 @@
   );
 
   &[data-flow-motion='true'] .nx\:chip-trace[data-flowing='true'] > i {
-    animation: frameworks-chip-signal 2200ms linear infinite;
+    animation: flow-signal 2200ms linear infinite;
     animation-delay: var(--chip-phase, 0ms);
   }
   @container framework (min-width: 701px) and ((max-height: 752px) or (max-width: 959px)) {
