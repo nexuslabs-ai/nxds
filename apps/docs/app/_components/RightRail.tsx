@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { cn } from '@nxds/react/utils';
 import { usePathname } from 'next/navigation';
+
+import { cn } from '@/lib/utils';
 
 import {
   collectHeadings,

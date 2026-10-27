@@ -2,7 +2,6 @@
 
 import { useRef, useState } from 'react';
 
-import { cn } from '@nxds/react/utils';
 import { CaretDownIcon } from '@phosphor-icons/react/ssr';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -16,6 +15,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/sheet/sheet';
+import { cn } from '@/lib/utils';
 
 import type { ManifestSection } from '../_lib/manifest';
 import { isActive, NAV_LINKS } from '../_lib/nav-links';

@@ -439,6 +439,11 @@ export default tseslint.config(
               message:
                 'Import the part from source, `@/components/<name>/<name>`, so the page loads one copy of it.',
             },
+            {
+              name: '@nxds/react/utils',
+              message:
+                'Import `cn` from source, `@/lib/utils`, so the page loads one copy of it.',
+            },
           ],
         },
       ],
@@ -456,6 +461,11 @@ export default tseslint.config(
               name: '@nxds/react',
               message:
                 'Import the part from source, `@/components/<name>/<name>`, so the page loads one copy of it.',
+            },
+            {
+              name: '@nxds/react/utils',
+              message:
+                'A pattern page imports its examples from `@/patterns/` and its parts from `@/components/`.',
             },
           ],
           patterns: [

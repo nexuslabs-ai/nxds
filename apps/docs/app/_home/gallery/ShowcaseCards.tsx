@@ -8,7 +8,6 @@ import {
   useState,
 } from 'react';
 
-import { cn } from '@nxds/react/utils';
 import { Bar, BarChart, XAxis } from 'recharts';
 
 import { Avatar, AvatarFallback } from '@/components/avatar/avatar';
@@ -74,6 +73,7 @@ import {
   TabsTrigger,
 } from '@/components/tabs/tabs';
 import { Textarea } from '@/components/textarea/textarea';
+import { cn } from '@/lib/utils';
 
 import {
   SiteArrowUpRightIcon,

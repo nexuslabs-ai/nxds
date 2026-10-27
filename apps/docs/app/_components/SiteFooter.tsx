@@ -1,7 +1,7 @@
-import { cn } from '@nxds/react/utils';
 import Link from 'next/link';
 
 import { Button } from '@/components/button/button';
+import { cn } from '@/lib/utils';
 
 import { PAGE_MANIFEST } from '../_lib/manifest';
 import { NPM_CORE_URL, REPO_URL, STORYBOOK_URL } from '../_lib/site';

@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 
-import { cn } from '@nxds/react/utils';
 import Link from 'next/link';
 
 import { Button } from '@/components/button/button';
+import { cn } from '@/lib/utils';
 
 import { requireSection } from '../_lib/manifest';
 

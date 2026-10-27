@@ -2,7 +2,7 @@
 
 import type { ComponentType, FocusEvent } from 'react';
 
-import { cn } from '@nxds/react/utils';
+import { cn } from '@/lib/utils';
 
 import type { ToolName } from '../tool-icons';
 

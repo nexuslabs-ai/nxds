@@ -3,7 +3,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
 
 import { useNxdsAppearance } from '@nxds/react/appearance';
-import { cn } from '@nxds/react/utils';
+
+import { cn } from '@/lib/utils';
 
 import {
   getThemeModeOptions,
