@@ -774,7 +774,10 @@ function SidebarMenuButton({
     typeof tooltip === 'string' ? { children: tooltip } : tooltip;
 
   return (
-    <Tooltip open={open && isRail} onOpenChange={setOpen}>
+    <Tooltip
+      open={open && isRail}
+      onOpenChange={(next) => setOpen(next && isRail)}
+    >
       <TooltipTrigger asChild>{button}</TooltipTrigger>
       <TooltipContent side="right" align="center" {...tooltipProps} />
     </Tooltip>

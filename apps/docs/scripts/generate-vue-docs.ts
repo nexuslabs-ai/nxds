@@ -248,7 +248,7 @@ function setupScript(
     if (!ts.isObjectLiteralExpression(returned)) {
       fail(`${where}: setup must return an object literal.`);
     }
-    return returnedValues(where, returned, false);
+    return returnedValues(where, returned);
   }
 
   const statements = [...fn.body.statements];
@@ -262,17 +262,47 @@ function setupScript(
   }
   return [
     ...statements.map((node) => ({ code: node.getText(), node })),
-    ...returnedValues(where, returned, true),
+    ...returnedValues(where, returned, declaredNames(statements)),
   ];
+}
+
+/** Names a setup block declares at its top level. */
+function declaredNames(statements: ts.Statement[]): Set<string> {
+  const names = new Set<string>();
+  const addBinding = (name: ts.BindingName) => {
+    if (ts.isIdentifier(name)) {
+      names.add(name.text);
+      return;
+    }
+    for (const element of name.elements) {
+      if (!ts.isOmittedExpression(element)) addBinding(element.name);
+    }
+  };
+  for (const statement of statements) {
+    if (ts.isVariableStatement(statement)) {
+      statement.declarationList.declarations.forEach((d) => addBinding(d.name));
+    }
+    if (ts.isFunctionDeclaration(statement) && statement.name) {
+      names.add(statement.name.text);
+    }
+  }
+  return names;
 }
 
 function returnedValues(
   where: string,
   returned: ts.ObjectLiteralExpression,
-  byName: boolean
+  declared?: Set<string>
 ): ScriptLine[] {
   return returned.properties.flatMap((prop) => {
-    if (byName && ts.isShorthandPropertyAssignment(prop)) return [];
+    if (declared && ts.isShorthandPropertyAssignment(prop)) {
+      if (!declared.has(prop.name.text)) {
+        fail(
+          `${where}: setup returns \`${prop.name.text}\`, which the block doesn't declare. Declare it in setup or return \`${prop.name.text}: value\`.`
+        );
+      }
+      return [];
+    }
     if (!ts.isPropertyAssignment(prop)) {
       fail(
         `${where}: setup values need a name and a value, as \`open: ref(true)\`.`

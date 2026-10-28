@@ -333,13 +333,17 @@ export const CollapsedTooltip: Story = {
     const trigger = canvasElement.querySelector<HTMLButtonElement>(
       '[data-slot="sidebar-trigger"]'
     );
+    const body = within(canvasElement.ownerDocument.body);
+    const home = canvas.getByRole('button', { name: 'Home' });
+    await userEvent.hover(home);
+    await userEvent.unhover(home);
+
     await userEvent.click(trigger!);
     await expect(sidebar).toHaveAttribute('data-state', 'collapsed');
+    await expect(body.queryByRole('tooltip')).toBeNull();
 
     canvas.getByRole('button', { name: 'Inbox' }).focus();
-    await expect(
-      await within(canvasElement.ownerDocument.body).findByRole('tooltip')
-    ).toHaveTextContent('Inbox');
+    await expect(await body.findByRole('tooltip')).toHaveTextContent('Inbox');
   },
 };
 

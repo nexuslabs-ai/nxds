@@ -68,7 +68,7 @@ const button = computed(() => ({
   <Tooltip
     v-if="tooltip || $slots.tooltip"
     :open="open && isRail"
-    @update:open="open = $event"
+    @update:open="open = $event && isRail"
   >
     <TooltipTrigger as-child>
       <Primitive v-bind="{ ...button, ...$attrs }">
