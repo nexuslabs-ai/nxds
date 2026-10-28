@@ -44,6 +44,7 @@ export interface TokensFile {
   borderWidth?: { tokens: ListToken[] };
   zIndex?: { tokens: ListToken[] };
   motion?: { tokens: ListToken[] };
+  icon?: { tokens: ListToken[] };
   typeScale?: { tokens: ListToken[] };
 }
 
@@ -60,6 +61,7 @@ const LIST_FAMILIES = {
   borderwidth: 'borderWidth',
   'z-index': 'zIndex',
   motion: 'motion',
+  icon: 'icon',
 } as const;
 
 /** A tokens.json list family key, such as `borderWidth`. */
