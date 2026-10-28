@@ -24,6 +24,7 @@
     "linkDirectory": false
   },
   "exports": {
+    "./icons": "./src/icons.ts",
     "./system-index": "./src/system-index.ts",
     "./tokens-css": "./src/tokens-css.ts"
   },
