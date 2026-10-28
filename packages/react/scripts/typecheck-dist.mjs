@@ -36,8 +36,9 @@ const { exports } = JSON.parse(
   await readFile(path.join(packageRoot, 'package.json'), 'utf8')
 );
 
+// Only a stylesheet ships without types; every other subpath needs a probe.
 const typedSubpaths = Object.entries(exports).filter(
-  ([, target]) => typeof target === 'object'
+  ([, target]) => !(typeof target === 'string' && target.endsWith('.css'))
 );
 
 for (const [subpath, target] of typedSubpaths) {
@@ -48,8 +49,14 @@ for (const [subpath, target] of typedSubpaths) {
   }
 
   for (const condition of ['import', 'require']) {
-    const file = target[condition]?.types;
-    if (!file || !existsSync(path.join(packageRoot, file))) {
+    const file =
+      typeof target === 'object' ? target[condition]?.types : undefined;
+    if (!file) {
+      throw new Error(
+        `@nxds/react exports ${subpath} has no ${condition}.types. Give it { import: { types, default }, require: { types, default } }.`
+      );
+    }
+    if (!existsSync(path.join(packageRoot, file))) {
       throw new Error(
         `@nxds/react exports ${subpath}.${condition}.types -> ${file} is missing. Run @nxds/react build before this dist typecheck.`
       );
