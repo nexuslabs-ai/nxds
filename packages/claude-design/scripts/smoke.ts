@@ -30,7 +30,7 @@ import {
   type Route,
 } from 'playwright';
 
-import { ICONS } from '../src/icons.ts';
+import { iconSet } from '../src/icon-set.ts';
 import { PRESETS } from '../src/presets.ts';
 import { folderCanvasExample } from '../src/previews.ts';
 
@@ -227,6 +227,12 @@ function pageHelpers() {
   const revive = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(revive);
     if (!value || typeof value !== 'object') return value;
+    if ('__icon' in value) {
+      return globals().React.createElement(
+        globals().Nxds['Icon'] as ReactModule.ElementType,
+        { name: value.__icon }
+      );
+    }
     if ('__date' in value) {
       const [year, month, day] = String(value.__date).split('-').map(Number);
       return new Date(year ?? 0, (month ?? 1) - 1, day ?? 1);
@@ -1221,6 +1227,8 @@ function compareSignatures(
   );
 }
 
+const iconComponents = new Set(iconSet().map(({ component }) => component));
+
 /** Each card's README example, with the docs story's values as plain React. */
 async function readmeExamples() {
   const parts = new Set(
@@ -1231,7 +1239,7 @@ async function readmeExamples() {
       ).matchAll(/export interface (\w+)Props\b/g),
     ]
       .map((match) => match[1] ?? '')
-      .filter((name) => !ICONS.includes(name as (typeof ICONS)[number]))
+      .filter((name) => !iconComponents.has(name))
   );
   const slugs = new Map(
     [...exportedComponentSlugs()].map((slug) => [componentLabel(slug), slug])
@@ -1551,6 +1559,84 @@ const ATTRIBUTE_CASES: { name: string; markup: string; expected: Part }[] = [
     }),
   },
   {
+    name: 'an icon prop takes an icon name',
+    markup: x('Button', 'start-icon="plus"', 'Create project'),
+    expected: part(
+      'Button',
+      { startIcon: { __icon: 'plus' } },
+      'Create project'
+    ),
+  },
+  {
+    name: 'an end icon takes an icon name',
+    markup: x('Button', 'variant="outline" end-icon="chevron-down"', 'Sort'),
+    expected: part(
+      'Button',
+      { variant: 'outline', endIcon: { __icon: 'chevron-down' } },
+      'Sort'
+    ),
+  },
+  {
+    name: 'Badge icons take icon names',
+    markup: x('Badge', 'left-icon="circle-check" right-icon="x"', 'Paid'),
+    expected: part(
+      'Badge',
+      { leftIcon: { __icon: 'circle-check' }, rightIcon: { __icon: 'x' } },
+      'Paid'
+    ),
+  },
+  {
+    name: 'an InputGroupButton icon takes an icon name',
+    markup: x(
+      'InputGroup',
+      '',
+      x('InputGroupInput', 'aria-label="Search"'),
+      x(
+        'InputGroupAddon',
+        'align="inline-end"',
+        x('InputGroupButton', 'start-icon="search" aria-label="Search"')
+      )
+    ),
+    expected: part(
+      'InputGroup',
+      null,
+      part('InputGroupInput', { 'aria-label': 'Search' }),
+      part(
+        'InputGroupAddon',
+        { align: 'inline-end' },
+        part('InputGroupButton', {
+          startIcon: { __icon: 'search' },
+          'aria-label': 'Search',
+        })
+      )
+    ),
+  },
+  {
+    name: 'an icon element in an icon slot passes through',
+    markup: x('Button', '', x('Icon', 'name="device-floppy"'), 'Save'),
+    expected: part(
+      'Button',
+      null,
+      part('Icon', { name: 'device-floppy' }),
+      'Save'
+    ),
+  },
+  {
+    name: 'Icon takes its size and stroke as numbers',
+    markup: x('Icon', 'name="bell" size="20" stroke="1.5"'),
+    expected: part('Icon', { name: 'bell', size: 20, stroke: 1.5 }),
+  },
+  {
+    name: 'an empty Icon label leaves the icon hidden',
+    markup: x('Icon', 'name="bell" aria-label=""'),
+    expected: part('Icon', { name: 'bell' }),
+  },
+  {
+    name: 'a labelled Icon is an image',
+    markup: x('Icon', 'name="bell" aria-label="Notifications"'),
+    expected: part('Icon', { name: 'bell', 'aria-label': 'Notifications' }),
+  },
+  {
     name: 'a link target is a dropdown value',
     markup: x(
       'Breadcrumb',
@@ -1710,6 +1796,28 @@ const BAD_INPUT_CASES: {
     ],
   },
   {
+    name: 'an unknown icon name renders nothing',
+    markup: x('Icon', 'name="sparkle-heart"'),
+    expected: part('', null),
+    warnings: [
+      /^\[nxds\] Icon: name="sparkle-heart" isn't an icon name in components\/Icon\/README\.md\. Using nothing\.$/,
+    ],
+  },
+  {
+    name: 'a component name points at the icon name',
+    markup: x('Button', 'start-icon="IconPlus"', 'Create project'),
+    expected: part('Button', null, 'Create project'),
+    warnings: [
+      /^\[nxds\] Button: start-icon="IconPlus" isn't an icon name; write "plus"\. Using the default\.$/,
+    ],
+  },
+  {
+    name: 'an icon size is a number',
+    markup: x('Icon', 'name="bell" size=""'),
+    expected: part('Icon', { name: 'bell' }),
+    warnings: [/^\[nxds\] Icon: size="" isn't a number/],
+  },
+  {
     name: 'one bad value warns once however often it renders',
     markup: el(
       'div',
@@ -1778,6 +1886,45 @@ async function checkBadInput() {
     }
     await page.close();
   }
+}
+
+// Every icon name the README lists draws an svg.
+async function checkIcons() {
+  const { page, problems } = await openPage('Button', LIGHT);
+  const names = iconSet().map(({ name }) => name);
+  const missing = await page.evaluate((names) => {
+    const { React, ReactDOM, Nxds } = window as unknown as PageGlobals;
+    const host = document.createElement('div');
+    document.body.append(host);
+    const root = ReactDOM.createRoot(host);
+    ReactDOM.flushSync(() =>
+      root.render(
+        React.createElement(
+          React.Fragment,
+          null,
+          ...names.map((name) =>
+            React.createElement(
+              'span',
+              { key: name, 'data-name': name },
+              React.createElement(Nxds['Icon'] as ReactModule.ElementType, {
+                name,
+              })
+            )
+          )
+        )
+      )
+    );
+    const drawn = names.filter((name) =>
+      host.querySelector(`[data-name="${name}"] svg path`)
+    );
+    root.unmount();
+    host.remove();
+    return names.filter((name) => !drawn.includes(name));
+  }, names);
+  failOnProblems('icons', problems, false);
+  for (const name of missing) fail(`Icon: "${name}" draws no svg.`);
+  await page.close();
+  return names.length;
 }
 
 // Chile starts daylight saving at midnight, so 6 September 2026 has no
@@ -2006,6 +2153,7 @@ const exampleCount = await checkExamples();
 await checkAttributes();
 await checkBadInput();
 await checkTimeZone();
+const iconCount = await checkIcons();
 await checkRefs();
 await checkExports();
 await checkTokens();
@@ -2020,5 +2168,5 @@ if (failures.length > 0) {
   process.exit(1);
 }
 console.log(
-  `Smoke test passed: ${cards().length} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${exampleCount} README examples against their stories, ${ATTRIBUTE_CASES.length} attribute conversions, ${BAD_INPUT_CASES.length} bad attributes, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes.`
+  `Smoke test passed: ${cards().length} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${exampleCount} README examples against their stories, ${ATTRIBUTE_CASES.length} attribute conversions, ${BAD_INPUT_CASES.length} bad attributes, ${iconCount} icons, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes.`
 );

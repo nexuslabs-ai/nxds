@@ -2,13 +2,14 @@
 // and ReactDOM from the page's globals and assigns `window.Nxds`.
 import { react18Src } from '@nxds/source-model/roots.mjs';
 import { build, type Metafile, type Plugin } from 'esbuild';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 
 import { canvasSchema } from './canvas-schema.ts';
 import { canvasProps } from './canvas-transform.ts';
-import { ICONS } from './icons.ts';
+import { CANVAS_PARTS } from './groups.ts';
+import { iconSet } from './icon-set.ts';
 import type { FlatComponent } from './props.ts';
 import { NAMESPACE } from './system-index.ts';
 
@@ -27,6 +28,8 @@ const REACT_GLOBALS: Record<string, string> = {
 const EXPORTS_MODULE = 'nxds:exports';
 const ICONS_MODULE = 'nxds:icons';
 const SCHEMA_MODULE = 'nxds:canvas-schema';
+const ICON_NAMES_MODULE = 'nxds:icon-names';
+const CANVAS_ICON = path.join(import.meta.dirname, 'canvas', 'icon.ts');
 
 // index.ts's utility exports (`getFilterErrors`, `CHART_CATEGORICAL_SERIES`),
 // copied statement by statement.
@@ -54,41 +57,24 @@ function exportsModule(slugs: readonly string[]) {
     ...libExports(),
     ...slugs.map((slug) => `export * from './components/${slug}/${slug}';`),
     `export * as Icons from '${ICONS_MODULE}';`,
+    `export { Icon } from ${JSON.stringify(CANVAS_ICON)};`,
     "export * as Recharts from 'recharts';",
   ].join('\n');
 }
 
-const TABLER_IMPORT =
-  /import\s*(?:type\s*)?\{([^}]*)\}\s*from\s*'@tabler\/icons-react'/g;
-
-// Previews render the docs stories against `Nxds.Icons`, so every icon the
-// sources import has to be in it.
-function assertIconsCovered() {
-  const listed = new Set<string>(ICONS);
-  const missing = new Set<string>();
-  for (const file of readdirSync(react18Src, {
-    recursive: true,
-    encoding: 'utf8',
-  })) {
-    if (!/\.tsx?$/.test(file)) continue;
-    const source = readFileSync(path.join(react18Src, file), 'utf8');
-    for (const [, names = ''] of source.matchAll(TABLER_IMPORT)) {
-      for (const name of names
-        .split(',')
-        .map((entry) => entry.trim().split(/\s+as\s+/)[0])) {
-        if (name && !listed.has(name)) missing.add(name);
-      }
-    }
-  }
-  if (missing.size > 0) {
-    throw new Error(
-      `bundle.js: add these icons to src/icons.ts: ${[...missing].join(', ')}.`
-    );
-  }
+function iconsModule() {
+  return `export { ${iconSet()
+    .map(({ component }) => component)
+    .join(', ')} } from '@tabler/icons-react';`;
 }
 
-function iconsModule() {
-  return `export { ${ICONS.join(', ')} } from '@tabler/icons-react';`;
+// Each icon by its canvas name, for Nxds.Icon and icon props.
+function iconNamesModule() {
+  const icons = iconSet();
+  return [
+    `import { ${icons.map(({ component }) => component).join(', ')} } from '@tabler/icons-react';`,
+    `export const ICON_COMPONENTS = { ${icons.map(({ component, name }) => `${JSON.stringify(name)}: ${component}`).join(', ')} };`,
+  ].join('\n');
 }
 
 const pageGlobals: Plugin = {
@@ -154,6 +140,7 @@ function virtualModules(
   const contents: Record<string, () => string> = {
     [EXPORTS_MODULE]: () => exportsModule(slugs),
     [ICONS_MODULE]: iconsModule,
+    [ICON_NAMES_MODULE]: iconNamesModule,
     [SCHEMA_MODULE]: () =>
       `export const CANVAS_SCHEMA = ${JSON.stringify(canvasSchema(parts))};`,
   };
@@ -195,7 +182,6 @@ export async function buildBundle(
   folders: readonly { name: string; slug: string }[],
   parts: readonly FlatComponent[]
 ) {
-  assertIconsCovered();
   const result = await build({
     stdin: {
       contents: `import * as all from '${EXPORTS_MODULE}';\nwindow.${NAMESPACE} = all;`,
@@ -214,7 +200,12 @@ export async function buildBundle(
     charset: 'utf8',
     define: { 'process.env.NODE_ENV': '"production"' },
     loader: { '.css': 'empty' },
-    banner: { js: bundleHeader(folders.map((folder) => folder.name)) },
+    banner: {
+      js: bundleHeader([
+        ...folders.map((folder) => folder.name),
+        ...CANVAS_PARTS.map((part) => part.name),
+      ]),
+    },
     plugins: [
       canvasSlot,
       pageGlobals,

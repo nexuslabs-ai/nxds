@@ -34,6 +34,8 @@ function ruleOf(attribute: Attribute | null, required: boolean): Rule | null {
       ];
     case 'date':
       return attribute.selection ? 'D' : 'd';
+    case 'icon':
+      return attribute.as === 'name' ? 'i' : 'I';
     case 'json':
       return [
         'j',

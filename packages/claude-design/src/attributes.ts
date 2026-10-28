@@ -7,13 +7,16 @@
 import * as React from 'react';
 
 import { CANVAS_SCHEMA } from 'nxds:canvas-schema';
+import { ICON_COMPONENTS } from 'nxds:icon-names';
 
+import { Icon } from './canvas/icon.ts';
 import { kebab } from './canvas-wrapper.ts';
 
 /**
  * How one prop's attribute converts, in a compact form:
  * - `b` boolean, `n` number, `d` date, `D` DatePicker's `selected`,
- *   `s` a string that can't be empty;
+ *   `s` a string that can't be empty, `i` an icon name, `I` an icon prop,
+ *   which renders the named icon;
  * - `['e', literals, flags]` a literal union, where flags holds `s`
  *   (any string), `n` (any number) and `b` (boolean);
  * - `['l', item, single]` a comma list, with the one value it also takes;
@@ -25,6 +28,8 @@ export type Rule =
   | 'd'
   | 'D'
   | 's'
+  | 'i'
+  | 'I'
   | ['e', (string | number)[], string]
   | ['l', Rule, Rule | null]
   | ['j', 'o' | 'a' | '*', string[], string[], 0 | 1, 0 | 1];
@@ -103,7 +108,31 @@ function scalar(
   return fail(`isn't ${accepted.join(', or ')}`);
 }
 
+// `IconPlus` or `Plus` for `plus`.
+function iconName(value: string) {
+  return value
+    .replace(/^Icon(?=[A-Z])/, '')
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([a-zA-Z])(\d)/g, '$1-$2')
+    .toLowerCase();
+}
+
+function icon(value: string, rule: 'i' | 'I'): Converted {
+  if (!ICON_COMPONENTS[value]) {
+    const suggestion = iconName(value);
+    return fail(
+      ICON_COMPONENTS[suggestion]
+        ? `isn't an icon name; write "${suggestion}"`
+        : "isn't an icon name in components/Icon/README.md"
+    );
+  }
+  return {
+    value: rule === 'i' ? value : React.createElement(Icon, { name: value }),
+  };
+}
+
 function convertOne(value: string, rule: Rule, props: Props): Converted {
+  if (rule === 'i' || rule === 'I') return icon(value, rule);
   if (rule === 'b') {
     const bool = toBoolean(value);
     return bool === null ? fail("isn't true or false") : { value: bool };
@@ -251,7 +280,7 @@ function fallback(rule: Rule, prop: string): unknown {
   if (rule === 'b') return false;
   if (rule === 'n') return 0;
   if (rule === 's') return `${prop}-${(fallbackCount += 1)}`;
-  if (rule === 'd' || rule === 'D') return undefined;
+  if (typeof rule === 'string') return undefined;
   if (rule[0] === 'e') return rule[1][0];
   if (rule[0] === 'l') return [];
   if (rule[0] === 'j')
@@ -285,6 +314,7 @@ function describe(value: unknown) {
   ) {
     return JSON.stringify(value);
   }
+  if (value === undefined) return 'nothing';
   return Array.isArray(value) ? 'an empty list' : 'an empty value';
 }
 

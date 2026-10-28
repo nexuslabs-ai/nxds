@@ -10,6 +10,7 @@
 import ts from 'typescript';
 
 import { kebab } from './canvas-wrapper.ts';
+import { iconSet } from './icon-set.ts';
 import { NAMESPACE } from './system-index.ts';
 
 const INDENT = '  ';
@@ -19,12 +20,18 @@ export interface TreeDate {
   __date: string;
 }
 
+/** An icon element passed as a prop, such as Button's `startIcon`, by name. */
+export interface TreeIcon {
+  __icon: string;
+}
+
 export type TreeValue =
   | string
   | number
   | boolean
   | null
   | TreeDate
+  | TreeIcon
   | TreeValue[]
   | { [key: string]: TreeValue };
 
@@ -56,6 +63,25 @@ function isDate(value: TreeValue): value is TreeDate {
     !Array.isArray(value) &&
     '__date' in value
   );
+}
+
+function isIcon(value: TreeValue): value is TreeIcon {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    '__icon' in value
+  );
+}
+
+let iconNames: Map<string, string> | null = null;
+
+/** `plus` for `IconPlus`, or undefined for a component that isn't an icon the bundle ships. */
+function iconName(component: string) {
+  iconNames ??= new Map(
+    iconSet().map(({ component, name }) => [component, name])
+  );
+  return iconNames.get(component);
 }
 
 function isoDate(year: number, month: number, day: number) {
@@ -98,6 +124,14 @@ function literal(
     return items.includes(UNWRITABLE) ? UNWRITABLE : (items as TreeValue[]);
   }
   if (ts.isObjectLiteralExpression(node)) return objectLiteral(node, context);
+  // `startIcon={<IconPlus />}`: an icon prop takes the icon's name.
+  if (
+    ts.isJsxSelfClosingElement(node) &&
+    node.attributes.properties.length === 0
+  ) {
+    const name = iconName(node.tagName.getText());
+    return name ? { __icon: name } : UNWRITABLE;
+  }
   if (ts.isNewExpression(node) && node.expression.getText() === 'Date') {
     const args = (node.arguments ?? []).map((arg) => literal(arg, context));
     if (args.length !== 3 || !args.every((arg) => typeof arg === 'number')) {
@@ -139,6 +173,7 @@ function attributeString(value: TreeValue): string {
   }
   if (value === null) return 'null';
   if (isDate(value)) return value.__date;
+  if (isIcon(value)) return value.__icon;
   if (Array.isArray(value)) {
     const items = value.map((item) =>
       typeof item === 'string' ||
@@ -271,12 +306,14 @@ function tagOf(name: string, context: Context) {
       isPart: true,
     };
   }
-  if (/^Icon[A-Z]/.test(name)) {
+  const icon = iconName(name);
+  if (icon) {
     return {
-      open: `x-import component-from-global-scope="${NAMESPACE}.Icons.${name}"`,
+      open: `x-import component-from-global-scope="${NAMESPACE}.Icon" name="${icon}"`,
       close: 'x-import',
       isPart: true,
-      part: `Icons.${name}`,
+      part: 'Icon',
+      props: { name: icon },
     };
   }
   if (/^[a-z]/.test(name)) return { open: name, close: name, isPart: false };
@@ -302,7 +339,7 @@ function jsxElement(
   if (!tag || !attrs) return null;
   const tree: TreeNode = {
     part: tag.part ?? name,
-    props: attrs.props,
+    props: { ...tag.props, ...attrs.props },
     children: [],
   };
   if (!ts.isJsxElement(node)) {

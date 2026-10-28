@@ -18,7 +18,8 @@ import {
 import path from 'node:path';
 
 import { buildBundle } from '../src/bundle.ts';
-import { EXCLUDED_SLUGS, GROUPS } from '../src/groups.ts';
+import { canvasPartFiles } from '../src/canvas/pages.ts';
+import { CANVAS_PARTS, EXCLUDED_SLUGS, GROUPS } from '../src/groups.ts';
 import { withPresetTable } from '../src/presets.ts';
 import {
   buildPreview,
@@ -53,6 +54,18 @@ function gitRef() {
   return execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
     encoding: 'utf8',
   }).trim();
+}
+
+// nxds's own budgets, well under the Design System format's caps (src/validate.ts).
+const BUNDLE_BUDGET = 1.6 * 1024 * 1024;
+const TYPES_BUDGET = 1024 * 1024;
+
+function assertBudget(file: string, contents: string, budget: number) {
+  const bytes = Buffer.byteLength(contents);
+  if (bytes <= budget) return;
+  throw new Error(
+    `${file}: ${Math.round(bytes / 1024)} KB, over its ${Math.round(budget / 1024)} KB budget.`
+  );
 }
 
 function write(relative: string, contents: string) {
@@ -146,8 +159,11 @@ async function main() {
   const { code } = await buildBundle(folders, parts);
   write('components/bundle.js', code);
   write('components/bundle.css', styles);
+  const indexDts = renderIndexDts(parts);
+  write('components/index.d.ts', indexDts);
+  assertBudget('components/bundle.js', code, BUNDLE_BUDGET);
+  assertBudget('components/index.d.ts', indexDts, TYPES_BUDGET);
 
-  write('components/index.d.ts', renderIndexDts(parts));
   const report = coverage(parts);
   if (report.missing.length > 0) {
     throw new Error(
@@ -166,6 +182,15 @@ async function main() {
       `components/${folder.name}/README.md`,
       componentReadme({ folder, parts: own, example })
     );
+  }
+
+  const canvasGroups = new Map(
+    CANVAS_PARTS.map((part) => [part.name, part.group])
+  );
+  for (const [file, contents] of Object.entries(
+    canvasPartFiles(parts, canvasGroups)
+  )) {
+    write(`components/${file}`, contents);
   }
 
   write(
@@ -197,9 +222,9 @@ async function main() {
     path.join(distDir, 'LICENSE')
   );
 
-  const bundleKb = Math.round(Buffer.byteLength(code) / 1024);
+  const kb = (text: string) => Math.round(Buffer.byteLength(text) / 1024);
   console.log(
-    `@nxds/claude-design ${version}: ${folders.length} components, ${parts.length} parts, bundle.js ${bundleKb} KB, ${report.props} props (${report.controls.dropdown} dropdowns, ${report.controls.toggle} toggles).`
+    `@nxds/claude-design ${version}: ${folders.length} components, ${parts.length} parts, bundle.js ${kb(code)} KB, index.d.ts ${kb(indexDts)} KB, ${report.props} props (${report.controls.dropdown} dropdowns, ${report.controls.toggle} toggles).`
   );
 }
 

@@ -16,7 +16,7 @@ import type {
   ListAttribute,
   ScalarAttribute,
 } from './attribute.ts';
-import { ICONS } from './icons.ts';
+import { iconSet } from './icon-set.ts';
 
 /** DOM attributes every part lists. */
 const COMMON_DOM_PROPS = new Set(['children', 'className', 'id']);
@@ -390,7 +390,7 @@ function attributeOf(
   if (members.length === 0) return undefined;
   if (isReactNode(members)) {
     return ICON_PROPS.has(name)
-      ? { kind: 'icon' }
+      ? { kind: 'icon', as: 'element' }
       : { ...emptyScalar(), string: true };
   }
   const values = members.filter(
@@ -489,6 +489,8 @@ function attributeType(attribute: Attribute, ownType: string) {
     case 'date':
     case 'json':
       return 'string';
+    case 'icon':
+      return iconNameUnion();
     default:
       return ownType;
   }
@@ -497,7 +499,7 @@ function attributeType(attribute: Attribute, ownType: string) {
 function controlOf(attribute: Attribute | null, type: string): Control | null {
   if (!attribute) return null;
   if (attribute.kind === 'content') return 'content';
-  if (attribute.kind === 'none' || attribute.kind === 'icon') return null;
+  if (attribute.kind === 'none') return null;
   if (type === 'boolean') return 'toggle';
   if (type === 'number') return 'number';
   if (type === 'string') return 'text';
@@ -534,6 +536,8 @@ function attributeFormat(attribute: Attribute | null) {
       return attribute.selection
         ? 'ISO date, such as `2026-10-28`. With `mode="multiple"`, a comma list of dates. With `mode="range"`, the first and last date: `2026-10-01,2026-10-07`.'
         : 'ISO date, such as `2026-10-28`, or a month, such as `2026-10`.';
+    case 'icon':
+      return 'An icon name, such as `plus`. `components/Icon/README.md` lists every name.';
     case 'json':
       return `JSON${attribute.dateKeys.length > 0 || attribute.dateItems ? ', with dates as ISO strings' : ''}.${attribute.boolean ? ' A bare attribute is `true`.' : ''}`;
     default:
@@ -675,9 +679,86 @@ function flatComponent(
 /** Every component part the bundle exports, in name order. */
 export function flatComponents(): FlatComponent[] {
   const { checker, exported } = reactProgram();
-  return [...publicComponents(checker, exported, componentsRoot)]
-    .map(([name, symbol]) => flatComponent(checker, name, symbol))
-    .filter((component) => component.slug !== 'appearance');
+  return [
+    ...[...publicComponents(checker, exported, componentsRoot)]
+      .map(([name, symbol]) => flatComponent(checker, name, symbol))
+      .filter((component) => component.slug !== 'appearance'),
+    iconPart(),
+  ];
+}
+
+function iconNameUnion() {
+  return iconSet()
+    .map(({ name }) => JSON.stringify(name))
+    .join(' | ');
+}
+
+const NUMBER = {
+  kind: 'scalar',
+  literals: [],
+  string: false,
+  suggested: false,
+  number: true,
+  boolean: false,
+} as const satisfies ScalarAttribute;
+const TEXT = { ...NUMBER, string: true, number: false } as const;
+
+// Nxds.Icon lives in the export (src/canvas/icon.ts), not in @nxds/react.
+function iconPart(): FlatComponent {
+  return {
+    name: 'Icon',
+    slug: 'icon',
+    description:
+      'A Tabler icon by name, such as `plus`. It takes the colour of its text. `components/Icon/README.md` lists every name.',
+    props: [
+      {
+        name: 'name',
+        type: iconNameUnion(),
+        optional: false,
+        description: 'The icon, by its name on tabler.io.',
+        defaultValue: null,
+        attribute: { kind: 'icon', as: 'name' },
+        control: 'dropdown',
+      },
+      {
+        name: 'size',
+        type: 'number',
+        optional: true,
+        description: 'Width and height in px.',
+        defaultValue: '16',
+        attribute: NUMBER,
+        control: 'number',
+      },
+      {
+        name: 'stroke',
+        type: 'number',
+        optional: true,
+        description: 'Stroke width.',
+        defaultValue: '2',
+        attribute: NUMBER,
+        control: 'number',
+      },
+      {
+        name: 'aria-label',
+        type: 'string',
+        optional: true,
+        description:
+          'Names the icon for screen readers. Without it, they skip the icon. An icon-only button names itself instead.',
+        defaultValue: null,
+        attribute: TEXT,
+        control: 'text',
+      },
+      {
+        name: 'className',
+        type: 'string',
+        optional: true,
+        description: '',
+        defaultValue: null,
+        attribute: TEXT,
+        control: 'text',
+      },
+    ],
+  };
 }
 
 function docComment(lines: string[], indent: string) {
@@ -716,7 +797,7 @@ export function renderIndexDts(components: readonly FlatComponent[]) {
     '// Each type is what the prop’s x-import attribute holds.',
     "import type * as React from 'react';",
     ...interfaces,
-    ...ICONS.flatMap((icon) => ['', ...iconProps(icon)]),
+    ...iconSet().flatMap(({ component }) => ['', ...iconProps(component)]),
     '',
   ].join('\n');
 }
@@ -737,18 +818,12 @@ function iconProps(icon: string) {
   ];
 }
 
-/** Props whose rule lands in a later commit of this change, by what lands it. */
-const PLANNED: Readonly<Record<string, string>> = {
-  icon: 'icon names',
-};
-
 export interface Coverage {
   components: number;
   props: number;
   controls: Record<Control, number>;
   /** Props a canvas doesn't set, by reason. */
   notNeeded: Map<string, string[]>;
-  planned: Map<string, string[]>;
   missing: { name: string; type: string }[];
 }
 
@@ -758,7 +833,6 @@ export function coverage(components: readonly FlatComponent[]): Coverage {
     props: 0,
     controls: { dropdown: 0, toggle: 0, number: 0, text: 0, content: 0 },
     notNeeded: new Map(),
-    planned: new Map(),
     missing: [],
   };
   const add = (map: Map<string, string[]>, key: string, prop: string) =>
@@ -773,8 +847,6 @@ export function coverage(components: readonly FlatComponent[]): Coverage {
         report.missing.push({ name: qualified, type: prop.type });
       } else if (attribute.kind === 'none') {
         add(report.notNeeded, attribute.reason, qualified);
-      } else if (PLANNED[attribute.kind]) {
-        add(report.planned, PLANNED[attribute.kind] ?? '', qualified);
       }
     }
   }
@@ -806,14 +878,10 @@ export function renderCoverage(report: Coverage) {
       ([kind, count]) => `| ${kind} | ${count} |`
     ),
     `| none: not needed on a canvas | ${total(report.notNeeded)} |`,
-    `| none: planned | ${total(report.planned)} |`,
     `| none: missing | ${report.missing.length} |`,
     '',
     '## Not needed on a canvas',
     '',
     ...listed(report.notNeeded),
-    ...(report.planned.size > 0
-      ? ['## Planned', '', ...listed(report.planned)]
-      : []),
   ].join('\n');
 }

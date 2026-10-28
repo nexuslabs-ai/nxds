@@ -4,3 +4,13 @@ declare module 'nxds:canvas-schema' {
 
   export const CANVAS_SCHEMA: CanvasSchema;
 }
+
+// Each icon component bundle.js ships, by its canvas name.
+declare module 'nxds:icon-names' {
+  import type { ComponentType } from 'react';
+
+  export const ICON_COMPONENTS: Record<
+    string,
+    ComponentType<Record<string, unknown>> | undefined
+  >;
+}

@@ -43,9 +43,10 @@ export interface JsonAttribute {
   boolean: boolean;
 }
 
-/** An icon prop, which takes an icon name. */
+/** An icon by its canvas name: as an element for an icon prop, or as Nxds.Icon's `name`. */
 export interface IconAttribute {
   kind: 'icon';
+  as: 'element' | 'name';
 }
 
 export interface ContentAttribute {

@@ -136,7 +136,7 @@ async function compileStory(source: string) {
   return output.text.trim();
 }
 
-function previewHtml({
+export function previewHtml({
   name,
   group,
   script,
@@ -213,7 +213,29 @@ function controlCell(prop: FlatProp) {
 function propRow(prop: FlatProp) {
   const control = controlCell(prop);
   const fallback = prop.defaultValue ?? '';
-  return `| \`${prop.name}\` | \`${prop.type.replace(/\|/g, '\\|')}\` | ${fallback && `\`${fallback}\``} | ${control} |`;
+  // Every icon name would fill the cell; components/Icon/README.md lists them.
+  const type =
+    prop.attribute?.kind === 'icon'
+      ? 'icon name'
+      : `\`${prop.type.replace(/\|/g, '\\|')}\``;
+  return `| \`${prop.name}\` | ${type} | ${fallback && `\`${fallback}\``} | ${control} |`;
+}
+
+/** The README's props tables, one per part. */
+export function propsSection(parts: readonly FlatComponent[]) {
+  const lines = ['## Props', ''];
+  for (const part of parts) {
+    if (part.props.length === 0) continue;
+    lines.push(
+      `### ${part.name}`,
+      '',
+      '| Prop | Type | Default | Control |',
+      '| --- | --- | --- | --- |',
+      ...part.props.map(propRow),
+      ''
+    );
+  }
+  return lines;
 }
 
 // Used when no docs story's markup can be written as attributes.
@@ -267,17 +289,6 @@ export function componentReadme({
     lines.push('');
   }
 
-  lines.push('## Props', '');
-  for (const part of parts) {
-    if (part.props.length === 0) continue;
-    lines.push(
-      `### ${part.name}`,
-      '',
-      '| Prop | Type | Default | Control |',
-      '| --- | --- | --- | --- |',
-      ...part.props.map(propRow),
-      ''
-    );
-  }
+  lines.push(...propsSection(parts));
   return lines.join('\n');
 }

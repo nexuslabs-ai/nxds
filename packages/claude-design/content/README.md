@@ -68,7 +68,8 @@ Motion answers input and then gets out of the way. Popovers, menus and routine s
 
 ## Iconography
 
-- nxds uses Tabler icons, outline style, at 16px beside text. They are `Nxds.Icons.IconName`, such as `Nxds.Icons.IconPlus`.
+- nxds uses Tabler icons, outline style, at 16px beside text. Place one with `Nxds.Icon` and its tabler.io name: `name="plus"`.
+- Name an icon on an icon prop the same way: Button `start-icon="plus"`, Badge `left-icon="circle-check"`. `components/Icon/README.md` lists every name the system ships.
 - An icon takes the colour of its text. Don't tint icons on their own.
 - An icon-only button needs an `aria-label`.
 - No emoji as icons.
