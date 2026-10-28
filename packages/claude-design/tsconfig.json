@@ -9,6 +9,7 @@
     "verbatimModuleSyntax": true,
     "types": ["node"],
     "paths": {
+      "nxds:*": ["./src/virtual/*.ts"],
       "@radix-ui/react-slot": [
         "../react-18/node_modules/@radix-ui/react-slot/dist/index.d.mts"
       ]

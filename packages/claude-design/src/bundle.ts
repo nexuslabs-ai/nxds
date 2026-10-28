@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 
+import { RECHARTS_PARTS } from './canvas/recharts.ts';
 import { canvasSchema } from './canvas-schema.ts';
 import { canvasProps } from './canvas-transform.ts';
 import { CANVAS_PARTS } from './groups.ts';
@@ -30,6 +31,8 @@ const ICONS_MODULE = 'nxds:icons';
 const SCHEMA_MODULE = 'nxds:canvas-schema';
 const ICON_NAMES_MODULE = 'nxds:icon-names';
 const SONNER_THEME_MODULE = 'nxds:sonner-theme';
+const RECHARTS_MODULE = 'nxds:recharts';
+const ATTRIBUTES = path.join(import.meta.dirname, 'attributes.ts');
 const CANVAS_DIR = path.join(import.meta.dirname, 'canvas');
 const CANVAS_ICON = path.join(CANVAS_DIR, 'icon.ts');
 const CANVAS_TOAST = path.join(CANVAS_DIR, 'toast.ts');
@@ -62,7 +65,7 @@ function exportsModule(slugs: readonly string[]) {
     `export * as Icons from '${ICONS_MODULE}';`,
     `export { Icon } from ${JSON.stringify(CANVAS_ICON)};`,
     `export { Toast } from ${JSON.stringify(CANVAS_TOAST)};`,
-    "export * as Recharts from 'recharts';",
+    `export * as Recharts from '${RECHARTS_MODULE}';`,
   ].join('\n');
 }
 
@@ -145,6 +148,7 @@ function virtualModules(
     [EXPORTS_MODULE]: () => exportsModule(slugs),
     [ICONS_MODULE]: iconsModule,
     [ICON_NAMES_MODULE]: iconNamesModule,
+    [RECHARTS_MODULE]: rechartsModule,
     [SCHEMA_MODULE]: () =>
       `export const CANVAS_SCHEMA = ${JSON.stringify(canvasSchema(parts))};`,
   };
@@ -170,6 +174,21 @@ function virtualModules(
       );
     },
   };
+}
+
+// Every Recharts export, with the typed parts (src/canvas/recharts.ts) taking
+// their attributes as typed props.
+function rechartsModule() {
+  const names = Object.keys(RECHARTS_PARTS);
+  return [
+    "export * from 'recharts';",
+    `import { ${names.map((name) => `${name} as Recharts${name}`).join(', ')} } from 'recharts';`,
+    `import { withCanvasProps } from ${JSON.stringify(ATTRIBUTES)};`,
+    ...names.map(
+      (name) =>
+        `export const ${name} = withCanvasProps('Recharts${name}', Recharts${name});`
+    ),
+  ].join('\n');
 }
 
 const SONNER_SOURCE = path.join(

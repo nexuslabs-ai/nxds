@@ -2,6 +2,7 @@
 // (src/attributes.ts), written from each prop's attribute kind.
 import type { Attribute, ScalarAttribute } from './attribute.ts';
 import type { CanvasSchema, Rule } from './attributes.ts';
+import { kebab } from './canvas-wrapper.ts';
 import type { FlatComponent } from './props.ts';
 
 function scalarRule(scalar: ScalarAttribute): Rule {
@@ -54,9 +55,23 @@ function ruleOf(attribute: Attribute | null, required: boolean): Rule | null {
   }
 }
 
+/** Parts that read their children's types, as Recharts finds a chart's series and Cells. */
+const UNWRAPS = (part: FlatComponent) =>
+  part.slug === 'recharts' || part.name === 'ChartContainer';
+
 export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
-  const schema: CanvasSchema = { rules: {}, required: {} };
+  const schema: CanvasSchema = {
+    rules: {},
+    required: {},
+    unwrap: parts.filter(UNWRAPS).map((part) => part.name),
+    renames: {},
+  };
   for (const part of parts) {
+    const renames = part.props
+      .filter((prop) => /^data[A-Z]/.test(prop.name))
+      .map((prop) => [kebab(prop.name), prop.name]);
+    if (renames.length > 0)
+      schema.renames[part.name] = Object.fromEntries(renames);
     const rules: Record<string, Rule> = {};
     const required: string[] = [];
     for (const prop of part.props) {

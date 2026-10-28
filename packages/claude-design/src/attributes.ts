@@ -10,7 +10,7 @@ import { CANVAS_SCHEMA } from 'nxds:canvas-schema';
 import { ICON_COMPONENTS } from 'nxds:icon-names';
 
 import { Icon } from './canvas/icon.ts';
-import { kebab } from './canvas-wrapper.ts';
+import { kebab, unwrapped } from './canvas-wrapper.ts';
 
 /**
  * How one prop's attribute converts, in a compact form:
@@ -39,6 +39,10 @@ export interface CanvasSchema {
   rules: Record<string, Record<string, Rule>>;
   /** Each part's props that have no default, so a bad value can't just be dropped. */
   required: Record<string, string[]>;
+  /** Parts that read their children's types, which get them without canvas wrappers. */
+  unwrap: string[];
+  /** A `data-*` attribute a canvas keeps as written, by the prop it sets: `data-key` for Recharts' `dataKey`. */
+  renames: Record<string, Record<string, string>>;
 }
 
 type Props = Record<string, unknown>;
@@ -336,12 +340,30 @@ function isIndentation(children: unknown) {
   );
 }
 
+// `props` with each `data-*` attribute a part declares as a prop renamed to it.
+function renamed(part: string, props: Props): Props | null {
+  const renames = CANVAS_SCHEMA.renames[part];
+  if (!renames) return null;
+  let result: Props | null = null;
+  for (const [attribute, prop] of Object.entries(renames)) {
+    if (!(attribute in props) || prop in props) continue;
+    result ??= { ...props };
+    result[prop] = result[attribute];
+    delete result[attribute];
+  }
+  return result;
+}
+
 /** `props` with each attribute string converted to its prop's type. */
 export function coerce<P extends object>(part: string, props: P): P {
-  let result: Props | null = null;
-  if (isIndentation((props as Props)['children'])) {
-    result = { ...(props as Props) };
+  let result: Props | null = renamed(part, props as Props);
+  const children = (result ?? (props as Props))['children'];
+  if (isIndentation(children)) {
+    result ??= { ...(props as Props) };
     delete result['children'];
+  } else if (children !== undefined && CANVAS_SCHEMA.unwrap.includes(part)) {
+    result ??= { ...(props as Props) };
+    result['children'] = unwrapped(children as React.ReactNode);
   }
   const rules = CANVAS_SCHEMA.rules[part];
   if (!rules) return (result ?? props) as P;

@@ -81,7 +81,8 @@ Motion answers input and then gets out of the way. Popovers, menus and routine s
 - Overlays (`Dialog`, `Popover`, `DropdownMenu`, `Select`, `Tooltip`) open from a trigger part, such as `Nxds.DialogTrigger`.
 - Wrap a sidebar layout in `Nxds.SidebarProvider`.
 - Show a toast on a static screen with `Nxds.Toast`, placed where the app shows its toasts. `Nxds.Toaster` shows a toast only when code calls `toast()`.
-- Draw charts with `Nxds.ChartContainer` around `Nxds.Recharts` parts.
+- Draw a chart with `Nxds.BarChart`, `Nxds.LineChart`, `Nxds.AreaChart` or `Nxds.PieChart`. Give it its rows as JSON in `data`, the category key in `x-key` and the series keys as a comma list in `series`: `series="desktop,mobile"`. Each series takes the next chart colour.
+- For a chart those don't draw, put `Nxds.Recharts` parts inside `Nxds.ChartContainer`, each as its own x-import: `Nxds.Recharts.BarChart` with `data` as JSON, then `Nxds.Recharts.Bar` with `data-key="desktop"`. Name each series' label and colour in ChartContainer's `config`, and fill it with `var(--color-desktop)`. Use the data charts when you want the nxds tooltip and legend.
 
 ## Themes
 

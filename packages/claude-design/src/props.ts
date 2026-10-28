@@ -16,6 +16,7 @@ import type {
   ListAttribute,
   ScalarAttribute,
 } from './attribute.ts';
+import { RECHARTS_PARTS } from './canvas/recharts.ts';
 import { iconSet } from './icon-set.ts';
 
 /** DOM attributes every part lists. */
@@ -58,6 +59,11 @@ const ICON_PROPS = new Set(['startIcon', 'endIcon', 'leftIcon', 'rightIcon']);
 
 /** Object props a canvas sets as JSON. Any other object prop needs a reason in NOT_NEEDED. */
 const JSON_PROPS: Readonly<Record<string, readonly string[]>> = {
+  ...Object.fromEntries(
+    Object.entries(RECHARTS_PARTS)
+      .filter(([, props]) => props.includes('data'))
+      .map(([name]) => [`Recharts${name}`, ['data']])
+  ),
   AreaChart: ['data', 'config'],
   BarChart: ['data', 'config'],
   ChartContainer: ['config'],
@@ -197,9 +203,7 @@ function withoutNullish(type: ts.Type) {
 // An optional ReactNode prop is a fresh union with undefined, which has lost
 // the alias name; ReactPortal only appears inside ReactNode.
 function isReactNode(members: readonly ts.Type[]) {
-  return members.some((member) =>
-    ['ReactPortal', 'ReactElement'].includes(member.getSymbol()?.name ?? '')
-  );
+  return members.some((member) => member.getSymbol()?.name === 'ReactPortal');
 }
 
 /** The prop's own TypeScript type, printed for a prop the canvas doesn't set. */
@@ -231,7 +235,7 @@ function isDate(type: ts.Type) {
 }
 
 function arrayItem(checker: ts.TypeChecker, type: ts.Type) {
-  if (!checker.isArrayType(type)) return null;
+  if (!checker.isArrayType(type) && !checker.isTupleType(type)) return null;
   return checker.getTypeArguments(type as ts.TypeReference)[0] ?? null;
 }
 
@@ -416,12 +420,15 @@ function attributeOf(
     return listOf(checker, arrays, single);
   }
 
-  // A string or an object, such as SidebarMenuButton's `tooltip`: the
-  // attribute holds the string.
+  // A string or an object, such as SidebarMenuButton's `tooltip`, or a
+  // boolean or an element, such as Recharts' `dot`: the attribute holds the
+  // string or boolean.
   const primitive = scalarOf(
     values.filter((member) => !(member.flags & ts.TypeFlags.Object))
   );
-  return primitive?.string ? primitive : null;
+  if (!primitive) return null;
+  const { string, number, boolean, literals } = primitive;
+  return string || number || boolean || literals.length > 0 ? primitive : null;
 }
 
 // A props union, such as DayPicker's one per mode, lists a prop once with
@@ -482,7 +489,10 @@ function attributeType(attribute: Attribute, ownType: string) {
   switch (attribute.kind) {
     case 'scalar':
       if (attribute.number && attribute.literals.length === 0) return 'number';
-      if (attribute.string && !attribute.suggested) return 'string';
+      // A dropdown can't hold "any number" beside its literals.
+      if (attribute.number || (attribute.string && !attribute.suggested)) {
+        return 'string';
+      }
       if (attribute.literals.length > 0) return literalUnion(attribute);
       return attribute.boolean ? 'boolean' : 'string';
     case 'list':
@@ -529,8 +539,11 @@ function attributeFormat(attribute: Attribute | null) {
       if (single.string) {
         return `One value. With \`type="multiple"\`, a ${list.charAt(0).toLowerCase()}${list.slice(1)}`;
       }
-      const literals = single.literals.map((literal) => `\`${literal}\``);
-      return `${literals.join(' or ')}, or a ${list.charAt(0).toLowerCase()}${list.slice(1)}`;
+      const options = [
+        ...single.literals.map((literal) => `\`${literal}\``),
+        ...(single.number ? ['A number'] : []),
+      ];
+      return `${options.join(' or ')}, or a ${list.charAt(0).toLowerCase()}${list.slice(1)}`;
     }
     case 'date':
       return attribute.selection
@@ -623,7 +636,8 @@ function isDomEventHandler(type: string) {
 function flatComponent(
   checker: ts.TypeChecker,
   name: string,
-  symbol: ts.Symbol
+  symbol: ts.Symbol,
+  listed: (prop: ts.Symbol) => boolean = isListedProp
 ): FlatComponent {
   const fileName = symbol.declarations?.[0]?.getSourceFile().fileName ?? '';
   const defaults = componentDefaults(checker, symbol);
@@ -634,7 +648,7 @@ function flatComponent(
     const multiple = takesMultiple(checker, name, byName, resolved.declaration);
     for (const [propName, symbols] of byName) {
       const [first] = symbols;
-      if (!first || !isListedProp(first)) continue;
+      if (!first || !listed(first)) continue;
       const types = symbols.map((prop) =>
         checker.getTypeOfSymbolAtLocation(prop, resolved.declaration)
       );
@@ -684,7 +698,92 @@ export function flatComponents(): FlatComponent[] {
       .map(([name, symbol]) => flatComponent(checker, name, symbol))
       .filter((component) => component.slug !== 'appearance'),
     ...canvasParts(),
+    ...rechartsParts(checker, exported),
   ];
+}
+
+// The `recharts` module chart.tsx imports, by export name.
+function rechartsExports(
+  checker: ts.TypeChecker,
+  exported: ReadonlyMap<string, ts.Symbol>
+) {
+  const source = exported
+    .get('ChartContainer')
+    ?.declarations?.[0]?.getSourceFile();
+  const specifier = source?.statements
+    .filter(ts.isImportDeclaration)
+    .map((statement) => statement.moduleSpecifier)
+    .find(
+      (specifier) =>
+        ts.isStringLiteral(specifier) && specifier.text === 'recharts'
+    );
+  const module = specifier && checker.getSymbolAtLocation(specifier);
+  if (!module) throw new Error('index.d.ts: chart.tsx imports no recharts.');
+  return new Map(
+    checker
+      .getExportsOfModule(module)
+      .map((symbol) => [
+        symbol.name,
+        symbol.flags & ts.SymbolFlags.Alias
+          ? checker.getAliasedSymbol(symbol)
+          : symbol,
+      ])
+  );
+}
+
+// The one type a `prop:type` entry names, for a prop whose type takes
+// several or is generic, such as Recharts' `TypedDataKey<...>`.
+function narrowed(attribute: Attribute | null, to: string | undefined) {
+  if (!to) return attribute;
+  return {
+    ...emptyScalar(),
+    string: to === 'string',
+    number: to === 'number',
+    boolean: to === 'boolean',
+  };
+}
+
+/** Typed Recharts parts, `Nxds.Recharts.Bar` as `RechartsBar`, with the props src/canvas/recharts.ts lists. */
+function rechartsParts(
+  checker: ts.TypeChecker,
+  exported: ReadonlyMap<string, ts.Symbol>
+): FlatComponent[] {
+  const recharts = rechartsExports(checker, exported);
+  const problems: string[] = [];
+  const parts = Object.entries(RECHARTS_PARTS).map(([name, entries]) => {
+    const specs = new Map(
+      entries.map((entry) => {
+        const [prop = '', to] = entry.split(':');
+        return [prop, to] as const;
+      })
+    );
+    const symbol = recharts.get(name);
+    if (!symbol) throw new Error(`index.d.ts: recharts exports no ${name}.`);
+    const part = flatComponent(checker, `Recharts${name}`, symbol, (prop) =>
+      specs.has(prop.name)
+    );
+    const props = [...specs].flatMap(([prop, to]) => {
+      const found = part.props.find((candidate) => candidate.name === prop);
+      const attribute = narrowed(found?.attribute ?? null, to);
+      if (!found || !attribute || attribute.kind === 'none') {
+        problems.push(
+          `${name}.${prop}${found ? `: ${found.type}` : ' (no such prop)'}`
+        );
+        return [];
+      }
+      const type = attributeType(attribute, found.type);
+      return [
+        { ...found, attribute, type, control: controlOf(attribute, type) },
+      ];
+    });
+    return { ...part, slug: 'recharts', props };
+  });
+  if (problems.length > 0) {
+    throw new Error(
+      `index.d.ts: these Recharts props have no canvas attribute; drop each from src/canvas/recharts.ts or give it a type:\n  ${problems.join('\n  ')}`
+    );
+  }
+  return parts;
 }
 
 function iconNameUnion() {
