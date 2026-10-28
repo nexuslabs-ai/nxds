@@ -151,37 +151,59 @@ const context = await browser.newContext({
 });
 
 // `window.__nxdsElement(tree, wrapped)` turns a `Part` tree into React
-// elements. With `wrapped`, every Nxds part sits inside its own
-// `<div data-dc-tpl style="display: contents">`, the way a canvas mounts each
-// x-import; plain elements stay as they are.
+// elements. With `wrapped`, it mounts the tree the way a canvas does: every
+// element gets `data-dc-tpl` and its children as an array, and every Nxds part
+// sits inside its own `<div class="sc-host-x" style="display: contents">`,
+// with the indentation between its content's tags kept as strings.
 await context.addInitScript(() => {
   type Node = Part | string;
   let mounted = 0;
-  const element = (tree: Node, wrapped: boolean): ReactModule.ReactNode => {
+  const element = (
+    tree: Node,
+    wrapped: boolean,
+    key?: number
+  ): ReactModule.ReactNode => {
     const { React, Nxds } = window as unknown as PageGlobals;
     if (typeof tree === 'string') return tree;
     const part = tree.part.startsWith('Icons.')
       ? Nxds.Icons[tree.part.slice('Icons.'.length)]
       : Nxds[tree.part];
-    const children = (tree.children ?? []).map((child) =>
-      element(child, wrapped)
+    const type = (part as ReactModule.ElementType | undefined) ?? tree.part;
+    const children = (tree.children ?? []).map((child, index) =>
+      element(child, wrapped, index)
     );
-    const rendered = React.createElement(
-      (part as ReactModule.ElementType | undefined) ?? tree.part,
-      tree.props ?? null,
-      ...children
-    );
-    if (!wrapped || !part) return rendered;
+    if (!wrapped) {
+      return React.createElement(type, tree.props ?? null, ...children);
+    }
     mounted += 1;
-    return React.createElement(
-      'div',
-      {
-        className: 'sc-host-x',
-        'data-dc-tpl': String(mounted),
-        style: { display: 'contents' },
-      },
-      rendered
-    );
+    const tpl = String(mounted);
+    // A void element such as <input> throws on any `children` prop.
+    const content = children.length > 0 ? { children } : {};
+    if (!part) {
+      return React.createElement(type, {
+        ...tree.props,
+        ...content,
+        key,
+        'data-dc-tpl': tpl,
+      });
+    }
+    const indented = children.every((child) => typeof child === 'string')
+      ? content
+      : {
+          children: [...children.flatMap((child) => ['\n    ', child]), '\n  '],
+        };
+    const rendered = React.createElement(type, {
+      ...tree.props,
+      ...indented,
+      key: 0,
+    });
+    return React.createElement('div', {
+      key,
+      className: 'sc-host-x',
+      'data-dc-tpl': tpl,
+      style: { display: 'contents' },
+      children: [rendered],
+    });
   };
   Object.assign(window, { __nxdsElement: element });
 });
@@ -776,7 +798,56 @@ const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
     reads: [
       { target: '[data-slot="sidebar-menu-badge"]', property: 'top' },
       { target: '[data-slot="sidebar-menu-button"] svg', property: 'width' },
+      {
+        target: '[data-slot="sidebar-menu-button"] > span',
+        property: 'text-overflow',
+      },
     ],
+  },
+  {
+    name: 'AlertIcon sizes a hand-written svg',
+    tree: part(
+      'Alert',
+      null,
+      part(
+        'AlertIcon',
+        null,
+        part(
+          'svg',
+          { viewBox: '0 0 24 24', 'aria-hidden': true },
+          part('circle', { cx: 12, cy: 12, r: 10 })
+        )
+      ),
+      part('AlertTitle', null, 'Heads up')
+    ),
+    reads: [
+      { target: 'svg', property: 'width' },
+      { target: 'svg', property: 'height' },
+    ],
+  },
+  {
+    name: 'FieldDescription underlines a raw link',
+    tree: part(
+      'FieldDescription',
+      null,
+      'Read the ',
+      part('a', { href: '#terms' }, 'terms'),
+      ' first.'
+    ),
+    reads: [{ target: 'a', property: 'text-underline-offset' }],
+  },
+  {
+    name: "an author's rounded card leaves its children square",
+    tree: part(
+      'div',
+      { style: { borderRadius: '16px', padding: '16px' } },
+      part(
+        'div',
+        { className: 'card-header' },
+        part('Button', { variant: 'outline' }, 'Edit')
+      )
+    ),
+    reads: [{ target: '.card-header', property: 'border-top-left-radius' }],
   },
   {
     name: 'a Label dims beside a disabled Checkbox',
@@ -839,12 +910,12 @@ const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
 ];
 
 // React logs an element a wrapper puts where HTML doesn't allow it, such as
-// a <div> inside <tbody>. A canvas renders the same tree, so these are its
-// own output, not nxds's.
+// a <div> inside <tbody>, and the indentation a canvas keeps inside a table.
+// A canvas renders the same tree, so these are its own output, not nxds's.
 // React 18 logs the format string with its arguments after it: the element,
 // then the parent it can't sit in. One of the two is the wrapper <div>.
 const WRAPPER_NESTING =
-  /validateDOMNesting\(\.\.\.\): %s cannot appear as a (?:child|descendant) of <%s>\.%s%s%s (?:<div> \w+|<\w+> div)\s/;
+  /validateDOMNesting\(\.\.\.\): %s cannot appear as a (?:child|descendant) of <%s>\.%s%s%s (?:<div> \w+|<\w+> div|Whitespace text nodes \w+)\s/;
 
 // Renders `tree`, with or without canvas wrappers, and reads each `read`.
 async function readTree(
@@ -859,7 +930,13 @@ async function readTree(
       const host = document.createElement('div');
       document.body.append(host);
       const root = ReactDOM.createRoot(host);
-      ReactDOM.flushSync(() => root.render(__nxdsElement(tree, wrapped)));
+      try {
+        ReactDOM.flushSync(() => root.render(__nxdsElement(tree, wrapped)));
+      } catch (error) {
+        root.unmount();
+        host.remove();
+        return { error: (error as Error).message, values: [], wrappers: 0 };
+      }
       for (const animation of document.getAnimations()) animation.finish();
       const values = reads.map(({ target, property, index = 0 }) => {
         const element = host.querySelectorAll(target)[index];
@@ -867,10 +944,10 @@ async function readTree(
           ? getComputedStyle(element).getPropertyValue(property)
           : null;
       });
-      const wrappers = host.querySelectorAll('[data-dc-tpl]').length;
+      const wrappers = host.querySelectorAll('.sc-host-x').length;
       root.unmount();
       host.remove();
-      return { values, wrappers };
+      return { error: null, values, wrappers };
     },
     { tree, reads, wrapped }
   );
@@ -892,6 +969,13 @@ async function checkWrapped() {
     failOnProblems(name, problems, false);
     const wrapped = await readTree(page, tree, reads, true);
     failOnProblems(name, problems, true);
+    if (plain.error) fail(`${name}: the plain tree throws ${plain.error}`);
+    if (wrapped.error) {
+      fail(
+        `${name}: through canvas wrappers, the tree throws ${wrapped.error}`
+      );
+    }
+    if (plain.error || wrapped.error) continue;
     if (wrapped.wrappers === 0)
       fail(`${name}: the wrapped tree has no wrapper.`);
     reads.forEach(({ target, property, index = 0 }, read) => {
@@ -1040,7 +1124,20 @@ async function openOverlayTree(
     { tree: overlay.tree, wrapped }
   );
   const button = page.locator('#overlay-host button').first();
-  await button.waitFor();
+  const rendered = await button.waitFor({ timeout: 2000 }).then(
+    () => true,
+    () => false
+  );
+  if (!rendered) {
+    await page.close();
+    failOnProblems(overlay.name, problems, wrapped);
+    return {
+      opened: false,
+      state: 'no button',
+      offset: 'none',
+      focus: 'not checked',
+    };
+  }
   if (overlay.hover) await button.hover();
   else await button.click();
   const content = page.locator(overlay.open).first();

@@ -9,9 +9,9 @@
 import postcss from 'postcss';
 import selectorParser from 'postcss-selector-parser';
 
-import { CANVAS_WRAPPER } from './canvas-wrapper.ts';
+import { CANVAS_WRAPPER_CLASS } from './canvas-wrapper.ts';
 
-const W = `[${CANVAS_WRAPPER}]`;
+const W = `.${CANVAS_WRAPPER_CLASS}`;
 const IS_W = `:where(${W})`;
 const NOT_W = `:where(:not(${W}))`;
 const NXDS_CLASS = /\.nx\\:/;

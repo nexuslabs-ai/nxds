@@ -1,25 +1,37 @@
 // bundle.js resolves every `@radix-ui/react-slot` import, Radix's own and
 // nxds's, to this module. A Design canvas puts each component it mounts inside
-// `<div data-dc-tpl style="display: contents">`, so an `asChild` trigger's
-// child is that wrapper and not the button. This Slot keeps the wrappers in
-// place and slots the element inside them, so the button gets the trigger's
-// ref, handlers and state.
+// `<div class="sc-host-x" style="display: contents">`, so an `asChild`
+// trigger's child is that wrapper and not the button. This Slot keeps the
+// wrappers in place and slots the element inside them, so the button gets the
+// trigger's ref, handlers and state.
 import * as React from 'react';
 
 import * as RadixSlot from '@radix-ui/react-slot';
 
-import { CANVAS_WRAPPER } from './canvas-wrapper.ts';
+import { CANVAS_WRAPPER_CLASS } from './canvas-wrapper.ts';
 
-type WrapperProps = { children?: React.ReactNode };
+type WrapperProps = { className?: unknown; children?: React.ReactNode };
+
+// A canvas passes x-import content as an array, even for one child, and keeps
+// the indentation between tags as strings.
+function withoutIndentation(children: React.ReactNode): React.ReactNode {
+  if (!Array.isArray(children)) return children;
+  const content = children.filter(
+    (child) => typeof child !== 'string' || child.trim() !== ''
+  );
+  return content.length === 1 ? content[0] : content;
+}
 
 function isCanvasWrapper(
   node: React.ReactNode
 ): node is React.ReactElement<WrapperProps> {
   if (!React.isValidElement<WrapperProps>(node)) return false;
-  if (typeof node.type !== 'string' || !(CANVAS_WRAPPER in node.props)) {
+  const { className, children } = node.props;
+  if (typeof node.type !== 'string' || typeof className !== 'string') {
     return false;
   }
-  const child = node.props.children;
+  if (!className.split(/\s+/).includes(CANVAS_WRAPPER_CLASS)) return false;
+  const child = withoutIndentation(children);
   return React.isValidElement(child) && child.type !== React.Fragment;
 }
 
@@ -28,11 +40,12 @@ function inWrappers(
   children: React.ReactNode,
   render: (child: React.ReactNode) => React.ReactElement
 ): React.ReactElement {
-  if (!isCanvasWrapper(children)) return render(children);
+  const child = withoutIndentation(children);
+  if (!isCanvasWrapper(child)) return render(child);
   return React.cloneElement(
-    children,
+    child,
     undefined,
-    inWrappers(children.props.children, render)
+    inWrappers(child.props.children, render)
   );
 }
 
