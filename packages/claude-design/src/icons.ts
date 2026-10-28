@@ -112,6 +112,7 @@ export const ICONS = [
   'NotePencilIcon',
   'PackageIcon',
   'PaletteIcon',
+  'PaperPlaneRightIcon',
   'PaperPlaneTiltIcon',
   'PaperclipIcon',
   'PauseIcon',
