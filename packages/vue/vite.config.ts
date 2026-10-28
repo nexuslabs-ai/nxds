@@ -18,7 +18,9 @@ export default defineConfig({
     dts({
       include: ['src'],
       exclude: ['**/*.stories.ts', 'src/stories/**'],
-      bundleTypes: true,
+      // vaul-vue's `require` export has no types, so CommonJS consumers on
+      // node16 would see Drawer as `any` unless its types are inlined.
+      bundleTypes: { bundledPackages: ['vaul-vue'] },
       outDirs: ['dist', { dir: 'dist', moduleFormat: 'cjs' }],
       // API Extractor drops `declare var`, which vue-tsc uses for slot props.
       beforeWriteFile: (_filePath, content) => ({

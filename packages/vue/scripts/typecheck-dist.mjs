@@ -54,7 +54,10 @@ await writeFile(
       moduleResolution: 'NodeNext',
       strict: true,
       noEmit: true,
-      skipLibCheck: true,
+      skipLibCheck: false,
+      // @vueuse/core's declarations use the Web Bluetooth globals without a
+      // reference directive.
+      types: ['web-bluetooth'],
     },
     include: ['probe.ts', 'probe.cts'],
   })
