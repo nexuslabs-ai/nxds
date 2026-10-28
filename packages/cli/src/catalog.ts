@@ -16,6 +16,7 @@ import { EnvHttpProxyAgent, fetch } from 'undici';
 
 import { CLI_COMMAND } from './cli-command';
 import { CliError, readJson, UsageError } from './errors';
+import { assertRegistryUrl } from './url';
 
 export type {
   Catalog,
@@ -40,14 +41,22 @@ const FETCH_TIMEOUT_MS = 30_000;
 // Honours HTTPS_PROXY, HTTP_PROXY and NO_PROXY.
 const dispatcher = new EnvHttpProxyAgent();
 
+// Any value with a URI scheme of two or more characters, after any leading
+// space, even one URL can't parse. A Windows drive such as `C:` stays a path.
 function isUrl(registry: string) {
-  return /^https?:\/\//.test(registry);
+  return /^\s*[a-z][a-z\d+.-]+:/i.test(registry);
 }
 
 /** The `--registry` value as a URL, or as an absolute folder path. */
 export function resolveRegistry(option: string | undefined) {
   if (!option) return DEFAULT_REGISTRY;
-  return isUrl(option) ? option.replace(/\/+$/, '') : path.resolve(option);
+  if (!isUrl(option)) return path.resolve(option);
+  assertRegistryUrl(
+    '--registry (or NXDS_REGISTRY_URL)',
+    option,
+    'For a private registry, download its latest.json and <version>.json files to a folder, and pass the folder with --registry.'
+  );
+  return option.replace(/\/+$/, '');
 }
 
 /** The timeout's signal also aborts reading the body, so both steps check for it. */

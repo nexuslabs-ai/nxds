@@ -22,6 +22,7 @@ import { x as extract } from 'tar';
 import { EnvHttpProxyAgent, fetch } from 'undici';
 
 import { CliError, readJson, UsageError } from '../errors';
+import { assertRegistryUrl, httpUrl } from '../url';
 
 import type { CommandResult } from './result';
 
@@ -52,14 +53,6 @@ type Packument = {
     { dist?: { tarball?: string; integrity?: string } }
   >;
 };
-
-/** `value` as a URL, if it is an http or https one. */
-function httpUrl(value: string) {
-  const url = URL.canParse(value) ? new URL(value) : undefined;
-  return url?.protocol === 'http:' || url?.protocol === 'https:'
-    ? url
-    : undefined;
-}
 
 /** `url` without its credentials or query, to print in an error. */
 function redactUrl(url: string) {
@@ -98,27 +91,17 @@ async function download(url: string) {
   return Buffer.from(await response.arrayBuffer());
 }
 
-function assertRegistry(registry: string) {
-  const url = httpUrl(registry);
-  if (!url || /[?#]/.test(registry)) {
-    throw new UsageError(
-      `--npm-registry must be an http or https URL with no query or fragment, such as ${DEFAULT_NPM_REGISTRY}.`
-    );
-  }
-  if (url.username || url.password) {
-    throw new UsageError(
-      `--npm-registry can't include a user name or password, because nxds-cli sends no registry login. For a private registry, unpack the tarball from \`npm pack ${CLAUDE_DESIGN_PACKAGE}\` and pass its package folder with --source.`
-    );
-  }
-}
-
 function packageUrl(registry: string) {
   return `${registry.replace(/\/+$/, '')}/${CLAUDE_DESIGN_PACKAGE.replace('/', '%2f')}`;
 }
 
 /** The tarball and its integrity for `release`, a version or a dist-tag. */
 async function resolveTarball(registry: string, release: string) {
-  assertRegistry(registry);
+  assertRegistryUrl(
+    '--npm-registry (or npm_config_registry)',
+    registry,
+    `For a private registry, unpack the tarball from \`npm pack ${CLAUDE_DESIGN_PACKAGE}\` and pass its package folder with --source.`
+  );
   const url = packageUrl(registry);
   const body = (await download(url)).toString('utf8');
   let packument: Packument;
