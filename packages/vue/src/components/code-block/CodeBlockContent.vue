@@ -36,7 +36,7 @@ const delegated = reactiveOmit(props, 'class', 'language');
     <pre class="nx:m-0"><code
       :class="
         cn(
-          'nx:grid nx:grid-cols-[auto_minmax(0,1fr)] nx:py-4 nx:typography-code-block',
+          'nx:grid nx:grid-cols-[auto_auto_minmax(0,1fr)] nx:py-4 nx:typography-code-block',
           language && `language-${language}`
         )
       "

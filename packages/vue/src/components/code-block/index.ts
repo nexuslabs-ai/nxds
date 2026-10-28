@@ -31,4 +31,9 @@ export const codeBlockVariants = cva(
   }
 );
 
+export const codeBlockDiffClasses = {
+  added: "nx:text-success-subtle-foreground nx:before:content-['+']",
+  removed: "nx:text-error-subtle-foreground nx:before:content-['−']",
+};
+
 export type CodeBlockVariants = VariantProps<typeof codeBlockVariants>;

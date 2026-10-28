@@ -61,6 +61,18 @@ const packageJson = `{
 
 const installCommand = 'npx nxds-cli@latest add code-block';
 
+const saveBarDiff: { line: string; diff?: 'added' | 'removed' }[] = [
+  { line: 'export function SaveBar({ saving, onSave }: SaveBarProps) {' },
+  { line: '  return (' },
+  { line: '    <Button onClick={onSave} disabled={saving}>', diff: 'removed' },
+  { line: '      {saving && <Spinner />}', diff: 'removed' },
+  { line: '    <Button onClick={onSave} loading={saving}>', diff: 'added' },
+  { line: '      Save changes' },
+  { line: '    </Button>' },
+  { line: '  );' },
+  { line: '}' },
+];
+
 const highlighter = createHighlighterCoreSync({
   themes: [codeBlockTheme],
   langs: [tsx],
@@ -155,6 +167,31 @@ export const MarkedLines: Story = {
   ),
 };
 
+// A change shown as a diff: removed lines, then the lines that replace them.
+export const DiffLines: Story = {
+  tags: ['docs'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Set `diff` to `added` or `removed` to show a change. The copy button copies the new code, without the removed lines.',
+      },
+    },
+  },
+  render: () => (
+    <CodeBlock className="nx:max-w-xl">
+      <CodeBlockContent>
+        {saveBarDiff.map(({ line, diff }, index) => (
+          <CodeBlockLine key={index} diff={diff}>
+            {line}
+          </CodeBlockLine>
+        ))}
+      </CodeBlockContent>
+      <CodeBlockCopyButton />
+    </CodeBlock>
+  ),
+};
+
 // Inside a card the card draws the frame, so the block drops its own.
 export const InCard: Story = {
   tags: ['docs'],
@@ -168,8 +205,10 @@ export const InCard: Story = {
   },
   render: () => (
     <Card className="nx:max-w-xl">
-      <CardHeader className="nx:border-b-default nx:border-border-default nx:py-4">
-        <CardTitle>Switch.stories.tsx</CardTitle>
+      <CardHeader className="nx:border-b-default nx:border-border-default nx:px-4 nx:py-3">
+        <CardTitle className="nx:typography-label-default">
+          Switch.stories.tsx
+        </CardTitle>
       </CardHeader>
       <CodeBlock variant="flush">
         <CodeBlockContent>
@@ -233,7 +272,7 @@ export const SyntaxHighlighting: Story = {
 
     await expect(keyword).toHaveAttribute(
       'style',
-      expect.stringContaining('var(--nx-color-chart-categorical-4)')
+      expect.stringContaining('var(--nx-color-syntax-keyword)')
     );
   },
 };
@@ -378,6 +417,53 @@ export const KeyboardInteraction: Story = {
   },
 };
 
+// Removed lines show a minus and stay out of the copy; added lines show a plus.
+export const DiffLinesCopy: Story = {
+  beforeEach: () => {
+    const writeText = spyOn(navigator.clipboard, 'writeText');
+    writeText.mockResolvedValue(undefined);
+    return () => writeText.mockRestore();
+  },
+  render: () => (
+    <CodeBlock className="nx:max-w-xl">
+      <CodeBlockContent>
+        <CodeBlockLine number={1}>{'<Button'}</CodeBlockLine>
+        <CodeBlockLine number={2} diff="removed">
+          {'  disabled={saving}'}
+        </CodeBlockLine>
+        <CodeBlockLine number={3} diff="added" highlighted>
+          {'  loading={saving}'}
+        </CodeBlockLine>
+        <CodeBlockLine number={4}>{'>'}</CodeBlockLine>
+      </CodeBlockContent>
+      <CodeBlockCopyButton />
+    </CodeBlock>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const lines = canvasElement.querySelectorAll<HTMLElement>(
+      '[data-slot="code-block-line"]'
+    );
+
+    await expect(lines[1]).toHaveAttribute('data-diff', 'removed');
+    await expect(lines[2]).toHaveAttribute('data-diff', 'added');
+    // The marker comes before the code, so readers hear it first.
+    await expect(
+      getComputedStyle(lines[1]!.firstElementChild!, '::before').content
+    ).toBe('"−"');
+    await expect(
+      getComputedStyle(lines[2]!.firstElementChild!, '::before').content
+    ).toBe('"+"');
+    // The marker shares the line's row, so a diff line is one line tall.
+    await expect(lines[1]!.offsetHeight).toBe(lines[0]!.offsetHeight);
+    await expect(lines[2]!.offsetHeight).toBe(lines[0]!.offsetHeight);
+    await userEvent.click(canvas.getByRole('button', { name: 'Copy code' }));
+    await expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      '<Button\n  loading={saving}\n>'
+    );
+  },
+};
+
 // ============================================
 // EDGE CASES
 // ============================================
@@ -503,6 +589,20 @@ export const AllVariants: Story = {
             <CodeBlockCopyButton />
           </CodeBlock>
         </Card>
+      </div>
+      <div className="nx:flex nx:flex-col nx:gap-2">
+        <span className="nx:text-muted-foreground">Diff lines</span>
+        <CodeBlock>
+          <CodeBlockContent>
+            <CodeBlockLine number={1} diff="removed">
+              {'npx nxds-cli@latest add card'}
+            </CodeBlockLine>
+            <CodeBlockLine number={2} diff="added">
+              {installCommand}
+            </CodeBlockLine>
+          </CodeBlockContent>
+          <CodeBlockCopyButton />
+        </CodeBlock>
       </div>
     </div>
   ),

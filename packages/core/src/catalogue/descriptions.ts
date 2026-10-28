@@ -105,6 +105,13 @@ const NEUTRAL_DESCRIPTIONS: Record<string, string> = {
   'chart-categorical-3': 'Third chart series, on container or background.',
   'chart-categorical-4': 'Fourth chart series, on container or background.',
   'chart-categorical-5': 'Fifth chart series, on container or background.',
+  'syntax-keyword':
+    'Keywords in code, such as const and return, on CodeBlock surfaces.',
+  'syntax-string': 'Strings in code, on CodeBlock surfaces.',
+  'syntax-function':
+    'Function and attribute names in code, on CodeBlock surfaces.',
+  'syntax-type': 'Type, class and tag names in code, on CodeBlock surfaces.',
+  'syntax-constant': 'Numbers and constants in code, on CodeBlock surfaces.',
   'focus-default': 'Focus ring of every interactive control, on any surface.',
   'focus-error': 'Focus ring of an invalid control.',
   'background-hover-alpha':
