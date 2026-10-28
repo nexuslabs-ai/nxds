@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Primitive, type PrimitiveProps } from 'reka-ui';
-import { computed, type HTMLAttributes, ref, type VNode } from 'vue';
+import { computed, type HTMLAttributes, ref, type VNode, watch } from 'vue';
 
 import { cn } from '../../lib/utils';
 import {
@@ -48,6 +48,10 @@ defineSlots<{
 const { isNarrow, state } = useSidebar();
 const isRail = computed(() => state.value === 'collapsed' && !isNarrow.value);
 const open = ref(false);
+// Reka never reports the close once the button leaves the rail.
+watch(isRail, (rail) => {
+  if (!rail) open.value = false;
+});
 
 const button = computed(() => ({
   as: props.as,
@@ -67,7 +71,7 @@ const button = computed(() => ({
 <template>
   <Tooltip
     v-if="tooltip || $slots.tooltip"
-    :open="open && isRail"
+    :open="open"
     @update:open="open = $event && isRail"
   >
     <TooltipTrigger as-child>

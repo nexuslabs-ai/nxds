@@ -931,6 +931,8 @@ const SidebarMenuButton = React.forwardRef<
   const { isNarrow, state } = useSidebar();
   const [open, setOpen] = React.useState(false);
   const isRail = state === 'collapsed' && !isNarrow;
+  // Radix never reports the close once the button leaves the rail.
+  if (!isRail && open) setOpen(false);
 
   const button = (
     <Comp
@@ -952,10 +954,7 @@ const SidebarMenuButton = React.forwardRef<
     typeof tooltip === 'string' ? { children: tooltip } : tooltip;
 
   return (
-    <Tooltip
-      open={open && isRail}
-      onOpenChange={(next) => setOpen(next && isRail)}
-    >
+    <Tooltip open={open} onOpenChange={setOpen}>
       <TooltipTrigger asChild>{button}</TooltipTrigger>
       <TooltipContent side="right" align="center" {...tooltipProps} />
     </Tooltip>

@@ -282,7 +282,12 @@ function declaredNames(statements: ts.Statement[]): Set<string> {
     if (ts.isVariableStatement(statement)) {
       statement.declarationList.declarations.forEach((d) => addBinding(d.name));
     }
-    if (ts.isFunctionDeclaration(statement) && statement.name) {
+    if (
+      (ts.isFunctionDeclaration(statement) ||
+        ts.isClassDeclaration(statement) ||
+        ts.isEnumDeclaration(statement)) &&
+      statement.name
+    ) {
       names.add(statement.name.text);
     }
   }

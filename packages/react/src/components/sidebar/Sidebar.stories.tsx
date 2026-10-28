@@ -342,6 +342,16 @@ export const CollapsedTooltip: Story = {
     await expect(sidebar).toHaveAttribute('data-state', 'collapsed');
     await expect(body.queryByRole('tooltip')).toBeNull();
 
+    await userEvent.hover(home);
+    await expect(await body.findByRole('tooltip')).toHaveTextContent('Home');
+    await userEvent.keyboard('{Control>}b{/Control}');
+    await expect(sidebar).toHaveAttribute('data-state', 'expanded');
+    await waitFor(() => expect(body.queryByRole('tooltip')).toBeNull());
+    await userEvent.unhover(home);
+    await userEvent.click(trigger!);
+    await expect(sidebar).toHaveAttribute('data-state', 'collapsed');
+    await expect(body.queryByRole('tooltip')).toBeNull();
+
     canvas.getByRole('button', { name: 'Inbox' }).focus();
     await expect(await body.findByRole('tooltip')).toHaveTextContent('Inbox');
   },
