@@ -14,8 +14,10 @@
      keeps the floating toolbar clear of the preview. */
   --section-space-top: var(--nx-spacing-8);
   --section-space-bottom: var(--nx-spacing-24);
+  /* The first section sits under the header, not under another section. */
+  --first-section-space-top: var(--nx-spacing-12);
   /* About one title block, so a section is about one screen tall. */
-  --heading-allowance: 11rem;
+  --heading-allowance: 12rem;
   --preview-fade: var(--nx-spacing-24);
   --preview-min: 24rem;
   --preview-max: 100svh;
@@ -23,6 +25,7 @@
   /* Desktop previews stop at 60% of the column's width. */
   @media (width >= 64rem) {
     --section-space-top: var(--nx-spacing-12);
+    --first-section-space-top: var(--nx-spacing-20);
     --preview-min: 30rem;
     --preview-max: calc(
       0.6 * min(100vw - 2 * var(--nx-spacing-8), var(--site-column))
@@ -35,6 +38,9 @@
   display: flex;
   flex-direction: column;
   padding-block: var(--section-space-top) var(--section-space-bottom);
+  &:first-child {
+    padding-block-start: var(--first-section-space-top);
+  }
   /* Land right under the header, not with the docs headings' extra space. */
   scroll-margin-block-start: calc(
     var(--site-header-h) - var(--docs-scroll-offset)
@@ -43,7 +49,7 @@
 
 @utility chapter-heading {
   text-align: center;
-  padding-block-end: var(--nx-spacing-10);
+  padding-block-end: var(--nx-spacing-14);
 
   & :is(h1, h2) {
     @apply nx:typography-display-small nx:md:typography-display-medium nx:lg:typography-display-large;
