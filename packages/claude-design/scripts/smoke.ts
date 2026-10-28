@@ -935,7 +935,11 @@ async function readTree(
       } catch (error) {
         root.unmount();
         host.remove();
-        return { error: (error as Error).message, values: [], wrappers: 0 };
+        return {
+          error: error instanceof Error ? error.message : String(error),
+          values: [],
+          wrappers: 0,
+        };
       }
       for (const animation of document.getAnimations()) animation.finish();
       const values = reads.map(({ target, property, index = 0 }) => {
