@@ -43,7 +43,13 @@ function fail(selector: string, reason: string): never {
 }
 
 function text(nodes: readonly Node[]) {
-  return nodes.map((node) => String(node).trim()).join('');
+  return nodes
+    .map((node) =>
+      node.type === 'combinator'
+        ? spaced(node.value.trim() || ' ')
+        : String(node).trim()
+    )
+    .join('');
 }
 
 function parse(selector: string) {
@@ -106,11 +112,14 @@ function isPseudoElement(node: Node) {
   return node.type === 'pseudo' && node.value.startsWith('::');
 }
 
-// A `:has()` target is one compound with no position: wrappers leave which
-// descendants a part has unchanged, but not their relations or positions.
+// A `:has()` target has no child or sibling relation and no position:
+// wrappers only add ancestors, so they leave descendant relations unchanged,
+// but not which element is a child, a sibling or in a position.
 function assertPlainTarget(nodes: readonly Node[], whole: string) {
   for (const node of nodes) {
-    if (node.type === 'combinator') fail(whole, 'a combinator inside :has()');
+    if (node.type === 'combinator' && node.value.trim() !== '') {
+      fail(whole, `\`${node.value.trim()}\` inside :has()`);
+    }
     if (node.type !== 'pseudo') continue;
     if (node.value === ':has') fail(whole, ':has() inside :has()');
     if (POSITIONS.has(node.value) || UNSUPPORTED.has(node.value)) {
@@ -297,13 +306,19 @@ function nodeSpecificity(node: Node): Specificity {
   return branches.sort(compare).at(-1) ?? [0, 0, 0];
 }
 
+function hasOf(argument: selectorParser.Selector) {
+  return argument.nodes.some(
+    (node) => node.type === 'tag' && node.value.toLowerCase() === 'of'
+  );
+}
+
 // Positions a wrapper changes and no branch can restore.
 function assertSupported(selector: selectorParser.Selector, whole: string) {
   selector.walkPseudos((pseudo) => {
     if (UNSUPPORTED.has(pseudo.value)) {
       fail(whole, `${pseudo.value} has no wrapper-tolerant form`);
     }
-    if (pseudo.value === ':nth-child' && /\sof\s/.test(String(pseudo))) {
+    if (pseudo.value === ':nth-child' && pseudo.nodes.some(hasOf)) {
       fail(whole, ':nth-child(… of …) has no wrapper-tolerant form');
     }
   });
