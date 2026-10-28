@@ -10,9 +10,7 @@ export const planned = [
   'color-field',
   'config-preview',
   'setting-row',
-  'sidebar',
   'theme-quick-control',
-  'toolbar',
 ];
 
 /** Components both packages ship, appearance aside: it has its own contract. */
@@ -73,6 +71,7 @@ export const shared = [
   'separator',
   'sheet',
   'show',
+  'sidebar',
   'skeleton',
   'slider',
   'sonner',
@@ -83,6 +82,7 @@ export const shared = [
   'textarea',
   'toggle',
   'toggle-group',
+  'toolbar',
   'tooltip',
 ];
 
@@ -226,6 +226,10 @@ export const vueOnlyApi: Record<string, string> = {
   'ResizablePanel.default.isExpanded': REKA_SLOT_PROP,
   'ResizablePanel.default.resize': REKA_SLOT_PROP,
   'ResizablePanelGroup.default.layout': REKA_SLOT_PROP,
+  'SidebarTrigger.disabled':
+    'native <button> attribute React inherits from its props type; Vue declares it to pass on to Button',
+  'SidebarTrigger.type':
+    "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
   'Switch.thumb':
     'slot for custom thumb content; React renders the thumb itself with no way to compose it',
   'Textarea.defaultValue': NATIVE_DEFAULT_VALUE,
@@ -234,6 +238,10 @@ export const vueOnlyApi: Record<string, string> = {
   'ToggleGroup.update:modelValue':
     "v-model update narrowed to the string values items take; React's onValueChange is inherited from Radix's props type",
   'ToggleGroupItem.value':
+    "string, as Radix types it, so aria-checked matches Reka's pressed state; React inherits value from Radix's props type",
+  'ToolbarToggleGroup.update:modelValue':
+    "v-model update narrowed to the string values items take; React's onValueChange is inherited from Radix's props type",
+  'ToolbarToggleItem.value':
     "string, as Radix types it, so aria-checked matches Reka's pressed state; React inherits value from Radix's props type",
 };
 
@@ -573,6 +581,8 @@ export const renderedAttributeDifferences: Record<string, string> = {
   'resizable-panel-group data-panel-group-id': SPLITTER_ID,
   'resizable-panel-group data-panel-group': SPLITTER_STATE_REKA,
   'resizable-panel-group data-testid': SPLITTER_TEST_ID,
+  'toolbar-button data-disabled':
+    "Reka's roving focus marks an item it skips with data-disabled; Radix's toolbar button sets none",
   'popover-content name':
     "Reka names the popover's dialog after its trigger with aria-labelledby; Radix leaves it unnamed",
 };
@@ -616,6 +626,8 @@ export const vueOnlyDeclarations: Record<string, string> = {
 /** Top-level values a Vue recipe file declares under React's name with a body only its framework can write, as `{file}#{name}`. */
 export const frameworkDeclarations: Record<string, string> = {
   'message-scroller/index.ts#useMessageScroller':
+    "injects the provider's state; React's hook reads its context",
+  'sidebar/index.ts#useSidebar':
     "injects the provider's state; React's hook reads its context",
   'sonner/index.ts#useNxdsToasts':
     "filters vue-sonner's active toasts in a computed; React's hook filters sonner's useSonner list",

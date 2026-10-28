@@ -57,6 +57,7 @@ export * from './components/select';
 export * from './components/separator';
 export * from './components/sheet';
 export * from './components/show';
+export * from './components/sidebar';
 export * from './components/skeleton';
 export * from './components/slider';
 export * from './components/sonner';
@@ -67,6 +68,7 @@ export * from './components/tabs';
 export * from './components/textarea';
 export * from './components/toggle';
 export * from './components/toggle-group';
+export * from './components/toolbar';
 export * from './components/tooltip';
 export {
   type FilterError,
