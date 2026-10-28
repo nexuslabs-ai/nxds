@@ -6,7 +6,10 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 
+import { canvasSchema } from './canvas-schema.ts';
+import { canvasProps } from './canvas-transform.ts';
 import { ICONS } from './icons.ts';
+import type { FlatComponent } from './props.ts';
 import { NAMESPACE } from './system-index.ts';
 
 const JSX_RUNTIME = path.join(import.meta.dirname, 'jsx-runtime.ts');
@@ -23,6 +26,7 @@ const REACT_GLOBALS: Record<string, string> = {
 
 const EXPORTS_MODULE = 'nxds:exports';
 const ICONS_MODULE = 'nxds:icons';
+const SCHEMA_MODULE = 'nxds:canvas-schema';
 
 // index.ts's utility exports (`getFilterErrors`, `CHART_CATEGORICAL_SERIES`),
 // copied statement by statement.
@@ -143,7 +147,16 @@ function assertOneSlot(metafile: Metafile) {
   }
 }
 
-function virtualModules(slugs: readonly string[]): Plugin {
+function virtualModules(
+  slugs: readonly string[],
+  parts: readonly FlatComponent[]
+): Plugin {
+  const contents: Record<string, () => string> = {
+    [EXPORTS_MODULE]: () => exportsModule(slugs),
+    [ICONS_MODULE]: iconsModule,
+    [SCHEMA_MODULE]: () =>
+      `export const CANVAS_SCHEMA = ${JSON.stringify(canvasSchema(parts))};`,
+  };
   return {
     name: 'nxds-virtual-modules',
     setup(builder) {
@@ -152,13 +165,20 @@ function virtualModules(slugs: readonly string[]): Plugin {
         namespace: 'nxds',
       }));
       builder.onLoad({ filter: /.*/, namespace: 'nxds' }, (args) => ({
-        contents:
-          args.path === ICONS_MODULE ? iconsModule() : exportsModule(slugs),
+        contents: contents[args.path]?.() ?? '',
         loader: 'ts',
         resolveDir: react18Src,
       }));
     },
   };
+}
+
+function partsBySlug(parts: readonly FlatComponent[]) {
+  const bySlug = new Map<string, string[]>();
+  for (const { slug, name } of parts) {
+    bySlug.set(slug, [...(bySlug.get(slug) ?? []), name]);
+  }
+  return bySlug;
 }
 
 function bundleHeader(components: readonly string[]) {
@@ -170,9 +190,10 @@ function bundleHeader(components: readonly string[]) {
   return `/* @ds-bundle: ${JSON.stringify(header)} */`;
 }
 
-/** `folders` are the component folders, in card order. */
+/** `folders` are the component folders, in card order; `parts` every part they export. */
 export async function buildBundle(
-  folders: readonly { name: string; slug: string }[]
+  folders: readonly { name: string; slug: string }[],
+  parts: readonly FlatComponent[]
 ) {
   assertIconsCovered();
   const result = await build({
@@ -197,7 +218,11 @@ export async function buildBundle(
     plugins: [
       canvasSlot,
       pageGlobals,
-      virtualModules(folders.map((folder) => folder.slug)),
+      virtualModules(
+        folders.map((folder) => folder.slug),
+        parts
+      ),
+      canvasProps(partsBySlug(parts)),
     ],
     logOverride: { 'module-level-directive': 'silent' },
     metafile: true,

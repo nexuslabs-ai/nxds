@@ -12,7 +12,7 @@ import { build, type Plugin } from 'esbuild';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { canvasMarkup, kebab } from './canvas-markup.ts';
+import { type CanvasExample, canvasExample } from './canvas-markup.ts';
 import { ROOT_PARTS } from './groups.ts';
 import type { FlatComponent, FlatProp } from './props.ts';
 import { NAMESPACE } from './system-index.ts';
@@ -173,7 +173,7 @@ export interface ComponentFolder {
   group: string;
 }
 
-/** The card's preview, and the source of the docs story it renders. */
+/** The card's preview, which renders the folder's first docs story. */
 export async function buildPreview(folder: ComponentFolder) {
   const [story] = readDocsStories(
     folder.slug,
@@ -183,10 +183,20 @@ export async function buildPreview(folder: ComponentFolder) {
     throw new Error(`preview: ${folder.slug} has no story tagged \`docs\`.`);
   }
   const { source } = await docsStoryModule(story, {});
-  return {
-    html: previewHtml({ ...folder, script: await compileStory(source) }),
-    storySource: source,
-  };
+  return previewHtml({ ...folder, script: await compileStory(source) });
+}
+
+/** The folder's first docs story that canvas markup can write, or null. */
+export async function folderCanvasExample(
+  slug: string,
+  exported: ReadonlySet<string>
+): Promise<CanvasExample | null> {
+  for (const story of readDocsStories(slug, componentStoryFiles(slug))) {
+    const { source } = await docsStoryModule(story, {});
+    const example = canvasExample(inlineStaticFiles(source), exported);
+    if (example) return example;
+  }
+  return null;
 }
 
 function firstSentence(text: string) {
@@ -206,39 +216,19 @@ function propRow(prop: FlatProp) {
   return `| \`${prop.name}\` | \`${prop.type.replace(/\|/g, '\\|')}\` | ${fallback && `\`${fallback}\``} | ${control} |`;
 }
 
-// Used when the docs story's markup can't be written as attributes.
+// Used when no docs story's markup can be written as attributes.
 function rootExample(part: FlatComponent) {
-  const attributes = part.props
-    .filter((prop) => prop.control === 'dropdown')
-    .slice(0, 2)
-    .flatMap((prop) => {
-      const options = prop.type
-        .split(' | ')
-        .filter(
-          (option) => option.startsWith('"') && option !== prop.defaultValue
-        );
-      const [option] = options;
-      if (!option) return [];
-      return [` ${kebab(prop.name)}=${option}`];
-    })
-    .join('');
-  const hasChildren = part.props.some((prop) => prop.name === 'children');
-  const tag = `x-import component-from-global-scope="${NAMESPACE}.${part.name}"${attributes}`;
-  return hasChildren
-    ? `<${tag}>${part.name}</x-import>`
-    : `<${tag}></x-import>`;
+  return `<x-import component-from-global-scope="${NAMESPACE}.${part.name}"></x-import>`;
 }
 
 export function componentReadme({
   folder,
   parts,
-  storySource,
-  exported,
+  example,
 }: {
   folder: ComponentFolder;
   parts: readonly FlatComponent[];
-  storySource: string;
-  exported: ReadonlySet<string>;
+  example: CanvasExample | null;
 }) {
   const description = componentDescription(
     folder.slug,
@@ -259,10 +249,10 @@ export function componentReadme({
     '## On the canvas',
     '',
     '```html',
-    canvasMarkup(storySource, exported) ?? rootExample(main),
+    example?.markup ?? rootExample(main),
     '```',
     '',
-    'Attributes set props, kebab-case to camelCase. Element content becomes `children`. An attribute holds text, so a prop that takes an element, a function or an object has no attribute.',
+    'Attributes set props, kebab-case to camelCase. Element content becomes `children`. Each prop below lists the attribute it takes. A comma list, JSON or an ISO date is noted in its type.',
     '',
   ];
 

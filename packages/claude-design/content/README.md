@@ -121,8 +121,22 @@ The System page is read-only for this system. An edit there recompiles tokens.cs
 ## Canvas rules
 
 - Mount a component with `<x-import component-from-global-scope="Nxds.Button">`. Attributes set props, kebab-case to camelCase, and element content becomes `children`.
-- An attribute holds text only. A prop that takes an element, a function or an object has no attribute.
-- Write a boolean prop as `as-child="{{true}}"`. A bare `as-child` arrives as an empty string, which is false.
+- Write each attribute in the form its prop's type in `components/index.d.ts` takes:
+
+| Prop type         | Write it as                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------- |
+| `boolean`         | A bare attribute for true: `disabled`. Or `"true"` or `"false"`.                   |
+| `number`          | Digits: `value="60"`, `min="-10"`, `step="0.5"`.                                   |
+| A list of options | One of them, exactly: `variant="outline"`.                                         |
+| A comma list      | `default-value="20,80"`. Write JSON, `'["a, b","c"]'`, when an item holds a comma. |
+| An ISO date       | `selected="2026-10-28"`, or a month: `default-month="2026-10"`.                    |
+| JSON              | Single quotes around it: `data='[{"month":"Jan","desktop":186}]'`.                 |
+
+- A prop with a doc comment such as "With `type="multiple"`, a comma list" reads its list form only beside that `type`. DatePicker's `selected` follows `mode` the same way: one date, a comma list of dates, or a range as its first and last date, `"2026-10-01,2026-10-07"`.
+- An attribute that doesn't fit its prop logs a `[nxds]` warning and leaves the prop at its default. Read the console when a component looks wrong.
+- `{{...}}` and `dc-props` pass their values through unchanged.
+- A prop that takes a function, a ref or a DOM node has no attribute. `coverage.md` in the export lists them, and why a canvas doesn't need them.
+- Show an overlay open with `default-open` on its root part, such as `Nxds.Dialog`. A modal overlay locks the rest of the artboard while it's open, as it does in an app. Set `modal="false"` on a `Nxds.DropdownMenu` that shouldn't.
 - Lay out artboards with the spacing tokens, not raw pixel values.
 - Mount each part as its own `x-import`, the way a component's README shows. The canvas puts each one in a wrapper, and the parts keep their layout, borders and icon sizes through it. An `as-child` trigger opens its overlay from the element inside the wrapper.
 - Style a component through its props, not with a `style` on its `x-import`. A styled `x-import` turns the canvas's wrapper into a box that sits between the parts.

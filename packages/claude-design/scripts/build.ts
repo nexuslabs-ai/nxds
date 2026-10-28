@@ -24,6 +24,7 @@ import {
   buildPreview,
   type ComponentFolder,
   componentReadme,
+  folderCanvasExample,
 } from '../src/previews.ts';
 import {
   coverage,
@@ -141,11 +142,11 @@ async function main() {
     readFileSync(path.join(contentDir, 'cover.html'), 'utf8')
   );
 
-  const { code } = await buildBundle(folders);
+  const parts = flatComponents();
+  const { code } = await buildBundle(folders, parts);
   write('components/bundle.js', code);
   write('components/bundle.css', styles);
 
-  const parts = flatComponents();
   write('components/index.d.ts', renderIndexDts(parts));
   const report = coverage(parts);
   if (report.missing.length > 0) {
@@ -157,12 +158,13 @@ async function main() {
 
   const exported = new Set(parts.map((part) => part.name));
   for (const folder of folders) {
-    const { html, storySource } = await buildPreview(folder);
+    const html = await buildPreview(folder);
+    const example = await folderCanvasExample(folder.slug, exported);
     const own = parts.filter((part) => part.slug === folder.slug);
     write(`components/${folder.name}/preview.html`, html);
     write(
       `components/${folder.name}/README.md`,
-      componentReadme({ folder, parts: own, storySource, exported })
+      componentReadme({ folder, parts: own, example })
     );
   }
 

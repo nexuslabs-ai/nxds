@@ -16,12 +16,23 @@ import {
   deriveTheme,
   themeToCss,
 } from '@nxds/core';
+import {
+  componentLabel,
+  exportedComponentSlugs,
+} from '@nxds/source-model/react-sources.mjs';
 import { readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { chromium, type Page } from 'playwright';
+import {
+  type BrowserContextOptions,
+  chromium,
+  type Page,
+  type Route,
+} from 'playwright';
 
+import { ICONS } from '../src/icons.ts';
 import { PRESETS } from '../src/presets.ts';
+import { folderCanvasExample } from '../src/previews.ts';
 
 const packageRoot = path.join(import.meta.dirname, '..');
 const projectDir = path.join(packageRoot, 'dist', 'project');
@@ -91,10 +102,9 @@ interface PageGlobals {
   React: typeof ReactModule;
   ReactDOM: typeof ReactDOMClient & Pick<typeof ReactDOMModule, 'flushSync'>;
   Nxds: Record<string, unknown> & { Icons: Record<string, unknown> };
-  __nxdsElement: (
-    tree: Part | string,
-    wrapped: boolean
-  ) => ReactModule.ReactNode;
+  __nxdsElement: (tree: Part | string) => ReactModule.ReactNode;
+  __nxdsMarkup: (markup: string, wrapped: boolean) => ReactModule.ReactNode;
+  __nxdsSignature: (host: Element) => string[];
 }
 
 function fail(message: string) {
@@ -120,8 +130,8 @@ function cards() {
     .sort();
 }
 
-async function openPage(card: string, theme: Theme) {
-  const page = await context.newPage();
+async function openPage(card: string, theme: Theme, on = context) {
+  const page = await on.newPage();
   const problems: string[] = [];
   page.on('console', (message) => {
     if (message.type() === 'error' || message.type() === 'warning') {
@@ -146,69 +156,194 @@ async function openPage(card: string, theme: Theme) {
 }
 
 const browser = await chromium.launch();
-const context = await browser.newContext({
-  viewport: { width: 960, height: 720 },
-});
 
-// `window.__nxdsElement(tree, wrapped)` turns a `Part` tree into React
-// elements. With `wrapped`, it mounts the tree the way a canvas does: every
-// element gets `data-dc-tpl` and its children as an array, and every Nxds part
-// sits inside its own `<div class="sc-host-x" style="display: contents">`,
-// with the indentation between its content's tags kept as strings.
-await context.addInitScript(() => {
-  type Node = Part | string;
+// `window.__nxdsElement(tree)` renders a `Part` tree as plain React: each
+// prop holds its real value, as nxds's own stories pass it.
+//
+// `window.__nxdsMarkup(markup, wrapped)` renders canvas markup. Every
+// attribute arrives as a string, kebab-case to camelCase except `aria-*` and
+// `data-*`, and a bare one as "". With `wrapped`, it mounts the markup the way
+// a canvas does: every element gets `data-dc-tpl` and its children as an
+// array, indentation kept as strings, and every x-import sits inside its own
+// `<div class="sc-host-x" style="display: contents">`. Without, it leaves out
+// the wrappers and the indentation.
+//
+// `window.__nxdsSignature(host)` lists what a viewer and a screen reader get
+// from each element: tag, part, role, state, classes and text.
+function pageHelpers() {
+  const NAMES: Record<string, string> = {
+    class: 'className',
+    for: 'htmlFor',
+    htmlfor: 'htmlFor',
+    tabindex: 'tabIndex',
+    colspan: 'colSpan',
+    rowspan: 'rowSpan',
+    viewbox: 'viewBox',
+    datetime: 'dateTime',
+  };
+  const SIGNED = [
+    'data-slot',
+    'role',
+    'aria-label',
+    'aria-checked',
+    'aria-selected',
+    'aria-pressed',
+    'aria-valuenow',
+    'aria-disabled',
+    'data-state',
+    'data-disabled',
+    'data-variant',
+    'data-size',
+    'type',
+    'value',
+    'disabled',
+    'placeholder',
+  ];
   let mounted = 0;
+  const globals = () => window as unknown as PageGlobals;
+  const camel = (name: string) =>
+    /^(?:aria|data)-/.test(name)
+      ? name
+      : name.replace(/-([a-z])/g, (_, char: string) => char.toUpperCase());
+  const styleObject = (text: string) =>
+    Object.fromEntries(
+      text
+        .split(';')
+        .map((declaration) => declaration.split(':').map((side) => side.trim()))
+        .filter(([name, value]) => name && value)
+        .map(([name = '', value]) => [
+          name.startsWith('--') ? name : camel(name),
+          value,
+        ])
+    );
+  const part = (name: string) =>
+    name
+      .replace(/^Nxds\./, '')
+      .split('.')
+      .reduce<unknown>(
+        (scope, key) => (scope as Record<string, unknown> | undefined)?.[key],
+        globals().Nxds
+      ) as ReactModule.ElementType | undefined;
+  const revive = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(revive);
+    if (!value || typeof value !== 'object') return value;
+    if ('__date' in value) {
+      const [year, month, day] = String(value.__date).split('-').map(Number);
+      return new Date(year ?? 0, (month ?? 1) - 1, day ?? 1);
+    }
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, revive(item)])
+    );
+  };
   const element = (
-    tree: Node,
-    wrapped: boolean,
+    tree: Part | string,
     key?: number
   ): ReactModule.ReactNode => {
-    const { React, Nxds } = window as unknown as PageGlobals;
+    const { React } = globals();
     if (typeof tree === 'string') return tree;
-    const part = tree.part.startsWith('Icons.')
-      ? Nxds.Icons[tree.part.slice('Icons.'.length)]
-      : Nxds[tree.part];
-    const type = (part as ReactModule.ElementType | undefined) ?? tree.part;
+    const type =
+      tree.part === '' ? React.Fragment : (part(tree.part) ?? tree.part);
     const children = (tree.children ?? []).map((child, index) =>
-      element(child, wrapped, index)
+      element(child, index)
     );
-    if (!wrapped) {
-      return React.createElement(type, tree.props ?? null, ...children);
-    }
-    mounted += 1;
-    const tpl = String(mounted);
-    // A void element such as <input> throws on any `children` prop.
-    const content = children.length > 0 ? { children } : {};
-    if (!part) {
-      return React.createElement(type, {
-        ...tree.props,
-        ...content,
+    return React.createElement(
+      type,
+      { ...(revive(tree.props ?? {}) as object), key },
+      ...children
+    );
+  };
+  const compact = (children: ReactModule.ReactNode[]) =>
+    children
+      .filter((child) => typeof child !== 'string' || child.trim() !== '')
+      .map((child) =>
+        typeof child === 'string' ? child.trim().replace(/\s+/g, ' ') : child
+      );
+  const markupNode = (
+    node: ChildNode,
+    wrapped: boolean,
+    key: number
+  ): ReactModule.ReactNode => {
+    const { React } = globals();
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
+    if (!(node instanceof Element)) return null;
+    const children = [...node.childNodes]
+      .map((child, index) => markupNode(child, wrapped, index))
+      .filter((child) => child !== null);
+    const content = wrapped ? children : compact(children);
+    const tag = node.tagName.toLowerCase();
+    if (tag === 'x-import') {
+      const name = node.getAttribute('component-from-global-scope') ?? '';
+      const props: Record<string, unknown> = {};
+      for (const attribute of node.attributes) {
+        if (attribute.name === 'component-from-global-scope') continue;
+        props[camel(attribute.name)] = attribute.value;
+      }
+      const type = part(name) ?? name;
+      if (!wrapped) {
+        return React.createElement(type, { ...props, key }, ...content);
+      }
+      mounted += 1;
+      const rendered = React.createElement(type, {
+        ...props,
+        ...(content.length > 0 ? { children: content } : {}),
+        key: 0,
+      });
+      return React.createElement('div', {
         key,
-        'data-dc-tpl': tpl,
+        className: 'sc-host-x',
+        'data-dc-tpl': String(mounted),
+        style: { display: 'contents' },
+        children: [rendered],
       });
     }
-    const indented = children.every((child) => typeof child === 'string')
-      ? content
-      : {
-          children: [...children.flatMap((child) => ['\n    ', child]), '\n  '],
-        };
-    const rendered = React.createElement(type, {
-      ...tree.props,
-      ...indented,
-      key: 0,
-    });
-    return React.createElement('div', {
-      key,
-      className: 'sc-host-x',
-      'data-dc-tpl': tpl,
-      style: { display: 'contents' },
-      children: [rendered],
-    });
+    const props: Record<string, unknown> = { key };
+    for (const attribute of node.attributes) {
+      const name = NAMES[attribute.name] ?? attribute.name;
+      props[name] =
+        name === 'style' ? styleObject(attribute.value) : attribute.value;
+    }
+    if (wrapped) {
+      mounted += 1;
+      props['data-dc-tpl'] = String(mounted);
+    }
+    // A void element such as <input> throws on any `children` prop.
+    return content.length > 0
+      ? React.createElement(tag, { ...props, children: content })
+      : React.createElement(tag, props);
   };
-  Object.assign(window, { __nxdsElement: element });
-});
+  const markup = (text: string, wrapped: boolean): ReactModule.ReactNode => {
+    const { React } = globals();
+    const template = document.createElement('template');
+    template.innerHTML = text.trim();
+    const nodes = [...template.content.childNodes]
+      .map((node, index) => markupNode(node, wrapped, index))
+      .filter((node) => node !== null);
+    return React.createElement(React.Fragment, null, ...compact(nodes));
+  };
+  const signature = (host: Element) =>
+    [...host.querySelectorAll('*')]
+      .filter((node) => !node.classList.contains('sc-host-x'))
+      .map((node) => {
+        const states = SIGNED.filter((name) => node.hasAttribute(name)).map(
+          (name) => `${name}=${node.getAttribute(name)}`
+        );
+        const classes = [...node.classList].sort().join('.');
+        const text = [...node.childNodes]
+          .filter((child) => child.nodeType === Node.TEXT_NODE)
+          .map((child) => child.textContent)
+          .join('')
+          .replace(/\s+/g, ' ')
+          .trim();
+        return `${node.tagName.toLowerCase()}${classes ? `.${classes}` : ''}${states.length > 0 ? ` [${states.join(' ')}]` : ''}${text ? ` "${text}"` : ''}`;
+      });
+  Object.assign(window, {
+    __nxdsElement: element,
+    __nxdsMarkup: markup,
+    __nxdsSignature: signature,
+  });
+}
 
-await context.route('**/*', (route) => {
+function serve(route: Route) {
   const url = new URL(route.request().url());
   if (url.origin !== ORIGIN) {
     fail(`network request to ${url.href}`);
@@ -225,7 +360,20 @@ await context.route('**/*', (route) => {
   if (url.pathname === '/frame') return route.fallback();
   fail(`request for ${url.pathname}, which the system doesn't serve`);
   return route.abort();
-});
+}
+
+/** A browser context that serves the system and has the page helpers. */
+async function canvasContext(options: BrowserContextOptions = {}) {
+  const created = await browser.newContext({
+    viewport: { width: 960, height: 720 },
+    ...options,
+  });
+  await created.addInitScript(pageHelpers);
+  await created.route('**/*', serve);
+  return created;
+}
+
+const context = await canvasContext();
 
 async function rendered(page: Page) {
   return page.evaluate(() => {
@@ -532,7 +680,7 @@ async function measure(page: Page, probe: Probe, scope: Scope = {}) {
       if (scope.style) host.setAttribute('style', scope.style);
       document.body.append(host);
       const root = ReactDOM.createRoot(host);
-      ReactDOM.flushSync(() => root.render(__nxdsElement(probe.tree, false)));
+      ReactDOM.flushSync(() => root.render(__nxdsElement(probe.tree)));
       const element = host.querySelector(probe.target);
       const value = element
         ? [probe.property]
@@ -637,6 +785,34 @@ async function checkRuntimeLayer() {
   await page.close();
 }
 
+function indented(children: readonly string[]) {
+  return children.flatMap((child) =>
+    child.split('\n').map((line) => `  ${line}`)
+  );
+}
+
+/** Canvas markup for an Nxds part: `x('Button', 'variant="outline"', 'Save')`. */
+function x(name: string, attributes = '', ...children: string[]) {
+  const open = `<x-import component-from-global-scope="Nxds.${name}"${attributes ? ` ${attributes}` : ''}>`;
+  if (children.length === 0) return `${open}</x-import>`;
+  const [only] = children;
+  if (children.length === 1 && only !== undefined && !only.includes('<')) {
+    return `${open}${only}</x-import>`;
+  }
+  return [open, ...indented(children), '</x-import>'].join('\n');
+}
+
+/** Markup for a plain element. */
+function el(tag: string, attributes = '', ...children: string[]) {
+  const open = `<${tag}${attributes ? ` ${attributes}` : ''}>`;
+  if (children.length === 0) return `${open}</${tag}>`;
+  const [only] = children;
+  if (children.length === 1 && only !== undefined && !only.includes('<')) {
+    return `${open}${only}</${tag}>`;
+  }
+  return [open, ...indented(children), `</${tag}>`].join('\n');
+}
+
 const part = (
   name: string,
   props: Record<string, unknown> | null,
@@ -651,19 +827,19 @@ interface Read {
 }
 
 /**
- * Trees a canvas author builds from separate x-imports, and the reads that
- * show whether nxds's structure survives the wrappers: each must match the
- * same tree rendered without them.
+ * Markup a canvas author writes, part by part, and the reads that show
+ * whether nxds's structure survives the wrappers: each must match the same
+ * markup rendered without them.
  */
-const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
+const WRAPPED_CASES: { name: string; markup: string; reads: Read[] }[] = [
   {
     name: 'ButtonGroup joins its buttons',
-    tree: part(
+    markup: x(
       'ButtonGroup',
-      null,
-      part('Button', { variant: 'outline' }, 'Archive'),
-      part('Button', { variant: 'outline' }, 'Report'),
-      part('Button', { variant: 'outline' }, 'Snooze')
+      '',
+      x('Button', 'variant="outline"', 'Archive'),
+      x('Button', 'variant="outline"', 'Report'),
+      x('Button', 'variant="outline"', 'Snooze')
     ),
     reads: [
       { target: 'button', index: 0, property: 'border-top-right-radius' },
@@ -674,20 +850,20 @@ const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
   },
   {
     name: 'a split button joins its menu trigger',
-    tree: part(
+    markup: x(
       'ButtonGroup',
-      null,
-      part('Button', { variant: 'outline' }, 'Send'),
-      part(
+      '',
+      x('Button', 'variant="outline"', 'Send'),
+      x(
         'DropdownMenu',
-        null,
-        part(
+        '',
+        x(
           'DropdownMenuTrigger',
-          { asChild: true },
-          part(
+          'as-child',
+          x(
             'Button',
-            { variant: 'outline', size: 'icon', 'aria-label': 'More options' },
-            part('Icons.IconChevronDown', null)
+            'variant="outline" size="icon" aria-label="More options"',
+            x('Icons.IconChevronDown')
           )
         )
       )
@@ -700,11 +876,11 @@ const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
   },
   {
     name: 'AvatarGroup overlaps and rings its avatars',
-    tree: part(
+    markup: x(
       'AvatarGroup',
-      null,
-      part('Avatar', null, part('AvatarFallback', null, 'AL')),
-      part('Avatar', null, part('AvatarFallback', null, 'BK'))
+      '',
+      x('Avatar', '', x('AvatarFallback', '', 'AL')),
+      x('Avatar', '', x('AvatarFallback', '', 'BK'))
     ),
     reads: [
       {
@@ -721,14 +897,14 @@ const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
   },
   {
     name: 'a striped Table tints and divides its rows',
-    tree: part(
+    markup: x(
       'Table',
-      { striped: true },
-      part(
+      'striped',
+      x(
         'TableBody',
-        null,
+        '',
         ...['INV001', 'INV002', 'INV003'].map((invoice) =>
-          part('TableRow', null, part('TableCell', null, invoice))
+          x('TableRow', '', x('TableCell', '', invoice))
         )
       )
     ),
@@ -740,11 +916,11 @@ const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
   },
   {
     name: 'InputGroup sizes its icon and pads its input',
-    tree: part(
+    markup: x(
       'InputGroup',
-      null,
-      part('InputGroupAddon', null, part('Icons.IconSearch', null)),
-      part('InputGroupInput', { placeholder: 'Search', 'aria-label': 'Search' })
+      '',
+      x('InputGroupAddon', '', x('Icons.IconSearch')),
+      x('InputGroupInput', 'placeholder="Search" aria-label="Search"')
     ),
     reads: [
       { target: 'svg', property: 'width' },
@@ -753,12 +929,12 @@ const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
   },
   {
     name: 'Alert sizes its icon and places its title',
-    tree: part(
+    markup: x(
       'Alert',
-      null,
-      part('AlertIcon', null, part('Icons.IconInfoCircle', null)),
-      part('AlertTitle', null, 'Heads up'),
-      part('AlertDescription', null, 'Your trial ends in three days.')
+      '',
+      x('AlertIcon', '', x('Icons.IconInfoCircle')),
+      x('AlertTitle', '', 'Heads up'),
+      x('AlertDescription', '', 'Your trial ends in three days.')
     ),
     reads: [
       { target: 'svg', property: 'width' },
@@ -768,28 +944,28 @@ const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
   },
   {
     name: 'SidebarMenuBadge sits beside its button',
-    tree: part(
+    markup: x(
       'SidebarProvider',
-      null,
-      part(
+      '',
+      x(
         'Sidebar',
-        null,
-        part(
+        '',
+        x(
           'SidebarContent',
-          null,
-          part(
+          '',
+          x(
             'SidebarMenu',
-            null,
-            part(
+            '',
+            x(
               'SidebarMenuItem',
-              null,
-              part(
+              '',
+              x(
                 'SidebarMenuButton',
-                null,
-                part('Icons.IconInbox', null),
-                part('span', null, 'Inbox')
+                '',
+                x('Icons.IconInbox'),
+                el('span', '', 'Inbox')
               ),
-              part('SidebarMenuBadge', null, '24')
+              x('SidebarMenuBadge', '', '24')
             )
           )
         )
@@ -806,19 +982,19 @@ const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
   },
   {
     name: 'AlertIcon sizes a hand-written svg',
-    tree: part(
+    markup: x(
       'Alert',
-      null,
-      part(
+      '',
+      x(
         'AlertIcon',
-        null,
-        part(
+        '',
+        el(
           'svg',
-          { viewBox: '0 0 24 24', 'aria-hidden': true },
-          part('circle', { cx: 12, cy: 12, r: 10 })
+          'viewBox="0 0 24 24" aria-hidden="true"',
+          el('circle', 'cx="12" cy="12" r="10"')
         )
       ),
-      part('AlertTitle', null, 'Heads up')
+      x('AlertTitle', '', 'Heads up')
     ),
     reads: [
       { target: 'svg', property: 'width' },
@@ -827,52 +1003,44 @@ const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
   },
   {
     name: 'FieldDescription underlines a raw link',
-    tree: part(
+    markup: x(
       'FieldDescription',
-      null,
-      'Read the ',
-      part('a', { href: '#terms' }, 'terms'),
-      ' first.'
+      '',
+      'Read the',
+      el('a', 'href="#terms"', 'terms'),
+      'first.'
     ),
     reads: [{ target: 'a', property: 'text-underline-offset' }],
   },
   {
     name: "an author's rounded card leaves its children square",
-    tree: part(
+    markup: el(
       'div',
-      { style: { borderRadius: '16px', padding: '16px' } },
-      part(
-        'div',
-        { className: 'card-header' },
-        part('Button', { variant: 'outline' }, 'Edit')
-      )
+      'style="border-radius: 16px; padding: 16px"',
+      el('div', 'class="card-header"', x('Button', 'variant="outline"', 'Edit'))
     ),
     reads: [{ target: '.card-header', property: 'border-top-left-radius' }],
   },
   {
     name: 'a Label dims beside a disabled Checkbox',
-    tree: part(
+    markup: el(
       'div',
-      { className: 'nx:flex nx:items-center nx:gap-2' },
-      part('Checkbox', { id: 'terms', disabled: true }),
-      part('Label', { htmlFor: 'terms' }, 'Accept terms')
+      'class="nx:flex nx:items-center nx:gap-2"',
+      x('Checkbox', 'id="terms" disabled'),
+      x('Label', 'html-for="terms"', 'Accept terms')
     ),
     reads: [{ target: '[data-slot="label"]', property: 'color' }],
   },
   {
     name: 'a ChoiceCard in a form shows its disabled control',
-    tree: part(
+    markup: el(
       'form',
-      null,
-      part(
+      '',
+      x(
         'ChoiceCard',
-        { htmlFor: 'updates' },
-        part('Checkbox', { id: 'updates', disabled: true }),
-        part(
-          'ChoiceCardContent',
-          null,
-          part('ChoiceCardTitle', null, 'Product updates')
-        )
+        'html-for="updates"',
+        x('Checkbox', 'id="updates" disabled'),
+        x('ChoiceCardContent', '', x('ChoiceCardTitle', '', 'Product updates'))
       )
     ),
     reads: [
@@ -882,15 +1050,15 @@ const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
   },
   {
     name: 'Accordion drops the last divider',
-    tree: part(
+    markup: x(
       'Accordion',
-      { type: 'single' },
+      'type="single"',
       ...['Shipping', 'Returns'].map((title) =>
-        part(
+        x(
           'AccordionItem',
-          { value: title },
-          part('AccordionTrigger', null, title),
-          part('AccordionContent', null, `${title} policy`)
+          `value="${title}"`,
+          x('AccordionTrigger', '', title),
+          x('AccordionContent', '', `${title} policy`)
         )
       )
     ),
@@ -917,21 +1085,21 @@ const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
 const WRAPPER_NESTING =
   /validateDOMNesting\(\.\.\.\): %s cannot appear as a (?:child|descendant) of <%s>\.%s%s%s (?:<div> \w+|<\w+> div|Whitespace text nodes \w+)\s/;
 
-// Renders `tree`, with or without canvas wrappers, and reads each `read`.
-async function readTree(
+// Renders `markup`, with or without canvas wrappers, and reads each `read`.
+async function readMarkup(
   page: Page,
-  tree: Part,
+  markup: string,
   reads: readonly Read[],
   wrapped: boolean
 ) {
   return page.evaluate(
-    ({ tree, reads, wrapped }) => {
-      const { ReactDOM, __nxdsElement } = window as unknown as PageGlobals;
+    ({ markup, reads, wrapped }) => {
+      const { ReactDOM, __nxdsMarkup } = window as unknown as PageGlobals;
       const host = document.createElement('div');
       document.body.append(host);
       const root = ReactDOM.createRoot(host);
       try {
-        ReactDOM.flushSync(() => root.render(__nxdsElement(tree, wrapped)));
+        ReactDOM.flushSync(() => root.render(__nxdsMarkup(markup, wrapped)));
       } catch (error) {
         root.unmount();
         host.remove();
@@ -953,7 +1121,7 @@ async function readTree(
       host.remove();
       return { error: null, values, wrappers };
     },
-    { tree, reads, wrapped }
+    { markup, reads, wrapped }
   );
 }
 
@@ -968,10 +1136,10 @@ function failOnProblems(name: string, problems: string[], wrapped: boolean) {
 
 async function checkWrapped() {
   const { page, problems } = await openPage('Button', LIGHT);
-  for (const { name, tree, reads } of WRAPPED_CASES) {
-    const plain = await readTree(page, tree, reads, false);
+  for (const { name, markup, reads } of WRAPPED_CASES) {
+    const plain = await readMarkup(page, markup, reads, false);
     failOnProblems(name, problems, false);
-    const wrapped = await readTree(page, tree, reads, true);
+    const wrapped = await readMarkup(page, markup, reads, true);
     failOnProblems(name, problems, true);
     if (plain.error) fail(`${name}: the plain tree throws ${plain.error}`);
     if (wrapped.error) {
@@ -996,76 +1164,710 @@ async function checkWrapped() {
   await page.close();
 }
 
-const trigger = (
-  name: string,
-  label: string,
-  props: Record<string, unknown> = {}
-) =>
-  part(
-    name,
-    { asChild: true },
-    part('Button', { variant: 'outline', ...props }, label)
-  );
+/** What to render: a typed tree as plain React, or markup the way a canvas mounts it. */
+type Mount = { tree: Part } | { markup: string };
 
-/** Overlays mounted as separate x-imports, opened from an `asChild` Button. */
+// Renders `mount` and reads its signature once it stops changing, so a
+// chart's entry animation has finished.
+async function signatureOf(page: Page, mount: Mount) {
+  return page.evaluate(async (mount) => {
+    const { ReactDOM, __nxdsElement, __nxdsMarkup, __nxdsSignature } =
+      window as unknown as PageGlobals;
+    const host = document.createElement('div');
+    host.style.width = '640px';
+    document.body.append(host);
+    const root = ReactDOM.createRoot(host);
+    try {
+      ReactDOM.flushSync(() =>
+        root.render(
+          'tree' in mount
+            ? __nxdsElement(mount.tree)
+            : __nxdsMarkup(mount.markup, true)
+        )
+      );
+    } catch (error) {
+      root.unmount();
+      host.remove();
+      return { error: error instanceof Error ? error.message : String(error) };
+    }
+    let last: string[] = [];
+    for (let tries = 0; tries < 20; tries += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      const next = __nxdsSignature(host);
+      if (next.join('\n') === last.join('\n')) break;
+      last = next;
+    }
+    root.unmount();
+    host.remove();
+    return { signature: last };
+  }, mount);
+}
+
+function compareSignatures(
+  name: string,
+  expected: Awaited<ReturnType<typeof signatureOf>>,
+  canvas: Awaited<ReturnType<typeof signatureOf>>
+) {
+  if ('error' in expected)
+    return fail(`${name}: plain React throws ${expected.error}`);
+  if ('error' in canvas)
+    return fail(`${name}: the canvas markup throws ${canvas.error}`);
+  const [want, got] = [expected.signature, canvas.signature];
+  const at = want.findIndex((line, index) => got[index] !== line);
+  if (at === -1 && want.length === got.length) return;
+  const index = at === -1 ? want.length : at;
+  fail(
+    `${name}: the canvas markup renders ${got[index] ?? 'nothing'} where plain React renders ${want[index] ?? 'nothing'}.`
+  );
+}
+
+/** Each card's README example, with the docs story's values as plain React. */
+async function readmeExamples() {
+  const parts = new Set(
+    [
+      ...readFileSync(
+        path.join(projectDir, 'components', 'index.d.ts'),
+        'utf8'
+      ).matchAll(/export interface (\w+)Props\b/g),
+    ]
+      .map((match) => match[1] ?? '')
+      .filter((name) => !ICONS.includes(name as (typeof ICONS)[number]))
+  );
+  const slugs = new Map(
+    [...exportedComponentSlugs()].map((slug) => [componentLabel(slug), slug])
+  );
+  const examples: { card: string; markup: string; tree: Part }[] = [];
+  for (const card of cards()) {
+    const slug = slugs.get(card);
+    if (!slug) continue;
+    const example = await folderCanvasExample(slug, parts);
+    if (!example) continue;
+    const readme = readFileSync(
+      path.join(projectDir, 'components', card, 'README.md'),
+      'utf8'
+    );
+    const markup = /```html\n([\s\S]*?)\n```/.exec(readme)?.[1] ?? '';
+    if (markup !== example.markup) {
+      fail(
+        `${card}: README.md's canvas example isn't its first writable docs story.`
+      );
+      continue;
+    }
+    examples.push({ card, markup, tree: example.tree });
+  }
+  return examples;
+}
+
+// Each README example, mounted the way a canvas does, renders what its docs
+// story renders as plain React, and logs nothing.
+async function checkExamples() {
+  const examples = await readmeExamples();
+  const { page, problems } = await openPage('Button', LIGHT);
+  for (const { card, markup, tree } of examples) {
+    const expected = await signatureOf(page, { tree });
+    failOnProblems(`${card} README example`, problems, false);
+    const canvas = await signatureOf(page, { markup });
+    failOnProblems(`${card} README example`, problems, true);
+    compareSignatures(`${card} README example`, expected, canvas);
+  }
+  await page.close();
+  return examples.length;
+}
+
+const date = (year: number, month: number, day: number) => ({
+  __date: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+});
+
+const TOGGLES = ['a', 'b', 'c'].map((value) =>
+  x(
+    'ToggleGroupItem',
+    `value="${value}" aria-label="${value}"`,
+    value.toUpperCase()
+  )
+);
+const toggleItems = ['a', 'b', 'c'].map((value) =>
+  part('ToggleGroupItem', { value, 'aria-label': value }, value.toUpperCase())
+);
+const FRUITS = [
+  ['apple', 'Apple'],
+  ['banana', 'Banana'],
+] as const;
+
+/** Markup whose attribute strings must convert to the typed props beside it. */
+const ATTRIBUTE_CASES: { name: string; markup: string; expected: Part }[] = [
+  {
+    name: 'a comma list sets a Slider range',
+    markup: x('Slider', 'default-value="20,80" aria-label="Price"'),
+    expected: part('Slider', { defaultValue: [20, 80], 'aria-label': 'Price' }),
+  },
+  {
+    name: 'one number sets a one-thumb Slider',
+    markup: x('Slider', 'default-value=" 50 " max="200" aria-label="Volume"'),
+    expected: part('Slider', {
+      defaultValue: [50],
+      max: 200,
+      'aria-label': 'Volume',
+    }),
+  },
+  {
+    name: 'Slider markers take "steps" or numbers',
+    markup: x(
+      'Slider',
+      'default-value="40" step="20" markers="steps" aria-label="Level"'
+    ),
+    expected: part('Slider', {
+      defaultValue: [40],
+      step: 20,
+      markers: 'steps',
+      'aria-label': 'Level',
+    }),
+  },
+  {
+    name: 'a number sets Progress',
+    markup: x('Progress', 'value="60" aria-label="Upload"'),
+    expected: part('Progress', { value: 60, 'aria-label': 'Upload' }),
+  },
+  {
+    name: 'a negative number sets a Slider minimum',
+    markup: x(
+      'Slider',
+      'min="-10" max="10" default-value="-5" aria-label="Offset"'
+    ),
+    expected: part('Slider', {
+      min: -10,
+      max: 10,
+      defaultValue: [-5],
+      'aria-label': 'Offset',
+    }),
+  },
+  {
+    name: 'a bare attribute is true',
+    markup: x('Switch', 'disabled default-checked aria-label="Wi-Fi"'),
+    expected: part('Switch', {
+      disabled: true,
+      defaultChecked: true,
+      'aria-label': 'Wi-Fi',
+    }),
+  },
+  {
+    name: '"false" is false',
+    markup: x('Switch', 'disabled="false" aria-label="Wi-Fi"'),
+    expected: part('Switch', { disabled: false, 'aria-label': 'Wi-Fi' }),
+  },
+  {
+    name: 'a literal beside a boolean stays a string',
+    markup: x('Checkbox', 'checked="indeterminate" aria-label="Select all"'),
+    expected: part('Checkbox', {
+      checked: 'indeterminate',
+      'aria-label': 'Select all',
+    }),
+  },
+  {
+    name: 'a numeric literal converts to its number',
+    markup: x('ToggleGroup', 'type="single" spacing="2"', ...TOGGLES),
+    expected: part(
+      'ToggleGroup',
+      { type: 'single', spacing: 2 },
+      ...toggleItems
+    ),
+  },
+  {
+    name: 'type="multiple" reads a comma list',
+    markup: x('ToggleGroup', 'type="multiple" default-value="b,c"', ...TOGGLES),
+    expected: part(
+      'ToggleGroup',
+      { type: 'multiple', defaultValue: ['b', 'c'] },
+      ...toggleItems
+    ),
+  },
+  {
+    name: 'type="single" keeps a comma in its one value',
+    markup: x('ToggleGroup', 'type="single" default-value="a,b"', ...TOGGLES),
+    expected: part(
+      'ToggleGroup',
+      { type: 'single', defaultValue: 'a,b' },
+      ...toggleItems
+    ),
+  },
+  {
+    name: 'JSON escapes a comma in a list',
+    markup: x(
+      'ToggleGroup',
+      `type="multiple" default-value='["a","c"]'`,
+      ...TOGGLES
+    ),
+    expected: part(
+      'ToggleGroup',
+      { type: 'multiple', defaultValue: ['a', 'c'] },
+      ...toggleItems
+    ),
+  },
+  {
+    name: 'a multiple Accordion opens each listed item',
+    markup: x(
+      'Accordion',
+      'type="multiple" default-value="shipping,returns"',
+      ...['shipping', 'returns'].map((value) =>
+        x(
+          'AccordionItem',
+          `value="${value}"`,
+          x('AccordionTrigger', '', value),
+          x('AccordionContent', '', `${value} policy`)
+        )
+      )
+    ),
+    expected: part(
+      'Accordion',
+      { type: 'multiple', defaultValue: ['shipping', 'returns'] },
+      ...['shipping', 'returns'].map((value) =>
+        part(
+          'AccordionItem',
+          { value },
+          part('AccordionTrigger', null, value),
+          part('AccordionContent', null, `${value} policy`)
+        )
+      )
+    ),
+  },
+  {
+    name: 'MultiSelect shows chips for its default values through the wrappers',
+    markup: x(
+      'MultiSelect',
+      'default-values="apple,banana"',
+      x(
+        'MultiSelectTrigger',
+        'aria-label="Fruit"',
+        x('MultiSelectValue', 'placeholder="Pick fruit"')
+      ),
+      x(
+        'MultiSelectContent',
+        '',
+        ...FRUITS.map(([value, label]) =>
+          x('MultiSelectItem', `value="${value}"`, label)
+        )
+      )
+    ),
+    expected: part(
+      'MultiSelect',
+      { defaultValues: ['apple', 'banana'] },
+      part(
+        'MultiSelectTrigger',
+        { 'aria-label': 'Fruit' },
+        part('MultiSelectValue', { placeholder: 'Pick fruit' })
+      ),
+      part(
+        'MultiSelectContent',
+        null,
+        ...FRUITS.map(([value, label]) =>
+          part('MultiSelectItem', { value }, label)
+        )
+      )
+    ),
+  },
+  {
+    name: 'an ISO date selects a day',
+    markup: x(
+      'DatePicker',
+      'mode="single" selected="2026-10-15" default-month="2026-10"'
+    ),
+    expected: part('DatePicker', {
+      mode: 'single',
+      selected: date(2026, 10, 15),
+      defaultMonth: date(2026, 10, 1),
+    }),
+  },
+  {
+    name: 'mode="multiple" reads a comma list of dates',
+    markup: x(
+      'DatePicker',
+      'mode="multiple" selected="2026-10-05,2026-10-09" default-month="2026-10"'
+    ),
+    expected: part('DatePicker', {
+      mode: 'multiple',
+      selected: [date(2026, 10, 5), date(2026, 10, 9)],
+      defaultMonth: date(2026, 10, 1),
+    }),
+  },
+  {
+    name: 'mode="range" reads the first and last date',
+    markup: x(
+      'DatePicker',
+      'mode="range" selected="2026-10-01,2026-10-07" default-month="2026-10"'
+    ),
+    expected: part('DatePicker', {
+      mode: 'range',
+      selected: { from: date(2026, 10, 1), to: date(2026, 10, 7) },
+      defaultMonth: date(2026, 10, 1),
+    }),
+  },
+  {
+    name: 'JSON disables weekends',
+    markup: x(
+      'DatePicker',
+      `mode="single" default-month="2026-10" disabled='[{"dayOfWeek":[0,6]}]'`
+    ),
+    expected: part('DatePicker', {
+      mode: 'single',
+      defaultMonth: date(2026, 10, 1),
+      disabled: [{ dayOfWeek: [0, 6] }],
+    }),
+  },
+  {
+    name: 'JSON dates disable the days before one',
+    markup: x(
+      'DatePicker',
+      `mode="single" default-month="2026-10" disabled='{"before":"2026-10-10"}'`
+    ),
+    expected: part('DatePicker', {
+      mode: 'single',
+      defaultMonth: date(2026, 10, 1),
+      disabled: { before: date(2026, 10, 10) },
+    }),
+  },
+  {
+    name: 'JSON lists FieldError messages',
+    markup: x('FieldError', `errors='[{"message":"Enter an email address."}]'`),
+    expected: part('FieldError', {
+      errors: [{ message: 'Enter an email address.' }],
+    }),
+  },
+  {
+    name: 'a number field takes a number',
+    markup: x('Input', 'type="number" min="1" max="5" aria-label="Seats"'),
+    expected: part('Input', {
+      type: 'number',
+      min: 1,
+      max: 5,
+      'aria-label': 'Seats',
+    }),
+  },
+  {
+    name: 'a date field keeps its date min',
+    markup: x('Input', 'type="date" min="2026-01-01" aria-label="Start"'),
+    expected: part('Input', {
+      type: 'date',
+      min: '2026-01-01',
+      'aria-label': 'Start',
+    }),
+  },
+  {
+    name: 'a link target is a dropdown value',
+    markup: x(
+      'Breadcrumb',
+      '',
+      x(
+        'BreadcrumbList',
+        '',
+        x(
+          'BreadcrumbItem',
+          '',
+          x('BreadcrumbLink', 'href="#home" target="_blank"', 'Home')
+        )
+      )
+    ),
+    expected: part(
+      'Breadcrumb',
+      null,
+      part(
+        'BreadcrumbList',
+        null,
+        part(
+          'BreadcrumbItem',
+          null,
+          part('BreadcrumbLink', { href: '#home', target: '_blank' }, 'Home')
+        )
+      )
+    ),
+  },
+];
+
+async function checkAttributes() {
+  const { page, problems } = await openPage('Button', LIGHT);
+  for (const { name, markup, expected } of ATTRIBUTE_CASES) {
+    const want = await signatureOf(page, { tree: expected });
+    failOnProblems(name, problems, false);
+    const got = await signatureOf(page, { markup });
+    failOnProblems(name, problems, true);
+    compareSignatures(name, want, got);
+  }
+  await page.close();
+}
+
+/**
+ * Markup with an attribute that doesn't fit its prop: it logs exactly
+ * `warnings`, renders `expected` (the prop left at its default, or a
+ * placeholder for a required one), and never throws.
+ */
+const BAD_INPUT_CASES: {
+  name: string;
+  markup: string;
+  expected: Part | null;
+  warnings: RegExp[];
+}[] = [
+  {
+    name: 'a boolean is lowercase',
+    markup: x('Switch', 'disabled="TRUE" aria-label="Wi-Fi"'),
+    expected: part('Switch', { 'aria-label': 'Wi-Fi' }),
+    warnings: [
+      /^\[nxds\] Switch: disabled="TRUE" isn't true or false\. Using the default\.$/,
+    ],
+  },
+  {
+    name: 'a number is decimal',
+    markup: x('Progress', 'value="0x10" aria-label="Upload"'),
+    expected: part('Progress', { 'aria-label': 'Upload' }),
+    warnings: [/^\[nxds\] Progress: value="0x10" isn't a number/],
+  },
+  {
+    name: 'an exponent is not a number',
+    markup: x('Progress', 'value="1e3" aria-label="Upload"'),
+    expected: part('Progress', { 'aria-label': 'Upload' }),
+    warnings: [/^\[nxds\] Progress: value="1e3" isn't a number/],
+  },
+  {
+    name: 'a bare number attribute is empty',
+    markup: x('Progress', 'value aria-label="Upload"'),
+    expected: part('Progress', { 'aria-label': 'Upload' }),
+    warnings: [/^\[nxds\] Progress: value="" isn't a number/],
+  },
+  {
+    name: 'a comma list has no empty item',
+    markup: x('Slider', 'default-value="20,,80" aria-label="Price"'),
+    expected: part('Slider', { 'aria-label': 'Price' }),
+    warnings: [/^\[nxds\] Slider: default-value="20,,80" has an empty item/],
+  },
+  {
+    name: 'a literal union takes only its members',
+    markup: x('Button', 'variant="huge"', 'Save'),
+    expected: part('Button', null, 'Save'),
+    warnings: [/^\[nxds\] Button: variant="huge" isn't "link", "default", /],
+  },
+  {
+    name: 'a date that does not exist does not roll over',
+    markup: x(
+      'DatePicker',
+      'mode="single" selected="2026-02-30" default-month="2026-02"'
+    ),
+    expected: part('DatePicker', {
+      mode: 'single',
+      defaultMonth: date(2026, 2, 1),
+    }),
+    warnings: [/^\[nxds\] DatePicker: selected="2026-02-30" isn't a date/],
+  },
+  {
+    name: 'a month that does not exist does not roll over',
+    markup: x('DatePicker', 'mode="single" default-month="2026-13"'),
+    expected: part('DatePicker', { mode: 'single' }),
+    warnings: [/^\[nxds\] DatePicker: default-month="2026-13" isn't a date/],
+  },
+  {
+    name: 'a range needs two dates',
+    markup: x(
+      'DatePicker',
+      'mode="range" selected="2026-10-01" default-month="2026-10"'
+    ),
+    expected: part('DatePicker', {
+      mode: 'range',
+      defaultMonth: date(2026, 10, 1),
+    }),
+    warnings: [/^\[nxds\] DatePicker: selected="2026-10-01" isn't two dates/],
+  },
+  {
+    name: 'JSON must parse',
+    markup: x('FieldError', "errors='[{message: oops}]'"),
+    expected: part('FieldError', null),
+    warnings: [/^\[nxds\] FieldError: errors=".*" isn't valid JSON/],
+  },
+  {
+    name: 'JSON must have the shape its prop takes',
+    markup: x('FieldError', `errors='{"message":"Enter an email address."}'`),
+    expected: part('FieldError', null),
+    warnings: [/^\[nxds\] FieldError: errors=".*" isn't a JSON array/],
+  },
+  {
+    name: 'a required literal union falls back to its first member',
+    markup: x('ToggleGroup', 'type="multi"', ...TOGGLES),
+    expected: part('ToggleGroup', { type: 'single' }, ...toggleItems),
+    warnings: [
+      /^\[nxds\] ToggleGroup: type="multi" isn't "single", "multiple"\. Using "single"\.$/,
+    ],
+  },
+  {
+    name: 'a required value is never empty',
+    markup: x(
+      'Select',
+      'default-open',
+      x(
+        'SelectTrigger',
+        'aria-label="Fruit"',
+        x('SelectValue', 'placeholder="Pick fruit"')
+      ),
+      x('SelectContent', '', x('SelectItem', 'value', 'Apple'))
+    ),
+    expected: null,
+    warnings: [
+      /^\[nxds\] SelectItem: value="" is empty\. Using "value-\d+"\.$/,
+    ],
+  },
+  {
+    name: 'one bad value warns once however often it renders',
+    markup: el(
+      'div',
+      '',
+      x('Switch', 'disabled="yes" aria-label="Wi-Fi"'),
+      x('Switch', 'disabled="yes" aria-label="Bluetooth"'),
+      x('Switch', 'disabled="yes" aria-label="Airplane mode"')
+    ),
+    expected: part(
+      'div',
+      null,
+      part('Switch', { 'aria-label': 'Wi-Fi' }),
+      part('Switch', { 'aria-label': 'Bluetooth' }),
+      part('Switch', { 'aria-label': 'Airplane mode' })
+    ),
+    warnings: [/^\[nxds\] Switch: disabled="yes"/],
+  },
+  {
+    name: 'the same bad value warns once per part',
+    markup: el(
+      'div',
+      '',
+      x('Switch', 'disabled="yes" aria-label="Wi-Fi"'),
+      x('Checkbox', 'disabled="yes" aria-label="Remember me"')
+    ),
+    expected: part(
+      'div',
+      null,
+      part('Switch', { 'aria-label': 'Wi-Fi' }),
+      part('Checkbox', { 'aria-label': 'Remember me' })
+    ),
+    warnings: [
+      /^\[nxds\] Switch: disabled="yes"/,
+      /^\[nxds\] Checkbox: disabled="yes"/,
+    ],
+  },
+];
+
+const NXDS_WARNING = /^console warning: (\[nxds\] .*)$/;
+
+// Each case on a fresh page, so no earlier case has already logged its warning.
+async function checkBadInput() {
+  for (const { name, markup, expected, warnings } of BAD_INPUT_CASES) {
+    const { page, problems } = await openPage('Button', LIGHT);
+    const got = await signatureOf(page, { markup });
+    const logged = problems.splice(0).flatMap((problem) => {
+      const match = NXDS_WARNING.exec(problem);
+      if (match?.[1]) return [match[1]];
+      if (!WRAPPER_NESTING.test(problem)) fail(`${name}: ${problem}`);
+      return [];
+    });
+    if (
+      logged.length !== warnings.length ||
+      !warnings.every((warning, index) => warning.test(logged[index] ?? ''))
+    ) {
+      fail(
+        `${name}: logged ${logged.length > 0 ? logged.join(' | ') : 'no warning'}, not ${warnings.length} matching ${warnings.join(', ')}.`
+      );
+    }
+    if (expected) {
+      const want = await signatureOf(page, { tree: expected });
+      failOnProblems(name, problems, false);
+      compareSignatures(name, want, got);
+    } else if ('error' in got) {
+      fail(`${name}: the canvas markup throws ${got.error}`);
+    }
+    await page.close();
+  }
+}
+
+// Chile starts daylight saving at midnight, so 6 September 2026 has no
+// 00:00. A date still selects its own day there.
+const DATE_ZONE = 'America/Santiago';
+
+async function checkTimeZone() {
+  const zoned = await canvasContext({ timezoneId: DATE_ZONE });
+  const { page, problems } = await openPage('Button', LIGHT, zoned);
+  const name = `a date in ${DATE_ZONE}`;
+  const want = await signatureOf(page, {
+    tree: part('DatePicker', {
+      mode: 'single',
+      selected: date(2026, 9, 6),
+      defaultMonth: date(2026, 9, 1),
+    }),
+  });
+  const got = await signatureOf(page, {
+    markup: x(
+      'DatePicker',
+      'mode="single" selected="2026-09-06" default-month="2026-09"'
+    ),
+  });
+  failOnProblems(name, problems, true);
+  compareSignatures(name, want, got);
+  const selected = (got.signature ?? []).some((line) =>
+    line.includes('aria-label=Sunday, September 6th, 2026, selected')
+  );
+  if (!selected) fail(`${name}: 2026-09-06 isn't the selected day.`);
+  await zoned.close();
+}
+
+/** Overlays mounted as separate x-imports, opened from an `as-child` Button. */
+const trigger = (name: string, label: string) =>
+  x(name, 'as-child', x('Button', 'variant="outline"', label));
+
 const WRAPPED_OVERLAYS: {
   name: string;
-  tree: Part;
+  markup: string;
   open: string;
   hover?: boolean;
   escape?: boolean;
 }[] = [
   {
     name: 'Popover',
-    tree: part(
+    markup: x(
       'Popover',
-      null,
+      '',
       trigger('PopoverTrigger', 'Open popover'),
-      part('PopoverContent', null, 'Place content for the popover here.')
+      x('PopoverContent', '', 'Place content for the popover here.')
     ),
     open: '[data-slot="popover-content"]',
   },
   {
     name: 'DropdownMenu',
-    tree: part(
+    markup: x(
       'DropdownMenu',
-      null,
+      '',
       trigger('DropdownMenuTrigger', 'Open menu'),
-      part(
-        'DropdownMenuContent',
-        null,
-        part('DropdownMenuItem', null, 'Profile')
-      )
+      x('DropdownMenuContent', '', x('DropdownMenuItem', '', 'Profile'))
     ),
     open: '[role="menu"]',
   },
   {
     name: 'Dialog',
-    tree: part(
+    markup: x(
       'Dialog',
-      null,
+      '',
       trigger('DialogTrigger', 'Edit profile'),
-      part('DialogContent', {
-        title: 'Edit profile',
-        description: 'Change your name and email.',
-      })
+      x(
+        'DialogContent',
+        'title="Edit profile" description="Change your name and email."'
+      )
     ),
     open: '[role="dialog"]',
   },
   {
     name: 'Sheet',
-    tree: part(
+    markup: x(
       'Sheet',
-      null,
+      '',
       trigger('SheetTrigger', 'Open settings'),
-      part(
+      x(
         'SheetContent',
-        null,
-        part(
+        '',
+        x(
           'SheetHeader',
-          null,
-          part('SheetTitle', null, 'Settings'),
-          part('SheetDescription', null, 'Manage your account.')
+          '',
+          x('SheetTitle', '', 'Settings'),
+          x('SheetDescription', '', 'Manage your account.')
         )
       )
     ),
@@ -1073,11 +1875,11 @@ const WRAPPED_OVERLAYS: {
   },
   {
     name: 'Tooltip',
-    tree: part(
+    markup: x(
       'Tooltip',
-      null,
+      '',
       trigger('TooltipTrigger', 'Add to library'),
-      part('TooltipContent', null, 'Add to library')
+      x('TooltipContent', '', 'Add to library')
     ),
     open: '[role="tooltip"]',
     hover: true,
@@ -1085,11 +1887,11 @@ const WRAPPED_OVERLAYS: {
   },
   {
     name: 'HoverCard',
-    tree: part(
+    markup: x(
       'HoverCard',
-      { openDelay: 0 },
+      'open-delay="0"',
       trigger('HoverCardTrigger', '@nxds'),
-      part('HoverCardContent', null, 'The nxds design system.')
+      x('HoverCardContent', '', 'The nxds design system.')
     ),
     open: '[data-slot="hover-card-content"]',
     hover: true,
@@ -1097,11 +1899,11 @@ const WRAPPED_OVERLAYS: {
   },
   {
     name: 'Collapsible',
-    tree: part(
+    markup: x(
       'Collapsible',
-      null,
+      '',
       trigger('CollapsibleTrigger', 'Show details'),
-      part('CollapsibleContent', null, 'Shipped on 4 March.')
+      x('CollapsibleContent', '', 'Shipped on 4 March.')
     ),
     open: '[data-slot="collapsible-content"]',
     escape: false,
@@ -1117,15 +1919,15 @@ async function openOverlayTree(
 ) {
   const { page, problems } = await openPage('Button', LIGHT);
   await page.evaluate(
-    ({ tree, wrapped }) => {
-      const { ReactDOM, __nxdsElement } = window as unknown as PageGlobals;
+    ({ markup, wrapped }) => {
+      const { ReactDOM, __nxdsMarkup } = window as unknown as PageGlobals;
       const host = document.createElement('div');
       host.id = 'overlay-host';
       host.style.padding = '120px';
       document.body.append(host);
-      ReactDOM.createRoot(host).render(__nxdsElement(tree, wrapped));
+      ReactDOM.createRoot(host).render(__nxdsMarkup(markup, wrapped));
     },
-    { tree: overlay.tree, wrapped }
+    { markup: overlay.markup, wrapped }
   );
   const button = page.locator('#overlay-host button').first();
   const rendered = await button.waitFor({ timeout: 2000 }).then(
@@ -1200,6 +2002,10 @@ await checkThemes();
 for (const overlay of OVERLAYS) await checkOverlay(overlay);
 for (const overlay of WRAPPED_OVERLAYS) await checkWrappedOverlay(overlay);
 await checkWrapped();
+const exampleCount = await checkExamples();
+await checkAttributes();
+await checkBadInput();
+await checkTimeZone();
 await checkRefs();
 await checkExports();
 await checkTokens();
@@ -1214,5 +2020,5 @@ if (failures.length > 0) {
   process.exit(1);
 }
 console.log(
-  `Smoke test passed: ${cards().length} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes.`
+  `Smoke test passed: ${cards().length} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${exampleCount} README examples against their stories, ${ATTRIBUTE_CASES.length} attribute conversions, ${BAD_INPUT_CASES.length} bad attributes, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes.`
 );
