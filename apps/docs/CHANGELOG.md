@@ -1,5 +1,11 @@
 # @nxds/docs
 
+## 0.0.21
+
+### Patch Changes
+
+- @nxds/react@0.9.0
+
 ## 0.0.20
 
 ### Patch Changes
