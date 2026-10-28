@@ -1,6 +1,6 @@
 {
   "name": "@nxds/react-18",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "description": "nxds React components for React 18, generated from @nxds/react",
   "type": "module",

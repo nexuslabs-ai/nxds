@@ -1,5 +1,12 @@
 # nxds-cli
 
+## 0.4.1
+
+### Patch Changes
+
+- 6b515ae: `nxds-cli export` prints registry and tarball URLs without their user name, password or query string. It refuses an `--npm-registry` URL that is not http or https, or that has a user name, password, query or fragment. nxds-cli sends no registry login. For a private registry, unpack the tarball from `npm pack @nxds/claude-design` and pass its `package` folder with `--source`.
+- d00b904: `nxds-cli` refuses a `--registry` or `NXDS_REGISTRY_URL` URL that has a user name, password, query or fragment, so its errors can't print a registry token. nxds-cli sends no registry login. For a private registry, download its `latest.json` and `<version>.json` files to a folder, and pass the folder with `--registry`.
+
 ## 0.4.0
 
 ### Minor Changes
