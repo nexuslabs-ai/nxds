@@ -235,6 +235,9 @@ jobs:
       - name: Core dist-type contract
         run: pnpm --filter @nxds/core typecheck:dist
 
+      - name: Vue dist-type contract
+        run: pnpm --filter @nxds/vue typecheck:dist
+
       - name: Tailwind and CSS export contract
         run: node scripts/typecheck-tailwind-dist.mjs
 

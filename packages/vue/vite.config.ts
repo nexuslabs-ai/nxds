@@ -18,14 +18,22 @@ export default defineConfig({
     dts({
       include: ['src'],
       exclude: ['**/*.stories.ts', 'src/stories/**'],
-      outDir: 'dist',
+      bundleTypes: true,
+      outDirs: ['dist', { dir: 'dist', moduleFormat: 'cjs' }],
+      // API Extractor drops `declare var`, which vue-tsc uses for slot props.
+      beforeWriteFile: (_filePath, content) => ({
+        content: content.replaceAll(
+          'declare var __VLS_',
+          'declare const __VLS_'
+        ),
+      }),
     }),
   ],
   build: {
     lib: {
       entry: path.resolve(__dirname, 'src/index.ts'),
       formats: ['es', 'cjs'],
-      fileName: (format) => `index.${format === 'es' ? 'mjs' : 'js'}`,
+      fileName: (format) => `index.${format === 'es' ? 'mjs' : 'cjs'}`,
       cssFileName: 'vue',
     },
     rollupOptions: {

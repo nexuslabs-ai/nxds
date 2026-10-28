@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run --project=unit",
-    "typecheck:dist": "pnpm --filter @nxds/core typecheck:dist && node scripts/typecheck-tailwind-dist.mjs",
+    "typecheck:dist": "pnpm --filter @nxds/core typecheck:dist && pnpm --filter @nxds/vue typecheck:dist && node scripts/typecheck-tailwind-dist.mjs",
     "test:storybook": "pnpm test:storybook:react19 && pnpm test:storybook:react18",
     "test:storybook:react19": "vitest run --project=storybook --project=storybook-vue --project=parity",
     "test:storybook:react18": "vitest run --project=storybook-react18",

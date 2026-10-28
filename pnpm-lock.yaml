@@ -877,6 +877,9 @@ importers:
       '@internationalized/date':
         specifier: ^3.5.0
         version: 3.12.4
+      '@microsoft/api-extractor':
+        specifier: ^7.58.9
+        version: 7.58.9(@types/node@25.9.1)
       '@shikijs/langs':
         specifier: 4.4.3
         version: 4.4.3
