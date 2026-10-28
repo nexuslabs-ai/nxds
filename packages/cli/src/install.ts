@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { type Catalog, chosenFonts, resolveItems, variantFor } from './catalog';
+import { type Catalog, type Font, resolveItems, variantFor } from './catalog';
 import type { Config } from './config';
 import { type PreviousFiles, writeFiles, type WriteResult } from './files';
 import { installPackages, packagesToInstall } from './packages';
@@ -55,9 +55,9 @@ function addCssImports(
 
 /**
  * Installs `names` and everything they need: files, npm packages and
- * component stylesheet imports, plus the fonts `config` set up. A file that matches `previous` is replaced;
- * nxds's changes are merged into any other changed file (see `writeFiles`).
- * Updates `config` in place.
+ * component stylesheet imports, plus the packages and imports of `fonts`. A
+ * file that matches `previous` is replaced; nxds's changes are merged into any
+ * other changed file (see `writeFiles`). Updates `config` in place.
  */
 export function installItems(
   catalog: Catalog,
@@ -65,7 +65,8 @@ export function installItems(
   config: Config,
   names: string[],
   previous: PreviousFiles,
-  options: InstallOptions
+  options: InstallOptions,
+  fonts: Font[] = []
 ): InstallResult {
   const items = resolveItems(catalog, config.framework, names);
   const variants = items.map((item) => variantFor(item, config));
@@ -84,9 +85,6 @@ export function installItems(
     { ...options, version: catalog.version }
   );
 
-  const fonts = Object.values(chosenFonts(catalog, config)).filter(
-    (font) => font !== undefined
-  );
   const packages = packagesToInstall(
     project,
     Object.assign(

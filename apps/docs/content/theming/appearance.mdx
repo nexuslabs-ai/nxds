@@ -250,6 +250,9 @@ npx nxds-cli@latest init --icons lucide
 | HugeIcons    | `hugeicons` |
 | Remix Icon   | `remix`     |
 
+Remix Icon uses the Remix Icon License, not MIT. It bars logo use and building
+a competing icon set.
+
 Icons you pass to a component, such as a Button's icon, come from any library
 you like.
 
@@ -282,8 +285,16 @@ export function ShuffleButton() {
 ```
 
 Shuffle keeps mode, contrast and the other preferences. Every brand preset
-passes the contrast checks on every surface tone. Load every font Shuffle picks
-from, as [Fonts](#fonts) shows.
+passes the contrast checks on every surface tone.
+
+Shuffle picks from every font in `FONT_OPTIONS`. If your app loads only some
+of them, pass those as `fonts`:
+
+```ts
+shuffleNxdsAppearance(current, {
+  fonts: FONT_OPTIONS.filter((font) => font.value === 'inter'),
+});
+```
 
 To try it, open the [Playground](/playground) and select **Shuffle**. Then
 select **Use this theme** to copy the theme and its `init` command.

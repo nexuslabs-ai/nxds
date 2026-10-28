@@ -12,7 +12,6 @@
         "$TURBO_ROOT$/packages/core/package.json",
         "$TURBO_ROOT$/packages/core/src/lib/font-options.ts",
         "$TURBO_ROOT$/packages/core/src/lib/icon-libraries.ts",
-        "$TURBO_ROOT$/apps/docs/package.json",
         "$TURBO_ROOT$/packages/react/src/**",
         "$TURBO_ROOT$/packages/react/package.json",
         "$TURBO_ROOT$/packages/react/tsconfig.json",

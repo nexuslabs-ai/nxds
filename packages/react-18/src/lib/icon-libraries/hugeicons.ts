@@ -44,10 +44,10 @@ import {
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 
-type IconProps = Omit<React.ComponentPropsWithoutRef<'svg'>, 'strokeWidth'>;
+type HugeiconProps = Omit<React.ComponentPropsWithoutRef<'svg'>, 'strokeWidth'>;
 
-function hugeicon(icon: IconSvgElement, defaults?: IconProps) {
-  return function Hugeicon(props: IconProps) {
+function hugeicon(icon: IconSvgElement, defaults?: HugeiconProps) {
+  return function Hugeicon(props: HugeiconProps) {
     return React.createElement(HugeiconsIcon, { icon, ...defaults, ...props });
   };
 }

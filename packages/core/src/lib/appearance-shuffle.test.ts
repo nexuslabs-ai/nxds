@@ -34,13 +34,15 @@ const STATE = {
 describe('shuffleNxdsAppearance', () => {
   it('returns a state the sanitizer keeps as it is', () => {
     for (const draw of [0, 0.25, 0.5, 0.75, 0.999]) {
-      const shuffled = shuffleNxdsAppearance(STATE, sequence(draw));
+      const shuffled = shuffleNxdsAppearance(STATE, { random: sequence(draw) });
       expect(sanitizeNxdsAppearance(shuffled)).toEqual(shuffled);
     }
   });
 
   it('keeps mode, contrast and the preferences it does not pick', () => {
-    const shuffled = shuffleNxdsAppearance(STATE, sequence(0.6, 0.1, 0.9));
+    const shuffled = shuffleNxdsAppearance(STATE, {
+      random: sequence(0.6, 0.1, 0.9),
+    });
 
     expect(shuffled).toMatchObject({
       mode: 'dark',
@@ -55,8 +57,8 @@ describe('shuffleNxdsAppearance', () => {
   });
 
   it('picks the first and last curated options at the ends of the range', () => {
-    const first = shuffleNxdsAppearance(STATE, sequence(0));
-    const last = shuffleNxdsAppearance(STATE, sequence(0.999));
+    const first = shuffleNxdsAppearance(STATE, { random: sequence(0) });
+    const last = shuffleNxdsAppearance(STATE, { random: sequence(0.999) });
 
     expect(first).toMatchObject({
       brandColor: BRAND_COLOR_PRESETS[0]?.color,
@@ -79,32 +81,49 @@ describe('shuffleNxdsAppearance', () => {
       )
     );
     for (let draw = 0; draw < 1; draw += 0.05) {
-      const { prefs } = shuffleNxdsAppearance(STATE, sequence(draw));
+      const { prefs } = shuffleNxdsAppearance(STATE, {
+        random: sequence(draw),
+      });
       expect(mono.has(prefs.uiFont)).toBe(false);
       expect(mono.has(prefs.headingFont ?? '')).toBe(false);
     }
   });
+
+  it('picks fonts only from the fonts it is given', () => {
+    const fonts = FONT_OPTIONS.filter(
+      (font) => font.value === 'inter' || font.value === 'lora'
+    );
+    const families = new Set<string | null>([
+      null,
+      ...fonts.map((font) => font.family),
+    ]);
+    for (let draw = 0; draw < 1; draw += 0.05) {
+      const { prefs } = shuffleNxdsAppearance(STATE, {
+        fonts,
+        random: sequence(draw),
+      });
+      expect(families.has(prefs.uiFont)).toBe(true);
+      expect(families.has(prefs.headingFont)).toBe(true);
+    }
+  });
 });
 
-describe.each(BRAND_COLOR_PRESETS)(
-  'a shuffle with the $label brand preset',
-  ({ color }) => {
-    it.each(BASE_TONE_OPTIONS.map((tone) => tone.value))(
-      'clears every contrast floor on the %s surface tone',
-      (surfaceTone) => {
-        const theme = deriveTheme(
-          createNxdsThemeContract({
-            ...DEFAULT_NXDS_APPEARANCE,
-            brandColor: color,
-            surfaceTone,
-          })
-        );
-        const failures = measureThemeContrast(theme).filter(
-          (check) => !check.pass
-        );
+describe.each(BRAND_COLOR_PRESETS)('the $label brand preset', ({ color }) => {
+  it.each(BASE_TONE_OPTIONS.map((tone) => tone.value))(
+    'clears every contrast floor on the %s surface tone',
+    (surfaceTone) => {
+      const theme = deriveTheme(
+        createNxdsThemeContract({
+          ...DEFAULT_NXDS_APPEARANCE,
+          brandColor: color,
+          surfaceTone,
+        })
+      );
+      const failures = measureThemeContrast(theme).filter(
+        (check) => !check.pass
+      );
 
-        expect(failures).toEqual([]);
-      }
-    );
-  }
-);
+      expect(failures).toEqual([]);
+    }
+  );
+});

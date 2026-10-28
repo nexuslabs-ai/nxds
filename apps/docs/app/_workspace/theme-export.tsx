@@ -38,11 +38,13 @@ function initCommand(state: NxdsAppearanceState, library: NxdsIconLibrary) {
     state.prefs.headingFont === null
       ? undefined
       : findFontOption(state.prefs.headingFont);
+  const codeFont = findFontOption(state.prefs.codeFont);
   return [
     'npx nxds-cli@latest init',
     `--icons ${library}`,
     ...(font ? [`--font ${font.value}`] : []),
     ...(headingFont ? [`--heading-font ${headingFont.value}`] : []),
+    ...(codeFont ? [`--code-font ${codeFont.value}`] : []),
   ].join(' ');
 }
 

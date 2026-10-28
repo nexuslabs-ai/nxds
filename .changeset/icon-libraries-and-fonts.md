@@ -8,11 +8,11 @@
 
 Pick the icon library nxds components draw their own icons with, and start from a self-hosted font. Phosphor is the default icon library, in place of Tabler Icons.
 
-| Package                    | Change                                                                                                                                                                                                                                      |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@nxds/core`               | `ICON_LIBRARY_OPTIONS`, `FONT_OPTIONS`, `findFontOption` and `shuffleNxdsAppearance`. `NxdsAppearancePrefs` gains `headingFont`, which sets `--nx-typography-family-font-heading`. `null`, the default, follows `uiFont`.                   |
-| `@nxds/react`, `@nxds/vue` | `lib/icons` draws Phosphor. `lib/icon-libraries/` holds the same icons in Lucide, Tabler Icons, HugeIcons and Remix Icon. InputOTP's separator draws the filled circle at `nx:size-1`. `NxdsAppearanceSettings` gains a Heading font field. |
-| `nxds-cli`                 | `init --icons <library>`, `--font <font>` and `--heading-font <font>`. `nxds.json` records them, and `add` and `update` keep them. Running `init --icons` again switches every installed `lib/icons.ts`.                                    |
+| Package                    | Change                                                                                                                                                                                                                                                                                                   |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@nxds/core`               | `ICON_LIBRARY_OPTIONS`, `FONT_OPTIONS`, `findFontOption`, `shuffleNxdsAppearance` (pass `fonts` to pick from the fonts your app loads) and `shuffleNxdsIconLibrary`. `NxdsAppearancePrefs` gains `headingFont`, which sets `--nx-typography-family-font-heading`. `null`, the default, follows `uiFont`. |
+| `@nxds/react`, `@nxds/vue` | `lib/icons` draws Phosphor. `lib/icon-libraries/` holds the same icons in Lucide, Tabler Icons, HugeIcons and Remix Icon. InputOTP's separator draws the filled circle at `nx:size-1`. `NxdsAppearanceSettings` gains a Heading font field.                                                              |
+| `nxds-cli`                 | `init --icons <library>`, `--font <font>`, `--heading-font <font>` and `--code-font <font>`. `nxds.json` records the icon library, and `add` and `update` keep it. Fonts are set up once by `init`. Running `init --icons` again switches every installed `lib/icons.ts`.                                |
 
 To keep Tabler Icons, set `"iconLibrary": "tabler"` in `nxds.json` before you run `update`. After `update`, run `npx nxds-cli@latest init --icons tabler` instead.
 

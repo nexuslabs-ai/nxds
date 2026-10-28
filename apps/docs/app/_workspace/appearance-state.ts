@@ -2,10 +2,17 @@
 
 import { useState } from 'react';
 
-import type { NxdsAppearanceState } from '@nxds/core';
+import {
+  DEFAULT_ICON_LIBRARY,
+  type NxdsAppearanceState,
+  type NxdsIconLibrary,
+  shuffleNxdsAppearance,
+  shuffleNxdsIconLibrary,
+} from '@nxds/core';
 import { useNxdsAppearance } from '@nxds/react/appearance';
 
 import { DOCS_APPEARANCE_DEFAULT_STATE } from '../_lib/appearance-controls';
+import { setIconLibrary, useIconLibrary } from '../_lib/icon-library';
 
 const HISTORY_LIMIT = 100;
 
@@ -38,36 +45,66 @@ function inverseOf(
 }
 
 /**
- * The shared docs appearance plus an undo history of the edits made through
- * `change` and `reset`. Each step stores only the previous values of the keys
- * it changed, so Undo leaves writes made elsewhere (such as the top-nav mode
- * toggle) in place. Consecutive changes in the same `group` share one undo
- * step until `startStep` is called. Edits persist through the docs appearance
- * provider.
+ * One undo step: the previous values of the appearance keys it changed, and
+ * the previous icon library when it changed that.
+ */
+type HistoryStep = {
+  appearance: AppearancePatch;
+  iconLibrary?: NxdsIconLibrary;
+};
+
+/**
+ * The shared docs appearance and icon library, plus an undo history of the
+ * edits made through `change`, `changeIconLibrary`, `shuffle` and `reset`.
+ * Each step stores only the previous values of what it changed, so Undo leaves
+ * writes made elsewhere (such as the top-nav mode toggle) in place.
+ * Consecutive changes in the same `group` share one undo step until
+ * `startStep` is called. Edits persist through the docs appearance provider.
  */
 export function useAppearanceHistory() {
   const { state, setState } = useNxdsAppearance();
-  const [history, setHistory] = useState<AppearancePatch[]>([]);
+  const iconLibrary = useIconLibrary();
+  const [history, setHistory] = useState<HistoryStep[]>([]);
   const [lastGroup, setLastGroup] = useState<AppearanceKey | null>(null);
 
-  function change(patch: AppearancePatch, group?: AppearanceKey) {
-    const inverse = inverseOf(state, patch);
-    if (Object.keys(inverse).length === 0) return;
+  function record(
+    patch: AppearancePatch,
+    library: NxdsIconLibrary,
+    group?: AppearanceKey
+  ) {
+    const step: HistoryStep = { appearance: inverseOf(state, patch) };
+    if (library !== iconLibrary) step.iconLibrary = iconLibrary;
+    if (Object.keys(step.appearance).length === 0 && !step.iconLibrary) return;
 
     const extendsStep = group !== undefined && group === lastGroup;
     setHistory((past) => {
-      const step = past.at(-1);
-      if (!extendsStep || !step)
-        return [...past, inverse].slice(-HISTORY_LIMIT);
+      const open = past.at(-1);
+      if (!extendsStep || !open) return [...past, step].slice(-HISTORY_LIMIT);
       // The open step keeps the value each key had before the group began.
-      return [...past.slice(0, -1), { ...inverse, ...step }];
+      return [
+        ...past.slice(0, -1),
+        { ...open, appearance: { ...step.appearance, ...open.appearance } },
+      ];
     });
     setLastGroup(group ?? null);
     setState((current) => ({ ...current, ...patch }));
+    if (step.iconLibrary) setIconLibrary(library);
+  }
+
+  function change(patch: AppearancePatch, group?: AppearanceKey) {
+    record(patch, iconLibrary, group);
+  }
+
+  function changeIconLibrary(library: NxdsIconLibrary) {
+    record({}, library);
+  }
+
+  function shuffle() {
+    record(shuffleNxdsAppearance(state), shuffleNxdsIconLibrary());
   }
 
   function reset() {
-    change(DOCS_APPEARANCE_DEFAULT_STATE);
+    record(DOCS_APPEARANCE_DEFAULT_STATE, DEFAULT_ICON_LIBRARY);
   }
 
   function startStep() {
@@ -75,16 +112,20 @@ export function useAppearanceHistory() {
   }
 
   function undo() {
-    const inverse = history.at(-1);
-    if (!inverse) return;
+    const step = history.at(-1);
+    if (!step) return;
     setHistory((past) => past.slice(0, -1));
     startStep();
-    setState((current) => ({ ...current, ...inverse }));
+    setState((current) => ({ ...current, ...step.appearance }));
+    if (step.iconLibrary) setIconLibrary(step.iconLibrary);
   }
 
   return {
     state,
+    iconLibrary,
     change,
+    changeIconLibrary,
+    shuffle,
     startStep,
     reset,
     undo,

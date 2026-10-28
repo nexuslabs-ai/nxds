@@ -96,17 +96,19 @@ function program(
       )
       .option(
         '--icons <library>',
-        'icon library nxds components draw, such as lucide (default: phosphor)'
+        'icon library nxds components draw, such as lucide (default: phosphor). remix is under the Remix Icon License, not MIT: no logo use, and no competing icon set'
       )
       .option('--font <font>', 'font for UI text, such as inter')
       .option('--heading-font <font>', 'font for headings, such as lora')
+      .option('--code-font <font>', 'font for code, such as jetbrains-mono')
   ).action(async (_options, command: Command) => {
     const { cwd, registry } = context(command);
-    const { dir, icons, font, headingFont } = command.opts<{
+    const { dir, icons, font, headingFont, codeFont } = command.opts<{
       dir?: string;
       icons?: string;
       font?: string;
       headingFont?: string;
+      codeFont?: string;
     }>();
     done(
       await init(cwd, registry, {
@@ -115,6 +117,7 @@ function program(
         icons,
         font,
         headingFont,
+        codeFont,
       })
     );
   });

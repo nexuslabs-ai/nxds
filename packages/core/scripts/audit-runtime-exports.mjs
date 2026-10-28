@@ -61,6 +61,7 @@ const EXPECTED_RUNTIME_EXPORTS = [
   'sanitizeNxdsAppearanceSnapshot',
   'serializeNxdsAppearanceStateCookie',
   'shuffleNxdsAppearance',
+  'shuffleNxdsIconLibrary',
   'themeToCss',
   'watchColorScheme',
 ];

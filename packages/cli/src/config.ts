@@ -29,10 +29,6 @@ const configSchema = z.looseObject({
   items: z.array(z.string()),
   /** The icon library `lib/icons.ts` draws, from the release's `iconLibraries`. */
   iconLibrary: z.string().optional(),
-  /** The release font for UI text, which `init` set up. */
-  font: z.string().optional(),
-  /** The release font for headings, which `init` set up. */
-  headingFont: z.string().optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;

@@ -4,17 +4,17 @@ import path from 'node:path';
 
 import {
   type Catalog,
-  chosenFonts,
+  type ChosenFonts,
   fetchRelease,
   loadRelease,
   type ReactMajor,
+  releaseChoice,
   releaseFiles,
   resolveItems,
   SETUP,
   setupVariant,
   splitInstalled,
   type Target,
-  unknownName,
   variantFor,
   withIconLibrary,
 } from '../catalog';
@@ -109,17 +109,21 @@ function nxdsDir(dir: string) {
   );
 }
 
-/** `name`, when the release has a `kind` by that name. */
-function releaseChoice(
+/** The release font `flag` names, which must be a code font or must not be. */
+function fontChoice(
   catalog: Catalog,
-  kind: 'icon library' | 'font',
+  flag: string,
   name: string | undefined,
-  entries: { name: string }[]
+  code: boolean
 ) {
-  if (name === undefined || entries.some((entry) => entry.name === name)) {
-    return name;
-  }
-  throw new UsageError(unknownName(catalog, kind, name, entries));
+  if (name === undefined) return undefined;
+  return releaseChoice(
+    catalog,
+    code ? 'code font' : 'text font',
+    name,
+    catalog.fonts.filter((font) => (font.category === 'mono') === code),
+    (message) => new UsageError(`${flag}: ${message}`)
+  );
 }
 
 function assertTailwind4(project: Project) {
@@ -144,6 +148,7 @@ export async function init(
     icons?: string;
     font?: string;
     headingFont?: string;
+    codeFont?: string;
   }
 ): Promise<CommandResult> {
   const project = readProject(cwd);
@@ -184,19 +189,28 @@ export async function init(
     items: [],
   };
   const previousLibrary = config.iconLibrary;
-  const icons = releaseChoice(
-    release,
-    'icon library',
-    options.icons,
-    release.iconLibraries
-  );
+  const icons =
+    options.icons === undefined
+      ? undefined
+      : releaseChoice(
+          release,
+          'icon library',
+          options.icons,
+          release.iconLibraries,
+          (message) => new UsageError(message)
+        ).name;
   config.iconLibrary =
     icons ?? config.iconLibrary ?? release.iconLibraries[0]?.name;
-  config.font =
-    releaseChoice(release, 'font', options.font, release.fonts) ?? config.font;
-  config.headingFont =
-    releaseChoice(release, 'font', options.headingFont, release.fonts) ??
-    config.headingFont;
+  const fonts: ChosenFonts = {
+    font: fontChoice(release, '--font', options.font, false),
+    headingFont: fontChoice(
+      release,
+      '--heading-font',
+      options.headingFont,
+      false
+    ),
+    codeFont: fontChoice(release, '--code-font', options.codeFont, true),
+  };
   const catalog = withIconLibrary(release, config.iconLibrary);
   // A new icon library rewrites `lib/icons.ts` in every installed item, from
   // the files the old library gave them.
@@ -204,13 +218,7 @@ export async function init(
     existing !== null && icons !== undefined && icons !== previousLibrary;
 
   const setup = setupVariant(catalog, config);
-  const wiring = planWiring(
-    project,
-    config,
-    addTailwind,
-    setup.steps,
-    chosenFonts(catalog, config)
-  );
+  const wiring = planWiring(project, config, addTailwind, setup.steps, fonts);
 
   const tailwind = packagesToInstall(
     project,
@@ -227,7 +235,8 @@ export async function init(
     switched
       ? releaseFiles(withIconLibrary(release, previousLibrary), config)
       : null,
-    options
+    options,
+    Object.values(fonts).filter((font) => font !== undefined)
   );
 
   if (!options.dryRun) {
@@ -255,8 +264,9 @@ export async function init(
       dir: config.dir,
       css: config.css,
       iconLibrary: config.iconLibrary,
-      font: config.font,
-      headingFont: config.headingFont,
+      font: fonts.font?.name,
+      headingFont: fonts.headingFont?.name,
+      codeFont: fonts.codeFont?.name,
       dryRun: options.dryRun,
       ...installed,
       packages,

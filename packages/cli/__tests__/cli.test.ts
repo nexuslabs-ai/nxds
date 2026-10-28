@@ -570,6 +570,14 @@ const LORA = {
   package: '@fontsource-variable/lora',
   range: '^5.3.0',
 } as const;
+const JETBRAINS_MONO = {
+  name: 'jetbrains-mono',
+  label: 'JetBrains Mono',
+  category: 'mono',
+  family: '"JetBrains Mono Variable", ui-monospace, monospace',
+  package: '@fontsource-variable/jetbrains-mono',
+  range: '^5.3.0',
+} as const;
 
 /**
  * The committed release as `version`, with icon libraries and fonts to pick
@@ -596,7 +604,7 @@ function choicesRelease(version: string): Catalog {
       npm: { 'lucide-react': '^1.61.0' },
     },
   ];
-  release.fonts = [INTER, LORA];
+  release.fonts = [INTER, LORA, JETBRAINS_MONO];
   return release;
 }
 
@@ -670,6 +678,27 @@ describe('icon libraries', () => {
       /has no icon library "feather"\. Pick one of: tabler, lucide\./
     );
   });
+
+  it('fails the doctor icons check for a library the release does not have', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+    await cli(['init'], context);
+    writeApp(
+      context.app,
+      'nxds.json',
+      JSON.stringify({ ...nxdsJson(context.app), iconLibrary: 'feather' })
+    );
+
+    const { exitCode, body } = await cliJson(['doctor'], context);
+
+    expect(exitCode).toBe(EXIT_CODES.attention);
+    expect(body.data.checks).toContainEqual(
+      expect.objectContaining({
+        name: 'icons',
+        ok: false,
+        message: expect.stringMatching(/init --icons <library>/),
+      })
+    );
+  });
 });
 
 describe('fonts', () => {
@@ -677,7 +706,15 @@ describe('fonts', () => {
     const context = setup([choicesRelease('0.4.7')]);
 
     const { exitCode, body } = await cliJson(
-      ['init', '--font', 'inter', '--heading-font', 'lora'],
+      [
+        'init',
+        '--font',
+        'inter',
+        '--heading-font',
+        'lora',
+        '--code-font',
+        'jetbrains-mono',
+      ],
       context
     );
 
@@ -685,19 +722,36 @@ describe('fonts', () => {
     const css = readApp(context.app, 'app/nxds.css');
     expect(css).toContain("@import '@fontsource-variable/inter';");
     expect(css).toContain("@import '@fontsource-variable/lora';");
+    expect(css).toContain("@import '@fontsource-variable/jetbrains-mono';");
     const state = readApp(context.app, 'app/appearance-state.ts');
     expect(state).toContain(`uiFont: '${INTER.family}',`);
     expect(state).toContain(`headingFont: '${LORA.family}',`);
+    expect(state).toContain(`codeFont: '${JETBRAINS_MONO.family}',`);
     expect(body.data.packages).toEqual(
       expect.arrayContaining([
         '@fontsource-variable/inter@^5.3.0',
         '@fontsource-variable/lora@^5.3.0',
+        '@fontsource-variable/jetbrains-mono@^5.3.0',
       ])
     );
-    expect(nxdsJson(context.app)).toMatchObject({
-      font: 'inter',
-      headingFont: 'lora',
-    });
+  });
+
+  it('leaves fonts to the app after init', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+    await cli(['init', '--font', 'inter'], context);
+    const css = readApp(context.app, 'app/nxds.css');
+    writeApp(
+      context.app,
+      'app/nxds.css',
+      css.replace("@import '@fontsource-variable/inter';\n", '')
+    );
+
+    const { exitCode, body } = await cliJson(['add', 'spinner'], context);
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(body.data.cssImports).toEqual([]);
+    expect(body.data.packages.join(' ')).not.toContain('@fontsource');
+    expect(nxdsJson(context.app)).not.toHaveProperty('font');
   });
 
   it('asks you to set a font your appearance-state.ts does not name yet', async () => {
@@ -725,7 +779,7 @@ describe('fonts', () => {
       state.replace('uiFont: ', 'uiFont:\n      ')
     );
 
-    const run = await cli(['init', '--icons', 'lucide'], context);
+    const run = await cli(['init', '--font', 'inter'], context);
 
     expect(run.exitCode, run.stdout).toBe(EXIT_CODES.ok);
     expect(run.stdout).not.toContain('appearance-state.ts: Set');
@@ -738,9 +792,24 @@ describe('fonts', () => {
 
     expect(run.exitCode).toBe(EXIT_CODES.usage);
     expect(run.stderr).toMatch(
-      /has no font "comic-sans"\. Pick one of: inter, lora\./
+      /has no text font "comic-sans"\. Pick one of: inter, lora\./
     );
   });
+
+  it.each([
+    ['--font', 'jetbrains-mono', /--font: .* Pick one of: inter, lora\./],
+    ['--code-font', 'inter', /--code-font: .* Pick one of: jetbrains-mono\./],
+  ])(
+    'exits 2 when %s names a font of the wrong kind',
+    async (flag, name, message) => {
+      const context = setup([choicesRelease('0.4.7')]);
+
+      const run = await cli(['init', flag, name], context);
+
+      expect(run.exitCode).toBe(EXIT_CODES.usage);
+      expect(run.stderr).toMatch(message);
+    }
+  );
 });
 
 describe('help', () => {

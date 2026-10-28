@@ -37,17 +37,19 @@ npx nxds-cli@latest init --icons lucide --font inter --heading-font lora
 ```
 
 `--icons` picks the library nxds components draw their own icons with.
-`--font` and `--heading-font` pick self-hosted fonts for UI text and headings.
+`--font`, `--heading-font` and `--code-font` pick self-hosted fonts for UI
+text, headings and code.
 
-| Option                     | Values                                                                                                                         |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `--icons`                  | `phosphor` (default), `lucide`, `tabler`, `hugeicons`, `remix`                                                                 |
-| `--font`, `--heading-font` | `geist`, `inter`, `figtree`, `dm-sans`, `manrope`, `ibm-plex-sans`, `lora`, `playfair-display`, `geist-mono`, `jetbrains-mono` |
+| Option                     | Values                                                                                         |
+| -------------------------- | ---------------------------------------------------------------------------------------------- |
+| `--icons`                  | `phosphor` (default), `lucide`, `tabler`, `hugeicons`, `remix`                                 |
+| `--font`, `--heading-font` | `geist`, `inter`, `figtree`, `dm-sans`, `manrope`, `ibm-plex-sans`, `lora`, `playfair-display` |
+| `--code-font`              | `geist-mono`, `jetbrains-mono`                                                                 |
 
 `init` installs the icon package and each font's Fontsource package. It
 imports the fonts in the nxds CSS entry and sets them in
-`appearance-state.ts`. `nxds.json` records the choices, so `add` and `update`
-keep them.
+`appearance-state.ts`. `nxds.json` records the icon library, so `add` and
+`update` keep it. The fonts are yours after `init`.
 
 To switch icon libraries later, run `init --icons` again. It rewrites
 `lib/icons.ts` in every installed component. If your app already has

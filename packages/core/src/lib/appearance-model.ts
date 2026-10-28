@@ -264,10 +264,7 @@ export function sanitizeNxdsAppearancePrefs(raw: unknown): NxdsAppearancePrefs {
   const d = DEFAULT_NXDS_APPEARANCE.prefs;
   return {
     uiFont: fontFamilyOr(o.uiFont, d.uiFont),
-    headingFont:
-      o.headingFont === null
-        ? null
-        : fontFamilyOr(o.headingFont, d.headingFont),
+    headingFont: fontFamilyOr(o.headingFont, d.headingFont),
     codeFont: fontFamilyOr(o.codeFont, d.codeFont),
     uiFontSize: clampFontSize(o.uiFontSize, d.uiFontSize),
     codeFontSize: clampFontSize(o.codeFontSize, d.codeFontSize),

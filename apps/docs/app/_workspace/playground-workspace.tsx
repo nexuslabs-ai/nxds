@@ -1,14 +1,7 @@
 'use client';
 
-import {
-  DEFAULT_ICON_LIBRARY,
-  ICON_LIBRARY_OPTIONS,
-  shuffleNxdsAppearance,
-} from '@nxds/core';
 import { Button } from '@nxds/react';
 import { useNxdsAppearance } from '@nxds/react/appearance';
-
-import { setIconLibrary } from '../_lib/icon-library';
 
 import { AppearanceControls } from './appearance-controls';
 import { useAppearanceHistory } from './appearance-state';
@@ -19,28 +12,27 @@ import { ThemeExport } from './theme-export';
 import { WorkspaceLayout } from './workspace-layout';
 
 export function PlaygroundWorkspace() {
-  const { state, change, startStep, reset, undo, canUndo } =
-    useAppearanceHistory();
+  const {
+    state,
+    iconLibrary,
+    change,
+    changeIconLibrary,
+    shuffle,
+    startStep,
+    reset,
+    undo,
+    canUndo,
+  } = useAppearanceHistory();
   const { resolvedMode } = useNxdsAppearance();
-
-  function shuffle() {
-    change(shuffleNxdsAppearance(state));
-    const index = Math.floor(Math.random() * ICON_LIBRARY_OPTIONS.length);
-    const library = ICON_LIBRARY_OPTIONS[index];
-    if (library) setIconLibrary(library.value);
-  }
-
-  function resetAll() {
-    reset();
-    setIconLibrary(DEFAULT_ICON_LIBRARY);
-  }
 
   const panel = (
     <div className="nx:space-y-8">
       <AppearanceControls
         state={state}
         resolvedMode={resolvedMode}
+        iconLibrary={iconLibrary}
         onChange={change}
+        onIconLibraryChange={changeIconLibrary}
         onGestureStart={startStep}
       />
       <div className="nx:flex nx:flex-col nx:gap-2 nx:pt-4 nx:border-t-default nx:border-border-default">
@@ -51,7 +43,7 @@ export function PlaygroundWorkspace() {
           <Button variant="outline" onClick={undo} aria-disabled={!canUndo}>
             Undo
           </Button>
-          <Button variant="outline" onClick={resetAll}>
+          <Button variant="outline" onClick={reset}>
             Reset
           </Button>
         </div>

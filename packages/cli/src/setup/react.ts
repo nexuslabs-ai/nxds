@@ -132,10 +132,11 @@ export function cssImportLine(config: Config, file: string) {
 }
 
 /** `pref: 'family'` for each font set up, as the default prefs set it. */
-function fontPrefs({ font, headingFont }: ChosenFonts) {
+function fontPrefs({ font, headingFont, codeFont }: ChosenFonts) {
   return [
     ...(font ? [`uiFont: '${font.family}'`] : []),
     ...(headingFont ? [`headingFont: '${headingFont.family}'`] : []),
+    ...(codeFont ? [`codeFont: '${codeFont.family}'`] : []),
   ];
 }
 

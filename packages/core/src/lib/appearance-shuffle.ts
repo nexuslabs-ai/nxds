@@ -7,39 +7,57 @@ import {
   STROKE_OPTIONS,
 } from './appearance-model';
 import { BRAND_COLOR_PRESETS } from './brand-presets';
-import { FONT_OPTIONS } from './font-options';
+import { FONT_OPTIONS, type NxdsFontOption } from './font-options';
+import { ICON_LIBRARY_OPTIONS, type NxdsIconLibrary } from './icon-libraries';
 
-const TEXT_FONTS = FONT_OPTIONS.filter((font) => font.category !== 'mono');
+export interface NxdsShuffleOptions {
+  /**
+   * The fonts the UI and heading fonts come from. Monospace fonts are skipped.
+   * Leave it out to pick from every curated font.
+   */
+  readonly fonts?: readonly NxdsFontOption[];
+  /** Returns a number in [0, 1), like `Math.random`. */
+  readonly random?: () => number;
+}
+
+function pick<T>(options: readonly T[], random: () => number): T {
+  const option = options[Math.floor(random() * options.length)];
+  if (option === undefined) throw new Error('No option to pick from.');
+  return option;
+}
 
 /**
  * A random appearance from nxds's curated options: brand color preset, surface
  * tone, density, corners, elevation, stroke, UI font and heading font. Mode,
  * contrast and the other preferences stay as `state` has them.
- *
- * `random` returns a number in [0, 1), like `Math.random`.
  */
 export function shuffleNxdsAppearance(
   state: NxdsAppearanceState,
-  random: () => number = Math.random
+  { fonts = FONT_OPTIONS, random = Math.random }: NxdsShuffleOptions = {}
 ): NxdsAppearanceState {
-  function pick<T>(options: readonly T[]): T {
-    const option = options[Math.floor(random() * options.length)];
-    if (option === undefined) throw new Error('No option to pick from.');
-    return option;
-  }
+  const textFonts = fonts
+    .filter((font) => font.category !== 'mono')
+    .map((font) => font.family);
 
   return {
     ...state,
-    brandColor: pick(BRAND_COLOR_PRESETS).color,
-    surfaceTone: pick(BASE_TONE_OPTIONS).value,
-    density: pick(DENSITY_OPTIONS).value,
-    corners: pick(CORNER_OPTIONS).value,
-    elevation: pick(ELEVATION_OPTIONS).value,
-    stroke: pick(STROKE_OPTIONS).value,
+    brandColor: pick(BRAND_COLOR_PRESETS, random).color,
+    surfaceTone: pick(BASE_TONE_OPTIONS, random).value,
+    density: pick(DENSITY_OPTIONS, random).value,
+    corners: pick(CORNER_OPTIONS, random).value,
+    elevation: pick(ELEVATION_OPTIONS, random).value,
+    stroke: pick(STROKE_OPTIONS, random).value,
     prefs: {
       ...state.prefs,
-      uiFont: pick(TEXT_FONTS).family,
-      headingFont: pick([null, ...TEXT_FONTS.map((font) => font.family)]),
+      uiFont: pick(textFonts, random),
+      headingFont: pick([null, ...textFonts], random),
     },
   };
+}
+
+/** A random icon library. `random` returns a number in [0, 1), like `Math.random`. */
+export function shuffleNxdsIconLibrary(
+  random: () => number = Math.random
+): NxdsIconLibrary {
+  return pick(ICON_LIBRARY_OPTIONS, random).value;
 }

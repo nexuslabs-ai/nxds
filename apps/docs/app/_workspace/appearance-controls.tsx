@@ -12,6 +12,8 @@ import {
   ICON_LIBRARY_OPTIONS,
   type NxdsAppearancePrefs,
   type NxdsAppearanceState,
+  type NxdsFontCategory,
+  type NxdsIconLibrary,
   type NxdsResolvedAppearanceMode,
   STROKE_OPTIONS,
 } from '@nxds/core';
@@ -26,7 +28,6 @@ import {
 } from '@nxds/react';
 
 import { THEME_MODE_OPTIONS } from '../_lib/appearance-controls';
-import { setIconLibrary, useIconLibrary } from '../_lib/icon-library';
 
 const CONTRAST_MIN = 0;
 const CONTRAST_MAX = 100;
@@ -87,7 +88,7 @@ function SelectField<T extends string>({
 /** A font a picker offers: `family` is the stack the prefs store, `null` for the UI font. */
 type FontChoice = { value: string; label: string; family: string | null };
 
-function catalogueFonts(categories: readonly string[]): FontChoice[] {
+function catalogueFonts(categories: readonly NxdsFontCategory[]): FontChoice[] {
   return FONT_OPTIONS.filter((font) => categories.includes(font.category)).map(
     ({ value, label, family }) => ({ value, label, family })
   );
@@ -290,21 +291,23 @@ function BrandColorField({
 export function AppearanceControls({
   state,
   resolvedMode,
+  iconLibrary,
   onChange,
+  onIconLibraryChange,
   onGestureStart,
 }: {
   state: NxdsAppearanceState;
   resolvedMode: NxdsResolvedAppearanceMode;
+  iconLibrary: NxdsIconLibrary;
   onChange: (
     patch: Partial<NxdsAppearanceState>,
     group?: keyof NxdsAppearanceState
   ) => void;
+  onIconLibraryChange: (library: NxdsIconLibrary) => void;
   onGestureStart: () => void;
 }) {
   const contrastKey =
     resolvedMode === 'dark' ? 'darkContrast' : 'lightContrast';
-
-  const iconLibrary = useIconLibrary();
 
   function changePrefs(patch: Partial<NxdsAppearancePrefs>) {
     onChange({ prefs: { ...state.prefs, ...patch } });
@@ -389,7 +392,7 @@ export function AppearanceControls({
           label="Icons"
           value={iconLibrary}
           options={ICON_LIBRARY_OPTIONS}
-          onChange={setIconLibrary}
+          onChange={onIconLibraryChange}
         />
       </ControlGroup>
       <ControlGroup title="Preferences">

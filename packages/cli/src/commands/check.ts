@@ -7,7 +7,6 @@ import {
   type Catalog,
   type CatalogFile,
   type CatalogItem,
-  chosenFonts,
   fetchRelease,
   loadRelease,
   releaseFiles,
@@ -209,20 +208,15 @@ function reactChecks(project: Project, config: Config): Check[] {
   return checks;
 }
 
-/** Each package the installed items and fonts need that is missing or below range. */
+/** Each package the installed items need that is missing or below range. */
 function packageProblems(
   project: Project,
   config: Config,
-  catalog: Catalog,
   items: CatalogItem[]
 ) {
-  const fonts = Object.values(chosenFonts(catalog, config)).filter(
-    (font) => font !== undefined
-  );
   const needed: Record<string, string> = Object.assign(
     {},
-    ...items.map((item) => variantFor(item, config).packages.npm),
-    ...fonts.map((font) => ({ [font.package]: font.range }))
+    ...items.map((item) => variantFor(item, config).packages.npm)
   );
   return Object.entries(needed).flatMap(([name, range]) => {
     if (!(name in project.dependencies))
@@ -236,6 +230,27 @@ function packageProblems(
     }
     return [];
   });
+}
+
+/**
+ * `release` with the icon library nxds.json names. When the release has no
+ * such library, the `icons` check fails and `release` keeps its own icons.
+ */
+function iconsCheck(
+  release: Catalog,
+  config: Config,
+  check: (name: string, ok: boolean, message: string) => void
+) {
+  if (config.iconLibrary === undefined) return release;
+  try {
+    const catalog = withIconLibrary(release, config.iconLibrary);
+    check('icons', true, `lib/icons.ts draws ${config.iconLibrary}`);
+    return catalog;
+  } catch (error) {
+    if (!(error instanceof CliError)) throw error;
+    check('icons', false, error.message);
+    return release;
+  }
 }
 
 export async function doctor(
@@ -259,14 +274,14 @@ export async function doctor(
   if (!config || !project.setup) return report(checks);
 
   const fetched = await fetchRelease(registry, config.version);
-  const catalog = fetched && withIconLibrary(fetched, config.iconLibrary);
   check(
     'release',
-    catalog !== null,
-    catalog
+    fetched !== null,
+    fetched
       ? `Files come from nxds ${config.version}`
       : `${registry} has no nxds ${config.version}. Run \`${CLI_COMMAND} update\`.`
   );
+  const catalog = fetched && iconsCheck(fetched, config, check);
 
   check(
     'tailwind',
@@ -369,7 +384,7 @@ export async function doctor(
       : `Resolve the <<<<<<< markers in ${conflicted.join(', ')}.`
   );
 
-  const problems = packageProblems(project, config, catalog, items);
+  const problems = packageProblems(project, config, items);
   check(
     'packages',
     problems.length === 0,

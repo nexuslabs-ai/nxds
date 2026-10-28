@@ -39,7 +39,8 @@ function overrideCss(overrides: Overrides): string {
 }
 
 export function LabWorkspace({ primitives, scales }: LabData) {
-  const { state, change, startStep } = useAppearanceHistory();
+  const { state, iconLibrary, change, changeIconLibrary, startStep } =
+    useAppearanceHistory();
   const { resolvedMode } = useNxdsAppearance();
   const [overrides, setOverrides] = useState<Overrides>(NO_OVERRIDES);
   const live = useLiveTheme(overrides);
@@ -62,7 +63,9 @@ export function LabWorkspace({ primitives, scales }: LabData) {
       <AppearanceControls
         state={state}
         resolvedMode={resolvedMode}
+        iconLibrary={iconLibrary}
         onChange={change}
+        onIconLibraryChange={changeIconLibrary}
         onGestureStart={startStep}
       />
       <div className="nx:pt-4 nx:border-t-default nx:border-border-default">

@@ -1,5 +1,6 @@
 import createMDX from '@next/mdx';
 import type { NextConfig } from 'next';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -12,6 +13,32 @@ const docsRoot = path.dirname(fileURLToPath(import.meta.url));
 // reader's icon library.
 const ICONS_REQUESTS = ['../../lib/icons', '../../../lib/icons', '@/lib/icons'];
 const SWITCHABLE_ICONS = './app/_lib/switchable-icons.tsx';
+
+// The swap matches import requests, not resolved files, so fail on any
+// packages/react import of lib/icons the swap would miss. The icon sets the
+// swap draws from import the Phosphor set unswapped.
+function assertIconsRequests() {
+  const reactSrc = path.join(docsRoot, '..', '..', 'packages', 'react', 'src');
+  const icons = path.join(reactSrc, 'lib', 'icons');
+  for (const file of readdirSync(reactSrc, {
+    recursive: true,
+    encoding: 'utf8',
+  })) {
+    if (!/\.tsx?$/.test(file)) continue;
+    if (file.startsWith(path.join('lib', 'icon-libraries'))) continue;
+    const source = readFileSync(path.join(reactSrc, file), 'utf8');
+    for (const [, request = ''] of source.matchAll(/from\s+'(\.[^']*)'/g)) {
+      const resolved = path.join(reactSrc, path.dirname(file), request);
+      if (resolved === icons && !ICONS_REQUESTS.includes(request)) {
+        throw new Error(
+          `packages/react/src/${file} imports lib/icons as '${request}'. Add it to ICONS_REQUESTS in apps/docs/next.config.ts, so the docs swap it.`
+        );
+      }
+    }
+  }
+}
+
+assertIconsRequests();
 
 const nextConfig: NextConfig = {
   output: 'export',

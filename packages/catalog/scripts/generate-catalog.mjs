@@ -38,11 +38,11 @@ import { fileURLToPath } from 'node:url';
 
 // Core's source, not its build: the release job snapshots a catalog before
 // anything is built.
-import { FONT_OPTIONS } from '../../core/src/lib/font-options.ts';
+import { FONT_OPTIONS } from '@nxds/core/source/lib/font-options.ts';
 import {
   DEFAULT_ICON_LIBRARY,
   ICON_LIBRARY_OPTIONS,
-} from '../../core/src/lib/icon-libraries.ts';
+} from '@nxds/core/source/lib/icon-libraries.ts';
 import { catalogSchema, issueLines } from './catalog-schema.ts';
 import {
   dependencyEntries,
@@ -180,14 +180,18 @@ function iconLibraries() {
       value === DEFAULT_ICON_LIBRARY
         ? ICONS_FILE
         : `lib/icon-libraries/${value}.ts`;
+    const content = readCanonical(path.join(reactSrc, source));
+    // The swap replaces every React major's file with React 19's.
+    if (readCanonical(path.join(react18Src, source)) !== content) {
+      throw new Error(
+        `catalog: packages/react-18/src/${source} differs from packages/react's. Run \`pnpm --filter @nxds/react-18 generate\`.`
+      );
+    }
     const walked = react.walkRoots(value, [path.join(reactSrc, source)]);
     return {
       name: value,
       label,
-      file: {
-        path: ICONS_FILE,
-        content: readCanonical(path.join(reactSrc, source)),
-      },
+      file: { path: ICONS_FILE, content },
       npm: packageRecord(walked.packages.map(react.toInstall)),
     };
   });
@@ -218,23 +222,26 @@ function assertIconsOnlyInIconsFile(items, libraries) {
   }
 }
 
-/** @type {{ dependencies: Record<string, string> }} */
-const docsPackage = JSON.parse(
-  readFileSync(path.join(repoRoot, 'apps', 'docs', 'package.json'), 'utf8')
+/** @type {{ devDependencies: Record<string, string> }} */
+const catalogPackage = JSON.parse(
+  readFileSync(
+    path.join(repoRoot, 'packages', 'catalog', 'package.json'),
+    'utf8'
+  )
 );
 
 /**
- * Each font option, at the range the docs app, which self-hosts every one,
- * depends on.
+ * Each font option, at the range packages/catalog's devDependencies give its
+ * Fontsource package.
  * @returns {Font[]}
  */
 function fonts() {
   return FONT_OPTIONS.map(
     ({ value, label, category, family, package: name }) => {
-      const range = docsPackage.dependencies[name];
+      const range = catalogPackage.devDependencies[name];
       if (!range) {
         throw new Error(
-          `catalog: the docs app self-hosts every font option, so apps/docs must depend on ${name}.`
+          `catalog: add ${name} to packages/catalog's devDependencies, at the range apps install.`
         );
       }
       return { name: value, label, category, family, package: name, range };

@@ -31,8 +31,8 @@ export type {
   Variant,
 } from '@nxds/catalog';
 
-/** The fonts an app set up for UI text and for headings. */
-export type ChosenFonts = { font?: Font; headingFont?: Font };
+/** The fonts `init` sets up for UI text, headings and code. */
+export type ChosenFonts = { font?: Font; headingFont?: Font; codeFont?: Font };
 
 /** Which files an app gets: its framework, and for React, its major. */
 export type Target = { framework: Framework; react: ReactMajor };
@@ -257,22 +257,33 @@ export function releaseFiles(catalog: Catalog, target: Target) {
   );
 }
 
-/** A message naming the release's `kind` entries, for a name it doesn't have. */
-export function unknownName(
+/**
+ * The release's `kind` entry named `name`. Fails with `fail`'s error, whose
+ * message names the entries there are.
+ */
+export function releaseChoice<E extends { name: string }>(
   catalog: Catalog,
-  kind: 'icon library' | 'font',
+  kind: string,
   name: string,
-  entries: { name: string }[]
-) {
+  entries: E[],
+  fail: (message: string) => CliError
+): E {
+  const entry = entries.find((candidate) => candidate.name === name);
+  if (entry) return entry;
   if (entries.length === 0) {
-    return `nxds ${catalog.version} has no ${kind} choices. Run \`${CLI_COMMAND} update\` to move to a release that has them.`;
+    throw fail(
+      `nxds ${catalog.version} has no ${kind} choices. Run \`${CLI_COMMAND} update\` to move to a release that has them.`
+    );
   }
-  return `nxds ${catalog.version} has no ${kind} "${name}". Pick one of: ${entries.map((entry) => entry.name).join(', ')}.`;
+  throw fail(
+    `nxds ${catalog.version} has no ${kind} "${name}". Pick one of: ${entries.map((candidate) => candidate.name).join(', ')}.`
+  );
 }
 
 /**
- * `catalog` with `lib/icons.ts` drawn by the icon library `library`. A release
- * from before icon libraries keeps its own `lib/icons.ts`.
+ * `catalog` with `lib/icons.ts` drawn by the icon library `library`, which
+ * nxds.json names. A release from before icon libraries keeps its own
+ * `lib/icons.ts`.
  */
 export function withIconLibrary(
   catalog: Catalog,
@@ -280,30 +291,17 @@ export function withIconLibrary(
 ): Catalog {
   const { iconLibraries } = catalog;
   if (library === undefined || iconLibraries.length === 0) return catalog;
-  if (!iconLibraries.some((entry) => entry.name === library)) {
-    throw new CliError(
-      unknownName(catalog, 'icon library', library, iconLibraries)
-    );
-  }
+  releaseChoice(
+    catalog,
+    'icon library',
+    library,
+    iconLibraries,
+    (message) =>
+      new CliError(
+        `nxds.json: ${message} Run \`${CLI_COMMAND} init --icons <library>\` to switch.`
+      )
+  );
   return catalogWithIconLibrary(catalog, library);
-}
-
-function releaseFont(catalog: Catalog, name: string | undefined) {
-  if (name === undefined) return undefined;
-  const font = catalog.fonts.find((entry) => entry.name === name);
-  if (font) return font;
-  throw new CliError(unknownName(catalog, 'font', name, catalog.fonts));
-}
-
-/** The release fonts `config` set up for UI text and for headings. */
-export function chosenFonts(
-  catalog: Catalog,
-  config: { font?: string; headingFont?: string }
-): ChosenFonts {
-  return {
-    font: releaseFont(catalog, config.font),
-    headingFont: releaseFont(catalog, config.headingFont),
-  };
 }
 
 /** Installed item names this catalog still has, and the ones it dropped. */

@@ -43,8 +43,11 @@ import {
 import { HugeiconsIcon } from '@hugeicons/vue';
 import { type FunctionalComponent, h } from 'vue';
 
+/** `@hugeicons/core-free-icons` types every icon this way, and doesn't export the type. */
+type IconSvgObject = typeof CircleIcon;
+
 function hugeicon(
-  icon: typeof CircleIcon,
+  icon: IconSvgObject,
   defaults?: Record<string, unknown>
 ): FunctionalComponent {
   return (_props, { attrs }) =>

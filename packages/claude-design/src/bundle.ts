@@ -55,7 +55,7 @@ function exportsModule(slugs: readonly string[]) {
 }
 
 const ICON_IMPORT =
-  /import\s*(?:type\s*)?\{([^}]*)\}\s*from\s*'@phosphor-icons\/react\/ssr'/g;
+  /(?:import|export)\s*(?:type\s*)?\{([^}]*)\}\s*from\s*'@phosphor-icons\/react\/ssr'/g;
 
 // Previews render the docs stories against `Nxds.Icons`, so every icon the
 // sources import has to be in it.
