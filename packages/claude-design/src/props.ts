@@ -297,17 +297,19 @@ export function renderIndexDts(components: readonly FlatComponent[]) {
   ].join('\n');
 }
 
-// Each `Nxds.Icons.IconName` takes Tabler's props.
+// Each `Nxds.Icons.NameIcon` takes Phosphor's props.
 function iconProps(icon: string) {
   return [
-    `/** Tabler icon, mounted as \`Nxds.Icons.${icon}\`. */`,
+    `/** Phosphor icon, mounted as \`Nxds.Icons.${icon}\`. */`,
     `export interface ${icon}Props {`,
-    '  /** Width and height in px. @default 24 */',
-    '  size?: number;',
-    '  /** Stroke width. @default 2 */',
-    '  stroke?: number;',
-    '  /** Stroke colour. @default "currentColor" */',
+    '  /** Width and height, in px or any CSS length. @default "1em" */',
+    '  size?: number | string;',
+    '  /** Line weight, or a filled shape. @default "regular" */',
+    "  weight?: 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone';",
+    '  /** Icon colour. @default "currentColor" */',
     '  color?: string;',
+    '  /** Flips the icon horizontally. */',
+    '  mirrored?: boolean;',
     '  className?: string;',
     '}',
   ];

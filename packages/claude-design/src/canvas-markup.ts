@@ -4,7 +4,10 @@
 // can't hold: state, a computed value, an element passed as a prop.
 import ts from 'typescript';
 
+import { ICONS } from './icons.ts';
 import { NAMESPACE } from './system-index.ts';
+
+const ICON_NAMES = new Set<string>(ICONS);
 
 const INDENT = '  ';
 
@@ -101,7 +104,7 @@ function tagOf(name: string, context: Context) {
       isPart: true,
     };
   }
-  if (/^Icon[A-Z]/.test(name)) {
+  if (ICON_NAMES.has(name)) {
     return {
       open: `x-import component-from-global-scope="${NAMESPACE}.Icons.${name}"`,
       close: 'x-import',

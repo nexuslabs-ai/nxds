@@ -52,8 +52,8 @@ function exportsModule(slugs: readonly string[]) {
   ].join('\n');
 }
 
-const TABLER_IMPORT =
-  /import\s*(?:type\s*)?\{([^}]*)\}\s*from\s*'@tabler\/icons-react'/g;
+const ICON_IMPORT =
+  /import\s*(?:type\s*)?\{([^}]*)\}\s*from\s*'@phosphor-icons\/react\/ssr'/g;
 
 // Previews render the docs stories against `Nxds.Icons`, so every icon the
 // sources import has to be in it.
@@ -66,7 +66,7 @@ function assertIconsCovered() {
   })) {
     if (!/\.tsx?$/.test(file)) continue;
     const source = readFileSync(path.join(react18Src, file), 'utf8');
-    for (const [, names = ''] of source.matchAll(TABLER_IMPORT)) {
+    for (const [, names = ''] of source.matchAll(ICON_IMPORT)) {
       for (const name of names
         .split(',')
         .map((entry) => entry.trim().split(/\s+as\s+/)[0])) {
@@ -82,7 +82,7 @@ function assertIconsCovered() {
 }
 
 function iconsModule() {
-  return `export { ${ICONS.join(', ')} } from '@tabler/icons-react';`;
+  return `export { ${ICONS.join(', ')} } from '@phosphor-icons/react/ssr';`;
 }
 
 const pageGlobals: Plugin = {

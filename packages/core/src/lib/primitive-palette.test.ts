@@ -3,12 +3,11 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { type Shade, SHADES } from './palette';
+import { getPaletteRamp, getPaletteShade } from './primitive-palette';
 import {
-  getPaletteRamp,
-  getPaletteShade,
   PRIMITIVE_PALETTE_NAMES,
   type PrimitivePaletteName,
-} from './primitive-palette';
+} from './token-scales.generated';
 
 const variablesCss = readFileSync(
   resolve(process.cwd(), 'packages/tailwind/variables.css'),

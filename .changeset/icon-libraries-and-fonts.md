@@ -1,4 +1,5 @@
 ---
+'@nxds/claude-design': minor
 '@nxds/core': minor
 '@nxds/react': minor
 '@nxds/vue': minor
@@ -14,3 +15,5 @@ Pick the icon library nxds components draw their own icons with, and start from 
 | `nxds-cli`                 | `init --icons <library>`, `--font <font>` and `--heading-font <font>`. `nxds.json` records them, and `add` and `update` keep them. Running `init --icons` again switches every installed `lib/icons.ts`.                                    |
 
 To keep Tabler Icons, set `"iconLibrary": "tabler"` in `nxds.json` before you run `update`. After `update`, run `npx nxds-cli@latest init --icons tabler` instead.
+
+`@nxds/claude-design` gives Claude Design Phosphor icons as `Nxds.Icons`, such as `Nxds.Icons.PlusIcon`, in place of Tabler's `Nxds.Icons.IconPlus`. Pass `weight="fill"` for a filled icon.

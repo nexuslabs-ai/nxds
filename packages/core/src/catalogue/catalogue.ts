@@ -10,6 +10,7 @@ import {
   formatShadowStyle,
   formatTokenValue,
   formatTypographyDeclarations,
+  inlineVariables,
   resolveValue,
 } from '../token-source/format';
 import {
@@ -413,21 +414,58 @@ function typographyStyleEntry(lookup: ReferenceLookup) {
   };
 }
 
-function shadowStyleEntry(lookup: ReferenceLookup) {
-  return ({ leaf }: AuthoredLeaf): LeafEntry => {
+/** Each elevation preset's layer values in one theme mode, keyed by `--name`. */
+function shadowLayerSets(
+  layers: readonly AuthoredLeaf[],
+  lookup: ReferenceLookup
+) {
+  const sets = new Map<string, VariantAxes & { values: Map<string, string> }>();
+  for (const { preset, mode, leaf } of layers) {
+    const key = `${preset}/${mode}`;
+    const set = sets.get(key) ?? { preset, mode, values: new Map() };
+    set.values.set(
+      primitiveName('shadow', leaf.path),
+      resolveValue(leaf.value, lookup, leaf.type, leaf.path)
+    );
+    sets.set(key, set);
+  }
+  return [...sets.values()];
+}
+
+/**
+ * A shadow style, declared by each elevation preset as its own composite
+ * value. The layer primitives it is composed from are not tokens.
+ */
+function shadowStyleTokens(
+  layers: readonly AuthoredLeaf[],
+  lookup: ReferenceLookup
+): CatalogueToken[] {
+  const sets = shadowLayerSets(layers, lookup);
+  return styleLeaves('shadow', SHADOW_STYLES_FILE).map(({ leaf }) => {
     const key = pathToCssVarPrefixed(leaf.path, 'shadow');
-    const property = `--${key}`;
+    const name: CatalogueTokenName = `--nx-${key}`;
+    const composite = formatShadowStyle(leaf.path, leaf.value, lookup);
     return {
-      name: `--nx-${key}`,
-      aliases: [cssVariable(property)],
-      declarations: [
-        {
-          property,
-          value: formatShadowStyle(leaf.path, leaf.value, lookup),
-        },
-      ],
+      name,
+      family: 'shadow',
+      group: leafGroup('shadow', leaf.path),
+      type: leaf.type,
+      description: leaf.description ?? null,
+      aliases: [cssVariable(`--${key}`)],
+      control: PRESET_CONTROLS.shadow ?? null,
+      variants: sets.map(({ preset, mode, values }) => ({
+        mode,
+        preset,
+        source: { file: SHADOW_STYLES_FILE, path: leaf.path },
+        appearance: null,
+        authoredValue: structuredClone(leaf.value),
+        declarations: [
+          { property: name, value: inlineVariables(composite, values) },
+        ],
+        references: [],
+      })),
     };
-  };
+  });
 }
 
 function styleLeaves(family: CatalogueFamily, file: TokenFile): AuthoredLeaf[] {
@@ -495,14 +533,20 @@ function runtimeColorTokens(): CatalogueToken[] {
 /**
  * Every nxds token, identified by its `--nx-*` name: primitives, runtime
  * colours, spacing, z-index, breakpoints, and typography and shadow styles.
+ * Shadow layer primitives only compose the shadow styles.
  * Runtime colours are computed from `DEFAULT_NXDS_APPEARANCE` in explicit
  * light and dark modes; each variant records the appearance it used.
  */
 export function createTokenCatalogue(): readonly CatalogueToken[] {
   const primitives = PRIMITIVE_FAMILIES.flatMap(primitiveLeaves);
   const lookup = primitiveLookup(primitives);
+  const shadowLayers = primitives.filter(({ family }) => family === 'shadow');
   return [
-    ...authoredTokens(primitives, lookup, primitiveEntry(lookup)),
+    ...authoredTokens(
+      primitives.filter((leaf) => leaf.family !== 'shadow'),
+      lookup,
+      primitiveEntry(lookup)
+    ),
     ...runtimeColorTokens(),
     ...authoredTokens(spacingLeaves(), lookup, spacingEntry),
     ...authoredTokens(
@@ -520,10 +564,6 @@ export function createTokenCatalogue(): readonly CatalogueToken[] {
       lookup,
       typographyStyleEntry(lookup)
     ),
-    ...authoredTokens(
-      styleLeaves('shadow', SHADOW_STYLES_FILE),
-      lookup,
-      shadowStyleEntry(lookup)
-    ),
+    ...shadowStyleTokens(shadowLayers, lookup),
   ];
 }

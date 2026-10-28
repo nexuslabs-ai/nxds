@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 
+import type { SpacingStep } from '@nxds/core';
 import * as ToggleGroupPrimitive from '@radix-ui/react-toggle-group';
 import type { VariantProps } from 'class-variance-authority';
 
@@ -10,7 +11,7 @@ import { toggleVariants } from '../toggle/toggle';
 
 const ToggleGroupContext = React.createContext<
   VariantProps<typeof toggleVariants> & {
-    spacing: number;
+    spacing: SpacingStep;
     orientation: 'horizontal' | 'vertical';
   }
 >({
@@ -30,7 +31,7 @@ type ToggleGroupProps = React.ComponentProps<typeof ToggleGroupPrimitive.Root> &
      * Gap between items, in spacing-scale units. `0` joins them into one
      * segmented control. A larger value splits them into separate pills.
      */
-    spacing?: number;
+    spacing?: SpacingStep;
   };
 
 /**
@@ -54,7 +55,12 @@ function ToggleGroup({
       orientation={orientation}
       // Spacing-scale gap via the runtime spacing var (nxds resets the base
       // --spacing, so Tailwind's --spacing() function is unavailable here).
-      style={spacing ? { gap: `var(--nx-spacing-${spacing})` } : undefined}
+      // A half step such as 0.5 is named `--nx-spacing-0_5`.
+      style={
+        spacing
+          ? { gap: `var(--nx-spacing-${String(spacing).replace('.', '_')})` }
+          : undefined
+      }
       className={cn(
         'nx:flex nx:w-fit nx:items-center nx:rounded-md nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
         spacing === 0 && 'nx:isolate',

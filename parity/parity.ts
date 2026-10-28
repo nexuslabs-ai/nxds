@@ -5,17 +5,12 @@
 /** React components Vue doesn't ship yet. */
 export const planned = [
   'appearance-settings',
-  'attachment',
   'brand-color-field',
-  'bubble',
   'chart',
   'color-field',
   'config-preview',
-  'message',
-  'message-scroller',
   'setting-row',
   'sidebar',
-  'sonner',
   'theme-quick-control',
   'toolbar',
 ];
@@ -26,9 +21,11 @@ export const shared = [
   'alert',
   'alert-dialog',
   'aspect-ratio',
+  'attachment',
   'avatar',
   'badge',
   'breadcrumb',
+  'bubble',
   'button',
   'button-group',
   'card',
@@ -61,6 +58,8 @@ export const shared = [
   'label',
   'marker',
   'menubar',
+  'message',
+  'message-scroller',
   'multi-select',
   'native-select',
   'navigation-menu',
@@ -77,6 +76,7 @@ export const shared = [
   'show',
   'skeleton',
   'slider',
+  'sonner',
   'spinner',
   'switch',
   'table',
@@ -100,12 +100,20 @@ const DAY_PICKER_PROP =
 const HOVER_CARD_EVENT =
   "Reka exports no type for HoverCardContent's emits, so Vue declares them; React inherits the same handler from Radix's props type";
 
+const REKA_SLOT_PROP =
+  "Reka root's slot prop, which the Vue part passes on to its default slot; Radix's part passes its children nothing";
+const SCROLL_SLOT_PROP =
+  "useMessageScroller's state as a slot prop, so a template beside the scroller reads it without a child component; React calls the hook in a child";
+
 /**
- * Props, slots and events only the Vue part declares, as `{Part}.{name}`.
+ * Props, slots and events only the Vue part declares, as `{Part}.{name}`,
+ * and props its default slot passes, as `{Part}.default.{name}`.
  * React's `ReactNode` props map to kebab-case slots, own `on*` props to own
  * emits, and `asChild` to Reka's inherited `PrimitiveProps`.
  */
 export const vueOnlyApi: Record<string, string> = {
+  'Accordion.default.modelValue': REKA_SLOT_PROP,
+  'AccordionItem.default.open': REKA_SLOT_PROP,
   'Button.disabled':
     'native <button> attribute React inherits from its props type; Vue declares it so the spinner state can read it',
   'Button.type':
@@ -118,6 +126,7 @@ export const vueOnlyApi: Record<string, string> = {
     'native <button> attribute React inherits from its props type; Vue declares it so a set value overrides the scroll state',
   'CarouselPrevious.type':
     "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
+  'Collapsible.default.open': REKA_SLOT_PROP,
   'ComboboxTrigger.disabled':
     'native <button> attribute React inherits from its props type; Vue declares it to pass on to Button',
   'ComboboxTrigger.type':
@@ -194,6 +203,15 @@ export const vueOnlyApi: Record<string, string> = {
     "v-model code as a string; React's value is inherited from input-otp's props type",
   'InputOTP.update:modelValue':
     "v-model update with the code as a string; React's onChange is inherited from input-otp's props type",
+  'MessageScrollerButton.disabled':
+    'native <button> attribute React inherits from its props type; Vue declares it to pass on to Button',
+  'MessageScrollerButton.type':
+    "native <button> attribute React inherits from its props type; Vue declares it to default to 'button'",
+  'MessageScrollerProvider.default.isAtEnd': SCROLL_SLOT_PROP,
+  'MessageScrollerProvider.default.isAtStart': SCROLL_SLOT_PROP,
+  'MessageScrollerProvider.default.isScrollable': SCROLL_SLOT_PROP,
+  'MessageScrollerProvider.default.scrollToEnd': SCROLL_SLOT_PROP,
+  'MessageScrollerProvider.default.scrollToStart': SCROLL_SLOT_PROP,
   'MultiSelectGroup.forceMount': CMDK_PROP,
   'MultiSelectGroup.heading': CMDK_PROP,
   'MultiSelectItem.disabled': CMDK_PROP,
@@ -203,6 +221,12 @@ export const vueOnlyApi: Record<string, string> = {
   'NativeSelect.defaultValue': NATIVE_DEFAULT_VALUE,
   'NativeSelect.modelValue': NATIVE_MODEL_VALUE,
   'NativeSelect.update:modelValue': NATIVE_MODEL_UPDATE,
+  'ResizablePanel.default.collapse': REKA_SLOT_PROP,
+  'ResizablePanel.default.expand': REKA_SLOT_PROP,
+  'ResizablePanel.default.isCollapsed': REKA_SLOT_PROP,
+  'ResizablePanel.default.isExpanded': REKA_SLOT_PROP,
+  'ResizablePanel.default.resize': REKA_SLOT_PROP,
+  'ResizablePanelGroup.default.layout': REKA_SLOT_PROP,
   'Switch.thumb':
     'slot for custom thumb content; React renders the thumb itself with no way to compose it',
   'Textarea.defaultValue': NATIVE_DEFAULT_VALUE,
@@ -216,10 +240,10 @@ export const vueOnlyApi: Record<string, string> = {
 
 /**
  * Packages, or a scope of them, whose props a Vue part takes from a twin: the
- * DOM attributes React's types declare, Radix's from Reka, and Vaul's from
- * vaul-vue.
+ * DOM attributes React's types declare, Radix's from Reka, Vaul's from
+ * vaul-vue, and Sonner's from vue-sonner.
  */
-export const twinPackages = ['@radix-ui', '@types/react', 'vaul'];
+export const twinPackages = ['@radix-ui', '@types/react', 'sonner', 'vaul'];
 
 /**
  * Packages whose components Vue rebuilds over Reka rather than inheriting a
@@ -451,9 +475,11 @@ export const behaviourDifferences: Record<string, string> = {
   'date-picker/Accessibility':
     "react-day-picker labels a day 'Today, Wednesday, January 15th, 2025, selected'; Reka labels it 'Wednesday, January 15, 2025' and marks selection with aria-selected on the cell, so Vue checks those",
   'avatar/WithDataAttributes': AVATAR_IMAGE_LOAD,
+  'bubble/WithTooltip': GRACE_AREA,
   'hover-card/OpenCloseInteraction': GRACE_AREA,
   'input-otp/KeyboardInteraction': PIN_INPUT,
   'input-otp/Paste': PIN_INPUT,
+  'message/WithActions': GRACE_AREA,
   'tabs/DisabledTabInteraction': TABS_INDICATOR,
   'tabs/UnderlineVariant': TABS_INDICATOR,
   'tabs/VerticalIndicatorFollowsActiveTab': TABS_INDICATOR,
@@ -462,6 +488,11 @@ export const behaviourDifferences: Record<string, string> = {
   'tooltip/WithDataAttributes': GRACE_AREA,
   'toggle-group/ControlledDisabledTransition':
     "clearing a single selection emits '' from Radix and undefined from Reka",
+};
+
+/** Parts whose `data-slot` doesn't start with their component's slug, as `{data-slot}: slug`. */
+export const slotOwners: Record<string, string> = {
+  toaster: 'sonner',
 };
 
 /** Parts whose rendered element differs by design, by `data-slot`; the rendered check skips them. */
@@ -581,6 +612,14 @@ export const vueOnlyDeclarations: Record<string, string> = {
     'Vue injection key the list provides to its triggers; React passes the same state through context',
   'toggle-group/index.ts#ToggleGroupKey':
     'Vue injection key the group provides to its items; React passes the same state through context',
+};
+
+/** Top-level values a Vue recipe file declares under React's name with a body only its framework can write, as `{file}#{name}`. */
+export const frameworkDeclarations: Record<string, string> = {
+  'message-scroller/index.ts#useMessageScroller':
+    "injects the provider's state; React's hook reads its context",
+  'sonner/index.ts#useNxdsToasts':
+    "filters vue-sonner's active toasts in a computed; React's hook filters sonner's useSonner list",
 };
 
 /** Files Vue copies from React byte for byte, as `[react, vue]` repo paths. */

@@ -23,7 +23,7 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,vue,js,jsx,json,md,mdx,css,yml}\" \".claude/**/*.md\"",
     "clean": "turbo run clean && rm -rf node_modules",
     "typecheck": "turbo run typecheck",
-    "tokens:tailwind": "turbo run build:tailwind --filter=@nxds/core && cp packages/core/dist/tailwind/* packages/tailwind/",
+    "tokens:tailwind": "pnpm --filter @nxds/core generate:scales && turbo run build:tailwind --filter=@nxds/core && cp packages/core/dist/tailwind/* packages/tailwind/",
     "audit:agent-drift": "node scripts/audit-agent-drift.js",
     "audit:turbo-outputs": "node scripts/audit-turbo-outputs.js",
     "audit:contrast": "vitest run --project=unit packages/core/src/lib/derive-theme.test.ts packages/core/src/lib/contrast.test.ts -t \"legibility invariant\"",
