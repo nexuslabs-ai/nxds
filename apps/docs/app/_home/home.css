@@ -120,8 +120,8 @@
    screen, so a tall screen doesn't stretch the live example. */
 @utility stories-section {
   @media (width >= 64rem) {
-    --preview-min: 30rem;
-    --preview-max: 30rem;
+    --preview-min: 32rem;
+    --preview-max: 32rem;
   }
 }
 

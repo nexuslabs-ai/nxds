@@ -460,46 +460,50 @@ export function StoryTestIterations({
             <Separator />
             <div className="nx:dotted-stage nx:flex nx:flex-1 nx:flex-col nx:gap-6 nx:p-6">
               <div className="nx:flex nx:flex-1 nx:items-center nx:justify-center">
-                <Field
-                  orientation="horizontal"
-                  className="nx:max-w-sm"
-                  data-invalid={invalid || undefined}
+                <Item
+                  variant="outline"
+                  className="nx:w-full nx:max-w-sm nx:bg-background"
                 >
-                  <FieldContent>
-                    <FieldLabel htmlFor={nameless ? undefined : id}>
-                      Email notifications
-                    </FieldLabel>
-                    <FieldDescription id={`${id}-description`}>
-                      Product updates, on your terms.
-                    </FieldDescription>
-                    {invalid && (
-                      <FieldError id={`${id}-error`}>
-                        Choose a notification preference.
-                      </FieldError>
-                    )}
-                    {nameless && (
-                      <FieldError>
-                        The visible label is deliberately disconnected in this
-                        example.
-                      </FieldError>
-                    )}
-                  </FieldContent>
-                  <Switch
-                    ref={example}
-                    id={id}
-                    checked={checked}
-                    disabled={disabled}
-                    aria-invalid={invalid || undefined}
-                    aria-describedby={
-                      invalid ? `${id}-error` : `${id}-description`
-                    }
-                    onCheckedChange={onCheckedChange}
-                    onKeyDown={onKeyDown}
-                    onKeyUp={onKeyUp}
-                    onPointerDown={cancelKeyboard}
-                    onBlur={cancelKeyboard}
-                  />
-                </Field>
+                  <Field
+                    orientation="horizontal"
+                    data-invalid={invalid || undefined}
+                  >
+                    <FieldContent>
+                      <FieldLabel htmlFor={nameless ? undefined : id}>
+                        Email notifications
+                      </FieldLabel>
+                      <FieldDescription id={`${id}-description`}>
+                        Product updates, on your terms.
+                      </FieldDescription>
+                      {invalid && (
+                        <FieldError id={`${id}-error`}>
+                          Choose a notification preference.
+                        </FieldError>
+                      )}
+                      {nameless && (
+                        <FieldError>
+                          The visible label is deliberately disconnected in this
+                          example.
+                        </FieldError>
+                      )}
+                    </FieldContent>
+                    <Switch
+                      ref={example}
+                      id={id}
+                      checked={checked}
+                      disabled={disabled}
+                      aria-invalid={invalid || undefined}
+                      aria-describedby={
+                        invalid ? `${id}-error` : `${id}-description`
+                      }
+                      onCheckedChange={onCheckedChange}
+                      onKeyDown={onKeyDown}
+                      onKeyUp={onKeyUp}
+                      onPointerDown={cancelKeyboard}
+                      onBlur={cancelKeyboard}
+                    />
+                  </Field>
+                </Item>
               </div>
               <p className="nx:m-0 nx:flex nx:flex-wrap nx:gap-x-4 nx:typography-body-small nx:text-muted-foreground">
                 <span>
