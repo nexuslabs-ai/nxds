@@ -8,8 +8,8 @@ export interface ScalarAttribute {
   /** The literal members, each in its own type: `"1"` stays a string, `1` a number. */
   literals: (string | number)[];
   string: boolean;
-  /** Any string is accepted, but the literals are the suggestions (`string & {}`). */
-  suggested: boolean;
+  /** Any string is accepted, but the literals are the suggestions (`string & {}`). Only index.d.ts reads it, so nxds:canvas-schema leaves it out. */
+  suggested?: boolean;
   number: boolean;
   boolean: boolean;
 }

@@ -1,4 +1,4 @@
-// The card and README for each part only the export ships (src/canvas/).
+// The card and README for each part only the export ships (src/runtime/).
 import { iconSet } from '../icon-set.ts';
 import { previewHtml, propsSection } from '../previews.ts';
 import type { FlatComponent } from '../props.ts';

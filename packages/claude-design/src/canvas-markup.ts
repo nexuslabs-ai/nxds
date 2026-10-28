@@ -10,7 +10,7 @@
 import ts from 'typescript';
 
 import { iconSet } from './icon-set.ts';
-import { kebab } from './runtime/canvas-wrapper.ts';
+import { kebab } from './runtime/canvas-names.ts';
 import { NAMESPACE } from './system-index.ts';
 
 const INDENT = '  ';

@@ -18,7 +18,8 @@ import type {
   ScalarAttribute,
 } from '../attribute.ts';
 
-import { kebab, unwrapped } from './canvas-wrapper.ts';
+import { kebab } from './canvas-names.ts';
+import { unwrapped } from './canvas-wrapper.ts';
 import { Icon } from './icon.ts';
 
 export interface CanvasSchema {
@@ -40,7 +41,7 @@ type Converted = { value: unknown } | { problem: string };
 const NUMBER = /^-?\d+(?:\.\d+)?$/;
 const DATE = /^(\d{4})-(\d{2})(?:-(\d{2}))?$/;
 const MAX_JSON = 256 * 1024;
-const MAX_CACHED = 500;
+const MAX_CACHED_LENGTH = 4 * 1024 * 1024;
 
 const DATE_ITEM: DateAttribute = { kind: 'date', selection: null };
 
@@ -278,10 +279,21 @@ function pickerOf(attribute: CanvasAttribute) {
   return null;
 }
 
-const conversions = new Map<string, Converted>();
+function holdsObject(converted: Converted) {
+  return (
+    'value' in converted &&
+    typeof converted.value === 'object' &&
+    converted.value !== null
+  );
+}
 
-// The same attribute string gives the same value on every render, so a
-// chart doesn't replay its entry animation and effects don't fire again.
+const conversions = new Map<string, Converted>();
+let cachedLength = 0;
+
+// The same attribute string gives the same list, date or object on every
+// render, so a chart doesn't replay its entry animation and effects don't
+// fire again. Once the keys pass MAX_CACHED_LENGTH characters, the least
+// recently used go first.
 function cachedConvert(
   part: string,
   prop: string,
@@ -295,10 +307,20 @@ function cachedConvert(
     '\u0000'
   );
   const cached = conversions.get(key);
-  if (cached) return cached;
-  if (conversions.size >= MAX_CACHED) conversions.clear();
+  if (cached) {
+    conversions.delete(key);
+    conversions.set(key, cached);
+    return cached;
+  }
   const converted = convert(value, attribute, props, required);
+  if (!holdsObject(converted)) return converted;
   conversions.set(key, converted);
+  cachedLength += key.length;
+  for (const oldest of conversions.keys()) {
+    if (cachedLength <= MAX_CACHED_LENGTH) break;
+    conversions.delete(oldest);
+    cachedLength -= oldest.length;
+  }
   return converted;
 }
 
