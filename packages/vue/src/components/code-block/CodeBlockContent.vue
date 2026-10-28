@@ -8,12 +8,17 @@ import ScrollArea from '../scroll-area/ScrollArea.vue';
 import ScrollBar from '../scroll-area/ScrollBar.vue';
 
 export interface CodeBlockContentProps extends ScrollAreaRootProps {
+  /**
+   * Language of the code, such as `tsx`. It sets the `language-*` class on
+   * `code`, which Markdown converters and reader tools read.
+   */
+  language?: string;
   class?: HTMLAttributes['class'];
 }
 
 const props = defineProps<CodeBlockContentProps>();
 
-const delegated = reactiveOmit(props, 'class');
+const delegated = reactiveOmit(props, 'class', 'language');
 </script>
 
 <template>
@@ -28,9 +33,14 @@ const delegated = reactiveOmit(props, 'class');
       )
     "
   >
-    <pre
-      class="nx:m-0"
-    ><code class="nx:grid nx:grid-cols-[auto_auto_minmax(0,1fr)] nx:py-4 nx:typography-code-block"><slot /></code></pre>
+    <pre class="nx:m-0"><code
+      :class="
+        cn(
+          'nx:grid nx:grid-cols-[auto_auto_minmax(0,1fr)] nx:py-4 nx:typography-code-block',
+          language && `language-${language}`
+        )
+      "
+    ><slot /></code></pre>
     <ScrollBar orientation="horizontal" />
   </ScrollArea>
 </template>

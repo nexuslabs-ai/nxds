@@ -3,7 +3,7 @@ import * as React from 'react';
 import { cn } from '@nxds/react/utils';
 
 import {
-  CodeBlock as NxdsCodeBlock,
+  CodeBlock,
   CodeBlockContent,
   CodeBlockCopyButton,
   CodeBlockLine,
@@ -14,29 +14,31 @@ import {
  * renders through here, so the docs have one code-block surface, each with a
  * copy control.
  */
-export function CodeBlock({
+export function DocsCodeBlock({
   framed = false,
+  language,
   className,
   children,
-  ...props
 }: {
   /** Sits flush inside a bordered card instead of standing on its own. */
   framed?: boolean;
+  /** Language of the code, such as `tsx`. */
+  language?: string;
   /** Classes for the scroll region, such as a max height. */
   className?: string;
   /** One `CodeBlockLine` per line. */
   children: React.ReactNode;
-  [dataAttribute: `data-${string}`]: string | undefined;
 }) {
   return (
-    <NxdsCodeBlock
+    <CodeBlock
       variant={framed ? 'flush' : 'default'}
       className={cn(!framed && 'nx:mb-4')}
-      {...props}
     >
-      <CodeBlockContent className={className}>{children}</CodeBlockContent>
+      <CodeBlockContent language={language} className={className}>
+        {children}
+      </CodeBlockContent>
       <CodeBlockCopyButton />
-    </NxdsCodeBlock>
+    </CodeBlock>
   );
 }
 
@@ -59,10 +61,10 @@ export function MdxCodeBlock({
   );
 
   return (
-    <CodeBlock data-language={language}>
+    <DocsCodeBlock language={language}>
       {lines.map((line, index) => (
         <CodeBlockLine key={index}>{line.props.children}</CodeBlockLine>
       ))}
-    </CodeBlock>
+    </DocsCodeBlock>
   );
 }

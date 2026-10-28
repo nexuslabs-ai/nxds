@@ -31,7 +31,7 @@ function codeText(button: HTMLElement) {
   const lines = button
     .closest('[data-slot="code-block"]')
     ?.querySelectorAll(
-      '[data-slot="code-block-line"]:not([data-diff="removed"])'
+      '[data-slot="code-block-content"] [data-slot="code-block-line"]:not([data-diff="removed"])'
     );
   return Array.from(lines ?? [], (line) => line.textContent)
     .join('')

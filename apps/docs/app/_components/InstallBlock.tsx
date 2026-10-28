@@ -1,7 +1,7 @@
 import { loadInstallPlan } from '../_lib/catalog';
 import type { Framework } from '../_lib/frameworks';
 
-import { CodeBlock } from './CodeBlock';
+import { DocsCodeBlock } from './CodeBlock';
 import {
   ComponentLinks,
   PackagesSample,
@@ -33,11 +33,11 @@ export function InstallBlock({
       )}
       {packages.length > 0 && <PackagesSample packages={packages} />}
       {files.length > 0 && (
-        <CodeBlock>
+        <DocsCodeBlock>
           {files.map((file) => (
             <CodeBlockLine key={file.path}>{file.path}</CodeBlockLine>
           ))}
-        </CodeBlock>
+        </DocsCodeBlock>
       )}
       {styles.length > 0 && <StylesSample styles={styles} />}
     </>
