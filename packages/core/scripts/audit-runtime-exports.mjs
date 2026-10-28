@@ -80,6 +80,19 @@ const EXPECTED_CATALOGUE_EXPORTS = [
   'createTokenCatalogue',
 ];
 
+const packageJson = JSON.parse(
+  readFileSync(path.join(packageRoot, 'package.json'), 'utf8')
+);
+const publishedExports = Object.fromEntries(
+  Object.entries(packageJson.exports).filter(([key]) => key !== './source/*')
+);
+assert.deepEqual(
+  packageJson.publishConfig.exports,
+  publishedExports,
+  'publishConfig.exports must match exports without ./source/*.'
+);
+console.log('@nxds/core publishConfig.exports matches exports.');
+
 const OKLCH_VALUE = /^oklch\(\d+(\.\d+)? \d+(\.\d+)? \d+(\.\d+)?\)$/;
 
 function assertExports(label, mod, allowlist = EXPECTED_RUNTIME_EXPORTS) {

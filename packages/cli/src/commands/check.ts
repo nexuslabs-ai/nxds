@@ -234,7 +234,8 @@ function packageProblems(
 
 /**
  * `release` with the icon library nxds.json names. When the release has no
- * such library, the `icons` check fails and `release` keeps its own icons.
+ * icon libraries or not that one, the `icons` check fails and `release` keeps
+ * its own icons.
  */
 function iconsCheck(
   release: Catalog,
@@ -242,6 +243,14 @@ function iconsCheck(
   check: (name: string, ok: boolean, message: string) => void
 ) {
   if (config.iconLibrary === undefined) return release;
+  if (release.iconLibraries.length === 0) {
+    check(
+      'icons',
+      false,
+      `nxds ${release.version} has no icon libraries, so lib/icons.ts draws its own icons, not ${config.iconLibrary}. Run \`${CLI_COMMAND} update\`.`
+    );
+    return release;
+  }
   try {
     const catalog = withIconLibrary(release, config.iconLibrary);
     check('icons', true, `lib/icons.ts draws ${config.iconLibrary}`);

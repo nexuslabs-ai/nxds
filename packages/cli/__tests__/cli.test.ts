@@ -699,6 +699,27 @@ describe('icon libraries', () => {
       })
     );
   });
+
+  it('fails the doctor icons check when the release has no icon libraries', async () => {
+    const context = setup();
+    await cli(['init'], context);
+    writeApp(
+      context.app,
+      'nxds.json',
+      JSON.stringify({ ...nxdsJson(context.app), iconLibrary: 'lucide' })
+    );
+
+    const { exitCode, body } = await cliJson(['doctor'], context);
+
+    expect(exitCode).toBe(EXIT_CODES.attention);
+    expect(body.data.checks).toContainEqual(
+      expect.objectContaining({
+        name: 'icons',
+        ok: false,
+        message: expect.stringMatching(/has no icon libraries/),
+      })
+    );
+  });
 });
 
 describe('fonts', () => {

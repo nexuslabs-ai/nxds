@@ -12,8 +12,9 @@ import { ICON_LIBRARY_OPTIONS, type NxdsIconLibrary } from './icon-libraries';
 
 export interface NxdsShuffleOptions {
   /**
-   * The fonts the UI and heading fonts come from. Monospace fonts are skipped.
-   * Leave it out to pick from every curated font.
+   * The fonts the UI and heading fonts come from. Monospace fonts are skipped,
+   * so it needs at least one sans or serif font. Leave it out to pick from
+   * every curated font.
    */
   readonly fonts?: readonly NxdsFontOption[];
   /** Returns a number in [0, 1), like `Math.random`. */
@@ -38,6 +39,11 @@ export function shuffleNxdsAppearance(
   const textFonts = fonts
     .filter((font) => font.category !== 'mono')
     .map((font) => font.family);
+  if (textFonts.length === 0) {
+    throw new Error(
+      'shuffleNxdsAppearance: `fonts` needs at least one sans or serif font.'
+    );
+  }
 
   return {
     ...state,
@@ -55,9 +61,9 @@ export function shuffleNxdsAppearance(
   };
 }
 
-/** A random icon library. `random` returns a number in [0, 1), like `Math.random`. */
-export function shuffleNxdsIconLibrary(
-  random: () => number = Math.random
-): NxdsIconLibrary {
+/** A random icon library. */
+export function shuffleNxdsIconLibrary({
+  random = Math.random,
+}: Pick<NxdsShuffleOptions, 'random'> = {}): NxdsIconLibrary {
   return pick(ICON_LIBRARY_OPTIONS, random).value;
 }

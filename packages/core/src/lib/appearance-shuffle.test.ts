@@ -106,6 +106,14 @@ describe('shuffleNxdsAppearance', () => {
       expect(families.has(prefs.headingFont)).toBe(true);
     }
   });
+
+  it('names `fonts` when it has no sans or serif font', () => {
+    const fonts = FONT_OPTIONS.filter((font) => font.category === 'mono');
+
+    expect(() => shuffleNxdsAppearance(STATE, { fonts })).toThrow(
+      /`fonts` needs at least one sans or serif font/
+    );
+  });
 });
 
 describe.each(BRAND_COLOR_PRESETS)('the $label brand preset', ({ color }) => {
