@@ -753,7 +753,8 @@ function SidebarMenuButton({
   const { isNarrow, state } = useSidebar();
   const [open, setOpen] = React.useState(false);
   const isRail = state === 'collapsed' && !isNarrow;
-  // Radix never reports the close once the button leaves the rail.
+  // Only the icon rail shows the tooltip. Radix never reports a close after
+  // the button leaves the rail.
   if (!isRail && open) setOpen(false);
 
   const button = (
