@@ -42,11 +42,16 @@ function fail(selector: string, reason: string): never {
   );
 }
 
+// A descendant combinator's value is its whitespace, so it reads back as `' '`.
+function combinatorOf(node: selectorParser.Combinator) {
+  return node.value.trim() || ' ';
+}
+
 function text(nodes: readonly Node[]) {
   return nodes
     .map((node) =>
       node.type === 'combinator'
-        ? spaced(node.value.trim() || ' ')
+        ? spaced(combinatorOf(node))
         : String(node).trim()
     )
     .join('');
@@ -65,7 +70,7 @@ function split(selector: selectorParser.Selector): Complex {
       compound.push(node);
       continue;
     }
-    complex.combinators.push(node.value.trim() || ' ');
+    complex.combinators.push(combinatorOf(node));
     compound = [];
     complex.compounds.push(compound);
   }
@@ -117,8 +122,10 @@ function isPseudoElement(node: Node) {
 // but not which element is a child, a sibling or in a position.
 function assertPlainTarget(nodes: readonly Node[], whole: string) {
   for (const node of nodes) {
-    if (node.type === 'combinator' && node.value.trim() !== '') {
-      fail(whole, `\`${node.value.trim()}\` inside :has()`);
+    if (node.type === 'combinator') {
+      const combinator = combinatorOf(node);
+      if (combinator !== ' ') fail(whole, `\`${combinator}\` inside :has()`);
+      continue;
     }
     if (node.type !== 'pseudo') continue;
     if (node.value === ':has') fail(whole, ':has() inside :has()');
@@ -152,7 +159,8 @@ function relativeHas(pseudo: selectorParser.Pseudo, whole: string) {
     assertPlainTarget(argument.nodes, whole);
     return pseudo;
   }
-  if (first.value.trim() !== '>') fail(whole, `:has(${first.value.trim()} …)`);
+  const combinator = combinatorOf(first);
+  if (combinator !== '>') fail(whole, `:has(${combinator} …)`);
   assertPlainTarget(rest, whole);
   const target = text(rest);
   const [replaced] = parse(
