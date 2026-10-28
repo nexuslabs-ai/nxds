@@ -551,7 +551,6 @@ function ChartFrame({
         tickLine={false}
         axisLine={false}
         tickMargin={8}
-        width="auto"
       />
       {tooltip && (
         <ChartTooltip content={<ChartTooltipContent indicator={indicator} />} />
