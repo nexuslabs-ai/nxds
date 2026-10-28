@@ -86,7 +86,18 @@ const PROJECT: Record<string, string> = {
     buildSystemIndex({ version: VERSION, at: '2026-10-26T09:00:00Z' })
   ),
   'tokens.json': JSON.stringify(TOKENS),
-  'tokens.css': compileTokensCss(TOKENS),
+  'tokens.css': compileTokensCss(
+    TOKENS,
+    new Map([
+      [
+        'typography-body-default',
+        [
+          'font-family: var(--nx-typography-family-font-sans);',
+          'font-size: 14px;',
+        ],
+      ],
+    ])
+  ),
   'README.md': 'Set the page on `nx-color-background`.\n',
   'components/bundle.js': BUNDLE,
   'components/bundle.css': '.nx\\:p-4 { padding: var(--nx-spacing-4); }\n',

@@ -7,6 +7,7 @@ import {
   formatShadowStyle,
   formatTokenValue,
   formatTypographyDeclarations,
+  inlineVariables,
 } from '../src/token-source/format.ts';
 import {
   SPACING_MODE_FILE_PATTERN,
@@ -189,16 +190,6 @@ export function partitionThemedModes(modes) {
   }
 
   return { themed, plain };
-}
-
-/**
- * Return dark tokens whose value diverges from the light token sharing the same
- * cssName. Dark tokens identical to their light counterpart would emit redundant
- * `.dark` (or `html.dark`) overrides; filtering keeps the override block honest.
- */
-export function filterDivergentDark(lightTokens, darkTokens) {
-  const lightByName = new Map(lightTokens.map((t) => [t.cssName, t.value]));
-  return darkTokens.filter((t) => lightByName.get(t.cssName) !== t.value);
 }
 
 /**
@@ -1155,8 +1146,33 @@ export function generateMotionUtilitiesCSS(motionTokens) {
 }
 
 /**
- * Collect shadow token CSS values with var() references
- * Returns array of { cssName, value } for @theme block
+ * Each elevation preset's shadow styles, composed from that preset's layer
+ * primitives, as `{ mode: { light, dark } }` of `{ cssName, value }`.
+ *
+ * @param {ReturnType<typeof collectShadowModes>} shadowModes
+ * @param {ReturnType<typeof collectShadowTokens>} shadowTokens
+ */
+export function composeShadowModes(shadowModes, shadowTokens) {
+  const compose = (layers) => {
+    const values = new Map(
+      layers.map((layer) => [`--nx-${layer.cssName}`, layer.value])
+    );
+    return shadowTokens.map(({ cssName, value }) => ({
+      cssName,
+      value: inlineVariables(value, values),
+    }));
+  };
+  return Object.fromEntries(
+    Object.entries(shadowModes).map(([mode, { light, dark }]) => [
+      mode,
+      { light: compose(light), dark: compose(dark) },
+    ])
+  );
+}
+
+/**
+ * Collect shadow styles as composites of var() references to their layer
+ * primitives. Returns array of { cssName, value }.
  */
 export function collectShadowTokens(tokensDir, primitiveMap) {
   const stylesFile = path.join(tokensDir, 'styles/shadows.json');
@@ -1210,7 +1226,7 @@ export function collectShadowTokens(tokensDir, primitiveMap) {
  * @param {object[]} config.radiusTokens - Array of { cssName, varRef } for radius
  * @param {object[]} config.borderwidthTokens - Array of { key, varRef } for borderwidth; each one emits both a --border-width-* and an --outline-width-* inline theme key
  * @param {object[]} config.motionTokens - Array of { group, key, cssName, varRef } for duration/ease
- * @param {object[]} config.shadowTokens - Array of { cssName, value } for shadows
+ * @param {object[]} config.shadowTokens - Array of { cssName } for shadows; the elevation blocks declare the values
  * @param {object[]} config.zIndexTokens - Array of { cssName, value } for z-index layers
  * @param {object[]} config.breakpointTokens - Array of { cssName, value } for breakpoints
  * @param {object[]} [config.darkSemanticTokens] - Array of { cssName, value } for dark mode semantic colours
@@ -1274,14 +1290,6 @@ export function generateThemeCSS(config) {
     }
   }
 
-  // Shadow tokens
-  if (shadowTokens.length > 0) {
-    css += `\n  /* Shadow tokens */\n`;
-    for (const token of shadowTokens) {
-      css += `  --${token.cssName}: ${token.value};\n`;
-    }
-  }
-
   // Breakpoint tokens
   if (breakpointTokens.length > 0) {
     css += `\n  /* Breakpoint tokens */\n`;
@@ -1339,6 +1347,10 @@ export function generateThemeCSS(config) {
   css += `\n  /* Radius tokens */\n`;
   for (const token of radiusTokens) {
     css += `  --${token.cssName}: ${token.varRef};\n`;
+  }
+  css += `\n  /* Shadow tokens */\n`;
+  for (const token of shadowTokens) {
+    css += `  --${token.cssName}: var(--nx-${token.cssName});\n`;
   }
   css += `\n  /* Z-index tokens */\n`;
   for (const token of zIndexTokens) {

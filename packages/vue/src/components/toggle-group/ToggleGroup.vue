@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { SpacingStep } from '@nxds/core';
 import { reactiveOmit } from '@vueuse/core';
 import {
   type AcceptableValue,
@@ -22,7 +23,7 @@ export interface ToggleGroupProps extends ToggleGroupRootProps<
    * Gap between items, in spacing-scale units. `0` joins them into one
    * segmented control. A larger value splits them into separate pills.
    */
-  spacing?: number;
+  spacing?: SpacingStep;
   class?: HTMLAttributes['class'];
 }
 
@@ -51,7 +52,11 @@ function update(value: AcceptableValue | AcceptableValue[]) {
 <template>
   <ToggleGroupRoot
     v-bind="forwarded"
-    :style="spacing ? { gap: `var(--nx-spacing-${spacing})` } : undefined"
+    :style="
+      spacing
+        ? { gap: `var(--nx-spacing-${String(spacing).replace('.', '_')})` }
+        : undefined
+    "
     :class="
       cn(
         'nx:flex nx:w-fit nx:items-center nx:rounded-md nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',

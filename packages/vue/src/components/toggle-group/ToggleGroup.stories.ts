@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
-  IconAlignCenter,
-  IconAlignLeft,
-  IconAlignRight,
-  IconBold,
-  IconItalic,
-  IconUnderline,
-} from '@tabler/icons-vue';
+  PhTextAlignCenter,
+  PhTextAlignLeft,
+  PhTextAlignRight,
+  PhTextB,
+  PhTextItalic,
+  PhTextUnderline,
+} from '@phosphor-icons/vue';
+import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
   expect,
   fn,
@@ -43,8 +43,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<ToggleGroupArgs>;
 
-const alignIcons = { IconAlignCenter, IconAlignLeft, IconAlignRight };
-const formatIcons = { IconBold, IconItalic, IconUnderline };
+const alignIcons = { PhTextAlignCenter, PhTextAlignLeft, PhTextAlignRight };
+const formatIcons = { PhTextB, PhTextItalic, PhTextUnderline };
 
 // Single-select permits one selected item or an empty selection.
 // Also guards invariant #3 — data-variant / data-size are emitted on the default.
@@ -52,22 +52,22 @@ export const Default: Story = {
   tags: ['docs'],
   render: () => ({
     components: {
-      IconAlignCenter,
-      IconAlignLeft,
-      IconAlignRight,
+      PhTextAlignCenter,
+      PhTextAlignLeft,
+      PhTextAlignRight,
       ToggleGroup,
       ToggleGroupItem,
     },
     template: `
       <ToggleGroup type="single" default-value="left">
         <ToggleGroupItem value="left" aria-label="Align left">
-          <IconAlignLeft />
+          <PhTextAlignLeft />
         </ToggleGroupItem>
         <ToggleGroupItem value="center" aria-label="Align center">
-          <IconAlignCenter />
+          <PhTextAlignCenter />
         </ToggleGroupItem>
         <ToggleGroupItem value="right" aria-label="Align right">
-          <IconAlignRight />
+          <PhTextAlignRight />
         </ToggleGroupItem>
       </ToggleGroup>
     `,
@@ -95,22 +95,22 @@ export const Multiple: Story = {
   },
   render: () => ({
     components: {
-      IconBold,
-      IconItalic,
-      IconUnderline,
+      PhTextB,
+      PhTextItalic,
+      PhTextUnderline,
       ToggleGroup,
       ToggleGroupItem,
     },
     template: `
       <ToggleGroup type="multiple" :default-value="['bold']">
         <ToggleGroupItem value="bold" aria-label="Bold">
-          <IconBold />
+          <PhTextB />
         </ToggleGroupItem>
         <ToggleGroupItem value="italic" aria-label="Italic">
-          <IconItalic />
+          <PhTextItalic />
         </ToggleGroupItem>
         <ToggleGroupItem value="underline" aria-label="Underline">
-          <IconUnderline />
+          <PhTextUnderline />
         </ToggleGroupItem>
       </ToggleGroup>
     `,
@@ -129,22 +129,22 @@ export const Outline: Story = {
   },
   render: () => ({
     components: {
-      IconAlignCenter,
-      IconAlignLeft,
-      IconAlignRight,
+      PhTextAlignCenter,
+      PhTextAlignLeft,
+      PhTextAlignRight,
       ToggleGroup,
       ToggleGroupItem,
     },
     template: `
       <ToggleGroup type="single" variant="outline" default-value="left">
         <ToggleGroupItem value="left" aria-label="Align left">
-          <IconAlignLeft />
+          <PhTextAlignLeft />
         </ToggleGroupItem>
         <ToggleGroupItem value="center" aria-label="Align center">
-          <IconAlignCenter />
+          <PhTextAlignCenter />
         </ToggleGroupItem>
         <ToggleGroupItem value="right" aria-label="Align right">
-          <IconAlignRight />
+          <PhTextAlignRight />
         </ToggleGroupItem>
       </ToggleGroup>
     `,
@@ -164,12 +164,12 @@ export const Spacing: Story = {
   },
   render: () => ({
     components: {
-      IconAlignCenter,
-      IconAlignLeft,
-      IconAlignRight,
-      IconBold,
-      IconItalic,
-      IconUnderline,
+      PhTextAlignCenter,
+      PhTextAlignLeft,
+      PhTextAlignRight,
+      PhTextB,
+      PhTextItalic,
+      PhTextUnderline,
       ToggleGroup,
       ToggleGroupItem,
     },
@@ -177,24 +177,24 @@ export const Spacing: Story = {
       <div class="nx:flex nx:flex-col nx:gap-4">
         <ToggleGroup type="single" variant="outline" default-value="left">
           <ToggleGroupItem value="left" aria-label="Align left">
-            <IconAlignLeft />
+            <PhTextAlignLeft />
           </ToggleGroupItem>
           <ToggleGroupItem value="center" aria-label="Align center">
-            <IconAlignCenter />
+            <PhTextAlignCenter />
           </ToggleGroupItem>
           <ToggleGroupItem value="right" aria-label="Align right">
-            <IconAlignRight />
+            <PhTextAlignRight />
           </ToggleGroupItem>
         </ToggleGroup>
         <ToggleGroup type="single" variant="outline" :spacing="2" default-value="left">
           <ToggleGroupItem value="left" aria-label="Align left (spaced)">
-            <IconAlignLeft />
+            <PhTextAlignLeft />
           </ToggleGroupItem>
           <ToggleGroupItem value="center" aria-label="Align center (spaced)">
-            <IconAlignCenter />
+            <PhTextAlignCenter />
           </ToggleGroupItem>
           <ToggleGroupItem value="right" aria-label="Align right (spaced)">
-            <IconAlignRight />
+            <PhTextAlignRight />
           </ToggleGroupItem>
         </ToggleGroup>
         <ToggleGroup
@@ -203,13 +203,13 @@ export const Spacing: Story = {
           :default-value="['bold', 'italic']"
         >
           <ToggleGroupItem value="bold" aria-label="Outline primary bold">
-            <IconBold />
+            <PhTextB />
           </ToggleGroupItem>
           <ToggleGroupItem value="italic" aria-label="Outline primary italic">
-            <IconItalic />
+            <PhTextItalic />
           </ToggleGroupItem>
           <ToggleGroupItem value="underline" aria-label="Outline primary underline">
-            <IconUnderline />
+            <PhTextUnderline />
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
@@ -530,9 +530,9 @@ export const FormattingSettings: Story = {
   render: () => ({
     components: {
       Button,
-      IconBold,
-      IconItalic,
-      IconUnderline,
+      PhTextB,
+      PhTextItalic,
+      PhTextUnderline,
       Input,
       Label,
       ToggleGroup,
@@ -556,13 +556,13 @@ export const FormattingSettings: Story = {
             aria-label="Text formatting"
           >
             <ToggleGroupItem value="bold" aria-label="Bold">
-              <IconBold />
+              <PhTextB />
             </ToggleGroupItem>
             <ToggleGroupItem value="italic" aria-label="Italic">
-              <IconItalic />
+              <PhTextItalic />
             </ToggleGroupItem>
             <ToggleGroupItem value="underline" aria-label="Underline">
-              <IconUnderline />
+              <PhTextUnderline />
             </ToggleGroupItem>
           </ToggleGroup>
           <Button variant="outline">Reset formatting</Button>
@@ -590,13 +590,13 @@ export const ClickInteraction: Story = {
     template: `
       <ToggleGroup type="single" default-value="left">
         <ToggleGroupItem value="left" aria-label="Align left">
-          <IconAlignLeft />
+          <PhTextAlignLeft />
         </ToggleGroupItem>
         <ToggleGroupItem value="center" aria-label="Align center">
-          <IconAlignCenter />
+          <PhTextAlignCenter />
         </ToggleGroupItem>
         <ToggleGroupItem value="right" aria-label="Align right">
-          <IconAlignRight />
+          <PhTextAlignRight />
         </ToggleGroupItem>
       </ToggleGroup>
     `,
@@ -613,6 +613,35 @@ export const ClickInteraction: Story = {
   },
 };
 
+// A half-step spacing reads its own spacing token.
+export const HalfStepSpacing: Story = {
+  render: () => ({
+    components: { ...alignIcons, ToggleGroup, ToggleGroupItem },
+    template: `
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        :spacing="0.5"
+        aria-label="Text alignment"
+      >
+        <ToggleGroupItem value="left" aria-label="Align left">
+          <PhTextAlignLeft />
+        </ToggleGroupItem>
+        <ToggleGroupItem value="right" aria-label="Align right">
+          <PhTextAlignRight />
+        </ToggleGroupItem>
+      </ToggleGroup>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const group = canvas.getByRole('group', { name: 'Text alignment' });
+    await expect(getComputedStyle(group).columnGap).toBe(
+      getComputedStyle(group).getPropertyValue('--nx-spacing-0_5').trim()
+    );
+  },
+};
+
 // A disabled group disables all its items.
 export const Disabled: Story = {
   tags: ['docs'],
@@ -625,18 +654,18 @@ export const Disabled: Story = {
   },
   render: () => ({
     components: {
-      IconAlignCenter,
-      IconAlignLeft,
+      PhTextAlignCenter,
+      PhTextAlignLeft,
       ToggleGroup,
       ToggleGroupItem,
     },
     template: `
       <ToggleGroup type="single" default-value="left" disabled>
         <ToggleGroupItem value="left" aria-label="Align left">
-          <IconAlignLeft />
+          <PhTextAlignLeft />
         </ToggleGroupItem>
         <ToggleGroupItem value="center" aria-label="Align center">
-          <IconAlignCenter />
+          <PhTextAlignCenter />
         </ToggleGroupItem>
       </ToggleGroup>
     `,
@@ -657,10 +686,10 @@ export const WithDataAttributes: Story = {
     template: `
       <ToggleGroup type="single" variant="outline" size="sm" default-value="left">
         <ToggleGroupItem value="left" aria-label="Align left">
-          <IconAlignLeft />
+          <PhTextAlignLeft />
         </ToggleGroupItem>
         <ToggleGroupItem value="center" variant="default" aria-label="Align center">
-          <IconAlignCenter />
+          <PhTextAlignCenter />
         </ToggleGroupItem>
       </ToggleGroup>
     `,
@@ -689,10 +718,10 @@ export const VModel: Story = {
       <div class="nx:flex nx:flex-col nx:gap-2">
         <ToggleGroup v-model="alignment" type="single">
           <ToggleGroupItem value="left" aria-label="Align left">
-            <IconAlignLeft />
+            <PhTextAlignLeft />
           </ToggleGroupItem>
           <ToggleGroupItem value="right" aria-label="Align right">
-            <IconAlignRight />
+            <PhTextAlignRight />
           </ToggleGroupItem>
         </ToggleGroup>
         <output data-testid="alignment">{{ alignment }}</output>
@@ -725,43 +754,43 @@ export const AllVariants: Story = {
           :default-value="['bold', 'italic']"
         >
           <ToggleGroupItem value="bold" aria-label="Outline primary bold">
-            <IconBold />
+            <PhTextB />
           </ToggleGroupItem>
           <ToggleGroupItem value="italic" aria-label="Outline primary italic">
-            <IconItalic />
+            <PhTextItalic />
           </ToggleGroupItem>
           <ToggleGroupItem value="underline" aria-label="Outline primary underline">
-            <IconUnderline />
+            <PhTextUnderline />
           </ToggleGroupItem>
         </ToggleGroup>
         <ToggleGroup type="single" default-value="left">
           <ToggleGroupItem value="left" aria-label="Align left">
-            <IconAlignLeft />
+            <PhTextAlignLeft />
           </ToggleGroupItem>
           <ToggleGroupItem value="center" aria-label="Align center">
-            <IconAlignCenter />
+            <PhTextAlignCenter />
           </ToggleGroupItem>
           <ToggleGroupItem value="right" aria-label="Align right">
-            <IconAlignRight />
+            <PhTextAlignRight />
           </ToggleGroupItem>
         </ToggleGroup>
         <ToggleGroup type="multiple" variant="outline" :default-value="['bold']">
           <ToggleGroupItem value="bold" aria-label="Bold">
-            <IconBold />
+            <PhTextB />
           </ToggleGroupItem>
           <ToggleGroupItem value="italic" aria-label="Italic">
-            <IconItalic />
+            <PhTextItalic />
           </ToggleGroupItem>
           <ToggleGroupItem value="underline" aria-label="Underline">
-            <IconUnderline />
+            <PhTextUnderline />
           </ToggleGroupItem>
         </ToggleGroup>
         <ToggleGroup type="single" variant="outline" :spacing="2" default-value="left">
           <ToggleGroupItem value="left" aria-label="Spaced left">
-            <IconAlignLeft />
+            <PhTextAlignLeft />
           </ToggleGroupItem>
           <ToggleGroupItem value="center" aria-label="Spaced center">
-            <IconAlignCenter />
+            <PhTextAlignCenter />
           </ToggleGroupItem>
         </ToggleGroup>
       </div>

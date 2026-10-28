@@ -556,6 +556,32 @@ export const ClickInteraction: Story = {
   },
 };
 
+// A half-step spacing reads its own spacing token.
+export const HalfStepSpacing: Story = {
+  render: () => (
+    <ToggleGroup
+      type="single"
+      variant="outline"
+      spacing={0.5}
+      aria-label="Text alignment"
+    >
+      <ToggleGroupItem value="left" aria-label="Align left">
+        <TextAlignLeftIcon />
+      </ToggleGroupItem>
+      <ToggleGroupItem value="right" aria-label="Align right">
+        <TextAlignRightIcon />
+      </ToggleGroupItem>
+    </ToggleGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const group = canvas.getByRole('group', { name: 'Text alignment' });
+    await expect(getComputedStyle(group).columnGap).toBe(
+      getComputedStyle(group).getPropertyValue('--nx-spacing-0_5').trim()
+    );
+  },
+};
+
 // A disabled group disables all its items.
 export const Disabled: Story = {
   tags: ['docs'],

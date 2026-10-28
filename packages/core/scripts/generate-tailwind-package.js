@@ -9,7 +9,6 @@ import {
 } from '../src/token-source/spacing.ts';
 import {
   extractTokens,
-  isReference,
   pathToCssVarPrefixed,
 } from '../src/token-source/tokens.ts';
 
@@ -25,10 +24,10 @@ import {
   collectShadowTokens,
   collectSpacingTokens,
   collectZIndexTokens,
+  composeShadowModes,
   defaultTokenConfig,
   discoverPrimitives,
   ensureDir,
-  filterDivergentDark,
   formatDistCssFiles,
   generateAutofillUtilitiesCSS,
   generateBorderColorAliasUtilitiesCSS,
@@ -62,9 +61,8 @@ async function loadDistRuntimeEngine() {
 
 /**
  * Get primitive file paths based on discovered structure and config.
- * For themed categories (mode names matching `${base}-{light|dark}`), returns
- * both light and dark paths so the bundled output can emit a `.dark` override
- * block in variables.css.
+ * A themed category (mode names matching `${base}-{light|dark}`) resolves to
+ * its light file: its primitives are only referenced, never declared.
  */
 function getPrimitiveFiles(discovered, config) {
   const result = {};
@@ -82,32 +80,17 @@ function getPrimitiveFiles(discovered, config) {
     const mode = config[category] || info.modes[0];
     const { themed } = partitionThemedModes(info.modes);
 
-    if (themed[mode]) {
-      result[category] = {
-        themed: true,
-        mode,
-        lightFilePath: path.join(
-          PRIMITIVES_DIR,
-          category,
-          `${category}-${mode}-light.json`
-        ),
-        darkFilePath: path.join(
-          PRIMITIVES_DIR,
-          category,
-          `${category}-${mode}-dark.json`
-        ),
-      };
-    } else {
-      result[category] = {
-        themed: false,
-        mode,
-        filePath: path.join(
-          PRIMITIVES_DIR,
-          category,
-          `${category}-${mode}.json`
-        ),
-      };
-    }
+    result[category] = {
+      themed: Boolean(themed[mode]),
+      mode,
+      filePath: path.join(
+        PRIMITIVES_DIR,
+        category,
+        themed[mode]
+          ? `${category}-${mode}-light.json`
+          : `${category}-${mode}.json`
+      ),
+    };
   }
 
   return result;
@@ -145,18 +128,7 @@ function assertSemanticFilesAreClaimed() {
  */
 function assertPrimitiveFilesExist(primitiveFiles) {
   for (const [category, info] of Object.entries(primitiveFiles)) {
-    if (info.themed) {
-      if (!fs.existsSync(info.lightFilePath)) {
-        throw new Error(
-          `Primitive file missing: ${info.lightFilePath} (themed category "${category}", mode "${info.mode}")`
-        );
-      }
-      if (!fs.existsSync(info.darkFilePath)) {
-        throw new Error(
-          `Primitive file missing: ${info.darkFilePath} (themed category "${category}", mode "${info.mode}")`
-        );
-      }
-    } else if (!fs.existsSync(info.filePath)) {
+    if (!fs.existsSync(info.filePath)) {
       throw new Error(
         `Primitive file missing: ${info.filePath} (category "${category}")`
       );
@@ -283,54 +255,6 @@ function loadTokensWithNxPrefix(filePath, primitiveMap, tokenList, category) {
 }
 
 /**
- * Load dark themed primitive tokens into a separate list. The light-side
- * primitiveMap is the canonical resolution map, so dark tokens do not write
- * to it; they only contribute the `.dark` override declarations. References
- * are stored raw and resolved against the fully-populated primitiveMap by
- * `resolveDarkReferences` after all primitive categories have loaded.
- */
-function loadDarkThemedTokens(filePath, tokenList, category) {
-  const tokenData = readTokenFile(filePath);
-  const tokens = extractTokens(tokenData);
-
-  for (const token of tokens) {
-    const cssName = pathToCssVarPrefixed(token.path, category, true);
-    const cssValue = isReference(token.value)
-      ? token.value
-      : formatTokenValue(token.value, token.type, token.path);
-
-    tokenList.push({
-      cssName,
-      value: cssValue,
-      type: token.type,
-      category,
-      rawValue: token.value,
-      path: token.path.join('.'),
-    });
-  }
-}
-
-/**
- * Resolve `{ref}` values in dark tokens against the light primitiveMap.
- * Unlike `resolveCrossPrimitiveReferences`, this does not write back into the
- * primitiveMap — dark resolutions must not bleed into the light-canonical map.
- * Throws on any reference that does not resolve.
- */
-function resolveDarkReferences(darkTokens, primitiveMap) {
-  for (const token of darkTokens) {
-    if (!isReference(token.rawValue)) continue;
-
-    const resolved = resolveValue(token.rawValue, primitiveMap, token.type);
-    if (isReference(resolved)) {
-      throw new Error(
-        `Dark themed primitive reference not found: ${token.category}.${token.path} = ${token.rawValue}`
-      );
-    }
-    token.value = resolved;
-  }
-}
-
-/**
  * Resolve cross-primitive references in token list
  */
 function resolveCrossPrimitiveReferences(tokenList, primitiveMap) {
@@ -353,12 +277,13 @@ function resolveCrossPrimitiveReferences(tokenList, primitiveMap) {
 
 /**
  * Process all primitive tokens with --nx-* prefix.
- * Returns light tokens (for `:root`), dark tokens (for `.dark` override block),
- * the resolved primitive map, and the chosen mode per category for logging.
+ * Returns the tokens variables.css declares, the resolved primitive map, and
+ * the chosen mode per category for logging. A themed category's primitives
+ * resolve references but are not declared.
  */
 function processPrimitivesWithNxPrefix(discovered, config) {
   const primitiveTokens = [];
-  const darkPrimitiveTokens = [];
+  const referencedOnly = [];
   const primitiveMap = new Map();
   const usedModes = {};
 
@@ -366,38 +291,21 @@ function processPrimitivesWithNxPrefix(discovered, config) {
   assertPrimitiveFilesExist(primitiveFiles);
 
   for (const [category, fileInfo] of Object.entries(primitiveFiles)) {
-    if (fileInfo.themed) {
-      loadTokensWithNxPrefix(
-        fileInfo.lightFilePath,
-        primitiveMap,
-        primitiveTokens,
-        category
-      );
-      loadDarkThemedTokens(
-        fileInfo.darkFilePath,
-        darkPrimitiveTokens,
-        category
-      );
-    } else {
-      loadTokensWithNxPrefix(
-        fileInfo.filePath,
-        primitiveMap,
-        primitiveTokens,
-        category
-      );
-    }
+    loadTokensWithNxPrefix(
+      fileInfo.filePath,
+      primitiveMap,
+      fileInfo.themed ? referencedOnly : primitiveTokens,
+      category
+    );
     usedModes[category] = fileInfo.mode;
   }
 
-  resolveCrossPrimitiveReferences(primitiveTokens, primitiveMap);
-  resolveDarkReferences(darkPrimitiveTokens, primitiveMap);
+  resolveCrossPrimitiveReferences(
+    [...primitiveTokens, ...referencedOnly],
+    primitiveMap
+  );
 
-  return {
-    tokens: primitiveTokens,
-    darkTokens: darkPrimitiveTokens,
-    primitiveMap,
-    usedModes,
-  };
+  return { tokens: primitiveTokens, primitiveMap, usedModes };
 }
 
 /**
@@ -415,19 +323,16 @@ function groupByCategory(tokens) {
 
 /**
  * Generate variables.css with --nx-* prefixed primitives, in the theme layer.
- * Themed dark variants emit into a `.dark` block that overrides `:root` when
- * an ancestor carries the `.dark` class (matching the @custom-variant selector
- * used in nxds.css).
  */
-function generateVariablesCSS(primitiveTokens, divergentDark, usedModes) {
+function generateVariablesCSS(primitiveTokens, usedModes) {
   let css = `/* ===== NXDS DESIGN SYSTEM - PRIMITIVE VARIABLES ===== */\n`;
   css += `/* Auto-generated - DO NOT EDIT */\n`;
   css += `/* All primitives use --nx-* prefix for namespace isolation */\n\n`;
 
   css += `@layer theme {\n`;
   css += `:root {\n`;
-  const lightCategories = groupByCategory(primitiveTokens);
-  for (const [category, tokens] of Object.entries(lightCategories)) {
+  const categories = groupByCategory(primitiveTokens);
+  for (const [category, tokens] of Object.entries(categories)) {
     if (tokens.length === 0) continue;
     const modeInfo = usedModes[category] ? ` (${usedModes[category]})` : '';
     css += `  /* ${category}${modeInfo} */\n`;
@@ -437,23 +342,6 @@ function generateVariablesCSS(primitiveTokens, divergentDark, usedModes) {
     css += `\n`;
   }
   css += `}\n`;
-
-  if (divergentDark.length > 0) {
-    css += `\n.dark {\n`;
-    const darkCategories = groupByCategory(divergentDark);
-    for (const [category, tokens] of Object.entries(darkCategories)) {
-      if (tokens.length === 0) continue;
-      const modeInfo = usedModes[category]
-        ? ` (${usedModes[category]} dark)`
-        : '';
-      css += `  /* ${category}${modeInfo} */\n`;
-      for (const token of tokens) {
-        css += `  --${token.cssName}: ${token.value};\n`;
-      }
-      css += `\n`;
-    }
-    css += `}\n`;
-  }
   css += `}\n`;
 
   return css;
@@ -566,11 +454,14 @@ function generateNxdsCSS(
     commentLabel: 'RADIUS',
     duplicateValuePrefix: null,
   });
-  css += generateThemedModesCSS(runtimeModes.shadowModes, {
-    defaultMode: usedModes.shadow,
-    attrName: 'data-shadow',
-    commentLabel: 'SHADOW',
-  });
+  css += generateThemedModesCSS(
+    composeShadowModes(runtimeModes.shadowModes, shadowTokens),
+    {
+      defaultMode: usedModes.shadow,
+      attrName: 'data-shadow',
+      commentLabel: 'SHADOW',
+    }
+  );
   css += generateSpacingModesCSS(runtimeModes.borderwidthModes, {
     defaultMode: usedModes.borderwidth,
     attrName: 'data-borderwidth',
@@ -612,7 +503,6 @@ async function generateTailwindPackage(overrides, engine) {
 
   const {
     tokens: primitiveTokens,
-    darkTokens: darkPrimitiveTokens,
     primitiveMap,
     usedModes,
   } = processPrimitivesWithNxPrefix(discoveredPrimitives, config);
@@ -627,15 +517,7 @@ async function generateTailwindPackage(overrides, engine) {
   console.log(`   base: ${baseTone}`);
   console.log('');
 
-  const divergentDark = filterDivergentDark(
-    primitiveTokens,
-    darkPrimitiveTokens
-  );
-  const variablesCSS = generateVariablesCSS(
-    primitiveTokens,
-    divergentDark,
-    usedModes
-  );
+  const variablesCSS = generateVariablesCSS(primitiveTokens, usedModes);
   writeDistFile('variables.css', variablesCSS);
 
   const typography = generateTypographyUtilitiesCSS(TOKENS_DIR, primitiveMap);
@@ -713,9 +595,6 @@ async function generateTailwindPackage(overrides, engine) {
   console.log(
     `   Primitives: ${primitiveTokens.length} tokens (with --nx-* prefix)`
   );
-  if (divergentDark.length > 0) {
-    console.log(`   Dark overrides: ${divergentDark.length} tokens`);
-  }
   console.log(`   Engine semantic colors: ${lightSemanticTokens.length}`);
   console.log(`   Typography utilities: ${typography.count}`);
   console.log(`   Border width alias utilities: ${borderWidth.count}`);

@@ -7,6 +7,17 @@ import { useFramework } from './FrameworkTabs';
 /** The compiled Vue demos, which `scripts/bundle-vue-demos.ts` writes to public/. */
 const VUE_DEMOS_ENTRY = '/vue-demos/entry.js';
 
+/** The CSS the demos import, such as vue-sonner's, which the bundle writes beside its entry. */
+const VUE_DEMOS_STYLES = '/vue-demos/entry.css';
+
+function loadVueDemoStyles() {
+  if (document.querySelector(`link[href="${VUE_DEMOS_STYLES}"]`)) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = VUE_DEMOS_STYLES;
+  document.head.append(link);
+}
+
 type VueDemos = {
   mount: (element: Element, id: string) => Promise<() => void>;
 };
@@ -26,6 +37,7 @@ export function VueDemoStage({ id }: { id: string }) {
 
     let unmount: (() => void) | undefined;
     let cancelled = false;
+    loadVueDemoStyles();
     // The bundle is a static file, not a module Next should resolve.
     const demos: Promise<VueDemos> = import(
       /* webpackIgnore: true */ /* turbopackIgnore: true */ VUE_DEMOS_ENTRY

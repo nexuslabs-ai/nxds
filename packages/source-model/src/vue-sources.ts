@@ -33,6 +33,7 @@ import {
 const COMPONENT_SPECIFIER = './components/';
 
 export type VueProgram = ReturnType<typeof createVueProgram>;
+export type { PropertyMetaSchema };
 
 function fail(message: string): never {
   throw new Error(`vue-sources: ${message}`);
