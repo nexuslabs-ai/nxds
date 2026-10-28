@@ -1,8 +1,10 @@
-/* On desktop, the preview is tall enough for the tallest example, so the
-   cards keep their size when the visitor switches apps. */
+/* On desktop, the preview is as tall as the tallest example on every screen,
+   so the cards keep their size when the visitor switches apps, and a tall
+   screen doesn't stretch the stage. */
 @utility coexist-section {
   @media (width >= 64rem) {
     --preview-min: 33rem;
+    --preview-max: 33rem;
   }
 }
 
