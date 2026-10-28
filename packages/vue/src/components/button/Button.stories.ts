@@ -33,7 +33,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Button triggers an action. Use it for short, visible labels.\n\n- Use one decorative icon slot at most: `#start-icon` or `#end-icon`.\n- A loading button shows only a spinner and hides its icons.\n- Icon-only buttons need `aria-label` or `aria-labelledby`.\n- Icon-only buttons show 16, 18 or 20px icons with a medium line, by size.',
+          'Button triggers an action. Use it for short, visible labels.\n\n- Use one decorative icon slot at most: `#start-icon` or `#end-icon`.\n- A loading button shows only a spinner and hides its icons.\n- Icon-only buttons need `aria-label` or `aria-labelledby`.\n- Icons are 16px at every size and density.',
       },
     },
   },
@@ -284,6 +284,10 @@ export const IconSize: Story = {
           <Button size="lg"><template #start-icon><PhDownloadSimple /></template>Download</Button>
           <Button size="icon-lg" aria-label="Large icon"><PhStar /></Button>
         </div>
+        <div data-density="compact" class="nx:flex nx:items-center nx:gap-2">
+          <Button><template #start-icon><PhDownloadSimple /></template>Download</Button>
+          <Button size="icon" aria-label="Compact icon"><PhStar /></Button>
+        </div>
       </div>
     `,
   }),
@@ -294,10 +298,13 @@ export const IconSize: Story = {
         '--nx-icon-glyph-default'
       )
     );
-    for (const button of canvas.getAllByRole('button')) {
-      const svg = button.querySelector('svg');
-      await expect(svg?.getBoundingClientRect().height).toBe(iconToken);
-      await expect(svg ? getComputedStyle(svg).strokeWidth : '').toBe('1.75px');
+    const icons = canvasElement.querySelectorAll('button svg');
+    await expect(icons).toHaveLength(canvas.getAllByRole('button').length);
+    for (const svg of icons) {
+      const { width, height } = svg.getBoundingClientRect();
+      await expect(width).toBe(iconToken);
+      await expect(height).toBe(iconToken);
+      await expect(getComputedStyle(svg).strokeWidth).toBe('1.75px');
     }
   },
 };

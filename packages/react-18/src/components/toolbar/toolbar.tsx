@@ -17,27 +17,26 @@ import {
 import { TooltipProvider } from '../tooltip/tooltip';
 import { TooltipGroupContext } from '../tooltip/tooltip-group';
 
+const useIsomorphicLayoutEffect =
+  typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
+
 type ToolbarVariant = 'default' | 'floating';
 
-const ToolbarContext = React.createContext<ToolbarVariant>('default');
-
-const toolbarGap: Record<ToolbarVariant, string> = {
-  default: 'nx:gap-0.5',
-  floating: 'nx:gap-2',
-};
-
 const toolbarVariants = cva(
-  'nx:flex nx:w-fit nx:max-w-full nx:min-w-0 nx:flex-wrap nx:items-center nx:border-default nx:border-border-default nx:bg-container nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
+  'nx:group/toolbar nx:flex nx:w-fit nx:max-w-full nx:min-w-0 nx:flex-wrap nx:items-center nx:border-default nx:border-border-default nx:bg-container nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
   {
     variants: {
       variant: {
-        default: 'nx:rounded-lg nx:p-0.5 nx:shadow-sm',
-        floating: 'nx:rounded-2xl nx:p-2 nx:shadow-lg',
+        default: 'nx:gap-0.5 nx:rounded-lg nx:p-0.5 nx:shadow-sm',
+        floating: 'nx:gap-2 nx:rounded-2xl nx:p-2 nx:shadow-lg',
       },
     },
     defaultVariants: { variant: 'default' },
   }
 );
+
+const toolbarGroupLayout =
+  'nx:flex nx:min-w-0 nx:flex-wrap nx:items-center nx:gap-[inherit] nx:group-data-[orientation=vertical]/toolbar:flex-col nx:group-data-[orientation=vertical]/toolbar:items-stretch';
 
 interface ToolbarProps extends React.ComponentProps<
   typeof ToolbarPrimitive.Root
@@ -66,18 +65,12 @@ const Toolbar = React.forwardRef<
     : { ...propsWithoutRef, ref: forwardedRef };
   const inGroup = React.useContext(TooltipGroupContext);
   const root = (
-    <ToolbarContext.Provider value={variant}>
-      <ToolbarPrimitive.Root
-        data-slot="toolbar"
-        data-variant={variant}
-        className={cn(
-          toolbarVariants({ variant }),
-          toolbarGap[variant],
-          className
-        )}
-        {...props}
-      />
-    </ToolbarContext.Provider>
+    <ToolbarPrimitive.Root
+      data-slot="toolbar"
+      data-variant={variant}
+      className={cn(toolbarVariants({ variant }), className)}
+      {...props}
+    />
   );
   if (inGroup) return root;
 
@@ -153,16 +146,11 @@ const ToolbarGroup = React.forwardRef<
     forwardedRef === null
       ? propsWithoutRef
       : { ...propsWithoutRef, ref: forwardedRef };
-  const variant = React.useContext(ToolbarContext);
   return (
     <div
       role="group"
       data-slot="toolbar-group"
-      className={cn(
-        'nx:flex nx:min-w-0 nx:flex-wrap nx:items-center',
-        toolbarGap[variant],
-        className
-      )}
+      className={cn(toolbarGroupLayout, className)}
       {...props}
     />
   );
@@ -185,16 +173,11 @@ const ToolbarToggleGroup = React.forwardRef<
     forwardedRef === null
       ? propsWithoutRef
       : { ...propsWithoutRef, ref: forwardedRef };
-  const variant = React.useContext(ToolbarContext);
   return (
     <ToolbarPrimitive.ToggleGroup
       data-slot="toolbar-toggle-group"
       role={props.type === 'single' ? 'radiogroup' : 'group'}
-      className={cn(
-        'nx:flex nx:min-w-0 nx:flex-wrap nx:items-center nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
-        toolbarGap[variant],
-        className
-      )}
+      className={cn(toolbarGroupLayout, className)}
       {...props}
     />
   );
@@ -242,10 +225,10 @@ type ToolbarToolGroupContextValue = {
   registerPanel: (value: string) => () => void;
   select: (value: string) => void;
   /** Returns true when focus should stay on the tool that was just chosen. */
-  panelOpened: () => boolean;
-  panelClosed: () => void;
-  /** Returns true when the press was on a tool, so the panel stays open. */
-  keepsPanelOpen: (target: Node) => boolean;
+  handlePanelOpen: () => boolean;
+  handlePanelClose: () => void;
+  isInGroup: (target: Node) => boolean;
+  handlePressOutside: () => void;
 };
 
 const ToolbarToolGroupContext =
@@ -275,8 +258,8 @@ interface ToolbarToolGroupProps extends Omit<
 }
 
 /**
- * One selected tool at a time. Selecting a tool opens its ToolbarToolPanel;
- * selecting it again closes it. Label the group with aria-label.
+ * One selected tool at a time. Selecting a tool opens its ToolbarToolPanel.
+ * Selecting it again closes it. Label the group with aria-label.
  */
 const ToolbarToolGroup = React.forwardRef<
   HTMLDivElement,
@@ -298,7 +281,6 @@ const ToolbarToolGroup = React.forwardRef<
   } = forwardedRef === null
     ? propsWithoutRef
     : { ...propsWithoutRef, ref: forwardedRef };
-  const variant = React.useContext(ToolbarContext);
   const group = React.useRef<HTMLDivElement>(null);
   const composedRef = useComposedRefs(ref, group);
   const activeToolRef = React.useRef<HTMLButtonElement | null>(null);
@@ -346,23 +328,27 @@ const ToolbarToolGroup = React.forwardRef<
     if (nextOpen !== open) setOpen(nextOpen);
   }
 
-  function panelOpened() {
+  function handlePanelOpen() {
     restoreFocus.current = true;
     const keepFocusOnTool = switching.current;
     switching.current = false;
     return keepFocusOnTool;
   }
 
-  function panelClosed() {
-    if (restoreFocus.current)
-      activeToolRef.current?.focus({ preventScroll: true });
+  function handlePanelClose() {
+    const tool = activeToolRef.current;
+    if (!restoreFocus.current || !tool) return;
+    // Focus falls to the body only when it was inside the closed panel.
+    if (tool.ownerDocument.activeElement !== tool.ownerDocument.body) return;
+    tool.focus({ preventScroll: true });
   }
 
-  function keepsPanelOpen(target: Node) {
-    // Tools handle their own clicks, so the panel can stay open while switching.
-    if (group.current?.contains(target)) return true;
+  function isInGroup(target: Node) {
+    return group.current?.contains(target) ?? false;
+  }
+
+  function handlePressOutside() {
     restoreFocus.current = false;
-    return false;
   }
 
   const context = {
@@ -374,9 +360,10 @@ const ToolbarToolGroup = React.forwardRef<
     setActiveTool,
     registerPanel,
     select,
-    panelOpened,
-    panelClosed,
-    keepsPanelOpen,
+    handlePanelOpen,
+    handlePanelClose,
+    isInGroup,
+    handlePressOutside,
   };
 
   return (
@@ -386,11 +373,7 @@ const ToolbarToolGroup = React.forwardRef<
           role="group"
           data-slot="toolbar-tool-group"
           ref={composedRef}
-          className={cn(
-            'nx:flex nx:min-w-0 nx:flex-wrap nx:items-center',
-            toolbarGap[variant],
-            className
-          )}
+          className={cn(toolbarGroupLayout, className)}
           {...props}
         >
           {children}
@@ -438,7 +421,7 @@ const ToolbarTool = React.forwardRef<
   const expanded = selected && tools.open;
   const { setActiveTool } = tools;
 
-  React.useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!selected) return;
     setActiveTool(button.current);
     return () => setActiveTool(null);
@@ -499,21 +482,21 @@ const ToolbarToolPanel = React.forwardRef<
   const tools = useToolbarToolGroup();
   const { registerPanel } = tools;
 
-  React.useLayoutEffect(() => registerPanel(value), [registerPanel, value]);
+  useIsomorphicLayoutEffect(() => registerPanel(value), [registerPanel, value]);
 
   if (value !== tools.value) return null;
 
   function handleOpenAutoFocus(event: Event) {
     onOpenAutoFocus?.(event);
     // Switching tools keeps focus on the tool that was just chosen.
-    if (tools.panelOpened()) event.preventDefault();
+    if (tools.handlePanelOpen()) event.preventDefault();
   }
 
   function handleCloseAutoFocus(event: Event) {
     onCloseAutoFocus?.(event);
     if (event.defaultPrevented) return;
     event.preventDefault();
-    tools.panelClosed();
+    tools.handlePanelClose();
   }
 
   const handleInteractOutside: NonNullable<
@@ -521,7 +504,9 @@ const ToolbarToolPanel = React.forwardRef<
   > = (event) => {
     onInteractOutside?.(event);
     if (event.defaultPrevented) return;
-    if (tools.keepsPanelOpen(event.target as Node)) event.preventDefault();
+    // Tools handle their own clicks, so the panel can stay open while switching.
+    if (tools.isInGroup(event.target as Node)) event.preventDefault();
+    else tools.handlePressOutside();
   };
 
   return (

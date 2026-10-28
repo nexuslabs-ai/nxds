@@ -326,6 +326,14 @@ const BUTTON: Omit<Probe, 'property'> = {
   tree: { part: 'Button', children: ['Save changes'] },
   target: 'button',
 };
+const ICON_BUTTON: Omit<Probe, 'property'> = {
+  tree: {
+    part: 'Button',
+    props: { size: 'icon', 'aria-label': 'Download' },
+    children: [{ part: 'svg' }],
+  },
+  target: 'button svg',
+};
 const CARD: Omit<Probe, 'property'> = {
   tree: {
     part: 'Card',
@@ -416,6 +424,13 @@ const TOKEN_CASES: (Probe & { family: string; name: string; value: string })[] =
       value: 'linear',
       ...BUTTON,
       property: 'transition-timing-function',
+    },
+    {
+      family: 'icon',
+      name: '--nx-icon-glyph-default',
+      value: '23px',
+      ...ICON_BUTTON,
+      property: 'width',
     },
     {
       family: 'typeScale',

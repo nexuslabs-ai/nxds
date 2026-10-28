@@ -55,7 +55,15 @@ function CodeBlock({
  * Props for CodeBlockContent, from ScrollArea. `type` sets when the
  * scrollbars show.
  */
-type CodeBlockContentProps = React.ComponentProps<typeof ScrollArea>;
+interface CodeBlockContentProps extends React.ComponentProps<
+  typeof ScrollArea
+> {
+  /**
+   * Language of the code, such as `tsx`. It sets the `language-*` class on
+   * `code`, which Markdown converters and reader tools read.
+   */
+  language?: string;
+}
 
 /**
  * Scrollable code region that holds the `CodeBlockLine` rows. It scrolls
@@ -64,6 +72,7 @@ type CodeBlockContentProps = React.ComponentProps<typeof ScrollArea>;
  */
 function CodeBlockContent({
   className,
+  language,
   children,
   ...props
 }: CodeBlockContentProps) {
@@ -80,7 +89,12 @@ function CodeBlockContent({
       {...props}
     >
       <pre className="nx:m-0">
-        <code className="nx:grid nx:grid-cols-[auto_auto_minmax(0,1fr)] nx:py-4 nx:typography-code-block">
+        <code
+          className={cn(
+            'nx:grid nx:grid-cols-[auto_auto_minmax(0,1fr)] nx:py-4 nx:typography-code-block',
+            language && `language-${language}`
+          )}
+        >
           {children}
         </code>
       </pre>
@@ -89,8 +103,10 @@ function CodeBlockContent({
   );
 }
 
-const codeBlockDiffClasses =
-  "nx:data-diff:after:col-start-2 nx:data-diff:after:row-start-1 nx:data-diff:after:me-2 nx:data-[diff=added]:bg-success-subtle nx:data-[diff=added]:after:text-success-subtle-foreground nx:data-[diff=added]:after:content-['+'] nx:data-[diff=removed]:bg-error-subtle nx:data-[diff=removed]:after:text-error-subtle-foreground nx:data-[diff=removed]:after:content-['−']";
+const codeBlockDiffClasses = {
+  added: "nx:text-success-subtle-foreground nx:before:content-['+']",
+  removed: "nx:text-error-subtle-foreground nx:before:content-['−']",
+};
 
 /**
  * Props for CodeBlockLine.
@@ -107,8 +123,9 @@ interface CodeBlockLineProps extends React.ComponentProps<'span'> {
   status?: 'success' | 'error';
   /**
    * Marks the line as added or removed in a diff. The line gets a green or
-   * red tint and a `+` or `−` before the code. The copy button leaves out
-   * removed lines.
+   * red tint and a `+` or `−` before the code. The tint replaces the
+   * `highlighted` shade, and a `status` edge replaces the highlight edge. The
+   * copy button leaves out removed lines.
    */
   diff?: 'added' | 'removed';
 }
@@ -137,12 +154,17 @@ function CodeBlockLine({
         'nx:before:text-end nx:before:text-muted-foreground-subtle nx:before:content-[attr(data-number)] nx:data-number:before:me-4',
         'nx:data-highlighted:not-data-diff:bg-container-hover nx:data-highlighted:before:text-muted-foreground nx:data-highlighted:not-data-status:border-foreground',
         'nx:data-[status=error]:border-error-subtle-foreground nx:data-[status=success]:border-success-subtle-foreground',
-        codeBlockDiffClasses,
+        'nx:data-[diff=added]:bg-success-subtle nx:data-[diff=removed]:bg-error-subtle',
         'nx:group-has-data-[slot=code-block-copy-button]/code-block:pe-14',
         className
       )}
       {...props}
     >
+      {diff && (
+        <span
+          className={cn('nx:col-start-2 nx:me-2', codeBlockDiffClasses[diff])}
+        />
+      )}
       <span className="nx:col-start-3">{children}</span>
       {/* A grid doesn't render this newline, but the code's text keeps it. */}
       {'\n'}
@@ -168,7 +190,7 @@ function codeText(button: HTMLElement) {
   const lines = button
     .closest('[data-slot="code-block"]')
     ?.querySelectorAll(
-      '[data-slot="code-block-line"]:not([data-diff="removed"])'
+      '[data-slot="code-block-content"] [data-slot="code-block-line"]:not([data-diff="removed"])'
     );
   return Array.from(lines ?? [], (line) => line.textContent)
     .join('')
@@ -177,11 +199,11 @@ function codeText(button: HTMLElement) {
 
 /**
  * Props for CodeBlockCopyButton. It takes the attributes of a button, except
- * `children` and `onClick`, which it sets itself.
+ * `children`, which it sets itself. `onClick` runs before the copy.
  */
 type CodeBlockCopyButtonProps = Omit<
   React.ComponentProps<'button'>,
-  'children' | 'onClick'
+  'children'
 >;
 
 /**
@@ -190,6 +212,7 @@ type CodeBlockCopyButtonProps = Omit<
  */
 function CodeBlockCopyButton({
   className,
+  onClick,
   ...props
 }: CodeBlockCopyButtonProps) {
   // `seq` remounts the message, so a second copy announces again.
@@ -211,6 +234,7 @@ function CodeBlockCopyButton({
   };
 
   const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    onClick?.(event);
     const text = codeText(event.currentTarget);
     if (!text) {
       settle('failed');

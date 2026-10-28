@@ -2,13 +2,13 @@ import type { ComponentProps } from 'react';
 
 import { type CodeSampleLanguage, highlightSample } from '../_lib/code-sample';
 
-import { CodeBlock } from './CodeBlock';
+import { DocsCodeBlock } from './CodeBlock';
 import { CodeCard } from './CodeCard';
 import { CodeBlockLine } from './nxds';
 
 /**
  * A code string rendered outside an MDX fence. Tokenised by the same theme the
- * MDX fences use, then rendered in the same `CodeBlock` those fences render
+ * MDX fences use, then rendered in the same `DocsCodeBlock` those fences render
  * through, so a sample and a fence get the same surface and copy control.
  */
 export async function CodeSample({
@@ -23,7 +23,7 @@ export async function CodeSample({
   const lines = await highlightSample(lang, children.trimEnd());
 
   return (
-    <CodeBlock framed={framed} data-language={lang}>
+    <DocsCodeBlock framed={framed} language={lang}>
       {lines.map((tokens, index) => (
         <CodeBlockLine key={index}>
           {tokens.map((token, at) => (
@@ -33,7 +33,7 @@ export async function CodeSample({
           ))}
         </CodeBlockLine>
       ))}
-    </CodeBlock>
+    </DocsCodeBlock>
   );
 }
 

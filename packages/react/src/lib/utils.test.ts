@@ -144,7 +144,6 @@ describe('cn', () => {
   });
 
   it.each([
-    ['icon size', 'nx:size-icon-glyph-default', 'nx:size-4'],
     ['radius base', 'nx:rounded-base', 'nx:rounded-md'],
     ['ease enter', 'nx:ease-enter', 'nx:ease-linear'],
     ['ease exit', 'nx:ease-exit', 'nx:ease-linear'],
@@ -171,6 +170,11 @@ describe('cn', () => {
       'nx:animate-none',
     ],
     ['z-index', 'nx:z-overlay nx:z-popover', 'nx:z-popover'],
+    [
+      'icon size',
+      'nx:size-4 nx:size-icon-glyph-default',
+      'nx:size-icon-glyph-default',
+    ],
     [
       'spacing role',
       'nx:gap-container nx:gap-layout-stack',

@@ -41,6 +41,7 @@ const CATEGORIES: Record<TokenCategory, string> = {
   brand: 'Primary and secondary',
   status: 'Status',
   chart: 'Chart',
+  syntax: 'Syntax',
   focus: 'Focus',
   alpha: 'Alpha and overlays',
 };

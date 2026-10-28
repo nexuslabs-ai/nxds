@@ -17,8 +17,9 @@ export interface CodeBlockLineProps {
   status?: 'success' | 'error';
   /**
    * Marks the line as added or removed in a diff. The line gets a green or
-   * red tint and a `+` or `−` before the code. The copy button leaves out
-   * removed lines.
+   * red tint and a `+` or `−` before the code. The tint replaces the
+   * `highlighted` shade, and a `status` edge replaces the highlight edge. The
+   * copy button leaves out removed lines.
    */
   diff?: 'added' | 'removed';
   class?: HTMLAttributes['class'];
@@ -42,11 +43,14 @@ const props = withDefaults(defineProps<CodeBlockLineProps>(), {
         'nx:before:text-end nx:before:text-muted-foreground-subtle nx:before:content-[attr(data-number)] nx:data-number:before:me-4',
         'nx:data-highlighted:not-data-diff:bg-container-hover nx:data-highlighted:before:text-muted-foreground nx:data-highlighted:not-data-status:border-foreground',
         'nx:data-[status=error]:border-error-subtle-foreground nx:data-[status=success]:border-success-subtle-foreground',
-        codeBlockDiffClasses,
+        'nx:data-[diff=added]:bg-success-subtle nx:data-[diff=removed]:bg-error-subtle',
         'nx:group-has-data-[slot=code-block-copy-button]/code-block:pe-14',
         props.class
       )
     "
-    ><span class="nx:col-start-3"><slot /></span>{{ '\n' }}</span
+    ><span
+      v-if="diff"
+      :class="cn('nx:col-start-2 nx:me-2', codeBlockDiffClasses[diff])"
+    /><span class="nx:col-start-3"><slot /></span>{{ '\n' }}</span
   >
 </template>
