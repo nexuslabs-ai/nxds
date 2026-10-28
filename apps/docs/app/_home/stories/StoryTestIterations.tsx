@@ -401,7 +401,7 @@ export function StoryTestIterations({
       onClick={runExample}
       disabled={running}
     >
-      Run
+      Run checks
     </ToolbarButton>
   );
   const modePanel = (
