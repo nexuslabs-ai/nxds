@@ -9,5 +9,5 @@ export const navLinkClassName =
   'nx:h-auto nx:px-0 nx:text-muted-foreground nx:hover:text-foreground nx:aria-[current=page]:text-foreground';
 
 export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
-export const DISCORD_URL = 'https://discord.gg/EwZDDGfng';
+export const DISCORD_URL = 'https://discord.gg/CBummVdKnJ';
 export const X_URL = 'https://x.com/nxdsdev';
