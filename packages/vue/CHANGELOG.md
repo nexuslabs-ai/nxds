@@ -1,5 +1,38 @@
 # @nxds/vue
 
+## 0.9.0
+
+### Minor Changes
+
+- e5916e8: Add CodeBlock, a surface for code with line numbers, marked lines and a copy button.
+
+  | Part                  | What it does                                                                                                                           |
+  | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+  | `CodeBlock`           | The surface. Use `variant="flush"` inside a Card                                                                                       |
+  | `CodeBlockContent`    | The scroll region. Long lines scroll sideways, and a `nx:max-h-*` class scrolls down. `language` sets the `language-*` class on `code` |
+  | `CodeBlockLine`       | One line. `number` shows it in the gutter, `highlighted` and `status` mark it                                                          |
+  | `CodeBlockCopyButton` | Copies the code and tells screen readers the result                                                                                    |
+
+  CodeBlock does not highlight code. Highlight with Shiki and the `codeBlockTheme` it ships, then put each line's tokens in a `CodeBlockLine`. In server code, such as a React Server Component, import the theme from `@nxds/react/code-block-theme`.
+
+  In `@nxds/core`, the contrast solver also reads the chart colours on `container-hover`, the surface of a highlighted line. Where a chart colour was too faint on it, the colour gets a little darker in light mode or a little lighter in dark mode.
+
+- 9f564c1: Add diff lines to CodeBlock, and give code its own syntax colours.
+
+  | Package                    | Change                                                                                                                                                                                                                                                                                   |
+  | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `@nxds/react`, `@nxds/vue` | `CodeBlockLine` takes `diff="added"` or `diff="removed"`. The line gets a green or red tint and a `+` or `−` before the code. The copy button leaves out removed lines. `codeBlockTheme` colours code with the `syntax-*` tokens.                                                        |
+  | `@nxds/core`               | Add five colour tokens for code: `syntax-keyword`, `syntax-string`, `syntax-function`, `syntax-type` and `syntax-constant`. Each takes the hue of a chart series. The contrast solver keeps them legible on `container`, `container-hover`, `success-subtle` and `error-subtle`.         |
+  | `@nxds/core`               | The solver reads the chart colours only on `container` and `background` again, so chart colours go back to their values before CodeBlock. It also reads the foreground and muted colours on `success-subtle` and `error-subtle`. Muted text moves by a very small amount in some themes. |
+
+### Patch Changes
+
+- e5916e8: Fix `require('@nxds/vue')`. The CommonJS entry file ends in `.cjs`, so Node reads it as CommonJS and `require` gets every export.
+- e5916e8: Fix the `@nxds/vue` types for TypeScript projects that use `moduleResolution: "node16"` or `"nodenext"`. The types are now one file, and `require` gets its own `index.d.cts`. Drawer's types come from `vaul-vue` and are included, so `require` no longer types Drawer as `any`.
+- Updated dependencies [e5916e8]
+- Updated dependencies [9f564c1]
+  - @nxds/core@0.11.0
+
 ## 0.8.0
 
 ### Minor Changes
