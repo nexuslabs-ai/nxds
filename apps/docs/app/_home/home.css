@@ -116,6 +116,15 @@
   }
 }
 
+/* On desktop, the Stories preview is as tall as its longest story on every
+   screen, so a tall screen doesn't stretch the live example. */
+@utility stories-section {
+  @media (width >= 64rem) {
+    --preview-min: 30rem;
+    --preview-max: 30rem;
+  }
+}
+
 /* A light signal that runs along a flow line, then rests. Frameworks and
    Coexist draw their lines sideways and run it on the child <i>. */
 @keyframes flow-signal {

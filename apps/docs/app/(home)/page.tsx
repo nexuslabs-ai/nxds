@@ -131,6 +131,7 @@ export default async function Home() {
           title="Stories are the tests."
           subtitle="The example you explore is the example we check."
           actions={<StorybookLink />}
+          className="nx:stories-section"
         >
           <StoryTestIterations storyCode={await highlightStories()} />
         </ChapterSection>
