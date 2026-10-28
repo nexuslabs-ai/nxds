@@ -18,7 +18,7 @@
   /* About one title block, and the toolbar with the space above it, so a
      section is about one screen tall. */
   --heading-allowance: 12rem;
-  --toolbar-allowance: 6rem;
+  --toolbar-allowance: 5rem;
   --preview-fade: var(--nx-spacing-24);
   --preview-min: 24rem;
   --preview-max: 100svh;

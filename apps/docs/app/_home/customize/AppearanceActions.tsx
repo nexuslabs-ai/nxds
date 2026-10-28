@@ -15,7 +15,7 @@ import { DOCS_APPEARANCE_DEFAULT_STATE } from '../../_lib/appearance-controls';
 import { setIconLibrary } from '../../_lib/icon-library';
 
 const actionClass =
-  'nx:typography-label-default nx:sm:w-auto nx:sm:gap-2 nx:sm:px-3.5';
+  'nx:typography-label-default nx:sm:w-auto nx:sm:gap-2 nx:sm:px-2.5';
 
 /** Shuffle and Reset in the Customize toolbar. They change the whole site. */
 export function AppearanceActions() {
@@ -33,7 +33,7 @@ export function AppearanceActions() {
   return (
     <>
       <ToolbarButton
-        size="icon-lg"
+        size="icon-sm"
         aria-label="Shuffle"
         className={actionClass}
         onClick={shuffle}
@@ -42,7 +42,7 @@ export function AppearanceActions() {
         <Show above="sm">Shuffle</Show>
       </ToolbarButton>
       <ToolbarButton
-        size="icon-lg"
+        size="icon-sm"
         aria-label="Reset"
         className={actionClass}
         onClick={reset}

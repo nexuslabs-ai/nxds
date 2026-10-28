@@ -70,13 +70,11 @@ export function ChapterPreview<T extends ToolName>({
           <Tooltip key={tool}>
             <TooltipTrigger asChild>
               <span className="nx:inline-flex">
-                {/* Six 48px tools and the page's side margins need 378px. */}
                 <ToolbarTool
                   value={tool}
-                  size="icon-lg"
+                  size="icon-sm"
                   aria-label={tool}
                   id={toolId(index)}
-                  className="nx:max-[23.625rem]:size-10"
                 >
                   <Icon aria-hidden="true" />
                 </ToolbarTool>

@@ -397,7 +397,7 @@ export function StoryTestIterations({
   const runButton = (
     <ToolbarButton
       variant="default"
-      size="lg"
+      size="sm"
       onClick={runExample}
       disabled={running}
     >
