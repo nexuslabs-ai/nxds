@@ -21,6 +21,7 @@
       "outputs": ["generated/props/**"]
     },
     "generate:vue": {
+      "dependsOn": ["@nxds/core#build"],
       "inputs": [
         "scripts/generate-vue-docs.ts",
         "$TURBO_ROOT$/packages/catalog/scripts/install-plans.ts",

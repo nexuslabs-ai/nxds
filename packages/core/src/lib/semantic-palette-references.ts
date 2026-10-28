@@ -1,5 +1,5 @@
 import type { Shade } from './palette';
-import type { PrimitivePaletteName } from './primitive-palette';
+import type { PrimitivePaletteName } from './token-scales.generated';
 
 export const STATUS_PALETTE_FAMILIES = {
   success: 'green',

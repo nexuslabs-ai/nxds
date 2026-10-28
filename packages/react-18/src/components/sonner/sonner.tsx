@@ -114,13 +114,15 @@ const toast = Object.assign(
     loading: (message: Message, data?: ExternalToast) =>
       sonnerToast.loading(message, inNxdsToaster(data)),
     custom: (
-      jsx: Parameters<typeof sonnerToast.custom>[0],
+      content: Parameters<typeof sonnerToast.custom>[0],
       data?: ExternalToast
-    ) => sonnerToast.custom(jsx, inNxdsToaster(data)),
-    promise: <ToastData,>(
+    ) => sonnerToast.custom(content, inNxdsToaster(data)),
+    promise<ToastData>(
       promise: Parameters<typeof sonnerToast.promise<ToastData>>[0],
       data?: Parameters<typeof sonnerToast.promise<ToastData>>[1]
-    ) => sonnerToast.promise(promise, data && inNxdsToaster(data)),
+    ) {
+      return sonnerToast.promise(promise, data && inNxdsToaster(data));
+    },
     // Without an id, dismisses every nxds toast and leaves the host's alone.
     dismiss: (id?: number | string) => {
       if (id !== undefined) return sonnerToast.dismiss(id);

@@ -46,9 +46,11 @@ const TooltipTrigger = TooltipPrimitive.Trigger;
 /**
  * Props for TooltipContent.
  */
-type TooltipContentProps = React.ComponentProps<
+interface TooltipContentProps extends React.ComponentProps<
   typeof TooltipPrimitive.Content
->;
+> {
+  className?: string;
+}
 
 /**
  * Popup that shows the tooltip text. Position it with `side` and `align`.

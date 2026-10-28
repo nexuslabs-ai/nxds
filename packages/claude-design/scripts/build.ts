@@ -19,6 +19,7 @@ import path from 'node:path';
 
 import { buildBundle } from '../src/bundle.ts';
 import { EXCLUDED_SLUGS, GROUPS } from '../src/groups.ts';
+import { withPresetTable } from '../src/presets.ts';
 import {
   buildPreview,
   type ComponentFolder,
@@ -30,10 +31,11 @@ import {
   renderCoverage,
   renderIndexDts,
 } from '../src/props.ts';
+import { componentReads, variablesRead } from '../src/reads.ts';
 import { buildStyles } from '../src/styles.ts';
 import { buildSystemIndex } from '../src/system-index.ts';
-import { buildTokens } from '../src/tokens.ts';
-import { compileTokensCss, listFamilies } from '../src/tokens-css.ts';
+import { buildTokens, typeStyleRules } from '../src/tokens.ts';
+import { compileTokensCss } from '../src/tokens-css.ts';
 import { validateSystem } from '../src/validate.ts';
 
 const packageRoot = path.join(import.meta.dirname, '..');
@@ -118,25 +120,30 @@ async function main() {
   mkdirSync(projectDir, { recursive: true });
   const at = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
 
-  const tokens = buildTokens({ version, ref: gitRef() });
+  const folders = componentFolders();
+  const reads = await componentReads(folders);
+  const styles = await buildStyles();
+  const tokens = buildTokens({
+    version,
+    ref: gitRef(),
+    reads,
+    stylesheetReads: variablesRead(styles),
+  });
+  const tokensCss = compileTokensCss(tokens, typeStyleRules());
   write('tokens.json', `${JSON.stringify(tokens, null, 2)}\n`);
-  write('tokens.css', compileTokensCss(tokens));
-  write('README.md', readFileSync(path.join(contentDir, 'README.md'), 'utf8'));
+  write('tokens.css', tokensCss);
+  write(
+    'README.md',
+    withPresetTable(readFileSync(path.join(contentDir, 'README.md'), 'utf8'))
+  );
   write(
     'components/Cover/preview.html',
     readFileSync(path.join(contentDir, 'cover.html'), 'utf8')
   );
 
-  const folders = componentFolders();
   const { code } = await buildBundle(folders);
   write('components/bundle.js', code);
-
-  const tokenNames = new Set(
-    listFamilies(tokens).flatMap(([, list]) =>
-      list.map((token) => `--${token.name}`)
-    )
-  );
-  write('components/bundle.css', await buildStyles(tokenNames));
+  write('components/bundle.css', styles);
 
   const parts = flatComponents();
   write('components/index.d.ts', renderIndexDts(parts));
