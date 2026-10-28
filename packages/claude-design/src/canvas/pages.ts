@@ -42,7 +42,7 @@ function iconScript() {
   const cells = ${JSON.stringify(SHOWN)}.map((name) =>
     h('figure', { key: name, style: { margin: 0, display: 'grid', justifyItems: 'center', gap: 'var(--nx-spacing-2)' } },
       h(${NAMESPACE}.Icon, { name, size: 20 }),
-      h('figcaption', { className: 'typography-body-small', style: { color: 'var(--nx-color-muted-foreground)' } }, name)));
+      h('figcaption', { className: 'nx:typography-body-small', style: { color: 'var(--nx-color-muted-foreground)' } }, name)));
   ReactDOM.createRoot(document.getElementById('root')).render(
     h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(88px, 1fr))', gap: 'var(--nx-spacing-4)' } }, cells));
 })();`;
@@ -62,7 +62,7 @@ function iconReadme(part: FlatComponent) {
     `<x-import component-from-global-scope="${NAMESPACE}.Button" start-icon="plus">Create project</x-import>`,
     '```',
     '',
-    'Place an icon with `Nxds.Icon`, or name one on an icon prop: Button `start-icon` and `end-icon`, Badge `left-icon` and `right-icon`. Write the name as tabler.io lists it, in kebab-case. `Nxds.Icons.IconPlus` mounts the same icon as a component.',
+    'Place an icon with `Nxds.Icon`, or name one on an icon prop: Button `start-icon` and `end-icon`, Badge `left-icon` and `right-icon`. Write the name as tabler.io lists it, in kebab-case.',
     '',
     `## Names (${names.length})`,
     '',

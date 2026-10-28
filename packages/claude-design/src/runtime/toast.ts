@@ -12,8 +12,7 @@ import {
   useToasterTheme,
 } from 'nxds:sonner-theme';
 
-import { coerce } from '../attributes.ts';
-
+import { useCanvasProps } from './attributes.ts';
 import { Icon } from './icon.ts';
 
 type ToastVariant =
@@ -59,7 +58,7 @@ export function Toast(raw: ToastProps) {
     richColors = false,
     icon,
     className,
-  } = coerce('Toast', raw);
+  } = useCanvasProps('Toast', raw);
   const toasterId = `nxds-canvas-toast-${React.useId().replace(/:/g, '')}`;
   const theme = useToasterTheme();
 

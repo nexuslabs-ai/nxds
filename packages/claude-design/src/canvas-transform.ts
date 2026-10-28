@@ -1,8 +1,8 @@
 // An esbuild plugin that hooks every public part in bundle.js into
-// src/attributes.ts. It doesn't wrap a part, so the part keeps its identity
+// src/runtime/attributes.ts. It doesn't wrap a part, so the part keeps its identity
 // for checks such as `child.type === MultiSelectItem`:
 // - a part's render function, plain or inside `forwardRef`, gets
-//   `const props = coerce('Part', raw)` as its first statement;
+//   `const props = useCanvasProps('Part', raw)` as its first statement;
 // - a part that is another library's component, `const Dialog =
 //   DialogPrimitive.Root`, becomes `withCanvasProps('Dialog', ...)`, and every
 //   reference in the bundle shares that binding.
@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 
-const ATTRIBUTES = path.join(import.meta.dirname, 'attributes.ts');
+const ATTRIBUTES = path.join(import.meta.dirname, 'runtime', 'attributes.ts');
 const RAW = '__nxdsRawProps';
 
 interface Edit {
@@ -51,7 +51,7 @@ function hookRender(
     {
       start: insertAt,
       end: insertAt,
-      text: `const ${props.name.getText(source)} = __nxdsCoerce(${JSON.stringify(part)}, ${RAW});`,
+      text: `const ${props.name.getText(source)} = __nxdsUseCanvasProps(${JSON.stringify(part)}, ${RAW});`,
     },
   ];
 }
@@ -129,7 +129,7 @@ export function hookParts(
         text.slice(0, edit.start) + edit.text + text.slice(edit.end),
       code
     );
-  return `import { coerce as __nxdsCoerce, withCanvasProps as __nxdsWithCanvasProps } from ${JSON.stringify(ATTRIBUTES)};\n${hookedCode}`;
+  return `import { useCanvasProps as __nxdsUseCanvasProps, withCanvasProps as __nxdsWithCanvasProps } from ${JSON.stringify(ATTRIBUTES)};\n${hookedCode}`;
 }
 
 /** Hooks each component folder's own file; `parts` lists its public parts by folder. */

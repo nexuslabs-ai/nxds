@@ -18,9 +18,14 @@ const icons = TablerIcons as unknown as Record<
 >;
 
 export default function CanvasIcons() {
-  const items = ICON_NAMES.flatMap((name) => {
+  const items = ICON_NAMES.map((name) => {
     const Icon = icons[iconComponent(name)];
-    return Icon ? [{ name, icon: <Icon size={20} aria-hidden /> }] : [];
+    if (!Icon) {
+      throw new Error(
+        `Canvas icons: @tabler/icons-react has no ${iconComponent(name)}. Align its version with @nxds/react-18's.`
+      );
+    }
+    return { name, icon: <Icon size={20} aria-hidden /> };
   });
 
   return (

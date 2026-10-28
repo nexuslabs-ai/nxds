@@ -14,8 +14,9 @@ import { iconSet } from './icon-set.ts';
 import type { FlatComponent } from './props.ts';
 import { NAMESPACE } from './system-index.ts';
 
-const JSX_RUNTIME = path.join(import.meta.dirname, 'jsx-runtime.ts');
-const CANVAS_SLOT = path.join(import.meta.dirname, 'slot.ts');
+const RUNTIME = path.join(import.meta.dirname, 'runtime');
+const JSX_RUNTIME = path.join(RUNTIME, 'jsx-runtime.ts');
+const CANVAS_SLOT = path.join(RUNTIME, 'slot.ts');
 const RADIX_SLOT = '@radix-ui/react-slot';
 
 /** What each React module the sources import reads from the page. */
@@ -32,10 +33,9 @@ const SCHEMA_MODULE = 'nxds:canvas-schema';
 const ICON_NAMES_MODULE = 'nxds:icon-names';
 const SONNER_THEME_MODULE = 'nxds:sonner-theme';
 const RECHARTS_MODULE = 'nxds:recharts';
-const ATTRIBUTES = path.join(import.meta.dirname, 'attributes.ts');
-const CANVAS_DIR = path.join(import.meta.dirname, 'canvas');
-const CANVAS_ICON = path.join(CANVAS_DIR, 'icon.ts');
-const CANVAS_TOAST = path.join(CANVAS_DIR, 'toast.ts');
+const ATTRIBUTES = path.join(RUNTIME, 'attributes.ts');
+const CANVAS_ICON = path.join(RUNTIME, 'icon.ts');
+const CANVAS_TOAST = path.join(RUNTIME, 'toast.ts');
 
 // index.ts's utility exports (`getFilterErrors`, `CHART_CATEGORICAL_SERIES`),
 // copied statement by statement.
@@ -102,7 +102,7 @@ const pageGlobals: Plugin = {
 };
 
 // Every Slot, Radix's and nxds's, looks through the wrapper a canvas puts
-// around each component (src/slot.ts). The shim itself gets the copy the
+// around each component (src/runtime/slot.ts). The shim itself gets the copy the
 // React 18 sources use.
 const canvasSlot: Plugin = {
   name: 'nxds-canvas-slot',
@@ -135,7 +135,7 @@ function assertOneSlot(metafile: Metafile) {
     path.resolve(importers[0] ?? '') !== CANVAS_SLOT
   ) {
     throw new Error(
-      `bundle.js: ${RADIX_SLOT} must be bundled once and imported only by src/slot.ts; found ${copies.join(', ') || 'none'} imported by ${importers.join(', ') || 'nothing'}.`
+      `bundle.js: ${RADIX_SLOT} must be bundled once and imported only by src/runtime/slot.ts; found ${copies.join(', ') || 'none'} imported by ${importers.join(', ') || 'nothing'}.`
     );
   }
 }

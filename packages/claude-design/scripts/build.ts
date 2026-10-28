@@ -157,12 +157,12 @@ async function main() {
 
   const parts = flatComponents();
   const { code } = await buildBundle(folders, parts);
-  write('components/bundle.js', code);
-  write('components/bundle.css', styles);
   const indexDts = renderIndexDts(parts);
-  write('components/index.d.ts', indexDts);
   assertBudget('components/bundle.js', code, BUNDLE_BUDGET);
   assertBudget('components/index.d.ts', indexDts, TYPES_BUDGET);
+  write('components/bundle.js', code);
+  write('components/bundle.css', styles);
+  write('components/index.d.ts', indexDts);
 
   const report = coverage(parts);
   if (report.missing.length > 0) {

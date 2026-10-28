@@ -9,14 +9,17 @@ import path from 'node:path';
 
 import { ICON_NAMES, iconComponent } from './icons.ts';
 
-/** bundle.js grows about 0.4 KB per icon. */
+/**
+ * Each icon adds about 0.4 KB to bundle.js and 0.26 KB to index.d.ts, which
+ * prints every name on each of the 18 icon props so the panel can list them.
+ */
 const MAX_ICONS = 520;
 
 const TABLER_IMPORT =
   /(?:import|export)\s*(?:type\s*)?\{([^}]*)\}\s*from\s*'@tabler\/icons-react'/g;
 
 export interface IconEntry {
-  /** The component, `IconPlus`, which `Nxds.Icons` exports. */
+  /** The component, `IconPlus`, which `Nxds.Icons` exports for the previews. */
   component: string;
   /** Its name on a canvas, `plus`, as tabler.io lists it. */
   name: string;

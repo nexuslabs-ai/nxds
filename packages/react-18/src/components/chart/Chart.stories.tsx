@@ -461,8 +461,11 @@ export const KeyboardTooltip: Story = {
     await expect(surface).toHaveFocus();
     // Focus selects January; the arrow moves to February.
     await userEvent.keyboard('{ArrowRight}');
-    const tooltip = canvasElement.querySelector('.recharts-tooltip-wrapper');
-    await waitFor(() => expect(tooltip).toHaveTextContent('FebDesktop305'));
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('.recharts-tooltip-wrapper')
+      ).toHaveTextContent('FebDesktop305')
+    );
   },
 };
 

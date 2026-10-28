@@ -4,7 +4,7 @@ import * as React from 'react';
 
 import { ICON_COMPONENTS } from 'nxds:icon-names';
 
-import { coerce } from '../attributes.ts';
+import { useCanvasProps } from './attributes.ts';
 
 export interface IconProps {
   name: string;
@@ -23,7 +23,7 @@ export function Icon(raw: IconProps) {
     className,
     'aria-label': label,
     ...rest
-  } = coerce('Icon', raw);
+  } = useCanvasProps('Icon', raw);
   const Component = ICON_COMPONENTS[name];
   if (!Component) return null;
   // An empty label names nothing, so the icon stays hidden from screen readers.

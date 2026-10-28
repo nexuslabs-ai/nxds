@@ -41,7 +41,7 @@ const BUNDLE_MODULES: Record<string, string> = {
   recharts: `module.exports = window.${NAMESPACE}.Recharts;`,
 };
 
-const JSX_RUNTIME = path.join(import.meta.dirname, 'jsx-runtime.ts');
+const JSX_RUNTIME = path.join(import.meta.dirname, 'runtime', 'jsx-runtime.ts');
 const STORY_MODULE = 'nxds:story';
 
 const MEDIA_TYPES: Record<string, string> = {

@@ -1,58 +1,23 @@
-// nxds:canvas-schema, the rules bundle.js converts attribute strings by
-// (src/attributes.ts), written from each prop's attribute kind.
-import type { Attribute, ScalarAttribute } from './attribute.ts';
-import type { CanvasSchema, Rule } from './attributes.ts';
-import { kebab } from './canvas-wrapper.ts';
+// nxds:canvas-schema, the attributes bundle.js converts strings by
+// (src/runtime/attributes.ts), as index.d.ts reads them from each prop.
+import type { Attribute, CanvasAttribute } from './attribute.ts';
 import type { FlatComponent } from './props.ts';
+import type { CanvasSchema } from './runtime/attributes.ts';
+import { kebab } from './runtime/canvas-wrapper.ts';
 
-function scalarRule(scalar: ScalarAttribute): Rule {
-  const only = scalar.literals.length === 0;
-  if (only && scalar.boolean && !scalar.string && !scalar.number) return 'b';
-  if (only && scalar.number && !scalar.string && !scalar.boolean) return 'n';
-  const flags = [
-    scalar.string ? 's' : '',
-    scalar.number ? 'n' : '',
-    scalar.boolean ? 'b' : '',
-  ].join('');
-  return ['e', scalar.literals, flags];
-}
-
-// Null for a prop whose attribute string is already its value.
-function ruleOf(attribute: Attribute | null, required: boolean): Rule | null {
-  switch (attribute?.kind) {
-    case 'scalar': {
-      const rule = scalarRule(attribute);
-      const plainString =
-        Array.isArray(rule) && rule[1].length === 0 && rule[2] === 's';
-      if (!plainString) return rule;
-      return required ? 's' : null;
-    }
-    case 'list':
-      return [
-        'l',
-        attribute.item.kind === 'date' ? 'd' : scalarRule(attribute.item),
-        attribute.single ? scalarRule(attribute.single) : null,
-      ];
-    case 'date':
-      return attribute.selection ? 'D' : 'd';
-    case 'icon':
-      return attribute.as === 'name' ? 'i' : 'I';
-    case 'json':
-      return [
-        'j',
-        attribute.shape === 'object'
-          ? 'o'
-          : attribute.shape === 'array'
-            ? 'a'
-            : '*',
-        attribute.required,
-        attribute.dateKeys,
-        attribute.dateItems ? 1 : 0,
-        attribute.boolean ? 1 : 0,
-      ];
-    default:
-      return null;
+// Null for a prop whose attribute string is already its value. A required
+// string stays, so an empty one gets a placeholder.
+function converted(
+  attribute: Attribute | null,
+  required: boolean
+): CanvasAttribute | null {
+  if (!attribute || attribute.kind === 'content' || attribute.kind === 'none') {
+    return null;
   }
+  if (attribute.kind !== 'scalar' || required) return attribute;
+  const { literals, string, number, boolean } = attribute;
+  const plainString = string && literals.length === 0 && !number && !boolean;
+  return plainString ? null : attribute;
 }
 
 /** Parts that read their children's types, as Recharts finds a chart's series and Cells. */
@@ -61,7 +26,7 @@ const UNWRAPS = (part: FlatComponent) =>
 
 export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
   const schema: CanvasSchema = {
-    rules: {},
+    attributes: {},
     required: {},
     unwrap: parts.filter(UNWRAPS).map((part) => part.name),
     renames: {},
@@ -72,16 +37,18 @@ export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
       .map((prop) => [kebab(prop.name), prop.name]);
     if (renames.length > 0)
       schema.renames[part.name] = Object.fromEntries(renames);
-    const rules: Record<string, Rule> = {};
+    const attributes: Record<string, CanvasAttribute> = {};
     const required: string[] = [];
     for (const prop of part.props) {
       const isRequired = !prop.optional && prop.defaultValue === null;
-      const rule = ruleOf(prop.attribute, isRequired);
-      if (!rule) continue;
-      rules[prop.name] = rule;
+      const attribute = converted(prop.attribute, isRequired);
+      if (!attribute) continue;
+      attributes[prop.name] = attribute;
       if (isRequired) required.push(prop.name);
     }
-    if (Object.keys(rules).length > 0) schema.rules[part.name] = rules;
+    if (Object.keys(attributes).length > 0) {
+      schema.attributes[part.name] = attributes;
+    }
     if (required.length > 0) schema.required[part.name] = required;
   }
   return schema;

@@ -48,7 +48,11 @@ export function compileTheme() {
 // since the previews render the docs stories, and in the export's own parts.
 function candidates() {
   const found = new Set<string>();
-  for (const root of [react18Src, path.join(import.meta.dirname, 'canvas')]) {
+  for (const root of [
+    react18Src,
+    path.join(import.meta.dirname, 'canvas'),
+    path.join(import.meta.dirname, 'runtime'),
+  ]) {
     for (const file of readdirSync(root, {
       recursive: true,
       encoding: 'utf8',

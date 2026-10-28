@@ -484,7 +484,7 @@ interface CartesianChartProps {
   data: ChartDatum[];
   /** The key in each row that holds its category, such as `month`. */
   xKey: string;
-  /** The keys in each row to plot. Each key is one series, colored in order. */
+  /** The keys in each row to plot. Each key is one series, colored in order. The palette has five colors, so a sixth series repeats the first series' color. */
   series: string[];
   /** Label, icon and color for each series, keyed by its key. Without one, a series is labelled by its key. */
   config?: ChartConfig;
@@ -607,7 +607,6 @@ function BarChart({
   return (
     <ChartContainer config={colors} className={className}>
       <RechartsPrimitive.BarChart
-        accessibilityLayer
         data={data}
         layout={horizontal ? 'vertical' : 'horizontal'}
       >
@@ -665,11 +664,7 @@ function LineChart({
   const colors = seriesConfig(series, config);
   return (
     <ChartContainer config={colors} className={className}>
-      <RechartsPrimitive.LineChart
-        accessibilityLayer
-        data={data}
-        margin={{ left: 12, right: 12 }}
-      >
+      <RechartsPrimitive.LineChart data={data} margin={{ left: 12, right: 12 }}>
         <ChartFrame
           xKey={xKey}
           legend={legend}
@@ -726,11 +721,7 @@ function AreaChart({
     fill === 'gradient' ? `url(#${gradientId}-${index})` : colors[key]?.color;
   return (
     <ChartContainer config={colors} className={className}>
-      <RechartsPrimitive.AreaChart
-        accessibilityLayer
-        data={data}
-        margin={{ left: 12, right: 12 }}
-      >
+      <RechartsPrimitive.AreaChart data={data} margin={{ left: 12, right: 12 }}>
         {fill === 'gradient' && (
           <defs>
             {series.map((key, index) => (
@@ -782,7 +773,7 @@ function AreaChart({
 }
 
 interface PieChartProps {
-  /** The slices to plot, one row each. */
+  /** The slices to plot, one row each. The palette has five colors, so a sixth slice repeats the first slice's color. */
   data: ChartDatum[];
   /** The key in each row that holds the slice's name, such as `browser`. */
   nameKey: string;
@@ -851,7 +842,7 @@ function PieChart({
 
   return (
     <ChartContainer config={colors} className={className}>
-      <RechartsPrimitive.PieChart accessibilityLayer>
+      <RechartsPrimitive.PieChart>
         {tooltip && (
           <ChartTooltip
             content={<ChartTooltipContent nameKey={nameKey} hideLabel />}

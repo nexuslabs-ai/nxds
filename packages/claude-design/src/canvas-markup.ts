@@ -1,6 +1,6 @@
 // A docs story's JSX as canvas markup: each nxds part becomes an
 // `<x-import component-from-global-scope="Nxds.Part">` element, plain HTML
-// stays HTML. Each value is written the way src/attributes.ts reads it back:
+// stays HTML. Each value is written the way src/runtime/attributes.ts reads it back:
 // arrays as comma lists, objects as JSON, dates as ISO strings. Returns null
 // when the story needs something an attribute can't hold: state, a computed
 // value, an element passed as a prop.
@@ -9,8 +9,8 @@
 // the smoke renders as plain React to compare against the canvas.
 import ts from 'typescript';
 
-import { kebab } from './canvas-wrapper.ts';
 import { iconSet } from './icon-set.ts';
+import { kebab } from './runtime/canvas-wrapper.ts';
 import { NAMESPACE } from './system-index.ts';
 
 const INDENT = '  ';
@@ -165,7 +165,7 @@ function jsonText(value: TreeValue): string {
   );
 }
 
-// The attribute string src/attributes.ts converts back to `value`.
+// The attribute string src/runtime/attributes.ts converts back to `value`.
 function attributeString(value: TreeValue): string {
   if (typeof value === 'string') return value;
   if (typeof value === 'number' || typeof value === 'boolean') {

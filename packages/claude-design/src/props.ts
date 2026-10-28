@@ -54,6 +54,12 @@ const SHARED_DOM_INTERFACES = new Set([
 
 const OMITTED_PROPS = new Set(['key', 'ref']);
 
+/** The `type` that makes Accordion's and ToggleGroup's `value` a list. */
+const MULTIPLE = { prop: 'type', value: 'multiple' };
+
+/** DayPicker's `mode`, which picks how DatePicker's `selected` reads. */
+const DATE_SELECTION = { prop: 'mode', list: 'multiple', range: 'range' };
+
 /** Props that take an icon element, which a canvas sets by icon name. */
 const ICON_PROPS = new Set(['startIcon', 'endIcon', 'leftIcon', 'rightIcon']);
 
@@ -364,10 +370,15 @@ function listOf(
   });
   if (items.length === 0) return null;
   if (items.every(isDate)) {
-    return { kind: 'list', item: { kind: 'date', selection: false }, single };
+    return {
+      kind: 'list',
+      item: { kind: 'date', selection: null },
+      single,
+      listWhen: null,
+    };
   }
   const item = scalarOf(items);
-  return item ? { kind: 'list', item, single } : null;
+  return item ? { kind: 'list', item, single, listWhen: null } : null;
 }
 
 // DatePicker's `selected` across its modes: a Date, Date[] and DateRange.
@@ -409,9 +420,9 @@ function attributeOf(
   if (reason) return { kind: 'none', reason };
   if (JSON_PROPS[part]?.includes(name)) return jsonOf(checker, type, values);
 
-  if (values.every(isDate)) return { kind: 'date', selection: false };
+  if (values.every(isDate)) return { kind: 'date', selection: null };
   if (isDateSelection(checker, values))
-    return { kind: 'date', selection: true };
+    return { kind: 'date', selection: DATE_SELECTION };
 
   const arrays = values.filter((member) => arrayItem(checker, member));
   const rest = values.filter((member) => !arrays.includes(member));
@@ -460,7 +471,7 @@ function mergeAttributes(
   }
   // DatePicker's `selected`: a Date, a Date[] or a DateRange, by mode.
   if (present.some((attribute) => attribute?.kind === 'date')) {
-    return { kind: 'date', selection: true } satisfies DateAttribute;
+    return { kind: 'date', selection: DATE_SELECTION } satisfies DateAttribute;
   }
   throw new Error(
     `index.d.ts: ${part}.${name} has a different type in each member of its props union; add a rule for it in src/props.ts.`
@@ -534,10 +545,10 @@ function attributeFormat(attribute: Attribute | null) {
             ? 'number'
             : 'string';
       const list = LIST_FORMAT[item] ?? '';
-      const { single } = attribute;
+      const { single, listWhen } = attribute;
       if (!single) return list;
-      if (single.string) {
-        return `One value. With \`type="multiple"\`, a ${list.charAt(0).toLowerCase()}${list.slice(1)}`;
+      if (listWhen) {
+        return `One value. With \`${listWhen.prop}="${listWhen.value}"\`, a ${list.charAt(0).toLowerCase()}${list.slice(1)}`;
       }
       const options = [
         ...single.literals.map((literal) => `\`${literal}\``),
@@ -545,10 +556,14 @@ function attributeFormat(attribute: Attribute | null) {
       ];
       return `${options.join(' or ')}, or a ${list.charAt(0).toLowerCase()}${list.slice(1)}`;
     }
-    case 'date':
-      return attribute.selection
-        ? 'ISO date, such as `2026-10-28`. With `mode="multiple"`, a comma list of dates. With `mode="range"`, the first and last date: `2026-10-01,2026-10-07`.'
-        : 'ISO date, such as `2026-10-28`, or a month, such as `2026-10`.';
+    case 'date': {
+      const { selection } = attribute;
+      if (!selection) {
+        return 'ISO date, such as `2026-10-28`, or a month, such as `2026-10`.';
+      }
+      const { prop, list, range } = selection;
+      return `ISO date, such as \`2026-10-28\`. With \`${prop}="${list}"\`, a comma list of dates. With \`${prop}="${range}"\`, the first and last date: \`2026-10-01,2026-10-07\`.`;
+    }
     case 'icon':
       return 'An icon name, such as `plus`. `components/Icon/README.md` lists every name.';
     case 'json':
@@ -600,32 +615,38 @@ function propSymbols(checker: ts.TypeChecker, type: ts.Type) {
   return { byName, members: members.length };
 }
 
-// Whether the part has a `type` that can be "multiple", as Accordion and
-// ToggleGroup do.
-function takesMultiple(
+// The `type="multiple"` that picks a list, when the part has one, as
+// Accordion and ToggleGroup do.
+function multipleWhen(
   checker: ts.TypeChecker,
   part: string,
   byName: Map<string, ts.Symbol[]>,
   declaration: ts.Node
 ) {
-  return (byName.get('type') ?? []).some((symbol) => {
+  const takes = (byName.get(MULTIPLE.prop) ?? []).some((symbol) => {
     const attribute = attributeOf(
       checker,
       part,
-      'type',
+      MULTIPLE.prop,
       checker.getTypeOfSymbolAtLocation(symbol, declaration)
     );
     return (
-      attribute?.kind === 'scalar' && attribute.literals.includes('multiple')
+      attribute?.kind === 'scalar' &&
+      attribute.literals.includes(MULTIPLE.value)
     );
   });
+  return takes ? MULTIPLE : null;
 }
 
 // A list that also takes any string, such as Button's `value`, is a list only
 // where `type="multiple"` picks the array.
-function singleUnlessMultiple(attribute: Attribute | null, multiple: boolean) {
+function singleUnlessMultiple(
+  attribute: Attribute | null,
+  multiple: ListAttribute['listWhen']
+) {
   if (attribute?.kind !== 'list' || !attribute.single?.string) return attribute;
-  return multiple ? attribute : { ...attribute.single, number: false };
+  if (!multiple) return { ...attribute.single, number: false };
+  return { ...attribute, listWhen: multiple };
 }
 
 // DOM event handlers a library re-declares, such as Recharts' `onClick`.
@@ -645,7 +666,7 @@ function flatComponent(
   const props: FlatProp[] = [];
   if (resolved) {
     const { byName, members } = propSymbols(checker, resolved.type);
-    const multiple = takesMultiple(checker, name, byName, resolved.declaration);
+    const multiple = multipleWhen(checker, name, byName, resolved.declaration);
     for (const [propName, symbols] of byName) {
       const [first] = symbols;
       if (!first || !listed(first)) continue;
@@ -731,10 +752,21 @@ function rechartsExports(
   );
 }
 
+const NARROWED_TYPES = ['string', 'number', 'boolean'];
+
 // The one type a `prop:type` entry names, for a prop whose type takes
 // several or is generic, such as Recharts' `TypedDataKey<...>`.
-function narrowed(attribute: Attribute | null, to: string | undefined) {
+function narrowed(
+  attribute: Attribute | null,
+  entry: string,
+  to: string | undefined
+) {
   if (!to) return attribute;
+  if (!NARROWED_TYPES.includes(to)) {
+    throw new Error(
+      `src/canvas/recharts.ts: ${entry} names ${to}; write string, number or boolean.`
+    );
+  }
   return {
     ...emptyScalar(),
     string: to === 'string',
@@ -764,7 +796,11 @@ function rechartsParts(
     );
     const props = [...specs].flatMap(([prop, to]) => {
       const found = part.props.find((candidate) => candidate.name === prop);
-      const attribute = narrowed(found?.attribute ?? null, to);
+      const attribute = narrowed(
+        found?.attribute ?? null,
+        `${name}.${prop}`,
+        to
+      );
       if (!found || !attribute || attribute.kind === 'none') {
         problems.push(
           `${name}.${prop}${found ? `: ${found.type}` : ' (no such prop)'}`
@@ -825,7 +861,7 @@ function canvasProp(
   };
 }
 
-// The export's own parts, in src/canvas/, which @nxds/react doesn't have.
+// The export's own parts, in src/runtime/, which @nxds/react doesn't have.
 function canvasParts(): FlatComponent[] {
   const iconName: Attribute = { kind: 'icon', as: 'name' };
   return [
@@ -942,25 +978,8 @@ export function renderIndexDts(components: readonly FlatComponent[]) {
     '// Each type is what the prop’s x-import attribute holds.',
     "import type * as React from 'react';",
     ...interfaces,
-    ...iconSet().flatMap(({ component }) => ['', ...iconProps(component)]),
     '',
   ].join('\n');
-}
-
-// Each `Nxds.Icons.IconName` takes Tabler's props.
-function iconProps(icon: string) {
-  return [
-    `/** Tabler icon, mounted as \`Nxds.Icons.${icon}\`. */`,
-    `export interface ${icon}Props {`,
-    '  /** Width and height in px. @default 24 */',
-    '  size?: number;',
-    '  /** Stroke width. @default 2 */',
-    '  stroke?: number;',
-    '  /** Stroke colour. @default "currentColor" */',
-    '  color?: string;',
-    '  className?: string;',
-    '}',
-  ];
 }
 
 export interface Coverage {

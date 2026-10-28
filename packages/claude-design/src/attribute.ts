@@ -20,13 +20,15 @@ export interface ListAttribute {
   item: ScalarAttribute | DateAttribute;
   /** The prop also takes one value, as Accordion's `value` does for `type="single"`. */
   single: ScalarAttribute | null;
+  /** The prop value that picks the list over `single`, as Accordion's `type="multiple"`. Without one, a value `single` takes is one value. */
+  listWhen: { prop: string; value: string } | null;
 }
 
 /** A Date, written `YYYY-MM-DD` or `YYYY-MM`. */
 export interface DateAttribute {
   kind: 'date';
-  /** DatePicker's `selected`: one date, a comma list or a range, by `mode`. */
-  selection: boolean;
+  /** DatePicker's `selected`: the prop whose `list` or `range` value picks a comma list or a range over one date. */
+  selection: { prop: string; list: string; range: string } | null;
 }
 
 /** An object or array of objects, written as JSON. */
@@ -59,11 +61,12 @@ export interface NoAttribute {
   reason: string;
 }
 
-export type Attribute =
+/** An attribute bundle.js converts from its string. */
+export type CanvasAttribute =
   | ScalarAttribute
   | ListAttribute
   | DateAttribute
   | JsonAttribute
-  | IconAttribute
-  | ContentAttribute
-  | NoAttribute;
+  | IconAttribute;
+
+export type Attribute = CanvasAttribute | ContentAttribute | NoAttribute;
