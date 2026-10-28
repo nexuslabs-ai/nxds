@@ -4,22 +4,19 @@ import type {
   Attribute,
   CanvasAttribute,
   ScalarAttribute,
+  SchemaAttribute,
+  SchemaScalar,
 } from './attribute.ts';
 import type { FlatComponent } from './props.ts';
 import type { CanvasSchema } from './runtime/attributes.ts';
 import { kebab } from './runtime/canvas-names.ts';
 
-function withoutSuggested({
-  kind,
-  literals,
-  string,
-  number,
-  boolean,
-}: ScalarAttribute): ScalarAttribute {
-  return { kind, literals, string, number, boolean };
+function withoutSuggested(attribute: ScalarAttribute): SchemaScalar {
+  const { suggested: _suggested, ...rest } = attribute;
+  return rest;
 }
 
-function forRuntime(attribute: CanvasAttribute): CanvasAttribute {
+function forRuntime(attribute: CanvasAttribute): SchemaAttribute {
   if (attribute.kind === 'scalar') return withoutSuggested(attribute);
   if (attribute.kind !== 'list') return attribute;
   const { item, single } = attribute;
@@ -35,7 +32,7 @@ function forRuntime(attribute: CanvasAttribute): CanvasAttribute {
 function converted(
   attribute: Attribute | null,
   required: boolean
-): CanvasAttribute | null {
+): SchemaAttribute | null {
   if (!attribute || attribute.kind === 'content' || attribute.kind === 'none') {
     return null;
   }
@@ -62,7 +59,7 @@ export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
       .map((prop) => [kebab(prop.name), prop.name]);
     if (renames.length > 0)
       schema.renames[part.name] = Object.fromEntries(renames);
-    const attributes: Record<string, CanvasAttribute> = {};
+    const attributes: Record<string, SchemaAttribute> = {};
     const required: string[] = [];
     for (const prop of part.props) {
       const isRequired = !prop.optional && prop.defaultValue === null;

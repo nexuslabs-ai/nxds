@@ -9,7 +9,7 @@ export interface ScalarAttribute {
   literals: (string | number)[];
   string: boolean;
   /** Any string is accepted, but the literals are the suggestions (`string & {}`). Only index.d.ts reads it, so nxds:canvas-schema leaves it out. */
-  suggested?: boolean;
+  suggested: boolean;
   number: boolean;
   boolean: boolean;
 }
@@ -70,3 +70,19 @@ export type CanvasAttribute =
   | IconAttribute;
 
 export type Attribute = CanvasAttribute | ContentAttribute | NoAttribute;
+
+/** A scalar as nxds:canvas-schema ships it, without the panel-only `suggested`. */
+export type SchemaScalar = Omit<ScalarAttribute, 'suggested'>;
+
+export interface SchemaList extends Omit<ListAttribute, 'item' | 'single'> {
+  item: SchemaScalar | DateAttribute;
+  single: SchemaScalar | null;
+}
+
+/** A CanvasAttribute as nxds:canvas-schema ships it. */
+export type SchemaAttribute =
+  | SchemaScalar
+  | SchemaList
+  | DateAttribute
+  | JsonAttribute
+  | IconAttribute;

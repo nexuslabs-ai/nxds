@@ -10,12 +10,12 @@ import { CANVAS_SCHEMA } from 'nxds:canvas-schema';
 import { ICON_COMPONENTS } from 'nxds:icon-names';
 
 import type {
-  CanvasAttribute,
   DateAttribute,
   IconAttribute,
   JsonAttribute,
-  ListAttribute,
-  ScalarAttribute,
+  SchemaAttribute,
+  SchemaList,
+  SchemaScalar,
 } from '../attribute.ts';
 
 import { kebab } from './canvas-names.ts';
@@ -24,7 +24,7 @@ import { Icon } from './icon.ts';
 
 export interface CanvasSchema {
   /** Each part's props whose attribute string converts, by prop. */
-  attributes: Record<string, Record<string, CanvasAttribute>>;
+  attributes: Record<string, Record<string, SchemaAttribute>>;
   /** Each part's props that have no default, so a bad value can't just be dropped. */
   required: Record<string, string[]>;
   /** Parts that read their children's types, which get them without canvas wrappers. */
@@ -80,7 +80,7 @@ function literals(values: readonly (string | number)[]) {
 
 function scalar(
   value: string,
-  attribute: ScalarAttribute,
+  attribute: SchemaScalar,
   required = false
 ): Converted {
   const number = toNumber(value);
@@ -140,10 +140,7 @@ function parseJson(value: string): unknown {
 
 // A comma list, or a JSON array for items that hold commas. Each item takes
 // the item's type.
-function items(
-  value: string,
-  item: ScalarAttribute | DateAttribute
-): Converted {
+function items(value: string, item: SchemaScalar | DateAttribute): Converted {
   const trimmed = value.trim();
   if (trimmed === '') return { value: [] };
   const parts = trimmed.startsWith('[')
@@ -166,7 +163,7 @@ function items(
 
 function list(
   value: string,
-  { item, single, listWhen }: ListAttribute,
+  { item, single, listWhen }: SchemaList,
   props: Props
 ): Converted {
   if (!single) return items(value, item);
@@ -252,7 +249,7 @@ function json(value: string, attribute: JsonAttribute): Converted {
 
 function convert(
   value: string,
-  attribute: CanvasAttribute,
+  attribute: SchemaAttribute,
   props: Props,
   required: boolean
 ): Converted {
@@ -273,7 +270,7 @@ function convert(
 }
 
 /** The prop whose value picks how `attribute` reads, such as Accordion's `type`. */
-function pickerOf(attribute: CanvasAttribute) {
+function pickerOf(attribute: SchemaAttribute) {
   if (attribute.kind === 'list') return attribute.listWhen?.prop ?? null;
   if (attribute.kind === 'date') return attribute.selection?.prop ?? null;
   return null;
@@ -293,12 +290,12 @@ let cachedLength = 0;
 // The same attribute string gives the same list, date or object on every
 // render, so a chart doesn't replay its entry animation and effects don't
 // fire again. Once the keys pass MAX_CACHED_LENGTH characters, the least
-// recently used go first.
+// recently used go first. A key longer than that on its own isn't cached.
 function cachedConvert(
   part: string,
   prop: string,
   value: string,
-  attribute: CanvasAttribute,
+  attribute: SchemaAttribute,
   props: Props,
   required: boolean
 ): Converted {
@@ -306,6 +303,9 @@ function cachedConvert(
   const key = [part, prop, picker ? String(props[picker]) : '', value].join(
     '\u0000'
   );
+  if (key.length > MAX_CACHED_LENGTH) {
+    return convert(value, attribute, props, required);
+  }
   const cached = conversions.get(key);
   if (cached) {
     conversions.delete(key);
@@ -326,7 +326,7 @@ function cachedConvert(
 
 // What a required prop gets when its attribute doesn't fit. `id` keeps a
 // string placeholder unique to its part and the same on every render.
-function fallback(attribute: CanvasAttribute, prop: string, id: string) {
+function fallback(attribute: SchemaAttribute, prop: string, id: string) {
   if (attribute.kind === 'list') return [];
   if (attribute.kind === 'json' && attribute.shape === 'array') return [];
   if (attribute.kind === 'json' && attribute.shape === 'object') return {};
@@ -368,7 +368,7 @@ function describe(value: unknown) {
 
 // The props that pick how another prop reads come first, so a bad one has
 // already fallen back to its default.
-function ordered(props: Props, attributes: Record<string, CanvasAttribute>) {
+function ordered(props: Props, attributes: Record<string, SchemaAttribute>) {
   const pickers = new Set(Object.values(attributes).map(pickerOf));
   const keys = Object.keys(props);
   return [
