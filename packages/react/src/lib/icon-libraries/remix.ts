@@ -31,6 +31,7 @@ export {
 export {
   RiCheckLine as IconCheck,
   RiCircleFill as IconCircleFilled,
+  RiFileCopyLine as IconCopy,
   RiSubtractLine as IconMinus,
   RiPencilLine as IconPencil,
   RiAddLine as IconPlus,

@@ -1,5 +1,19 @@
 # @nxds/docs
 
+## 0.0.21
+
+### Patch Changes
+
+- @nxds/react@0.9.0
+
+## 0.0.20
+
+### Patch Changes
+
+- Updated dependencies [f629fb8]
+- Updated dependencies [91d13a1]
+  - @nxds/react@0.8.1
+
 ## 0.0.19
 
 ### Patch Changes

@@ -25,6 +25,7 @@ import {
   Cancel01Icon,
   CheckmarkCircle02Icon,
   CircleIcon,
+  Copy01Icon,
   DragDropVerticalIcon,
   HashtagIcon,
   InformationCircleIcon,
@@ -70,6 +71,7 @@ export const IconSelector = hugeicon(UnfoldMoreIcon);
 // Actions
 export const IconCheck = hugeicon(Tick02Icon);
 export const IconCircleFilled = hugeicon(CircleIcon, { fill: 'currentColor' });
+export const IconCopy = hugeicon(Copy01Icon);
 export const IconMinus = hugeicon(MinusSignIcon);
 export const IconPencil = hugeicon(PencilEdit02Icon);
 export const IconPlus = hugeicon(PlusSignIcon);

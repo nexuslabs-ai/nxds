@@ -73,6 +73,7 @@ export const GROUPS: readonly (readonly [string, readonly string[]])[] = [
       'Avatar',
       'Badge',
       'Kbd',
+      'CodeBlock',
       'Marker',
       'Accordion',
       'Collapsible',

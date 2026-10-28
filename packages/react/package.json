@@ -1,6 +1,6 @@
 {
   "name": "@nxds/react",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "description": "React components built with Radix UI and Tailwind CSS",
   "//": [
@@ -8,29 +8,59 @@
     "Tracked for restructure: https://github.com/nexuslabs-ai/nxds/issues/66 (move to @nxds/tailwind dependsOn @nxds/core#build:tailwind in turbo)."
   ],
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./utils": {
-      "types": "./dist/lib/utils.d.ts",
-      "import": "./dist/utils.mjs",
-      "require": "./dist/utils.js"
+      "import": {
+        "types": "./dist/lib/utils.d.ts",
+        "default": "./dist/lib/utils.mjs"
+      },
+      "require": {
+        "types": "./dist/lib/utils.d.cts",
+        "default": "./dist/lib/utils.cjs"
+      }
+    },
+    "./code-block-theme": {
+      "import": {
+        "types": "./dist/components/code-block/code-block-theme.d.ts",
+        "default": "./dist/components/code-block/code-block-theme.mjs"
+      },
+      "require": {
+        "types": "./dist/components/code-block/code-block-theme.d.cts",
+        "default": "./dist/components/code-block/code-block-theme.cjs"
+      }
     },
     "./appearance": {
-      "types": "./dist/components/appearance/provider/index.d.ts",
-      "import": "./dist/appearance.mjs",
-      "require": "./dist/appearance.js"
+      "import": {
+        "types": "./dist/components/appearance/provider/index.d.ts",
+        "default": "./dist/components/appearance/provider/index.mjs"
+      },
+      "require": {
+        "types": "./dist/components/appearance/provider/index.d.cts",
+        "default": "./dist/components/appearance/provider/index.cjs"
+      }
     },
     "./appearance/server": {
-      "types": "./dist/components/appearance/provider/server.d.ts",
-      "import": "./dist/appearance-server.mjs",
-      "require": "./dist/appearance-server.js"
+      "import": {
+        "types": "./dist/components/appearance/provider/server.d.ts",
+        "default": "./dist/components/appearance/provider/server.mjs"
+      },
+      "require": {
+        "types": "./dist/components/appearance/provider/server.d.cts",
+        "default": "./dist/components/appearance/provider/server.cjs"
+      }
     },
     "./styles.css": "./dist/react.css"
   },
@@ -39,10 +69,13 @@
     "build": "vite build",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
+    "typecheck:dist": "node scripts/typecheck-dist.mjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.58.9",
+    "@shikijs/langs": "4.4.3",
     "@storybook/addon-a11y": "^10.1.10",
     "@storybook/addon-docs": "^10.1.10",
     "@storybook/react-vite": "^10.1.10",
@@ -57,6 +90,7 @@
     "react-hook-form": "^7.77.0",
     "react-resizable-panels": "^4.11.2",
     "recharts": "^3.8.1",
+    "shiki": "4.4.3",
     "sonner": "^2.0.7",
     "storybook": "^10.1.10",
     "tailwindcss": "4.3.0",
@@ -64,7 +98,7 @@
     "typescript": "^5.9.3",
     "vaul": "^1.1.2",
     "vite": "^7.3.0",
-    "vite-plugin-dts": "^5.0.3"
+    "vite-plugin-dts": "^5.1.2"
   },
   "dependencies": {
     "@hugeicons/core-free-icons": "^4.3.5",

@@ -43,10 +43,10 @@ const forwarded = useForwardPropsEmits(delegated, emits);
   <DialogPortal>
     <SheetOverlay />
     <DialogContent
-      v-bind="{ ...$attrs, ...forwarded }"
       data-slot="sheet-content"
       :data-side="side"
       :class="cn(sheetContentVariants({ side }), props.class)"
+      v-bind="{ ...$attrs, ...forwarded }"
     >
       <slot />
       <DialogClose

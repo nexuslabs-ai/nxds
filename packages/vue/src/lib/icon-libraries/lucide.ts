@@ -32,6 +32,7 @@ export {
 // Actions
 export {
   Check as IconCheck,
+  Copy as IconCopy,
   Minus as IconMinus,
   Pencil as IconPencil,
   Plus as IconPlus,

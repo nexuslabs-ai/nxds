@@ -62,6 +62,23 @@ const config = {
 
 const shortMonth = (value: string) => value.slice(0, 3);
 
+/** The elements inside `chart` that its `nx:[&_{selector}]:{utility}` classes style. */
+function styledBy(chart: Element | null, utility: string) {
+  if (!chart) return [];
+  const prefix = 'nx:[&_';
+  const suffix = `]:${utility}`;
+  return Array.from(chart.classList)
+    .filter(
+      (className) => className.startsWith(prefix) && className.endsWith(suffix)
+    )
+    .flatMap((className) => {
+      const selector = className
+        .slice(prefix.length, -suffix.length)
+        .replace(/_/g, ' ');
+      return Array.from(chart.querySelectorAll(selector));
+    });
+}
+
 function AreaExample() {
   return (
     <ChartContainer config={config}>
@@ -235,6 +252,22 @@ export const WithDataAttributes: Story = {
     await expect(chart).toHaveAttribute('data-chart');
     // #497: chart base text migrated from the raw named text-size utility.
     await expect(chart).toHaveClass('nx:typography-body-small');
+  },
+};
+
+export const AxisTickText: Story = {
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <BarExample />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const tick = (await canvas.findByText('Jan')).closest('text');
+    const chart = canvasElement.querySelector('[data-slot="chart"]');
+
+    await expect(styledBy(chart, 'fill-muted-foreground')).toContain(tick);
+    await expect(styledBy(chart, 'tabular-nums')).toContain(tick);
   },
 };
 

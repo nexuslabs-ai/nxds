@@ -1,6 +1,6 @@
 {
   "name": "@nxds/react-18",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "description": "nxds React components for React 18, generated from @nxds/react",
   "type": "module",
@@ -12,6 +12,8 @@
     "build-storybook": "storybook build"
   },
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.58.9",
+    "@shikijs/langs": "4.4.3",
     "@storybook/addon-a11y": "^10.1.10",
     "@storybook/addon-docs": "^10.1.10",
     "@storybook/react-vite": "^10.1.10",
@@ -28,6 +30,7 @@
     "react-hook-form": "^7.77.0",
     "react-resizable-panels": "^4.11.2",
     "recharts": "^3.8.1",
+    "shiki": "4.4.3",
     "sonner": "^2.0.7",
     "storybook": "^10.1.10",
     "tailwindcss": "4.3.0",
@@ -35,7 +38,7 @@
     "typescript": "^5.9.3",
     "vaul": "^1.1.2",
     "vite": "^7.3.0",
-    "vite-plugin-dts": "^5.0.3"
+    "vite-plugin-dts": "^5.1.2"
   },
   "license": "MIT",
   "dependencies": {

@@ -53,7 +53,7 @@ function findById(node: Nodes, id: string) {
 
 /**
  * Drops on-screen-only elements, `data-md-skip` previews and decorative
- * `aria-hidden` elements, and labels each code block with its language.
+ * `aria-hidden` elements.
  */
 function prune(node: Element) {
   node.children = node.children.filter(
@@ -75,18 +75,6 @@ function prune(node: Element) {
         properties: {},
         children: [{ type: 'text', value: frameworkLabel(framework) }],
       });
-    }
-    // rehype-remark reads a code block's language from its `language-*` class.
-    if (child.tagName === 'pre' && child.properties.dataLanguage) {
-      const code = child.children.find(
-        (inner): inner is Element =>
-          inner.type === 'element' && inner.tagName === 'code'
-      );
-      if (code) {
-        code.properties.className = [
-          `language-${child.properties.dataLanguage}`,
-        ];
-      }
     }
     prune(child);
   }

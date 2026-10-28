@@ -31,6 +31,7 @@ export {
 export {
   IconCheck,
   IconCircleFilled,
+  IconCopy,
   IconMinus,
   IconPencil,
   IconPlus,

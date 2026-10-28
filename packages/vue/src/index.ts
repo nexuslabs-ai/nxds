@@ -17,6 +17,7 @@ export * from './components/carousel';
 export * from './components/checkbox';
 export * from './components/choice-card';
 export * from './components/choice-row';
+export * from './components/code-block';
 export * from './components/collapsible';
 export * from './components/combobox';
 export * from './components/command';
@@ -57,6 +58,7 @@ export * from './components/select';
 export * from './components/separator';
 export * from './components/sheet';
 export * from './components/show';
+export * from './components/sidebar';
 export * from './components/skeleton';
 export * from './components/slider';
 export * from './components/sonner';
@@ -67,6 +69,7 @@ export * from './components/tabs';
 export * from './components/textarea';
 export * from './components/toggle';
 export * from './components/toggle-group';
+export * from './components/toolbar';
 export * from './components/tooltip';
 export {
   type FilterError,

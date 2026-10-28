@@ -33,6 +33,7 @@ export {
 // Actions
 export {
   PhCheck as IconCheck,
+  PhCopy as IconCopy,
   PhMinus as IconMinus,
   PhPencilSimple as IconPencil,
   PhPlus as IconPlus,

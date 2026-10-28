@@ -1,7 +1,7 @@
 // components/bundle.js: @nxds/react-18 as ONE classic script. It reads React
 // and ReactDOM from the page's globals and assigns `window.Nxds`.
 import { react18Src } from '@nxds/source-model/roots.mjs';
-import { build, type Plugin } from 'esbuild';
+import { build, type Metafile, type Plugin } from 'esbuild';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
@@ -10,6 +10,8 @@ import { ICONS } from './icons.ts';
 import { NAMESPACE } from './system-index.ts';
 
 const JSX_RUNTIME = path.join(import.meta.dirname, 'jsx-runtime.ts');
+const CANVAS_SLOT = path.join(import.meta.dirname, 'slot.ts');
+const RADIX_SLOT = '@radix-ui/react-slot';
 
 /** What each React module the sources import reads from the page. */
 const REACT_GLOBALS: Record<string, string> = {
@@ -102,6 +104,45 @@ const pageGlobals: Plugin = {
   },
 };
 
+// Every Slot, Radix's and nxds's, looks through the wrapper a canvas puts
+// around each component (src/slot.ts). The shim itself gets the copy the
+// React 18 sources use.
+const canvasSlot: Plugin = {
+  name: 'nxds-canvas-slot',
+  setup(builder) {
+    builder.onResolve({ filter: /^@radix-ui\/react-slot$/ }, (args) => {
+      if (args.pluginData === CANVAS_SLOT) return undefined;
+      if (args.importer !== CANVAS_SLOT) return { path: CANVAS_SLOT };
+      return builder.resolve(args.path, {
+        kind: args.kind,
+        resolveDir: react18Src,
+        pluginData: CANVAS_SLOT,
+      });
+    });
+  },
+};
+
+// One copy of react-slot, reached only through the shim, so no Slot misses it.
+function assertOneSlot(metafile: Metafile) {
+  const copies = Object.keys(metafile.inputs).filter((input) =>
+    input.includes(`${RADIX_SLOT}/`)
+  );
+  const importers = Object.entries(metafile.inputs)
+    .filter(([, input]) =>
+      input.imports.some((imported) => copies.includes(imported.path))
+    )
+    .map(([file]) => file);
+  if (
+    copies.length !== 1 ||
+    importers.length !== 1 ||
+    path.resolve(importers[0] ?? '') !== CANVAS_SLOT
+  ) {
+    throw new Error(
+      `bundle.js: ${RADIX_SLOT} must be bundled once and imported only by src/slot.ts; found ${copies.join(', ') || 'none'} imported by ${importers.join(', ') || 'nothing'}.`
+    );
+  }
+}
+
 function virtualModules(slugs: readonly string[]): Plugin {
   return {
     name: 'nxds-virtual-modules',
@@ -154,12 +195,14 @@ export async function buildBundle(
     loader: { '.css': 'empty' },
     banner: { js: bundleHeader(folders.map((folder) => folder.name)) },
     plugins: [
+      canvasSlot,
       pageGlobals,
       virtualModules(folders.map((folder) => folder.slug)),
     ],
     logOverride: { 'module-level-directive': 'silent' },
     metafile: true,
   });
+  assertOneSlot(result.metafile);
   const [output] = result.outputFiles;
   if (!output) throw new Error('bundle.js: esbuild wrote no output.');
   return { code: output.text, metafile: result.metafile };

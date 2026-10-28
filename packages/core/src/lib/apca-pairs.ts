@@ -102,7 +102,7 @@ export const APCA_PAIRS = [
     ink(`${family}-subtle-foreground`, `${family}-subtle-active`, 'ui'),
   ]),
   ...CATEGORICAL_INDICES.flatMap((index) =>
-    ['container', 'background'].map((bg) => ({
+    ['container', 'container-hover', 'background'].map((bg) => ({
       ...ink(`chart-categorical-${index}`, bg, 'ui'),
       offset: (index - 1) * CHART_STAGGER_LC,
     }))
