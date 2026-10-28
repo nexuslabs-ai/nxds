@@ -83,7 +83,7 @@ export default async function Home() {
             />
           }
         >
-          <GalleryPreview chapter="explore" />
+          <GalleryPreview />
         </ChapterSection>
         <ChapterSection
           id="customize"
@@ -91,7 +91,7 @@ export default async function Home() {
           subtitle="Change one setting. See your system respond."
           actions={<ChapterLinks href="/playground" label="Open Playground" />}
         >
-          <CustomizePreview chapter="customize" />
+          <CustomizePreview />
         </ChapterSection>
         <ChapterSection
           id="coexist"
@@ -105,7 +105,7 @@ export default async function Home() {
           }
           className="nx:coexist-section"
         >
-          <CoexistPreview chapter="coexist" />
+          <CoexistPreview />
         </ChapterSection>
         <ChapterSection
           id="frameworks"
@@ -125,10 +125,7 @@ export default async function Home() {
           subtitle="The example you explore is the example we check."
           actions={<StorybookLink />}
         >
-          <StoryTestIterations
-            chapter="stories"
-            storyCode={await highlightStories()}
-          />
+          <StoryTestIterations storyCode={await highlightStories()} />
         </ChapterSection>
         <Community />
       </div>

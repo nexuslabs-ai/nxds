@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useId } from 'react';
 
 import { Show, type ShowProps } from '@/components/show/show';
 import {
@@ -17,16 +17,13 @@ import {
   TooltipTrigger,
 } from '@/components/tooltip/tooltip';
 
-import { type HomeSection, useActiveSection } from './active-section';
 import { toolIcons, type ToolName } from './tool-icons';
 
 /**
- * A chapter's preview: the canvas, and the floating toolbar whose tools pick
- * what the canvas shows. The bar sits at the bottom of the screen and shows
- * only while its chapter is the active section.
+ * A chapter's preview: the canvas, and under it the toolbar whose tools pick
+ * what the canvas shows.
  */
 export function ChapterPreview<T extends ToolName>({
-  chapter,
   label,
   tools,
   selected,
@@ -37,8 +34,6 @@ export function ChapterPreview<T extends ToolName>({
   panel,
   children,
 }: {
-  /** The id of the section this preview sits in. */
-  chapter: HomeSection;
   /** Names the toolbar and its tools. */
   label: string;
   tools: readonly T[];
@@ -55,17 +50,8 @@ export function ChapterPreview<T extends ToolName>({
   /** What the canvas shows. */
   children: ReactNode;
 }) {
-  const active = useActiveSection(chapter);
-  const [open, setOpen] = useState(false);
-  // A panel left open closes with its chapter, so coming back doesn't reopen
-  // it and move focus into it.
-  const [wasActive, setWasActive] = useState(active);
-  if (active !== wasActive) {
-    setWasActive(active);
-    if (!active) setOpen(false);
-  }
-
-  const toolId = (index: number) => `${chapter}-tool-${index}`;
+  const id = useId();
+  const toolId = (index: number) => `${id}-tool-${index}`;
   function selectTool(value: string) {
     const tool = tools.find((item) => item === value);
     if (tool) onSelect(tool);
@@ -76,8 +62,6 @@ export function ChapterPreview<T extends ToolName>({
       aria-label={`${label} tools`}
       value={selected}
       onValueChange={selectTool}
-      open={open}
-      onOpenChange={setOpen}
     >
       {tools.map((tool, index) => {
         const name: ToolName = tool;
@@ -134,7 +118,7 @@ export function ChapterPreview<T extends ToolName>({
       <ChapterCanvas grows={grows} labelledBy={toolId(tools.indexOf(selected))}>
         {children}
       </ChapterCanvas>
-      <div className="nx:chapter-toolbar" data-active={active}>
+      <div className="nx:chapter-toolbar">
         <Toolbar variant="floating" aria-label={label}>
           {toolsAndActions ?? toolGroup}
         </Toolbar>

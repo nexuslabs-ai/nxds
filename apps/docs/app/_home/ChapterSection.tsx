@@ -7,9 +7,16 @@ import { cn } from '@/lib/utils';
 
 import { requireSection } from '../_lib/manifest';
 
-import type { HomeSection } from './active-section';
-
 const GET_STARTED_HREF = requireSection('getting-started').href;
+
+/** The homepage section ids, each a link target such as `/#stories`. */
+export type HomeSection =
+  | 'explore'
+  | 'customize'
+  | 'coexist'
+  | 'frameworks'
+  | 'stories'
+  | 'community';
 
 /** One homepage chapter: its title block, then its preview as `children`. */
 export function ChapterSection({
@@ -35,7 +42,6 @@ export function ChapterSection({
   return (
     <section
       id={id}
-      data-home-section
       aria-labelledby={titleId}
       className={cn('nx:site-column nx:home-section', className)}
     >

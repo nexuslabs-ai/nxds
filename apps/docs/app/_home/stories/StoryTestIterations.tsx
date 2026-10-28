@@ -49,7 +49,6 @@ import {
   IconMinus,
   IconX,
 } from '../../_lib/switchable-icons';
-import type { HomeSection } from '../active-section';
 import { ChapterPreview } from '../ChapterPreview';
 
 import type { StoryCode } from './story-code';
@@ -119,11 +118,8 @@ function stepDelay(reduceMotion: boolean) {
  * that picks the story and runs its checks on the live example.
  */
 export function StoryTestIterations({
-  chapter,
   storyCode,
 }: {
-  /** The id of the section this preview sits in. */
-  chapter: HomeSection;
   /** Every story's highlighted source, from `highlightStories()`. */
   storyCode: StoryCode;
 }) {
@@ -438,7 +434,6 @@ export function StoryTestIterations({
 
   return (
     <ChapterPreview
-      chapter={chapter}
       label="Stories"
       tools={storyTools}
       selected={tool}

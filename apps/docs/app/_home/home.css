@@ -9,15 +9,16 @@
    grid inside the site column. */
 @utility home-journey {
   --grid-gap: var(--nx-spacing-6);
-  /* Every section has the same space above its title and below its preview,
-     so the gap between any two sections is the same. The space below also
-     keeps the floating toolbar clear of the preview. */
+  /* Every section has the same space above its title and below its last
+     part, so the gap between any two sections is the same. */
   --section-space-top: var(--nx-spacing-8);
   --section-space-bottom: var(--nx-spacing-24);
   /* The first section sits under the header, not under another section. */
   --first-section-space-top: var(--nx-spacing-12);
-  /* About one title block, so a section is about one screen tall. */
+  /* About one title block, and the toolbar with the space above it, so a
+     section is about one screen tall. */
   --heading-allowance: 12rem;
+  --toolbar-allowance: 6rem;
   --preview-fade: var(--nx-spacing-24);
   --preview-min: 24rem;
   --preview-max: 100svh;
@@ -77,8 +78,8 @@
   gap: var(--nx-spacing-3);
 }
 
-/* The rest of the screen below the header, the section's spaces and a title
-   block, kept between the minimum and the desktop cap. */
+/* The rest of the screen below the header, the section's spaces, a title
+   block and a toolbar, kept between the minimum and the desktop cap. */
 @utility chapter-canvas {
   container: chapter-canvas / size;
   position: relative;
@@ -87,7 +88,8 @@
     var(--preview-min),
     min(
       100svh - var(--site-header-h) - var(--section-space-top) -
-        var(--section-space-bottom) - var(--heading-allowance),
+        var(--section-space-bottom) - var(--heading-allowance) -
+        var(--toolbar-allowance),
       var(--preview-max)
     )
   );
@@ -143,7 +145,7 @@
   background-size: var(--nx-spacing-4) var(--nx-spacing-4);
 }
 
-/* The bottom fade under the toolbar. */
+/* A bottom fade where a clipped preview ends. */
 @utility preview-fade {
   mask-image: linear-gradient(
     to bottom,
@@ -153,29 +155,9 @@
   );
 }
 
-/* Every chapter's toolbar sits at the bottom of the screen. Only the active
-   chapter's bar shows: the old bar goes at once and the new one fades in. */
+/* Each chapter's toolbar, centred under its preview. */
 @utility chapter-toolbar {
-  position: fixed;
-  inset-inline: 0;
-  inset-block-end: var(--nx-spacing-5);
-  z-index: 20;
-  display: grid;
-  justify-items: center;
-  pointer-events: none;
-  visibility: hidden;
-  opacity: 0;
-
-  & > * {
-    pointer-events: auto;
-  }
-  &[data-active='true'] {
-    visibility: visible;
-    opacity: 1;
-    transition: opacity var(--nx-motion-duration-default)
-      var(--nx-motion-ease-enter);
-  }
-  @media (width < 48rem) {
-    inset-block-end: var(--nx-spacing-4);
-  }
+  display: flex;
+  justify-content: center;
+  margin-block-start: var(--nx-spacing-6);
 }

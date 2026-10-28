@@ -4,7 +4,7 @@ import { REPO_URL } from '../_lib/site';
 import { DiscordMark, GitHubMark, XMark } from '../_lib/site-icons';
 import { DISCORD_URL, X_URL } from '../_lib/site-links';
 
-import type { HomeSection } from './active-section';
+import type { HomeSection } from './ChapterSection';
 
 const communityLinks = [
   { name: 'GitHub', href: REPO_URL, Mark: GitHubMark },
@@ -19,7 +19,6 @@ export function Community() {
   return (
     <section
       id={SECTION}
-      data-home-section
       className="nx:site-column nx:home-section"
       aria-labelledby={`${SECTION}-title`}
     >
