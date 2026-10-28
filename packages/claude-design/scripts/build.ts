@@ -148,6 +148,11 @@ async function main() {
   const parts = flatComponents();
   write('components/index.d.ts', renderIndexDts(parts));
   const report = coverage(parts);
+  if (report.missing.length > 0) {
+    throw new Error(
+      `index.d.ts: no canvas rule covers these props. Give each a JSON or not-needed entry in src/props.ts:\n${report.missing.map(({ name, type }) => `  ${name}: ${type}`).join('\n')}`
+    );
+  }
   writeFileSync(path.join(distDir, 'coverage.md'), renderCoverage(report));
 
   const exported = new Set(parts.map((part) => part.name));

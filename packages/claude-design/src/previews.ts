@@ -193,8 +193,15 @@ function firstSentence(text: string) {
   return /^[\s\S]*?[.!?](?=\s|$)/.exec(text.trim())?.[0] ?? text.trim();
 }
 
+function controlCell(prop: FlatProp) {
+  if (prop.control) return prop.control;
+  return prop.attribute?.kind === 'none'
+    ? `none: ${prop.attribute.reason}`
+    : 'none';
+}
+
 function propRow(prop: FlatProp) {
-  const control = prop.control ?? `none (${prop.reason})`;
+  const control = controlCell(prop);
   const fallback = prop.defaultValue ?? '';
   return `| \`${prop.name}\` | \`${prop.type.replace(/\|/g, '\\|')}\` | ${fallback && `\`${fallback}\``} | ${control} |`;
 }
