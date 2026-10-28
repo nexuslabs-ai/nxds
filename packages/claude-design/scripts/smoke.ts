@@ -3,8 +3,9 @@
 // links, in its order — and fails on anything a viewer would see break: a
 // preview that renders nothing or logs an error in either theme, a theme
 // switch that changes nothing, an overlay that doesn't open, close and return
-// focus, a token or preset that doesn't reach a component, or a request to
-// the network.
+// focus, a token or preset that doesn't reach a component, a tree or overlay
+// that changes when each part sits in a canvas wrapper, or a request to the
+// network.
 import type * as ReactModule from 'react';
 import type * as ReactDOMModule from 'react-dom';
 import type * as ReactDOMClient from 'react-dom/client';
@@ -90,6 +91,10 @@ interface PageGlobals {
   React: typeof ReactModule;
   ReactDOM: typeof ReactDOMClient & Pick<typeof ReactDOMModule, 'flushSync'>;
   Nxds: Record<string, unknown> & { Icons: Record<string, unknown> };
+  __nxdsElement: (
+    tree: Part | string,
+    wrapped: boolean
+  ) => ReactModule.ReactNode;
 }
 
 function fail(message: string) {
@@ -143,6 +148,64 @@ async function openPage(card: string, theme: Theme) {
 const browser = await chromium.launch();
 const context = await browser.newContext({
   viewport: { width: 960, height: 720 },
+});
+
+// `window.__nxdsElement(tree, wrapped)` turns a `Part` tree into React
+// elements. With `wrapped`, it mounts the tree the way a canvas does: every
+// element gets `data-dc-tpl` and its children as an array, and every Nxds part
+// sits inside its own `<div class="sc-host-x" style="display: contents">`,
+// with the indentation between its content's tags kept as strings.
+await context.addInitScript(() => {
+  type Node = Part | string;
+  let mounted = 0;
+  const element = (
+    tree: Node,
+    wrapped: boolean,
+    key?: number
+  ): ReactModule.ReactNode => {
+    const { React, Nxds } = window as unknown as PageGlobals;
+    if (typeof tree === 'string') return tree;
+    const part = tree.part.startsWith('Icons.')
+      ? Nxds.Icons[tree.part.slice('Icons.'.length)]
+      : Nxds[tree.part];
+    const type = (part as ReactModule.ElementType | undefined) ?? tree.part;
+    const children = (tree.children ?? []).map((child, index) =>
+      element(child, wrapped, index)
+    );
+    if (!wrapped) {
+      return React.createElement(type, tree.props ?? null, ...children);
+    }
+    mounted += 1;
+    const tpl = String(mounted);
+    // A void element such as <input> throws on any `children` prop.
+    const content = children.length > 0 ? { children } : {};
+    if (!part) {
+      return React.createElement(type, {
+        ...tree.props,
+        ...content,
+        key,
+        'data-dc-tpl': tpl,
+      });
+    }
+    const indented = children.every((child) => typeof child === 'string')
+      ? content
+      : {
+          children: [...children.flatMap((child) => ['\n    ', child]), '\n  '],
+        };
+    const rendered = React.createElement(type, {
+      ...tree.props,
+      ...indented,
+      key: 0,
+    });
+    return React.createElement('div', {
+      key,
+      className: 'sc-host-x',
+      'data-dc-tpl': tpl,
+      style: { display: 'contents' },
+      children: [rendered],
+    });
+  };
+  Object.assign(window, { __nxdsElement: element });
 });
 
 await context.route('**/*', (route) => {
@@ -458,17 +521,7 @@ const PRESET_CASES = Object.entries(PRESETS).map(
 async function measure(page: Page, probe: Probe, scope: Scope = {}) {
   return page.evaluate(
     ({ probe, scope }) => {
-      const { React, ReactDOM, Nxds } = window as unknown as PageGlobals;
-      type Node = Part | string;
-      const build = (node: Node): ReactModule.ReactNode =>
-        typeof node === 'string'
-          ? node
-          : React.createElement(
-              (Nxds[node.part] as ReactModule.ElementType | undefined) ??
-                node.part,
-              node.props ?? null,
-              ...(node.children ?? []).map(build)
-            );
+      const { ReactDOM, __nxdsElement } = window as unknown as PageGlobals;
       const style = document.createElement('style');
       style.textContent = scope.css ?? '';
       document.head.append(style);
@@ -479,7 +532,7 @@ async function measure(page: Page, probe: Probe, scope: Scope = {}) {
       if (scope.style) host.setAttribute('style', scope.style);
       document.body.append(host);
       const root = ReactDOM.createRoot(host);
-      ReactDOM.flushSync(() => root.render(build(probe.tree)));
+      ReactDOM.flushSync(() => root.render(__nxdsElement(probe.tree, false)));
       const element = host.querySelector(probe.target);
       const value = element
         ? [probe.property]
@@ -584,9 +637,569 @@ async function checkRuntimeLayer() {
   await page.close();
 }
 
+const part = (
+  name: string,
+  props: Record<string, unknown> | null,
+  ...children: (Part | string)[]
+): Part => ({ part: name, ...(props ? { props } : {}), children });
+
+/** A read of the `index`th `target`'s computed `property`. */
+interface Read {
+  target: string;
+  property: string;
+  index?: number;
+}
+
+/**
+ * Trees a canvas author builds from separate x-imports, and the reads that
+ * show whether nxds's structure survives the wrappers: each must match the
+ * same tree rendered without them.
+ */
+const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
+  {
+    name: 'ButtonGroup joins its buttons',
+    tree: part(
+      'ButtonGroup',
+      null,
+      part('Button', { variant: 'outline' }, 'Archive'),
+      part('Button', { variant: 'outline' }, 'Report'),
+      part('Button', { variant: 'outline' }, 'Snooze')
+    ),
+    reads: [
+      { target: 'button', index: 0, property: 'border-top-right-radius' },
+      { target: 'button', index: 1, property: 'border-left-width' },
+      { target: 'button', index: 1, property: 'border-top-left-radius' },
+      { target: 'button', index: 2, property: 'border-top-right-radius' },
+    ],
+  },
+  {
+    name: 'a split button joins its menu trigger',
+    tree: part(
+      'ButtonGroup',
+      null,
+      part('Button', { variant: 'outline' }, 'Send'),
+      part(
+        'DropdownMenu',
+        null,
+        part(
+          'DropdownMenuTrigger',
+          { asChild: true },
+          part(
+            'Button',
+            { variant: 'outline', size: 'icon', 'aria-label': 'More options' },
+            part('Icons.IconChevronDown', null)
+          )
+        )
+      )
+    ),
+    reads: [
+      { target: 'button', index: 1, property: 'border-left-width' },
+      { target: 'button', index: 1, property: 'border-top-left-radius' },
+      { target: 'button', index: 0, property: 'border-top-right-radius' },
+    ],
+  },
+  {
+    name: 'AvatarGroup overlaps and rings its avatars',
+    tree: part(
+      'AvatarGroup',
+      null,
+      part('Avatar', null, part('AvatarFallback', null, 'AL')),
+      part('Avatar', null, part('AvatarFallback', null, 'BK'))
+    ),
+    reads: [
+      {
+        target: '[data-slot="avatar"]',
+        index: 1,
+        property: 'margin-inline-start',
+      },
+      { target: '[data-slot="avatar"]', index: 0, property: 'box-shadow' },
+      {
+        target: '[data-slot="avatar-fallback"]',
+        property: 'border-top-left-radius',
+      },
+    ],
+  },
+  {
+    name: 'a striped Table tints and divides its rows',
+    tree: part(
+      'Table',
+      { striped: true },
+      part(
+        'TableBody',
+        null,
+        ...['INV001', 'INV002', 'INV003'].map((invoice) =>
+          part('TableRow', null, part('TableCell', null, invoice))
+        )
+      )
+    ),
+    reads: [
+      { target: 'tr', index: 1, property: 'background-color' },
+      { target: 'tr', index: 0, property: 'border-bottom-width' },
+      { target: 'tr', index: 2, property: 'border-bottom-width' },
+    ],
+  },
+  {
+    name: 'InputGroup sizes its icon and pads its input',
+    tree: part(
+      'InputGroup',
+      null,
+      part('InputGroupAddon', null, part('Icons.IconSearch', null)),
+      part('InputGroupInput', { placeholder: 'Search', 'aria-label': 'Search' })
+    ),
+    reads: [
+      { target: 'svg', property: 'width' },
+      { target: 'input', property: 'padding-left' },
+    ],
+  },
+  {
+    name: 'Alert sizes its icon and places its title',
+    tree: part(
+      'Alert',
+      null,
+      part('AlertIcon', null, part('Icons.IconInfoCircle', null)),
+      part('AlertTitle', null, 'Heads up'),
+      part('AlertDescription', null, 'Your trial ends in three days.')
+    ),
+    reads: [
+      { target: 'svg', property: 'width' },
+      { target: '[data-slot="alert-title"]', property: 'grid-column-start' },
+      { target: '[data-slot="alert"]', property: 'column-gap' },
+    ],
+  },
+  {
+    name: 'SidebarMenuBadge sits beside its button',
+    tree: part(
+      'SidebarProvider',
+      null,
+      part(
+        'Sidebar',
+        null,
+        part(
+          'SidebarContent',
+          null,
+          part(
+            'SidebarMenu',
+            null,
+            part(
+              'SidebarMenuItem',
+              null,
+              part(
+                'SidebarMenuButton',
+                null,
+                part('Icons.IconInbox', null),
+                part('span', null, 'Inbox')
+              ),
+              part('SidebarMenuBadge', null, '24')
+            )
+          )
+        )
+      )
+    ),
+    reads: [
+      { target: '[data-slot="sidebar-menu-badge"]', property: 'top' },
+      { target: '[data-slot="sidebar-menu-button"] svg', property: 'width' },
+      {
+        target: '[data-slot="sidebar-menu-button"] > span',
+        property: 'text-overflow',
+      },
+    ],
+  },
+  {
+    name: 'AlertIcon sizes a hand-written svg',
+    tree: part(
+      'Alert',
+      null,
+      part(
+        'AlertIcon',
+        null,
+        part(
+          'svg',
+          { viewBox: '0 0 24 24', 'aria-hidden': true },
+          part('circle', { cx: 12, cy: 12, r: 10 })
+        )
+      ),
+      part('AlertTitle', null, 'Heads up')
+    ),
+    reads: [
+      { target: 'svg', property: 'width' },
+      { target: 'svg', property: 'height' },
+    ],
+  },
+  {
+    name: 'FieldDescription underlines a raw link',
+    tree: part(
+      'FieldDescription',
+      null,
+      'Read the ',
+      part('a', { href: '#terms' }, 'terms'),
+      ' first.'
+    ),
+    reads: [{ target: 'a', property: 'text-underline-offset' }],
+  },
+  {
+    name: "an author's rounded card leaves its children square",
+    tree: part(
+      'div',
+      { style: { borderRadius: '16px', padding: '16px' } },
+      part(
+        'div',
+        { className: 'card-header' },
+        part('Button', { variant: 'outline' }, 'Edit')
+      )
+    ),
+    reads: [{ target: '.card-header', property: 'border-top-left-radius' }],
+  },
+  {
+    name: 'a Label dims beside a disabled Checkbox',
+    tree: part(
+      'div',
+      { className: 'nx:flex nx:items-center nx:gap-2' },
+      part('Checkbox', { id: 'terms', disabled: true }),
+      part('Label', { htmlFor: 'terms' }, 'Accept terms')
+    ),
+    reads: [{ target: '[data-slot="label"]', property: 'color' }],
+  },
+  {
+    name: 'a ChoiceCard in a form shows its disabled control',
+    tree: part(
+      'form',
+      null,
+      part(
+        'ChoiceCard',
+        { htmlFor: 'updates' },
+        part('Checkbox', { id: 'updates', disabled: true }),
+        part(
+          'ChoiceCardContent',
+          null,
+          part('ChoiceCardTitle', null, 'Product updates')
+        )
+      )
+    ),
+    reads: [
+      { target: '[data-slot="choice-card"]', property: 'background-color' },
+      { target: '[data-slot="checkbox"]', property: 'margin-top' },
+    ],
+  },
+  {
+    name: 'Accordion drops the last divider',
+    tree: part(
+      'Accordion',
+      { type: 'single' },
+      ...['Shipping', 'Returns'].map((title) =>
+        part(
+          'AccordionItem',
+          { value: title },
+          part('AccordionTrigger', null, title),
+          part('AccordionContent', null, `${title} policy`)
+        )
+      )
+    ),
+    reads: [
+      {
+        target: '[data-slot="accordion-item"]',
+        index: 0,
+        property: 'border-bottom-width',
+      },
+      {
+        target: '[data-slot="accordion-item"]',
+        index: 1,
+        property: 'border-bottom-width',
+      },
+    ],
+  },
+];
+
+// React logs an element a wrapper puts where HTML doesn't allow it, such as
+// a <div> inside <tbody>, and the indentation a canvas keeps inside a table.
+// A canvas renders the same tree, so these are its own output, not nxds's.
+// React 18 logs the format string with its arguments after it: the element,
+// then the parent it can't sit in. One of the two is the wrapper <div>.
+const WRAPPER_NESTING =
+  /validateDOMNesting\(\.\.\.\): %s cannot appear as a (?:child|descendant) of <%s>\.%s%s%s (?:<div> \w+|<\w+> div|Whitespace text nodes \w+)\s/;
+
+// Renders `tree`, with or without canvas wrappers, and reads each `read`.
+async function readTree(
+  page: Page,
+  tree: Part,
+  reads: readonly Read[],
+  wrapped: boolean
+) {
+  return page.evaluate(
+    ({ tree, reads, wrapped }) => {
+      const { ReactDOM, __nxdsElement } = window as unknown as PageGlobals;
+      const host = document.createElement('div');
+      document.body.append(host);
+      const root = ReactDOM.createRoot(host);
+      try {
+        ReactDOM.flushSync(() => root.render(__nxdsElement(tree, wrapped)));
+      } catch (error) {
+        root.unmount();
+        host.remove();
+        return {
+          error: error instanceof Error ? error.message : String(error),
+          values: [],
+          wrappers: 0,
+        };
+      }
+      for (const animation of document.getAnimations()) animation.finish();
+      const values = reads.map(({ target, property, index = 0 }) => {
+        const element = host.querySelectorAll(target)[index];
+        return element
+          ? getComputedStyle(element).getPropertyValue(property)
+          : null;
+      });
+      const wrappers = host.querySelectorAll('.sc-host-x').length;
+      root.unmount();
+      host.remove();
+      return { error: null, values, wrappers };
+    },
+    { tree, reads, wrapped }
+  );
+}
+
+// Fails on every console problem since the last call. A wrapped render may
+// log the wrapper's own nesting.
+function failOnProblems(name: string, problems: string[], wrapped: boolean) {
+  for (const problem of problems.splice(0)) {
+    if (wrapped && WRAPPER_NESTING.test(problem)) continue;
+    fail(`${name}${wrapped ? ' through canvas wrappers' : ''}: ${problem}`);
+  }
+}
+
+async function checkWrapped() {
+  const { page, problems } = await openPage('Button', LIGHT);
+  for (const { name, tree, reads } of WRAPPED_CASES) {
+    const plain = await readTree(page, tree, reads, false);
+    failOnProblems(name, problems, false);
+    const wrapped = await readTree(page, tree, reads, true);
+    failOnProblems(name, problems, true);
+    if (plain.error) fail(`${name}: the plain tree throws ${plain.error}`);
+    if (wrapped.error) {
+      fail(
+        `${name}: through canvas wrappers, the tree throws ${wrapped.error}`
+      );
+    }
+    if (plain.error || wrapped.error) continue;
+    if (wrapped.wrappers === 0)
+      fail(`${name}: the wrapped tree has no wrapper.`);
+    reads.forEach(({ target, property, index = 0 }, read) => {
+      if (plain.values[read] === null) {
+        fail(`${name}: the plain tree has no ${target} #${index}.`);
+        return;
+      }
+      if (wrapped.values[read] === plain.values[read]) return;
+      fail(
+        `${name}: through canvas wrappers, ${target} #${index} has ${property} ${wrapped.values[read] ?? 'no element'} instead of ${plain.values[read]}.`
+      );
+    });
+  }
+  await page.close();
+}
+
+const trigger = (
+  name: string,
+  label: string,
+  props: Record<string, unknown> = {}
+) =>
+  part(
+    name,
+    { asChild: true },
+    part('Button', { variant: 'outline', ...props }, label)
+  );
+
+/** Overlays mounted as separate x-imports, opened from an `asChild` Button. */
+const WRAPPED_OVERLAYS: {
+  name: string;
+  tree: Part;
+  open: string;
+  hover?: boolean;
+  escape?: boolean;
+}[] = [
+  {
+    name: 'Popover',
+    tree: part(
+      'Popover',
+      null,
+      trigger('PopoverTrigger', 'Open popover'),
+      part('PopoverContent', null, 'Place content for the popover here.')
+    ),
+    open: '[data-slot="popover-content"]',
+  },
+  {
+    name: 'DropdownMenu',
+    tree: part(
+      'DropdownMenu',
+      null,
+      trigger('DropdownMenuTrigger', 'Open menu'),
+      part(
+        'DropdownMenuContent',
+        null,
+        part('DropdownMenuItem', null, 'Profile')
+      )
+    ),
+    open: '[role="menu"]',
+  },
+  {
+    name: 'Dialog',
+    tree: part(
+      'Dialog',
+      null,
+      trigger('DialogTrigger', 'Edit profile'),
+      part('DialogContent', {
+        title: 'Edit profile',
+        description: 'Change your name and email.',
+      })
+    ),
+    open: '[role="dialog"]',
+  },
+  {
+    name: 'Sheet',
+    tree: part(
+      'Sheet',
+      null,
+      trigger('SheetTrigger', 'Open settings'),
+      part(
+        'SheetContent',
+        null,
+        part(
+          'SheetHeader',
+          null,
+          part('SheetTitle', null, 'Settings'),
+          part('SheetDescription', null, 'Manage your account.')
+        )
+      )
+    ),
+    open: '[role="dialog"]',
+  },
+  {
+    name: 'Tooltip',
+    tree: part(
+      'Tooltip',
+      null,
+      trigger('TooltipTrigger', 'Add to library'),
+      part('TooltipContent', null, 'Add to library')
+    ),
+    open: '[role="tooltip"]',
+    hover: true,
+    escape: false,
+  },
+  {
+    name: 'HoverCard',
+    tree: part(
+      'HoverCard',
+      { openDelay: 0 },
+      trigger('HoverCardTrigger', '@nxds'),
+      part('HoverCardContent', null, 'The nxds design system.')
+    ),
+    open: '[data-slot="hover-card-content"]',
+    hover: true,
+    escape: false,
+  },
+  {
+    name: 'Collapsible',
+    tree: part(
+      'Collapsible',
+      null,
+      trigger('CollapsibleTrigger', 'Show details'),
+      part('CollapsibleContent', null, 'Shipped on 4 March.')
+    ),
+    open: '[data-slot="collapsible-content"]',
+    escape: false,
+  },
+];
+
+// Opens the overlay from its button and reads what a viewer sees: the
+// button's state, where the content sits against it, and where focus lands
+// after Escape.
+async function openOverlayTree(
+  overlay: (typeof WRAPPED_OVERLAYS)[number],
+  wrapped: boolean
+) {
+  const { page, problems } = await openPage('Button', LIGHT);
+  await page.evaluate(
+    ({ tree, wrapped }) => {
+      const { ReactDOM, __nxdsElement } = window as unknown as PageGlobals;
+      const host = document.createElement('div');
+      host.id = 'overlay-host';
+      host.style.padding = '120px';
+      document.body.append(host);
+      ReactDOM.createRoot(host).render(__nxdsElement(tree, wrapped));
+    },
+    { tree: overlay.tree, wrapped }
+  );
+  const button = page.locator('#overlay-host button').first();
+  const rendered = await button.waitFor({ timeout: 2000 }).then(
+    () => true,
+    () => false
+  );
+  if (!rendered) {
+    await page.close();
+    failOnProblems(overlay.name, problems, wrapped);
+    return {
+      opened: false,
+      state: 'no button',
+      offset: 'none',
+      focus: 'not checked',
+    };
+  }
+  if (overlay.hover) await button.hover();
+  else await button.click();
+  const content = page.locator(overlay.open).first();
+  const opened = await content
+    .waitFor({ state: 'visible', timeout: 2000 })
+    .then(
+      () => true,
+      () => false
+    );
+  const state = await button.evaluate(
+    (element) =>
+      `aria-expanded=${element.getAttribute('aria-expanded')} data-state=${element.getAttribute('data-state')}`
+  );
+  const [triggerBox, contentBox] = await Promise.all([
+    button.boundingBox(),
+    opened ? content.boundingBox() : null,
+  ]);
+  const offset =
+    triggerBox && contentBox
+      ? `${Math.round(contentBox.x - triggerBox.x)},${Math.round(contentBox.y - triggerBox.y)}`
+      : 'none';
+  let focus = 'not checked';
+  if (opened && overlay.escape !== false) {
+    await page.keyboard.press('Escape');
+    await content.waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
+    focus = await page
+      .waitForFunction(
+        (element) => element === document.activeElement,
+        await button.elementHandle(),
+        { timeout: 2000 }
+      )
+      .then(
+        () => 'on the button',
+        () => 'elsewhere'
+      );
+  }
+  await page.close();
+  failOnProblems(overlay.name, problems, wrapped);
+  return { opened, state, offset, focus };
+}
+
+async function checkWrappedOverlay(overlay: (typeof WRAPPED_OVERLAYS)[number]) {
+  const plain = await openOverlayTree(overlay, false);
+  const wrapped = await openOverlayTree(overlay, true);
+  if (!plain.opened) fail(`${overlay.name}: didn't open from its button.`);
+  for (const key of ['opened', 'state', 'offset', 'focus'] as const) {
+    if (wrapped[key] === plain[key]) continue;
+    fail(
+      `${overlay.name}: through canvas wrappers, ${key} is ${wrapped[key]} instead of ${plain[key]}.`
+    );
+  }
+}
+
 for (const card of cards()) await checkCard(card);
 await checkThemes();
 for (const overlay of OVERLAYS) await checkOverlay(overlay);
+for (const overlay of WRAPPED_OVERLAYS) await checkWrappedOverlay(overlay);
+await checkWrapped();
 await checkRefs();
 await checkExports();
 await checkTokens();
@@ -601,5 +1214,5 @@ if (failures.length > 0) {
   process.exit(1);
 }
 console.log(
-  `Smoke test passed: ${cards().length} cards in two themes, ${OVERLAYS.length} overlays, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes.`
+  `Smoke test passed: ${cards().length} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes.`
 );

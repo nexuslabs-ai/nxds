@@ -2,8 +2,9 @@
 // React 18 sources use. Every catalogue token's default leaves this file:
 // tokens.css declares the ones a component reads, and a read the scanner
 // misses fails validation instead of falling back to a default here. The
-// appearance presets stay, and `.dark` rules also match the page's
-// `data-theme="dark"`.
+// appearance presets stay, `.dark` rules also match the page's
+// `data-theme="dark"`, and structural selectors reach through the wrapper the
+// canvas puts around each component.
 import { createTokenCatalogue } from '@nxds/core/catalogue';
 import { react18Src } from '@nxds/source-model/roots.mjs';
 import { compile } from '@tailwindcss/node';
@@ -11,6 +12,8 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import postcss from 'postcss';
+
+import { tolerateCanvasWrappers } from './wrapper-css.ts';
 
 const TAILWIND_DIR = path.dirname(
   fileURLToPath(import.meta.resolve('@nxds/tailwind/nxds.css'))
@@ -105,5 +108,7 @@ export async function buildStyles() {
   const tokenNames = new Set<string>(
     createTokenCatalogue().map((token) => token.name)
   );
-  return moveValuesToTokens(compiler.build(candidates()), tokenNames);
+  return tolerateCanvasWrappers(
+    moveValuesToTokens(compiler.build(candidates()), tokenNames)
+  );
 }

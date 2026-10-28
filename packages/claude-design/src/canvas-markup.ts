@@ -18,7 +18,7 @@ function escapeAttribute(value: string) {
 }
 
 function attributeValue(initializer: ts.JsxAttributeValue | undefined) {
-  if (!initializer) return '';
+  if (!initializer) return true;
   if (ts.isStringLiteral(initializer)) return initializer.text;
   if (!ts.isJsxExpression(initializer) || !initializer.expression) return null;
   const expression = initializer.expression;
@@ -29,8 +29,15 @@ function attributeValue(initializer: ts.JsxAttributeValue | undefined) {
     return expression.text;
   }
   if (ts.isNumericLiteral(expression)) return expression.text;
-  if (expression.kind === ts.SyntaxKind.TrueKeyword) return '';
+  if (expression.kind === ts.SyntaxKind.TrueKeyword) return true;
   return null;
+}
+
+// A bare attribute reaches an x-import as `""`, which is false, so a part's
+// `true` is written as a template expression.
+function attributeText(name: string, value: string | true, isPart: boolean) {
+  if (value !== true) return `${name}="${escapeAttribute(value)}"`;
+  return isPart ? `${name}="{{true}}"` : name;
 }
 
 function attributes(node: ts.JsxAttributes, isPart: boolean): string | null {
@@ -45,9 +52,7 @@ function attributes(node: ts.JsxAttributes, isPart: boolean): string | null {
       : name === 'className'
         ? 'class'
         : name;
-    parts.push(
-      value === '' ? attribute : `${attribute}="${escapeAttribute(value)}"`
-    );
+    parts.push(attributeText(attribute, value, isPart));
   }
   return parts.map((part) => ` ${part}`).join('');
 }
