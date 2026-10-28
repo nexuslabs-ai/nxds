@@ -13,11 +13,15 @@
      part, so the gap between any two sections is the same. */
   --section-space-top: var(--nx-spacing-8);
   --section-space-bottom: var(--nx-spacing-24);
-  /* The first section sits under the header, not under another section. */
+  /* The first section sits under the header, not under another section,
+     and leads the page, so it has more space around its title block. */
   --first-section-space-top: var(--nx-spacing-16);
-  /* About one title block, and the toolbar with the space above it, so a
-     section is about one screen tall. */
-  --heading-allowance: 12rem;
+  --first-heading-space-bottom: var(--nx-spacing-20);
+  /* The space under a title block's links. */
+  --heading-space-bottom: var(--nx-spacing-14);
+  /* About one title and its links, and the toolbar with the space above it,
+     so a section is about one screen tall. */
+  --heading-allowance: 8.5rem;
   --toolbar-allowance: 5rem;
   --preview-fade: var(--nx-spacing-24);
   --preview-min: 24rem;
@@ -27,6 +31,7 @@
   @media (width >= 64rem) {
     --section-space-top: var(--nx-spacing-12);
     --first-section-space-top: var(--nx-spacing-32);
+    --first-heading-space-bottom: var(--nx-spacing-28);
     --preview-min: 30rem;
     --preview-max: calc(
       0.6 * min(100vw - 2 * var(--nx-spacing-8), var(--site-column))
@@ -39,10 +44,11 @@
   display: flex;
   flex-direction: column;
   padding-block: var(--section-space-top) var(--section-space-bottom);
-  /* The preview height reads this too, so the first section stays about
+  /* The preview height reads these too, so the first section stays about
      one screen tall. */
   &:first-child {
     --section-space-top: var(--first-section-space-top);
+    --heading-space-bottom: var(--first-heading-space-bottom);
   }
   /* Land right under the header, not with the docs headings' extra space. */
   scroll-margin-block-start: calc(
@@ -52,7 +58,7 @@
 
 @utility chapter-heading {
   text-align: center;
-  padding-block-end: var(--nx-spacing-14);
+  padding-block-end: var(--heading-space-bottom);
 
   & :is(h1, h2) {
     @apply nx:typography-display-small nx:md:typography-display-medium nx:lg:typography-display-large;
@@ -91,7 +97,7 @@
     min(
       100svh - var(--site-header-h) - var(--section-space-top) -
         var(--section-space-bottom) - var(--heading-allowance) -
-        var(--toolbar-allowance),
+        var(--heading-space-bottom) - var(--toolbar-allowance),
       var(--preview-max)
     )
   );
