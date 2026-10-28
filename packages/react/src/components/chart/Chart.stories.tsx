@@ -2,25 +2,20 @@ import { useId } from 'react';
 
 import type { Meta, StoryObj } from '@storybook/react';
 import { IconTexture } from '@tabler/icons-react';
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Line,
-  LineChart,
-  XAxis,
-} from 'recharts';
-import { expect, waitFor, within } from 'storybook/test';
+import * as Recharts from 'recharts';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import {
+  AreaChart,
+  BarChart,
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  LineChart,
+  PieChart,
 } from './chart';
 
 const meta: Meta<typeof ChartContainer> = {
@@ -30,7 +25,7 @@ const meta: Meta<typeof ChartContainer> = {
     docs: {
       description: {
         component:
-          'ChartContainer wraps a Recharts chart with nxds colors, tooltips and legends. Use it for bar, area and line charts. Set the label and color of each series in `config`.',
+          "Plot rows of data with BarChart, LineChart, AreaChart or PieChart. Each key in `series` is one series, colored in order. For a chart they don't cover, compose Recharts parts inside ChartContainer and set each series' label and color in `config`.",
       },
     },
   },
@@ -82,13 +77,13 @@ function styledBy(chart: Element | null, utility: string) {
 function AreaExample() {
   return (
     <ChartContainer config={config}>
-      <AreaChart
+      <Recharts.AreaChart
         accessibilityLayer
         data={data}
         margin={{ left: 12, right: 12 }}
       >
-        <CartesianGrid vertical={false} />
-        <XAxis
+        <Recharts.CartesianGrid vertical={false} />
+        <Recharts.XAxis
           dataKey="month"
           tickLine={false}
           axisLine={false}
@@ -97,14 +92,14 @@ function AreaExample() {
         />
         <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Area
+        <Recharts.Area
           dataKey="desktop"
           type="natural"
           fill="var(--color-desktop)"
           fillOpacity={0.4}
           stroke="var(--color-desktop)"
         />
-        <Area
+        <Recharts.Area
           dataKey="mobile"
           type="natural"
           fill="var(--color-mobile)"
@@ -112,7 +107,7 @@ function AreaExample() {
           stroke="var(--color-mobile)"
           strokeDasharray="6 4"
         />
-      </AreaChart>
+      </Recharts.AreaChart>
     </ChartContainer>
   );
 }
@@ -121,7 +116,7 @@ function BarExample() {
   const mobilePattern = useId();
   return (
     <ChartContainer config={config}>
-      <BarChart accessibilityLayer data={data}>
+      <Recharts.BarChart accessibilityLayer data={data}>
         <defs>
           <pattern
             id={mobilePattern}
@@ -137,8 +132,8 @@ function BarExample() {
             />
           </pattern>
         </defs>
-        <CartesianGrid vertical={false} />
-        <XAxis
+        <Recharts.CartesianGrid vertical={false} />
+        <Recharts.XAxis
           dataKey="month"
           tickLine={false}
           axisLine={false}
@@ -147,9 +142,17 @@ function BarExample() {
         />
         <ChartTooltip content={<ChartTooltipContent indicator="dashed" />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-        <Bar dataKey="mobile" fill={`url(#${mobilePattern})`} radius={4} />
-      </BarChart>
+        <Recharts.Bar
+          dataKey="desktop"
+          fill="var(--color-desktop)"
+          radius={4}
+        />
+        <Recharts.Bar
+          dataKey="mobile"
+          fill={`url(#${mobilePattern})`}
+          radius={4}
+        />
+      </Recharts.BarChart>
     </ChartContainer>
   );
 }
@@ -157,13 +160,13 @@ function BarExample() {
 function LineExample() {
   return (
     <ChartContainer config={config}>
-      <LineChart
+      <Recharts.LineChart
         accessibilityLayer
         data={data}
         margin={{ left: 12, right: 12 }}
       >
-        <CartesianGrid vertical={false} />
-        <XAxis
+        <Recharts.CartesianGrid vertical={false} />
+        <Recharts.XAxis
           dataKey="month"
           tickLine={false}
           axisLine={false}
@@ -172,14 +175,14 @@ function LineExample() {
         />
         <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Line
+        <Recharts.Line
           dataKey="desktop"
           type="natural"
           stroke="var(--color-desktop)"
           strokeWidth={2}
           dot={false}
         />
-        <Line
+        <Recharts.Line
           dataKey="mobile"
           type="natural"
           stroke="var(--color-mobile)"
@@ -187,14 +190,176 @@ function LineExample() {
           strokeWidth={2}
           dot={false}
         />
-      </LineChart>
+      </Recharts.LineChart>
     </ChartContainer>
   );
 }
 
+const visitors = [
+  { month: 'Jan', desktop: 186, mobile: 80 },
+  { month: 'Feb', desktop: 305, mobile: 200 },
+  { month: 'Mar', desktop: 237, mobile: 120 },
+  { month: 'Apr', desktop: 173, mobile: 190 },
+  { month: 'May', desktop: 209, mobile: 130 },
+  { month: 'Jun', desktop: 264, mobile: 140 },
+];
+
+const browsers = [
+  { browser: 'Chrome', visitors: 275 },
+  { browser: 'Safari', visitors: 200 },
+  { browser: 'Firefox', visitors: 187 },
+  { browser: 'Edge', visitors: 173 },
+  { browser: 'Other', visitors: 90 },
+];
+
+export const Bars: Story = {
+  tags: ['docs'],
+  name: 'Bar chart',
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <BarChart data={visitors} xKey="month" series={['desktop', 'mobile']} />
+    </div>
+  ),
+};
+
+export const StackedBars: Story = {
+  tags: ['docs'],
+  name: 'Stacked bar chart',
+  parameters: {
+    docs: {
+      description: {
+        story: 'Stack the series in one bar per category with `stacked`.',
+      },
+    },
+  },
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <BarChart
+        data={visitors}
+        xKey="month"
+        series={['desktop', 'mobile']}
+        stacked
+      />
+    </div>
+  ),
+};
+
+export const HorizontalBars: Story = {
+  tags: ['docs'],
+  name: 'Horizontal bar chart',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Run the bars left to right with `orientation="horizontal"`. The categories move to the y-axis.',
+      },
+    },
+  },
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <BarChart
+        data={browsers}
+        xKey="browser"
+        series={['visitors']}
+        orientation="horizontal"
+        legend={false}
+      />
+    </div>
+  ),
+};
+
+export const Lines: Story = {
+  tags: ['docs'],
+  name: 'Line chart',
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <LineChart data={visitors} xKey="month" series={['desktop', 'mobile']} />
+    </div>
+  ),
+};
+
+export const Areas: Story = {
+  tags: ['docs'],
+  name: 'Area chart',
+  parameters: {
+    docs: {
+      description: {
+        story: 'Fade each area toward the axis with `fill="gradient"`.',
+      },
+    },
+  },
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <AreaChart
+        data={visitors}
+        xKey="month"
+        series={['desktop', 'mobile']}
+        fill="gradient"
+        stacked
+      />
+    </div>
+  ),
+};
+
+export const Donut: Story = {
+  tags: ['docs'],
+  name: 'Pie chart',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Plot one value per row with PieChart. `donut` cuts out the middle.',
+      },
+    },
+  },
+  render: () => (
+    <div className="nx:w-[400px] nx:max-w-full">
+      <PieChart data={browsers} nameKey="browser" valueKey="visitors" donut />
+    </div>
+  ),
+};
+
+export const SeriesLabels: Story = {
+  tags: ['docs'],
+  name: 'Series labels and colors',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Each series is labelled by its key and colored in order. Set a label or color for a key in `config`.',
+      },
+    },
+  },
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <LineChart
+        data={visitors}
+        xKey="month"
+        series={['desktop', 'mobile']}
+        config={{
+          desktop: { label: 'Desktop visitors' },
+          mobile: {
+            label: 'Mobile visitors',
+            color: 'var(--nx-color-chart-categorical-4)',
+          },
+        }}
+        dots
+      />
+    </div>
+  ),
+};
+
 export const BarChartStory: Story = {
   tags: ['docs'],
-  name: 'Bar',
+  name: 'Custom bar chart',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          "Compose Recharts parts inside ChartContainer for a chart the data charts don't cover, such as a patterned series.",
+      },
+    },
+  },
   render: () => (
     <div className="nx:w-[600px] nx:max-w-full">
       <BarExample />
@@ -211,7 +376,7 @@ export const AreaChartStory: Story = {
       },
     },
   },
-  name: 'Area',
+  name: 'Custom area chart',
   render: () => (
     <div className="nx:w-[600px] nx:max-w-full">
       <AreaExample />
@@ -228,7 +393,7 @@ export const LineChartStory: Story = {
       },
     },
   },
-  name: 'Line',
+  name: 'Custom line chart',
   render: () => (
     <div className="nx:w-[600px] nx:max-w-full">
       <LineExample />
@@ -240,9 +405,13 @@ export const WithDataAttributes: Story = {
   render: () => (
     <div className="nx:w-[600px] nx:max-w-full">
       <ChartContainer config={config}>
-        <BarChart accessibilityLayer data={data}>
-          <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-        </BarChart>
+        <Recharts.BarChart accessibilityLayer data={data}>
+          <Recharts.Bar
+            dataKey="desktop"
+            fill="var(--color-desktop)"
+            radius={4}
+          />
+        </Recharts.BarChart>
       </ChartContainer>
     </div>
   ),
@@ -253,6 +422,221 @@ export const WithDataAttributes: Story = {
     // #497: chart base text migrated from the raw named text-size utility.
     await expect(chart).toHaveClass('nx:typography-body-small');
   },
+};
+
+/** The `n`th categorical chart color, as the charts write it. */
+const categorical = (n: number) => `var(--nx-color-chart-categorical-${n})`;
+
+function shapes(canvasElement: HTMLElement, selector: string) {
+  return Array.from(canvasElement.querySelectorAll(selector));
+}
+
+// Recharts draws each bar's path once its entry animation starts.
+const BAR = '.recharts-bar-rectangle path';
+
+export const SeriesBars: Story = {
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <BarChart data={visitors} xKey="month" series={['desktop', 'mobile']} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(shapes(canvasElement, BAR)).toHaveLength(12));
+    await expect(canvas.getByText('Desktop')).toBeInTheDocument();
+    await expect(canvas.getByText('Mobile')).toBeInTheDocument();
+    await expect(canvas.getByText('Jan')).toBeInTheDocument();
+  },
+};
+
+export const KeyboardTooltip: Story = {
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <BarChart data={visitors} xKey="month" series={['desktop']} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await userEvent.tab();
+    const surface = canvasElement.querySelector('[tabindex="0"]');
+    await expect(surface).toHaveFocus();
+    // Focus selects January; the arrow moves to February.
+    await userEvent.keyboard('{ArrowRight}');
+    const tooltip = canvasElement.querySelector('.recharts-tooltip-wrapper');
+    await waitFor(() => expect(tooltip).toHaveTextContent('FebDesktop305'));
+  },
+};
+
+export const HorizontalCategories: Story = {
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <BarChart
+        data={browsers}
+        xKey="browser"
+        series={['visitors']}
+        orientation="horizontal"
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const tick = (await within(canvasElement).findByText('Chrome')).closest(
+      '.recharts-yAxis-tick-labels'
+    );
+    await expect(tick).toBeInTheDocument();
+  },
+};
+
+export const StackedRadius: Story = {
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <BarChart
+        data={visitors}
+        xKey="month"
+        series={['desktop', 'mobile']}
+        stacked
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(shapes(canvasElement, BAR)).toHaveLength(12));
+    const layers = shapes(canvasElement, '.recharts-bar-rectangles');
+    const bottom = layers[0]?.querySelector('path')?.getAttribute('d') ?? '';
+    const top = layers[1]?.querySelector('path')?.getAttribute('d') ?? '';
+    // A rounded corner draws an arc; only the stack's outer end has one.
+    await expect(bottom).not.toContain('A');
+    await expect(top).toContain('A');
+  },
+};
+
+export const ManySeries: Story = {
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <BarChart
+        data={[{ team: 'Q1', a: 1, b: 2, c: 3, d: 4, e: 5, f: 6 }]}
+        xKey="team"
+        series={['a', 'b', 'c', 'd', 'e', 'f']}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(shapes(canvasElement, BAR)).toHaveLength(6));
+    const fills = shapes(canvasElement, BAR).map((path) =>
+      path.getAttribute('fill')
+    );
+    // Colors cycle after the fifth series.
+    await expect(fills[0]).toBe(categorical(1));
+    await expect(fills[5]).toBe(categorical(1));
+  },
+};
+
+export const MissingSeries: Story = {
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <BarChart data={visitors} xKey="month" series={['desktop', 'tablet']} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(shapes(canvasElement, BAR)).toHaveLength(6));
+    await expect(within(canvasElement).getByText('Tablet')).toBeInTheDocument();
+  },
+};
+
+export const EmptyData: Story = {
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <LineChart data={[]} xKey="month" series={['desktop']} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(
+      canvasElement.querySelector('[data-slot="chart"]')
+    ).toBeInTheDocument();
+    await expect(shapes(canvasElement, '.recharts-line-curve')).toHaveLength(0);
+  },
+};
+
+export const SinglePoint: Story = {
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <LineChart
+        data={[{ month: 'Jan', desktop: 186 }]}
+        xKey="month"
+        series={['desktop']}
+        dots
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(shapes(canvasElement, '.recharts-line-dot')).toHaveLength(1)
+    );
+  },
+};
+
+export const PieSlices: Story = {
+  render: () => (
+    <div className="nx:w-[400px] nx:max-w-full">
+      <PieChart data={browsers} nameKey="browser" valueKey="visitors" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() =>
+      expect(shapes(canvasElement, '.recharts-pie-sector')).toHaveLength(5)
+    );
+    await expect(canvas.getByText('Chrome')).toBeInTheDocument();
+    await expect(canvas.getByText('Other')).toBeInTheDocument();
+  },
+};
+
+export const EmptyPie: Story = {
+  render: () => (
+    <div className="nx:w-[400px] nx:max-w-full">
+      <PieChart
+        data={[
+          { browser: 'Chrome', visitors: 0 },
+          { browser: 'Safari', visitors: 0 },
+        ]}
+        nameKey="browser"
+        valueKey="visitors"
+        donut
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(shapes(canvasElement, '.recharts-pie-sector')).toHaveLength(1)
+    );
+    const sector = canvasElement.querySelector('.recharts-pie-sector path');
+    await expect(sector).toHaveAttribute('fill', 'var(--nx-color-muted)');
+  },
+};
+
+export const LongLabels: Story = {
+  render: () => (
+    <div className="nx:w-[360px] nx:max-w-full">
+      <BarChart
+        data={[
+          { region: 'North America and the Caribbean', revenue: 420 },
+          { region: 'Europe, the Middle East and Africa', revenue: 380 },
+          { region: 'Asia Pacific', revenue: 290 },
+        ]}
+        xKey="region"
+        series={['revenue']}
+        orientation="horizontal"
+        legend={false}
+      />
+    </div>
+  ),
+};
+
+export const Dark: Story = {
+  globals: { mode: 'dark' },
+  render: () => (
+    <div className="nx:flex nx:w-[600px] nx:max-w-full nx:flex-col nx:gap-10">
+      <AreaChart data={visitors} xKey="month" series={['desktop', 'mobile']} />
+      <PieChart data={browsers} nameKey="browser" valueKey="visitors" donut />
+    </div>
+  ),
 };
 
 export const AxisTickText: Story = {
@@ -274,6 +658,22 @@ export const AxisTickText: Story = {
 export const AllVariants: Story = {
   render: () => (
     <div className="nx:flex nx:w-[600px] nx:max-w-full nx:flex-col nx:gap-10">
+      <BarChart data={visitors} xKey="month" series={['desktop', 'mobile']} />
+      <BarChart
+        data={visitors}
+        xKey="month"
+        series={['desktop', 'mobile']}
+        stacked
+      />
+      <BarChart
+        data={browsers}
+        xKey="browser"
+        series={['visitors']}
+        orientation="horizontal"
+      />
+      <LineChart data={visitors} xKey="month" series={['desktop', 'mobile']} />
+      <AreaChart data={visitors} xKey="month" series={['desktop', 'mobile']} />
+      <PieChart data={browsers} nameKey="browser" valueKey="visitors" />
       <AreaExample />
       <BarExample />
       <LineExample />

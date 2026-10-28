@@ -4,6 +4,7 @@ import * as React from 'react';
 
 import * as RechartsPrimitive from 'recharts';
 
+import { CHART_CATEGORICAL_SERIES } from '../../lib/chart';
 import { cn } from '../../lib/utils';
 
 /**
@@ -447,11 +448,444 @@ function getPayloadConfigFromPayload(
   return config[configKey] ?? config[key];
 }
 
+/** One row of chart data: a category and a value for each series. */
+type ChartDatum = Record<string, string | number | null | undefined>;
+
+type ChartCurve = 'linear' | 'natural' | 'monotone' | 'step';
+
+function categoricalColor(index: number) {
+  const series =
+    CHART_CATEGORICAL_SERIES[index % CHART_CATEGORICAL_SERIES.length];
+  return `var(--nx-color-chart-categorical-${series})`;
+}
+
+function sentenceCase(key: string) {
+  return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+// Each series gets the next categorical color and its key as a label, under
+// whatever `config` sets.
+function seriesConfig(series: readonly string[], config: ChartConfig = {}) {
+  const generated = Object.fromEntries(
+    series.map((key, index) => [
+      key,
+      {
+        label: sentenceCase(key),
+        color: categoricalColor(index),
+        ...config[key],
+      },
+    ])
+  );
+  return { ...config, ...generated };
+}
+
+interface CartesianChartProps {
+  /** The rows to plot, one per category. */
+  data: ChartDatum[];
+  /** The key in each row that holds its category, such as `month`. */
+  xKey: string;
+  /** The keys in each row to plot. Each key is one series, colored in order. */
+  series: string[];
+  /** Label, icon and color for each series, keyed by its key. Without one, a series is labelled by its key. */
+  config?: ChartConfig;
+  /** Shows a legend under the chart. */
+  legend?: boolean;
+  /** Shows a tooltip on hover. */
+  tooltip?: boolean;
+  /** The tooltip's mark beside each value. */
+  indicator?: ChartIndicator;
+  /** Draws grid lines across the values. */
+  grid?: boolean;
+  /** Shows the axis with each row's category. */
+  categoryAxis?: boolean;
+  /** Shows the axis with the value scale. */
+  valueAxis?: boolean;
+  className?: string;
+}
+
+type ChartFrameProps = Pick<
+  CartesianChartProps,
+  | 'xKey'
+  | 'legend'
+  | 'tooltip'
+  | 'indicator'
+  | 'grid'
+  | 'categoryAxis'
+  | 'valueAxis'
+> & {
+  /** Bars run left to right, so the category axis is the y-axis. */
+  horizontal?: boolean;
+};
+
+// Grid, axes, tooltip and legend shared by the cartesian charts.
+function ChartFrame({
+  xKey,
+  legend,
+  tooltip,
+  indicator,
+  grid,
+  categoryAxis,
+  valueAxis,
+  horizontal = false,
+}: ChartFrameProps) {
+  const category = { dataKey: xKey, type: 'category' as const };
+  const value = { type: 'number' as const };
+  return (
+    <>
+      {grid && (
+        <RechartsPrimitive.CartesianGrid
+          vertical={horizontal}
+          horizontal={!horizontal}
+        />
+      )}
+      <RechartsPrimitive.XAxis
+        {...(horizontal ? value : category)}
+        hide={horizontal ? !valueAxis : !categoryAxis}
+        tickLine={false}
+        axisLine={false}
+        tickMargin={8}
+      />
+      <RechartsPrimitive.YAxis
+        {...(horizontal ? category : value)}
+        hide={horizontal ? !categoryAxis : !valueAxis}
+        tickLine={false}
+        axisLine={false}
+        tickMargin={8}
+        width="auto"
+      />
+      {tooltip && (
+        <ChartTooltip content={<ChartTooltipContent indicator={indicator} />} />
+      )}
+      {legend && <ChartLegend content={<ChartLegendContent />} />}
+    </>
+  );
+}
+
+interface BarChartProps extends CartesianChartProps {
+  /** The direction the bars run. `horizontal` bars grow left to right. */
+  orientation?: 'vertical' | 'horizontal';
+  /** Stacks the series in one bar per category. */
+  stacked?: boolean;
+  /** Corner radius of each bar, in px. A stack rounds only its outer end. */
+  radius?: number;
+}
+
+type BarRadius = number | [number, number, number, number];
+
+function barRadius(
+  radius: number,
+  {
+    stacked,
+    last,
+    horizontal,
+  }: { stacked: boolean; last: boolean; horizontal: boolean }
+): BarRadius {
+  if (!stacked) return radius;
+  if (!last) return 0;
+  return horizontal ? [0, radius, radius, 0] : [radius, radius, 0, 0];
+}
+
+/** A bar chart of one or more series. */
+function BarChart({
+  data,
+  xKey,
+  series,
+  config,
+  orientation = 'vertical',
+  stacked = false,
+  radius = 4,
+  legend = true,
+  tooltip = true,
+  indicator = 'dashed',
+  grid = true,
+  categoryAxis = true,
+  valueAxis = false,
+  className,
+}: BarChartProps) {
+  const horizontal = orientation === 'horizontal';
+  const colors = seriesConfig(series, config);
+  return (
+    <ChartContainer config={colors} className={className}>
+      <RechartsPrimitive.BarChart
+        accessibilityLayer
+        data={data}
+        layout={horizontal ? 'vertical' : 'horizontal'}
+      >
+        <ChartFrame
+          xKey={xKey}
+          legend={legend}
+          tooltip={tooltip}
+          indicator={indicator}
+          grid={grid}
+          categoryAxis={categoryAxis}
+          valueAxis={valueAxis}
+          horizontal={horizontal}
+        />
+        {series.map((key, index) => (
+          <RechartsPrimitive.Bar
+            key={key}
+            dataKey={key}
+            fill={colors[key]?.color}
+            stackId={stacked ? 'stack' : undefined}
+            radius={barRadius(radius, {
+              stacked,
+              last: index === series.length - 1,
+              horizontal,
+            })}
+          />
+        ))}
+      </RechartsPrimitive.BarChart>
+    </ChartContainer>
+  );
+}
+
+interface LineChartProps extends CartesianChartProps {
+  /** How each line joins its points. */
+  curve?: ChartCurve;
+  /** Marks each data point with a dot. */
+  dots?: boolean;
+}
+
+/** A line chart of one or more series. */
+function LineChart({
+  data,
+  xKey,
+  series,
+  config,
+  curve = 'natural',
+  dots = false,
+  legend = true,
+  tooltip = true,
+  indicator = 'line',
+  grid = true,
+  categoryAxis = true,
+  valueAxis = false,
+  className,
+}: LineChartProps) {
+  const colors = seriesConfig(series, config);
+  return (
+    <ChartContainer config={colors} className={className}>
+      <RechartsPrimitive.LineChart
+        accessibilityLayer
+        data={data}
+        margin={{ left: 12, right: 12 }}
+      >
+        <ChartFrame
+          xKey={xKey}
+          legend={legend}
+          tooltip={tooltip}
+          indicator={indicator}
+          grid={grid}
+          categoryAxis={categoryAxis}
+          valueAxis={valueAxis}
+        />
+        {series.map((key) => (
+          <RechartsPrimitive.Line
+            key={key}
+            dataKey={key}
+            type={curve}
+            stroke={colors[key]?.color}
+            strokeWidth={2}
+            dot={dots}
+          />
+        ))}
+      </RechartsPrimitive.LineChart>
+    </ChartContainer>
+  );
+}
+
+interface AreaChartProps extends CartesianChartProps {
+  /** How each area's edge joins its points. */
+  curve?: ChartCurve;
+  /** Stacks the series on top of each other. */
+  stacked?: boolean;
+  /** `gradient` fades each area toward the axis. */
+  fill?: 'solid' | 'gradient';
+}
+
+/** An area chart of one or more series. */
+function AreaChart({
+  data,
+  xKey,
+  series,
+  config,
+  curve = 'natural',
+  stacked = false,
+  fill = 'solid',
+  legend = true,
+  tooltip = true,
+  indicator = 'dot',
+  grid = true,
+  categoryAxis = true,
+  valueAxis = false,
+  className,
+}: AreaChartProps) {
+  const gradientId = React.useId().replace(/:/g, '');
+  const colors = seriesConfig(series, config);
+  const areaFill = (key: string, index: number) =>
+    fill === 'gradient' ? `url(#${gradientId}-${index})` : colors[key]?.color;
+  return (
+    <ChartContainer config={colors} className={className}>
+      <RechartsPrimitive.AreaChart
+        accessibilityLayer
+        data={data}
+        margin={{ left: 12, right: 12 }}
+      >
+        {fill === 'gradient' && (
+          <defs>
+            {series.map((key, index) => (
+              <linearGradient
+                key={key}
+                id={`${gradientId}-${index}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="5%"
+                  stopColor={colors[key]?.color}
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor={colors[key]?.color}
+                  stopOpacity={0.1}
+                />
+              </linearGradient>
+            ))}
+          </defs>
+        )}
+        <ChartFrame
+          xKey={xKey}
+          legend={legend}
+          tooltip={tooltip}
+          indicator={indicator}
+          grid={grid}
+          categoryAxis={categoryAxis}
+          valueAxis={valueAxis}
+        />
+        {series.map((key, index) => (
+          <RechartsPrimitive.Area
+            key={key}
+            dataKey={key}
+            type={curve}
+            stackId={stacked ? 'stack' : undefined}
+            fill={areaFill(key, index)}
+            fillOpacity={fill === 'gradient' ? 1 : 0.4}
+            stroke={colors[key]?.color}
+          />
+        ))}
+      </RechartsPrimitive.AreaChart>
+    </ChartContainer>
+  );
+}
+
+interface PieChartProps {
+  /** The slices to plot, one row each. */
+  data: ChartDatum[];
+  /** The key in each row that holds the slice's name, such as `browser`. */
+  nameKey: string;
+  /** The key in each row that holds the slice's value. */
+  valueKey: string;
+  /** Label, icon and color for each slice, keyed by its name. Without one, a slice is labelled by its name. */
+  config?: ChartConfig;
+  /** Cuts out the middle, so the pie becomes a ring. */
+  donut?: boolean;
+  /** Writes each slice's value beside it. */
+  labels?: boolean;
+  /** Shows a legend under the chart. */
+  legend?: boolean;
+  /** Shows a tooltip on hover. */
+  tooltip?: boolean;
+  className?: string;
+}
+
+function sliceTotal(data: readonly ChartDatum[], valueKey: string) {
+  return data.reduce((sum, row) => {
+    const value = row[valueKey];
+    return typeof value === 'number' && value > 0 ? sum + value : sum;
+  }, 0);
+}
+
+/** A pie or donut chart of one series, a slice per row. */
+function PieChart({
+  data,
+  nameKey,
+  valueKey,
+  config,
+  donut = false,
+  labels = false,
+  legend = true,
+  tooltip = true,
+  className,
+}: PieChartProps) {
+  const names = data.map((row) => String(row[nameKey]));
+  const colors = Object.fromEntries(
+    names.map((name, index) => [
+      name,
+      { label: name, color: categoricalColor(index), ...config?.[name] },
+    ])
+  );
+  const slices = data.map((row, index) => ({
+    ...row,
+    fill: colors[names[index] ?? '']?.color,
+  }));
+  const innerRadius = donut ? '60%' : 0;
+
+  // An empty or all-zero pie draws an empty ring, not a blank chart.
+  if (sliceTotal(data, valueKey) === 0) {
+    return (
+      <ChartContainer config={colors} className={className}>
+        <RechartsPrimitive.PieChart>
+          <RechartsPrimitive.Pie
+            data={[{ value: 1, fill: 'var(--nx-color-muted)' }]}
+            dataKey="value"
+            innerRadius={innerRadius}
+            isAnimationActive={false}
+          />
+        </RechartsPrimitive.PieChart>
+      </ChartContainer>
+    );
+  }
+
+  return (
+    <ChartContainer config={colors} className={className}>
+      <RechartsPrimitive.PieChart accessibilityLayer>
+        {tooltip && (
+          <ChartTooltip
+            content={<ChartTooltipContent nameKey={nameKey} hideLabel />}
+          />
+        )}
+        <RechartsPrimitive.Pie
+          data={slices}
+          dataKey={valueKey}
+          nameKey={nameKey}
+          innerRadius={innerRadius}
+          label={labels}
+        />
+        {legend && (
+          <ChartLegend content={<ChartLegendContent nameKey={nameKey} />} />
+        )}
+      </RechartsPrimitive.PieChart>
+    </ChartContainer>
+  );
+}
+
 export {
+  AreaChart,
+  type AreaChartProps,
+  BarChart,
+  type BarChartProps,
   ChartContainer,
+  type ChartDatum,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  LineChart,
+  type LineChartProps,
+  PieChart,
+  type PieChartProps,
   useChart,
 };
