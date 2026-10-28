@@ -135,13 +135,15 @@ function checkSizes(root: string, files: string[], errors: string[]) {
   }
 }
 
+function messageOf(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
+
 function readJson(root: string, file: string, errors: string[]) {
   try {
     return JSON.parse(readFileSync(path.join(root, file), 'utf8'));
   } catch (error) {
-    errors.push(
-      `${file}: ${error instanceof Error ? error.message : String(error)}`
-    );
+    errors.push(`${file}: ${messageOf(error)}`);
     return undefined;
   }
 }
@@ -423,7 +425,7 @@ function checkTokensCss(tokens: TokensFile, css: string, errors: string[]) {
   try {
     expected = compileTokensCss(tokens, rules);
   } catch (error) {
-    errors.push(error instanceof Error ? error.message : String(error));
+    errors.push(messageOf(error));
     return;
   }
   if (css !== expected) {
@@ -481,7 +483,7 @@ function checkBundle(
     parse(code, { ecmaVersion: 'latest', sourceType: 'script' });
   } catch (error) {
     errors.push(
-      `components/bundle.js: not a classic script (${error instanceof Error ? error.message : String(error)}).`
+      `components/bundle.js: not a classic script (${messageOf(error)}).`
     );
   }
   const header = bundleHeader(code, errors);
