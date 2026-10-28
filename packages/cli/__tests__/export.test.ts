@@ -86,7 +86,18 @@ const PROJECT: Record<string, string> = {
     buildSystemIndex({ version: VERSION, at: '2026-10-26T09:00:00Z' })
   ),
   'tokens.json': JSON.stringify(TOKENS),
-  'tokens.css': compileTokensCss(TOKENS),
+  'tokens.css': compileTokensCss(
+    TOKENS,
+    new Map([
+      [
+        'typography-body-default',
+        [
+          'font-family: var(--nx-typography-family-font-sans);',
+          'font-size: 14px;',
+        ],
+      ],
+    ])
+  ),
   'README.md': 'Set the page on `nx-color-background`.\n',
   'components/bundle.js': BUNDLE,
   'components/bundle.css': '.nx\\:p-4 { padding: var(--nx-spacing-4); }\n',
@@ -174,7 +185,11 @@ function readOut(cwd: string, file: string) {
 async function npmRegistry(
   root: string,
   source: string,
-  { integrity }: { integrity?: string } = {}
+  {
+    integrity,
+    tarballUrl,
+    tarballQuery = '',
+  }: { integrity?: string; tarballUrl?: string; tarballQuery?: string } = {}
 ) {
   const staging = path.join(root, 'staging');
   cpSync(source, path.join(staging, 'package'), { recursive: true });
@@ -193,7 +208,9 @@ async function npmRegistry(
           versions: {
             [VERSION]: {
               dist: {
-                tarball: `http://127.0.0.1:${port}/claude-design-${VERSION}.tgz`,
+                tarball:
+                  tarballUrl ??
+                  `http://127.0.0.1:${port}/claude-design-${VERSION}.tgz${tarballQuery}`,
                 integrity: integrity ?? digest,
               },
             },
@@ -281,6 +298,73 @@ describe('nxds-cli export claude-design', () => {
 
     expect(exitCode).toBe(EXIT_CODES.usage);
     expect(body.error).toMatch(/no release 9\.9\.9.*0\.5\.0/);
+  });
+
+  it.each([
+    ['with a user name and password', 'https://user:secret@registry.invalid'],
+    ['without an http scheme', 'user:secret@registry.invalid'],
+    ['with a query', 'https://registry.invalid/?token=secret'],
+    ['with an empty query', 'https://registry.invalid/?'],
+    ['with an empty fragment', 'https://registry.invalid/#'],
+  ])('refuses a registry URL %s', async (_, registry) => {
+    const { cwd } = setup();
+    const { exitCode, stdout, stderr } = await cli(
+      ['export', 'claude-design', '--npm-registry', registry],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.usage);
+    expect(stdout + stderr).toContain('--npm-registry');
+    expect(stdout + stderr).not.toContain('secret');
+  });
+
+  it.each([
+    [
+      'a password',
+      'https://user:secret@registry.invalid/claude-design.tgz',
+      'https://registry.invalid/claude-design.tgz',
+    ],
+    [
+      'no http scheme',
+      'user:secret@registry.invalid/claude-design.tgz',
+      '<invalid URL>',
+    ],
+    [
+      'a $& in its path',
+      'https://user:secret@registry.invalid/a$&b.tgz',
+      'https://registry.invalid/a$&b.tgz',
+    ],
+  ])(
+    "leaves a tarball URL's password out of its errors, with %s",
+    async (_, tarballUrl, shown) => {
+      const { root, source, cwd } = setup();
+      const registry = await npmRegistry(root, source, { tarballUrl });
+      const { exitCode, stdout, stderr } = await cli(
+        ['export', 'claude-design', '--npm-registry', registry],
+        cwd
+      );
+
+      expect(exitCode).toBe(EXIT_CODES.error);
+      expect(stdout + stderr).toContain(`Could not reach ${shown}`);
+      expect(stdout + stderr).not.toContain('secret');
+    }
+  );
+
+  it("leaves a tarball URL's query out of its errors", async () => {
+    const { root, source, cwd } = setup();
+    const registry = await npmRegistry(root, source, {
+      tarballQuery: '?token=secret',
+    });
+    const { exitCode, stdout, stderr } = await cli(
+      ['export', 'claude-design', '--npm-registry', registry],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(stdout + stderr).toContain(
+      `${registry}/claude-design-${VERSION}.tgz answered 404`
+    );
+    expect(stdout + stderr).not.toContain('secret');
   });
 
   it('keeps an existing folder unless asked to overwrite it', async () => {

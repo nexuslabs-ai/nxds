@@ -231,7 +231,8 @@ await writeFile(
         strict: true,
         noEmit: true,
         esModuleInterop: true,
-        skipLibCheck: true,
+        skipLibCheck: false,
+        types: [],
         forceConsistentCasingInFileNames: true,
       },
       include: ['probe.ts', 'probe.cts'],
@@ -251,5 +252,7 @@ const result = spawnSync(
 );
 
 await rm(probeDir, { recursive: true, force: true });
+
+if (result.error) throw result.error;
 
 process.exit(result.status ?? 1);

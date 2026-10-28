@@ -25,12 +25,14 @@ type GlobalOptions = { cwd?: string; registry?: string };
 
 type InstallFlags = { overwrite?: boolean; dryRun?: boolean; install: boolean };
 
+function cwdOf(command: Command) {
+  const { cwd } = command.optsWithGlobals<GlobalOptions>();
+  return path.resolve(cwd ?? process.cwd());
+}
+
 function context(command: Command) {
-  const { cwd, registry } = command.optsWithGlobals<GlobalOptions>();
-  return {
-    cwd: path.resolve(cwd ?? process.cwd()),
-    registry: resolveRegistry(registry),
-  };
+  const { registry } = command.optsWithGlobals<GlobalOptions>();
+  return { cwd: cwdOf(command), registry: resolveRegistry(registry) };
 }
 
 function installOptions(command: Command): InstallOptions {
@@ -156,7 +158,7 @@ function program(
     .command('info')
     .description('show what the CLI detects in this app')
     .action((_options, command: Command) => {
-      done(info(context(command).cwd));
+      done(info(cwdOf(command)));
     });
 
   cli
@@ -198,8 +200,9 @@ function program(
       ).env('npm_config_registry')
     )
     .action(async (_target: string, _options, command: Command) => {
-      const { cwd } = context(command);
-      done(await exportClaudeDesign(cwd, command.opts<ExportOptions>()));
+      done(
+        await exportClaudeDesign(cwdOf(command), command.opts<ExportOptions>())
+      );
     });
 
   cli

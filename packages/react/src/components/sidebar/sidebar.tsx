@@ -22,6 +22,7 @@ import { Skeleton } from '../skeleton/skeleton';
 import {
   Tooltip,
   TooltipContent,
+  type TooltipContentProps,
   TooltipProvider,
   TooltipTrigger,
 } from '../tooltip/tooltip';
@@ -82,11 +83,11 @@ interface SidebarProviderProps extends React.ComponentProps<'div'> {
    */
   defaultOpen?: boolean;
   /**
-   * Controlled open state. Pair it with `onOpenChange`.
+   * Controlled open state.
    */
   open?: boolean;
   /**
-   * Called when the open state changes in controlled mode.
+   * Called when the open state changes.
    */
   onOpenChange?: (open: boolean) => void;
 }
@@ -107,22 +108,20 @@ function SidebarProvider({
   const isNarrow = useIsNarrow();
   const [openNarrow, setOpenNarrow] = React.useState(false);
 
-  // Internal open state; openProp/setOpenProp take over when controlled.
+  // Internal open state; openProp takes over when controlled.
   const [_open, _setOpen] = React.useState(defaultOpen);
   const open = openProp ?? _open;
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === 'function' ? value(open) : value;
-      if (setOpenProp) {
-        setOpenProp(openState);
-        return;
-      }
+      setOpenProp?.(openState);
+      if (openProp !== undefined) return;
 
       _setOpen(openState);
       // Persist non-sensitive uncontrolled open state for server-side restore.
       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}; SameSite=Lax`;
     },
-    [setOpenProp, open]
+    [setOpenProp, openProp, open]
   );
 
   const toggleSidebar = React.useCallback(() => {
@@ -220,6 +219,20 @@ function Sidebar({
   ...props
 }: SidebarProps) {
   const { isNarrow, state, openNarrow, setOpenNarrow } = useSidebar();
+  // The drawer opens from state, not a SheetTrigger, so it has no trigger to
+  // return focus to. Return it to whatever had focus when it opened.
+  const returnFocus = React.useRef<HTMLElement | null>(null);
+
+  function rememberFocus() {
+    const opener = document.activeElement;
+    returnFocus.current = opener instanceof HTMLElement ? opener : null;
+  }
+
+  function restoreFocus(event: Event) {
+    if (!returnFocus.current?.isConnected) return;
+    event.preventDefault();
+    returnFocus.current.focus();
+  }
 
   if (collapsible === 'none') {
     return (
@@ -244,6 +257,8 @@ function Sidebar({
           data-slot="sidebar"
           data-narrow="true"
           side={side}
+          onOpenAutoFocus={rememberFocus}
+          onCloseAutoFocus={restoreFocus}
           className={cn(
             'nx:inset-y-2 nx:h-auto nx:w-(--sidebar-width) nx:max-w-[calc(100vw-1rem)] nx:rounded-lg nx:border-default nx:border-nav-border nx:bg-nav-background nx:p-0 nx:text-nav-foreground',
             side === 'left'
@@ -718,7 +733,7 @@ interface SidebarMenuButtonProps
   /**
    * Tooltip shown only on the icon rail. A string or `TooltipContent` props.
    */
-  tooltip?: string | React.ComponentProps<typeof TooltipContent>;
+  tooltip?: string | TooltipContentProps;
 }
 
 /**
@@ -736,6 +751,11 @@ function SidebarMenuButton({
 }: SidebarMenuButtonProps) {
   const Comp = asChild ? Slot : 'button';
   const { isNarrow, state } = useSidebar();
+  const [open, setOpen] = React.useState(false);
+  const isRail = state === 'collapsed' && !isNarrow;
+  // Only the icon rail shows the tooltip. Radix never reports a close after
+  // the button leaves the rail.
+  if (!isRail && open) setOpen(false);
 
   const button = (
     <Comp
@@ -757,14 +777,9 @@ function SidebarMenuButton({
     typeof tooltip === 'string' ? { children: tooltip } : tooltip;
 
   return (
-    <Tooltip>
+    <Tooltip open={open} onOpenChange={setOpen}>
       <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent
-        side="right"
-        align="center"
-        hidden={state !== 'collapsed' || isNarrow}
-        {...tooltipProps}
-      />
+      <TooltipContent side="right" align="center" {...tooltipProps} />
     </Tooltip>
   );
 }

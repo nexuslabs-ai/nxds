@@ -7,7 +7,12 @@
     "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@radix-ui/react-slot": [
+        "../react-18/node_modules/@radix-ui/react-slot/dist/index.d.mts"
+      ]
+    }
   },
   "include": ["src/**/*.ts", "scripts/**/*.ts"]
 }

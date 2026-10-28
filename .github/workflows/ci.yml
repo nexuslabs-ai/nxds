@@ -235,6 +235,12 @@ jobs:
       - name: Core dist-type contract
         run: pnpm --filter @nxds/core typecheck:dist
 
+      - name: React dist-type contract
+        run: pnpm --filter @nxds/react typecheck:dist
+
+      - name: Vue dist-type contract
+        run: pnpm --filter @nxds/vue typecheck:dist
+
       - name: Tailwind and CSS export contract
         run: node scripts/typecheck-tailwind-dist.mjs
 
@@ -302,6 +308,9 @@ jobs:
       # the validator above — stdlib-only, sub-second.
       - name: Check canonical step set freshness
         run: pnpm --filter @nxds/eslint-plugin refresh:canonical-set --check
+
+      - name: Check token scales freshness
+        run: pnpm --filter @nxds/core generate:scales --check
 
       - name: Regenerate token outputs (tailwind)
         id: regen

@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run --project=unit",
-    "typecheck:dist": "pnpm --filter @nxds/core typecheck:dist && node scripts/typecheck-tailwind-dist.mjs",
+    "typecheck:dist": "pnpm --filter @nxds/core typecheck:dist && pnpm --filter @nxds/react typecheck:dist && pnpm --filter @nxds/vue typecheck:dist && node scripts/typecheck-tailwind-dist.mjs",
     "test:storybook": "pnpm test:storybook:react19 && pnpm test:storybook:react18",
     "test:storybook:react19": "vitest run --project=storybook --project=storybook-vue --project=parity",
     "test:storybook:react18": "vitest run --project=storybook-react18",
@@ -23,7 +23,7 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,vue,js,jsx,json,md,mdx,css,yml}\" \".claude/**/*.md\"",
     "clean": "turbo run clean && rm -rf node_modules",
     "typecheck": "turbo run typecheck",
-    "tokens:tailwind": "turbo run build:tailwind --filter=@nxds/core && cp packages/core/dist/tailwind/* packages/tailwind/",
+    "tokens:tailwind": "pnpm --filter @nxds/core generate:scales && turbo run build:tailwind --filter=@nxds/core && cp packages/core/dist/tailwind/* packages/tailwind/",
     "audit:agent-drift": "node scripts/audit-agent-drift.js",
     "audit:turbo-outputs": "node scripts/audit-turbo-outputs.js",
     "audit:contrast": "vitest run --project=unit packages/core/src/lib/derive-theme.test.ts packages/core/src/lib/contrast.test.ts -t \"legibility invariant\"",
@@ -69,7 +69,7 @@
     },
     {
       "name": "@nxds/react/appearance (ESM)",
-      "path": "packages/react/dist/appearance.mjs",
+      "path": "packages/react/dist/components/appearance/provider/index.mjs",
       "ignore": [
         "@nxds/core",
         "react",

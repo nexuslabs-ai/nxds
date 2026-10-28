@@ -1,5 +1,39 @@
 # @nxds/vue
 
+## 0.8.0
+
+### Minor Changes
+
+- 91d13a1: Add app-shell components to `@nxds/vue` that match their React counterparts.
+
+  | Component | Parts                                                                                                                                                                                                                                                                                                                                                                                                                                          | Notes                                                                                                                                                                                    |
+  | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | Sidebar   | `SidebarProvider`, `Sidebar`, `SidebarTrigger`, `SidebarRail`, `SidebarInset`, `SidebarInput`, `SidebarHeader`, `SidebarFooter`, `SidebarSeparator`, `SidebarContent`, `SidebarGroup`, `SidebarGroupLabel`, `SidebarGroupAction`, `SidebarGroupContent`, `SidebarMenu`, `SidebarMenuItem`, `SidebarMenuButton`, `SidebarMenuAction`, `SidebarMenuBadge`, `SidebarMenuSkeleton`, `SidebarMenuSub`, `SidebarMenuSubItem`, `SidebarMenuSubButton` | Read the state with `useSidebar`. Listen for `open-change` on `SidebarProvider`. With `TooltipContent` props as `tooltip`, put the tooltip text in `SidebarMenuButton`'s `#tooltip` slot |
+  | Toolbar   | `Toolbar`, `ToolbarButton`, `ToolbarLink`, `ToolbarGroup`, `ToolbarToggleGroup`, `ToolbarToggleItem`, `ToolbarSeparator`                                                                                                                                                                                                                                                                                                                       | Bind a toggle group's value with `v-model`                                                                                                                                               |
+
+  In `@nxds/react`, `SidebarProvider` is controlled only when you pass `open`. It now calls `onOpenChange` in both modes, so passing `onOpenChange` alone no longer stops the sidebar from toggling.
+
+  Closing the narrow-viewport sidebar drawer returns focus to the control that opened it. The first Escape closes the drawer, because a `SidebarMenuButton` tooltip no longer opens unless the sidebar is collapsed to its icon rail.
+
+## 0.7.0
+
+### Minor Changes
+
+- 4181e9b: Add chat components that match their React counterparts.
+
+  | Component       | Parts                                                                                                                                                                               | Notes                                                                                                   |
+  | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+  | Attachment      | `Attachment`, `AttachmentMedia`, `AttachmentContent`, `AttachmentTitle`, `AttachmentDescription`, `AttachmentActions`, `AttachmentProgress`, `AttachmentTrigger`, `AttachmentGroup` | Put a badge after the file name in `AttachmentTitle`'s `#trailing` slot                                 |
+  | Bubble          | `Bubble`, `BubbleGroup`, `BubbleContent`, `BubbleReactions`                                                                                                                         |                                                                                                         |
+  | Message         | `Message`, `MessageGroup`, `MessageAvatar`, `MessageContent`, `MessageHeader`, `MessageFooter`                                                                                      |                                                                                                         |
+  | MessageScroller | `MessageScrollerProvider`, `MessageScroller`, `MessageScrollerViewport`, `MessageScrollerContent`, `MessageScrollerItem`, `MessageScrollerButton`                                   | Read the scroll state with `useMessageScroller`, or from `MessageScrollerProvider`'s default slot props |
+  | Sonner          | `Toaster`, `toast`, `useSonner`                                                                                                                                                     | Install `vue-sonner` in your app to use it                                                              |
+
+### Patch Changes
+
+- Updated dependencies [bfd0509]
+  - @nxds/core@0.10.0
+
 ## 0.6.0
 
 ### Minor Changes
