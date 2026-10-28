@@ -68,4 +68,6 @@ const result = spawnSync(
 
 await rm(probeDir, { recursive: true, force: true });
 
+if (result.error) throw result.error;
+
 process.exit(result.status ?? 1);

@@ -17,15 +17,18 @@ const config: StorybookConfig = {
     const tailwindcss = (await import('@tailwindcss/vite')).default;
 
     // Storybook loads vite.config.ts. Remove vite-plugin-dts (plugin name
-    // `unplugin-dts`): type bundling needs the library build in dist.
-    config.plugins = config.plugins?.filter(
+    // `unplugin-dts`): only the library build writes the types in dist.
+    const plugins = config.plugins?.filter(
       (plugin) =>
         !(plugin && 'name' in plugin && plugin.name === 'unplugin-dts')
     );
 
-    return mergeConfig(config, {
-      plugins: [tailwindcss()],
-    });
+    return mergeConfig(
+      { ...config, plugins },
+      {
+        plugins: [tailwindcss()],
+      }
+    );
   },
 };
 

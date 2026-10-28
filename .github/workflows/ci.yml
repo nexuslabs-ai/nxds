@@ -235,6 +235,9 @@ jobs:
       - name: Core dist-type contract
         run: pnpm --filter @nxds/core typecheck:dist
 
+      - name: React dist-type contract
+        run: pnpm --filter @nxds/react typecheck:dist
+
       - name: Vue dist-type contract
         run: pnpm --filter @nxds/vue typecheck:dist
 

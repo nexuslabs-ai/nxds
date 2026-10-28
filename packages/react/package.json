@@ -69,6 +69,7 @@
     "build": "vite build",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
+    "typecheck:dist": "node scripts/typecheck-dist.mjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
