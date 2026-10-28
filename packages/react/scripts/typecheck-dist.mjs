@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -12,55 +12,60 @@ const repoRoot = path.resolve(packageRoot, '../..');
 const probeDir = path.join(packageRoot, '.dist-typecheck');
 const tscBin = path.join(repoRoot, 'node_modules', 'typescript', 'bin', 'tsc');
 
-const entries = [
-  'index',
-  'lib/utils',
-  'components/code-block/code-block-theme',
-  'components/appearance/provider/index',
-  'components/appearance/provider/server',
-];
+// One probe per public subpath. The @ts-expect-error line fails when the
+// subpath's declarations are emitted as `any`.
+const probes = {
+  '.': `import { Button } from '@nxds/react';
+// @ts-expect-error proves the root entry is not any.
+export const button: number = Button;`,
+  './utils': `import { cn } from '@nxds/react/utils';
+// @ts-expect-error proves the utils entry is not any.
+export const merged: number = cn('nx:flex');`,
+  './code-block-theme': `import { codeBlockTheme } from '@nxds/react/code-block-theme';
+// @ts-expect-error proves the code block theme entry is not any.
+export const theme: number = codeBlockTheme;`,
+  './appearance': `import { NxdsAppearanceProvider } from '@nxds/react/appearance';
+// @ts-expect-error proves the appearance entry is not any.
+export const provider: number = NxdsAppearanceProvider;`,
+  './appearance/server': `import { createNxdsAppearanceScript } from '@nxds/react/appearance/server';
+// @ts-expect-error proves the appearance server entry is not any.
+export const script: number = createNxdsAppearanceScript;`,
+};
 
-for (const entry of entries) {
-  for (const extension of ['d.ts', 'd.cts']) {
-    const file = `dist/${entry}.${extension}`;
-    if (!existsSync(path.join(packageRoot, file))) {
+const { exports } = JSON.parse(
+  await readFile(path.join(packageRoot, 'package.json'), 'utf8')
+);
+
+const typedSubpaths = Object.entries(exports).filter(
+  ([, target]) => typeof target === 'object'
+);
+
+for (const [subpath, target] of typedSubpaths) {
+  if (!(subpath in probes)) {
+    throw new Error(
+      `@nxds/react exports ${subpath} has no probe in scripts/typecheck-dist.mjs.`
+    );
+  }
+
+  for (const condition of ['import', 'require']) {
+    const file = target[condition]?.types;
+    if (!file || !existsSync(path.join(packageRoot, file))) {
       throw new Error(
-        `Missing packages/react/${file}. Run @nxds/react build before this dist typecheck.`
+        `@nxds/react exports ${subpath}.${condition}.types -> ${file} is missing. Run @nxds/react build before this dist typecheck.`
       );
     }
   }
 }
 
-// One import per public subpath. If a subpath's types fail to resolve, the
-// import is `any` and the @ts-expect-error lines fail.
-const probe = `import { Button } from '@nxds/react';
-import { cn } from '@nxds/react/utils';
-import { codeBlockTheme } from '@nxds/react/code-block-theme';
-import { NxdsAppearanceProvider } from '@nxds/react/appearance';
-import { createNxdsAppearanceScript } from '@nxds/react/appearance/server';
+for (const subpath of Object.keys(probes)) {
+  if (!typedSubpaths.some(([exported]) => exported === subpath)) {
+    throw new Error(
+      `scripts/typecheck-dist.mjs probes ${subpath}, which @nxds/react no longer exports.`
+    );
+  }
+}
 
-const className: string = cn('nx:flex');
-const themeName: string = codeBlockTheme.name;
-
-// @ts-expect-error proves the root entry is not any.
-const button: number = Button;
-// @ts-expect-error proves the utils entry is not any.
-const merged: number = cn('nx:flex');
-// @ts-expect-error proves the code block theme entry is not any.
-const theme: number = codeBlockTheme;
-// @ts-expect-error proves the appearance entry is not any.
-const provider: number = NxdsAppearanceProvider;
-// @ts-expect-error proves the appearance server entry is not any.
-const script: number = createNxdsAppearanceScript;
-
-void className;
-void themeName;
-void button;
-void merged;
-void theme;
-void provider;
-void script;
-`;
+const probe = `${Object.values(probes).join('\n\n')}\n`;
 
 await rm(probeDir, { recursive: true, force: true });
 await mkdir(probeDir, { recursive: true });
@@ -76,7 +81,8 @@ await writeFile(
       moduleResolution: 'NodeNext',
       strict: true,
       noEmit: true,
-      skipLibCheck: true,
+      skipLibCheck: false,
+      types: [],
     },
     include: ['probe.ts', 'probe.cts'],
   })
