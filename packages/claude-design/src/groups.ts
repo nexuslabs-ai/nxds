@@ -95,4 +95,5 @@ export const GROUPS: readonly (readonly [string, readonly string[]])[] = [
 /** Parts only the export ships, in src/canvas/, and the card group each sits in. */
 export const CANVAS_PARTS: readonly { name: string; group: string }[] = [
   { name: 'Icon', group: 'Iconography' },
+  { name: 'Toast', group: 'Feedback' },
 ];

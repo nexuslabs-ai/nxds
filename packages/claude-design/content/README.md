@@ -79,7 +79,8 @@ Motion answers input and then gets out of the way. Popovers, menus and routine s
 - Mount components from `Nxds`, such as `Nxds.Button` and `Nxds.DialogContent`. Each component's card lists its parts and props.
 - Compose a component from its parts, as its README shows: `Nxds.Card` holds `Nxds.CardHeader`, `Nxds.CardTitle` and `Nxds.CardContent`.
 - Overlays (`Dialog`, `Popover`, `DropdownMenu`, `Select`, `Tooltip`) open from a trigger part, such as `Nxds.DialogTrigger`.
-- Wrap a sidebar layout in `Nxds.SidebarProvider`, and mount `Nxds.Toaster` once to show toasts.
+- Wrap a sidebar layout in `Nxds.SidebarProvider`.
+- Show a toast on a static screen with `Nxds.Toast`, placed where the app shows its toasts. `Nxds.Toaster` shows a toast only when code calls `toast()`.
 - Draw charts with `Nxds.ChartContainer` around `Nxds.Recharts` parts.
 
 ## Themes

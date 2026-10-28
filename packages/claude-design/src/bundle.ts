@@ -29,7 +29,10 @@ const EXPORTS_MODULE = 'nxds:exports';
 const ICONS_MODULE = 'nxds:icons';
 const SCHEMA_MODULE = 'nxds:canvas-schema';
 const ICON_NAMES_MODULE = 'nxds:icon-names';
-const CANVAS_ICON = path.join(import.meta.dirname, 'canvas', 'icon.ts');
+const SONNER_THEME_MODULE = 'nxds:sonner-theme';
+const CANVAS_DIR = path.join(import.meta.dirname, 'canvas');
+const CANVAS_ICON = path.join(CANVAS_DIR, 'icon.ts');
+const CANVAS_TOAST = path.join(CANVAS_DIR, 'toast.ts');
 
 // index.ts's utility exports (`getFilterErrors`, `CHART_CATEGORICAL_SERIES`),
 // copied statement by statement.
@@ -58,6 +61,7 @@ function exportsModule(slugs: readonly string[]) {
     ...slugs.map((slug) => `export * from './components/${slug}/${slug}';`),
     `export * as Icons from '${ICONS_MODULE}';`,
     `export { Icon } from ${JSON.stringify(CANVAS_ICON)};`,
+    `export { Toast } from ${JSON.stringify(CANVAS_TOAST)};`,
     "export * as Recharts from 'recharts';",
   ].join('\n');
 }
@@ -151,13 +155,34 @@ function virtualModules(
         path: args.path,
         namespace: 'nxds',
       }));
-      builder.onLoad({ filter: /.*/, namespace: 'nxds' }, (args) => ({
-        contents: contents[args.path]?.() ?? '',
-        loader: 'ts',
-        resolveDir: react18Src,
-      }));
+      builder.onLoad({ filter: /.*/, namespace: 'nxds' }, (args) =>
+        args.path === SONNER_THEME_MODULE
+          ? {
+              contents: sonnerThemeModule(),
+              loader: 'tsx',
+              resolveDir: path.dirname(SONNER_SOURCE),
+            }
+          : {
+              contents: contents[args.path]?.() ?? '',
+              loader: 'ts',
+              resolveDir: react18Src,
+            }
+      );
     },
   };
+}
+
+const SONNER_SOURCE = path.join(
+  react18Src,
+  'components',
+  'sonner',
+  'sonner.tsx'
+);
+
+// The nxds Toaster's module with its private theme and Sonner's own exports
+// opened up, for Nxds.Toast. It imports the same Sonner as the Toaster.
+function sonnerThemeModule() {
+  return `${readFileSync(SONNER_SOURCE, 'utf8')}\nexport { Sonner, sonnerToast, toasterIcons, toasterThemeVars, useToasterTheme };`;
 }
 
 function partsBySlug(parts: readonly FlatComponent[]) {

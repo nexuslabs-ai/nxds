@@ -683,7 +683,7 @@ export function flatComponents(): FlatComponent[] {
     ...[...publicComponents(checker, exported, componentsRoot)]
       .map(([name, symbol]) => flatComponent(checker, name, symbol))
       .filter((component) => component.slug !== 'appearance'),
-    iconPart(),
+    ...canvasParts(),
   ];
 }
 
@@ -702,63 +702,109 @@ const NUMBER = {
   boolean: false,
 } as const satisfies ScalarAttribute;
 const TEXT = { ...NUMBER, string: true, number: false } as const;
+const BOOLEAN = { ...NUMBER, number: false, boolean: true } as const;
 
-// Nxds.Icon lives in the export (src/canvas/icon.ts), not in @nxds/react.
-function iconPart(): FlatComponent {
+/** A prop of a part only the export ships, typed by hand. */
+function canvasProp(
+  name: string,
+  attribute: Attribute,
+  description: string,
+  {
+    defaultValue = null,
+    optional = true,
+  }: { defaultValue?: string | null; optional?: boolean } = {}
+): FlatProp {
+  const type = attributeType(attribute, 'string');
   return {
-    name: 'Icon',
-    slug: 'icon',
-    description:
-      'A Tabler icon by name, such as `plus`. It takes the colour of its text. `components/Icon/README.md` lists every name.',
-    props: [
-      {
-        name: 'name',
-        type: iconNameUnion(),
-        optional: false,
-        description: 'The icon, by its name on tabler.io.',
-        defaultValue: null,
-        attribute: { kind: 'icon', as: 'name' },
-        control: 'dropdown',
-      },
-      {
-        name: 'size',
-        type: 'number',
-        optional: true,
-        description: 'Width and height in px.',
-        defaultValue: '16',
-        attribute: NUMBER,
-        control: 'number',
-      },
-      {
-        name: 'stroke',
-        type: 'number',
-        optional: true,
-        description: 'Stroke width.',
-        defaultValue: '2',
-        attribute: NUMBER,
-        control: 'number',
-      },
-      {
-        name: 'aria-label',
-        type: 'string',
-        optional: true,
-        description:
-          'Names the icon for screen readers. Without it, they skip the icon. An icon-only button names itself instead.',
-        defaultValue: null,
-        attribute: TEXT,
-        control: 'text',
-      },
-      {
-        name: 'className',
-        type: 'string',
-        optional: true,
-        description: '',
-        defaultValue: null,
-        attribute: TEXT,
-        control: 'text',
-      },
-    ],
+    name,
+    type,
+    optional,
+    description,
+    defaultValue,
+    attribute,
+    control: controlOf(attribute, type),
   };
+}
+
+// The export's own parts, in src/canvas/, which @nxds/react doesn't have.
+function canvasParts(): FlatComponent[] {
+  const iconName: Attribute = { kind: 'icon', as: 'name' };
+  return [
+    {
+      name: 'Icon',
+      slug: 'icon',
+      description:
+        'A Tabler icon by name, such as `plus`. It takes the colour of its text. `components/Icon/README.md` lists every name.',
+      props: [
+        canvasProp('name', iconName, 'The icon, by its name on tabler.io.', {
+          optional: false,
+        }),
+        canvasProp('size', NUMBER, 'Width and height in px.', {
+          defaultValue: '16',
+        }),
+        canvasProp('stroke', NUMBER, 'Stroke width.', { defaultValue: '2' }),
+        canvasProp(
+          'aria-label',
+          TEXT,
+          'Names the icon for screen readers. Without it, they skip the icon. An icon-only button names itself instead.'
+        ),
+        canvasProp('className', TEXT, ''),
+      ],
+    },
+    {
+      name: 'Toast',
+      slug: 'toast',
+      description:
+        'One toast, shown in place, as `toast()` shows it in an app. Use it to show a toast on a static screen.',
+      props: [
+        canvasProp(
+          'variant',
+          {
+            ...TEXT,
+            string: false,
+            literals: [
+              'default',
+              'success',
+              'info',
+              'warning',
+              'error',
+              'loading',
+            ],
+          },
+          'The kind of message. Each kind but `default` has its icon.',
+          { defaultValue: '"default"' }
+        ),
+        canvasProp('title', TEXT, 'The message.', { optional: false }),
+        canvasProp('description', TEXT, 'A line of detail under the title.'),
+        canvasProp(
+          'action',
+          TEXT,
+          'The label of an action button, such as "Undo".'
+        ),
+        canvasProp(
+          'cancel',
+          TEXT,
+          'The label of a dismiss button, such as "Close".'
+        ),
+        canvasProp(
+          'closeButton',
+          BOOLEAN,
+          'Shows a close button in the corner.',
+          {
+            defaultValue: 'false',
+          }
+        ),
+        canvasProp(
+          'richColors',
+          BOOLEAN,
+          'Fills the toast with its variant’s colour.',
+          { defaultValue: 'false' }
+        ),
+        canvasProp('icon', iconName, 'An icon in place of the variant’s.'),
+        canvasProp('className', TEXT, ''),
+      ],
+    },
+  ];
 }
 
 function docComment(lines: string[], indent: string) {

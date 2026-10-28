@@ -72,14 +72,56 @@ function iconReadme(part: FlatComponent) {
   ].join('\n');
 }
 
+const TOAST_EXAMPLE = [
+  `<x-import component-from-global-scope="${NAMESPACE}.Toast" variant="success" title="Changes saved" description="Your profile is up to date."></x-import>`,
+  `<x-import component-from-global-scope="${NAMESPACE}.Toast" title="Event has been created" description="Sunday, 1 March at 9:00" action="Undo"></x-import>`,
+  `<x-import component-from-global-scope="${NAMESPACE}.Toast" variant="error" title="Something went wrong" cancel="Dismiss"></x-import>`,
+].join('\n');
+
+function toastScript() {
+  return `(() => {
+  const { React, ReactDOM, ${NAMESPACE} } = window;
+  const h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    h('div', { style: { display: 'grid', gap: 'var(--nx-spacing-3)' } },
+      h(${NAMESPACE}.Toast, { variant: 'success', title: 'Changes saved', description: 'Your profile is up to date.' }),
+      h(${NAMESPACE}.Toast, { title: 'Event has been created', description: 'Sunday, 1 March at 9:00', action: 'Undo' })));
+})();`;
+}
+
+function toastReadme(part: FlatComponent) {
+  return [
+    '# Toast',
+    '',
+    part.description,
+    '',
+    '## On the canvas',
+    '',
+    '```html',
+    TOAST_EXAMPLE,
+    '```',
+    '',
+    'Each Toast sits where it is placed, the width of a toast. Stack several in a column with a gap to show a queue. Put one in a corner of the artboard to show where an app shows its toasts. `Nxds.Toaster` shows nothing on a static screen, because a toast needs a `toast()` call.',
+    '',
+    ...propsSection([part]),
+  ].join('\n');
+}
+
 /** Each canvas part's files, by path under `components/`. */
 export function canvasPartFiles(
   parts: readonly FlatComponent[],
   groups: ReadonlyMap<string, string>
 ): Record<string, string> {
   const icon = parts.find((part) => part.name === 'Icon');
-  if (!icon) throw new Error('canvas parts: no Icon part.');
+  const toast = parts.find((part) => part.name === 'Toast');
+  if (!icon || !toast) throw new Error('canvas parts: no Icon or Toast part.');
   return {
+    'Toast/preview.html': previewHtml({
+      name: 'Toast',
+      group: groups.get('Toast') ?? '',
+      script: toastScript(),
+    }),
+    'Toast/README.md': toastReadme(toast),
     'Icon/preview.html': previewHtml({
       name: 'Icon',
       group: groups.get('Icon') ?? '',
