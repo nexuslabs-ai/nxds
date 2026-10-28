@@ -31,6 +31,7 @@ export const shared = [
   'checkbox',
   'choice-card',
   'choice-row',
+  'code-block',
   'collapsible',
   'combobox',
   'command',
@@ -648,6 +649,10 @@ export const copies: [react: string, vue: string][] = [
   [
     'packages/react/src/lib/responsive-visibility.ts',
     'packages/vue/src/lib/responsive-visibility.ts',
+  ],
+  [
+    'packages/react/src/components/code-block/code-block-theme.ts',
+    'packages/vue/src/components/code-block/code-block-theme.ts',
   ],
   [
     'packages/react/src/components/progress/progress.css',

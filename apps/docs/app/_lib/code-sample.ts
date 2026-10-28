@@ -1,11 +1,10 @@
+import { codeBlockTheme } from '@nxds/react/code-block-theme';
 import bash from '@shikijs/langs/bash';
 import css from '@shikijs/langs/css';
 import tsx from '@shikijs/langs/tsx';
 import vue from '@shikijs/langs/vue';
 import { createHighlighterCore, type HighlighterCore } from 'shiki/core';
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
-
-import { NXDS_CODE_THEME } from '../../code-theme';
 
 import 'server-only';
 
@@ -18,28 +17,17 @@ let highlighter: Promise<HighlighterCore> | undefined;
 
 function getHighlighter() {
   highlighter ??= createHighlighterCore({
-    themes: [NXDS_CODE_THEME],
+    themes: [codeBlockTheme],
     langs: Object.values(LANGS),
     engine: createJavaScriptRegexEngine(),
   });
   return highlighter;
 }
 
+/** Each line of `code` as Shiki tokens coloured by `codeBlockTheme`. */
 export async function highlightSample(lang: CodeSampleLanguage, code: string) {
-  return (await getHighlighter()).codeToHtml(code, {
+  return (await getHighlighter()).codeToTokens(code, {
     lang,
-    theme: NXDS_CODE_THEME.name,
-    transformers: [
-      {
-        root(node) {
-          const pre = node.children[0];
-          if (pre?.type !== 'element') return;
-
-          // `CodeBlock` owns the `pre` — its surface, its tab stop, its copy
-          // control — so the sample contributes only the `code` inside it.
-          node.children = pre.children;
-        },
-      },
-    ],
-  });
+    theme: codeBlockTheme.name,
+  }).tokens;
 }

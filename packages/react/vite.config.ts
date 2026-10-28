@@ -4,6 +4,20 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
+const clientEntry = 'components/appearance/provider/index';
+
+// Named after the source path, so each entry's bundled types land at the
+// same dist path as its source.
+const entries = Object.fromEntries(
+  [
+    'index',
+    'lib/utils',
+    'components/code-block/code-block-theme',
+    clientEntry,
+    'components/appearance/provider/server',
+  ].map((name) => [name, path.resolve(__dirname, `src/${name}.ts`)])
+);
+
 export default defineConfig({
   plugins: [
     react(),
@@ -18,27 +32,17 @@ export default defineConfig({
         'src/blocks/**',
         'src/patterns/**',
       ],
-      outDir: 'dist',
+      bundleTypes: true,
+      outDirs: ['dist', { dir: 'dist', moduleFormat: 'cjs' }],
     }),
   ],
   build: {
     lib: {
-      entry: {
-        index: path.resolve(__dirname, 'src/index.ts'),
-        utils: path.resolve(__dirname, 'src/lib/utils.ts'),
-        appearance: path.resolve(
-          __dirname,
-          'src/components/appearance/provider/index.ts'
-        ),
-        'appearance-server': path.resolve(
-          __dirname,
-          'src/components/appearance/provider/server.ts'
-        ),
-      },
+      entry: entries,
       name: 'NxdsReact',
       formats: ['es', 'cjs'],
       fileName: (format, entryName) =>
-        `${entryName}.${format === 'es' ? 'mjs' : 'js'}`,
+        `${entryName}.${format === 'es' ? 'mjs' : 'cjs'}`,
       cssFileName: 'react',
     },
     rollupOptions: {
@@ -56,10 +60,7 @@ export default defineConfig({
       ],
       output: {
         banner: (chunk) =>
-          chunk.fileName === 'appearance.mjs' ||
-          chunk.fileName === 'appearance.js'
-            ? "'use client';"
-            : '',
+          chunk.isEntry && chunk.name === clientEntry ? "'use client';" : '',
         globals: {
           '@nxds/core': 'NxdsCore',
           react: 'React',

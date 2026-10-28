@@ -1,12 +1,13 @@
 import { loadInstallPlan } from '../_lib/catalog';
 import type { Framework } from '../_lib/frameworks';
 
-import { CodeBlock } from './CodeBlock';
+import { DocsCodeBlock } from './CodeBlock';
 import {
   ComponentLinks,
   PackagesSample,
   StylesSample,
 } from './ComponentInstallation';
+import { CodeBlockLine } from './nxds';
 
 const BODY_CLASS = 'nx:typography-body-default nx:text-muted-foreground';
 
@@ -32,9 +33,11 @@ export function InstallBlock({
       )}
       {packages.length > 0 && <PackagesSample packages={packages} />}
       {files.length > 0 && (
-        <CodeBlock>
-          <code>{files.map((file) => file.path).join('\n')}</code>
-        </CodeBlock>
+        <DocsCodeBlock>
+          {files.map((file) => (
+            <CodeBlockLine key={file.path}>{file.path}</CodeBlockLine>
+          ))}
+        </DocsCodeBlock>
       )}
       {styles.length > 0 && <StylesSample styles={styles} />}
     </>
