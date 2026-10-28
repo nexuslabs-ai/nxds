@@ -1,4 +1,8 @@
-import { ChapterLinks, ChapterSection } from '../_home/ChapterSection';
+import {
+  ChapterLink,
+  ChapterSection,
+  GetStartedLink,
+} from '../_home/ChapterSection';
 import { CoexistPreview } from '../_home/coexist/CoexistPreview';
 import { Community } from '../_home/Community';
 import { CustomizePreview } from '../_home/customize/CustomizePreview';
@@ -77,10 +81,13 @@ export default async function Home() {
           level={1}
           title="Your design system starts here."
           actions={
-            <ChapterLinks
-              href={requireSection('components').href}
-              label="View components"
-            />
+            <>
+              <GetStartedLink />
+              <ChapterLink
+                href={requireSection('components').href}
+                label="View components"
+              />
+            </>
           }
         >
           <GalleryPreview />
@@ -89,7 +96,7 @@ export default async function Home() {
           id="customize"
           title="Customize every detail."
           subtitle="Change one setting. See your system respond."
-          actions={<ChapterLinks href="/playground" label="Open Playground" />}
+          actions={<ChapterLink href="/playground" label="Open Playground" />}
         >
           <CustomizePreview />
         </ChapterSection>
@@ -98,7 +105,7 @@ export default async function Home() {
           title="Your next component shouldn’t change the rest."
           subtitle="Nexus components bring their own styles, so you can add what you need while keeping the look and feel you’ve already built."
           actions={
-            <ChapterLinks
+            <ChapterLink
               href={requirePage('integrations', 'overview').route}
               label="Explore integrations"
             />
@@ -111,7 +118,7 @@ export default async function Home() {
           id="frameworks"
           title="One foundation. Many frameworks."
           actions={
-            <ChapterLinks
+            <ChapterLink
               href={requirePage('foundations', 'tokens').route}
               label="Explore the engine"
             />

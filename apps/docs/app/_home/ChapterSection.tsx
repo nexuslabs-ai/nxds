@@ -59,16 +59,20 @@ export function ChapterSection({
   );
 }
 
-/** Get started, then the chapter's own link. */
-export function ChapterLinks({ href, label }: { href: string; label: string }) {
+/** The page's main call to action, in the first chapter only. */
+export function GetStartedLink() {
   return (
-    <>
-      <Button asChild>
-        <Link href={GET_STARTED_HREF}>Get started</Link>
-      </Button>
-      <Button variant="outline" asChild>
-        <Link href={href}>{label}</Link>
-      </Button>
-    </>
+    <Button asChild>
+      <Link href={GET_STARTED_HREF}>Get started</Link>
+    </Button>
+  );
+}
+
+/** A chapter's link to the docs page that goes deeper. */
+export function ChapterLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Button variant="outline" asChild>
+      <Link href={href}>{label}</Link>
+    </Button>
   );
 }
