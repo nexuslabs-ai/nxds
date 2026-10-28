@@ -123,3 +123,7 @@ The System page is read-only for this system. An edit there recompiles tokens.cs
 - Mount a component with `<x-import component-from-global-scope="Nxds.Button">`. Attributes set props, kebab-case to camelCase, and element content becomes `children`.
 - An attribute holds text only. A prop that takes an element, a function or an object has no attribute.
 - Lay out artboards with the spacing tokens, not raw pixel values.
+- Mount each part as its own `x-import`, the way a component's README shows. The canvas puts each one in a wrapper, and the parts keep their layout, borders and icon sizes through it. An `as-child` trigger opens its overlay from the element inside the wrapper.
+- Style a component through its props, not with a `style` on its `x-import`. A styled `x-import` turns the canvas's wrapper into a box that sits between the parts.
+- A Carousel can't scroll on a canvas. It measures its slides, and the wrapper around each `Nxds.CarouselItem` has no size.
+- Give a `Nxds.DialogContent` either a `title` or a `Nxds.DialogHeader`, not both. With both, the dialog shows two headers.
