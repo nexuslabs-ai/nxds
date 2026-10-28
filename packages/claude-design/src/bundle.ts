@@ -135,7 +135,7 @@ function assertOneSlot(metafile: Metafile) {
   if (
     copies.length !== 1 ||
     importers.length !== 1 ||
-    !CANVAS_SLOT.endsWith(importers[0] ?? '-')
+    path.resolve(importers[0] ?? '') !== CANVAS_SLOT
   ) {
     throw new Error(
       `bundle.js: ${RADIX_SLOT} must be bundled once and imported only by src/slot.ts; found ${copies.join(', ') || 'none'} imported by ${importers.join(', ') || 'nothing'}.`

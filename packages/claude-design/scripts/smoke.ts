@@ -846,49 +846,64 @@ const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
 const WRAPPER_NESTING =
   /validateDOMNesting\(\.\.\.\): %s cannot appear as a (?:child|descendant) of <%s>\.%s%s%s (?:<div> \w+|<\w+> div)\s/;
 
-// Renders `tree` with and without canvas wrappers and reads each `read`.
-async function readBoth(page: Page, tree: Part, reads: readonly Read[]) {
+// Renders `tree`, with or without canvas wrappers, and reads each `read`.
+async function readTree(
+  page: Page,
+  tree: Part,
+  reads: readonly Read[],
+  wrapped: boolean
+) {
   return page.evaluate(
-    ({ tree, reads }) => {
+    ({ tree, reads, wrapped }) => {
       const { ReactDOM, __nxdsElement } = window as unknown as PageGlobals;
-      const render = (wrapped: boolean) => {
-        const host = document.createElement('div');
-        document.body.append(host);
-        const root = ReactDOM.createRoot(host);
-        ReactDOM.flushSync(() => root.render(__nxdsElement(tree, wrapped)));
-        for (const animation of document.getAnimations()) animation.finish();
-        const values = reads.map(({ target, property, index = 0 }) => {
-          const element = host.querySelectorAll(target)[index];
-          return element
-            ? getComputedStyle(element).getPropertyValue(property)
-            : `no ${target} #${index}`;
-        });
-        const wrappers = host.querySelectorAll('[data-dc-tpl]').length;
-        root.unmount();
-        host.remove();
-        return { values, wrappers };
-      };
-      return { plain: render(false), wrapped: render(true) };
+      const host = document.createElement('div');
+      document.body.append(host);
+      const root = ReactDOM.createRoot(host);
+      ReactDOM.flushSync(() => root.render(__nxdsElement(tree, wrapped)));
+      for (const animation of document.getAnimations()) animation.finish();
+      const values = reads.map(({ target, property, index = 0 }) => {
+        const element = host.querySelectorAll(target)[index];
+        return element
+          ? getComputedStyle(element).getPropertyValue(property)
+          : null;
+      });
+      const wrappers = host.querySelectorAll('[data-dc-tpl]').length;
+      root.unmount();
+      host.remove();
+      return { values, wrappers };
     },
-    { tree, reads }
+    { tree, reads, wrapped }
   );
+}
+
+// Fails on every console problem since the last call. A wrapped render may
+// log the wrapper's own nesting.
+function failOnProblems(name: string, problems: string[], wrapped: boolean) {
+  for (const problem of problems.splice(0)) {
+    if (wrapped && WRAPPER_NESTING.test(problem)) continue;
+    fail(`${name}${wrapped ? ' through canvas wrappers' : ''}: ${problem}`);
+  }
 }
 
 async function checkWrapped() {
   const { page, problems } = await openPage('Button', LIGHT);
   for (const { name, tree, reads } of WRAPPED_CASES) {
-    const { plain, wrapped } = await readBoth(page, tree, reads);
+    const plain = await readTree(page, tree, reads, false);
+    failOnProblems(name, problems, false);
+    const wrapped = await readTree(page, tree, reads, true);
+    failOnProblems(name, problems, true);
     if (wrapped.wrappers === 0)
       fail(`${name}: the wrapped tree has no wrapper.`);
     reads.forEach(({ target, property, index = 0 }, read) => {
+      if (plain.values[read] === null) {
+        fail(`${name}: the plain tree has no ${target} #${index}.`);
+        return;
+      }
       if (wrapped.values[read] === plain.values[read]) return;
       fail(
-        `${name}: through canvas wrappers, ${target} #${index} has ${property} ${wrapped.values[read]} instead of ${plain.values[read]}.`
+        `${name}: through canvas wrappers, ${target} #${index} has ${property} ${wrapped.values[read] ?? 'no element'} instead of ${plain.values[read]}.`
       );
     });
-  }
-  for (const problem of problems) {
-    if (!WRAPPER_NESTING.test(problem)) fail(`wrapped trees: ${problem}`);
   }
   await page.close();
 }
@@ -958,7 +973,12 @@ const WRAPPED_OVERLAYS: {
       part(
         'SheetContent',
         null,
-        part('SheetHeader', null, part('SheetTitle', null, 'Settings'))
+        part(
+          'SheetHeader',
+          null,
+          part('SheetTitle', null, 'Settings'),
+          part('SheetDescription', null, 'Manage your account.')
+        )
       )
     ),
     open: '[role="dialog"]',
@@ -1007,7 +1027,7 @@ async function openOverlayTree(
   overlay: (typeof WRAPPED_OVERLAYS)[number],
   wrapped: boolean
 ) {
-  const { page } = await openPage('Button', LIGHT);
+  const { page, problems } = await openPage('Button', LIGHT);
   await page.evaluate(
     ({ tree, wrapped }) => {
       const { ReactDOM, __nxdsElement } = window as unknown as PageGlobals;
@@ -1058,6 +1078,7 @@ async function openOverlayTree(
       );
   }
   await page.close();
+  failOnProblems(overlay.name, problems, wrapped);
   return { opened, state, offset, focus };
 }
 

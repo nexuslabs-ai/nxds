@@ -9,7 +9,9 @@
 import postcss from 'postcss';
 import selectorParser from 'postcss-selector-parser';
 
-const W = '[data-dc-tpl]';
+import { CANVAS_WRAPPER } from './canvas-wrapper.ts';
+
+const W = `[${CANVAS_WRAPPER}]`;
 const IS_W = `:where(${W})`;
 const NOT_W = `:where(:not(${W}))`;
 const NXDS_CLASS = /\.nx\\:/;
@@ -49,9 +51,8 @@ function parse(selector: string) {
 }
 
 function split(selector: selectorParser.Selector): Complex {
-  const complex: Complex = { compounds: [[]], combinators: [] };
   let compound: Node[] = [];
-  complex.compounds = [compound];
+  const complex: Complex = { compounds: [compound], combinators: [] };
   for (const node of selector.nodes) {
     if (node.type === 'comment') continue;
     if (node.type !== 'combinator') {
@@ -87,15 +88,36 @@ function lead(complex: Complex, index: number) {
   return `${join(complex, 0, index)}${spaced(combinator)}`;
 }
 
-// `:first-child`, `:last-child`, `:nth-child(…)`, or `:not()` of only those.
+// `:first-child`, `:last-child`, `:nth-child(…)`, or `:not()` of only those,
+// with or without `*` (Tailwind's `not-first:` is `:not(*:first-child)`).
 function isPosition(node: Node): boolean {
   if (node.type !== 'pseudo') return false;
   if (POSITIONS.has(node.value)) return true;
   if (node.value !== ':not') return false;
-  return node.nodes.every(
-    (selector) =>
-      selector.nodes.length === 1 && selector.nodes.every(isPosition)
-  );
+  return node.nodes.every((selector) => {
+    const [position, ...more] = selector.nodes.filter(
+      (inner) => inner.type !== 'universal'
+    );
+    return position !== undefined && more.length === 0 && isPosition(position);
+  });
+}
+
+function isPseudoElement(node: Node) {
+  return node.type === 'pseudo' && node.value.startsWith('::');
+}
+
+// A `:has()` target is one compound with no position: wrappers leave which
+// descendants a part has unchanged, but not their relations or positions.
+function assertPlainTarget(nodes: readonly Node[], whole: string) {
+  for (const node of nodes) {
+    if (node.type === 'combinator') fail(whole, 'a combinator inside :has()');
+    if (node.type !== 'pseudo') continue;
+    if (node.value === ':has') fail(whole, ':has() inside :has()');
+    if (POSITIONS.has(node.value) || UNSUPPORTED.has(node.value)) {
+      fail(whole, `${node.value} inside :has()`);
+    }
+    for (const selector of node.nodes) assertPlainTarget(selector.nodes, whole);
+  }
 }
 
 function hasPosition(compound: readonly Node[]) {
@@ -110,21 +132,24 @@ function withoutPositions(compound: readonly Node[]) {
   return text(compound.filter((node) => !isPosition(node))) || '*';
 }
 
-// `:has(> X)` → it, or X behind wrappers only.
+// `:has(X)` → it. `:has(> X)` → it, or X behind wrappers only.
 function relativeHas(pseudo: selectorParser.Pseudo, whole: string) {
   const [argument, ...more] = pseudo.nodes;
   if (!argument || more.length > 0) fail(whole, ':has() with a selector list');
   const [first, ...rest] = argument.nodes.filter(
     (node) => node.type !== 'comment'
   );
-  if (first?.type !== 'combinator') return pseudo;
+  if (first?.type !== 'combinator') {
+    assertPlainTarget(argument.nodes, whole);
+    return pseudo;
+  }
   if (first.value.trim() !== '>') fail(whole, `:has(${first.value.trim()} …)`);
+  assertPlainTarget(rest, whole);
   const target = text(rest);
-  if (target.includes(':has(')) fail(whole, ':has() inside :has()');
   const [replaced] = parse(
     `:is(:has(> ${target}), :has(> ${IS_W} ${target}):where(:not(:has(> ${IS_W} :not(${W}) ${target}))))`
   );
-  return replaced?.nodes[0] ?? pseudo;
+  return replaced?.nodes[0] ?? fail(whole, `\`${target}\` doesn't parse`);
 }
 
 // Rewrites the selectors inside `:is`, `:where`, `:not` and `:has`.
@@ -166,6 +191,8 @@ function childBranches(complex: Complex, index: number) {
 function positionBranches(complex: Complex, index: number, whole: string) {
   const own = complex.compounds[index] ?? [];
   const target = withoutPositions(own);
+  if (target === '*')
+    fail(whole, 'a position on a part with nothing to find it by');
   if (target.includes(':has(')) fail(whole, ':has() on a positioned part');
   const outermost = `${IS_W}${positionsOf(own)}:where(:not(${W} > *)):where(:not(:has(:not(${W}) ${target})))`;
   const before = lead(complex, index);
@@ -201,11 +228,6 @@ function alternatives(
   whole: string
 ): string[] {
   const parts = split(selector);
-  for (const node of parts.compounds.flat()) {
-    if (node.type === 'pseudo' && UNSUPPORTED.has(node.value)) {
-      fail(whole, `${node.value} has no wrapper-tolerant form`);
-    }
-  }
   const complex: Complex = {
     compounds: parts.compounds.map((compound) =>
       rewriteArguments(compound, whole)
@@ -214,23 +236,27 @@ function alternatives(
   };
   const { compounds, combinators } = complex;
   const siblings = combinators.filter((combinator) => /[~+]/.test(combinator));
+  const children = combinators.flatMap((combinator, index) =>
+    combinator === '>' ? [index] : []
+  );
+  const positioned = compounds.flatMap((compound, index) =>
+    hasPosition(compound) ? [index] : []
+  );
+  const structural = siblings.length + children.length + positioned.length > 0;
+  if (structural && compounds.flat().some(isPseudoElement)) {
+    fail(whole, 'a pseudo-element on a wrapped part');
+  }
   if (siblings.length > 1) fail(whole, 'more than one sibling relation');
   if (siblings.length === 1) {
     if (!/[~+]/.test(combinators.at(-1) ?? '')) {
       fail(whole, 'a sibling relation before another relation');
     }
-    if (compounds.some(hasPosition)) {
+    if (positioned.length > 0) {
       fail(whole, 'a position with a sibling relation');
     }
     return siblingBranches(complex, whole);
   }
-  const children = combinators.flatMap((combinator, index) =>
-    combinator === '>' ? [index] : []
-  );
   if (children.length > 1) fail(whole, 'more than one `>`');
-  const positioned = compounds.flatMap((compound, index) =>
-    hasPosition(compound) ? [index] : []
-  );
   const [child] = children;
   if (child !== undefined) {
     if (positioned.some((index) => index !== child + 1)) {
@@ -271,8 +297,21 @@ function nodeSpecificity(node: Node): Specificity {
   return branches.sort(compare).at(-1) ?? [0, 0, 0];
 }
 
+// Positions a wrapper changes and no branch can restore.
+function assertSupported(selector: selectorParser.Selector, whole: string) {
+  selector.walkPseudos((pseudo) => {
+    if (UNSUPPORTED.has(pseudo.value)) {
+      fail(whole, `${pseudo.value} has no wrapper-tolerant form`);
+    }
+    if (pseudo.value === ':nth-child' && /\sof\s/.test(String(pseudo))) {
+      fail(whole, ':nth-child(… of …) has no wrapper-tolerant form');
+    }
+  });
+}
+
 function rewriteSelector(selector: string) {
   return parse(selector).flatMap((parsed) => {
+    assertSupported(parsed, selector);
     const expected = specificityOf(parsed.nodes);
     return alternatives(parsed, selector).map((branch) => {
       const [rewritten] = parse(branch);

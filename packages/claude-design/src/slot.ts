@@ -8,7 +8,7 @@ import * as React from 'react';
 
 import * as RadixSlot from '@radix-ui/react-slot';
 
-const CANVAS_WRAPPER = 'data-dc-tpl';
+import { CANVAS_WRAPPER } from './canvas-wrapper.ts';
 
 type WrapperProps = { children?: React.ReactNode };
 
