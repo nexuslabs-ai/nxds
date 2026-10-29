@@ -24,6 +24,7 @@
     "linkDirectory": false
   },
   "exports": {
+    "./icons": "./src/icons.ts",
     "./system-index": "./src/system-index.ts",
     "./tokens-css": "./src/tokens-css.ts"
   },
@@ -38,6 +39,7 @@
     "@nxds/react-18": "workspace:*",
     "@nxds/source-model": "workspace:*",
     "@nxds/tailwind": "workspace:*",
+    "@tabler/icons": "3.44.0",
     "@tailwindcss/node": "4.3.0",
     "@types/node": "^25.9.1",
     "@types/react": "18.3.23",

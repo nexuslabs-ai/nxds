@@ -50,6 +50,14 @@ nxds component, shows its props as controls and lists the nxds tokens.
 If you republish over an existing system, remove the files in `removed.json`
 too, so no old component stays on the page.
 
+On the canvas, every prop is an attribute. A bare `disabled` is true,
+`value="60"` is a number and `default-value="20,80"` is a list. Each
+component's README in the folder lists the form its props take.
+
+Name an icon as [Canvas icons](/getting-started/canvas-icons) lists it, such
+as `start-icon="plus"`. Draw a chart with `Nxds.BarChart`, `Nxds.LineChart`,
+`Nxds.AreaChart` or `Nxds.PieChart`, with its rows as JSON in `data`.
+
 ## Add the nxds skills
 
 Two skills teach your agent nxds:
