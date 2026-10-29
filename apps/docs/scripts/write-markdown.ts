@@ -237,9 +237,8 @@ writeFileSync(
   `# nxds\n\n${LLMS_BLURB}\n\n${fullPages.join('\n\n')}`
 );
 
-// Claude in a chat fetches this page's Markdown through a model that
-// summarizes it, so it stays short and keeps the command word for word.
-function claudeDesignProblems(markdown = '') {
+function claudeDesignProblems(markdown: string | undefined) {
+  if (markdown === undefined) return ['page not built'];
   const problems: string[] = [];
   const fence = /^\s*```bash\n\s*(.+)\n\s*```$/m.exec(markdown);
   if (fence?.[1] !== CLAUDE_DESIGN_COMMAND) {

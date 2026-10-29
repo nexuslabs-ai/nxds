@@ -111,20 +111,30 @@ const PROJECT: Record<string, string> = {
     '<!-- @dsCard height=288 -->\n<!doctype html>\n<html><body><p>nxds</p></body></html>\n',
 };
 
+/** The files a small release ships beside `project/`. */
+const ROOT: Record<string, string> = {
+  'coverage.md': '# Canvas prop coverage\n',
+  'SETUP.md': `# Set up nxds ${VERSION} on a Claude Design canvas\n`,
+};
+
+const entries = (files: Record<string, string>) =>
+  Object.entries(files).map(([file, content]) => ({
+    path: file,
+    sha256: createHash('sha256').update(content).digest('hex'),
+  }));
+
+/** files.json for a release that ships `root` beside `project/`. */
+const filesJson = (root: Record<string, string>) =>
+  JSON.stringify({ project: entries(PROJECT), root: entries(root) });
+
 /** The files of a small system in the @nxds/claude-design package layout. */
 const PACKAGE_FILES: Record<string, string> = {
   'package.json': JSON.stringify({
     name: '@nxds/claude-design',
     version: VERSION,
   }),
-  'coverage.md': '# Canvas prop coverage\n',
-  'SETUP.md': `# Set up nxds ${VERSION} on a Claude Design canvas\n`,
-  'files.json': JSON.stringify(
-    Object.entries(PROJECT).map(([file, content]) => ({
-      path: file,
-      sha256: createHash('sha256').update(content).digest('hex'),
-    }))
-  ),
+  ...ROOT,
+  'files.json': filesJson(ROOT),
   ...Object.fromEntries(
     Object.entries(PROJECT).map(([file, content]) => [
       `project/${file}`,
@@ -286,9 +296,10 @@ describe('nxds-cli export claude-design', () => {
       ],
       cwd
     );
-    expect(json.body.data.setup).toBe(
-      path.join(cwd, 'design', 'nxds', 'SETUP.md')
-    );
+    expect(json.body.data.root).toEqual([
+      path.join(cwd, 'design', 'nxds', 'coverage.md'),
+      path.join(cwd, 'design', 'nxds', 'SETUP.md'),
+    ]);
   });
 
   it('lists the files to remove before the line that points at the guide', async () => {
@@ -314,22 +325,71 @@ describe('nxds-cli export claude-design', () => {
     expect(lines.at(-1)).toMatch(/^Read nxds-design-system\/SETUP\.md/);
   });
 
-  it('tells you to publish, and drops an old guide, when the release ships none', async () => {
-    const { source, cwd } = setup();
-    await cli(['export', 'claude-design', '--source', source], cwd);
-    rmSync(path.join(source, 'SETUP.md'));
+  it('tells you to publish when the release ships no guide', async () => {
+    const { source, cwd } = setup({ 'files.json': filesJson({}) });
 
-    const { exitCode, stdout } = await cli(
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+    const { stdout } = await cli(
       ['export', 'claude-design', '--source', source, '--overwrite'],
       cwd
     );
 
     expect(exitCode).toBe(EXIT_CODES.ok);
-    expect(existsSync(path.join(cwd, 'nxds-design-system', 'SETUP.md'))).toBe(
-      false
-    );
+    expect(body.data.root).toEqual([]);
+    expect(readdirSync(path.join(cwd, 'nxds-design-system'))).toEqual([
+      'project',
+    ]);
     expect(lastLine(stdout)).toBe(
       'Publish nxds-design-system as a Design System artifact in Claude, with nxds-design-system as the root.'
+    );
+  });
+
+  it('copies each file files.json lists beside project/', async () => {
+    const { source, cwd } = setup({
+      'CHANGES.md': '# Changes\n',
+      'files.json': filesJson({ ...ROOT, 'CHANGES.md': '# Changes\n' }),
+    });
+
+    const { exitCode } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(readOut(cwd, 'CHANGES.md')).toBe('# Changes\n');
+  });
+
+  it('refuses a file beside project/ that does not match files.json', async () => {
+    const { source, cwd } = setup({ 'SETUP.md': '# Tampered\n' });
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toMatch(
+      /^SETUP\.md doesn't match the release's files\.json/
+    );
+    expect(existsSync(path.join(cwd, 'nxds-design-system'))).toBe(false);
+  });
+
+  it('refuses a file beside project/ that would land outside the folder', async () => {
+    const { source, cwd } = setup({
+      'files.json': filesJson({ '../escape.md': '# Escape\n' }),
+    });
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toMatch(
+      /files\.json lists \.\.\/escape\.md beside project\//
     );
   });
 

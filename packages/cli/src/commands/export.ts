@@ -43,8 +43,10 @@ export type ExportOptions = {
   overwrite: boolean;
 };
 
-/** `files.json`: each file under `project/`, as the package build wrote it. */
-type Manifest = { path: string; sha256: string }[];
+type Entry = { path: string; sha256: string };
+
+/** `files.json`: each file the package build wrote under `project/`, and each one it wrote beside it, such as SETUP.md. */
+type Manifest = { project: Entry[]; root: Entry[] };
 
 type Packument = {
   'dist-tags'?: Record<string, string>;
@@ -189,18 +191,6 @@ function localPackage(source: string) {
   };
 }
 
-// Copies a file the release ships beside project/, or removes an earlier
-// export's copy when this release has none. Returns whether it copied.
-function copyReleaseFile(root: string, out: string, name: string) {
-  const file = path.join(root, name);
-  if (!existsSync(file)) {
-    rmSync(path.join(out, name), { force: true });
-    return false;
-  }
-  writeFileSync(path.join(out, name), readFileSync(file));
-  return true;
-}
-
 function assertWritable(out: string, overwrite: boolean) {
   if (!existsSync(out) || readdirSync(out).length === 0 || overwrite) return;
   throw new UsageError(
@@ -232,6 +222,13 @@ function stalePaths(existing: string[], exported: Set<string>) {
     .sort();
 }
 
+const isEntries = (value: unknown): value is Entry[] =>
+  Array.isArray(value) &&
+  value.every(
+    (entry) =>
+      typeof entry?.path === 'string' && typeof entry.sha256 === 'string'
+  );
+
 function readManifest(root: string): Manifest {
   const file = path.join(root, 'files.json');
   if (!existsSync(file)) {
@@ -239,44 +236,64 @@ function readManifest(root: string): Manifest {
       `${root} has no files.json. Export from an @nxds/claude-design release or a built dist folder.`
     );
   }
-  const value = readJson(file);
-  if (
-    !Array.isArray(value) ||
-    !value.every(
-      (entry) =>
-        typeof entry?.path === 'string' && typeof entry.sha256 === 'string'
-    )
-  ) {
+  const value = readJson(file) as Partial<Manifest> | null;
+  if (!isEntries(value?.project) || !isEntries(value.root)) {
     throw new CliError(
-      `${file} must be a JSON array of { path, sha256 } entries.`
+      `${file} must be a JSON object whose project and root are arrays of { path, sha256 } entries.`
     );
   }
-  return value;
+  return { project: value.project, root: value.root };
+}
+
+// `shown` names the file in an error, as the release lays it out.
+function readVerified(file: string, entry: Entry, shown: string) {
+  if (!existsSync(file) || !lstatSync(file).isFile()) {
+    throw new CliError(
+      `${shown} is missing from the release, or isn't a regular file.`
+    );
+  }
+  const bytes = readFileSync(file);
+  if (createHash('sha256').update(bytes).digest('hex') !== entry.sha256) {
+    throw new CliError(
+      `${shown} doesn't match the release's files.json, so nothing was written.`
+    );
+  }
+  return bytes;
 }
 
 // The package build validated exactly the files files.json lists, at its
 // hashes, so those are the only files read.
-function readProject(root: string) {
+function readProject(root: string, entries: Entry[]) {
   const projectDir = path.join(root, 'project');
   const files = new Map<string, Buffer>();
-  for (const entry of readManifest(root)) {
+  for (const entry of entries) {
     const file = path.join(projectDir, entry.path);
     const relative = path.relative(projectDir, file);
     if (relative.split(path.sep)[0] === '..' || path.isAbsolute(relative)) {
       throw new CliError(`files.json lists ${entry.path}, outside project/.`);
     }
-    if (!existsSync(file) || !lstatSync(file).isFile()) {
+    files.set(entry.path, readVerified(file, entry, `project/${entry.path}`));
+  }
+  return files;
+}
+
+// The files a release ships beside project/, such as SETUP.md. Each is a
+// plain file name, and none can stand in for project/ or removed.json.
+function readRootFiles(root: string, entries: Entry[]) {
+  const files = new Map<string, Buffer>();
+  for (const entry of entries) {
+    if (
+      path.basename(entry.path) !== entry.path ||
+      ['.', '..', 'project', 'removed.json'].includes(entry.path)
+    ) {
       throw new CliError(
-        `project/${entry.path} is missing from the release, or isn't a regular file.`
+        `files.json lists ${entry.path} beside project/, which isn't a file name the export can write.`
       );
     }
-    const bytes = readFileSync(file);
-    if (createHash('sha256').update(bytes).digest('hex') !== entry.sha256) {
-      throw new CliError(
-        `project/${entry.path} doesn't match the release's files.json, so nothing was written.`
-      );
-    }
-    files.set(entry.path, bytes);
+    files.set(
+      entry.path,
+      readVerified(path.join(root, entry.path), entry, entry.path)
+    );
   }
   return files;
 }
@@ -370,7 +387,9 @@ export async function exportClaudeDesign(
       );
 
   try {
-    const files = readProject(pkg.root);
+    const manifest = readManifest(pkg.root);
+    const files = readProject(pkg.root, manifest.project);
+    const rootFiles = readRootFiles(pkg.root, manifest.root);
     if (options.index) mergeIndex(files, path.resolve(cwd, options.index));
     const exported = new Set(
       [...files.keys()].map((file) => `project/${file}`)
@@ -379,8 +398,9 @@ export async function exportClaudeDesign(
       ? stalePaths(readPaths(path.resolve(cwd, options.existing)), exported)
       : [];
     writeProject(out, files);
-    const coverage = copyReleaseFile(pkg.root, out, 'coverage.md');
-    const setup = copyReleaseFile(pkg.root, out, 'SETUP.md');
+    for (const [name, bytes] of rootFiles) {
+      writeFileSync(path.join(out, name), bytes);
+    }
     if (options.existing) {
       writeFileSync(
         path.join(out, 'removed.json'),
@@ -392,7 +412,7 @@ export async function exportClaudeDesign(
     const lines = [
       `Exported nxds ${pkg.version} as a Claude Design System: ${files.size} files in ${path.join(relative, 'project')}.`,
     ];
-    if (coverage) {
+    if (rootFiles.has('coverage.md')) {
       lines.push(
         `The props the canvas can't set are in ${path.join(relative, 'coverage.md')}.`
       );
@@ -403,7 +423,7 @@ export async function exportClaudeDesign(
       );
     }
     lines.push(
-      setup
+      rootFiles.has('SETUP.md')
         ? `Read ${path.join(relative, 'SETUP.md')} and follow it. It publishes the system, installs it on a canvas and checks it.`
         : `Publish ${relative} as a Design System artifact in Claude, with ${relative} as the root.`
     );
@@ -415,7 +435,7 @@ export async function exportClaudeDesign(
         out,
         files: files.size,
         removed,
-        setup: setup ? path.join(out, 'SETUP.md') : null,
+        root: [...rootFiles.keys()].map((name) => path.join(out, name)),
       },
     };
   } finally {

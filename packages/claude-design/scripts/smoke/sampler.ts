@@ -24,6 +24,36 @@ function shippedArtboard() {
   return markup;
 }
 
+/** The value `attribute` takes on the markup's `Nxds.<part>` tag. */
+function attributeOf(markup: string, part: string, attribute: string) {
+  const tag = new RegExp(
+    `<x-import component-from-global-scope="Nxds\\.${part}"[^>]*>`
+  ).exec(markup)?.[0];
+  const value = new RegExp(`\\s${attribute}=(?:"([^"]*)"|'([^']*)')`).exec(
+    tag ?? ''
+  );
+  if (!value) throw new Error(`sampler.html: no ${part} ${attribute}.`);
+  return value[1] ?? value[2] ?? '';
+}
+
+/** The bars the sampler's BarChart draws: one per data row and series. */
+function barsOf(markup: string) {
+  const rows = JSON.parse(attributeOf(markup, 'BarChart', 'data')) as unknown[];
+  return (
+    rows.length * attributeOf(markup, 'BarChart', 'series').split(',').length
+  );
+}
+
+/** The days the sampler's DatePicker range covers, both ends included. */
+function rangeDaysOf(markup: string) {
+  const [from = '', to = ''] = attributeOf(
+    markup,
+    'DatePicker',
+    'selected'
+  ).split(',');
+  return (Date.parse(to) - Date.parse(from)) / 86_400_000 + 1;
+}
+
 /** Each `Nxds.<Part>` the markup mounts, as the `data-slot` it renders. */
 function slotsOf(markup: string) {
   const parts = new Set(
@@ -42,7 +72,7 @@ function slotsOf(markup: string) {
 async function mountSampler(theme: Theme, markup: string) {
   const { page, problems } = await openPage('Button', theme);
   const result = await page.evaluate(async (markup) => {
-    const { ReactDOM, __nxdsMarkup, __nxdsSignature } =
+    const { ReactDOM, __nxdsMarkup, __nxdsSettle } =
       window as unknown as PageGlobals;
     const host = document.createElement('div');
     host.style.width = '960px';
@@ -54,19 +84,12 @@ async function mountSampler(theme: Theme, markup: string) {
     } catch (error) {
       return { error: error instanceof Error ? error.message : String(error) };
     }
-    let last: string[] = [];
-    for (let tries = 0; tries < 20; tries += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      const next = __nxdsSignature(host);
-      if (next.join('\n') === last.join('\n')) break;
-      last = next;
-    }
+    await __nxdsSettle(host);
     const background = (selector: string) => {
       const element = host.querySelector(selector);
       return element ? getComputedStyle(element).backgroundColor : null;
     };
     return {
-      signature: last,
       slots: [...host.querySelectorAll('[data-slot]')].map((element) =>
         element.getAttribute('data-slot')
       ),
@@ -95,8 +118,10 @@ export async function checkSampler() {
     fail("SETUP.md's sampler isn't the README's link lines and sampler.html.");
   }
   // The frame already loads the system the way the link lines do.
-  const markup = artboard.replace(/^[\s\S]*?\n\n/, '');
+  const markup = sampler.trim();
   const slots = slotsOf(markup);
+  const bars = barsOf(markup);
+  const days = rangeDaysOf(markup);
 
   for (const [label, theme] of [
     ['light', LIGHT],
@@ -112,12 +137,12 @@ export async function checkSampler() {
     for (const slot of slots) {
       if (!result.slots.includes(slot)) fail(`${name}: no ${slot} renders.`);
     }
-    if (result.bars !== 12) {
-      fail(`${name}: the bar chart draws ${result.bars} bars, not 12.`);
+    if (result.bars !== bars) {
+      fail(`${name}: the bar chart draws ${result.bars} bars, not ${bars}.`);
     }
-    if (result.selectedDays !== 7) {
+    if (result.selectedDays !== days) {
       fail(
-        `${name}: the date range selects ${result.selectedDays} days, not 7.`
+        `${name}: the date range selects ${result.selectedDays} days, not ${days}.`
       );
     }
     if (label === 'light' && result.dark === result.page) {

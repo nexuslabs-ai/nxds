@@ -61,7 +61,7 @@ export interface PageGlobals {
   Nxds: Record<string, unknown>;
   __nxdsElement: (tree: Part | string) => ReactModule.ReactNode;
   __nxdsMarkup: (markup: string, wrapped: boolean) => ReactModule.ReactNode;
-  __nxdsSignature: (host: Element) => string[];
+  __nxdsSettle: (host: Element) => Promise<string[]>;
 }
 
 export function fail(message: string) {
@@ -125,8 +125,9 @@ export const browser = await chromium.launch();
 // `<div class="sc-host-x" style="display: contents">`. Without, it leaves out
 // the wrappers and the indentation.
 //
-// `window.__nxdsSignature(host)` lists what a viewer and a screen reader get
-// from each element: tag, part, role, state, classes and text.
+// `window.__nxdsSettle(host)` waits until what a viewer and a screen reader
+// get from each element stops changing, up to four seconds, and returns it:
+// tag, part, role, state, classes and text.
 function pageHelpers() {
   const NAMES: Record<string, string> = {
     class: 'className',
@@ -299,10 +300,20 @@ function pageHelpers() {
           .trim();
         return `${node.tagName.toLowerCase()}${classes ? `.${classes}` : ''}${states.length > 0 ? ` [${states.join(' ')}]` : ''}${text ? ` "${text}"` : ''}`;
       });
+  const settle = async (host: Element) => {
+    let last: string[] = [];
+    for (let tries = 0; tries < 20; tries += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      const next = signature(host);
+      if (next.join('\n') === last.join('\n')) break;
+      last = next;
+    }
+    return last;
+  };
   Object.assign(window, {
     __nxdsElement: element,
     __nxdsMarkup: markup,
-    __nxdsSignature: signature,
+    __nxdsSettle: settle,
   });
 }
 
@@ -416,7 +427,7 @@ type Mount = { tree: Part } | { markup: string };
 // chart's entry animation has finished.
 export async function signatureOf(page: Page, mount: Mount) {
   return page.evaluate(async (mount) => {
-    const { ReactDOM, __nxdsElement, __nxdsMarkup, __nxdsSignature } =
+    const { ReactDOM, __nxdsElement, __nxdsMarkup, __nxdsSettle } =
       window as unknown as PageGlobals;
     const host = document.createElement('div');
     host.style.width = '640px';
@@ -435,16 +446,10 @@ export async function signatureOf(page: Page, mount: Mount) {
       host.remove();
       return { error: error instanceof Error ? error.message : String(error) };
     }
-    let last: string[] = [];
-    for (let tries = 0; tries < 20; tries += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      const next = __nxdsSignature(host);
-      if (next.join('\n') === last.join('\n')) break;
-      last = next;
-    }
+    const signature = await __nxdsSettle(host);
     root.unmount();
     host.remove();
-    return { signature: last };
+    return { signature };
   }, mount);
 }
 

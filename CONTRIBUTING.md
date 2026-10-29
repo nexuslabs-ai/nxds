@@ -186,7 +186,7 @@ Everything lives under the `@nxds` scope — the published packages on npm and t
 The packages authenticate to npm with **trusted publishing** (OIDC): GitHub Actions mints a short-lived credential at publish time, so there is **no `NPM_TOKEN` secret** in the repo. A new package is bootstrapped once, by hand:
 
 1. Publish it manually with `npm publish` from the branch that introduces it. Trusted publishing can't be configured until a package exists on npm.
-2. Register a **trusted publisher** on npmjs.com (_Settings → Trusted Publisher → GitHub Actions_) pointing at `nexuslabs-ai/nxds` and the `release.yml` workflow.
+2. Register a **trusted publisher** on npmjs.com (_Settings → Trusted Publisher → GitHub Actions_) pointing at `nexuslabs-ai/nxds`, the `release.yml` workflow and the `npm` environment.
 3. Lock the package to OIDC: _Settings → Publishing access → Require two-factor authentication and disallow tokens_. Then revoke the token used for the manual publish.
 
 The release workflow also needs a repo secret, **`RELEASE_TOKEN`**. It is a fine-grained PAT from `nexuslabs-ai-bot` with **contents: read/write** and **pull requests: read/write** on this repo. It authenticates the "Version Packages" PR. The default `GITHUB_TOKEN` can't be used here: PRs it opens don't fire `pull_request`, so the required `CI Status` check would never run on the version PR and it couldn't merge. Rotate the PAT before it expires.
@@ -195,12 +195,14 @@ The workflow grants `id-token: write` for the OIDC exchange, upgrades npm to a t
 
 ### Snapshot releases
 
-Push a branch to `snapshot/<name>` to publish its pending changesets before they release. The `Release` workflow versions them as `0.0.0-snapshot-<timestamp>` and publishes them under the `next` dist-tag. `latest` doesn't move, and nothing is pushed back.
+Push a branch to `snapshot/<name>` to publish its pending changesets before they release. The `Release` workflow versions them as `0.0.0-<name>-<timestamp>` and publishes them under the `<name>` dist-tag. `latest` doesn't move, and nothing is pushed back. A package with no pending changeset isn't published under the tag, so use its `latest`.
 
 ```bash
 git push origin HEAD:snapshot/claude-design-setup
-npx nxds-cli@next export claude-design --release next
+npx nxds-cli@claude-design-setup export claude-design --release claude-design-setup
 ```
+
+Both release jobs run in the **`npm`** environment. Its deployment branches are `main` and `snapshot/*`, and the `Snapshot publishers` ruleset lets only repo admins push `snapshot/**`. Each package's trusted publisher on npmjs.com names the `npm` environment, so no other branch can publish.
 
 Delete the branch once you're done with it.
 

@@ -21,6 +21,7 @@ import type {
 import { kebab } from './canvas-names.ts';
 import { unwrapped } from './canvas-wrapper.ts';
 import { Icon } from './icon.ts';
+import { toBoolean, toDate, toNumber } from './values.ts';
 
 export interface CanvasSchema {
   /** Each part's props whose attribute string converts, by prop. */
@@ -38,8 +39,6 @@ type Props = Record<string, unknown>;
 /** A converted value, or why the attribute doesn't fit its prop. */
 type Converted = { value: unknown } | { problem: string };
 
-const NUMBER = /^-?\d+(?:\.\d+)?$/;
-const DATE = /^(\d{4})-(\d{2})(?:-(\d{2}))?$/;
 const MAX_JSON = 256 * 1024;
 const MAX_CACHED_LENGTH = 4 * 1024 * 1024;
 
@@ -47,31 +46,6 @@ const DATE_ITEM: DateAttribute = { kind: 'date', selection: null };
 
 function fail(problem: string): Converted {
   return { problem };
-}
-
-function toNumber(value: string): number | null {
-  const trimmed = value.trim();
-  return NUMBER.test(trimmed) ? Number(trimmed) : null;
-}
-
-function toBoolean(value: string): boolean | null {
-  if (value === '' || value === 'true') return true;
-  if (value === 'false') return false;
-  return null;
-}
-
-// Local midnight, so the day doesn't move with the time zone. A day that
-// doesn't exist, such as 30 February, doesn't roll over into March.
-function toDate(value: string): Date | null {
-  const match = DATE.exec(value.trim());
-  if (!match) return null;
-  const [, year, month, day = '01'] = match;
-  const date = new Date(Number(year), Number(month) - 1, Number(day));
-  const fits =
-    date.getFullYear() === Number(year) &&
-    date.getMonth() === Number(month) - 1 &&
-    date.getDate() === Number(day);
-  return fits ? date : null;
 }
 
 function literals(values: readonly (string | number)[]) {
