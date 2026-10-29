@@ -171,6 +171,11 @@ describe('cn', () => {
     ],
     ['z-index', 'nx:z-overlay nx:z-popover', 'nx:z-popover'],
     [
+      'icon size',
+      'nx:size-4 nx:size-icon-glyph-default',
+      'nx:size-icon-glyph-default',
+    ],
+    [
       'spacing role',
       'nx:gap-container nx:gap-layout-stack',
       'nx:gap-layout-stack',

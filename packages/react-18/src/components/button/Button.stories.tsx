@@ -1,7 +1,12 @@
 import * as React from 'react';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconArrowRight, IconRocket, IconStar } from '@tabler/icons-react';
+import {
+  IconArrowRight,
+  IconDownload,
+  IconSend,
+  IconStar,
+} from '@tabler/icons-react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { expectHeightPinned } from '../../stories/support/story-height-test-utils';
@@ -20,6 +25,7 @@ Button triggers an action. Use it for short, visible labels.
 - Use one decorative icon slot at most: \`startIcon\` or \`endIcon\`.
 - A loading button shows only a spinner and hides its icons.
 - Icon-only buttons need \`aria-label\` or \`aria-labelledby\`.
+- Icons are 16px at every size and density.
         `,
       },
     },
@@ -204,6 +210,59 @@ export const IconOnlySizes: Story = {
   },
 };
 
+export const IconSize: Story = {
+  render: () => (
+    <div className="nx:flex nx:flex-col nx:items-start nx:gap-3">
+      <div className="nx:flex nx:items-center nx:gap-2">
+        <Button size="sm" startIcon={<IconDownload />}>
+          Download
+        </Button>
+        <Button size="icon-sm" aria-label="Small icon">
+          <IconStar />
+        </Button>
+      </div>
+      <div className="nx:flex nx:items-center nx:gap-2">
+        <Button startIcon={<IconDownload />}>Download</Button>
+        <Button size="icon" aria-label="Default icon">
+          <IconStar />
+        </Button>
+      </div>
+      <div className="nx:flex nx:items-center nx:gap-2">
+        <Button size="lg" startIcon={<IconDownload />}>
+          Download
+        </Button>
+        <Button size="icon-lg" aria-label="Large icon">
+          <IconStar />
+        </Button>
+      </div>
+      <div data-density="compact" className="nx:flex nx:items-center nx:gap-2">
+        <Button startIcon={<IconDownload />}>Download</Button>
+        <Button size="icon" aria-label="Compact icon">
+          <IconStar />
+        </Button>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const iconToken = parseFloat(
+      getComputedStyle(canvasElement).getPropertyValue(
+        '--nx-icon-glyph-default'
+      )
+    );
+    const icons = canvasElement.querySelectorAll('button svg');
+    await expect(icons).toHaveLength(canvas.getAllByRole('button').length);
+    for (const svg of icons) {
+      const { width, height } = svg.getBoundingClientRect();
+      await expect(width).toBe(iconToken);
+      await expect(height).toBe(iconToken);
+      await expect(parseFloat(getComputedStyle(svg).strokeWidth)).toBeLessThan(
+        Number(svg.getAttribute('stroke-width'))
+      );
+    }
+  },
+};
+
 // ============================================
 // STATE STORIES (with interaction tests)
 // ============================================
@@ -230,7 +289,7 @@ export const Disabled: Story = {
 export const Loading: Story = {
   args: {
     loading: true,
-    startIcon: <IconRocket />,
+    startIcon: <IconSend />,
     endIcon: <IconArrowRight />,
     children: 'Submitting',
   },
@@ -454,18 +513,18 @@ export const StartIconSlot: Story = {
     },
   },
   args: {
-    startIcon: <IconRocket data-testid="start-icon" />,
-    children: 'Launch',
+    startIcon: <IconDownload data-testid="start-icon" />,
+    children: 'Download',
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const button = canvas.getByRole('button', { name: 'Launch' });
+    const button = canvas.getByRole('button', { name: 'Download' });
     const startIcon = button.querySelector('[data-slot="button-start-icon"]');
 
     await expect(startIcon).toBeInTheDocument();
     await expect(startIcon).toHaveAttribute('aria-hidden', 'true');
     await expect(canvas.getByTestId('start-icon')).toBeInTheDocument();
-    await expect(button).toHaveAccessibleName('Launch');
+    await expect(button).toHaveAccessibleName('Download');
   },
 };
 
@@ -549,7 +608,7 @@ export const AllVariants: Story = {
           Icon slots
         </h3>
         <div className="nx:flex nx:flex-wrap nx:items-center nx:gap-2">
-          <Button startIcon={<IconRocket />}>Start icon</Button>
+          <Button startIcon={<IconDownload />}>Start icon</Button>
           <Button endIcon={<IconArrowRight />}>End icon</Button>
         </div>
       </div>

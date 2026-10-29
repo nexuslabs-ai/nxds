@@ -51,6 +51,7 @@ const UTILITY_FILES = [
   'border-color-aliases.css',
   'spacing-utilities.css',
   'motion-utilities.css',
+  'icon-utilities.css',
 ];
 
 function generated(file: string): string {
