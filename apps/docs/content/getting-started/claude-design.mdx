@@ -1,0 +1,68 @@
+export const description =
+  'Set up nxds on a Claude Design canvas from one prompt, and check it with a sampler artboard.';
+
+# Claude Design
+
+Claude sets up nxds on a Design canvas from one prompt, then checks it with a
+sampler artboard.
+
+<div data-md-skip>
+
+## Start a chat
+
+Paste this prompt into a new Claude chat. Your chat needs code execution with
+access to npm.
+
+```text
+Set up the nxds design system on a Claude Design canvas for me.
+Fetch https://nxds.dev/getting-started/claude-design.md and follow its steps exactly, in order.
+When the sampler artboard passes every check, tell me and give me the system's link. Then wait for my design request.
+```
+
+Claude publishes your own copy of nxds as a Design System and installs it on
+a new canvas. It then builds the sampler and waits for your design request.
+
+## Update to a new release
+
+Paste this prompt into a new chat. Replace `<system link>` with your system's
+link.
+
+```text
+Update my nxds design system at <system link> to the latest release.
+Fetch https://nxds.dev/getting-started/claude-design.md and follow its steps exactly.
+```
+
+## Use nxds in a Claude Project
+
+Add this to your Project's instructions. Every chat in the Project then builds
+with nxds. Replace `<system link>` with your system's link.
+
+```text
+Build every design in this project with nxds, the design system installed on the canvas under ds/nxds/.
+- Before you build, read README.md and the README of each component you use, from the nxds Design System at <system link>.
+- Mount components with x-import from Nxds. Write each prop in the form components/index.d.ts gives it.
+- Lay out with nxds tokens, such as var(--nx-spacing-4), not raw pixel values.
+- If a canvas has no ds/nxds/ folder, install the nxds system on it from <system link> first.
+- If you have no system link, set nxds up by following https://nxds.dev/getting-started/claude-design.md.
+```
+
+</div>
+
+## Steps for Claude
+
+Do these steps in order.
+
+1. Run this command in your sandbox:
+
+   ```bash
+   npx nxds-cli@latest export claude-design
+   ```
+
+2. Read `nxds-design-system/SETUP.md` and follow every step in it. It
+   publishes the system, installs it on a canvas and checks it with a sampler
+   artboard.
+3. When the sampler passes its checks, tell the person nxds is ready. Then
+   wait for their design request.
+
+If the command fails, show the person its output and stop. Don't build the
+system by hand.
