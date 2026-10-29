@@ -118,6 +118,7 @@ const PACKAGE_FILES: Record<string, string> = {
     version: VERSION,
   }),
   'coverage.md': '# Canvas prop coverage\n',
+  'SETUP.md': `# Set up nxds ${VERSION} on a Claude Design canvas\n`,
   'files.json': JSON.stringify(
     Object.entries(PROJECT).map(([file, content]) => ({
       path: file,
@@ -179,6 +180,10 @@ async function cliJson(args: string[], cwd: string) {
 
 function readOut(cwd: string, file: string) {
   return readFileSync(path.join(cwd, 'nxds-design-system', file), 'utf8');
+}
+
+function lastLine(stdout: string) {
+  return stdout.trim().split('\n').at(-1);
 }
 
 /** An npm registry serving the package folder as `version`'s tarball. */
@@ -251,6 +256,81 @@ describe('nxds-cli export claude-design', () => {
     expect(
       existsSync(path.join(cwd, 'nxds-design-system', 'coverage.md'))
     ).toBe(true);
+  });
+
+  it('writes the setup guide beside project/ and ends by pointing at it', async () => {
+    const { source, cwd } = setup();
+    const { exitCode, stdout } = await cli(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(readOut(cwd, 'SETUP.md')).toBe(PACKAGE_FILES['SETUP.md']);
+    expect(
+      existsSync(path.join(cwd, 'nxds-design-system', 'project', 'SETUP.md'))
+    ).toBe(false);
+    expect(lastLine(stdout)).toBe(
+      'Read nxds-design-system/SETUP.md and follow it. It publishes the system, installs it on a canvas and checks it.'
+    );
+
+    const json = await cliJson(
+      [
+        'export',
+        'claude-design',
+        '--source',
+        source,
+        '--out',
+        'design/nxds',
+        '--overwrite',
+      ],
+      cwd
+    );
+    expect(json.body.data.setup).toBe(
+      path.join(cwd, 'design', 'nxds', 'SETUP.md')
+    );
+  });
+
+  it('lists the files to remove before the line that points at the guide', async () => {
+    const { source, cwd } = setup();
+    writeFileSync(
+      path.join(cwd, 'existing.json'),
+      JSON.stringify(['project/components/Legacy/README.md'])
+    );
+    const { stdout } = await cli(
+      [
+        'export',
+        'claude-design',
+        '--source',
+        source,
+        '--existing',
+        'existing.json',
+      ],
+      cwd
+    );
+
+    const lines = stdout.trim().split('\n');
+    expect(lines.at(-2)).toMatch(/^Remove the 1 files .*removed\.json\.$/);
+    expect(lines.at(-1)).toMatch(/^Read nxds-design-system\/SETUP\.md/);
+  });
+
+  it('tells you to publish, and drops an old guide, when the release ships none', async () => {
+    const { source, cwd } = setup();
+    await cli(['export', 'claude-design', '--source', source], cwd);
+    rmSync(path.join(source, 'SETUP.md'));
+
+    const { exitCode, stdout } = await cli(
+      ['export', 'claude-design', '--source', source, '--overwrite'],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(existsSync(path.join(cwd, 'nxds-design-system', 'SETUP.md'))).toBe(
+      false
+    );
+    expect(lastLine(stdout)).toBe(
+      'Publish nxds-design-system as a Design System artifact in Claude, with nxds-design-system as the root.'
+    );
   });
 
   it('downloads the release from the npm registry and checks its integrity', async () => {

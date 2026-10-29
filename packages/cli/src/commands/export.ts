@@ -189,6 +189,18 @@ function localPackage(source: string) {
   };
 }
 
+// Copies a file the release ships beside project/, or removes an earlier
+// export's copy when this release has none. Returns whether it copied.
+function copyReleaseFile(root: string, out: string, name: string) {
+  const file = path.join(root, name);
+  if (!existsSync(file)) {
+    rmSync(path.join(out, name), { force: true });
+    return false;
+  }
+  writeFileSync(path.join(out, name), readFileSync(file));
+  return true;
+}
+
 function assertWritable(out: string, overwrite: boolean) {
   if (!existsSync(out) || readdirSync(out).length === 0 || overwrite) return;
   throw new UsageError(
@@ -366,13 +378,9 @@ export async function exportClaudeDesign(
     const removed = options.existing
       ? stalePaths(readPaths(path.resolve(cwd, options.existing)), exported)
       : [];
-    const coverageFile = path.join(pkg.root, 'coverage.md');
-    const coverage = existsSync(coverageFile)
-      ? readFileSync(coverageFile)
-      : undefined;
-
     writeProject(out, files);
-    if (coverage) writeFileSync(path.join(out, 'coverage.md'), coverage);
+    const coverage = copyReleaseFile(pkg.root, out, 'coverage.md');
+    const setup = copyReleaseFile(pkg.root, out, 'SETUP.md');
     if (options.existing) {
       writeFileSync(
         path.join(out, 'removed.json'),
@@ -383,22 +391,32 @@ export async function exportClaudeDesign(
     const relative = path.relative(cwd, out) || '.';
     const lines = [
       `Exported nxds ${pkg.version} as a Claude Design System: ${files.size} files in ${path.join(relative, 'project')}.`,
-      `Publish ${relative} as a Design System artifact in Claude, with ${relative} as the root.`,
     ];
-    if (removed.length > 0) {
-      lines.push(
-        `Remove the ${removed.length} files the system has and this release doesn't: they're listed in ${path.join(relative, 'removed.json')}.`
-      );
-    }
     if (coverage) {
       lines.push(
         `The props the canvas can't set are in ${path.join(relative, 'coverage.md')}.`
       );
     }
+    if (removed.length > 0) {
+      lines.push(
+        `Remove the ${removed.length} files the system has and this release doesn't: they're listed in ${path.join(relative, 'removed.json')}.`
+      );
+    }
+    lines.push(
+      setup
+        ? `Read ${path.join(relative, 'SETUP.md')} and follow it. It publishes the system, installs it on a canvas and checks it.`
+        : `Publish ${relative} as a Design System artifact in Claude, with ${relative} as the root.`
+    );
     return {
       ok: true,
       lines,
-      data: { version: pkg.version, out, files: files.size, removed },
+      data: {
+        version: pkg.version,
+        out,
+        files: files.size,
+        removed,
+        setup: setup ? path.join(out, 'SETUP.md') : null,
+      },
     };
   } finally {
     pkg.cleanup();
