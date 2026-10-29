@@ -146,8 +146,9 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
   },
 };
 
-const FONT_PX_MIN = 8;
-const FONT_PX_MAX = 32;
+/** The font sizes, in px, the appearance prefs take. */
+export const FONT_SIZE_PX_MIN = 8;
+export const FONT_SIZE_PX_MAX = 32;
 
 const APPEARANCE_MODES = new Set<NxdsAppearanceMode>([
   'light',
@@ -198,7 +199,7 @@ const enumOr = <T extends string>(
 
 const clampFontSize = (value: unknown, fallback: number): number =>
   typeof value === 'number' && Number.isFinite(value) && value > 0
-    ? Math.min(FONT_PX_MAX, Math.max(FONT_PX_MIN, value))
+    ? Math.min(FONT_SIZE_PX_MAX, Math.max(FONT_SIZE_PX_MIN, value))
     : fallback;
 
 function formatPx(value: number): string {
