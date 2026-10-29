@@ -35,9 +35,12 @@ name: Release
 # The default GITHUB_TOKEN then only needs id-token: write for the OIDC exchange.
 #
 # Snapshots: a push to `snapshot/<name>` publishes that branch's pending
-# changesets as `0.0.0-<name>-<timestamp>` versions under the `<name>`
-# dist-tag, so a change can be tried from npm before it releases, such as
-# `npx nxds-cli@<name> export claude-design --release <name>`. It pushes
+# changesets as `0.0.0-<name>-<timestamp>` versions under the
+# `snapshot-<name>` dist-tag, so a change can be tried from npm before it
+# releases, such as
+# `npx nxds-cli@snapshot-<name> export claude-design --release snapshot-<name>`.
+# The prefix keeps a branch from moving `latest`. `<name>` is one path
+# segment, as the `npm` environment allows. It pushes
 # nothing back and opens no PR. It runs from this file because npm's trusted
 # publishers name it.
 #
@@ -49,7 +52,7 @@ name: Release
 
 on:
   push:
-    branches: [main, 'snapshot/**']
+    branches: [main, 'snapshot/*']
 
 concurrency:
   group: release-${{ github.ref }}
@@ -135,11 +138,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      # snapshot/claude-design-setup publishes under `claude-design-setup`.
+      # snapshot/claude-design-setup publishes under `snapshot-claude-design-setup`.
       - name: Name the snapshot after the branch
-        run: |
-          name="${SNAPSHOT_BRANCH#snapshot/}"
-          echo "SNAPSHOT=${name//\//-}" >> "$GITHUB_ENV"
+        run: echo "SNAPSHOT=${SNAPSHOT_BRANCH#snapshot/}" >> "$GITHUB_ENV"
 
       - name: Version the pending changesets as a snapshot
         run: pnpm changeset version --snapshot "$SNAPSHOT"
@@ -148,4 +149,4 @@ jobs:
         run: pnpm turbo build
 
       - name: Publish under the branch's dist-tag
-        run: pnpm changeset publish --tag "$SNAPSHOT" --no-git-tag
+        run: pnpm changeset publish --tag "snapshot-$SNAPSHOT" --no-git-tag

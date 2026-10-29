@@ -48,6 +48,9 @@ type Entry = { path: string; sha256: string };
 /** `files.json`: each file the package build wrote under `project/`, and each one it wrote beside it, such as SETUP.md. */
 type Manifest = { project: Entry[]; root: Entry[] };
 
+/** The files.json layout this CLI reads. */
+const FILES_FORMAT = 2;
+
 type Packument = {
   'dist-tags'?: Record<string, string>;
   versions?: Record<
@@ -194,7 +197,7 @@ function localPackage(source: string) {
 function assertWritable(out: string, overwrite: boolean) {
   if (!existsSync(out) || readdirSync(out).length === 0 || overwrite) return;
   throw new UsageError(
-    `${out} already has files. Pass --overwrite to replace its project/ folder, or choose another --out.`
+    `${out} already has files. Pass --overwrite to replace the export in it, or choose another --out.`
   );
 }
 
@@ -236,7 +239,20 @@ function readManifest(root: string): Manifest {
       `${root} has no files.json. Export from an @nxds/claude-design release or a built dist folder.`
     );
   }
-  const value = readJson(file) as Partial<Manifest> | null;
+  const value = readJson(file) as
+    | (Partial<Manifest> & { format?: unknown })
+    | null;
+  const format = Array.isArray(value) ? 1 : value?.format;
+  if (typeof format === 'number' && format > FILES_FORMAT) {
+    throw new CliError(
+      `${file} is from a release newer than this nxds-cli reads. Run npx nxds-cli@latest.`
+    );
+  }
+  if (format !== FILES_FORMAT) {
+    throw new CliError(
+      `${file} is from a release older than this nxds-cli reads. Export a newer --release.`
+    );
+  }
   if (!isEntries(value?.project) || !isEntries(value.root)) {
     throw new CliError(
       `${file} must be a JSON object whose project and root are arrays of { path, sha256 } entries.`
@@ -296,6 +312,19 @@ function readRootFiles(root: string, entries: Entry[]) {
     );
   }
   return files;
+}
+
+// Every file beside project/ is published with the system, so a file an
+// earlier export wrote and this release doesn't list goes.
+function writeRootFiles(out: string, files: Map<string, Buffer>) {
+  for (const entry of readdirSync(out, { withFileTypes: true })) {
+    if (entry.isFile() && !files.has(entry.name)) {
+      rmSync(path.join(out, entry.name));
+    }
+  }
+  for (const [name, bytes] of files) {
+    writeFileSync(path.join(out, name), bytes);
+  }
 }
 
 function mergeIndex(files: Map<string, Buffer>, currentFile: string) {
@@ -398,9 +427,7 @@ export async function exportClaudeDesign(
       ? stalePaths(readPaths(path.resolve(cwd, options.existing)), exported)
       : [];
     writeProject(out, files);
-    for (const [name, bytes] of rootFiles) {
-      writeFileSync(path.join(out, name), bytes);
-    }
+    writeRootFiles(out, rootFiles);
     if (options.existing) {
       writeFileSync(
         path.join(out, 'removed.json'),

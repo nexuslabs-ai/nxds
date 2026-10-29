@@ -195,16 +195,25 @@ The workflow grants `id-token: write` for the OIDC exchange, upgrades npm to a t
 
 ### Snapshot releases
 
-Push a branch to `snapshot/<name>` to publish its pending changesets before they release. The `Release` workflow versions them as `0.0.0-<name>-<timestamp>` and publishes them under the `<name>` dist-tag. `latest` doesn't move, and nothing is pushed back. A package with no pending changeset isn't published under the tag, so use its `latest`.
+Push a branch to `snapshot/<name>` to publish its pending changesets before they release. `<name>` is one path segment, with no `/`. The `Release` workflow versions them as `0.0.0-<name>-<timestamp>` and publishes them under the `snapshot-<name>` dist-tag. `latest` doesn't move, and nothing is pushed back. A package with no pending changeset isn't published under the tag, so use its `latest`.
 
 ```bash
 git push origin HEAD:snapshot/claude-design-setup
-npx nxds-cli@claude-design-setup export claude-design --release claude-design-setup
+npx nxds-cli@snapshot-claude-design-setup export claude-design --release snapshot-claude-design-setup
 ```
 
 Both release jobs run in the **`npm`** environment. Its deployment branches are `main` and `snapshot/*`, and the `Snapshot publishers` ruleset lets only repo admins push `snapshot/**`. Each package's trusted publisher on npmjs.com names the `npm` environment, so no other branch can publish.
 
-Delete the branch once you're done with it.
+When you're done, delete the branch and its dist-tag from each package the snapshot published:
+
+```bash
+git push origin --delete snapshot/claude-design-setup
+for pkg in @nxds/core @nxds/eslint-plugin @nxds/claude-design nxds-cli; do
+  npm dist-tag rm "$pkg" snapshot-claude-design-setup
+done
+```
+
+`npm dist-tag rm` reports an error for a package the snapshot didn't publish. Ignore it.
 
 ### Day-to-day: adding a changeset
 

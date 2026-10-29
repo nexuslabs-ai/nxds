@@ -125,7 +125,11 @@ const entries = (files: Record<string, string>) =>
 
 /** files.json for a release that ships `root` beside `project/`. */
 const filesJson = (root: Record<string, string>) =>
-  JSON.stringify({ project: entries(PROJECT), root: entries(root) });
+  JSON.stringify({
+    format: 2,
+    project: entries(PROJECT),
+    root: entries(root),
+  });
 
 /** The files of a small system in the @nxds/claude-design package layout. */
 const PACKAGE_FILES: Record<string, string> = {
@@ -345,6 +349,46 @@ describe('nxds-cli export claude-design', () => {
     expect(lastLine(stdout)).toBe(
       'Publish nxds-design-system as a Design System artifact in Claude, with nxds-design-system as the root.'
     );
+  });
+
+  it("removes an earlier export's files beside project/ that the release doesn't list", async () => {
+    const { source, cwd } = setup();
+    await cli(['export', 'claude-design', '--source', source], cwd);
+    writeFileSync(path.join(source, 'files.json'), filesJson({}));
+
+    const { exitCode } = await cliJson(
+      ['export', 'claude-design', '--source', source, '--overwrite'],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(readdirSync(path.join(cwd, 'nxds-design-system'))).toEqual([
+      'project',
+    ]);
+  });
+
+  it('names the upgrade when files.json is from another release format', async () => {
+    const older = setup({ 'files.json': JSON.stringify(entries(PROJECT)) });
+    const newer = setup({
+      'files.json': JSON.stringify({
+        ...JSON.parse(filesJson(ROOT)),
+        format: 3,
+      }),
+    });
+
+    const fromOlder = await cliJson(
+      ['export', 'claude-design', '--source', older.source],
+      older.cwd
+    );
+    const fromNewer = await cliJson(
+      ['export', 'claude-design', '--source', newer.source],
+      newer.cwd
+    );
+
+    expect(fromOlder.exitCode).toBe(EXIT_CODES.error);
+    expect(fromOlder.body.error).toMatch(/Export a newer --release\.$/);
+    expect(fromNewer.exitCode).toBe(EXIT_CODES.error);
+    expect(fromNewer.body.error).toMatch(/Run npx nxds-cli@latest\.$/);
   });
 
   it('copies each file files.json lists beside project/', async () => {

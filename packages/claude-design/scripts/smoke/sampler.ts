@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { samplerArtboard } from '../../src/setup.ts';
+import { samplerArtboard, samplerTags } from '../../src/setup.ts';
 
 import {
   DARK,
@@ -26,14 +26,12 @@ function shippedArtboard() {
 
 /** The value `attribute` takes on the markup's `Nxds.<part>` tag. */
 function attributeOf(markup: string, part: string, attribute: string) {
-  const tag = new RegExp(
-    `<x-import component-from-global-scope="Nxds\\.${part}"[^>]*>`
-  ).exec(markup)?.[0];
-  const value = new RegExp(`\\s${attribute}=(?:"([^"]*)"|'([^']*)')`).exec(
-    tag ?? ''
-  );
-  if (!value) throw new Error(`sampler.html: no ${part} ${attribute}.`);
-  return value[1] ?? value[2] ?? '';
+  const value = samplerTags(markup)
+    .find((tag) => tag.part === part)
+    ?.attributes.get(attribute);
+  if (value === undefined)
+    throw new Error(`sampler.html: no ${part} ${attribute}.`);
+  return value;
 }
 
 /** The bars the sampler's BarChart draws: one per data row and series. */
@@ -56,11 +54,7 @@ function rangeDaysOf(markup: string) {
 
 /** Each `Nxds.<Part>` the markup mounts, as the `data-slot` it renders. */
 function slotsOf(markup: string) {
-  const parts = new Set(
-    [...markup.matchAll(/component-from-global-scope="Nxds\.(\w+)"/g)].map(
-      ([, name = '']) => name
-    )
-  );
+  const parts = new Set(samplerTags(markup).flatMap((tag) => tag.part ?? []));
   // Icon draws a bare <svg>, and BarChart renders as ChartContainer's slot.
   parts.delete('Icon');
   parts.delete('BarChart');

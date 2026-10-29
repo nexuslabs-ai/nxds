@@ -124,6 +124,8 @@ function publishedManifest() {
 
 /** The files the export writes beside project/. */
 const ROOT_FILES = ['coverage.md', 'SETUP.md'];
+/** files.json's layout. nxds-cli reads only the format it knows, so bump it when the layout changes. */
+const FILES_FORMAT = 2;
 
 function fileList(dir: string, files: readonly string[]) {
   return files.map((file) => ({
@@ -228,6 +230,7 @@ async function main() {
     })
   );
   const fileManifest = {
+    format: FILES_FORMAT,
     project: fileList(projectDir, files),
     root: fileList(distDir, ROOT_FILES),
   };
