@@ -4,6 +4,8 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { IconBold, IconItalic } from '@tabler/icons-react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import { Button } from '../button/button';
+
 import { Toggle } from './toggle';
 
 const meta: Meta<typeof Toggle> = {
@@ -105,12 +107,12 @@ export const Sizes: Story = {
     const lg = canvas.getByRole('button', { name: 'Large' });
 
     await expect(sm).toHaveClass('nx:typography-label-small');
-    await expect(sm).toHaveClass('nx:h-7', 'nx:px-3', 'nx:gap-1.5');
+    await expect(sm).toHaveClass('nx:h-8', 'nx:px-3', 'nx:gap-1.5');
 
     await expect(md).toHaveClass('nx:typography-label-default');
-    await expect(md).toHaveClass('nx:h-9', 'nx:px-4', 'nx:gap-2');
+    await expect(md).toHaveClass('nx:h-10', 'nx:px-4', 'nx:gap-2');
     await expect(lg).toHaveClass('nx:typography-label-default');
-    await expect(lg).toHaveClass('nx:h-11', 'nx:px-8', 'nx:gap-2.5');
+    await expect(lg).toHaveClass('nx:h-12', 'nx:px-8', 'nx:gap-2.5');
   },
 };
 
@@ -428,6 +430,11 @@ export const HeightAtEveryDensity: Story = {
             <IconItalic />
           </Toggle>
           <Toggle variant="outline">Bold</Toggle>
+          {SIZES.map((size) => (
+            <Button key={size} size={size} variant="outline">
+              Save
+            </Button>
+          ))}
         </div>
       ))}
     </div>
@@ -436,14 +443,16 @@ export const HeightAtEveryDensity: Story = {
     const canvas = within(canvasElement);
     const heights = SIZES.map(() => [] as number[]);
     for (const density of DENSITIES) {
-      const [small, standard, large, icon, outline] = within(
+      const [small, standard, large, icon, outline, ...buttons] = within(
         canvas.getByTestId(`row-${density}`)
       )
         .getAllByRole('button')
-        .map((toggle) => toggle.getBoundingClientRect().height);
+        .map((control) => control.getBoundingClientRect().height);
       // An icon or a border doesn't change the height.
       await expect(icon).toBe(standard);
       await expect(outline).toBe(standard);
+      // Each size matches the Button of the same size.
+      await expect([small, standard, large]).toEqual(buttons);
       [small, standard, large].forEach((height, size) =>
         heights[size]!.push(height!)
       );

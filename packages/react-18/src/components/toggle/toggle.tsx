@@ -20,9 +20,9 @@ const toggleVariants = cva(
         ],
       },
       size: {
-        default: 'nx:h-9 nx:px-4 nx:gap-2 nx:typography-label-default',
-        sm: 'nx:h-7 nx:px-3 nx:gap-1.5 nx:typography-label-small',
-        lg: 'nx:h-11 nx:px-8 nx:gap-2.5 nx:typography-label-default',
+        default: 'nx:h-10 nx:px-4 nx:gap-2 nx:typography-label-default',
+        sm: 'nx:h-8 nx:px-3 nx:gap-1.5 nx:typography-label-small',
+        lg: 'nx:h-12 nx:px-8 nx:gap-2.5 nx:typography-label-default',
       },
     },
     defaultVariants: {

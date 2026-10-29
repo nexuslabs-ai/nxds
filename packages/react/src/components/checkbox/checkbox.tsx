@@ -17,15 +17,15 @@ type CheckboxProps = React.ComponentProps<typeof CheckboxPrimitive.Root>;
  * Selects one or more options, or toggles one setting.
  * Set `checked="indeterminate"` to show a minus for a partly selected group, such as "select all".
  *
- * The box is 16px, so pair it with a label that carries the touch target.
- * Use `Label`, `ChoiceRow`, `ChoiceCard`, or `FieldLabel` in a `Field`.
+ * The box is 16px inside a 24px target. Pair it with a label for a larger
+ * target: `Label`, `ChoiceRow`, `ChoiceCard`, or `FieldLabel` in a `Field`.
  */
 function Checkbox({ className, ...props }: CheckboxProps) {
   return (
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        'nx:group nx:peer nx:inline-flex nx:size-[16px] nx:shrink-0 nx:items-center nx:justify-center nx:p-0',
+        'nx:group nx:peer nx:relative nx:inline-flex nx:size-[16px] nx:shrink-0 nx:items-center nx:justify-center nx:p-0 nx:before:absolute nx:before:top-1/2 nx:before:left-1/2 nx:before:size-[24px] nx:before:-translate-x-1/2 nx:before:-translate-y-1/2',
         'nx:rounded-sm nx:border-default nx:border-border-default nx:bg-container',
         'nx:transition-control',
         'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
@@ -60,7 +60,7 @@ function Checkbox({ className, ...props }: CheckboxProps) {
           data-slot="checkbox-check"
           aria-hidden="true"
           className={cn(
-            'nx:absolute nx:size-icon-glyph-sm',
+            'nx:absolute nx:size-full',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )}
@@ -69,7 +69,7 @@ function Checkbox({ className, ...props }: CheckboxProps) {
           data-slot="checkbox-minus"
           aria-hidden="true"
           className={cn(
-            'nx:absolute nx:size-icon-glyph-sm',
+            'nx:absolute nx:size-full',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=indeterminate]:scale-100 nx:group-data-[state=indeterminate]:opacity-100'
           )}

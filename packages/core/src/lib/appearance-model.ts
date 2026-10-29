@@ -199,11 +199,13 @@ function formatPx(value: number): string {
   return `${Number(value.toFixed(4))}px`;
 }
 
-function typographyScaleVariables(uiPx: number): string {
+function typographyScaleVariables(uiPx: number, codePx: number): string {
   const scale = uiPx / DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize;
   const sizeVars = Object.entries(typographyTokens.size).map(
-    ([name, token]) =>
-      `  --nx-typography-size-${name}: ${formatPx(token.$value.value * scale)};`
+    ([name, token]) => {
+      const px = name === 'code' ? codePx : token.$value.value * scale;
+      return `  --nx-typography-size-${name}: ${formatPx(px)};`;
+    }
   );
   const lineHeightVars = Object.entries(typographyTokens['line-height']).map(
     ([name, token]) =>
@@ -315,9 +317,8 @@ export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
     inRuntimeLayer(`:root {
   --nx-typography-family-font-sans: ${prefs.uiFont};
   --nx-typography-family-font-mono: ${prefs.codeFont};
-${typographyScaleVariables(uiPx)}
+${typographyScaleVariables(uiPx, codePx)}
 }`),
-    `.nx\\:font-mono, .nx\\:typography-code-block, .nx\\:typography-code-inline { font-size: ${codePx}px; }`,
   ];
   if (prefs.fontSmoothing) {
     blocks.push(

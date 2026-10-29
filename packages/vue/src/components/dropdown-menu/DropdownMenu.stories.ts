@@ -466,6 +466,71 @@ const threeItemMenu = (labels: [string, string, string]) => () => ({
   `,
 });
 
+const DENSITIES = [
+  'tight',
+  'compact',
+  'default',
+  'comfortable',
+  'relaxed',
+  'spacious',
+] as const;
+
+export const CheckInsetAtEveryDensity: Story = {
+  render: () => ({
+    components: {
+      Button,
+      DropdownMenu,
+      DropdownMenuCheckboxItem,
+      DropdownMenuContent,
+      DropdownMenuItem,
+      DropdownMenuLabel,
+      DropdownMenuTrigger,
+    },
+    template: `
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button variant="outline">View</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent class="nx:w-56">
+          <DropdownMenuLabel inset>Appearance</DropdownMenuLabel>
+          <DropdownMenuCheckboxItem :model-value="true">Status bar</DropdownMenuCheckboxItem>
+          <DropdownMenuItem inset>Reset view</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'View' }));
+    const menu = await within(document.body).findByRole('menu');
+    const item = within(menu).getByRole('menuitemcheckbox', {
+      name: 'Status bar',
+    });
+    const check = item.querySelector<HTMLElement>(
+      '[data-slot="dropdown-menu-checkbox-indicator"]'
+    )!.parentElement!;
+    const inset = (element: Element) =>
+      parseFloat(getComputedStyle(element).paddingLeft);
+    for (const density of DENSITIES) {
+      // The density applies to the open panel and everything in it.
+      menu.setAttribute('data-density', density);
+      // The check sits 8px in, and the text starts 8px after it.
+      await expect(check.offsetLeft).toBe(8);
+      await expect(inset(item) - check.offsetLeft - check.offsetWidth).toBe(8);
+      // Inset items and labels line up with that text.
+      await expect(
+        inset(within(menu).getByRole('menuitem', { name: 'Reset view' }))
+      ).toBe(inset(item));
+      await expect(inset(within(menu).getByText('Appearance'))).toBe(
+        inset(item)
+      );
+    }
+
+    await userEvent.keyboard('{Escape}');
+    await expectExitBeforeUnmount(menu);
+  },
+};
+
 export const OpenCloseInteraction: Story = {
   render: threeItemMenu(['Item 1', 'Item 2', 'Item 3']),
   play: async ({ canvasElement }) => {

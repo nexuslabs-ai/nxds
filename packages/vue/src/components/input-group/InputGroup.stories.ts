@@ -673,6 +673,79 @@ export const WithKbd: Story = {
   },
 };
 
+const DENSITIES = [
+  'tight',
+  'compact',
+  'default',
+  'comfortable',
+  'relaxed',
+  'spacious',
+] as const;
+
+/** The line height, snapped down to the 1/64px steps that layout uses. */
+function lineHeight(element: Element) {
+  return Math.floor(parseFloat(getComputedStyle(element).lineHeight) * 64) / 64;
+}
+
+/** The height inside the border and padding, with fractions kept. */
+function contentHeight(element: Element) {
+  const style = getComputedStyle(element);
+  const edges = [
+    'borderTopWidth',
+    'borderBottomWidth',
+    'paddingTop',
+    'paddingBottom',
+  ] as const;
+  return edges.reduce(
+    (height, edge) => height - parseFloat(style[edge]),
+    element.getBoundingClientRect().height
+  );
+}
+
+export const ExtraSmallButtonAtEveryDensity: Story = {
+  // Text is tallest at the largest UI font size, so it fits at every smaller one.
+  globals: { uiFontSize: 16 },
+  render: () => ({
+    components: {
+      InputGroup,
+      InputGroupAddon,
+      InputGroupButton,
+      InputGroupInput,
+    },
+    setup: () => ({ densities: DENSITIES }),
+    template: `
+      <div class="nx:flex nx:w-80 nx:flex-col nx:gap-3">
+        <div
+          v-for="density in densities"
+          :key="density"
+          :data-density="density"
+          :data-testid="'row-' + density"
+        >
+          <InputGroup>
+            <InputGroupInput :aria-label="'Invite link, ' + density" />
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton size="xs">Copy</InputGroupButton>
+            </InputGroupAddon>
+          </InputGroup>
+        </div>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const density of DENSITIES) {
+      const element = within(canvas.getByTestId(`row-${density}`)).getByRole(
+        'button',
+        { name: 'Copy' }
+      );
+      // The label fits inside the extra-small button at every density.
+      await expect(contentHeight(element)).toBeGreaterThanOrEqual(
+        lineHeight(element)
+      );
+    }
+  },
+};
+
 // ============================================
 // ALL VARIANTS GRID
 // ============================================

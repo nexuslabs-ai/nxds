@@ -37,8 +37,9 @@ export const switchThumbVariants = cva(
   {
     variants: {
       size: {
-        default: 'nx:size-[16px] nx:data-[state=checked]:translate-x-[16px]',
-        sm: 'nx:size-[14px] nx:data-[state=checked]:translate-x-[14px]',
+        default:
+          'nx:size-[calc(20px_-_2*var(--nx-borderwidth-thick))] nx:data-[state=checked]:translate-x-[16px]',
+        sm: 'nx:size-[calc(18px_-_2*var(--nx-borderwidth-thick))] nx:data-[state=checked]:translate-x-[14px]',
       },
     },
     defaultVariants: {

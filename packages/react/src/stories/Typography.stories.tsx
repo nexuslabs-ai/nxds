@@ -21,6 +21,7 @@ const SIZE_KEYS = [
   '7xl',
   '8xl',
   '9xl',
+  'code',
 ] as const;
 const WEIGHT_KEYS = [
   'thin',

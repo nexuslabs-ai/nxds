@@ -320,6 +320,18 @@ export const WithDataAttributes: Story = {
   },
 };
 
+/** Checks that `part` stays inside the border of `control`. */
+async function expectInsideBorder(part: Element, control: HTMLElement) {
+  const mark = part.getBoundingClientRect();
+  const box = control.getBoundingClientRect();
+  const top = box.top + control.clientTop;
+  const left = box.left + control.clientLeft;
+  await expect(mark.top).toBeGreaterThanOrEqual(top);
+  await expect(mark.bottom).toBeLessThanOrEqual(top + control.clientHeight);
+  await expect(mark.left).toBeGreaterThanOrEqual(left);
+  await expect(mark.right).toBeLessThanOrEqual(left + control.clientWidth);
+}
+
 const DENSITIES = [
   'tight',
   'compact',
@@ -328,6 +340,7 @@ const DENSITIES = [
   'relaxed',
   'spacious',
 ] as const;
+const STROKES = ['fine', 'normal', 'strong'] as const;
 
 export const SizesAtEveryDensity: Story = {
   render: () => (
@@ -361,19 +374,44 @@ export const SizesAtEveryDensity: Story = {
       );
       // The thumb stays inside the track's border at every density.
       for (const control of [standard!, small!]) {
-        const thumb = control
-          .querySelector('[data-slot="switch-thumb"]')!
-          .getBoundingClientRect();
-        const box = control.getBoundingClientRect();
-        const top = box.top + control.clientTop;
-        const left = box.left + control.clientLeft;
-        await expect(thumb.top).toBeGreaterThanOrEqual(top);
-        await expect(thumb.bottom).toBeLessThanOrEqual(
-          top + control.clientHeight
+        await expectInsideBorder(
+          control.querySelector('[data-slot="switch-thumb"]')!,
+          control
         );
-        await expect(thumb.left).toBeGreaterThanOrEqual(left);
-        await expect(thumb.right).toBeLessThanOrEqual(
-          left + control.clientWidth
+      }
+    }
+  },
+};
+
+export const ThumbAtEveryStroke: Story = {
+  render: () => (
+    <div className="nx:flex nx:flex-col nx:gap-3">
+      {STROKES.map((stroke) => (
+        <div
+          key={stroke}
+          data-borderwidth={stroke}
+          data-testid={`row-${stroke}`}
+          className="nx:flex nx:items-center nx:gap-3"
+        >
+          <Switch aria-label={`Off, ${stroke}`} />
+          <Switch defaultChecked aria-label={`On, ${stroke}`} />
+          <Switch size="sm" aria-label={`Small off, ${stroke}`} />
+          <Switch size="sm" defaultChecked aria-label={`Small on, ${stroke}`} />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const stroke of STROKES) {
+      const controls = within(canvas.getByTestId(`row-${stroke}`)).getAllByRole(
+        'switch'
+      );
+      // The thumb stays inside the track's border, on and off, at every stroke.
+      for (const control of controls) {
+        await expectInsideBorder(
+          control.querySelector('[data-slot="switch-thumb"]')!,
+          control
         );
       }
     }

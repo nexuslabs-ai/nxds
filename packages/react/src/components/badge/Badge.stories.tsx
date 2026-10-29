@@ -402,6 +402,67 @@ export const LongContent: Story = {
   },
 };
 
+const DENSITIES = [
+  'tight',
+  'compact',
+  'default',
+  'comfortable',
+  'relaxed',
+  'spacious',
+] as const;
+
+/** The line height, snapped down to the 1/64px steps that layout uses. */
+function lineHeight(element: Element) {
+  return Math.floor(parseFloat(getComputedStyle(element).lineHeight) * 64) / 64;
+}
+
+/** The height inside the border and padding, with fractions kept. */
+function contentHeight(element: Element) {
+  const style = getComputedStyle(element);
+  const edges = [
+    'borderTopWidth',
+    'borderBottomWidth',
+    'paddingTop',
+    'paddingBottom',
+  ] as const;
+  return edges.reduce(
+    (height, edge) => height - parseFloat(style[edge]),
+    element.getBoundingClientRect().height
+  );
+}
+
+export const TextFitsAtEveryDensity: Story = {
+  // Text is tallest at the largest UI font size, so it fits at every smaller one.
+  globals: { uiFontSize: 16 },
+  render: () => (
+    <div className="nx:flex nx:flex-col nx:items-start nx:gap-3">
+      {DENSITIES.map((density) => (
+        <div
+          key={density}
+          data-density={density}
+          data-testid={`row-${density}`}
+          className="nx:flex nx:gap-2"
+        >
+          <Badge>Beta</Badge>
+          <Badge isCaps={false}>New</Badge>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const density of DENSITIES) {
+      const row = within(canvas.getByTestId(`row-${density}`));
+      // Caps and sentence-case text fit inside the border at every density.
+      for (const element of [row.getByText('Beta'), row.getByText('New')]) {
+        await expect(contentHeight(element)).toBeGreaterThanOrEqual(
+          lineHeight(element)
+        );
+      }
+    }
+  },
+};
+
 // ============================================
 // ALL VARIANTS GRID (visual reference)
 // ============================================

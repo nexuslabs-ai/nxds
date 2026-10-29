@@ -412,9 +412,7 @@ describe('appearancePrefsToCss', () => {
     expect(css).toContain('--nx-typography-size-sm: 32px;');
     expect(css).toContain('--nx-typography-line-height-xxs: 27.4286px;');
     expect(css).toContain('--nx-typography-line-height-sm: 45.7143px;');
-    expect(css).toContain(
-      '.nx\\:font-mono, .nx\\:typography-code-block, .nx\\:typography-code-inline { font-size: 12px; }'
-    );
+    expect(css).toContain('--nx-typography-size-code: 12px;');
   });
 
   it('leaves the page font size alone', () => {
@@ -429,7 +427,7 @@ describe('appearancePrefsToCss', () => {
       ([, list = '']) => list.split(',').map((selector) => selector.trim())
     );
     for (const selector of selectors) {
-      expect(selector, selector).toMatch(/^(@layer nx-runtime$|:root|\.nx\\:)/);
+      expect(selector, selector).toMatch(/^(@layer nx-runtime|:root)$/);
     }
   });
 

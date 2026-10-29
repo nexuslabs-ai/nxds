@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { IconSearch } from '@tabler/icons-vue';
-import { expect } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 
 import { Kbd, KbdGroup } from '.';
 
@@ -137,6 +137,68 @@ export const WithDataAttributes: Story = {
     await expect(letterKey?.textContent).toBe('K');
     await expect(letterKey).not.toHaveAttribute('role');
     await expect(letterKey).not.toHaveAttribute('tabindex');
+  },
+};
+
+const DENSITIES = [
+  'tight',
+  'compact',
+  'default',
+  'comfortable',
+  'relaxed',
+  'spacious',
+] as const;
+
+/** The line height, snapped down to the 1/64px steps that layout uses. */
+function lineHeight(element: Element) {
+  return Math.floor(parseFloat(getComputedStyle(element).lineHeight) * 64) / 64;
+}
+
+/** The height inside the border and padding, with fractions kept. */
+function contentHeight(element: Element) {
+  const style = getComputedStyle(element);
+  const edges = [
+    'borderTopWidth',
+    'borderBottomWidth',
+    'paddingTop',
+    'paddingBottom',
+  ] as const;
+  return edges.reduce(
+    (height, edge) => height - parseFloat(style[edge]),
+    element.getBoundingClientRect().height
+  );
+}
+
+export const TextFitsAtEveryDensity: Story = {
+  // Text is tallest at the largest UI font size, so it fits at every smaller one.
+  globals: { uiFontSize: 16 },
+  render: () => ({
+    components: { Kbd },
+    setup: () => ({ densities: DENSITIES }),
+    template: `
+      <div class="nx:flex nx:flex-col nx:items-start nx:gap-3">
+        <div
+          v-for="density in densities"
+          :key="density"
+          :data-density="density"
+          :data-testid="'row-' + density"
+        >
+          <Kbd>Ctrl</Kbd>
+        </div>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const density of DENSITIES) {
+      const element = within(canvas.getByTestId(`row-${density}`)).getByText(
+        'Ctrl'
+      );
+      // The key label fits inside the border at every density.
+      await expect(contentHeight(element)).toBeGreaterThanOrEqual(
+        lineHeight(element)
+      );
+    }
   },
 };
 

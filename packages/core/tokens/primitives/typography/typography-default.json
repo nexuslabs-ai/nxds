@@ -135,6 +135,13 @@
         "unit": "px"
       },
       "$type": "dimension"
+    },
+    "code": {
+      "$value": {
+        "value": 12,
+        "unit": "px"
+      },
+      "$type": "dimension"
     }
   },
   "weight": {
