@@ -413,6 +413,17 @@ describe('appearancePrefsToCss', () => {
     }
   });
 
+  it('rounds line heights to even pixels', () => {
+    for (const uiFontSize of uiFontSizes) {
+      const css = appearancePrefsToCss({ ...prefs, uiFontSize });
+      const odd = typographyDeclarations(css).filter((declaration) => {
+        const px = /line-height-[a-z0-9]+:\s*(\d+)px;$/.exec(declaration)?.[1];
+        return px !== undefined && Number(px) % 2 !== 0;
+      });
+      expect(odd, `uiFontSize ${uiFontSize}`).toEqual([]);
+    }
+  });
+
   it('keeps the icon glyph tokens at the default font size', () => {
     const css = appearancePrefsToCss(prefs);
     for (const [name, token] of Object.entries(iconTokens.glyph)) {
@@ -466,7 +477,7 @@ describe('appearancePrefsToCss', () => {
     expect(css).toContain('--nx-typography-family-font-mono: JetBrains Mono;');
     expect(css).toContain('--nx-typography-size-sm: 16px;');
     expect(css).toContain('--nx-typography-line-height-xxs: 14px;');
-    expect(css).toContain('--nx-typography-line-height-sm: 23px;');
+    expect(css).toContain('--nx-typography-line-height-sm: 22px;');
     expect(css).toContain(
       '.nx\\:font-mono, .nx\\:typography-code-block, .nx\\:typography-code-inline { font-size: 12px; }'
     );

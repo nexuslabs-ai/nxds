@@ -94,12 +94,12 @@ const meta = {
       token(root, '--nx-radius-md')
     );
 
-    // The caps line box scales with uiFontSize, in whole pixels.
+    // The caps line box scales with uiFontSize, in even pixels.
     const caps = canvas.getByTestId('label-caps');
     const scale = globals.uiFontSize / DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize;
     await waitFor(() =>
       expect(getComputedStyle(caps).lineHeight).toBe(
-        `${Math.round(LABEL_CAPS_LINE_HEIGHT_PX * scale)}px`
+        `${2 * Math.round((LABEL_CAPS_LINE_HEIGHT_PX * scale) / 2)}px`
       )
     );
   },
