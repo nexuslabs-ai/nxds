@@ -144,6 +144,9 @@ importers:
       '@nxds/catalog':
         specifier: workspace:*
         version: link:../../packages/catalog
+      '@nxds/claude-design':
+        specifier: workspace:*
+        version: link:../../packages/claude-design
       '@nxds/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -302,6 +305,9 @@ importers:
       '@nxds/tailwind':
         specifier: workspace:*
         version: link:../tailwind
+      '@tabler/icons':
+        specifier: 3.44.0
+        version: 3.44.0
       '@tailwindcss/node':
         specifier: 4.3.0
         version: 4.3.0

@@ -44,17 +44,23 @@ export function compileTheme() {
   return compile(ENTRY, { base: TAILWIND_DIR, onDependency() {} });
 }
 
-// Every `nx:` class in the React 18 sources, stories and blocks included: the
-// previews render the docs stories.
+// Every `nx:` class in the React 18 sources, stories and blocks included,
+// since the previews render the docs stories, and in the export's own parts.
 function candidates() {
   const found = new Set<string>();
-  for (const file of readdirSync(react18Src, {
-    recursive: true,
-    encoding: 'utf8',
-  })) {
-    if (!/\.tsx?$/.test(file)) continue;
-    const source = readFileSync(path.join(react18Src, file), 'utf8');
-    for (const candidate of classCandidates(source)) found.add(candidate);
+  for (const root of [
+    react18Src,
+    path.join(import.meta.dirname, 'canvas'),
+    path.join(import.meta.dirname, 'runtime'),
+  ]) {
+    for (const file of readdirSync(root, {
+      recursive: true,
+      encoding: 'utf8',
+    })) {
+      if (!/\.tsx?$/.test(file)) continue;
+      const source = readFileSync(path.join(root, file), 'utf8');
+      for (const candidate of classCandidates(source)) found.add(candidate);
+    }
   }
   return [...found];
 }
