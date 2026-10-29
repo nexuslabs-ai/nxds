@@ -234,8 +234,8 @@ export type Font = z.infer<typeof fontSchema>;
 const themeFieldInfo = {
   /** Its `init` flag, without the `--`, such as `density`. */
   flag: z.string(),
-  /** The appearance field it sets, such as `density` or `prefs.uiFont`. */
-  key: z.string(),
+  /** The appearance field it sets, such as `density` or `prefs.uiFont`. The CLI writes it into `nxds-theme.ts` as source. */
+  key: z.string().regex(/^(prefs\.)?[A-Za-z]+$/),
 };
 
 const themeFieldSchema = z.discriminatedUnion('kind', [
@@ -262,6 +262,10 @@ const themeFieldSchema = z.discriminatedUnion('kind', [
 ]);
 
 export type ThemeField = z.infer<typeof themeFieldSchema>;
+
+const THEME_FIELD_KINDS: string[] = themeFieldSchema.options.map(
+  (option) => option.shape.kind.value
+);
 
 /**
  * The catalog's copy of one of core's theme fields: what the CLI needs to
@@ -307,8 +311,14 @@ export const catalogSchema = z.object({
   iconLibraries: z.array(iconLibrarySchema).default([]),
   /** The fonts an app can start with. Releases from before fonts leave it out. */
   fonts: z.array(fontSchema).default([]),
-  /** The theme flags this release's `@nxds/core` takes, beside `--icons`. Releases from before themes leave it out. */
-  themeFields: z.array(themeFieldSchema).default([]),
+  /** The theme flags this release's `@nxds/core` takes, beside `--icons`. Releases from before themes leave it out. Kinds this version doesn't know are dropped. */
+  themeFields: z
+    .array(z.looseObject({ kind: z.string() }))
+    .transform((fields) =>
+      fields.filter((field) => THEME_FIELD_KINDS.includes(field.kind))
+    )
+    .pipe(z.array(themeFieldSchema))
+    .default([]),
 });
 
 export type Catalog = z.infer<typeof catalogSchema>;

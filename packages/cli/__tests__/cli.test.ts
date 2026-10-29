@@ -661,6 +661,20 @@ describe('icon libraries', () => {
     expect(run.stdout).toMatch(/with Lucide icons/);
   });
 
+  it('goes back to the release default library when init is given an empty --icons', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+    await cli(['init', '--icons', 'lucide'], context);
+    await cli(['add', 'spinner'], context);
+
+    const run = await cli(['init', '--icons='], context);
+
+    expect(run.exitCode, run.stdout + run.stderr).toBe(EXIT_CODES.ok);
+    expect(nxdsJson(context.app)).toMatchObject({ iconLibrary: 'tabler' });
+    expect(readApp(context.app, NXDS_ICONS)).toBe(
+      choicesRelease('0.4.7').iconLibraries[0]?.file.content
+    );
+  });
+
   it('keeps the default library for an app from before icon libraries', async () => {
     const context = setup();
     await cli(['init'], context);
@@ -1009,6 +1023,42 @@ describe('theme', () => {
       ),
     });
     expect(theme.message).not.toContain('init --densty');
+  });
+
+  it('fails the doctor theme check for an empty value in nxds.json', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+    await cli(['init'], context);
+    writeApp(
+      context.app,
+      'nxds.json',
+      JSON.stringify({ ...nxdsJson(context.app), theme: { density: '' } })
+    );
+
+    const { body } = await cliJson(['doctor'], context);
+
+    expect(body.data.checks).toContainEqual(
+      expect.objectContaining({
+        name: 'theme',
+        ok: false,
+        message: expect.stringMatching(/--density "" isn't one of/),
+      })
+    );
+  });
+
+  it('takes a release whose theme fields include a kind this version does not know', async () => {
+    const release = choicesRelease('0.4.7');
+    Object.assign(release, {
+      themeFields: [
+        ...release.themeFields,
+        { flag: 'motion', key: 'motion', kind: 'curve' },
+      ],
+    });
+    const context = setup([release]);
+
+    const run = await cli(['init', '--density', 'compact'], context);
+
+    expect(run.exitCode, run.stdout + run.stderr).toBe(EXIT_CODES.ok);
+    expect(readApp(context.app, NXDS_THEME)).toContain("density: 'compact',");
   });
 
   it("fails the doctor fonts check when the theme's fonts aren't imported", async () => {

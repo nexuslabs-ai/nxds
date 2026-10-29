@@ -94,20 +94,18 @@ function program(
   const initCommand = cli
     .command('init')
     .description(
-      'set up nxds: token CSS, provider, and the layout wiring. Theme flags set nxds-theme.ts; one left out keeps its value, and an empty one, such as --density=, resets it'
+      "set up nxds: token CSS, provider, and the layout wiring. Theme flags set nxds-theme.ts; one left out keeps its value, and an empty one, such as --density=, resets it. A value your release doesn't take lists the ones it does"
     )
     .option(
       '--dir <path>',
       'nxds folder (default: components/nxds, or src/components/nxds)'
     );
   const themeOptions = NXDS_THEME_FIELDS.map((field) => {
-    const help =
-      'values' in field
-        ? `${field.description}: ${field.values.join(', ')}`
-        : field.description;
     const option = new Option(
       `--${field.flag} <value>`,
-      field.flag === ICONS_FLAG ? `${help}. ${REMIX_LICENSE}` : help
+      field.flag === ICONS_FLAG
+        ? `${field.description}. ${REMIX_LICENSE}`
+        : field.description
     );
     initCommand.addOption(option);
     return { flag: field.flag, key: option.attributeName() };

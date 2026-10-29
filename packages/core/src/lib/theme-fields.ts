@@ -10,6 +10,7 @@ import {
   type NxdsAppearanceState,
   STROKE_OPTIONS,
 } from './appearance-model';
+import { CONTRAST_MAX, CONTRAST_MIN } from './contrast';
 import { FONT_OPTIONS, type NxdsFontCategory } from './font-options';
 import {
   DEFAULT_ICON_LIBRARY,
@@ -169,11 +170,13 @@ function contrastField(
     flag,
     key,
     description,
-    min: 0,
-    max: 100,
+    min: CONTRAST_MIN,
+    max: CONTRAST_MAX,
     read: (theme) => String(theme.appearance[key]),
     write: (theme, value) =>
-      withAppearance(theme, { [key]: integer(flag, value, 0, 100) }),
+      withAppearance(theme, {
+        [key]: integer(flag, value, CONTRAST_MIN, CONTRAST_MAX),
+      }),
   };
 }
 

@@ -122,9 +122,10 @@ export function resolveTheme(
   stored: ThemeFlags,
   passed: ThemeFlags = {}
 ): Theme & { flags: ThemeFlags } {
-  const flags = Object.fromEntries(
-    Object.entries({ ...stored, ...passed }).filter(([, value]) => value !== '')
-  );
+  const flags: ThemeFlags = { ...stored, ...passed };
+  for (const [flag, value] of Object.entries(passed)) {
+    if (value === '') delete flags[flag];
+  }
   for (const flag of Object.keys(flags)) {
     assertThemeFlag(release, flag, flag in passed);
   }
