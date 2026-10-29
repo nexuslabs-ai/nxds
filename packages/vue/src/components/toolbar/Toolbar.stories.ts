@@ -1,16 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
-  IconArchive,
-  IconArrowBackUp,
-  IconBold,
-  IconChevronDown,
-  IconChevronLeft,
-  IconChevronRight,
-  IconDots,
-  IconItalic,
-  IconUnderline,
-  IconX,
-} from '@tabler/icons-vue';
+  PhArchive,
+  PhArrowUUpLeft,
+  PhCaretDown,
+  PhCaretLeft,
+  PhCaretRight,
+  PhDotsThree,
+  PhTextB,
+  PhTextItalic,
+  PhTextUnderline,
+  PhX,
+} from '@phosphor-icons/vue';
+import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { defineComponent, ref, useId } from 'vue';
 
@@ -69,10 +69,10 @@ export const Default: Story = {
   tags: ['docs'],
   render: () => ({
     components: {
-      IconArrowBackUp,
-      IconBold,
-      IconItalic,
-      IconUnderline,
+      PhArrowUUpLeft,
+      PhTextB,
+      PhTextItalic,
+      PhTextUnderline,
       Toolbar,
       ToolbarButton,
       ToolbarLink,
@@ -91,7 +91,7 @@ export const Default: Story = {
             <TooltipTrigger as-child>
               <span class="nx:inline-flex">
                 <ToolbarButton size="icon-sm" aria-label="Undo formatting" class="nx:text-muted-foreground" @click="formatting = []">
-                  <IconArrowBackUp aria-hidden="true" />
+                  <PhArrowUUpLeft aria-hidden="true" />
                 </ToolbarButton>
               </span>
             </TooltipTrigger>
@@ -103,7 +103,7 @@ export const Default: Story = {
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
                   <ToolbarToggleItem value="bold" aria-label="Bold" size="icon-sm">
-                    <IconBold aria-hidden="true" />
+                    <PhTextB aria-hidden="true" />
                   </ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
@@ -113,7 +113,7 @@ export const Default: Story = {
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
                   <ToolbarToggleItem value="italic" aria-label="Italic" size="icon-sm">
-                    <IconItalic aria-hidden="true" />
+                    <PhTextItalic aria-hidden="true" />
                   </ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
@@ -123,7 +123,7 @@ export const Default: Story = {
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
                   <ToolbarToggleItem value="underline" aria-label="Underline" size="icon-sm">
-                    <IconUnderline aria-hidden="true" />
+                    <PhTextUnderline aria-hidden="true" />
                   </ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
@@ -181,7 +181,7 @@ export const FileActions: Story = {
       DropdownMenuContent,
       DropdownMenuItem,
       DropdownMenuTrigger,
-      IconDots,
+      PhDotsThree,
       Toolbar,
       ToolbarButton,
       ToolbarGroup,
@@ -198,7 +198,7 @@ export const FileActions: Story = {
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
             <ToolbarButton size="icon-sm" aria-label="More file actions">
-              <IconDots />
+              <PhDotsThree />
             </ToolbarButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -237,8 +237,8 @@ export const Calendar: Story = {
   },
   render: () => ({
     components: {
-      IconChevronLeft,
-      IconChevronRight,
+      PhCaretLeft,
+      PhCaretRight,
       Toolbar,
       ToolbarButton,
       ToolbarGroup,
@@ -250,11 +250,11 @@ export const Calendar: Story = {
       <Toolbar aria-label="Calendar controls">
         <ToolbarGroup aria-label="Date navigation">
           <ToolbarButton size="icon-sm" aria-label="Previous period">
-            <IconChevronLeft />
+            <PhCaretLeft />
           </ToolbarButton>
           <ToolbarButton>Today</ToolbarButton>
           <ToolbarButton size="icon-sm" aria-label="Next period">
-            <IconChevronRight />
+            <PhCaretRight />
           </ToolbarButton>
         </ToolbarGroup>
         <ToolbarToggleGroup
@@ -442,7 +442,7 @@ export const NarrowContainer: Story = {
 export const InsideTooltipProvider: Story = {
   render: () => ({
     components: {
-      IconBold,
+      PhTextB,
       Toolbar,
       ToolbarButton,
       Tooltip,
@@ -456,7 +456,7 @@ export const InsideTooltipProvider: Story = {
           <Tooltip>
             <TooltipTrigger as-child>
               <ToolbarButton size="icon-sm" aria-label="Bold">
-                <IconBold aria-hidden="true" />
+                <PhTextB aria-hidden="true" />
               </ToolbarButton>
             </TooltipTrigger>
             <TooltipContent>Bold</TooltipContent>
@@ -558,7 +558,7 @@ const InlineExample = defineComponent({
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-    IconChevronDown,
+    PhCaretDown,
     Toolbar,
     ToolbarButton,
     ToolbarToggleGroup,
@@ -586,7 +586,7 @@ const InlineExample = defineComponent({
         </ToolbarToggleGroup>
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <ToolbarButton class="nx:ms-auto">Show <IconChevronDown aria-hidden="true" /></ToolbarButton>
+            <ToolbarButton class="nx:ms-auto">Show <PhCaretDown aria-hidden="true" /></ToolbarButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem @select="view = 'all'">All documents</DropdownMenuItem>
@@ -632,7 +632,7 @@ const AttachedExample = defineComponent({
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-    IconChevronDown,
+    PhCaretDown,
     Toolbar,
     ToolbarButton,
     ToolbarSeparator,
@@ -689,7 +689,7 @@ const AttachedExample = defineComponent({
           <ToolbarSeparator />
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <ToolbarButton>More <IconChevronDown aria-hidden="true" /></ToolbarButton>
+              <ToolbarButton>More <PhCaretDown aria-hidden="true" /></ToolbarButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem @select="formatting = []">Clear formatting</DropdownMenuItem>
@@ -757,8 +757,8 @@ export const Attached: Story = {
 const SelectionExample = defineComponent({
   components: {
     Checkbox,
-    IconArchive,
-    IconX,
+    PhArchive,
+    PhX,
     Label,
     Toolbar,
     ToolbarButton,
@@ -838,7 +838,7 @@ const SelectionExample = defineComponent({
                 class="nx:text-muted-foreground"
                 @click="clearSelection"
               >
-                <IconX aria-hidden="true" />
+                <PhX aria-hidden="true" />
               </ToolbarButton>
             </TooltipTrigger>
             <TooltipContent>Clear selection</TooltipContent>
@@ -846,7 +846,7 @@ const SelectionExample = defineComponent({
           <span class="nx:px-2 nx:typography-label-default nx:whitespace-nowrap" aria-live="polite">{{ selected.length }} selected</span>
           <ToolbarSeparator class="nx:self-stretch nx:data-[orientation=vertical]:h-auto" />
           <ToolbarButton @click="archiveSelection">
-            <IconArchive aria-hidden="true" />Archive</ToolbarButton>
+            <PhArchive aria-hidden="true" />Archive</ToolbarButton>
         </Toolbar>
       </div>
       <p role="status" class="nx:typography-body-small nx:text-muted-foreground">{{ message }}</p>

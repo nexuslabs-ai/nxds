@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { IconCheck } from '@tabler/icons-vue';
 import { reactiveOmit } from '@vueuse/core';
 import {
   SelectItem,
@@ -10,6 +9,7 @@ import {
 } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
+import { IconCheck } from '../../lib/icons';
 import { selectionIndicatorMotionClassName } from '../../lib/motion';
 import { cn } from '../../lib/utils';
 

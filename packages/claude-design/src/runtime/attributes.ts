@@ -29,10 +29,11 @@ export interface CanvasSchema {
 
 const MAX_CACHED_LENGTH = 4 * 1024 * 1024;
 
-// `IconPlus` or `Plus` for `plus`.
+// `PlusIcon`, `IconPlus` or `Plus` for `plus`.
 function iconName(value: string) {
   return value
     .replace(/^Icon(?=[A-Z])/, '')
+    .replace(/(?<=[a-z0-9])Icon$/, '')
     .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
     .replace(/([a-zA-Z])(\d)/g, '$1-$2')
     .toLowerCase();

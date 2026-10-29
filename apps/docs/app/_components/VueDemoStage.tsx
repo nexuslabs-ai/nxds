@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import type { NxdsIconLibrary } from '@nxds/core';
+
+import { useIconLibrary } from '../_lib/icon-library';
+
 import { useFramework } from './FrameworkTabs';
 
 /** The compiled Vue demos, which `scripts/bundle-vue-demos.ts` writes to public/. */
@@ -20,7 +24,15 @@ function loadVueDemoStyles() {
 
 type VueDemos = {
   mount: (element: Element, id: string) => Promise<() => void>;
+  setIconLibrary: (library: NxdsIconLibrary) => void;
 };
+
+function loadVueDemos(): Promise<VueDemos> {
+  // The bundle is a static file, not a module Next should resolve.
+  return import(
+    /* webpackIgnore: true */ /* turbopackIgnore: true */ VUE_DEMOS_ENTRY
+  );
+}
 
 /**
  * Mounts one Vue docs demo as its own Vue app. It mounts only while Vue is
@@ -29,7 +41,17 @@ type VueDemos = {
 export function VueDemoStage({ id }: { id: string }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const framework = useFramework();
+  const iconLibrary = useIconLibrary();
   const [failedId, setFailedId] = useState<string | null>(null);
+
+  // The demos draw icons in the reader's library, and redraw when it changes.
+  useEffect(() => {
+    if (framework !== 'vue') return;
+    loadVueDemos()
+      .then(({ setIconLibrary }) => setIconLibrary(iconLibrary))
+      // The mount below reports a bundle that fails to load.
+      .catch(() => undefined);
+  }, [framework, iconLibrary]);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -38,11 +60,7 @@ export function VueDemoStage({ id }: { id: string }) {
     let unmount: (() => void) | undefined;
     let cancelled = false;
     loadVueDemoStyles();
-    // The bundle is a static file, not a module Next should resolve.
-    const demos: Promise<VueDemos> = import(
-      /* webpackIgnore: true */ /* turbopackIgnore: true */ VUE_DEMOS_ENTRY
-    );
-    void demos
+    void loadVueDemos()
       .then(({ mount }) => mount(stage, id))
       .then(
         (dispose) => {

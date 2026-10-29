@@ -873,15 +873,27 @@ function canvasParts(): FlatComponent[] {
       name: 'Icon',
       slug: 'icon',
       description:
-        'A Tabler icon by name, such as `plus`. It takes the colour of its text. `components/Icon/README.md` lists every name.',
+        'A Phosphor icon by name, such as `plus`. It takes the colour of its text. `components/Icon/README.md` lists every name.',
       props: [
-        canvasProp('name', iconName, 'The icon, by its name on tabler.io.', {
-          optional: false,
-        }),
+        canvasProp(
+          'name',
+          iconName,
+          'The icon, by its name on phosphoricons.com. A `-fill` name, such as `check-circle-fill`, draws the filled icon.',
+          { optional: false }
+        ),
         canvasProp('size', NUMBER, 'Width and height in px.', {
           defaultValue: '16',
         }),
-        canvasProp('stroke', NUMBER, 'Stroke width.', { defaultValue: '2' }),
+        canvasProp(
+          'weight',
+          {
+            ...TEXT,
+            string: false,
+            literals: ['thin', 'light', 'regular', 'bold', 'fill', 'duotone'],
+          },
+          'Line weight, or a filled shape.',
+          { defaultValue: '"regular"' }
+        ),
         canvasProp(
           'aria-label',
           TEXT,

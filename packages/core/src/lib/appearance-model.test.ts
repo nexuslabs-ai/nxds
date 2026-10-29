@@ -34,6 +34,7 @@ describe('appearance model', () => {
       elevation: 'quiet',
       stroke: 'normal',
       prefs: {
+        headingFont: null,
         uiFontSize: 14,
         codeFontSize: 12,
         reduceMotion: false,
@@ -121,6 +122,7 @@ describe('sanitizeNxdsAppearance', () => {
       stroke: 'fine' as const,
       prefs: {
         ...DEFAULT_NXDS_APPEARANCE.prefs,
+        headingFont: '"Lora Variable", Georgia, serif',
         uiFontSize: 16,
         codeFontSize: 13,
         reduceMotion: true,
@@ -267,6 +269,18 @@ describe('sanitizeNxdsAppearancePrefs', () => {
     });
   });
 
+  it('keeps a null heading font, which follows the UI font', () => {
+    expect(
+      sanitizeNxdsAppearancePrefs({ headingFont: null }).headingFont
+    ).toBeNull();
+    expect(
+      sanitizeNxdsAppearancePrefs({ headingFont: 'Lora' }).headingFont
+    ).toBe('Lora');
+    expect(sanitizeNxdsAppearancePrefs({ headingFont: 7 }).headingFont).toBe(
+      DEFAULT_NXDS_APPEARANCE.prefs.headingFont
+    );
+  });
+
   it('rejects font families with CSS-breaking characters', () => {
     // appearancePrefsToCss interpolates these into a <style> rule.
     expect(
@@ -276,6 +290,9 @@ describe('sanitizeNxdsAppearancePrefs', () => {
     expect(
       sanitizeNxdsAppearancePrefs({ codeFont: 'Mono; color:red' }).codeFont
     ).toBe(DEFAULT_NXDS_APPEARANCE.prefs.codeFont);
+    expect(
+      sanitizeNxdsAppearancePrefs({ headingFont: 'Lora</style>' }).headingFont
+    ).toBe(DEFAULT_NXDS_APPEARANCE.prefs.headingFont);
   });
 });
 
@@ -409,12 +426,21 @@ describe('appearancePrefsToCss', () => {
 
     expect(css).toContain('--nx-typography-family-font-sans: Inter;');
     expect(css).toContain('--nx-typography-family-font-mono: JetBrains Mono;');
+    expect(css).toContain(
+      '--nx-typography-family-font-heading: var(--nx-typography-family-font-sans);'
+    );
     expect(css).toContain('--nx-typography-size-sm: 32px;');
     expect(css).toContain('--nx-typography-line-height-xxs: 27.4286px;');
     expect(css).toContain('--nx-typography-line-height-sm: 45.7143px;');
     expect(css).toContain(
       '.nx\\:font-mono, .nx\\:typography-code-block, .nx\\:typography-code-inline { font-size: 12px; }'
     );
+  });
+
+  it('emits a chosen heading font in place of the UI font', () => {
+    const css = appearancePrefsToCss({ ...prefs, headingFont: 'Lora' });
+
+    expect(css).toContain('--nx-typography-family-font-heading: Lora;');
   });
 
   it('leaves the page font size alone', () => {

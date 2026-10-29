@@ -5,8 +5,8 @@
     <x-import component-from-global-scope="Nxds.Button" variant="outline" end-icon="arrow-right">Continue</x-import>
     <x-import component-from-global-scope="Nxds.Button" variant="secondary" disabled>Archived</x-import>
     <x-import component-from-global-scope="Nxds.Button" variant="ghost" loading="true">Saving</x-import>
-    <x-import component-from-global-scope="Nxds.Badge" variant="success" left-icon="circle-check">Active</x-import>
-    <x-import component-from-global-scope="Nxds.Icon" name="settings" aria-label="Settings"></x-import>
+    <x-import component-from-global-scope="Nxds.Badge" variant="success" left-icon="check-circle">Active</x-import>
+    <x-import component-from-global-scope="Nxds.Icon" name="gear" aria-label="Settings"></x-import>
   </div>
   <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--nx-spacing-6);">
     <x-import component-from-global-scope="Nxds.Card">
@@ -23,13 +23,13 @@
           <x-import component-from-global-scope="Nxds.Progress" value="60" aria-label="Storage used"></x-import>
           <x-import component-from-global-scope="Nxds.ToggleGroup" type="multiple" default-value="bold,italic" variant="outline">
             <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="bold" aria-label="Bold">
-              <x-import component-from-global-scope="Nxds.Icon" name="bold"></x-import>
+              <x-import component-from-global-scope="Nxds.Icon" name="text-b"></x-import>
             </x-import>
             <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="italic" aria-label="Italic">
-              <x-import component-from-global-scope="Nxds.Icon" name="italic"></x-import>
+              <x-import component-from-global-scope="Nxds.Icon" name="text-italic"></x-import>
             </x-import>
             <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="underline" aria-label="Underline">
-              <x-import component-from-global-scope="Nxds.Icon" name="underline"></x-import>
+              <x-import component-from-global-scope="Nxds.Icon" name="text-underline"></x-import>
             </x-import>
           </x-import>
         </div>
@@ -43,7 +43,7 @@
   </div>
   <x-import component-from-global-scope="Nxds.Alert" variant="information">
     <x-import component-from-global-scope="Nxds.AlertIcon">
-      <x-import component-from-global-scope="Nxds.Icon" name="info-circle"></x-import>
+      <x-import component-from-global-scope="Nxds.Icon" name="info"></x-import>
     </x-import>
     <x-import component-from-global-scope="Nxds.AlertTitle">nxds is installed</x-import>
     <x-import component-from-global-scope="Nxds.AlertDescription">Every component on this artboard reads the installed tokens.</x-import>

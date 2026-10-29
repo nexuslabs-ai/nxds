@@ -1,5 +1,5 @@
+import { PhCaretUpDown } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { IconSelector } from '@tabler/icons-vue';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { ref } from 'vue';
 
@@ -40,7 +40,7 @@ export const Default: Story = {
       Collapsible,
       CollapsibleContent,
       CollapsibleTrigger,
-      IconSelector,
+      PhCaretUpDown,
     },
     template: `
       <Collapsible class="nx:flex nx:w-72 nx:flex-col">
@@ -49,7 +49,7 @@ export const Default: Story = {
             <span class="nx:typography-label-default nx:text-foreground">@nxds starred 3 repositories</span>
             <CollapsibleTrigger as-child>
               <Button variant="ghost" size="sm" aria-label="Toggle repositories">
-                <IconSelector />
+                <PhCaretUpDown />
               </Button>
             </CollapsibleTrigger>
           </div>

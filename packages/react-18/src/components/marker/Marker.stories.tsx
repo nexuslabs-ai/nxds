@@ -1,13 +1,13 @@
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconBook,
-  IconCheck,
-  IconFileText,
-  IconGitBranch,
-  IconPencil,
-  IconRotate,
-  IconSearch,
-} from '@tabler/icons-react';
+  ArrowCounterClockwiseIcon,
+  BookIcon,
+  CheckIcon,
+  FileTextIcon,
+  GitBranchIcon,
+  MagnifyingGlassIcon,
+  PencilSimpleIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Spinner } from '../spinner/spinner';
@@ -87,19 +87,19 @@ export const Border: Story = {
     <div className={stack}>
       <Marker variant="border">
         <MarkerIcon>
-          <IconGitBranch />
+          <GitBranchIcon />
         </MarkerIcon>
         <MarkerContent>Switched to release-candidate</MarkerContent>
       </Marker>
       <Marker variant="border">
         <MarkerIcon>
-          <IconSearch />
+          <MagnifyingGlassIcon />
         </MarkerIcon>
         <MarkerContent>Reviewed 8 related files</MarkerContent>
       </Marker>
       <Marker variant="border">
         <MarkerIcon>
-          <IconFileText />
+          <FileTextIcon />
         </MarkerIcon>
         <MarkerContent>Opened implementation notes</MarkerContent>
       </Marker>
@@ -120,19 +120,19 @@ export const WithIcon: Story = {
     <div className={stack}>
       <Marker>
         <MarkerIcon>
-          <IconPencil />
+          <PencilSimpleIcon />
         </MarkerIcon>
         <MarkerContent>Edited 2 minutes ago</MarkerContent>
       </Marker>
       <Marker variant="separator">
         <MarkerIcon>
-          <IconSearch />
+          <MagnifyingGlassIcon />
         </MarkerIcon>
         <MarkerContent>Explored 4 files</MarkerContent>
       </Marker>
       <Marker variant="border">
         <MarkerIcon>
-          <IconBook />
+          <BookIcon />
         </MarkerIcon>
         <MarkerContent>Syncing completed</MarkerContent>
       </Marker>
@@ -224,7 +224,7 @@ export const InContext: Story = {
       <div className={row}>Reviewed the token audit</div>
       <Marker>
         <MarkerIcon>
-          <IconPencil />
+          <PencilSimpleIcon />
         </MarkerIcon>
         <MarkerContent>Edited 2 minutes ago</MarkerContent>
       </Marker>
@@ -246,7 +246,7 @@ export const AsChildLink: Story = {
     <Marker asChild>
       <a href="#pull-request">
         <MarkerIcon>
-          <IconGitBranch />
+          <GitBranchIcon />
         </MarkerIcon>
         <MarkerContent>View the pull request</MarkerContent>
       </a>
@@ -271,7 +271,7 @@ export const Disabled: StoryObj<MarkerProps & { onRevert: () => void }> = {
       <Marker asChild>
         <button type="button" onClick={args.onRevert}>
           <MarkerIcon>
-            <IconRotate />
+            <ArrowCounterClockwiseIcon />
           </MarkerIcon>
           <MarkerContent>Revert this change</MarkerContent>
         </button>
@@ -279,7 +279,7 @@ export const Disabled: StoryObj<MarkerProps & { onRevert: () => void }> = {
       <Marker asChild>
         <button type="button" disabled onClick={args.onRevert}>
           <MarkerIcon>
-            <IconRotate />
+            <ArrowCounterClockwiseIcon />
           </MarkerIcon>
           <MarkerContent>Delete this draft</MarkerContent>
         </button>
@@ -287,7 +287,7 @@ export const Disabled: StoryObj<MarkerProps & { onRevert: () => void }> = {
       <Marker asChild>
         <a href="#pull-request" aria-disabled="true" tabIndex={-1}>
           <MarkerIcon>
-            <IconGitBranch />
+            <GitBranchIcon />
           </MarkerIcon>
           <MarkerContent>View the pull request</MarkerContent>
         </a>
@@ -326,7 +326,7 @@ export const ClickInteraction: StoryObj<
     <Marker asChild>
       <button type="button" onClick={args.onRevert}>
         <MarkerIcon>
-          <IconRotate />
+          <ArrowCounterClockwiseIcon />
         </MarkerIcon>
         <MarkerContent>Revert this change</MarkerContent>
       </button>
@@ -376,7 +376,7 @@ export const WithDataAttributes: Story = {
   render: () => (
     <Marker variant="separator">
       <MarkerIcon>
-        <IconCheck />
+        <CheckIcon />
       </MarkerIcon>
       <MarkerContent>Today</MarkerContent>
     </Marker>
@@ -413,7 +413,7 @@ export const AllVariants: Story = {
           </Marker>
           <Marker variant={variant}>
             <MarkerIcon>
-              <IconCheck />
+              <CheckIcon />
             </MarkerIcon>
             <MarkerContent>Today, with an icon</MarkerContent>
           </Marker>
