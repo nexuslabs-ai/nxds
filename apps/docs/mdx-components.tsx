@@ -1,7 +1,7 @@
 import { cn } from '@nxds/react/utils';
 import type { MDXComponents } from 'mdx/types';
 
-import { CodeBlock } from './app/_components/CodeBlock';
+import { MdxCodeBlock } from './app/_components/CodeBlock';
 import { ComponentDemo } from './app/_components/ComponentDemo';
 import { FrameworkPanel, FrameworkTabs } from './app/_components/FrameworkTabs';
 import {
@@ -87,7 +87,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       </a>
     ),
     code: InlineCode,
-    pre: CodeBlock,
+    pre: MdxCodeBlock,
     table: ({ className, ...props }) => (
       <div
         // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scroll container with no focusable children needs its own tab stop

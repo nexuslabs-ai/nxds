@@ -38,6 +38,7 @@ export * from './components/chart/chart';
 export * from './components/checkbox/checkbox';
 export * from './components/choice-card/choice-card';
 export * from './components/choice-row/choice-row';
+export * from './components/code-block/code-block';
 export * from './components/collapsible/collapsible';
 export * from './components/combobox/combobox';
 export * from './components/command/command';

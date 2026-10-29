@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
 import {
-  injectToggleGroupRootContext,
   ToggleGroupItem,
   type ToggleGroupItemProps as RekaToggleGroupItemProps,
   useForwardProps,
@@ -10,6 +9,8 @@ import { computed, type HTMLAttributes, inject } from 'vue';
 
 import { cn } from '../../lib/utils';
 import { type ToggleVariants, toggleVariants } from '../toggle';
+
+import { useToggleGroupSelectionAttrs } from './toggle-group-selection';
 
 import { ToggleGroupKey } from '.';
 
@@ -41,21 +42,10 @@ export interface ToggleGroupItemProps extends Omit<
 const props = defineProps<ToggleGroupItemProps>();
 
 const group = inject(ToggleGroupKey)!;
-const root = injectToggleGroupRootContext();
 
 const variant = computed(() => props.variant ?? group.variant);
 const size = computed(() => props.size ?? group.size);
-
-// A single-select group is a radio group, as Radix renders it: each item
-// reports aria-checked instead of Reka's aria-pressed.
-const selectionAttrs = computed(() => {
-  if (!root.isSingle.value) return {};
-  return {
-    role: 'radio',
-    'aria-checked': root.modelValue.value === props.value,
-    'aria-pressed': undefined,
-  };
-});
+const selectionAttrs = useToggleGroupSelectionAttrs(() => props.value);
 
 const delegated = reactiveOmit(props, 'class', 'variant', 'size');
 const forwarded = useForwardProps(delegated);
