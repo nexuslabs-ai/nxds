@@ -180,19 +180,15 @@ export const WithSeparator: Story = {
     },
     template: `
       <ButtonGroup>
-        <Button variant="ghost" size="icon" aria-label="Bold">
-          <IconBold />
-        </Button>
-        <Button variant="ghost" size="icon" aria-label="Italic">
-          <IconItalic />
-        </Button>
-        <Button variant="ghost" size="icon" aria-label="Underline">
-          <IconUnderline />
-        </Button>
+        <Button variant="ghost" icon-only>
+          <template #start-icon><IconBold /></template>Bold</Button>
+        <Button variant="ghost" icon-only>
+          <template #start-icon><IconItalic /></template>Italic</Button>
+        <Button variant="ghost" icon-only>
+          <template #start-icon><IconUnderline /></template>Underline</Button>
         <ButtonGroupSeparator />
-        <Button variant="ghost" size="icon" aria-label="Add link">
-          <IconLink />
-        </Button>
+        <Button variant="ghost" icon-only>
+          <template #start-icon><IconLink /></template>Add link</Button>
       </ButtonGroup>
     `,
   }),
@@ -210,6 +206,32 @@ export const WithSeparator: Story = {
 // group sets no `orientation` or `size`, a regression guard for the default
 // emits. In the second, an explicit `size` beats the group's, and a Button
 // nested in a wrapper still inherits it.
+// The group's size reaches an icon-only member, which stays square.
+export const IconOnlyInSmallGroup: Story = {
+  render: () => ({
+    components: { Button, ButtonGroup, IconChevronDown },
+    template: `
+      <ButtonGroup size="sm">
+        <Button variant="outline">Copy link</Button>
+        <Button variant="outline" icon-only>
+          <template #start-icon><IconChevronDown /></template>More share options</Button>
+      </ButtonGroup>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const text = canvas.getByRole('button', { name: 'Copy link' });
+    const icon = canvas.getByRole('button', { name: 'More share options' });
+    const { width, height } = icon.getBoundingClientRect();
+
+    await expect(icon).toHaveAttribute('data-size', 'sm');
+    // `sm` is 32px high.
+    await expect(height).toBe(32);
+    await expect(width).toBe(height);
+    await expect(text.getBoundingClientRect().height).toBe(height);
+  },
+};
+
 export const WithDataAttributes: Story = {
   render: () => ({
     components: { Button, ButtonGroup },

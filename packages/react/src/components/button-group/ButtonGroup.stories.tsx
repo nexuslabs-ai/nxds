@@ -161,18 +161,18 @@ export const WithSeparator: Story = {
   },
   render: () => (
     <ButtonGroup>
-      <Button variant="ghost" size="icon" aria-label="Bold">
-        <IconBold />
+      <Button variant="ghost" iconOnly startIcon={<IconBold />}>
+        Bold
       </Button>
-      <Button variant="ghost" size="icon" aria-label="Italic">
-        <IconItalic />
+      <Button variant="ghost" iconOnly startIcon={<IconItalic />}>
+        Italic
       </Button>
-      <Button variant="ghost" size="icon" aria-label="Underline">
-        <IconUnderline />
+      <Button variant="ghost" iconOnly startIcon={<IconUnderline />}>
+        Underline
       </Button>
       <ButtonGroupSeparator />
-      <Button variant="ghost" size="icon" aria-label="Add link">
-        <IconLink />
+      <Button variant="ghost" iconOnly startIcon={<IconLink />}>
+        Add link
       </Button>
     </ButtonGroup>
   ),
@@ -190,6 +190,30 @@ export const WithSeparator: Story = {
 // group sets no `orientation` or `size`, a regression guard for the default
 // emits. In the second, an explicit `size` beats the group's, and a Button
 // nested in a wrapper still inherits it.
+// The group's size reaches an icon-only member, which stays square.
+export const IconOnlyInSmallGroup: Story = {
+  render: () => (
+    <ButtonGroup size="sm">
+      <Button variant="outline">Copy link</Button>
+      <Button variant="outline" iconOnly startIcon={<IconChevronDown />}>
+        More share options
+      </Button>
+    </ButtonGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const text = canvas.getByRole('button', { name: 'Copy link' });
+    const icon = canvas.getByRole('button', { name: 'More share options' });
+    const { width, height } = icon.getBoundingClientRect();
+
+    await expect(icon).toHaveAttribute('data-size', 'sm');
+    // `sm` is 32px high.
+    await expect(height).toBe(32);
+    await expect(width).toBe(height);
+    await expect(text.getBoundingClientRect().height).toBe(height);
+  },
+};
+
 export const WithDataAttributes: Story = {
   render: () => (
     <div className="nx:flex nx:flex-col nx:items-start nx:gap-4">

@@ -209,19 +209,24 @@ function CarouselItem({ className, ...props }: React.ComponentProps<'div'>) {
   );
 }
 
+type CarouselPreviousProps = Omit<
+  React.ComponentProps<typeof Button>,
+  'iconOnly' | 'children' | 'startIcon' | 'endIcon' | 'asChild'
+>;
+
 function CarouselPrevious({
   className,
   variant = 'outline',
-  size = 'icon',
   ...props
-}: React.ComponentProps<typeof Button>) {
+}: CarouselPreviousProps) {
   const { orientation, scrollPrev, canScrollPrev } = useCarousel();
 
   return (
     <Button
       data-slot="carousel-previous"
       variant={variant}
-      size={size}
+      iconOnly
+      startIcon={<IconArrowLeft />}
       className={cn(
         carouselControlClasses,
         orientation === 'horizontal'
@@ -233,25 +238,29 @@ function CarouselPrevious({
       onClick={scrollPrev}
       {...props}
     >
-      <IconArrowLeft />
-      <span className="nx:sr-only">Previous slide</span>
+      Previous slide
     </Button>
   );
 }
 
+type CarouselNextProps = Omit<
+  React.ComponentProps<typeof Button>,
+  'iconOnly' | 'children' | 'startIcon' | 'endIcon' | 'asChild'
+>;
+
 function CarouselNext({
   className,
   variant = 'outline',
-  size = 'icon',
   ...props
-}: React.ComponentProps<typeof Button>) {
+}: CarouselNextProps) {
   const { orientation, scrollNext, canScrollNext } = useCarousel();
 
   return (
     <Button
       data-slot="carousel-next"
       variant={variant}
-      size={size}
+      iconOnly
+      startIcon={<IconArrowRight />}
       className={cn(
         carouselControlClasses,
         orientation === 'horizontal'
@@ -263,8 +272,7 @@ function CarouselNext({
       onClick={scrollNext}
       {...props}
     >
-      <IconArrowRight />
-      <span className="nx:sr-only">Next slide</span>
+      Next slide
     </Button>
   );
 }

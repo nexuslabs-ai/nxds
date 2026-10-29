@@ -57,8 +57,25 @@ const AppearanceDecorator: Decorator = (story, context) => ({
     '<div class="nx:flex nx:min-h-svh nx:items-center nx:justify-center nx:bg-background nx:text-foreground nx:typography-body-default"><story /></div>',
 });
 
+// Vue can't require slot text, and an icon-only button's text is its name.
+// A story that renders one without that text fails.
+function iconOnlyButtonsWithoutText(root: HTMLElement) {
+  return [...root.querySelectorAll(':is(button, a)[data-icon-only]')].filter(
+    (button) => !button.querySelector('.nx\\:sr-only')?.textContent?.trim()
+  );
+}
+
 const preview: Preview = {
   tags: ['autodocs'],
+  afterEach: ({ canvasElement }) => {
+    const unnamed = iconOnlyButtonsWithoutText(
+      canvasElement.ownerDocument.body
+    );
+    if (unnamed.length === 0) return;
+    throw new Error(
+      `An icon-only button has no slot text, so it has no name:\n${unnamed.map((button) => button.outerHTML).join('\n')}`
+    );
+  },
   parameters: {
     options: {
       storySort: {

@@ -78,17 +78,15 @@ interface PaginationLinkProps
   asChild?: boolean;
 }
 
-/**
- * Page number link styled as a `ghost` button, or `outline` for the current
- * page. Uses the square `icon` size unless you set `size`.
- */
-function PaginationLink({
+/** The link every pagination part renders. Page numbers are square. */
+function PaginationAnchor({
   className,
   isActive,
-  size = 'icon',
+  size,
+  square,
   asChild = false,
   ...props
-}: PaginationLinkProps) {
+}: PaginationLinkProps & { square: boolean }) {
   const Comp = asChild ? Slot : 'a';
 
   return (
@@ -97,13 +95,25 @@ function PaginationLink({
       data-slot="pagination-link"
       data-active={isActive}
       className={cn(
-        buttonVariants({ variant: isActive ? 'outline' : 'ghost', size }),
+        buttonVariants({
+          variant: isActive ? 'outline' : 'ghost',
+          size,
+          iconOnly: square,
+        }),
         'nx:typography-label-default',
         className
       )}
       {...props}
     />
   );
+}
+
+/**
+ * Square page number link styled as a `ghost` button, or `outline` for the
+ * current page. `size` sets its height.
+ */
+function PaginationLink(props: PaginationLinkProps) {
+  return <PaginationAnchor square {...props} />;
 }
 
 /**
@@ -117,14 +127,18 @@ type PaginationPreviousProps = React.ComponentProps<typeof PaginationLink>;
  */
 function PaginationPrevious({ children, ...props }: PaginationPreviousProps) {
   return (
-    <PaginationLink aria-label="Go to previous page" size="default" {...props}>
+    <PaginationAnchor
+      square={false}
+      aria-label="Go to previous page"
+      {...props}
+    >
       {children ?? (
         <>
           <IconChevronLeft />
           <span>Previous</span>
         </>
       )}
-    </PaginationLink>
+    </PaginationAnchor>
   );
 }
 
@@ -139,14 +153,14 @@ type PaginationNextProps = React.ComponentProps<typeof PaginationLink>;
  */
 function PaginationNext({ children, ...props }: PaginationNextProps) {
   return (
-    <PaginationLink aria-label="Go to next page" size="default" {...props}>
+    <PaginationAnchor square={false} aria-label="Go to next page" {...props}>
       {children ?? (
         <>
           <span>Next</span>
           <IconChevronRight />
         </>
       )}
-    </PaginationLink>
+    </PaginationAnchor>
   );
 }
 

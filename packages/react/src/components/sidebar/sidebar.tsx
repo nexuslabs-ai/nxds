@@ -341,7 +341,10 @@ function Sidebar({
 /**
  * Props for SidebarTrigger.
  */
-type SidebarTriggerProps = React.ComponentProps<typeof Button>;
+type SidebarTriggerProps = Omit<
+  React.ComponentProps<typeof Button>,
+  'iconOnly' | 'children' | 'startIcon' | 'endIcon' | 'asChild'
+>;
 
 /**
  * Icon button that opens and closes the sidebar. Place it in your top bar or
@@ -359,13 +362,13 @@ function SidebarTrigger({ className, onClick, ...props }: SidebarTriggerProps) {
     <Button
       data-slot="sidebar-trigger"
       variant="ghost"
-      size="icon"
+      iconOnly
+      startIcon={<IconLayoutSidebar />}
       className={cn('nx:size-7', className)}
       onClick={handleClick}
       {...props}
     >
-      <IconLayoutSidebar />
-      <span className="nx:sr-only">Toggle Sidebar</span>
+      Toggle Sidebar
     </Button>
   );
 }

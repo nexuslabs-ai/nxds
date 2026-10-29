@@ -70,7 +70,7 @@ Motion answers input and then gets out of the way. Popovers, menus and routine s
 
 - nxds uses Tabler icons, outline style, at 16px beside text. They are `Nxds.Icons.IconName`, such as `Nxds.Icons.IconPlus`.
 - An icon takes the colour of its text. Don't tint icons on their own.
-- An icon-only button needs an `aria-label`.
+- An icon-only button sets `iconOnly`, takes its icon as `startIcon`, and keeps its name as the text.
 - No emoji as icons.
 
 ## Using the components

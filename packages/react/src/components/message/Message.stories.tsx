@@ -489,7 +489,7 @@ export const WithActions: Story = {
     docs: {
       description: {
         story:
-          "Put copy and retry icon buttons, each with an `aria-label` and a tooltip, in a turn's footer.",
+          "Put icon-only copy and retry buttons, each with a tooltip, in a turn's footer.",
       },
     },
   },
@@ -511,11 +511,12 @@ export const WithActions: Story = {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    size="icon-sm"
+                    size="sm"
+                    iconOnly
+                    startIcon={<IconCopy />}
                     variant="ghost"
-                    aria-label="Copy reply"
                   >
-                    <IconCopy />
+                    Copy reply
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Copy</TooltipContent>
@@ -523,11 +524,12 @@ export const WithActions: Story = {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    size="icon-sm"
+                    size="sm"
+                    iconOnly
+                    startIcon={<IconRefresh />}
                     variant="ghost"
-                    aria-label="Regenerate reply"
                   >
-                    <IconRefresh />
+                    Regenerate reply
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Regenerate</TooltipContent>
@@ -551,11 +553,12 @@ export const WithActions: Story = {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    size="icon-sm"
+                    size="sm"
+                    iconOnly
+                    startIcon={<IconCopy />}
                     variant="ghost"
-                    aria-label="Copy message"
                   >
-                    <IconCopy />
+                    Copy message
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Copy</TooltipContent>
@@ -563,11 +566,12 @@ export const WithActions: Story = {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    size="icon-sm"
+                    size="sm"
+                    iconOnly
+                    startIcon={<IconRefresh />}
                     variant="ghost"
-                    aria-label="Retry sending"
                   >
-                    <IconRefresh />
+                    Retry sending
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Retry</TooltipContent>

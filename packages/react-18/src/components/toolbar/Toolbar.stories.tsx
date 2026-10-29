@@ -55,7 +55,8 @@ const meta: Meta<typeof Toolbar> = {
           '',
           '- Label the toolbar with `aria-label` or `aria-labelledby`.',
           '- Build it from ToolbarButton, ToolbarLink, ToolbarToggleGroup and ToolbarToggleItem so every control joins the arrow-key order.',
-          '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading` or icon slots.',
+          '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading`.',
+          '- ToolbarButton and ToolbarToggleItem take `iconOnly`. It shows only `startIcon`, and the text stays as the hidden name.',
           '- Use `asChild` to make a toolbar control a menu trigger.',
           '- Keep text fields outside the toolbar, because arrow keys would conflict with typing.',
           '- In narrow containers, controls wrap in DOM order and arrow keys still reach every row.',
@@ -78,12 +79,12 @@ function EditorToolbar() {
           <TooltipTrigger asChild>
             <span className="nx:inline-flex">
               <ToolbarButton
-                size="icon-sm"
-                aria-label="Undo formatting"
+                iconOnly
                 onClick={() => setFormatting([])}
                 className="nx:text-muted-foreground"
+                startIcon={<IconArrowBackUp />}
               >
-                <IconArrowBackUp aria-hidden="true" />
+                Undo formatting
               </ToolbarButton>
             </span>
           </TooltipTrigger>
@@ -101,10 +102,10 @@ function EditorToolbar() {
               <span className="nx:inline-flex">
                 <ToolbarToggleItem
                   value="bold"
-                  aria-label="Bold"
-                  size="icon-sm"
+                  iconOnly
+                  startIcon={<IconBold />}
                 >
-                  <IconBold aria-hidden="true" />
+                  Bold
                 </ToolbarToggleItem>
               </span>
             </TooltipTrigger>
@@ -115,10 +116,10 @@ function EditorToolbar() {
               <span className="nx:inline-flex">
                 <ToolbarToggleItem
                   value="italic"
-                  aria-label="Italic"
-                  size="icon-sm"
+                  iconOnly
+                  startIcon={<IconItalic />}
                 >
-                  <IconItalic aria-hidden="true" />
+                  Italic
                 </ToolbarToggleItem>
               </span>
             </TooltipTrigger>
@@ -129,10 +130,10 @@ function EditorToolbar() {
               <span className="nx:inline-flex">
                 <ToolbarToggleItem
                   value="underline"
-                  aria-label="Underline"
-                  size="icon-sm"
+                  iconOnly
+                  startIcon={<IconUnderline />}
                 >
-                  <IconUnderline aria-hidden="true" />
+                  Underline
                 </ToolbarToggleItem>
               </span>
             </TooltipTrigger>
@@ -198,8 +199,8 @@ function FileToolbar() {
       <ToolbarSeparator />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarButton size="icon-sm" aria-label="More file actions">
-            <IconDots />
+          <ToolbarButton iconOnly startIcon={<IconDots />}>
+            More file actions
           </ToolbarButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
@@ -246,12 +247,12 @@ function CalendarToolbar() {
   return (
     <Toolbar aria-label="Calendar controls">
       <ToolbarGroup aria-label="Date navigation">
-        <ToolbarButton size="icon-sm" aria-label="Previous period">
-          <IconChevronLeft />
+        <ToolbarButton iconOnly startIcon={<IconChevronLeft />}>
+          Previous period
         </ToolbarButton>
         <ToolbarButton>Today</ToolbarButton>
-        <ToolbarButton size="icon-sm" aria-label="Next period">
-          <IconChevronRight />
+        <ToolbarButton iconOnly startIcon={<IconChevronRight />}>
+          Next period
         </ToolbarButton>
       </ToolbarGroup>
       <ToolbarToggleGroup
@@ -443,8 +444,8 @@ export const InsideTooltipProvider: Story = {
       <Toolbar aria-label="Text formatting">
         <Tooltip>
           <TooltipTrigger asChild>
-            <ToolbarButton size="icon-sm" aria-label="Bold">
-              <IconBold aria-hidden="true" />
+            <ToolbarButton iconOnly startIcon={<IconBold />}>
+              Bold
             </ToolbarButton>
           </TooltipTrigger>
           <TooltipContent>Bold</TooltipContent>
@@ -493,6 +494,32 @@ export const Sizes: Story = {
       await expect(getComputedStyle(toggle).fontSize).toBe(
         getComputedStyle(button).fontSize
       );
+    }
+  },
+};
+
+export const IconOnly: Story = {
+  render: () => (
+    <Toolbar aria-label="Text formatting">
+      <ToolbarButton iconOnly startIcon={<IconArrowBackUp />}>
+        Undo formatting
+      </ToolbarButton>
+      <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+        <ToolbarToggleItem value="bold" iconOnly startIcon={<IconBold />}>
+          Bold
+        </ToolbarToggleItem>
+      </ToolbarToggleGroup>
+    </Toolbar>
+  ),
+  play: async ({ canvasElement }) => {
+    const toolbar = within(canvasElement).getByRole('toolbar', {
+      name: 'Text formatting',
+    });
+    for (const name of ['Undo formatting', 'Bold']) {
+      const button = within(toolbar).getByRole('button', { name });
+      const { width, height } = button.getBoundingClientRect();
+      await expect(width).toBe(height);
+      await expect(within(button).getByText(name)).toHaveClass('nx:sr-only');
     }
   },
 };
@@ -621,10 +648,10 @@ function AttachedExample() {
                 <span className="nx:inline-flex">
                   <ToolbarToggleItem
                     value="bold"
-                    size="icon-sm"
-                    aria-label="Bold note"
+                    iconOnly
+                    startIcon={<span className="nx:font-bold">B</span>}
                   >
-                    <span className="nx:font-bold">B</span>
+                    Bold note
                   </ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
@@ -635,10 +662,10 @@ function AttachedExample() {
                 <span className="nx:inline-flex">
                   <ToolbarToggleItem
                     value="italic"
-                    size="icon-sm"
-                    aria-label="Italic note"
+                    iconOnly
+                    startIcon={<span className="nx:italic">I</span>}
                   >
-                    <span className="nx:italic">I</span>
+                    Italic note
                   </ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
@@ -649,10 +676,10 @@ function AttachedExample() {
                 <span className="nx:inline-flex">
                   <ToolbarToggleItem
                     value="underline"
-                    size="icon-sm"
-                    aria-label="Underline note"
+                    iconOnly
+                    startIcon={<span className="nx:underline">U</span>}
                   >
-                    <span className="nx:underline">U</span>
+                    Underline note
                   </ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
@@ -773,12 +800,12 @@ function SelectionExample() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <ToolbarButton
-                  size="icon-sm"
-                  aria-label="Clear selection"
+                  iconOnly
                   className="nx:text-muted-foreground"
                   onClick={clearSelection}
+                  startIcon={<IconX />}
                 >
-                  <IconX aria-hidden="true" />
+                  Clear selection
                 </ToolbarButton>
               </TooltipTrigger>
               <TooltipContent>Clear selection</TooltipContent>

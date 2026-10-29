@@ -172,8 +172,17 @@ await context.addInitScript(() => {
     const children = (tree.children ?? []).map((child, index) =>
       element(child, wrapped, index)
     );
+    // A prop that is itself a part, such as `startIcon`, becomes an element.
+    const props = Object.fromEntries(
+      Object.entries(tree.props ?? {}).map(([name, value]) => [
+        name,
+        typeof value === 'object' && value !== null && 'part' in value
+          ? element(value as Part, false)
+          : value,
+      ])
+    );
     if (!wrapped) {
-      return React.createElement(type, tree.props ?? null, ...children);
+      return React.createElement(type, props, ...children);
     }
     mounted += 1;
     const tpl = String(mounted);
@@ -181,7 +190,7 @@ await context.addInitScript(() => {
     const content = children.length > 0 ? { children } : {};
     if (!part) {
       return React.createElement(type, {
-        ...tree.props,
+        ...props,
         ...content,
         key,
         'data-dc-tpl': tpl,
@@ -193,7 +202,7 @@ await context.addInitScript(() => {
           children: [...children.flatMap((child) => ['\n    ', child]), '\n  '],
         };
     const rendered = React.createElement(type, {
-      ...tree.props,
+      ...props,
       ...indented,
       key: 0,
     });
@@ -392,8 +401,8 @@ const BUTTON: Omit<Probe, 'property'> = {
 const ICON_BUTTON: Omit<Probe, 'property'> = {
   tree: {
     part: 'Button',
-    props: { size: 'icon', 'aria-label': 'Download' },
-    children: [{ part: 'svg' }],
+    props: { iconOnly: true, startIcon: { part: 'svg' } },
+    children: ['Download'],
   },
   target: 'button svg',
 };
@@ -701,8 +710,12 @@ const WRAPPED_CASES: { name: string; tree: Part; reads: Read[] }[] = [
           { asChild: true },
           part(
             'Button',
-            { variant: 'outline', size: 'icon', 'aria-label': 'More options' },
-            part('Icons.IconChevronDown', null)
+            {
+              variant: 'outline',
+              iconOnly: true,
+              startIcon: part('Icons.IconChevronDown', null),
+            },
+            'More options'
           )
         )
       )

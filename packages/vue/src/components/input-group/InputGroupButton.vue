@@ -15,6 +15,7 @@ const props = withDefaults(defineProps<InputGroupButtonProps>(), {
   as: 'button',
   variant: 'ghost',
   size: 'xs',
+  iconOnly: false,
   loading: false,
   type: 'button',
 });
@@ -33,7 +34,7 @@ const delegated = reactiveOmit(props, 'class', 'size');
     v-bind="delegated"
     data-slot="input-group-button"
     :data-size="size"
-    :class="cn(inputGroupButtonVariants({ size }), props.class)"
+    :class="cn(inputGroupButtonVariants({ size, iconOnly }), props.class)"
   >
     <template v-if="slots['start-icon']" #start-icon>
       <slot name="start-icon" />

@@ -291,8 +291,9 @@ const CodeBlockCopyButton = React.forwardRef<
         data-slot="code-block-copy-button"
         data-state={copy.state}
         variant="outline"
-        size="icon-sm"
-        aria-label="Copy code"
+        size="sm"
+        iconOnly
+        startIcon={<Icon />}
         className={cn(
           'nx:absolute nx:end-2 nx:top-2 nx:data-[state=copied]:text-success-subtle-foreground nx:data-[state=failed]:text-error-subtle-foreground',
           className
@@ -300,7 +301,7 @@ const CodeBlockCopyButton = React.forwardRef<
         {...props}
         onClick={handleClick}
       >
-        <Icon />
+        Copy code
       </Button>
       <span role="status" className="nx:sr-only">
         <span key={copy.seq}>{COPY_MESSAGES[copy.state]}</span>

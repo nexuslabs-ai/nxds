@@ -118,7 +118,7 @@ const FilterConditionRemove = React.forwardRef<
       type="button"
       data-slot="filter-condition-remove"
       className={cn(
-        buttonVariants({ variant: 'outline', size: 'icon-sm' }),
+        buttonVariants({ variant: 'outline', size: 'sm', iconOnly: true }),
         'nx:size-(--nx-spacing-8) nx:shrink-0 nx:rounded-s-none nx:border-s-0 nx:text-muted-foreground nx:active:scale-100 nx:focus-visible:relative nx:focus-visible:z-10',
         className
       )}

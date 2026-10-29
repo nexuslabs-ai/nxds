@@ -1291,21 +1291,23 @@ function DataTableRecipeDemo() {
           </span>
           <Button
             variant="outline"
-            size="icon-sm"
+            size="sm"
+            iconOnly
+            startIcon={<IconChevronLeft />}
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={safePage === 0}
-            aria-label="Previous page"
           >
-            <IconChevronLeft />
+            Previous page
           </Button>
           <Button
             variant="outline"
-            size="icon-sm"
+            size="sm"
+            iconOnly
+            startIcon={<IconChevronRight />}
             onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
             disabled={safePage >= pageCount - 1}
-            aria-label="Next page"
           >
-            <IconChevronRight />
+            Next page
           </Button>
         </div>
       </div>

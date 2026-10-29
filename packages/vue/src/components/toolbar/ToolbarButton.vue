@@ -4,7 +4,7 @@ import {
   ToolbarButton,
   type ToolbarButtonProps as RekaToolbarButtonProps,
 } from 'reka-ui';
-import type { HTMLAttributes } from 'vue';
+import type { HTMLAttributes, VNode } from 'vue';
 
 import { cn } from '../../lib/utils';
 import { type ButtonVariants, buttonVariants } from '../button';
@@ -12,6 +12,11 @@ import { type ButtonVariants, buttonVariants } from '../button';
 export interface ToolbarButtonProps extends RekaToolbarButtonProps {
   variant?: ButtonVariants['variant'];
   size?: ButtonVariants['size'];
+  /**
+   * Shows only `startIcon` in a square button. The text stays as the name
+   * screen readers read, visually hidden.
+   */
+  iconOnly?: boolean;
   class?: HTMLAttributes['class'];
 }
 
@@ -19,9 +24,15 @@ const props = withDefaults(defineProps<ToolbarButtonProps>(), {
   as: 'button',
   variant: 'ghost',
   size: 'sm',
+  iconOnly: false,
 });
 
-const delegated = reactiveOmit(props, 'class', 'variant', 'size');
+defineSlots<{
+  default?: () => VNode[];
+  'start-icon'?: () => VNode[];
+}>();
+
+const delegated = reactiveOmit(props, 'class', 'variant', 'size', 'iconOnly');
 </script>
 
 <template>
@@ -30,8 +41,15 @@ const delegated = reactiveOmit(props, 'class', 'variant', 'size');
     data-slot="toolbar-button"
     :data-variant="variant"
     :data-size="size"
-    :class="cn(buttonVariants({ variant, size }), props.class)"
+    :data-icon-only="iconOnly || undefined"
+    :class="cn(buttonVariants({ variant, size, iconOnly }), props.class)"
   >
-    <slot />
+    <template v-if="iconOnly">
+      <span aria-hidden="true" class="nx:inline-flex nx:shrink-0">
+        <slot name="start-icon" />
+      </span>
+      <span class="nx:sr-only"><slot /></span>
+    </template>
+    <slot v-else />
   </ToolbarButton>
 </template>

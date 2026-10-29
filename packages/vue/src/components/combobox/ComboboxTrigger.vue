@@ -7,7 +7,10 @@ import type { HTMLAttributes, VNode } from 'vue';
 import { cn } from '../../lib/utils';
 import { Button, type ButtonProps } from '../button';
 
-export interface ComboboxTriggerProps extends Omit<ButtonProps, 'class'> {
+export interface ComboboxTriggerProps extends Omit<
+  ButtonProps,
+  'class' | 'iconOnly'
+> {
   class?: HTMLAttributes['class'];
 }
 

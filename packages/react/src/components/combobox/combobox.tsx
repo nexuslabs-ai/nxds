@@ -4,7 +4,7 @@ import * as React from 'react';
 
 import { IconCheck, IconSelector } from '../../lib/icons';
 import { cn } from '../../lib/utils';
-import { Button, type ButtonProps } from '../button/button';
+import { Button, type ButtonWithTextProps } from '../button/button';
 import {
   Command,
   CommandEmpty,
@@ -43,7 +43,7 @@ function Combobox(props: ComboboxProps) {
  * Props for the ComboboxTrigger. Accepts Button props, such as `size`,
  * `disabled` and `aria-invalid`.
  */
-type ComboboxTriggerProps = ButtonProps;
+type ComboboxTriggerProps = Omit<ButtonWithTextProps, 'iconOnly'>;
 
 /**
  * The button that opens the popover and shows the current selection. Renders an

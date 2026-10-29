@@ -69,8 +69,8 @@ export const Default: Story = {
         <AttachmentDescription>2.4 MB</AttachmentDescription>
       </AttachmentContent>
       <AttachmentActions>
-        <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf">
-          <IconX />
+        <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+          Remove report.pdf
         </Button>
       </AttachmentActions>
     </Attachment>
@@ -98,8 +98,8 @@ export const States: Story = {
           <AttachmentDescription>PDF or PNG, up to 10 MB</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
-          <Button variant="ghost" size="icon-sm" aria-label="Dismiss">
-            <IconX />
+          <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+            Dismiss
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -113,12 +113,8 @@ export const States: Story = {
           <AttachmentProgress value={62} aria-label="Uploading report.pdf" />
         </AttachmentContent>
         <AttachmentActions>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Cancel upload of report.pdf"
-          >
-            <IconX />
+          <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+            Cancel upload of report.pdf
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -131,12 +127,8 @@ export const States: Story = {
           <AttachmentDescription>Processing…</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Cancel processing of scan.png"
-          >
-            <IconX />
+          <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+            Cancel processing of scan.png
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -153,17 +145,14 @@ export const States: Story = {
         <AttachmentActions>
           <Button
             variant="ghost"
-            size="icon-sm"
-            aria-label="Retry upload of archive.zip"
+            size="sm"
+            iconOnly
+            startIcon={<IconRefresh />}
           >
-            <IconRefresh />
+            Retry upload of archive.zip
           </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Dismiss archive.zip"
-          >
-            <IconX />
+          <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+            Dismiss archive.zip
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -186,13 +175,14 @@ export const States: Story = {
         <AttachmentActions>
           <Button
             variant="ghost"
-            size="icon-sm"
-            aria-label="Download notes.txt"
+            size="sm"
+            iconOnly
+            startIcon={<IconDownload />}
           >
-            <IconDownload />
+            Download notes.txt
           </Button>
-          <Button variant="ghost" size="icon-sm" aria-label="Remove notes.txt">
-            <IconX />
+          <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+            Remove notes.txt
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -221,8 +211,8 @@ export const Sizes: Story = {
           <AttachmentDescription>2.4 MB</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
-          <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf">
-            <IconX />
+          <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+            Remove report.pdf
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -235,8 +225,8 @@ export const Sizes: Story = {
           <AttachmentDescription>8 KB</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
-          <Button variant="ghost" size="icon-sm" aria-label="Remove notes.txt">
-            <IconX />
+          <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+            Remove notes.txt
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -339,11 +329,10 @@ export const LongFileName: Story = {
         <AttachmentActions>
           <Button
             variant="ghost"
-            size="icon-sm"
-            aria-label={`Remove ${LONG_NAME}`}
-          >
-            <IconX />
-          </Button>
+            size="sm"
+            iconOnly
+            startIcon={<IconX />}
+          >{`Remove ${LONG_NAME}`}</Button>
         </AttachmentActions>
       </Attachment>
     </TooltipProvider>
@@ -376,11 +365,12 @@ export const ClickInteraction: StoryObj<
       <AttachmentActions>
         <Button
           variant="ghost"
-          size="icon-sm"
-          aria-label="Remove report.pdf"
+          size="sm"
+          iconOnly
+          startIcon={<IconX />}
           onClick={args.onRemove}
         >
-          <IconX />
+          Remove report.pdf
         </Button>
       </AttachmentActions>
     </Attachment>
@@ -438,12 +428,13 @@ export const Disabled: StoryObj<AttachmentProps & { onRemove: () => void }> = {
       <AttachmentActions>
         <Button
           variant="ghost"
-          size="icon-sm"
-          aria-label="Remove report.pdf"
+          size="sm"
+          iconOnly
+          startIcon={<IconX />}
           disabled
           onClick={args.onRemove}
         >
-          <IconX />
+          Remove report.pdf
         </Button>
       </AttachmentActions>
     </Attachment>
@@ -477,8 +468,8 @@ export const WithDataAttributes: Story = {
         <AttachmentDescription>2.4 MB</AttachmentDescription>
       </AttachmentContent>
       <AttachmentActions>
-        <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf">
-          <IconX />
+        <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+          Remove report.pdf
         </Button>
       </AttachmentActions>
     </Attachment>
