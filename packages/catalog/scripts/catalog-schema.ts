@@ -217,9 +217,8 @@ const iconLibrarySchema = z.object({
 export type IconLibrary = z.infer<typeof iconLibrarySchema>;
 
 const fontSchema = z.object({
+  /** Its `init` flag value, such as `inter`. */
   name: z.string(),
-  label: z.string(),
-  category: z.enum(['sans', 'serif', 'mono']),
   /** The `font-family` stack the appearance prefs store. */
   family: z.string(),
   /** The Fontsource package that self-hosts the font, and its range. */

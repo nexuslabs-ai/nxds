@@ -236,17 +236,15 @@ const catalogPackage = JSON.parse(
  * @returns {Font[]}
  */
 function fonts() {
-  return FONT_OPTIONS.map(
-    ({ value, label, category, family, package: name }) => {
-      const range = catalogPackage.devDependencies[name];
-      if (!range) {
-        throw new Error(
-          `catalog: add ${name} to packages/catalog's devDependencies, at the range apps install.`
-        );
-      }
-      return { name: value, label, category, family, package: name, range };
+  return FONT_OPTIONS.map(({ value, family, package: name }) => {
+    const range = catalogPackage.devDependencies[name];
+    if (!range) {
+      throw new Error(
+        `catalog: add ${name} to packages/catalog's devDependencies, at the range apps install.`
+      );
     }
-  );
+    return { name: value, family, package: name, range };
+  });
 }
 
 /** Tailwind 4 at the version packages/react builds with, or a newer 4.x. */

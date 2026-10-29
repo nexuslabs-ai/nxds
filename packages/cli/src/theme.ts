@@ -5,8 +5,6 @@ import {
 import {
   applyNxdsThemeFlags,
   DEFAULT_NXDS_THEME,
-  NXDS_THEME_FIELDS,
-  type NxdsThemeField,
   nxdsThemeFlags,
 } from '@nxds/core/source/lib/theme-fields.ts';
 
@@ -17,22 +15,11 @@ import { CliError, UsageError } from './errors';
 /** A theme, as nxds.json keeps it: each `init` flag's value, by flag name. */
 export type ThemeFlags = Record<string, string>;
 
-const ICONS_FLAG = 'icons';
-
-function iconsField(): NxdsThemeField {
-  const field = NXDS_THEME_FIELDS.find(({ flag }) => flag === ICONS_FLAG);
-  if (!field) throw new Error('@nxds/core has no icons theme field.');
-  return field;
-}
-
 /**
- * The theme flags `init` takes. `--icons` is one of them, but nxds.json keeps
- * it as `iconLibrary`, since `add` and `update` install that library's files.
+ * The theme flag nxds.json keeps as `iconLibrary` instead, since `add` and
+ * `update` install that library's files.
  */
-export const THEME_FIELDS: readonly NxdsThemeField[] = [
-  ...NXDS_THEME_FIELDS.filter(({ flag }) => flag !== ICONS_FLAG),
-  iconsField(),
-];
+export const ICONS_FLAG = 'icons';
 
 /** The flags that name a curated font, which `init` installs. */
 const FONT_FLAGS = ['font', 'heading-font', 'code-font'];

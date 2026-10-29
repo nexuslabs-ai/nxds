@@ -50,7 +50,6 @@ const EXPECTED_RUNTIME_EXPORTS = [
   'createNxdsThemeContract',
   'deriveTheme',
   'findBrandColorPreset',
-  'findFontOption',
   'isColor',
   'measureThemeContrast',
   'normalizeAppearanceModeIds',

@@ -90,8 +90,3 @@ export const FONT_OPTIONS = [
 ] as const satisfies readonly NxdsFontOption[];
 
 export type NxdsFont = (typeof FONT_OPTIONS)[number]['value'];
-
-/** The catalogue font whose stack is `family`, if it is one. */
-export function findFontOption(family: string): NxdsFontOption | undefined {
-  return FONT_OPTIONS.find((option) => option.family === family);
-}

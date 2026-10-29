@@ -559,8 +559,7 @@ const LUCIDE_ICONS = readFileSync(
 function releaseFont(name: string): Font {
   const font = FONT_OPTIONS.find((option) => option.value === name);
   if (!font) throw new Error(`@nxds/core has no font ${name}`);
-  const { label, category, family, package: pkg } = font;
-  return { name, label, category, family, package: pkg, range: '^5.3.0' };
+  return { name, family: font.family, package: font.package, range: '^5.3.0' };
 }
 const INTER = releaseFont('inter');
 const LORA = releaseFont('lora');

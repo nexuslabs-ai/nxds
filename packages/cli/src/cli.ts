@@ -1,3 +1,4 @@
+import { NXDS_THEME_FIELDS } from '@nxds/core/source/lib/theme-fields.ts';
 import { Argument, Command, CommanderError, Option } from 'commander';
 import path from 'node:path';
 
@@ -15,7 +16,7 @@ import { add, init, update } from './commands/install';
 import type { CommandResult } from './commands/result';
 import { CliError, EXIT_CODES, type ExitCode } from './errors';
 import type { InstallOptions } from './install';
-import { THEME_FIELDS } from './theme';
+import { ICONS_FLAG } from './theme';
 
 export type Output = {
   out: (text: string) => void;
@@ -99,13 +100,13 @@ function program(
       '--dir <path>',
       'nxds folder (default: components/nxds, or src/components/nxds)'
     );
-  const themeOptions = THEME_FIELDS.map((field) => {
+  const themeOptions = NXDS_THEME_FIELDS.map((field) => {
     const help = field.values
       ? `${field.description}: ${field.values.join(', ')}`
       : field.description;
     const option = new Option(
       `--${field.flag} <value>`,
-      field.flag === 'icons' ? `${help}. ${REMIX_LICENSE}` : help
+      field.flag === ICONS_FLAG ? `${help}. ${REMIX_LICENSE}` : help
     );
     initCommand.addOption(option);
     return { flag: field.flag, key: option.attributeName() };
@@ -116,14 +117,16 @@ function program(
     const theme = Object.fromEntries(
       themeOptions.flatMap(({ flag, key }) => {
         const value = options[key];
-        return flag === 'icons' || value === undefined ? [] : [[flag, value]];
+        return flag === ICONS_FLAG || value === undefined
+          ? []
+          : [[flag, value]];
       })
     );
     done(
       await init(cwd, registry, {
         ...installOptions(command),
         dir: options['dir'],
-        icons: options['icons'],
+        icons: options[ICONS_FLAG],
         theme,
       })
     );
