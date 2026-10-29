@@ -107,8 +107,10 @@ function NumericStory() {
         </h2>
         <p className="nx:text-muted-foreground nx:typography-body-default nx:max-w-2xl">
           Live `--nx-spacing-*` variables consumed through Tailwind utilities
-          like `nx:p-4` or `nx:gap-2`. The Density toolbar changes the active
-          runtime values.
+          like `nx:p-4` or `nx:gap-2`. Steps up to 8px are the same in every
+          density. From step 3, the density offset grows until 24px, where it is
+          −4, −2, 0, +2, +4 and +6px from Tight to Spacious. Larger steps keep
+          that offset. The Density toolbar changes the active runtime values.
         </p>
       </div>
       <section className="nx:flex nx:flex-col nx:gap-1">

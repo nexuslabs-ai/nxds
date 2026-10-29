@@ -343,6 +343,61 @@ export const WithDataAttributes: Story = {
   },
 };
 
+const DENSITIES = [
+  'tight',
+  'compact',
+  'default',
+  'comfortable',
+  'relaxed',
+  'spacious',
+] as const;
+
+export const SizeAtEveryDensity: Story = {
+  render: () => ({
+    components: { RadioGroup, RadioGroupItem },
+    setup: () => ({ densities: DENSITIES }),
+    template: `
+      <div class="nx:flex nx:flex-col nx:gap-3">
+        <RadioGroup
+          v-for="density in densities"
+          :key="density"
+          :data-density="density"
+          :data-testid="'row-' + density"
+          default-value="on"
+          :aria-label="'Choice, ' + density"
+        >
+          <RadioGroupItem value="on" :aria-label="'On, ' + density" />
+        </RadioGroup>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const width = (element: Element) => element.getBoundingClientRect().width;
+    const reference = width(
+      within(canvas.getByTestId('row-default')).getByRole('radio')
+    );
+    for (const density of DENSITIES) {
+      const control = within(canvas.getByTestId(`row-${density}`)).getByRole(
+        'radio'
+      );
+      // The control keeps its Default size at every density.
+      await expect(width(control)).toBe(reference);
+      // The mark stays inside the border.
+      const mark = control
+        .querySelector('[data-slot="radio-group-dot"]')!
+        .getBoundingClientRect();
+      const box = control.getBoundingClientRect();
+      const top = box.top + control.clientTop;
+      const left = box.left + control.clientLeft;
+      await expect(mark.top).toBeGreaterThanOrEqual(top);
+      await expect(mark.bottom).toBeLessThanOrEqual(top + control.clientHeight);
+      await expect(mark.left).toBeGreaterThanOrEqual(left);
+      await expect(mark.right).toBeLessThanOrEqual(left + control.clientWidth);
+    }
+  },
+};
+
 export const VModel: Story = {
   render: () => ({
     components: { Label, RadioGroup, RadioGroupItem },

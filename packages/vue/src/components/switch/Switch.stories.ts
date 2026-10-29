@@ -314,6 +314,65 @@ export const WithDataAttributes: Story = {
   },
 };
 
+const DENSITIES = [
+  'tight',
+  'compact',
+  'default',
+  'comfortable',
+  'relaxed',
+  'spacious',
+] as const;
+
+export const SizesAtEveryDensity: Story = {
+  render: () => ({
+    components: { Switch },
+    setup: () => ({ densities: DENSITIES }),
+    template: `
+      <div class="nx:flex nx:flex-col nx:gap-3">
+        <div
+          v-for="density in densities"
+          :key="density"
+          :data-density="density"
+          :data-testid="'row-' + density"
+          class="nx:flex nx:items-center nx:gap-3"
+        >
+          <Switch :default-value="true" :aria-label="'Default size, ' + density" />
+          <Switch size="sm" :default-value="true" :aria-label="'Small size, ' + density" />
+        </div>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const density of DENSITIES) {
+      const [standard, small] = within(
+        canvas.getByTestId(`row-${density}`)
+      ).getAllByRole('switch');
+      // The small switch stays smaller at every density.
+      await expect(small!.getBoundingClientRect().height).toBeLessThan(
+        standard!.getBoundingClientRect().height
+      );
+      // The thumb stays inside the track's border at every density.
+      for (const control of [standard!, small!]) {
+        const thumb = control
+          .querySelector('[data-slot="switch-thumb"]')!
+          .getBoundingClientRect();
+        const box = control.getBoundingClientRect();
+        const top = box.top + control.clientTop;
+        const left = box.left + control.clientLeft;
+        await expect(thumb.top).toBeGreaterThanOrEqual(top);
+        await expect(thumb.bottom).toBeLessThanOrEqual(
+          top + control.clientHeight
+        );
+        await expect(thumb.left).toBeGreaterThanOrEqual(left);
+        await expect(thumb.right).toBeLessThanOrEqual(
+          left + control.clientWidth
+        );
+      }
+    }
+  },
+};
+
 export const VModel: Story = {
   render: () => ({
     components: { Switch },
