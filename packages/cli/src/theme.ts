@@ -1,16 +1,14 @@
+import type { NxdsAppearanceState } from '@nxds/core/source/lib/appearance-model.ts';
 import {
-  DEFAULT_NXDS_APPEARANCE,
-  type NxdsAppearanceState,
-} from '@nxds/core/source/lib/appearance-model.ts';
-import {
-  applyNxdsThemeFlags,
   DEFAULT_NXDS_THEME,
-  nxdsThemeFlags,
+  NXDS_THEME_FIELDS,
+  type NxdsThemeField,
+  type NxdsThemeKey,
 } from '@nxds/core/source/lib/theme-fields.ts';
 
-import type { Font } from './catalog';
+import type { Catalog, Font } from './catalog';
 import { CLI_COMMAND } from './cli-command';
-import { CliError, UsageError } from './errors';
+import { CliError } from './errors';
 
 /** A theme, as nxds.json keeps it: each `init` flag's value, by flag name. */
 export type ThemeFlags = Record<string, string>;
@@ -21,67 +19,121 @@ export type ThemeFlags = Record<string, string>;
  */
 export const ICONS_FLAG = 'icons';
 
-/** The flags that name a curated font, which `init` installs. */
-const FONT_FLAGS = ['font', 'heading-font', 'code-font'];
+/** A field `nxds-theme.ts` sets: where it lives, and its value as source. */
+type ThemeLine = { key: NxdsThemeKey; source: string };
 
-/** The appearance nxds.json's `theme` sets, over nxds's default appearance. */
-export function themeAppearance(theme: ThemeFlags = {}): NxdsAppearanceState {
-  try {
-    return applyNxdsThemeFlags(DEFAULT_NXDS_THEME, theme).appearance;
-  } catch (error) {
-    throw new CliError(
-      `nxds.json theme: ${(error as Error).message} Fix it, or run \`${CLI_COMMAND} init\` with that flag.`
-    );
+/** What a theme's flags set in an app on one release. */
+export type Theme = {
+  /** One line per flag, in the order of core's theme fields. */
+  lines: ThemeLine[];
+  /** The release fonts the theme uses, which the app installs and imports. */
+  fonts: Font[];
+};
+
+/** The error for a bad flag in nxds.json's `theme`. */
+export function storedThemeError(flag: string, message: string) {
+  return new CliError(
+    `nxds.json theme: ${message} Fix it, or run \`${CLI_COMMAND} init --${flag} <value>\`.`
+  );
+}
+
+function literal(value: string | number | boolean | null) {
+  if (typeof value !== 'string') return String(value);
+  return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+}
+
+function valueAt(appearance: NxdsAppearanceState, key: NxdsThemeKey) {
+  if (!key.startsWith('prefs.')) {
+    return appearance[key as Exclude<NxdsThemeKey, `prefs.${string}`>];
+  }
+  return appearance.prefs[
+    key.slice('prefs.'.length) as keyof NxdsAppearanceState['prefs']
+  ];
+}
+
+/** Throws on a `theme` key that is no theme flag. Only nxds.json can hold one. */
+function assertThemeFlags(flags: ThemeFlags) {
+  for (const flag of Object.keys(flags)) {
+    if (flag === ICONS_FLAG) {
+      throw new CliError(
+        `nxds.json theme: the icon library goes in "iconLibrary". Remove "${ICONS_FLAG}" from "theme".`
+      );
+    }
+    if (!NXDS_THEME_FIELDS.some((field) => field.flag === flag)) {
+      throw new CliError(
+        `nxds.json theme: "${flag}" isn't an init theme flag. Remove it from "theme".`
+      );
+    }
   }
 }
 
 /**
- * `appearance` with the theme flags `flags` sets. A font flag must name a
- * font the release has, since `init` installs it.
+ * `field`'s line for `value`, checked against `release`. A font flag names one
+ * of the release's fonts, by name, and the line writes that font's family.
  */
-export function withThemeFlags(
-  appearance: NxdsAppearanceState,
-  flags: ThemeFlags,
-  fonts: Font[]
-): NxdsAppearanceState {
-  let next: NxdsAppearanceState;
-  try {
-    next = applyNxdsThemeFlags(
-      { ...DEFAULT_NXDS_THEME, appearance },
-      flags
-    ).appearance;
-  } catch (error) {
-    throw new UsageError((error as Error).message);
-  }
-  for (const flag of FONT_FLAGS) {
-    const value = flags[flag];
-    if (value === undefined || value === 'system' || value === 'ui') continue;
-    if (!fonts.some((font) => font.name === value)) {
-      throw new UsageError(
-        `--${flag}: this nxds release has no font "${value}". Run \`${CLI_COMMAND} update\` first.`
-      );
-    }
-  }
-  return next;
-}
-
-/** nxds.json's `theme` for `appearance`: the flags that differ from nxds's defaults. */
-export function themeFlags(appearance: NxdsAppearanceState): ThemeFlags {
-  return Object.fromEntries(
-    nxdsThemeFlags({ ...DEFAULT_NXDS_THEME, appearance })
-      .filter(({ flag }) => flag !== ICONS_FLAG)
-      .map(({ flag, value }) => [flag, value])
+function themeLine(
+  release: Catalog,
+  field: NxdsThemeField & { key: NxdsThemeKey },
+  value: string,
+  fail: (flag: string, message: string) => Error
+): ThemeLine & { font?: Font } {
+  const { flag, key, fallback } = field;
+  const offered = release.themeFields.find(
+    (candidate) => candidate.flag === flag
   );
+  if (!offered) {
+    throw fail(
+      flag,
+      `nxds ${release.version} has no --${flag}. Run \`${CLI_COMMAND} update\` to move to a release that has it.`
+    );
+  }
+  if (offered.values && !offered.values.includes(value)) {
+    throw fail(
+      flag,
+      `--${flag} "${value}" isn't one of ${offered.values.join(', ')}.`
+    );
+  }
+  if (fallback?.value === value) {
+    // The fallback is the UI font, or the default stack of the app's release.
+    const source =
+      fallback.family === null ? 'null' : `DEFAULT_NXDS_APPEARANCE.${key}`;
+    return { key, source };
+  }
+  if (fallback) {
+    const font = release.fonts.find((candidate) => candidate.name === value);
+    if (!font) {
+      throw fail(flag, `nxds ${release.version} has no font "${value}".`);
+    }
+    return { key, source: literal(font.family), font };
+  }
+  try {
+    const { appearance } = field.write(DEFAULT_NXDS_THEME, value);
+    return { key, source: literal(valueAt(appearance, key)) };
+  } catch (error) {
+    throw fail(flag, (error as Error).message);
+  }
 }
 
-/** The release fonts `appearance` uses, which the app installs and imports. */
-export function themeFonts(
-  appearance: NxdsAppearanceState,
-  fonts: Font[]
-): Font[] {
-  const { uiFont, headingFont, codeFont } = appearance.prefs;
-  const families = new Set([uiFont, headingFont, codeFont]);
-  return fonts.filter((font) => families.has(font.family));
+/**
+ * What `flags` set in an app on `release`. Each flag must be one the release
+ * takes, with a value it accepts. `fail` makes the error for a bad value.
+ */
+export function resolveTheme(
+  release: Catalog,
+  flags: ThemeFlags,
+  fail: (flag: string, message: string) => Error
+): Theme {
+  assertThemeFlags(flags);
+  const lines = NXDS_THEME_FIELDS.flatMap((field) => {
+    const value = flags[field.flag];
+    if (value === undefined || field.key === undefined) return [];
+    return [themeLine(release, { ...field, key: field.key }, value, fail)];
+  });
+  const used = new Set(lines.map((line) => line.font));
+  return {
+    lines: lines.map(({ key, source }) => ({ key, source })),
+    fonts: release.fonts.filter((font) => used.has(font)),
+  };
 }
 
 /** The `@import` line that loads a release font. */
@@ -108,30 +160,13 @@ export function withFontImports(css: string, fonts: Font[], wanted: Font[]) {
   return `${kept.join('\n').trimEnd()}\n${missing.join('\n')}\n`;
 }
 
-function literal(value: string | number | null) {
-  if (typeof value !== 'string') return String(value);
-  return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
-}
-
-/** `key: value` for each field of `values` that differs from `defaults`. */
-function changedLines<T extends object>(
-  values: T,
-  defaults: T,
-  indent: string
-) {
-  return (Object.keys(values) as (keyof T & string)[])
-    .filter((key) => values[key] !== defaults[key])
-    .map(
-      (key) =>
-        `${indent}${key}: ${literal(values[key] as string | number | null)},`
-    );
-}
-
-/** `nxds-theme.ts`, which nxds owns: the appearance nxds.json's theme sets. */
-export function nxdsThemeSource(appearance: NxdsAppearanceState) {
-  const { prefs, ...fields } = appearance;
-  const { prefs: defaultPrefs, ...defaultFields } = DEFAULT_NXDS_APPEARANCE;
-  const prefLines = changedLines(prefs, defaultPrefs, '    ');
+/**
+ * `nxds-theme.ts`, which nxds owns: the default appearance of the app's
+ * release, with each field the theme sets.
+ */
+export function nxdsThemeSource(theme: Theme) {
+  const fields = theme.lines.filter(({ key }) => !key.startsWith('prefs.'));
+  const prefs = theme.lines.filter(({ key }) => key.startsWith('prefs.'));
   return [
     '// nxds-cli writes this file from the theme in nxds.json, so edits here are',
     `// lost. Change the theme with \`${CLI_COMMAND} init\` flags, such as`,
@@ -143,13 +178,15 @@ export function nxdsThemeSource(appearance: NxdsAppearanceState) {
     '',
     'export const nxdsTheme = {',
     '  ...DEFAULT_NXDS_APPEARANCE,',
-    ...changedLines(fields, defaultFields, '  '),
-    ...(prefLines.length === 0
+    ...fields.map(({ key, source }) => `  ${key}: ${source},`),
+    ...(prefs.length === 0
       ? []
       : [
           '  prefs: {',
           '    ...DEFAULT_NXDS_APPEARANCE.prefs,',
-          ...prefLines,
+          ...prefs.map(
+            ({ key, source }) => `    ${key.slice('prefs.'.length)}: ${source},`
+          ),
           '  },',
         ]),
     '} satisfies NxdsAppearanceState;',

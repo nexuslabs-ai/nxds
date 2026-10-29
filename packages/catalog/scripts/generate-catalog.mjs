@@ -32,6 +32,7 @@ import {
   vueSrc,
 } from '@nxds/source-model/roots.mjs';
 import { exportedSlugs } from '@nxds/source-model/vue-sources.ts';
+import { createJiti } from 'jiti';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -61,7 +62,15 @@ import { CATALOG_FILE } from './roots.mjs';
  * @typedef {import('./catalog-schema').SetupVariant} SetupVariant
  * @typedef {import('./catalog-schema').IconLibrary} IconLibrary
  * @typedef {import('./catalog-schema').Font} Font
+ * @typedef {import('./catalog-schema').ThemeField} ThemeField
  */
+
+// theme-fields.ts imports core's modules without file extensions, which Node
+// can't load as source, so jiti loads it.
+/** @type {typeof import('@nxds/core/source/lib/theme-fields.ts')} */
+const { NXDS_THEME_FIELDS } = await createJiti(import.meta.url).import(
+  '@nxds/core/source/lib/theme-fields.ts'
+);
 
 const DOCS_URL = 'https://nxds.dev';
 const SETUP = 'setup';
@@ -247,6 +256,17 @@ function fonts() {
   });
 }
 
+/**
+ * The theme flags core takes, and the values each accepts. `--icons` is left
+ * out, since the release lists its icon libraries.
+ * @returns {ThemeField[]}
+ */
+function themeFields() {
+  return NXDS_THEME_FIELDS.filter(({ flag }) => flag !== 'icons').map(
+    ({ flag, values }) => (values ? { flag, values: [...values] } : { flag })
+  );
+}
+
 /** Tailwind 4 at the version packages/react builds with, or a newer 4.x. */
 function tailwindRange() {
   const version = devRanges.tailwindcss;
@@ -430,6 +450,7 @@ export function buildCatalog() {
     items,
     iconLibraries: libraries,
     fonts: fonts(),
+    themeFields: themeFields(),
   };
   // Checked, not parsed: parsing would reorder keys in the written JSON.
   const checked = catalogSchema.safeParse(catalog);

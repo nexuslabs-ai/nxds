@@ -44,12 +44,10 @@ import {
 } from '../setup/react';
 import {
   nxdsThemeSource,
-  themeAppearance,
+  resolveTheme,
+  storedThemeError,
   type ThemeFlags,
-  themeFlags,
-  themeFonts,
   withFontImports,
-  withThemeFlags,
 } from '../theme';
 
 import type { CommandResult } from './result';
@@ -213,16 +211,14 @@ export async function init(
   config.iconLibrary =
     icons ?? config.iconLibrary ?? release.iconLibraries[0]?.name;
   // A theme flag left out keeps that part of the app's theme.
-  const appearance = withThemeFlags(
-    themeAppearance(config.theme),
-    options.theme ?? {},
-    release.fonts
+  const passed = options.theme ?? {};
+  const flags = { ...config.theme, ...passed };
+  const { lines, fonts } = resolveTheme(release, flags, (flag, message) =>
+    flag in passed ? new UsageError(message) : storedThemeError(flag, message)
   );
-  const theme = themeFlags(appearance);
-  const custom = Object.keys(theme).length > 0;
-  if (custom) config.theme = theme;
+  const custom = lines.length > 0;
+  if (custom) config.theme = flags;
   else delete config.theme;
-  const fonts = themeFonts(appearance, release.fonts);
   const catalog = withIconLibrary(release, config.iconLibrary);
   // A new icon library rewrites `lib/icons.ts` in every installed item, from
   // the files the old library gave them.
@@ -231,7 +227,7 @@ export async function init(
 
   const setup = setupVariant(catalog, config);
   const wiring = planWiring(project, config, addTailwind, setup.steps, {
-    source: nxdsThemeSource(appearance),
+    source: nxdsThemeSource({ lines, fonts }),
     fonts,
     custom,
   });
@@ -293,7 +289,7 @@ export async function init(
       dir: config.dir,
       css: config.css,
       iconLibrary: config.iconLibrary,
-      theme,
+      theme: flags,
       dryRun: options.dryRun,
       ...installed,
       packages,

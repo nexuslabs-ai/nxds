@@ -71,6 +71,24 @@ function isIconTag(node: ts.Identifier, names: Set<string>) {
 }
 
 /**
+ * Throws when a component that draws a HugeIcons icon as a value has the name
+ * of an imported HugeIcons icon, since the two bindings would clash.
+ */
+function assertNoWrapperClash(
+  id: string,
+  wrapped: Map<string, string>,
+  imported: Set<string>
+) {
+  for (const [name, data] of wrapped) {
+    if (imported.has(name)) {
+      throw new Error(
+        `${id}: HugeIcons' ${name} has the name of the component that draws ${data}. Pick another HugeIcons icon in EXAMPLE_ICONS.`
+      );
+    }
+  }
+}
+
+/**
  * A React example's source, drawn by `library`. An example that imports no
  * Phosphor icon comes back as it is.
  */
@@ -130,6 +148,14 @@ export function reactExampleSource(
       end: node.tagName.getEnd(),
       text: huge ? `HugeiconsIcon icon={${icon}}` : icon,
     });
+    if (ts.isJsxOpeningElement(node)) {
+      const { tagName } = node.parent.closingElement;
+      edits.push({
+        start: tagName.getStart(),
+        end: tagName.getEnd(),
+        text: huge ? 'HugeiconsIcon' : icon,
+      });
+    }
     if (weight) {
       edits.push({
         start: weight.getFullStart(),
@@ -146,15 +172,6 @@ export function reactExampleSource(
       names.has(node.tagName.getText())
     ) {
       visitTag(node);
-    } else if (
-      ts.isJsxClosingElement(node) &&
-      names.has(node.tagName.getText())
-    ) {
-      edits.push({
-        start: node.tagName.getStart(),
-        end: node.tagName.getEnd(),
-        text: huge ? 'HugeiconsIcon' : exported(node.tagName.getText()),
-      });
     } else if (
       ts.isIdentifier(node) &&
       names.has(node.text) &&
@@ -178,13 +195,7 @@ export function reactExampleSource(
   }
   visit(file);
 
-  for (const [name, data] of wrapped) {
-    if (imported.has(name)) {
-      throw new Error(
-        `${id}: HugeIcons' ${name} has the name of the component that draws ${data}. Pick another HugeIcons icon in EXAMPLE_ICONS.`
-      );
-    }
-  }
+  assertNoWrapperClash(id, wrapped, imported);
   const { icons, component } = ICON_PACKAGES[library].react;
   const lines = [importLine(imported, icons)];
   if (component) {
@@ -263,14 +274,17 @@ export function vueExampleSource(
   const wrapped = new Map<string, string>();
 
   const scriptEnd = sfc.indexOf('</script>');
+  // Tags nest, so a closing icon tag closes the last icon tag left open.
+  const open: string[] = [];
   const tagged = sfc
     .slice(scriptEnd)
     .replace(VUE_TAG, (tag, closing, name, attributes, selfClosing) => {
       if (!names.has(name)) return tag;
+      if (closing) return `</${huge ? 'HugeiconsIcon' : open.pop()}>`;
       const filled = attributes.match(WEIGHT_ATTRIBUTE)?.[1] === 'fill';
       const rest = attributes.replace(WEIGHT_ATTRIBUTE, '');
       const icon = exported(name, filled);
-      if (closing) return `</${huge ? 'HugeiconsIcon' : icon}>`;
+      if (!selfClosing) open.push(icon);
       imported.add(icon);
       return huge
         ? `<HugeiconsIcon :icon="${icon}"${rest}${selfClosing}>`
@@ -290,6 +304,7 @@ export function vueExampleSource(
     return wrapper;
   });
 
+  assertNoWrapperClash(id, wrapped, imported);
   const { icons, component } = ICON_PACKAGES[library].vue;
   const lines = [importLine(imported, icons)];
   if (component) lines.push(importLine(['HugeiconsIcon'], component));

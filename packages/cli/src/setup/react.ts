@@ -564,7 +564,7 @@ export type ThemeSetup = {
   /** `nxds-theme.ts`'s content. */
   source: string;
   fonts: Font[];
-  /** Whether the theme differs from nxds's default appearance. */
+  /** Whether the theme sets any part of the appearance. */
   custom: boolean;
 };
 

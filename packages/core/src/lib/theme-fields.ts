@@ -33,14 +33,29 @@ export const DEFAULT_NXDS_THEME: NxdsTheme = {
   iconLibrary: DEFAULT_ICON_LIBRARY,
 };
 
+/** Where a theme part lives in the appearance: a key of it, or of its prefs. */
+export type NxdsThemeKey =
+  | Exclude<keyof NxdsAppearanceState, 'prefs'>
+  | `prefs.${keyof NxdsAppearancePrefs}`;
+
 /** One part of a theme, as the `nxds-cli init` flag that sets it. */
 export interface NxdsThemeField {
   /** The flag, without its `--`. */
   readonly flag: string;
+  /** The appearance field the flag sets. The icon library sets none. */
+  readonly key?: NxdsThemeKey;
   /** What the flag sets, for `--help`. */
   readonly description: string;
   /** The values the flag takes, or undefined for a colour or a number. */
   readonly values?: readonly string[];
+  /**
+   * For a font flag: the value that names no curated font, and the family it
+   * stands for: the default stack, or null for the UI font.
+   */
+  readonly fallback?: {
+    readonly value: string;
+    readonly family: string | null;
+  };
   /** The flag's value for `theme`, or undefined when no flag value says it. */
   read(theme: NxdsTheme): string | undefined;
   /** `theme` with the flag's value. Throws when the value doesn't fit. */
@@ -95,6 +110,7 @@ function enumField<K extends EnumKey>(
 ): NxdsThemeField {
   return {
     flag,
+    key,
     description,
     values,
     read: (theme) => theme.appearance[key],
@@ -125,6 +141,7 @@ function contrastField(
 ): NxdsThemeField {
   return {
     flag,
+    key,
     description,
     read: (theme) => String(theme.appearance[key]),
     write: (theme, value) =>
@@ -139,6 +156,7 @@ function fontSizeField(
 ): NxdsThemeField {
   return {
     flag,
+    key: `prefs.${key}`,
     description,
     read: (theme) => String(theme.appearance.prefs[key]),
     write: (theme, value) =>
@@ -165,8 +183,10 @@ function fontField(
   );
   return {
     flag,
+    key: `prefs.${key}`,
     description,
     values: [fallback.value, ...fonts.map((font) => font.value)],
+    fallback,
     read: (theme) => {
       const family = theme.appearance.prefs[key];
       if (family === fallback.family) return fallback.value;
@@ -200,6 +220,7 @@ const TEXT_FONTS = ['sans', 'serif'] as const;
 export const NXDS_THEME_FIELDS: readonly NxdsThemeField[] = [
   {
     flag: 'brand-color',
+    key: 'brandColor',
     description: 'brand color, as any CSS color, such as "#4f46e5"',
     read: (theme) => theme.appearance.brandColor,
     write: (theme, value) => {

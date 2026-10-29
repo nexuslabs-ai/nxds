@@ -228,6 +228,15 @@ const fontSchema = z.object({
 
 export type Font = z.infer<typeof fontSchema>;
 
+const themeFieldSchema = z.object({
+  /** Its `init` flag, without the `--`, such as `density`. */
+  flag: z.string(),
+  /** The values the flag takes in this release, or none for a colour or a number. */
+  values: z.array(z.string()).optional(),
+});
+
+export type ThemeField = z.infer<typeof themeFieldSchema>;
+
 /** The `schema` this package writes and the CLI reads. */
 export const CATALOG_SCHEMA = 1;
 
@@ -246,6 +255,8 @@ export const catalogSchema = z.object({
   iconLibraries: z.array(iconLibrarySchema).default([]),
   /** The fonts an app can start with. Releases from before fonts leave it out. */
   fonts: z.array(fontSchema).default([]),
+  /** The theme flags this release's `@nxds/core` takes, beside `--icons`. Releases from before themes leave it out. */
+  themeFields: z.array(themeFieldSchema).default([]),
 });
 
 export type Catalog = z.infer<typeof catalogSchema>;

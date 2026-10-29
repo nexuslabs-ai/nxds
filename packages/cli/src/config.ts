@@ -29,7 +29,7 @@ const configSchema = z.looseObject({
   items: z.array(z.string()),
   /** The icon library `lib/icons.ts` draws, from the release's `iconLibraries`. */
   iconLibrary: z.string().optional(),
-  /** The theme `nxds-theme.ts` sets: each `init` flag off its default, by flag name. */
+  /** The theme `nxds-theme.ts` sets: each `init` theme flag the app was given, by flag name. */
   theme: z.record(z.string(), z.string()).optional(),
 });
 
