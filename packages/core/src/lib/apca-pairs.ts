@@ -1,4 +1,7 @@
-import { CHART_PALETTE_REFERENCES } from './semantic-palette-references';
+import {
+  CHART_PALETTE_REFERENCES,
+  SYNTAX_PALETTE_REFERENCES,
+} from './semantic-palette-references';
 
 export type ApcaTier = 'body' | 'ui' | 'incidental';
 
@@ -40,6 +43,12 @@ const CATEGORICAL_INDICES = CHART_PALETTE_REFERENCES.map(
 // Each chart series asks for this much more Lc than the previous one, so
 // categories differ in lightness as well as hue.
 const CHART_STAGGER_LC = 4.5;
+
+const DIFF_SURFACES = ['success-subtle', 'error-subtle'] as const;
+
+// CodeBlock draws code on its own surface, on a highlighted line and on the
+// diff tints.
+const CODE_SURFACES = ['container', 'container-hover', ...DIFF_SURFACES];
 
 const FOCUS_SURFACES = [
   'background',
@@ -102,11 +111,23 @@ export const APCA_PAIRS = [
     ink(`${family}-subtle-foreground`, `${family}-subtle-active`, 'ui'),
   ]),
   ...CATEGORICAL_INDICES.flatMap((index) =>
-    ['container', 'background'].map((bg) => ({
+    ['container', 'container-hover', 'background'].map((bg) => ({
       ...ink(`chart-categorical-${index}`, bg, 'ui'),
       offset: (index - 1) * CHART_STAGGER_LC,
     }))
   ),
+  ...CODE_SURFACES.flatMap((bg) =>
+    Object.keys(SYNTAX_PALETTE_REFERENCES).map((role) =>
+      ink(`syntax-${role}`, bg, 'ui')
+    )
+  ),
+  // codeBlockTheme also colours code with the text tokens, which already read
+  // on container and container-hover.
+  ...DIFF_SURFACES.flatMap((bg) => [
+    text('foreground', bg, 'ui'),
+    text('muted-foreground', bg, 'ui'),
+    text('muted-foreground-subtle', bg, 'incidental'),
+  ]),
   // Focus is the primary accent (components.md § Focus States), so it shares
   // one solved color with primary-subtle-foreground.
   ...FOCUS_SURFACES.flatMap((surface) => [

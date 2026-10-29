@@ -1,5 +1,42 @@
 # @nxds/core
 
+## 0.11.0
+
+### Minor Changes
+
+- e5916e8: Add CodeBlock, a surface for code with line numbers, marked lines and a copy button.
+
+  | Part                  | What it does                                                                                                                           |
+  | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+  | `CodeBlock`           | The surface. Use `variant="flush"` inside a Card                                                                                       |
+  | `CodeBlockContent`    | The scroll region. Long lines scroll sideways, and a `nx:max-h-*` class scrolls down. `language` sets the `language-*` class on `code` |
+  | `CodeBlockLine`       | One line. `number` shows it in the gutter, `highlighted` and `status` mark it                                                          |
+  | `CodeBlockCopyButton` | Copies the code and tells screen readers the result                                                                                    |
+
+  CodeBlock does not highlight code. Highlight with Shiki and the `codeBlockTheme` it ships, then put each line's tokens in a `CodeBlockLine`. In server code, such as a React Server Component, import the theme from `@nxds/react/code-block-theme`.
+
+  In `@nxds/core`, the contrast solver also reads the chart colours on `container-hover`, the surface of a highlighted line. Where a chart colour was too faint on it, the colour gets a little darker in light mode or a little lighter in dark mode.
+
+- 9f564c1: Add diff lines to CodeBlock, and give code its own syntax colours.
+
+  | Package                    | Change                                                                                                                                                                                                                                                                                   |
+  | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `@nxds/react`, `@nxds/vue` | `CodeBlockLine` takes `diff="added"` or `diff="removed"`. The line gets a green or red tint and a `+` or `−` before the code. The copy button leaves out removed lines. `codeBlockTheme` colours code with the `syntax-*` tokens.                                                        |
+  | `@nxds/core`               | Add five colour tokens for code: `syntax-keyword`, `syntax-string`, `syntax-function`, `syntax-type` and `syntax-constant`. Each takes the hue of a chart series. The contrast solver keeps them legible on `container`, `container-hover`, `success-subtle` and `error-subtle`.         |
+  | `@nxds/core`               | The solver reads the chart colours only on `container` and `background` again, so chart colours go back to their values before CodeBlock. It also reads the foreground and muted colours on `success-subtle` and `error-subtle`. Muted text moves by a very small amount in some themes. |
+
+## 0.10.0
+
+### Minor Changes
+
+- bfd0509: Every token the Claude Design System exports is a variable the components read. Changing a token on a canvas now changes the components, including shadows and text styles. `tokens.json` drops the palette steps, alpha scales and state colours no component reads. It keeps the full spacing and radius scales and the chart series for laying out artboards, marked "For authors". The type scale is a new `typeScale` family, and each text style class reads it the way the `nx:typography-*` utilities do.
+
+  On a Design canvas, `data-density`, `data-radius`, `data-borderwidth` and `data-shadow` work again. `tokens.css` declares its values in the `theme` layer, so these presets and the appearance provider's runtime theme override them. The system README names the files a canvas artboard loads and their order.
+
+  Shadows are one variable per elevation step. Each `data-shadow` preset declares `--nx-shadow-sm` and its siblings directly, and `nx:shadow-*` reads them. The `--nx-shadow-*-layer-*` variables are gone. In the token catalogue, shadow styles carry a variant per elevation preset and theme, and the layer primitives are no longer tokens.
+
+  `ToggleGroup` applies a half-step `spacing`, such as `0.5`, instead of dropping the gap. Its `spacing` takes only spacing-scale steps, typed by the new `SpacingStep` export from `@nxds/core`.
+
 ## 0.9.1
 
 ### Patch Changes

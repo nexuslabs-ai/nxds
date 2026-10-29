@@ -2,7 +2,6 @@ import { NxdsAppearanceProvider } from '@nxds/react/appearance';
 import { NxdsAppearanceScript } from '@nxds/react/appearance/server';
 import type { Metadata } from 'next';
 
-import { CopyAnnouncerProvider } from './_components/CopyAnnouncer';
 import {
   DOCS_APPEARANCE_DEFAULT_STATE,
   DOCS_APPEARANCE_STORAGE_KEY,
@@ -65,7 +64,7 @@ export default function RootLayout({
           storageKey={DOCS_APPEARANCE_STORAGE_KEY}
           defaultState={DOCS_APPEARANCE_DEFAULT_STATE}
         >
-          <CopyAnnouncerProvider>{children}</CopyAnnouncerProvider>
+          {children}
         </NxdsAppearanceProvider>
       </body>
     </html>

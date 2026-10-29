@@ -1,7 +1,5 @@
-import type { ThemeRegistrationRaw } from 'shiki';
-
 const SCOPES = {
-  'chart-categorical-4': [
+  'syntax-keyword': [
     'keyword',
     'storage',
     'storage.type',
@@ -9,25 +7,25 @@ const SCOPES = {
     'keyword.control',
     'variable.language',
   ],
-  'chart-categorical-2': [
+  'syntax-string': [
     'string',
     'constant.character.escape',
     'punctuation.definition.string',
   ],
-  'chart-categorical-5': [
+  'syntax-function': [
     'entity.name.function',
     'support.function',
     'meta.function-call',
     'entity.other.attribute-name',
   ],
-  'chart-categorical-1': [
+  'syntax-type': [
     'entity.name.type',
     'entity.name.class',
     'entity.name.tag',
     'support.type',
     'support.class',
   ],
-  'chart-categorical-3': [
+  'syntax-constant': [
     'constant.numeric',
     'constant.language',
     'constant.other',
@@ -41,11 +39,18 @@ const TOKEN_COLORS = Object.entries(SCOPES).map(([token, scope]) => ({
   settings: { foreground: `var(--nx-color-${token})` },
 }));
 
-export const NXDS_CODE_THEME = {
+/**
+ * Shiki theme for CodeBlock. Each syntax colour is a theme token that stays
+ * legible on the CodeBlock surface, a highlighted line and the diff tints, in
+ * light and dark mode.
+ */
+const codeBlockTheme = {
   name: 'nxds',
   colors: { 'editor.foreground': 'var(--nx-color-foreground)' },
   settings: TOKEN_COLORS,
   // rehype-pretty-code reads a theme as a light/dark record unless it carries
   // `tokenColors`; Shiki itself reads `settings`.
   tokenColors: TOKEN_COLORS,
-} satisfies ThemeRegistrationRaw;
+};
+
+export { codeBlockTheme };
