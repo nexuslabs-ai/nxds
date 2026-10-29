@@ -237,11 +237,7 @@ export const NXDS_THEME_FIELDS: readonly NxdsThemeField[] = [
     'border width',
     STROKE_OPTIONS.map((option) => option.value)
   ),
-  enumField('mode', 'mode', 'light, dark or the system setting', [
-    'light',
-    'dark',
-    'system',
-  ]),
+  enumField('mode', 'mode', 'color scheme', ['light', 'dark', 'system']),
   contrastField(
     'light-contrast',
     'lightContrast',
@@ -271,8 +267,7 @@ export const NXDS_THEME_FIELDS: readonly NxdsThemeField[] = [
   fontSizeField('code-font-size', 'codeFontSize', 'code text size in px'),
   {
     flag: 'icons',
-    description:
-      'icon library nxds components draw. remix is under the Remix Icon License, not MIT: no logo use, and no competing icon set',
+    description: 'icon library nxds components draw',
     values: ICON_LIBRARY_OPTIONS.map((option) => option.value),
     read: (theme) => theme.iconLibrary,
     write: (theme, value) => ({

@@ -1,12 +1,12 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { type Catalog, type Font, resolveItems, variantFor } from './catalog';
+import { type Catalog, resolveItems, variantFor } from './catalog';
 import type { Config } from './config';
 import { type PreviousFiles, writeFiles, type WriteResult } from './files';
 import { installPackages, packagesToInstall } from './packages';
 import type { Project } from './project';
-import { cssImportLine, fontImportLine } from './setup/react';
+import { cssImportLine } from './setup/react';
 
 export type InstallOptions = {
   overwrite: boolean;
@@ -55,9 +55,9 @@ function addCssImports(
 
 /**
  * Installs `names` and everything they need: files, npm packages and
- * component stylesheet imports, plus the packages and imports of `fonts`. A
- * file that matches `previous` is replaced; nxds's changes are merged into any
- * other changed file (see `writeFiles`). Updates `config` in place.
+ * component stylesheet imports, plus `extraPackages`. A file that matches
+ * `previous` is replaced; nxds's changes are merged into any other changed
+ * file (see `writeFiles`). Updates `config` in place.
  */
 export function installItems(
   catalog: Catalog,
@@ -66,7 +66,7 @@ export function installItems(
   names: string[],
   previous: PreviousFiles,
   options: InstallOptions,
-  fonts: Font[] = []
+  extraPackages: Record<string, string> = {}
 ): InstallResult {
   const items = resolveItems(catalog, config.framework, names);
   const variants = items.map((item) => variantFor(item, config));
@@ -90,7 +90,7 @@ export function installItems(
     Object.assign(
       {},
       ...variants.map((variant) => variant.packages.npm),
-      ...fonts.map((font) => ({ [font.package]: font.range }))
+      extraPackages
     )
   );
   if (options.install && !options.dryRun) {
@@ -100,12 +100,9 @@ export function installItems(
   const cssImports = addCssImports(
     project,
     config,
-    [
-      ...variants
-        .flatMap((variant) => variant.css)
-        .map((file) => cssImportLine(config, file)),
-      ...fonts.map(fontImportLine),
-    ],
+    variants
+      .flatMap((variant) => variant.css)
+      .map((file) => cssImportLine(config, file)),
     options.dryRun
   );
 

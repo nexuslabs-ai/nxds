@@ -4,7 +4,6 @@ import {
   type CatalogItem,
   catalogSchema,
   catalogWithIconLibrary,
-  type Font,
   type Framework,
   issueLines,
   type ReactMajor,
@@ -30,9 +29,6 @@ export type {
   SetupStep,
   Variant,
 } from '@nxds/catalog';
-
-/** The fonts `init` sets up for UI text, headings and code. */
-export type ChosenFonts = { font?: Font; headingFont?: Font; codeFont?: Font };
 
 /** Which files an app gets: its framework, and for React, its major. */
 export type Target = { framework: Framework; react: ReactMajor };

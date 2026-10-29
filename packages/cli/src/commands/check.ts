@@ -36,6 +36,7 @@ import {
   VITE_ENTRIES,
 } from '../project';
 import { entryDir } from '../setup/react';
+import { fontImportLine, nxdsThemeSource, themeAppearance } from '../theme';
 
 import type { CommandResult } from './result';
 
@@ -262,6 +263,56 @@ function iconsCheck(
   }
 }
 
+/**
+ * Whether `nxds-theme.ts` is what `init` writes for nxds.json's theme. An app
+ * with no theme and no `nxds-theme.ts` has nothing to check.
+ */
+function themeCheck(
+  cwd: string,
+  project: Project,
+  config: Config,
+  check: (name: string, ok: boolean, message: string) => void
+) {
+  const file = `${entryDir(project)}/nxds-theme.ts`;
+  const exists = existsSync(path.join(cwd, file));
+  if (!exists && config.theme === undefined) return;
+  let expected: string;
+  try {
+    expected = nxdsThemeSource(themeAppearance(config.theme));
+  } catch (error) {
+    if (!(error instanceof CliError)) throw error;
+    check('theme', false, error.message);
+    return;
+  }
+  if (!exists) {
+    check(
+      'theme',
+      false,
+      `${file} is missing. Run \`${CLI_COMMAND} init\` to write it.`
+    );
+    return;
+  }
+  const matches = read(cwd, file) === expected;
+  check(
+    'theme',
+    matches,
+    matches
+      ? `${file} sets the theme in nxds.json`
+      : `${file} differs from the theme in nxds.json, and \`${CLI_COMMAND} init\` rewrites it. Move your edits to appearance-state.ts, then run \`${CLI_COMMAND} init\`.`
+  );
+}
+
+/** Release font packages the app has, but its CSS entry no longer imports. */
+function unusedFonts(project: Project, catalog: Catalog, css: string) {
+  return catalog.fonts
+    .filter(
+      (font) =>
+        font.package in project.dependencies &&
+        !css.includes(fontImportLine(font))
+    )
+    .map((font) => font.package);
+}
+
 export async function doctor(
   cwd: string,
   registry: string
@@ -351,7 +402,20 @@ export async function doctor(
       : `The theme script is missing, so the page can flash the wrong theme. Run \`${CLI_COMMAND} init\`.`
   );
 
+  themeCheck(cwd, project, config, check);
+
   if (!catalog) return report(checks);
+
+  if (catalog.fonts.length > 0) {
+    const unused = unusedFonts(project, catalog, css);
+    check(
+      'fonts',
+      unused.length === 0,
+      unused.length === 0
+        ? 'Every nxds font package the app has is imported'
+        : `Nothing imports ${unused.join(', ')}, since the theme moved off it. Remove it with \`npm uninstall ${unused.join(' ')}\`.`
+    );
+  }
 
   const { known, removed } = splitInstalled(catalog, config.items);
   check(

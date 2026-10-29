@@ -17,7 +17,7 @@ import {
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import type { ChosenFonts, Font, SetupStep } from '../catalog';
+import type { Font, SetupStep } from '../catalog';
 import type { Config } from '../config';
 import { CliError } from '../errors';
 import { relativeImport } from '../files';
@@ -29,6 +29,7 @@ import {
   VITE_CONFIGS,
   VITE_ENTRIES,
 } from '../project';
+import { fontImportLine } from '../theme';
 
 import {
   applyInsertions,
@@ -100,7 +101,7 @@ function read(project: Project, file: string) {
 export function cssEntry(
   config: Config,
   withPreflight: boolean,
-  fonts: ChosenFonts
+  fonts: Font[]
 ) {
   const tokens = relativeImport(config.css, `${config.dir}/tailwind/nxds.css`);
   return [
@@ -112,18 +113,9 @@ export function cssEntry(
       : []),
     `@import '${tokens}';`,
     "@import 'tw-animate-css';",
-    ...new Set(
-      Object.values(fonts)
-        .filter((font) => font !== undefined)
-        .map(fontImportLine)
-    ),
+    ...fonts.map(fontImportLine),
     '',
   ].join('\n');
-}
-
-/** The `@import` line that loads a release font. */
-export function fontImportLine(font: Font) {
-  return `@import '${font.package}';`;
 }
 
 /** The `@import` line `add` appends for a component stylesheet. */
@@ -131,40 +123,15 @@ export function cssImportLine(config: Config, file: string) {
   return `@import '${relativeImport(config.css, `${config.dir}/${file}`)}';`;
 }
 
-/** `pref: 'family'` for each font set up, as the default prefs set it. */
-function fontPrefs({ font, headingFont, codeFont }: ChosenFonts) {
-  return [
-    ...(font ? [`uiFont: '${font.family}'`] : []),
-    ...(headingFont ? [`headingFont: '${headingFont.family}'`] : []),
-    ...(codeFont ? [`codeFont: '${codeFont.family}'`] : []),
-  ];
-}
+/** `appearance-state.ts`: the app's default appearance, nxds-theme.ts's theme. */
+const APPEARANCE_STATE = `import type { NxdsAppearanceState } from '@nxds/core';
 
-/** `appearance-state.ts`: the default appearance, with the fonts set up. */
-function appearanceState(fonts: ChosenFonts) {
-  const prefLines = fontPrefs(fonts).map((pref) => `    ${pref},`);
-  const prefs =
-    prefLines.length === 0
-      ? []
-      : [
-          '  prefs: {',
-          '    ...DEFAULT_NXDS_APPEARANCE.prefs,',
-          ...prefLines,
-          '  },',
-        ];
-  return [
-    'import {',
-    '  DEFAULT_NXDS_APPEARANCE,',
-    '  type NxdsAppearanceState,',
-    "} from '@nxds/core';",
-    '',
-    'export const defaultAppearance = {',
-    '  ...DEFAULT_NXDS_APPEARANCE,',
-    ...prefs,
-    '} satisfies NxdsAppearanceState;',
-    '',
-  ].join('\n');
-}
+import { nxdsTheme } from './nxds-theme';
+
+export const defaultAppearance = {
+  ...nxdsTheme,
+} satisfies NxdsAppearanceState;
+`;
 
 function providerImport(fromFile: string, config: Config, file = '') {
   return relativeImport(fromFile, `${config.dir}/${PROVIDER}${file}`);
@@ -592,25 +559,42 @@ function createdUnlessExists(
   return { changes: [{ path: file, content, created: true }], manual: [] };
 }
 
+/** The theme `init` sets up: `nxds-theme.ts`, and the fonts it installs. */
+export type ThemeSetup = {
+  /** `nxds-theme.ts`'s content. */
+  source: string;
+  fonts: Font[];
+  /** Whether the theme differs from nxds's default appearance. */
+  custom: boolean;
+};
+
 /**
- * `appearance-state.ts` with the fonts set up. An existing one is the app's,
- * so a font it doesn't name yet is a manual step.
+ * `nxds-theme.ts`, which nxds owns and rewrites, and `appearance-state.ts`,
+ * which the app owns. An existing `appearance-state.ts` that doesn't spread the
+ * theme yet is a manual step, when there is a theme to spread.
  */
-function planAppearanceState(project: Project, fonts: ChosenFonts) {
-  const file = `${entryDir(project)}/appearance-state.ts`;
-  if (!existsSync(path.join(project.root, file))) {
-    return createdUnlessExists(project, file, appearanceState(fonts));
+function planTheme(project: Project, theme: ThemeSetup): WiringPlan {
+  const dir = entryDir(project);
+  const themeFile = `${dir}/nxds-theme.ts`;
+  const stateFile = `${dir}/appearance-state.ts`;
+  const themeExists = existsSync(path.join(project.root, themeFile));
+  const changes: FileChange[] =
+    themeExists && read(project, themeFile) === theme.source
+      ? []
+      : [{ path: themeFile, content: theme.source, created: !themeExists }];
+  if (!existsSync(path.join(project.root, stateFile))) {
+    changes.push({ path: stateFile, content: APPEARANCE_STATE, created: true });
+    return { changes, manual: [] };
   }
-  // A formatter may move a long font stack onto its own line.
-  const current = read(project, file).replace(/\s+/g, ' ');
-  const missing = fontPrefs(fonts).filter((pref) => !current.includes(pref));
-  if (missing.length === 0) return NO_CHANGES;
+  if (!theme.custom || read(project, stateFile).includes("'./nxds-theme'")) {
+    return { changes, manual: [] };
+  }
   return {
-    changes: [],
+    changes,
     manual: [
       {
-        file,
-        step: `Set ${missing.join(', ')} in the prefs of defaultAppearance.`,
+        file: stateFile,
+        step: "Spread nxdsTheme from './nxds-theme' into defaultAppearance, in place of DEFAULT_NXDS_APPEARANCE, so the app starts from the theme.",
       },
     ],
   };
@@ -625,7 +609,7 @@ export function planWiring(
   config: Config,
   addTailwind: boolean,
   setupSteps: SetupStep[],
-  fonts: ChosenFonts
+  theme: ThemeSetup
 ): WiringPlan {
   const steps: Steps = new Set(setupSteps);
   const plans: WiringPlan[] = [wireTsconfigAlias(project)];
@@ -634,12 +618,12 @@ export function planWiring(
       createdUnlessExists(
         project,
         config.css,
-        cssEntry(config, addTailwind, fonts)
+        cssEntry(config, addTailwind, theme.fonts)
       )
     );
   }
   if (steps.has('add-head-script') || steps.has('wrap-root-with-provider')) {
-    plans.push(planAppearanceState(project, fonts));
+    plans.push(planTheme(project, theme));
   }
   if (project.setup === 'next-app') {
     plans.push(wireNextLayout(project, config, steps));

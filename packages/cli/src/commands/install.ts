@@ -1,11 +1,11 @@
 import { relativePath } from '@nxds/catalog';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import {
   type Catalog,
-  type ChosenFonts,
   fetchRelease,
+  type Font,
   loadRelease,
   type ReactMajor,
   releaseChoice,
@@ -42,6 +42,15 @@ import {
   planWiring,
   tailwindPackages,
 } from '../setup/react';
+import {
+  nxdsThemeSource,
+  themeAppearance,
+  type ThemeFlags,
+  themeFlags,
+  themeFonts,
+  withFontImports,
+  withThemeFlags,
+} from '../theme';
 
 import type { CommandResult } from './result';
 
@@ -109,21 +118,24 @@ function nxdsDir(dir: string) {
   );
 }
 
-/** The release font `flag` names, which must be a code font or must not be. */
-function fontChoice(
+/**
+ * Points the CSS entry at exactly the theme's release fonts. Returns whether
+ * it changed. An entry `init` is about to create already has them.
+ */
+function syncFontImports(
+  project: Project,
+  config: Config,
   catalog: Catalog,
-  flag: string,
-  name: string | undefined,
-  code: boolean
+  fonts: Font[],
+  dryRun: boolean
 ) {
-  if (name === undefined) return undefined;
-  return releaseChoice(
-    catalog,
-    code ? 'code font' : 'text font',
-    name,
-    catalog.fonts.filter((font) => (font.category === 'mono') === code),
-    (message) => new UsageError(`${flag}: ${message}`)
-  );
+  const entry = path.join(project.root, config.css);
+  if (!existsSync(entry)) return false;
+  const current = readFileSync(entry, 'utf8');
+  const next = withFontImports(current, catalog.fonts, fonts);
+  if (next === current) return false;
+  if (!dryRun) writeFileSync(entry, next);
+  return true;
 }
 
 function assertTailwind4(project: Project) {
@@ -146,9 +158,8 @@ export async function init(
   options: InstallOptions & {
     dir?: string;
     icons?: string;
-    font?: string;
-    headingFont?: string;
-    codeFont?: string;
+    /** The other theme flags, by flag name. */
+    theme?: ThemeFlags;
   }
 ): Promise<CommandResult> {
   const project = readProject(cwd);
@@ -201,16 +212,17 @@ export async function init(
         ).name;
   config.iconLibrary =
     icons ?? config.iconLibrary ?? release.iconLibraries[0]?.name;
-  const fonts: ChosenFonts = {
-    font: fontChoice(release, '--font', options.font, false),
-    headingFont: fontChoice(
-      release,
-      '--heading-font',
-      options.headingFont,
-      false
-    ),
-    codeFont: fontChoice(release, '--code-font', options.codeFont, true),
-  };
+  // A theme flag left out keeps that part of the app's theme.
+  const appearance = withThemeFlags(
+    themeAppearance(config.theme),
+    options.theme ?? {},
+    release.fonts
+  );
+  const theme = themeFlags(appearance);
+  const custom = Object.keys(theme).length > 0;
+  if (custom) config.theme = theme;
+  else delete config.theme;
+  const fonts = themeFonts(appearance, release.fonts);
   const catalog = withIconLibrary(release, config.iconLibrary);
   // A new icon library rewrites `lib/icons.ts` in every installed item, from
   // the files the old library gave them.
@@ -218,7 +230,11 @@ export async function init(
     existing !== null && icons !== undefined && icons !== previousLibrary;
 
   const setup = setupVariant(catalog, config);
-  const wiring = planWiring(project, config, addTailwind, setup.steps, fonts);
+  const wiring = planWiring(project, config, addTailwind, setup.steps, {
+    source: nxdsThemeSource(appearance),
+    fonts,
+    custom,
+  });
 
   const tailwind = packagesToInstall(
     project,
@@ -236,7 +252,7 @@ export async function init(
       ? releaseFiles(withIconLibrary(release, previousLibrary), config)
       : null,
     options,
-    Object.values(fonts).filter((font) => font !== undefined)
+    Object.fromEntries(fonts.map((font) => [font.package, font.range]))
   );
 
   if (!options.dryRun) {
@@ -246,6 +262,19 @@ export async function init(
       writeFileSync(target, change.content);
     }
     writeConfig(cwd, config);
+  }
+  const created = wiring.changes
+    .filter((change) => change.created)
+    .map((change) => change.path);
+  const edited = wiring.changes
+    .filter((change) => !change.created)
+    .map((change) => change.path);
+  if (
+    syncFontImports(project, config, release, fonts, options.dryRun) &&
+    !created.includes(config.css) &&
+    !edited.includes(config.css)
+  ) {
+    edited.push(config.css);
   }
 
   const packages = [...tailwind, ...installed.packages];
@@ -264,26 +293,19 @@ export async function init(
       dir: config.dir,
       css: config.css,
       iconLibrary: config.iconLibrary,
-      font: fonts.font?.name,
-      headingFont: fonts.headingFont?.name,
-      codeFont: fonts.codeFont?.name,
+      theme,
       dryRun: options.dryRun,
       ...installed,
       packages,
-      created: wiring.changes
-        .filter((change) => change.created)
-        .map((change) => change.path),
-      edited: wiring.changes
-        .filter((change) => !change.created)
-        .map((change) => change.path),
+      created,
+      edited,
       manual: wiring.manual,
     },
     lines: [
       `nxds ${config.version} in ${config.dir}, for React ${config.react}${iconsLabel ? `, with ${iconsLabel} icons` : ''}`,
       ...installLines(config, { ...installed, packages }, options),
-      ...wiring.changes.map(
-        (change) => `${change.created ? createVerb : editVerb} ${change.path}`
-      ),
+      ...created.map((file) => `${createVerb} ${file}`),
+      ...edited.map((file) => `${editVerb} ${file}`),
       ...manualLines(wiring.manual),
       ...(done && !options.dryRun
         ? [

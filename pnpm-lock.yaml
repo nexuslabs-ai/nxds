@@ -445,6 +445,9 @@ importers:
       '@nxds/claude-design':
         specifier: workspace:*
         version: link:../claude-design
+      '@nxds/core':
+        specifier: workspace:*
+        version: link:../core
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1

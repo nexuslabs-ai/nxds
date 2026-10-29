@@ -1,6 +1,7 @@
 // @vitest-environment node
-import { type Catalog, catalogSchema } from '@nxds/catalog';
+import { type Catalog, catalogSchema, type Font } from '@nxds/catalog';
 import { writeRegistry } from '@nxds/catalog/scripts/registry.mjs';
+import { FONT_OPTIONS } from '@nxds/core/source/lib/font-options.ts';
 import {
   mkdirSync,
   mkdtempSync,
@@ -554,30 +555,17 @@ const LUCIDE_ICONS = readFileSync(
   ),
   'utf8'
 );
-const INTER = {
-  name: 'inter',
-  label: 'Inter',
-  category: 'sans',
-  family: '"Inter Variable", sans-serif',
-  package: '@fontsource-variable/inter',
-  range: '^5.3.0',
-} as const;
-const LORA = {
-  name: 'lora',
-  label: 'Lora',
-  category: 'serif',
-  family: '"Lora Variable", Georgia, serif',
-  package: '@fontsource-variable/lora',
-  range: '^5.3.0',
-} as const;
-const JETBRAINS_MONO = {
-  name: 'jetbrains-mono',
-  label: 'JetBrains Mono',
-  category: 'mono',
-  family: '"JetBrains Mono Variable", ui-monospace, monospace',
-  package: '@fontsource-variable/jetbrains-mono',
-  range: '^5.3.0',
-} as const;
+/** A curated font as a release lists it. */
+function releaseFont(name: string): Font {
+  const font = FONT_OPTIONS.find((option) => option.value === name);
+  if (!font) throw new Error(`@nxds/core has no font ${name}`);
+  const { label, category, family, package: pkg } = font;
+  return { name, label, category, family, package: pkg, range: '^5.3.0' };
+}
+const INTER = releaseFont('inter');
+const LORA = releaseFont('lora');
+const JETBRAINS_MONO = releaseFont('jetbrains-mono');
+const NXDS_THEME = 'app/nxds-theme.ts';
 
 /**
  * The committed release as `version`, with icon libraries and fonts to pick
@@ -722,115 +710,181 @@ describe('icon libraries', () => {
   });
 });
 
-describe('fonts', () => {
-  it('imports, installs and sets the fonts init picks', async () => {
+describe('theme', () => {
+  it('sets the whole theme init is given, in one step', async () => {
     const context = setup([choicesRelease('0.4.7')]);
 
     const { exitCode, body } = await cliJson(
       [
         'init',
+        '--brand-color',
+        '#4f46e5',
+        '--density',
+        'compact',
         '--font',
         'inter',
         '--heading-font',
         'lora',
         '--code-font',
         'jetbrains-mono',
+        '--icons',
+        'lucide',
       ],
       context
     );
 
     expect(exitCode).toBe(EXIT_CODES.ok);
+    const theme = readApp(context.app, NXDS_THEME);
+    expect(theme).toContain("brandColor: '#4f46e5',");
+    expect(theme).toContain("density: 'compact',");
+    expect(theme).toContain(`uiFont: '${INTER.family}',`);
+    expect(theme).toContain(`headingFont: '${LORA.family}',`);
+    expect(theme).toContain(`codeFont: '${JETBRAINS_MONO.family}',`);
+    expect(readApp(context.app, 'app/appearance-state.ts')).toContain(
+      "import { nxdsTheme } from './nxds-theme';"
+    );
+    expect(nxdsJson(context.app)).toMatchObject({
+      iconLibrary: 'lucide',
+      theme: {
+        'brand-color': '#4f46e5',
+        density: 'compact',
+        font: 'inter',
+        'heading-font': 'lora',
+        'code-font': 'jetbrains-mono',
+      },
+    });
     const css = readApp(context.app, 'app/nxds.css');
-    expect(css).toContain("@import '@fontsource-variable/inter';");
-    expect(css).toContain("@import '@fontsource-variable/lora';");
-    expect(css).toContain("@import '@fontsource-variable/jetbrains-mono';");
-    const state = readApp(context.app, 'app/appearance-state.ts');
-    expect(state).toContain(`uiFont: '${INTER.family}',`);
-    expect(state).toContain(`headingFont: '${LORA.family}',`);
-    expect(state).toContain(`codeFont: '${JETBRAINS_MONO.family}',`);
+    expect(css).toContain(`@import '${INTER.package}';`);
+    expect(css).toContain(`@import '${LORA.package}';`);
+    expect(css).toContain(`@import '${JETBRAINS_MONO.package}';`);
     expect(body.data.packages).toEqual(
       expect.arrayContaining([
-        '@fontsource-variable/inter@^5.3.0',
-        '@fontsource-variable/lora@^5.3.0',
-        '@fontsource-variable/jetbrains-mono@^5.3.0',
+        `${INTER.package}@^5.3.0`,
+        `${LORA.package}@^5.3.0`,
+        `${JETBRAINS_MONO.package}@^5.3.0`,
       ])
     );
   });
 
-  it('leaves fonts to the app after init', async () => {
+  it('keeps the parts of the theme a later init leaves out', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+    await cli(['init', '--density', 'compact', '--font', 'inter'], context);
+
+    const run = await cli(['init', '--corners', 'round'], context);
+
+    expect(run.exitCode, run.stdout + run.stderr).toBe(EXIT_CODES.ok);
+    const theme = readApp(context.app, NXDS_THEME);
+    expect(theme).toContain("density: 'compact',");
+    expect(theme).toContain("corners: 'round',");
+    expect(theme).toContain(`uiFont: '${INTER.family}',`);
+    expect(nxdsJson(context.app)['theme']).toEqual({
+      density: 'compact',
+      corners: 'round',
+      font: 'inter',
+    });
+  });
+
+  it('changes nothing when init runs again with the same theme', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+    await cli(['init', '--density', 'compact', '--font', 'inter'], context);
+    const before = readTree(context.app);
+
+    const { exitCode, body } = await cliJson(
+      ['init', '--density', 'compact'],
+      context
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(body.data).toMatchObject({ created: [], edited: [] });
+    expect(readTree(context.app)).toEqual(before);
+  });
+
+  it('moves the CSS to the new font, and doctor names the old package', async () => {
     const context = setup([choicesRelease('0.4.7')]);
     await cli(['init', '--font', 'inter'], context);
+    const pkg = JSON.parse(readApp(context.app, 'package.json'));
+    pkg.dependencies[INTER.package] = INTER.range;
+    writeApp(context.app, 'package.json', JSON.stringify(pkg));
+
+    const run = await cli(['init', '--font', 'lora'], context);
+
+    expect(run.exitCode, run.stdout + run.stderr).toBe(EXIT_CODES.ok);
     const css = readApp(context.app, 'app/nxds.css');
-    writeApp(
-      context.app,
-      'app/nxds.css',
-      css.replace("@import '@fontsource-variable/inter';\n", '')
+    expect(css).toContain(`@import '${LORA.package}';`);
+    expect(css).not.toContain(INTER.package);
+    const { body } = await cliJson(['doctor'], context);
+    expect(body.data.checks).toContainEqual(
+      expect.objectContaining({
+        name: 'fonts',
+        ok: false,
+        message: expect.stringContaining(`npm uninstall ${INTER.package}`),
+      })
     );
+  });
+
+  it('leaves the fonts to the theme when add installs a component', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+    await cli(['init', '--font', 'inter'], context);
 
     const { exitCode, body } = await cliJson(['add', 'spinner'], context);
 
     expect(exitCode).toBe(EXIT_CODES.ok);
     expect(body.data.cssImports).toEqual([]);
     expect(body.data.packages.join(' ')).not.toContain('@fontsource');
-    expect(nxdsJson(context.app)).not.toHaveProperty('font');
   });
 
-  it('asks you to set a font your appearance-state.ts does not name yet', async () => {
+  it('asks an existing appearance-state.ts to spread the theme', async () => {
     const context = setup([choicesRelease('0.4.7')]);
     await cli(['init'], context);
-
-    const run = await cli(['init', '--font', 'inter'], context);
-
-    expect(run.exitCode).toBe(EXIT_CODES.attention);
-    expect(run.stdout).toContain(
-      `app/appearance-state.ts: Set uiFont: '${INTER.family}' in the prefs of defaultAppearance.`
-    );
-    expect(readApp(context.app, 'app/nxds.css')).toContain(
-      "@import '@fontsource-variable/inter';"
-    );
-  });
-
-  it('finds a font a formatter moved onto its own line', async () => {
-    const context = setup([choicesRelease('0.4.7')]);
-    await cli(['init', '--font', 'inter'], context);
-    const state = readApp(context.app, 'app/appearance-state.ts');
     writeApp(
       context.app,
       'app/appearance-state.ts',
-      state.replace('uiFont: ', 'uiFont:\n      ')
+      "import { DEFAULT_NXDS_APPEARANCE } from '@nxds/core';\n\nexport const defaultAppearance = DEFAULT_NXDS_APPEARANCE;\n"
     );
 
-    const run = await cli(['init', '--font', 'inter'], context);
+    const run = await cli(['init', '--density', 'compact'], context);
 
-    expect(run.exitCode, run.stdout).toBe(EXIT_CODES.ok);
-    expect(run.stdout).not.toContain('appearance-state.ts: Set');
+    expect(run.exitCode).toBe(EXIT_CODES.attention);
+    expect(run.stdout).toContain(
+      "app/appearance-state.ts: Spread nxdsTheme from './nxds-theme' into defaultAppearance"
+    );
+    expect(readApp(context.app, NXDS_THEME)).toContain("density: 'compact',");
   });
 
-  it('exits 2 for a font the release does not have', async () => {
+  it('fails the doctor theme check when nxds-theme.ts was edited', async () => {
     const context = setup([choicesRelease('0.4.7')]);
+    await cli(['init', '--density', 'compact'], context);
+    writeApp(
+      context.app,
+      NXDS_THEME,
+      readApp(context.app, NXDS_THEME).replace("'compact'", "'spacious'")
+    );
 
-    const run = await cli(['init', '--font', 'comic-sans'], context);
+    const { exitCode, body } = await cliJson(['doctor'], context);
 
-    expect(run.exitCode).toBe(EXIT_CODES.usage);
-    expect(run.stderr).toMatch(
-      /has no text font "comic-sans"\. Pick one of: inter, lora\./
+    expect(exitCode).toBe(EXIT_CODES.attention);
+    expect(body.data.checks).toContainEqual(
+      expect.objectContaining({
+        name: 'theme',
+        ok: false,
+        message: expect.stringMatching(/differs from the theme in nxds\.json/),
+      })
     );
   });
 
   it.each([
-    ['--font', 'jetbrains-mono', /--font: .* Pick one of: inter, lora\./],
-    ['--code-font', 'inter', /--code-font: .* Pick one of: jetbrains-mono\./],
-  ])(
-    'exits 2 when %s names a font of the wrong kind',
-    async (flag, name, message) => {
-      const context = setup([choicesRelease('0.4.7')]);
+    ['--density', 'roomy', /--density "roomy" isn't one of .*compact/],
+    ['--font', 'jetbrains-mono', /--font "jetbrains-mono" isn't one of system/],
+    ['--code-font', 'inter', /--code-font "inter" isn't one of system/],
+    ['--font', 'geist', /--font: this nxds release has no font "geist"/],
+  ])('exits 2 for %s %s', async (flag, value, message) => {
+    const context = setup([choicesRelease('0.4.7')]);
 
-      const run = await cli(['init', flag, name], context);
+    const run = await cli(['init', flag, value], context);
 
-      expect(run.exitCode).toBe(EXIT_CODES.usage);
-      expect(run.stderr).toMatch(message);
-    }
-  );
+    expect(run.exitCode).toBe(EXIT_CODES.usage);
+    expect(run.stderr).toMatch(message);
+  });
 });
 
 describe('help', () => {

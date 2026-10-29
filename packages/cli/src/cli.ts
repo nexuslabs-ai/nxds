@@ -15,6 +15,7 @@ import { add, init, update } from './commands/install';
 import type { CommandResult } from './commands/result';
 import { CliError, EXIT_CODES, type ExitCode } from './errors';
 import type { InstallOptions } from './install';
+import { THEME_FIELDS } from './theme';
 
 export type Output = {
   out: (text: string) => void;
@@ -22,6 +23,9 @@ export type Output = {
 };
 
 type GlobalOptions = { cwd?: string; registry?: string };
+
+const REMIX_LICENSE =
+  'remix is under the Remix Icon License, not MIT: no logo use, and no competing icon set';
 
 type InstallFlags = { overwrite?: boolean; dryRun?: boolean; install: boolean };
 
@@ -86,38 +90,41 @@ function program(
       `\nExit codes: 0 done, 1 error, 2 usage error, 3 done with something left for you (conflicts, kept files, manual steps, failed checks).\nDocs: https://nxds.dev/getting-started/install`
     );
 
-  withInstallFlags(
-    cli
-      .command('init')
-      .description('set up nxds: token CSS, provider, and the layout wiring')
-      .option(
-        '--dir <path>',
-        'nxds folder (default: components/nxds, or src/components/nxds)'
-      )
-      .option(
-        '--icons <library>',
-        'icon library nxds components draw, such as lucide (default: phosphor). remix is under the Remix Icon License, not MIT: no logo use, and no competing icon set'
-      )
-      .option('--font <font>', 'font for UI text, such as inter')
-      .option('--heading-font <font>', 'font for headings, such as lora')
-      .option('--code-font <font>', 'font for code, such as jetbrains-mono')
-  ).action(async (_options, command: Command) => {
+  const initCommand = cli
+    .command('init')
+    .description(
+      'set up nxds: token CSS, provider, and the layout wiring. Theme flags set nxds-theme.ts; one left out keeps its value'
+    )
+    .option(
+      '--dir <path>',
+      'nxds folder (default: components/nxds, or src/components/nxds)'
+    );
+  const themeOptions = THEME_FIELDS.map((field) => {
+    const help = field.values
+      ? `${field.description}: ${field.values.join(', ')}`
+      : field.description;
+    const option = new Option(
+      `--${field.flag} <value>`,
+      field.flag === 'icons' ? `${help}. ${REMIX_LICENSE}` : help
+    );
+    initCommand.addOption(option);
+    return { flag: field.flag, key: option.attributeName() };
+  });
+  withInstallFlags(initCommand).action(async (_options, command: Command) => {
     const { cwd, registry } = context(command);
-    const { dir, icons, font, headingFont, codeFont } = command.opts<{
-      dir?: string;
-      icons?: string;
-      font?: string;
-      headingFont?: string;
-      codeFont?: string;
-    }>();
+    const options = command.opts<Record<string, string | undefined>>();
+    const theme = Object.fromEntries(
+      themeOptions.flatMap(({ flag, key }) => {
+        const value = options[key];
+        return flag === 'icons' || value === undefined ? [] : [[flag, value]];
+      })
+    );
     done(
       await init(cwd, registry, {
         ...installOptions(command),
-        dir,
-        icons,
-        font,
-        headingFont,
-        codeFont,
+        dir: options['dir'],
+        icons: options['icons'],
+        theme,
       })
     );
   });
