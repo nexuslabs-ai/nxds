@@ -4,7 +4,7 @@
 // form a canvas writes, so it doubles as the install test.
 import type { Attribute } from './attribute.ts';
 import { ICON_NAMES } from './icons.ts';
-import type { FlatComponent } from './props.ts';
+import { type FlatComponent, isRequired } from './props.ts';
 import {
   convertValue,
   type Props,
@@ -180,12 +180,7 @@ export function samplerProblems(sampler: string, parts: FlatComponent[]) {
       if (attribute === PART || /^(?:aria|data)-/.test(attribute)) continue;
       const prop = part.props.find((entry) => entry.name === camel(attribute));
       const form = prop?.attribute
-        ? formOf(
-            prop.attribute,
-            value ?? '',
-            props,
-            !prop.optional && prop.defaultValue === null
-          )
+        ? formOf(prop.attribute, value ?? '', props, isRequired(prop))
         : null;
       if (!form) {
         problems.push(

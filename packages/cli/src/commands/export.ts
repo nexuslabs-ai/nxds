@@ -234,10 +234,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 // The nxds-cli to run for a release newer than this one reads. A dist-tag
-// such as `snapshot-<name>` names both packages' builds; a version doesn't.
+// such as `snapshot-<name>`, or a snapshot's prerelease version, names both
+// packages' builds; a stable version doesn't.
 function upgradeCommand(release: string | undefined) {
-  const tagged = release !== undefined && !/^\d+\.\d+\.\d+/.test(release);
-  return `npx nxds-cli@${tagged ? release : 'latest'}`;
+  const stable = release === undefined || /^\d+\.\d+\.\d+$/.test(release);
+  return `npx nxds-cli@${stable ? 'latest' : release}`;
 }
 
 // `release` is the --release the export was given, if any.
@@ -343,14 +344,16 @@ function recordedRootFiles(out: string): string[] {
   return root.map((entry) => entry.path).filter(isRootName);
 }
 
-// Removes the root files an earlier export wrote that this release doesn't
-// list, then writes this release's and its files.json, for the next export.
+// Removes the `recorded` root files an earlier export wrote that this release
+// doesn't list, then writes this release's and its files.json, for the next
+// export.
 function writeRootFiles(
   out: string,
+  recorded: string[],
   files: Map<string, Buffer>,
   manifest: Buffer
 ) {
-  for (const name of recordedRootFiles(out)) {
+  for (const name of recorded) {
     if (!files.has(name)) rmSync(path.join(out, name), { force: true });
   }
   for (const [name, bytes] of files) {
@@ -458,17 +461,19 @@ export async function exportClaudeDesign(
     const removed = options.existing
       ? stalePaths(readPaths(path.resolve(cwd, options.existing)), exported)
       : [];
+    const recorded = recordedRootFiles(out);
     writeProject(out, files);
     writeRootFiles(
       out,
+      recorded,
       rootFiles,
       readFileSync(path.join(pkg.root, 'files.json'))
     );
+    const removedFile = path.join(out, 'removed.json');
     if (options.existing) {
-      writeFileSync(
-        path.join(out, 'removed.json'),
-        `${JSON.stringify(removed, null, 2)}\n`
-      );
+      writeFileSync(removedFile, `${JSON.stringify(removed, null, 2)}\n`);
+    } else {
+      rmSync(removedFile, { force: true });
     }
 
     const relative = path.relative(cwd, out) || '.';

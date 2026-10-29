@@ -208,7 +208,13 @@ async function npmRegistry(
     integrity,
     tarballUrl,
     tarballQuery = '',
-  }: { integrity?: string; tarballUrl?: string; tarballQuery?: string } = {}
+    distTag = 'latest',
+  }: {
+    integrity?: string;
+    tarballUrl?: string;
+    tarballQuery?: string;
+    distTag?: string;
+  } = {}
 ) {
   const staging = path.join(root, 'staging');
   cpSync(source, path.join(staging, 'package'), { recursive: true });
@@ -223,7 +229,7 @@ async function npmRegistry(
       response.setHeader('content-type', 'application/json');
       response.end(
         JSON.stringify({
-          'dist-tags': { latest: VERSION },
+          'dist-tags': { latest: VERSION, [distTag]: VERSION },
           versions: {
             [VERSION]: {
               dist: {
@@ -374,6 +380,31 @@ describe('nxds-cli export claude-design', () => {
     ]);
   });
 
+  it("leaves project/ alone when an earlier export's files.json is unreadable", async () => {
+    const { source, cwd } = setup();
+    await cli(['export', 'claude-design', '--source', source], cwd);
+    writeFileSync(path.join(cwd, 'nxds-design-system', 'files.json'), '{');
+    const readme = 'Set the page on `nx-color-container`.\n';
+    writeFileSync(path.join(source, 'project', 'README.md'), readme);
+    writeFileSync(
+      path.join(source, 'files.json'),
+      JSON.stringify({
+        format: 2,
+        project: entries({ ...PROJECT, 'README.md': readme }),
+        root: entries(ROOT),
+      })
+    );
+
+    const { exitCode } = await cliJson(
+      ['export', 'claude-design', '--source', source, '--overwrite'],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(readOut(cwd, 'files.json')).toBe('{');
+    expect(readOut(cwd, 'project/README.md')).toBe(PROJECT['README.md']);
+  });
+
   it('names the upgrade when files.json is from another release format', async () => {
     const older = setup({ 'files.json': JSON.stringify(entries(PROJECT)) });
     const newer = setup({
@@ -396,6 +427,39 @@ describe('nxds-cli export claude-design', () => {
     expect(fromOlder.body.error).toMatch(/Export a newer --release\.$/);
     expect(fromNewer.exitCode).toBe(EXIT_CODES.error);
     expect(fromNewer.body.error).toMatch(/Run npx nxds-cli@latest\.$/);
+  });
+
+  it('names the snapshot nxds-cli when a snapshot release has a newer files.json', async () => {
+    const { root, source, cwd } = setup({
+      'files.json': JSON.stringify({
+        ...JSON.parse(filesJson(ROOT)),
+        format: 3,
+      }),
+    });
+    const registry = await npmRegistry(root, source, {
+      distTag: 'snapshot-claude-design-setup',
+    });
+    const exportRelease = (release: string) =>
+      cliJson(
+        [
+          'export',
+          'claude-design',
+          '--release',
+          release,
+          '--npm-registry',
+          registry,
+        ],
+        cwd
+      );
+
+    const byTag = await exportRelease('snapshot-claude-design-setup');
+    const byVersion = await exportRelease(VERSION);
+
+    expect(byTag.exitCode).toBe(EXIT_CODES.error);
+    expect(byTag.body.error).toMatch(
+      /Run npx nxds-cli@snapshot-claude-design-setup\.$/
+    );
+    expect(byVersion.body.error).toMatch(/Run npx nxds-cli@latest\.$/);
   });
 
   it('reports a files.json whose format is malformed as a shape error', async () => {
@@ -676,6 +740,31 @@ describe('nxds-cli export claude-design', () => {
     expect(exitCode).toBe(EXIT_CODES.ok);
     expect(body.data.removed).toEqual(['project/components/Legacy/README.md']);
     expect(JSON.parse(readOut(cwd, 'removed.json'))).toEqual(body.data.removed);
+  });
+
+  it('removes an earlier removed.json when the export is run without --existing', async () => {
+    const { source, cwd } = setup();
+    writeFileSync(path.join(cwd, 'existing.json'), JSON.stringify([]));
+    await cli(
+      [
+        'export',
+        'claude-design',
+        '--source',
+        source,
+        '--existing',
+        'existing.json',
+      ],
+      cwd
+    );
+
+    await cli(
+      ['export', 'claude-design', '--source', source, '--overwrite'],
+      cwd
+    );
+
+    expect(
+      existsSync(path.join(cwd, 'nxds-design-system', 'removed.json'))
+    ).toBe(false);
   });
 
   it('leaves the existing folder alone when a file does not match files.json', async () => {

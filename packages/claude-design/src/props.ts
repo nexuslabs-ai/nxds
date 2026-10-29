@@ -135,6 +135,10 @@ export interface FlatProp {
   control: Control | null;
 }
 
+/** A prop the part can't render without: required, with no default. */
+export const isRequired = (prop: FlatProp) =>
+  !prop.optional && prop.defaultValue === null;
+
 export interface FlatComponent {
   name: string;
   slug: string;

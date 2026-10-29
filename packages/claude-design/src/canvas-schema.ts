@@ -7,7 +7,7 @@ import type {
   SchemaAttribute,
   SchemaScalar,
 } from './attribute.ts';
-import type { FlatComponent } from './props.ts';
+import { type FlatComponent, isRequired } from './props.ts';
 import type { CanvasSchema } from './runtime/attributes.ts';
 import { kebab } from './runtime/canvas-names.ts';
 
@@ -62,11 +62,10 @@ export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
     const attributes: Record<string, SchemaAttribute> = {};
     const required: string[] = [];
     for (const prop of part.props) {
-      const isRequired = !prop.optional && prop.defaultValue === null;
-      const attribute = converted(prop.attribute, isRequired);
+      const attribute = converted(prop.attribute, isRequired(prop));
       if (!attribute) continue;
       attributes[prop.name] = attribute;
-      if (isRequired) required.push(prop.name);
+      if (isRequired(prop)) required.push(prop.name);
     }
     if (Object.keys(attributes).length > 0) {
       schema.attributes[part.name] = attributes;
