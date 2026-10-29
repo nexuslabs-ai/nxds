@@ -6,8 +6,8 @@ import type { Mode, TokenMap } from '@nxds/core';
 import { Button } from '@nxds/react';
 import { useNxdsAppearance } from '@nxds/react/appearance';
 
+import { useDocsTheme } from '../../../_lib/docs-theme';
 import { AppearanceControls } from '../../appearance-controls';
-import { useAppearanceHistory } from '../../appearance-state';
 import { PageHeading } from '../../page-heading';
 import { PlaygroundViewNav } from '../../playground-view-nav';
 import { WorkspaceLayout } from '../../workspace-layout';
@@ -40,7 +40,7 @@ function overrideCss(overrides: Overrides): string {
 
 export function LabWorkspace({ primitives, scales }: LabData) {
   const { state, iconLibrary, change, changeIconLibrary, startStep } =
-    useAppearanceHistory();
+    useDocsTheme();
   const { resolvedMode } = useNxdsAppearance();
   const [overrides, setOverrides] = useState<Overrides>(NO_OVERRIDES);
   const live = useLiveTheme(overrides);

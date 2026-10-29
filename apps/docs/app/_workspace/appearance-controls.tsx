@@ -8,11 +8,11 @@ import {
   DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
   ELEVATION_OPTIONS,
-  FONT_OPTIONS,
+  FONT_SIZE_PX_MAX,
+  FONT_SIZE_PX_MIN,
   ICON_LIBRARY_OPTIONS,
   type NxdsAppearancePrefs,
   type NxdsAppearanceState,
-  type NxdsFontCategory,
   type NxdsIconLibrary,
   type NxdsResolvedAppearanceMode,
   STROKE_OPTIONS,
@@ -27,12 +27,17 @@ import {
   Switch,
 } from '@nxds/react';
 
-import { THEME_MODE_OPTIONS } from '../_lib/appearance-controls';
+import {
+  CODE_FONTS,
+  type FontChoice,
+  fontPick,
+  HEADING_FONTS,
+  MODE_OPTIONS,
+  UI_FONTS,
+} from '../_lib/appearance-controls';
 
 const CONTRAST_MIN = 0;
 const CONTRAST_MAX = 100;
-const FONT_SIZE_MIN = 8;
-const FONT_SIZE_MAX = 32;
 
 const LABEL_CLASS = 'nx:typography-label-default';
 const FIELD_CLASS = 'nx:flex nx:flex-col nx:gap-2';
@@ -85,29 +90,7 @@ function SelectField<T extends string>({
   );
 }
 
-/** A font a picker offers: `family` is the stack the prefs store, `null` for the UI font. */
-type FontChoice = { value: string; label: string; family: string | null };
-
-function catalogueFonts(categories: readonly NxdsFontCategory[]): FontChoice[] {
-  return FONT_OPTIONS.filter((font) => categories.includes(font.category)).map(
-    ({ value, label, family }) => ({ value, label, family })
-  );
-}
-
 const { prefs: DEFAULT_PREFS } = DEFAULT_NXDS_APPEARANCE;
-
-const UI_FONTS: FontChoice[] = [
-  { value: 'system', label: 'System', family: DEFAULT_PREFS.uiFont },
-  ...catalogueFonts(['sans', 'serif']),
-];
-const HEADING_FONTS: FontChoice[] = [
-  { value: 'ui', label: 'Same as UI font', family: null },
-  ...catalogueFonts(['sans', 'serif']),
-];
-const CODE_FONTS: FontChoice[] = [
-  { value: 'system', label: 'System', family: DEFAULT_PREFS.codeFont },
-  ...catalogueFonts(['mono']),
-];
 
 /** Picks a font by name. A stack set some other way shows as Custom. */
 function FontField({
@@ -121,9 +104,7 @@ function FontField({
   choices: FontChoice[];
   onChange: (family: string | null) => void;
 }) {
-  const custom = { value: 'custom', label: 'Custom', family };
-  const chosen = choices.find((choice) => choice.family === family) ?? custom;
-  const options = chosen === custom ? [...choices, custom] : choices;
+  const { chosen, options } = fontPick(family, choices);
 
   function change(value: string) {
     const choice = options.find((option) => option.value === value);
@@ -215,7 +196,7 @@ function FontSizeField({
     setDraft(text);
     const next = Number(text);
     if (text === '' || !Number.isInteger(next) || next === value) return;
-    if (next < FONT_SIZE_MIN || next > FONT_SIZE_MAX) return;
+    if (next < FONT_SIZE_PX_MIN || next > FONT_SIZE_PX_MAX) return;
     onChange(next);
   }
 
@@ -226,8 +207,8 @@ function FontSizeField({
         id={id}
         type="number"
         inputMode="numeric"
-        min={FONT_SIZE_MIN}
-        max={FONT_SIZE_MAX}
+        min={FONT_SIZE_PX_MIN}
+        max={FONT_SIZE_PX_MAX}
         value={draft ?? value}
         onChange={handleChange}
         onBlur={() => setDraft(null)}
@@ -324,7 +305,7 @@ export function AppearanceControls({
         <SelectField
           label="Mode"
           value={state.mode}
-          options={THEME_MODE_OPTIONS.mode}
+          options={MODE_OPTIONS}
           onChange={(mode) => onChange({ mode })}
         />
         <SelectField
