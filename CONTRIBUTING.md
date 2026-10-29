@@ -193,6 +193,17 @@ The release workflow also needs a repo secret, **`RELEASE_TOKEN`**. It is a fine
 
 The workflow grants `id-token: write` for the OIDC exchange, upgrades npm to a trusted-publishing-capable version (≥ 11.5.1) on the `.nvmrc` Node, and uses `RELEASE_TOKEN` for the release PR and tags. There is **no npm token** — publish auth is OIDC. Provenance attestations are emitted automatically.
 
+### Snapshot releases
+
+Push a branch to `snapshot/<name>` to publish its pending changesets before they release. The `Release` workflow versions them as `0.0.0-snapshot-<timestamp>` and publishes them under the `next` dist-tag. `latest` doesn't move, and nothing is pushed back.
+
+```bash
+git push origin HEAD:snapshot/claude-design-setup
+npx nxds-cli@next export claude-design --release next
+```
+
+Delete the branch once you're done with it.
+
 ### Day-to-day: adding a changeset
 
 Any PR that changes `@nxds/core`, `@nxds/eslint-plugin`, `nxds-cli` or what `@nxds/react` installs includes a changeset describing the bump. `@nxds/claude-design` is fixed to `@nxds/react`: they always release together, at the same version. An `@nxds/react` bump is what gives apps a new release to `nxds update` to:

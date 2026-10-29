@@ -33,10 +33,17 @@ name: Release
 #     the required `CI Status` check would never run on the version PR and it
 #     couldn't merge without an admin override.
 # The default GITHUB_TOKEN then only needs id-token: write for the OIDC exchange.
+#
+# Snapshots: a push to a `snapshot/**` branch publishes that branch's pending
+# changesets as `0.0.0-snapshot-<timestamp>` versions under the `next`
+# dist-tag, so a change can be tried from npm before it releases, such as
+# `npx nxds-cli@next export claude-design --release next`. It never moves
+# `latest`, pushes nothing back and opens no PR. It runs from this file because
+# npm's trusted publishers name it.
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'snapshot/**']
 
 concurrency:
   group: release
@@ -49,6 +56,7 @@ permissions:
 jobs:
   release:
     name: Release
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -91,3 +99,37 @@ jobs:
           # "Release auth" note at the top of this file. Using GITHUB_TOKEN here
           # would leave the version PR unable to clear branch protection.
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
+  snapshot:
+    name: Snapshot
+    if: startsWith(github.ref, 'refs/heads/snapshot/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Upgrade npm for trusted publishing
+        run: npm install -g npm@11.5.1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Version the pending changesets as a snapshot
+        run: pnpm changeset version --snapshot snapshot
+
+      - name: Build
+        run: pnpm turbo build
+
+      - name: Publish under the next dist-tag
+        run: pnpm changeset publish --tag next --no-git-tag
