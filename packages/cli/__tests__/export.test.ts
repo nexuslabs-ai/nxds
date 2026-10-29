@@ -344,6 +344,7 @@ describe('nxds-cli export claude-design', () => {
     expect(exitCode).toBe(EXIT_CODES.ok);
     expect(body.data.root).toEqual([]);
     expect(readdirSync(path.join(cwd, 'nxds-design-system'))).toEqual([
+      'files.json',
       'project',
     ]);
     expect(lastLine(stdout)).toBe(
@@ -351,9 +352,13 @@ describe('nxds-cli export claude-design', () => {
     );
   });
 
-  it("removes an earlier export's files beside project/ that the release doesn't list", async () => {
+  it("removes an earlier export's files beside project/ that the release doesn't list, and keeps yours", async () => {
     const { source, cwd } = setup();
     await cli(['export', 'claude-design', '--source', source], cwd);
+    writeFileSync(
+      path.join(cwd, 'nxds-design-system', 'notes.md'),
+      '# Canvas notes\n'
+    );
     writeFileSync(path.join(source, 'files.json'), filesJson({}));
 
     const { exitCode } = await cliJson(
@@ -363,6 +368,8 @@ describe('nxds-cli export claude-design', () => {
 
     expect(exitCode).toBe(EXIT_CODES.ok);
     expect(readdirSync(path.join(cwd, 'nxds-design-system'))).toEqual([
+      'files.json',
+      'notes.md',
       'project',
     ]);
   });
@@ -389,6 +396,23 @@ describe('nxds-cli export claude-design', () => {
     expect(fromOlder.body.error).toMatch(/Export a newer --release\.$/);
     expect(fromNewer.exitCode).toBe(EXIT_CODES.error);
     expect(fromNewer.body.error).toMatch(/Run npx nxds-cli@latest\.$/);
+  });
+
+  it('reports a files.json whose format is malformed as a shape error', async () => {
+    const { source, cwd } = setup({
+      'files.json': JSON.stringify({
+        ...JSON.parse(filesJson(ROOT)),
+        format: '2',
+      }),
+    });
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toMatch(/must be a JSON object with format 2/);
   });
 
   it('copies each file files.json lists beside project/', async () => {

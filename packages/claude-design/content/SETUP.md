@@ -9,6 +9,7 @@ The export wrote `nxds-design-system/`:
 | `project/`     | The design system, {{files}} files             | Yes, every file, unchanged |
 | `SETUP.md`     | This guide                                     | No                         |
 | `coverage.md`  | The props a canvas can't set, and why          | No                         |
+| `files.json`   | The files this export wrote, for the next one  | No                         |
 | `removed.json` | Files an update drops. Only with `--existing`. | No                         |
 
 If the person gave you a link to an nxds system they already have, go to [Update to a new release](#update-to-a-new-release).

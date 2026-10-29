@@ -20,6 +20,7 @@ import path from 'node:path';
 
 import { buildBundle } from '../src/bundle.ts';
 import { canvasPartFiles } from '../src/canvas/pages.ts';
+import { FILES_FORMAT } from '../src/files.ts';
 import { CANVAS_PARTS, EXCLUDED_SLUGS, GROUPS } from '../src/groups.ts';
 import { withPresetTable } from '../src/presets.ts';
 import {
@@ -124,8 +125,6 @@ function publishedManifest() {
 
 /** The files the export writes beside project/. */
 const ROOT_FILES = ['coverage.md', 'SETUP.md'];
-/** files.json's layout. nxds-cli reads only the format it knows, so bump it when the layout changes. */
-const FILES_FORMAT = 2;
 
 function fileList(dir: string, files: readonly string[]) {
   return files.map((file) => ({

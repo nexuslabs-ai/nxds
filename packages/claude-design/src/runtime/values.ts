@@ -27,12 +27,12 @@ const MAX_JSON = 256 * 1024;
 
 const DATE_ITEM: DateAttribute = { kind: 'date', selection: null };
 
-export function toNumber(value: string): number | null {
+function toNumber(value: string): number | null {
   const trimmed = value.trim();
   return NUMBER.test(trimmed) ? Number(trimmed) : null;
 }
 
-export function toBoolean(value: string): boolean | null {
+function toBoolean(value: string): boolean | null {
   if (value === '' || value === 'true') return true;
   if (value === 'false') return false;
   return null;
@@ -40,7 +40,7 @@ export function toBoolean(value: string): boolean | null {
 
 // Local midnight, so the day doesn't move with the time zone. A day that
 // doesn't exist, such as 30 February, doesn't roll over into March.
-export function toDate(value: string): Date | null {
+function toDate(value: string): Date | null {
   const match = DATE.exec(value.trim());
   if (!match) return null;
   const [, year, month, day = '01'] = match;

@@ -92,7 +92,7 @@ function scalarForm(
   if (typeof value === 'boolean') {
     return raw === '' ? 'a bare boolean' : 'a boolean as "true" or "false"';
   }
-  if (literals.includes(value as string | number)) {
+  if (literals.some((literal) => literal === value)) {
     return 'one of a list of options';
   }
   return typeof value === 'number' ? 'a number' : 'text';
@@ -120,12 +120,17 @@ function valueForm(attribute: ValueAttribute, raw: string, value: unknown) {
 }
 
 /** The form an attribute's value takes for its prop: one of SAMPLER_FORMS, free `text`, or null when the bundle can't read it. */
-function formOf(attribute: Attribute, raw: string, props: Props): Form {
+function formOf(
+  attribute: Attribute,
+  raw: string,
+  props: Props,
+  required: boolean
+): Form {
   if (attribute.kind === 'content' || attribute.kind === 'none') return null;
   if (attribute.kind === 'icon') {
     return ICONS.has(raw) ? 'an icon name' : null;
   }
-  const converted = convertValue(raw, attribute, props);
+  const converted = convertValue(raw, attribute, props, required);
   return 'problem' in converted
     ? null
     : valueForm(attribute, raw, converted.value);
@@ -175,7 +180,12 @@ export function samplerProblems(sampler: string, parts: FlatComponent[]) {
       if (attribute === PART || /^(?:aria|data)-/.test(attribute)) continue;
       const prop = part.props.find((entry) => entry.name === camel(attribute));
       const form = prop?.attribute
-        ? formOf(prop.attribute, value ?? '', props)
+        ? formOf(
+            prop.attribute,
+            value ?? '',
+            props,
+            !prop.optional && prop.defaultValue === null
+          )
         : null;
       if (!form) {
         problems.push(

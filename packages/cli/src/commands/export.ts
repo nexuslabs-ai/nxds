@@ -1,3 +1,4 @@
+import { FILES_FORMAT } from '@nxds/claude-design/files';
 import {
   isPageGenerated,
   mergeSystemIndex,
@@ -47,9 +48,6 @@ type Entry = { path: string; sha256: string };
 
 /** `files.json`: each file the package build wrote under `project/`, and each one it wrote beside it, such as SETUP.md. */
 type Manifest = { project: Entry[]; root: Entry[] };
-
-/** The files.json layout this CLI reads. */
-const FILES_FORMAT = 2;
 
 type Packument = {
   'dist-tags'?: Record<string, string>;
@@ -232,33 +230,51 @@ const isEntries = (value: unknown): value is Entry[] =>
       typeof entry?.path === 'string' && typeof entry.sha256 === 'string'
   );
 
-function readManifest(root: string): Manifest {
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+// The nxds-cli to run for a release newer than this one reads. A dist-tag
+// such as `snapshot-<name>` names both packages' builds; a version doesn't.
+function upgradeCommand(release: string | undefined) {
+  const tagged = release !== undefined && !/^\d+\.\d+\.\d+/.test(release);
+  return `npx nxds-cli@${tagged ? release : 'latest'}`;
+}
+
+// `release` is the --release the export was given, if any.
+function readManifest(root: string, release: string | undefined): Manifest {
   const file = path.join(root, 'files.json');
   if (!existsSync(file)) {
     throw new CliError(
       `${root} has no files.json. Export from an @nxds/claude-design release or a built dist folder.`
     );
   }
-  const value = readJson(file) as
-    | (Partial<Manifest> & { format?: unknown })
-    | null;
-  const format = Array.isArray(value) ? 1 : value?.format;
-  if (typeof format === 'number' && format > FILES_FORMAT) {
-    throw new CliError(
-      `${file} is from a release newer than this nxds-cli reads. Run npx nxds-cli@latest.`
-    );
-  }
-  if (format !== FILES_FORMAT) {
+  const value = readJson(file);
+  const format = isRecord(value) ? value['format'] : undefined;
+  const older =
+    Array.isArray(value) ||
+    (isRecord(value) && format === undefined) ||
+    (typeof format === 'number' && format < FILES_FORMAT);
+  if (older) {
     throw new CliError(
       `${file} is from a release older than this nxds-cli reads. Export a newer --release.`
     );
   }
-  if (!isEntries(value?.project) || !isEntries(value.root)) {
+  if (typeof format === 'number' && format > FILES_FORMAT) {
     throw new CliError(
-      `${file} must be a JSON object whose project and root are arrays of { path, sha256 } entries.`
+      `${file} is from a release newer than this nxds-cli reads. Run ${upgradeCommand(release)}.`
     );
   }
-  return { project: value.project, root: value.root };
+  if (
+    !isRecord(value) ||
+    format !== FILES_FORMAT ||
+    !isEntries(value['project']) ||
+    !isEntries(value['root'])
+  ) {
+    throw new CliError(
+      `${file} must be a JSON object with format ${FILES_FORMAT}, and project and root arrays of { path, sha256 } entries.`
+    );
+  }
+  return { project: value['project'], root: value['root'] };
 }
 
 // `shown` names the file in an error, as the release lays it out.
@@ -293,15 +309,17 @@ function readProject(root: string, entries: Entry[]) {
   return files;
 }
 
-// The files a release ships beside project/, such as SETUP.md. Each is a
-// plain file name, and none can stand in for project/ or removed.json.
+// A root file is a plain file name that can't stand in for project/ or a
+// file the export writes itself.
+const isRootName = (name: string) =>
+  path.basename(name) === name &&
+  !['.', '..', 'project', 'removed.json', 'files.json'].includes(name);
+
+// The files a release ships beside project/, such as SETUP.md.
 function readRootFiles(root: string, entries: Entry[]) {
   const files = new Map<string, Buffer>();
   for (const entry of entries) {
-    if (
-      path.basename(entry.path) !== entry.path ||
-      ['.', '..', 'project', 'removed.json'].includes(entry.path)
-    ) {
+    if (!isRootName(entry.path)) {
       throw new CliError(
         `files.json lists ${entry.path} beside project/, which isn't a file name the export can write.`
       );
@@ -314,17 +332,31 @@ function readRootFiles(root: string, entries: Entry[]) {
   return files;
 }
 
-// Every file beside project/ is published with the system, so a file an
-// earlier export wrote and this release doesn't list goes.
-function writeRootFiles(out: string, files: Map<string, Buffer>) {
-  for (const entry of readdirSync(out, { withFileTypes: true })) {
-    if (entry.isFile() && !files.has(entry.name)) {
-      rmSync(path.join(out, entry.name));
-    }
+// The root files an earlier export recorded in `out`'s files.json. Anything
+// else in `out` isn't the export's, so it's never removed.
+function recordedRootFiles(out: string): string[] {
+  const file = path.join(out, 'files.json');
+  if (!existsSync(file)) return [];
+  const value = readJson(file);
+  const root = isRecord(value) ? value['root'] : undefined;
+  if (!isEntries(root)) return [];
+  return root.map((entry) => entry.path).filter(isRootName);
+}
+
+// Removes the root files an earlier export wrote that this release doesn't
+// list, then writes this release's and its files.json, for the next export.
+function writeRootFiles(
+  out: string,
+  files: Map<string, Buffer>,
+  manifest: Buffer
+) {
+  for (const name of recordedRootFiles(out)) {
+    if (!files.has(name)) rmSync(path.join(out, name), { force: true });
   }
   for (const [name, bytes] of files) {
     writeFileSync(path.join(out, name), bytes);
   }
+  writeFileSync(path.join(out, 'files.json'), manifest);
 }
 
 function mergeIndex(files: Map<string, Buffer>, currentFile: string) {
@@ -416,7 +448,7 @@ export async function exportClaudeDesign(
       );
 
   try {
-    const manifest = readManifest(pkg.root);
+    const manifest = readManifest(pkg.root, options.release);
     const files = readProject(pkg.root, manifest.project);
     const rootFiles = readRootFiles(pkg.root, manifest.root);
     if (options.index) mergeIndex(files, path.resolve(cwd, options.index));
@@ -427,7 +459,11 @@ export async function exportClaudeDesign(
       ? stalePaths(readPaths(path.resolve(cwd, options.existing)), exported)
       : [];
     writeProject(out, files);
-    writeRootFiles(out, rootFiles);
+    writeRootFiles(
+      out,
+      rootFiles,
+      readFileSync(path.join(pkg.root, 'files.json'))
+    );
     if (options.existing) {
       writeFileSync(
         path.join(out, 'removed.json'),
