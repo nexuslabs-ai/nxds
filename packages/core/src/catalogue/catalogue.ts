@@ -101,6 +101,7 @@ function leafControl({
   if (family === 'typography' && file.startsWith('primitives/')) {
     return typographyControl(leaf.path);
   }
+  if (family === 'icon') return { kind: 'pref', field: 'uiFontSize' };
   if (preset === null) return null;
   return PRESET_CONTROLS[family] ?? null;
 }

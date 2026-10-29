@@ -1,3 +1,4 @@
+import iconTokens from '../../tokens/primitives/icon.json';
 import typographyTokens from '../../tokens/primitives/typography/typography-default.json';
 
 import { normalizeContrast } from './contrast';
@@ -143,8 +144,10 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
   },
 };
 
-const FONT_PX_MIN = 8;
-const FONT_PX_MAX = 32;
+/** The UI font sizes the appearance accepts, in px. */
+export const UI_FONT_SIZE_RANGE = { min: 12, max: 16 } as const;
+/** The code font sizes the appearance accepts, in px. */
+export const CODE_FONT_SIZE_RANGE = { min: 8, max: 32 } as const;
 
 const APPEARANCE_MODES = new Set<NxdsAppearanceMode>([
   'light',
@@ -190,27 +193,35 @@ const enumOr = <T extends string>(
 ): T =>
   typeof value === 'string' && values.has(value as T) ? (value as T) : fallback;
 
-const clampFontSize = (value: unknown, fallback: number): number =>
+const clampFontSize = (
+  value: unknown,
+  fallback: number,
+  range: { min: number; max: number }
+): number =>
   typeof value === 'number' && Number.isFinite(value) && value > 0
-    ? Math.min(FONT_PX_MAX, Math.max(FONT_PX_MIN, value))
+    ? Math.min(range.max, Math.max(range.min, value))
     : fallback;
 
-function formatPx(value: number): string {
-  return `${Number(value.toFixed(4))}px`;
-}
-
-function typographyScaleVariables(uiPx: number): string {
+function fontScaleVariables(uiPx: number): string {
   const scale = uiPx / DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize;
   const sizeVars = Object.entries(typographyTokens.size).map(
     ([name, token]) =>
-      `  --nx-typography-size-${name}: ${formatPx(token.$value.value * scale)};`
+      `  --nx-typography-size-${name}: ${Math.round(token.$value.value * scale)}px;`
   );
   const lineHeightVars = Object.entries(typographyTokens['line-height']).map(
     ([name, token]) =>
-      `  --nx-typography-line-height-${name}: ${formatPx(token.$value.value * scale)};`
+      `  --nx-typography-line-height-${name}: ${Math.round(token.$value.value * scale)}px;`
+  );
+  // The default glyph rounds to an even size, so it centers on whole pixels in
+  // an even-height control. The other glyphs keep their distance from it.
+  const glyphDefault = iconTokens.glyph.default.$value.value;
+  const scaledDefault = 2 * Math.round((glyphDefault * scale) / 2);
+  const glyphVars = Object.entries(iconTokens.glyph).map(
+    ([name, token]) =>
+      `  --nx-icon-glyph-${name}: ${scaledDefault - (glyphDefault - token.$value.value)}px;`
   );
 
-  return [...sizeVars, ...lineHeightVars].join('\n');
+  return [...sizeVars, ...lineHeightVars, ...glyphVars].join('\n');
 }
 
 // Retired public-mode codename -> friendly, applied to persisted state on read
@@ -259,8 +270,12 @@ export function sanitizeNxdsAppearancePrefs(raw: unknown): NxdsAppearancePrefs {
   return {
     uiFont: fontFamilyOr(o.uiFont, d.uiFont),
     codeFont: fontFamilyOr(o.codeFont, d.codeFont),
-    uiFontSize: clampFontSize(o.uiFontSize, d.uiFontSize),
-    codeFontSize: clampFontSize(o.codeFontSize, d.codeFontSize),
+    uiFontSize: clampFontSize(o.uiFontSize, d.uiFontSize, UI_FONT_SIZE_RANGE),
+    codeFontSize: clampFontSize(
+      o.codeFontSize,
+      d.codeFontSize,
+      CODE_FONT_SIZE_RANGE
+    ),
     reduceMotion: boolOr(o.reduceMotion, d.reduceMotion),
     pointerCursors: boolOr(o.pointerCursors, d.pointerCursors),
     fontSmoothing: boolOr(o.fontSmoothing, d.fontSmoothing),
@@ -303,19 +318,21 @@ export function createNxdsThemeContract(
 export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
   const uiPx = clampFontSize(
     prefs.uiFontSize,
-    DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize
+    DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize,
+    UI_FONT_SIZE_RANGE
   );
   const codePx = clampFontSize(
     prefs.codeFontSize,
-    DEFAULT_NXDS_APPEARANCE.prefs.codeFontSize
+    DEFAULT_NXDS_APPEARANCE.prefs.codeFontSize,
+    CODE_FONT_SIZE_RANGE
   );
-  // Font and type size reach only nxds. The toggles below apply to the whole
-  // page, host included, when the user turns them on.
+  // Fonts, type size and icon size reach only nxds. The toggles below apply to
+  // the whole page, host included, when the user turns them on.
   const blocks: string[] = [
     inRuntimeLayer(`:root {
   --nx-typography-family-font-sans: ${prefs.uiFont};
   --nx-typography-family-font-mono: ${prefs.codeFont};
-${typographyScaleVariables(uiPx)}
+${fontScaleVariables(uiPx)}
 }`),
     `.nx\\:font-mono, .nx\\:typography-code-block, .nx\\:typography-code-inline { font-size: ${codePx}px; }`,
   ];

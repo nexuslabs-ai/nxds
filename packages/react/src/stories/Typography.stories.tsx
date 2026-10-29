@@ -1,4 +1,12 @@
+import { appearancePrefsToCss, DEFAULT_NXDS_APPEARANCE } from '@nxds/core';
 import type { Meta, StoryObj } from '@storybook/react';
+import { IconCheck, IconCommand, IconDownload } from '@tabler/icons-react';
+import { expect, within } from 'storybook/test';
+
+import { Badge } from '../components/badge/badge';
+import { Button } from '../components/button/button';
+import { Checkbox } from '../components/checkbox/checkbox';
+import { Kbd } from '../components/kbd/kbd';
 
 import {
   tokenValue,
@@ -344,4 +352,83 @@ export const CompositeUtilities: Story = {
       ))}
     </div>
   ),
+};
+
+const GLYPH_FONT_SIZES = [12, 13, 14, 15, 16] as const;
+
+// The appearance runtime's font-size CSS, scoped to one row per font size.
+function fontSizeCss(uiFontSize: number) {
+  return appearancePrefsToCss({
+    ...DEFAULT_NXDS_APPEARANCE.prefs,
+    uiFontSize,
+  }).replace(':root {', `[data-ui-font="${uiFontSize}"] {`);
+}
+
+export const GlyphsFollowFontSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Icons grow with the UI font size in even pixels, and control heights stay the same. Each row sets one UI font size.',
+      },
+    },
+  },
+  render: () => (
+    <div className="nx:flex nx:flex-col nx:gap-4 nx:p-10 nx:bg-background">
+      <style>{GLYPH_FONT_SIZES.map(fontSizeCss).join('\n')}</style>
+      {GLYPH_FONT_SIZES.map((uiFontSize) => (
+        <div
+          key={uiFontSize}
+          data-ui-font={uiFontSize}
+          data-testid={`font-${uiFontSize}`}
+          className="nx:flex nx:items-center nx:gap-4"
+        >
+          <Button>
+            <IconDownload />
+            Download
+          </Button>
+          <Badge isCaps={false} leftIcon={<IconCheck />}>
+            Active
+          </Badge>
+          <Kbd>
+            <IconCommand />K
+          </Kbd>
+          <Checkbox defaultChecked aria-label={`Checkbox at ${uiFontSize}px`} />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const width = (element: Element | null) =>
+      element!.getBoundingClientRect().width;
+    const buttonHeights = new Set<number>();
+    const checkWidths = new Set<number>();
+    let previous = 0;
+    for (const uiFontSize of GLYPH_FONT_SIZES) {
+      const row = canvas.getByTestId(`font-${uiFontSize}`);
+      const button = within(row).getByRole('button', { name: 'Download' });
+      const icon = width(button.querySelector('svg'));
+      const text = parseFloat(getComputedStyle(button).fontSize);
+      // The icon stays a little larger than the text beside it.
+      await expect(icon / text).toBeGreaterThanOrEqual(1.05);
+      await expect(icon / text).toBeLessThanOrEqual(1.25);
+      await expect(icon % 2).toBe(0);
+      await expect(icon).toBeGreaterThanOrEqual(previous);
+      previous = icon;
+      // Smaller glyphs keep their distance from the control icon.
+      await expect(width(row.querySelector('[data-slot="badge"] svg'))).toBe(
+        icon - 2
+      );
+      await expect(width(row.querySelector('[data-slot="kbd"] svg'))).toBe(
+        icon - 4
+      );
+      buttonHeights.add(button.getBoundingClientRect().height);
+      checkWidths.add(width(row.querySelector('[data-slot="checkbox-check"]')));
+    }
+    // Control heights follow density, not the font size. The Checkbox box is
+    // fixed, so its check is too.
+    await expect(buttonHeights.size).toBe(1);
+    await expect(checkWidths.size).toBe(1);
+  },
 };
