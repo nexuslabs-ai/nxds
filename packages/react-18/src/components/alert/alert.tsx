@@ -112,7 +112,7 @@ const AlertIcon = React.forwardRef<
       data-slot="alert-icon"
       aria-hidden="true"
       className={cn(
-        'nx:flex nx:[&>svg]:size-4',
+        'nx:flex nx:[&>svg]:size-icon-glyph-default',
         'nx:group-data-[layout=stack]/alert:translate-y-0.5',
         className
       )}
@@ -303,7 +303,7 @@ const AlertClose = React.forwardRef<
         'nx:focus-visible:bg-container-hover nx:focus-visible:text-foreground',
         'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
         'nx:disabled:pointer-events-none nx:disabled:text-disabled-foreground',
-        'nx:[&_svg]:size-4 nx:[&_svg]:shrink-0',
+        'nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0',
         className
       )}
       type={type}

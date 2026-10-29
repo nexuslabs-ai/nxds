@@ -1,4 +1,17 @@
+import type { NxdsDensity } from '@nxds/core';
 import type { Meta, StoryObj } from '@storybook/react';
+import { IconCommand, IconInbox, IconStar } from '@tabler/icons-react';
+import { expect, within } from 'storybook/test';
+
+import { Checkbox } from '../components/checkbox/checkbox';
+import { EmptyStateMedia } from '../components/empty-state/empty-state';
+import { Kbd } from '../components/kbd/kbd';
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from '../components/radio-group/radio-group';
+import { Spinner } from '../components/spinner/spinner';
+import { Toggle } from '../components/toggle/toggle';
 
 import {
   tokenValue,
@@ -212,4 +225,80 @@ export const ActiveMode: Story = {
       </section>
     </div>
   ),
+};
+
+const GLYPH_DENSITIES = [
+  'tight',
+  'spacious',
+] as const satisfies readonly NxdsDensity[];
+
+export const GlyphsIgnoreDensity: Story = {
+  tags: ['!autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Icons keep their glyph size while the spacing around them follows density. Each icon renders the same in Tight and Spacious.',
+      },
+    },
+  },
+  render: () => (
+    <div className="nx:flex nx:flex-col nx:gap-6 nx:p-10 nx:bg-background">
+      {GLYPH_DENSITIES.map((density) => (
+        <div
+          key={density}
+          data-density={density}
+          data-testid={`glyphs-${density}`}
+          className="nx:flex nx:items-center nx:gap-4"
+        >
+          <Kbd>
+            <IconCommand />K
+          </Kbd>
+          <Checkbox defaultChecked aria-label={`${density} checkbox`} />
+          <RadioGroup defaultValue="on" aria-label={`${density} radio`}>
+            <RadioGroupItem value="on" aria-label={`${density} radio item`} />
+          </RadioGroup>
+          <Spinner />
+          <Toggle aria-label={`${density} toggle`}>
+            <IconStar />
+          </Toggle>
+          <EmptyStateMedia variant="icon">
+            <IconInbox />
+          </EmptyStateMedia>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const [tight, spacious] = GLYPH_DENSITIES.map((density) =>
+      within(canvasElement).getByTestId(`glyphs-${density}`)
+    );
+    const spacing = (root: HTMLElement) =>
+      parseFloat(getComputedStyle(root).getPropertyValue('--nx-spacing-4'));
+    await expect(spacing(spacious!)).toBeGreaterThan(spacing(tight!));
+
+    const glyphs = (root: HTMLElement) =>
+      [...root.querySelectorAll('svg')].map((svg) => {
+        const { width, height } = svg.getBoundingClientRect();
+        return { width, height };
+      });
+    const tightGlyphs = glyphs(tight!);
+    await expect(tightGlyphs.length).toBeGreaterThan(0);
+    await expect(glyphs(spacious!)).toEqual(tightGlyphs);
+
+    for (const control of canvasElement.querySelectorAll<HTMLElement>(
+      '[data-slot="checkbox"], [data-slot="radio-group-item"]'
+    )) {
+      const glyph = control.querySelector('svg')!.getBoundingClientRect();
+      const box = control.getBoundingClientRect();
+      const top = box.top + control.clientTop;
+      const left = box.left + control.clientLeft;
+      await expect(glyph.top).toBeGreaterThanOrEqual(top);
+      await expect(glyph.left).toBeGreaterThanOrEqual(left);
+      await expect(glyph.bottom).toBeLessThanOrEqual(
+        top + control.clientHeight
+      );
+      await expect(glyph.right).toBeLessThanOrEqual(left + control.clientWidth);
+    }
+  },
 };

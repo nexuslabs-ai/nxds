@@ -31,6 +31,6 @@ const forwarded = useForwardProps(delegated);
       )
     "
   >
-    <IconChevronUp class="nx:size-4" />
+    <IconChevronUp class="nx:size-icon-glyph-default" />
   </SelectScrollUpButton>
 </template>

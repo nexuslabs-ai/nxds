@@ -169,7 +169,7 @@ function PaginationEllipsis({ className, ...props }: PaginationEllipsisProps) {
       )}
       {...props}
     >
-      <IconDots className="nx:size-4" />
+      <IconDots className="nx:size-icon-glyph-default" />
       <span className="nx:sr-only">More pages</span>
     </span>
   );

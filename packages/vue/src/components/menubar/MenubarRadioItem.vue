@@ -40,7 +40,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     "
   >
     <span
-      class="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-3.5 nx:items-center nx:justify-center"
+      class="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-icon-glyph-default nx:items-center nx:justify-center"
     >
       <MenubarItemIndicator force-mount data-slot="menubar-radio-indicator">
         <IconCircleFilled

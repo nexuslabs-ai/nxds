@@ -108,7 +108,7 @@ function generatedParts() {
         data-slot="dialog-close-button"
         :class="overlayCloseButtonClassName"
       >
-        <IconX class="nx:size-4" />
+        <IconX class="nx:size-icon-glyph-default" />
         <span class="nx:sr-only">Close</span>
       </DialogClose>
     </DialogContent>

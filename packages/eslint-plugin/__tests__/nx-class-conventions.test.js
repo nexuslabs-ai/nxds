@@ -21,6 +21,11 @@ const rule = plugin.rules['nx-class-conventions'];
 
 ruleTester.run('nx-class-conventions', rule, {
   valid: [
+    // Icon sizes from glyph tokens or fixed px, and box sizes, stay legal.
+    "const c = 'nx:[&_svg]:size-icon-glyph-default';",
+    "const c = 'nx:[&>svg]:size-icon-glyph-sm nx:text-muted-foreground';",
+    "const c = 'nx:[&_svg]:size-[24px]';",
+    "const c = 'nx:size-8 nx:rounded-sm';",
     // Correct prefix order + complete semantic paths.
     "const c = 'nx:hover:bg-primary-background';",
     "const c = 'nx:bg-primary-background nx:text-foreground';",
@@ -98,6 +103,18 @@ ruleTester.run('nx-class-conventions', rule, {
     },
   ],
   invalid: [
+    {
+      code: "const c = 'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-4';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&>svg]:size-3.5 nx:text-muted-foreground';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = `nx:[&_svg:not([class*='size-'])]:size-4`;",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
     {
       code: "const c = 'hover:nx:bg-primary-background';",
       errors: [{ messageId: 'prefixOrder' }],

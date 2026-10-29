@@ -30,7 +30,7 @@ const Spinner = React.forwardRef<
       role="status"
       aria-label="Loading"
       data-slot="spinner"
-      className={cn('nx:size-4 nx:animate-spin', className)}
+      className={cn('nx:size-icon-glyph-default nx:animate-spin', className)}
       {...props}
     />
   );

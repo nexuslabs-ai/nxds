@@ -54,7 +54,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
         data-slot="sheet-close-button"
         :class="overlayCloseButtonClassName"
       >
-        <IconX class="nx:size-4" />
+        <IconX class="nx:size-icon-glyph-default" />
         <span class="nx:sr-only">Close</span>
       </DialogClose>
     </DialogContent>

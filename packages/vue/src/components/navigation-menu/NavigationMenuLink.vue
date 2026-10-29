@@ -31,7 +31,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
         'nx:hover:bg-popover-hover nx:hover:text-popover-foreground',
         'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
         'nx:data-[active=true]:bg-popover-hover nx:data-[active=true]:text-popover-foreground',
-        'nx:[&_svg:not([class*=size-])]:size-4 nx:[&_svg:not([class*=text-])]:text-muted-foreground',
+        'nx:[&_svg:not([class*=size-])]:size-icon-glyph-default nx:[&_svg:not([class*=text-])]:text-muted-foreground',
         props.class
       )
     "

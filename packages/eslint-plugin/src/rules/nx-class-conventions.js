@@ -82,6 +82,13 @@ const CHECKS = [
     runtimeOnly: true,
   },
   {
+    // An SVG selector with a numeric step sizes the icon from spacing, so the
+    // icon follows density. Glyph tokens and arbitrary px values stay fixed.
+    messageId: 'densityIconSize',
+    re: /nx:[^\s'"`]*\[[^\s]*svg[^\s]*\]:size-\d/,
+    runtimeOnly: true,
+  },
+  {
     messageId: 'rawLetterSpacing',
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}tracking-(?:${RAW_LETTER_SPACINGS.join('|')}|\\[)`
@@ -275,6 +282,8 @@ export default {
         'Raw Tailwind line-height utility — let a typography composite own line-height instead of `nx:leading-*`.',
       rawLetterSpacing:
         'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
+      densityIconSize:
+        'Icon size from a spacing step — `[&_svg]:size-*` with a number follows density. Use `size-icon-glyph-xs`, `-sm` or `-default` (12, 14 or 16px), or a fixed px size such as `size-[24px]`.',
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
     },

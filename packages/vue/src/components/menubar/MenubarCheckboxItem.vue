@@ -40,7 +40,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     "
   >
     <span
-      class="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-3.5 nx:items-center nx:justify-center"
+      class="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-icon-glyph-default nx:items-center nx:justify-center"
     >
       <MenubarItemIndicator force-mount data-slot="menubar-checkbox-indicator">
         <IconCheck
@@ -48,7 +48,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
           aria-hidden="true"
           :class="
             cn(
-              'nx:size-4',
+              'nx:size-icon-glyph-default',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100',
               'nx:group-data-[state=indeterminate]:scale-100 nx:group-data-[state=indeterminate]:opacity-100'
