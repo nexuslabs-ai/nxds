@@ -209,11 +209,13 @@ async function npmRegistry(
     tarballUrl,
     tarballQuery = '',
     distTag = 'latest',
+    version = VERSION,
   }: {
     integrity?: string;
     tarballUrl?: string;
     tarballQuery?: string;
     distTag?: string;
+    version?: string;
   } = {}
 ) {
   const staging = path.join(root, 'staging');
@@ -229,13 +231,13 @@ async function npmRegistry(
       response.setHeader('content-type', 'application/json');
       response.end(
         JSON.stringify({
-          'dist-tags': { latest: VERSION, [distTag]: VERSION },
+          'dist-tags': { latest: version, [distTag]: version },
           versions: {
-            [VERSION]: {
+            [version]: {
               dist: {
                 tarball:
                   tarballUrl ??
-                  `http://127.0.0.1:${port}/claude-design-${VERSION}.tgz${tarballQuery}`,
+                  `http://127.0.0.1:${port}/claude-design-${version}.tgz${tarballQuery}`,
                 integrity: integrity ?? digest,
               },
             },
@@ -244,7 +246,7 @@ async function npmRegistry(
       );
       return;
     }
-    if (request.url === `/claude-design-${VERSION}.tgz`) {
+    if (request.url === `/claude-design-${version}.tgz`) {
       response.end(bytes);
       return;
     }
@@ -436,10 +438,14 @@ describe('nxds-cli export claude-design', () => {
         format: 3,
       }),
     });
+    const snapshotVersion = '0.0.0-claude-design-setup-20261029195700';
     const registry = await npmRegistry(root, source, {
       distTag: 'snapshot-claude-design-setup',
     });
-    const exportRelease = (release: string) =>
+    const snapshotRegistry = await npmRegistry(root, source, {
+      version: snapshotVersion,
+    });
+    const exportRelease = (release: string, npmRegistryUrl = registry) =>
       cliJson(
         [
           'export',
@@ -447,19 +453,26 @@ describe('nxds-cli export claude-design', () => {
           '--release',
           release,
           '--npm-registry',
-          registry,
+          npmRegistryUrl,
         ],
         cwd
       );
 
     const byTag = await exportRelease('snapshot-claude-design-setup');
     const byVersion = await exportRelease(VERSION);
+    const bySnapshotVersion = await exportRelease(
+      snapshotVersion,
+      snapshotRegistry
+    );
 
     expect(byTag.exitCode).toBe(EXIT_CODES.error);
     expect(byTag.body.error).toMatch(
       /Run npx nxds-cli@snapshot-claude-design-setup\.$/
     );
     expect(byVersion.body.error).toMatch(/Run npx nxds-cli@latest\.$/);
+    expect(bySnapshotVersion.body.error).toMatch(
+      /Run npx nxds-cli@0\.0\.0-claude-design-setup-20261029195700\.$/
+    );
   });
 
   it('reports a files.json whose format is malformed as a shape error', async () => {
