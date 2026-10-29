@@ -1,5 +1,6 @@
 ---
 '@nxds/react': minor
+'@nxds/vue': minor
 ---
 
 Toolbar gets tools that open panels, and a floating variant.
