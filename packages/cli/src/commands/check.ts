@@ -40,7 +40,6 @@ import {
   fontImportLine,
   nxdsThemeSource,
   resolveTheme,
-  storedThemeError,
   type Theme,
 } from '../theme';
 
@@ -283,7 +282,7 @@ function themeCheck(
 ): Theme | null {
   let theme: Theme;
   try {
-    theme = resolveTheme(release, config.theme ?? {}, storedThemeError);
+    theme = resolveTheme(release, config.theme ?? {});
   } catch (error) {
     if (!(error instanceof CliError)) throw error;
     check('theme', false, error.message);
@@ -334,15 +333,16 @@ function fontsCheck(
         !css.includes(fontImportLine(font))
     )
     .map((font) => font.package);
+  const them = (packages: string[]) => (packages.length === 1 ? 'it' : 'them');
   const problems: string[] = [];
   if (unimported.length > 0) {
     problems.push(
-      `The theme uses ${unimported.join(', ')}, and ${config.css} doesn't import it. Run \`${CLI_COMMAND} init\` to import it.`
+      `${config.css} doesn't import ${unimported.join(', ')}, which the theme uses. Run \`${CLI_COMMAND} init\` to import ${them(unimported)}.`
     );
   }
   if (unused.length > 0) {
     problems.push(
-      `Nothing imports ${unused.join(', ')}, since the theme moved off it. Remove it with \`npm uninstall ${unused.join(' ')}\`.`
+      `Nothing imports ${unused.join(', ')}, and the theme doesn't use ${them(unused)}. Remove ${them(unused)} with \`npm uninstall ${unused.join(' ')}\`.`
     );
   }
   check(

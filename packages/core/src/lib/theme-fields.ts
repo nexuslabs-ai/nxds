@@ -38,29 +38,53 @@ export type NxdsThemeKey =
   | Exclude<keyof NxdsAppearanceState, 'prefs'>
   | `prefs.${keyof NxdsAppearancePrefs}`;
 
-/** One part of a theme, as the `nxds-cli init` flag that sets it. */
-export interface NxdsThemeField {
+interface NxdsThemeFieldBase {
   /** The flag, without its `--`. */
   readonly flag: string;
-  /** The appearance field the flag sets. The icon library sets none. */
-  readonly key?: NxdsThemeKey;
   /** What the flag sets, for `--help`. */
   readonly description: string;
-  /** The values the flag takes, or undefined for a colour or a number. */
-  readonly values?: readonly string[];
-  /**
-   * For a font flag: the value that names no curated font, and the family it
-   * stands for: the default stack, or null for the UI font.
-   */
-  readonly fallback?: {
-    readonly value: string;
-    readonly family: string | null;
-  };
   /** The flag's value for `theme`, or undefined when no flag value says it. */
   read(theme: NxdsTheme): string | undefined;
   /** `theme` with the flag's value. Throws when the value doesn't fit. */
   write(theme: NxdsTheme, value: string): NxdsTheme;
 }
+
+/**
+ * One part of a theme, as the `nxds-cli init` flag that sets it. `kind` says
+ * which values the flag takes, and `key` the appearance field it sets. The
+ * icon library sets none.
+ */
+export type NxdsThemeField = NxdsThemeFieldBase &
+  (
+    | { readonly kind: 'color'; readonly key: NxdsThemeKey }
+    | {
+        readonly kind: 'choice';
+        readonly key?: NxdsThemeKey;
+        readonly values: readonly string[];
+      }
+    | {
+        readonly kind: 'integer';
+        readonly key: NxdsThemeKey;
+        readonly min: number;
+        readonly max: number;
+      }
+    | {
+        readonly kind: 'font';
+        readonly key: NxdsThemeKey;
+        /** The fallback's value, then each curated font's. */
+        readonly values: readonly string[];
+        /** The categories of the curated fonts the flag takes. */
+        readonly categories: readonly NxdsFontCategory[];
+        /**
+         * The value that names no curated font, and the family it stands for:
+         * the default stack, or null for the UI font.
+         */
+        readonly fallback: {
+          readonly value: string;
+          readonly family: string | null;
+        };
+      }
+  );
 
 function invalid(flag: string, value: string, accepted: string): Error {
   return new Error(`--${flag} "${value}" isn't ${accepted}.`);
@@ -109,6 +133,7 @@ function enumField<K extends EnumKey>(
   values: readonly NxdsAppearanceState[K][]
 ): NxdsThemeField {
   return {
+    kind: 'choice',
     flag,
     key,
     description,
@@ -140,9 +165,12 @@ function contrastField(
   description: string
 ): NxdsThemeField {
   return {
+    kind: 'integer',
     flag,
     key,
     description,
+    min: 0,
+    max: 100,
     read: (theme) => String(theme.appearance[key]),
     write: (theme, value) =>
       withAppearance(theme, { [key]: integer(flag, value, 0, 100) }),
@@ -155,9 +183,12 @@ function fontSizeField(
   description: string
 ): NxdsThemeField {
   return {
+    kind: 'integer',
     flag,
     key: `prefs.${key}`,
     description,
+    min: FONT_SIZE_PX_MIN,
+    max: FONT_SIZE_PX_MAX,
     read: (theme) => String(theme.appearance.prefs[key]),
     write: (theme, value) =>
       withPrefs(theme, {
@@ -182,10 +213,12 @@ function fontField(
     categories.includes(font.category)
   );
   return {
+    kind: 'font',
     flag,
     key: `prefs.${key}`,
     description,
     values: [fallback.value, ...fonts.map((font) => font.value)],
+    categories,
     fallback,
     read: (theme) => {
       const family = theme.appearance.prefs[key];
@@ -219,6 +252,7 @@ const TEXT_FONTS = ['sans', 'serif'] as const;
  */
 export const NXDS_THEME_FIELDS: readonly NxdsThemeField[] = [
   {
+    kind: 'color',
     flag: 'brand-color',
     key: 'brandColor',
     description: 'brand color, as any CSS color, such as "#4f46e5"',
@@ -287,6 +321,7 @@ export const NXDS_THEME_FIELDS: readonly NxdsThemeField[] = [
   fontSizeField('font-size', 'uiFontSize', 'UI text size in px'),
   fontSizeField('code-font-size', 'codeFontSize', 'code text size in px'),
   {
+    kind: 'choice',
     flag: 'icons',
     description: 'icon library nxds components draw',
     values: ICON_LIBRARY_OPTIONS.map((option) => option.value),

@@ -62,7 +62,8 @@ fonts in the nxds CSS entry. Your `appearance-state.ts` spreads `nxdsTheme`, so
 set your own overrides there. Don't edit `nxds-theme.ts`, since `init`
 rewrites it.
 
-To change the theme, run `init` again. A flag you leave out keeps its value. A
+To change the theme, run `init` again. A flag you leave out keeps its value.
+An empty flag, such as `--density=`, resets that part to the default. A
 new `--icons` rewrites `lib/icons.ts` in every installed component. A new font
 replaces the old one's import, and `doctor` lists the old package to remove.
 

@@ -32,19 +32,21 @@ import {
   vueSrc,
 } from '@nxds/source-model/roots.mjs';
 import { exportedSlugs } from '@nxds/source-model/vue-sources.ts';
-import { createJiti } from 'jiti';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Core's source, not its build: the release job snapshots a catalog before
-// anything is built.
-import { FONT_OPTIONS } from '@nxds/core/source/lib/font-options.ts';
 import {
   DEFAULT_ICON_LIBRARY,
+  FONT_OPTIONS,
   ICON_LIBRARY_OPTIONS,
-} from '@nxds/core/source/lib/icon-libraries.ts';
-import { catalogSchema, issueLines } from './catalog-schema.ts';
+  NXDS_THEME_FIELDS,
+} from '@nxds/core';
+import {
+  catalogSchema,
+  catalogThemeField,
+  issueLines,
+} from './catalog-schema.ts';
 import {
   dependencyEntries,
   react,
@@ -64,13 +66,6 @@ import { CATALOG_FILE } from './roots.mjs';
  * @typedef {import('./catalog-schema').Font} Font
  * @typedef {import('./catalog-schema').ThemeField} ThemeField
  */
-
-// theme-fields.ts imports core's modules without file extensions, which Node
-// can't load as source, so jiti loads it.
-/** @type {typeof import('@nxds/core/source/lib/theme-fields.ts')} */
-const { NXDS_THEME_FIELDS } = await createJiti(import.meta.url).import(
-  '@nxds/core/source/lib/theme-fields.ts'
-);
 
 const DOCS_URL = 'https://nxds.dev';
 const SETUP = 'setup';
@@ -245,26 +240,23 @@ const catalogPackage = JSON.parse(
  * @returns {Font[]}
  */
 function fonts() {
-  return FONT_OPTIONS.map(({ value, family, package: name }) => {
+  return FONT_OPTIONS.map(({ value, category, family, package: name }) => {
     const range = catalogPackage.devDependencies[name];
     if (!range) {
       throw new Error(
         `catalog: add ${name} to packages/catalog's devDependencies, at the range apps install.`
       );
     }
-    return { name: value, family, package: name, range };
+    return { name: value, category, family, package: name, range };
   });
 }
 
 /**
- * The theme flags core takes, and the values each accepts. `--icons` is left
- * out, since the release lists its icon libraries.
+ * The theme flags core takes: the field each sets and the values it accepts.
  * @returns {ThemeField[]}
  */
 function themeFields() {
-  return NXDS_THEME_FIELDS.filter(({ flag }) => flag !== 'icons').map(
-    ({ flag, values }) => (values ? { flag, values: [...values] } : { flag })
-  );
+  return NXDS_THEME_FIELDS.flatMap((field) => catalogThemeField(field) ?? []);
 }
 
 /** Tailwind 4 at the version packages/react builds with, or a newer 4.x. */

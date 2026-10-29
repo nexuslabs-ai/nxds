@@ -94,16 +94,17 @@ function program(
   const initCommand = cli
     .command('init')
     .description(
-      'set up nxds: token CSS, provider, and the layout wiring. Theme flags set nxds-theme.ts; one left out keeps its value'
+      'set up nxds: token CSS, provider, and the layout wiring. Theme flags set nxds-theme.ts; one left out keeps its value, and an empty one, such as --density=, resets it'
     )
     .option(
       '--dir <path>',
       'nxds folder (default: components/nxds, or src/components/nxds)'
     );
   const themeOptions = NXDS_THEME_FIELDS.map((field) => {
-    const help = field.values
-      ? `${field.description}: ${field.values.join(', ')}`
-      : field.description;
+    const help =
+      'values' in field
+        ? `${field.description}: ${field.values.join(', ')}`
+        : field.description;
     const option = new Option(
       `--${field.flag} <value>`,
       field.flag === ICONS_FLAG ? `${help}. ${REMIX_LICENSE}` : help

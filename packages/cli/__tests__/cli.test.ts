@@ -1,6 +1,12 @@
 // @vitest-environment node
-import { type Catalog, catalogSchema, type Font } from '@nxds/catalog';
+import {
+  type Catalog,
+  catalogSchema,
+  catalogThemeField,
+  type Font,
+} from '@nxds/catalog';
 import { writeRegistry } from '@nxds/catalog/scripts/registry.mjs';
+import { DEFAULT_NXDS_APPEARANCE } from '@nxds/core/source/lib/appearance-model.ts';
 import { FONT_OPTIONS } from '@nxds/core/source/lib/font-options.ts';
 import { NXDS_THEME_FIELDS } from '@nxds/core/source/lib/theme-fields.ts';
 import {
@@ -560,7 +566,13 @@ const LUCIDE_ICONS = readFileSync(
 function releaseFont(name: string): Font {
   const font = FONT_OPTIONS.find((option) => option.value === name);
   if (!font) throw new Error(`@nxds/core has no font ${name}`);
-  return { name, family: font.family, package: font.package, range: '^5.3.0' };
+  return {
+    name,
+    category: font.category,
+    family: font.family,
+    package: font.package,
+    range: '^5.3.0',
+  };
 }
 const INTER = releaseFont('inter');
 const LORA = releaseFont('lora');
@@ -594,19 +606,9 @@ function choicesRelease(version: string): Catalog {
     },
   ];
   release.fonts = [INTER, LORA, JETBRAINS_MONO];
-  release.themeFields = NXDS_THEME_FIELDS.filter(
-    ({ flag }) => flag !== 'icons'
-  ).map(({ flag, values, fallback }) => {
-    if (!values) return { flag };
-    if (!fallback) return { flag, values: [...values] };
-    const names = release.fonts.map((font) => font.name);
-    return {
-      flag,
-      values: values.filter(
-        (value) => value === fallback.value || names.includes(value)
-      ),
-    };
-  });
+  release.themeFields = NXDS_THEME_FIELDS.flatMap(
+    (field) => catalogThemeField(field) ?? []
+  );
   return release;
 }
 
@@ -914,14 +916,51 @@ describe('theme', () => {
     expect(run.exitCode, run.stdout + run.stderr).toBe(EXIT_CODES.ok);
     const theme = readApp(context.app, NXDS_THEME);
     expect(theme).toContain("density: 'default',");
-    expect(theme).toContain('uiFont: DEFAULT_NXDS_APPEARANCE.prefs.uiFont,');
+    expect(theme).toContain(
+      `uiFont: '${DEFAULT_NXDS_APPEARANCE.prefs.uiFont}',`
+    );
+  });
+
+  it("takes the values and ranges the app's release lists", async () => {
+    const release = choicesRelease('0.4.7');
+    release.themeFields = release.themeFields.map((field) => {
+      if (field.flag === 'density') {
+        return { ...field, kind: 'choice', values: ['default', 'roomy'] };
+      }
+      if (field.flag === 'font-size') {
+        return { ...field, kind: 'integer', min: 8, max: 40 };
+      }
+      return field;
+    });
+    const context = setup([release]);
+
+    const run = await cli(
+      ['init', '--density', 'roomy', '--font-size', '36'],
+      context
+    );
+
+    expect(run.exitCode, run.stdout + run.stderr).toBe(EXIT_CODES.ok);
+    const theme = readApp(context.app, NXDS_THEME);
+    expect(theme).toContain("density: 'roomy',");
+    expect(theme).toContain('uiFontSize: 36,');
+  });
+
+  it('resets a part of the theme an empty flag names', async () => {
+    const context = setup([choicesRelease('0.4.7')]);
+    await cli(['init', '--density', 'compact', '--font', 'inter'], context);
+
+    const run = await cli(['init', '--density='], context);
+
+    expect(run.exitCode, run.stdout + run.stderr).toBe(EXIT_CODES.ok);
+    expect(nxdsJson(context.app)['theme']).toEqual({ font: 'inter' });
+    expect(readApp(context.app, NXDS_THEME)).not.toContain('density:');
   });
 
   it("exits 2 for a value the app's release doesn't take", async () => {
     const release = choicesRelease('0.4.7');
     release.themeFields = release.themeFields.map((field) =>
       field.flag === 'density'
-        ? { flag: 'density', values: ['compact', 'default'] }
+        ? { ...field, kind: 'choice', values: ['compact', 'default'] }
         : field
     );
     const context = setup([release]);
@@ -959,26 +998,28 @@ describe('theme', () => {
     );
 
     const { body } = await cliJson(['doctor'], context);
-
-    expect(body.data.checks).toContainEqual(
-      expect.objectContaining({
-        name: 'theme',
-        ok: false,
-        message: expect.stringMatching(/"densty" isn't an init theme flag/),
-      })
+    const theme = body.data.checks.find(
+      (check: { name: string }) => check.name === 'theme'
     );
+
+    expect(theme).toMatchObject({
+      ok: false,
+      message: expect.stringMatching(
+        /"densty" isn't a theme flag nxds 0\.4\.7 takes\. Remove it/
+      ),
+    });
+    expect(theme.message).not.toContain('init --densty');
   });
 
-  it("fails the doctor fonts check when the theme's font isn't imported", async () => {
+  it("fails the doctor fonts check when the theme's fonts aren't imported", async () => {
     const context = setup([choicesRelease('0.4.7')]);
-    await cli(['init', '--font', 'inter'], context);
+    await cli(['init', '--font', 'inter', '--heading-font', 'lora'], context);
     writeApp(
       context.app,
       'app/nxds.css',
-      readApp(context.app, 'app/nxds.css').replace(
-        `@import '${INTER.package}';`,
-        ''
-      )
+      readApp(context.app, 'app/nxds.css')
+        .replace(`@import '${INTER.package}';`, '')
+        .replace(`@import '${LORA.package}';`, '')
     );
 
     const { body } = await cliJson(['doctor'], context);
@@ -987,8 +1028,8 @@ describe('theme', () => {
       expect.objectContaining({
         name: 'fonts',
         ok: false,
-        message: expect.stringMatching(
-          new RegExp(`uses ${INTER.package}, and app/nxds\\.css doesn't import`)
+        message: expect.stringContaining(
+          `app/nxds.css doesn't import ${INTER.package}, ${LORA.package}, which the theme uses. Run \`npx nxds-cli@latest init\` to import them.`
         ),
       })
     );

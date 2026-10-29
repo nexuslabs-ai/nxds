@@ -27,6 +27,7 @@ export type {
   Framework,
   ReactMajor,
   SetupStep,
+  ThemeField,
   Variant,
 } from '@nxds/catalog';
 

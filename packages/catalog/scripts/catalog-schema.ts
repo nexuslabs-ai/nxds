@@ -4,6 +4,7 @@
  * `nxds-cli` fetches from the registry. The generator and the CLI both
  * validate against these schemas, and the types are inferred from them.
  */
+import type { NxdsThemeField } from '@nxds/core';
 import path from 'node:path';
 import { valid, validRange } from 'semver';
 import { z } from 'zod';
@@ -219,6 +220,8 @@ export type IconLibrary = z.infer<typeof iconLibrarySchema>;
 const fontSchema = z.object({
   /** Its `init` flag value, such as `inter`. */
   name: z.string(),
+  /** Its kind, such as `sans` or `mono`, which decides the flags that take it. */
+  category: z.string(),
   /** The `font-family` stack the appearance prefs store. */
   family: z.string(),
   /** The Fontsource package that self-hosts the font, and its range. */
@@ -228,14 +231,63 @@ const fontSchema = z.object({
 
 export type Font = z.infer<typeof fontSchema>;
 
-const themeFieldSchema = z.object({
+const themeFieldInfo = {
   /** Its `init` flag, without the `--`, such as `density`. */
   flag: z.string(),
-  /** The values the flag takes in this release, or none for a colour or a number. */
-  values: z.array(z.string()).optional(),
-});
+  /** The appearance field it sets, such as `density` or `prefs.uiFont`. */
+  key: z.string(),
+};
+
+const themeFieldSchema = z.discriminatedUnion('kind', [
+  z.object({ ...themeFieldInfo, kind: z.literal('color') }),
+  z.object({
+    ...themeFieldInfo,
+    kind: z.literal('choice'),
+    values: z.array(z.string()).min(1),
+  }),
+  z.object({
+    ...themeFieldInfo,
+    kind: z.literal('integer'),
+    min: z.number().int(),
+    max: z.number().int(),
+  }),
+  z.object({
+    ...themeFieldInfo,
+    kind: z.literal('font'),
+    /** It takes the release's fonts of these categories, and `fallback.value`. */
+    categories: z.array(z.string()).min(1),
+    /** The value that names no font, and the family it writes. */
+    fallback: z.object({ value: z.string(), family: z.string().nullable() }),
+  }),
+]);
 
 export type ThemeField = z.infer<typeof themeFieldSchema>;
+
+/**
+ * The catalog's copy of one of core's theme fields: what the CLI needs to
+ * check and write its flag. Null for `--icons`, since the release lists its
+ * icon libraries.
+ */
+export function catalogThemeField(field: NxdsThemeField): ThemeField | null {
+  if (field.key === undefined) return null;
+  const { flag, key } = field;
+  switch (field.kind) {
+    case 'color':
+      return { flag, key, kind: field.kind };
+    case 'choice':
+      return { flag, key, kind: field.kind, values: [...field.values] };
+    case 'integer':
+      return { flag, key, kind: field.kind, min: field.min, max: field.max };
+    case 'font':
+      return {
+        flag,
+        key,
+        kind: field.kind,
+        categories: [...field.categories],
+        fallback: field.fallback,
+      };
+  }
+}
 
 /** The `schema` this package writes and the CLI reads. */
 export const CATALOG_SCHEMA = 1;

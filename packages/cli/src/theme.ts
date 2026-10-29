@@ -1,14 +1,8 @@
-import type { NxdsAppearanceState } from '@nxds/core/source/lib/appearance-model.ts';
-import {
-  DEFAULT_NXDS_THEME,
-  NXDS_THEME_FIELDS,
-  type NxdsThemeField,
-  type NxdsThemeKey,
-} from '@nxds/core/source/lib/theme-fields.ts';
+import { isColor } from '@nxds/core/source/lib/perceptual-ramp.ts';
 
-import type { Catalog, Font } from './catalog';
+import type { Catalog, Font, ThemeField } from './catalog';
 import { CLI_COMMAND } from './cli-command';
-import { CliError } from './errors';
+import { CliError, UsageError } from './errors';
 
 /** A theme, as nxds.json keeps it: each `init` flag's value, by flag name. */
 export type ThemeFlags = Record<string, string>;
@@ -20,117 +14,134 @@ export type ThemeFlags = Record<string, string>;
 export const ICONS_FLAG = 'icons';
 
 /** A field `nxds-theme.ts` sets: where it lives, and its value as source. */
-type ThemeLine = { key: NxdsThemeKey; source: string };
+type ThemeLine = { key: string; source: string };
 
 /** What a theme's flags set in an app on one release. */
 export type Theme = {
-  /** One line per flag, in the order of core's theme fields. */
+  /** One line per flag, in the order of the release's theme fields. */
   lines: ThemeLine[];
   /** The release fonts the theme uses, which the app installs and imports. */
   fonts: Font[];
 };
 
-/** The error for a bad flag in nxds.json's `theme`. */
-export function storedThemeError(flag: string, message: string) {
-  return new CliError(
-    `nxds.json theme: ${message} Fix it, or run \`${CLI_COMMAND} init --${flag} <value>\`.`
-  );
-}
+type Fail = (flag: string, message: string) => Error;
 
-function literal(value: string | number | boolean | null) {
-  if (typeof value !== 'string') return String(value);
+function literal(value: string | null) {
+  if (value === null) return 'null';
   return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 }
 
-function valueAt(appearance: NxdsAppearanceState, key: NxdsThemeKey) {
-  if (!key.startsWith('prefs.')) {
-    return appearance[key as Exclude<NxdsThemeKey, `prefs.${string}`>];
-  }
-  return appearance.prefs[
-    key.slice('prefs.'.length) as keyof NxdsAppearanceState['prefs']
-  ];
-}
-
-/** Throws on a `theme` key that is no theme flag. Only nxds.json can hold one. */
-function assertThemeFlags(flags: ThemeFlags) {
-  for (const flag of Object.keys(flags)) {
-    if (flag === ICONS_FLAG) {
-      throw new CliError(
-        `nxds.json theme: the icon library goes in "iconLibrary". Remove "${ICONS_FLAG}" from "theme".`
-      );
-    }
-    if (!NXDS_THEME_FIELDS.some((field) => field.flag === flag)) {
-      throw new CliError(
-        `nxds.json theme: "${flag}" isn't an init theme flag. Remove it from "theme".`
-      );
-    }
-  }
-}
-
 /**
- * `field`'s line for `value`, checked against `release`. A font flag names one
- * of the release's fonts, by name, and the line writes that font's family.
+ * A font flag's line. The flag names the fallback, or one of the release's
+ * fonts in the field's categories, and the line writes that font's family.
  */
-function themeLine(
+function fontLine(
   release: Catalog,
-  field: NxdsThemeField & { key: NxdsThemeKey },
+  field: Extract<ThemeField, { kind: 'font' }>,
   value: string,
-  fail: (flag: string, message: string) => Error
+  fail: Fail
 ): ThemeLine & { font?: Font } {
   const { flag, key, fallback } = field;
-  const offered = release.themeFields.find(
-    (candidate) => candidate.flag === flag
+  if (value === fallback.value) {
+    return { key, source: literal(fallback.family) };
+  }
+  const fonts = release.fonts.filter((font) =>
+    field.categories.includes(font.category)
   );
-  if (!offered) {
-    throw fail(
-      flag,
+  const font = fonts.find((candidate) => candidate.name === value);
+  if (!font) {
+    const names = [fallback.value, ...fonts.map((option) => option.name)];
+    throw fail(flag, `--${flag} "${value}" isn't one of ${names.join(', ')}.`);
+  }
+  return { key, source: literal(font.family), font };
+}
+
+/** `field`'s line for `value`, checked against what the release takes. */
+function themeLine(
+  release: Catalog,
+  field: ThemeField,
+  value: string,
+  fail: Fail
+): ThemeLine & { font?: Font } {
+  const { flag, key } = field;
+  switch (field.kind) {
+    case 'color':
+      if (!isColor(value)) {
+        throw fail(flag, `--${flag} "${value}" isn't a CSS color.`);
+      }
+      return { key, source: literal(value) };
+    case 'choice':
+      if (!field.values.includes(value)) {
+        throw fail(
+          flag,
+          `--${flag} "${value}" isn't one of ${field.values.join(', ')}.`
+        );
+      }
+      return { key, source: literal(value) };
+    case 'integer': {
+      const number = Number(value);
+      if (!/^\d+$/.test(value) || number < field.min || number > field.max) {
+        throw fail(
+          flag,
+          `--${flag} "${value}" isn't a whole number from ${field.min} to ${field.max}.`
+        );
+      }
+      return { key, source: String(number) };
+    }
+    case 'font':
+      return fontLine(release, field, value, fail);
+  }
+}
+
+/** Throws on a flag the release has no theme field for. */
+function assertThemeFlag(release: Catalog, flag: string, passed: boolean) {
+  if (release.themeFields.some((field) => field.flag === flag)) return;
+  if (passed) {
+    throw new UsageError(
       `nxds ${release.version} has no --${flag}. Run \`${CLI_COMMAND} update\` to move to a release that has it.`
     );
   }
-  if (offered.values && !offered.values.includes(value)) {
-    throw fail(
-      flag,
-      `--${flag} "${value}" isn't one of ${offered.values.join(', ')}.`
+  if (flag === ICONS_FLAG) {
+    throw new CliError(
+      `nxds.json theme: the icon library goes in "iconLibrary". Remove "${ICONS_FLAG}" from "theme".`
     );
   }
-  if (fallback?.value === value) {
-    // The fallback is the UI font, or the default stack of the app's release.
-    const source =
-      fallback.family === null ? 'null' : `DEFAULT_NXDS_APPEARANCE.${key}`;
-    return { key, source };
-  }
-  if (fallback) {
-    const font = release.fonts.find((candidate) => candidate.name === value);
-    if (!font) {
-      throw fail(flag, `nxds ${release.version} has no font "${value}".`);
-    }
-    return { key, source: literal(font.family), font };
-  }
-  try {
-    const { appearance } = field.write(DEFAULT_NXDS_THEME, value);
-    return { key, source: literal(valueAt(appearance, key)) };
-  } catch (error) {
-    throw fail(flag, (error as Error).message);
-  }
+  throw new CliError(
+    `nxds.json theme: "${flag}" isn't a theme flag nxds ${release.version} takes. Remove it from "theme".`
+  );
 }
 
 /**
- * What `flags` set in an app on `release`. Each flag must be one the release
- * takes, with a value it accepts. `fail` makes the error for a bad value.
+ * The theme nxds.json's `stored` flags set in an app on `release`, with the
+ * `passed` init flags over them. An empty passed flag removes its stored
+ * value. Each flag must be one the release takes, with a value it accepts. A
+ * bad passed flag is a usage error.
  */
 export function resolveTheme(
   release: Catalog,
-  flags: ThemeFlags,
-  fail: (flag: string, message: string) => Error
-): Theme {
-  assertThemeFlags(flags);
-  const lines = NXDS_THEME_FIELDS.flatMap((field) => {
+  stored: ThemeFlags,
+  passed: ThemeFlags = {}
+): Theme & { flags: ThemeFlags } {
+  const flags = Object.fromEntries(
+    Object.entries({ ...stored, ...passed }).filter(([, value]) => value !== '')
+  );
+  for (const flag of Object.keys(flags)) {
+    assertThemeFlag(release, flag, flag in passed);
+  }
+  const fail: Fail = (flag, message) =>
+    flag in passed
+      ? new UsageError(message)
+      : new CliError(
+          `nxds.json theme: ${message} Fix it, or run \`${CLI_COMMAND} init --${flag} <value>\`.`
+        );
+  const lines = release.themeFields.flatMap((field) => {
     const value = flags[field.flag];
-    if (value === undefined || field.key === undefined) return [];
-    return [themeLine(release, { ...field, key: field.key }, value, fail)];
+    if (value === undefined) return [];
+    return [themeLine(release, field, value, fail)];
   });
   const used = new Set(lines.map((line) => line.font));
   return {
+    flags,
     lines: lines.map(({ key, source }) => ({ key, source })),
     fonts: release.fonts.filter((font) => used.has(font)),
   };

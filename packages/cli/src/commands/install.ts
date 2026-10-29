@@ -45,7 +45,6 @@ import {
 import {
   nxdsThemeSource,
   resolveTheme,
-  storedThemeError,
   type ThemeFlags,
   withFontImports,
 } from '../theme';
@@ -114,6 +113,22 @@ function nxdsDir(dir: string) {
   throw new UsageError(
     `--dir takes a folder inside your app, such as components/nxds, not "${dir}".`
   );
+}
+
+/**
+ * The icon library `--icons` names, the release's default for an empty one,
+ * or undefined when it isn't passed.
+ */
+function pickedIconLibrary(release: Catalog, icons: string | undefined) {
+  if (icons === undefined) return undefined;
+  if (icons === '') return release.iconLibraries[0]?.name;
+  return releaseChoice(
+    release,
+    'icon library',
+    icons,
+    release.iconLibraries,
+    (message) => new UsageError(message)
+  ).name;
 }
 
 /**
@@ -198,23 +213,14 @@ export async function init(
     items: [],
   };
   const previousLibrary = config.iconLibrary;
-  const icons =
-    options.icons === undefined
-      ? undefined
-      : releaseChoice(
-          release,
-          'icon library',
-          options.icons,
-          release.iconLibraries,
-          (message) => new UsageError(message)
-        ).name;
+  const icons = pickedIconLibrary(release, options.icons);
   config.iconLibrary =
     icons ?? config.iconLibrary ?? release.iconLibraries[0]?.name;
   // A theme flag left out keeps that part of the app's theme.
-  const passed = options.theme ?? {};
-  const flags = { ...config.theme, ...passed };
-  const { lines, fonts } = resolveTheme(release, flags, (flag, message) =>
-    flag in passed ? new UsageError(message) : storedThemeError(flag, message)
+  const { flags, lines, fonts } = resolveTheme(
+    release,
+    config.theme ?? {},
+    options.theme
   );
   const custom = lines.length > 0;
   if (custom) config.theme = flags;
