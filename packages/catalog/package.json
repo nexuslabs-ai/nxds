@@ -1,6 +1,6 @@
 {
   "name": "@nxds/catalog",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "The install catalog the docs read and nxds-cli fetches, built from the React and Vue sources",
   "type": "module",
