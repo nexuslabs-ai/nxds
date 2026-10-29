@@ -4,6 +4,7 @@ import { type KeyboardEvent, useState } from 'react';
 
 import {
   BASE_TONE_OPTIONS,
+  CODE_FONT_SIZE_RANGE,
   CORNER_OPTIONS,
   DENSITY_OPTIONS,
   ELEVATION_OPTIONS,
@@ -15,6 +16,7 @@ import {
   type NxdsStroke,
   type NxdsSurfaceTone,
   STROKE_OPTIONS,
+  UI_FONT_SIZE_RANGE,
 } from '@nxds/core';
 
 import {
@@ -41,8 +43,6 @@ import { useNxdsAppearance } from '../provider';
 import { NxdsAppearanceSettingRow } from '../setting-row/setting-row';
 
 const APPEARANCE_MODES: NxdsAppearanceMode[] = ['light', 'dark', 'system'];
-const FONT_SIZE_MIN = 8;
-const FONT_SIZE_MAX = 32;
 
 function isAppearanceMode(value: string): value is NxdsAppearanceMode {
   return APPEARANCE_MODES.includes(value as NxdsAppearanceMode);
@@ -78,19 +78,23 @@ function AxisSelect<TValue extends string>({
   );
 }
 
-function parseFontSize(value: string) {
+type FontSizeRange = { min: number; max: number };
+
+function parseFontSize(value: string, range: FontSizeRange) {
   if (value.trim() === '') return null;
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return null;
-  return Math.min(FONT_SIZE_MAX, Math.max(FONT_SIZE_MIN, Math.round(parsed)));
+  return Math.min(range.max, Math.max(range.min, Math.round(parsed)));
 }
 
 function FontSizeInput({
   value,
+  range,
   onCommit,
   ariaLabel,
 }: {
   value: number;
+  range: FontSizeRange;
   onCommit: (value: number) => void;
   ariaLabel: string;
 }) {
@@ -103,7 +107,7 @@ function FontSizeInput({
   }
 
   const commitDraft = () => {
-    const parsed = parseFontSize(draft);
+    const parsed = parseFontSize(draft, range);
     if (parsed === null) {
       setDraft(String(value));
       return;
@@ -130,8 +134,8 @@ function FontSizeInput({
   return (
     <Input
       type="number"
-      min={FONT_SIZE_MIN}
-      max={FONT_SIZE_MAX}
+      min={range.min}
+      max={range.max}
       value={draft}
       onChange={(event) => setDraft(event.target.value)}
       onBlur={commitDraft}
@@ -284,6 +288,7 @@ export function NxdsAppearanceSettings() {
           <NxdsAppearanceSettingRow label="UI font size">
             <FontSizeInput
               value={state.prefs.uiFontSize}
+              range={UI_FONT_SIZE_RANGE}
               ariaLabel="UI font size"
               onCommit={(value) => setFontSize('uiFontSize', value)}
             />
@@ -291,6 +296,7 @@ export function NxdsAppearanceSettings() {
           <NxdsAppearanceSettingRow label="Code font size">
             <FontSizeInput
               value={state.prefs.codeFontSize}
+              range={CODE_FONT_SIZE_RANGE}
               ariaLabel="Code font size"
               onCommit={(value) => setFontSize('codeFontSize', value)}
             />

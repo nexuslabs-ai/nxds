@@ -94,12 +94,12 @@ const meta = {
       token(root, '--nx-radius-md')
     );
 
-    // The caps line box scales with uiFontSize.
+    // The caps line box scales with uiFontSize, in whole pixels.
     const caps = canvas.getByTestId('label-caps');
     const scale = globals.uiFontSize / DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize;
     await waitFor(() =>
       expect(getComputedStyle(caps).lineHeight).toBe(
-        `${LABEL_CAPS_LINE_HEIGHT_PX * scale}px`
+        `${Math.round(LABEL_CAPS_LINE_HEIGHT_PX * scale)}px`
       )
     );
   },
@@ -119,7 +119,7 @@ export const SpaciousExtraRound: Story = {
 };
 
 export const CompactSmoothLargeText: Story = {
-  globals: { density: 'compact', corners: 'smooth', uiFontSize: 28 },
+  globals: { density: 'compact', corners: 'smooth', uiFontSize: 16 },
 };
 
 export const RelaxedRound: Story = {

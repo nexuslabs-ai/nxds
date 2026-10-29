@@ -37,7 +37,12 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     :data-inset="inset || undefined"
     :data-variant="variant"
     :class="
-      cn(dropdownMenuItemVariants({ variant }), inset && 'nx:pl-8', props.class)
+      cn(
+        dropdownMenuItemVariants({ variant }),
+        inset &&
+          'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]',
+        props.class
+      )
     "
   >
     <slot />

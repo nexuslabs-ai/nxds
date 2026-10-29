@@ -354,7 +354,7 @@ export const CompositeUtilities: Story = {
   ),
 };
 
-const GLYPH_FONT_SIZES = [10, 12, 13, 14, 15, 16] as const;
+const GLYPH_FONT_SIZES = [12, 13, 14, 15, 16] as const;
 
 // The appearance runtime's font-size CSS, scoped to one row per font size.
 function fontSizeCss(uiFontSize: number) {

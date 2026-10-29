@@ -31,7 +31,8 @@ const forwarded = useForwardProps(delegated);
     :class="
       cn(
         'nx:px-2 nx:py-1.5 nx:typography-label-default',
-        inset && 'nx:pl-8',
+        inset &&
+          'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]',
         props.class
       )
     "

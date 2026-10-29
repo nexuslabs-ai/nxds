@@ -19,6 +19,7 @@ import {
   sanitizeNxdsAppearance,
   sanitizeNxdsAppearancePrefs,
   STROKE_OPTIONS,
+  UI_FONT_SIZE_RANGE,
 } from './appearance-model';
 import { deriveTheme } from './derive-theme';
 
@@ -241,8 +242,12 @@ describe('normalizeAppearanceModeIds', () => {
 });
 
 describe('sanitizeNxdsAppearancePrefs', () => {
-  it('clamps font sizes into [8,32] and falls back per field', () => {
-    expect(sanitizeNxdsAppearancePrefs({ uiFontSize: 99 }).uiFontSize).toBe(32);
+  it('clamps each font size into its range and falls back per field', () => {
+    expect(sanitizeNxdsAppearancePrefs({ uiFontSize: 99 }).uiFontSize).toBe(16);
+    expect(sanitizeNxdsAppearancePrefs({ uiFontSize: 8 }).uiFontSize).toBe(12);
+    expect(sanitizeNxdsAppearancePrefs({ codeFontSize: 99 }).codeFontSize).toBe(
+      32
+    );
     expect(sanitizeNxdsAppearancePrefs({ codeFontSize: 2 }).codeFontSize).toBe(
       8
     );
@@ -387,8 +392,10 @@ describe('appearancePrefsToCss', () => {
     return (css.match(typographyVarPattern) ?? []).sort();
   }
 
-  // Every UI font size the setting accepts.
-  const uiFontSizes = Array.from({ length: 25 }, (_, index) => index + 8);
+  const uiFontSizes = Array.from(
+    { length: UI_FONT_SIZE_RANGE.max - UI_FONT_SIZE_RANGE.min + 1 },
+    (_, index) => index + UI_FONT_SIZE_RANGE.min
+  );
 
   function glyphPx(css: string, name: string) {
     return Number(
@@ -457,9 +464,9 @@ describe('appearancePrefsToCss', () => {
 
     expect(css).toContain('--nx-typography-family-font-sans: Inter;');
     expect(css).toContain('--nx-typography-family-font-mono: JetBrains Mono;');
-    expect(css).toContain('--nx-typography-size-sm: 32px;');
-    expect(css).toContain('--nx-typography-line-height-xxs: 27px;');
-    expect(css).toContain('--nx-typography-line-height-sm: 46px;');
+    expect(css).toContain('--nx-typography-size-sm: 16px;');
+    expect(css).toContain('--nx-typography-line-height-xxs: 14px;');
+    expect(css).toContain('--nx-typography-line-height-sm: 23px;');
     expect(css).toContain(
       '.nx\\:font-mono, .nx\\:typography-code-block, .nx\\:typography-code-inline { font-size: 12px; }'
     );

@@ -144,8 +144,10 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
   },
 };
 
-const FONT_PX_MIN = 8;
-const FONT_PX_MAX = 32;
+/** The UI font sizes the appearance accepts, in px. */
+export const UI_FONT_SIZE_RANGE = { min: 12, max: 16 } as const;
+/** The code font sizes the appearance accepts, in px. */
+export const CODE_FONT_SIZE_RANGE = { min: 8, max: 32 } as const;
 
 const APPEARANCE_MODES = new Set<NxdsAppearanceMode>([
   'light',
@@ -191,9 +193,13 @@ const enumOr = <T extends string>(
 ): T =>
   typeof value === 'string' && values.has(value as T) ? (value as T) : fallback;
 
-const clampFontSize = (value: unknown, fallback: number): number =>
+const clampFontSize = (
+  value: unknown,
+  fallback: number,
+  range: { min: number; max: number }
+): number =>
   typeof value === 'number' && Number.isFinite(value) && value > 0
-    ? Math.min(FONT_PX_MAX, Math.max(FONT_PX_MIN, value))
+    ? Math.min(range.max, Math.max(range.min, value))
     : fallback;
 
 function fontScaleVariables(uiPx: number): string {
@@ -264,8 +270,12 @@ export function sanitizeNxdsAppearancePrefs(raw: unknown): NxdsAppearancePrefs {
   return {
     uiFont: fontFamilyOr(o.uiFont, d.uiFont),
     codeFont: fontFamilyOr(o.codeFont, d.codeFont),
-    uiFontSize: clampFontSize(o.uiFontSize, d.uiFontSize),
-    codeFontSize: clampFontSize(o.codeFontSize, d.codeFontSize),
+    uiFontSize: clampFontSize(o.uiFontSize, d.uiFontSize, UI_FONT_SIZE_RANGE),
+    codeFontSize: clampFontSize(
+      o.codeFontSize,
+      d.codeFontSize,
+      CODE_FONT_SIZE_RANGE
+    ),
     reduceMotion: boolOr(o.reduceMotion, d.reduceMotion),
     pointerCursors: boolOr(o.pointerCursors, d.pointerCursors),
     fontSmoothing: boolOr(o.fontSmoothing, d.fontSmoothing),
@@ -308,11 +318,13 @@ export function createNxdsThemeContract(
 export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
   const uiPx = clampFontSize(
     prefs.uiFontSize,
-    DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize
+    DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize,
+    UI_FONT_SIZE_RANGE
   );
   const codePx = clampFontSize(
     prefs.codeFontSize,
-    DEFAULT_NXDS_APPEARANCE.prefs.codeFontSize
+    DEFAULT_NXDS_APPEARANCE.prefs.codeFontSize,
+    CODE_FONT_SIZE_RANGE
   );
   // Fonts, type size and icon size reach only nxds. The toggles below apply to
   // the whole page, host included, when the user turns them on.
