@@ -1,6 +1,6 @@
 {
   "name": "@nxds/docs",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "private": true,
   "type": "module",
   "description": "Documentation site for the nxds design system",
@@ -23,6 +23,7 @@
     "@mdx-js/react": "^3.1.0",
     "@next/mdx": "^15.1.6",
     "@nxds/catalog": "workspace:*",
+    "@nxds/claude-design": "workspace:*",
     "@nxds/core": "workspace:*",
     "@nxds/react": "workspace:*",
     "@nxds/source-model": "workspace:*",

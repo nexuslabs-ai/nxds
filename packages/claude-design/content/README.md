@@ -68,9 +68,10 @@ Motion answers input and then gets out of the way. Popovers, menus and routine s
 
 ## Iconography
 
-- nxds uses Tabler icons, outline style, at 16px beside text. They are `Nxds.Icons.IconName`, such as `Nxds.Icons.IconPlus`.
+- nxds uses Tabler icons, outline style, at 16px beside text. Place one with `Nxds.Icon` and its tabler.io name: `name="plus"`.
+- Name an icon on an icon prop the same way: Button `start-icon="plus"`, Badge `left-icon="circle-check"`. `components/Icon/README.md` lists every name the system ships.
 - An icon takes the colour of its text. Don't tint icons on their own.
-- An icon-only button sets `iconOnly`, takes its icon as `startIcon`, and keeps its name as the text.
+- An icon-only button sets `icon-only` and names its icon with `start-icon`. Its text is the name screen readers read: Button `icon-only start-icon="download"` with the text `Download`.
 - No emoji as icons.
 
 ## Using the components
@@ -78,8 +79,10 @@ Motion answers input and then gets out of the way. Popovers, menus and routine s
 - Mount components from `Nxds`, such as `Nxds.Button` and `Nxds.DialogContent`. Each component's card lists its parts and props.
 - Compose a component from its parts, as its README shows: `Nxds.Card` holds `Nxds.CardHeader`, `Nxds.CardTitle` and `Nxds.CardContent`.
 - Overlays (`Dialog`, `Popover`, `DropdownMenu`, `Select`, `Tooltip`) open from a trigger part, such as `Nxds.DialogTrigger`.
-- Wrap a sidebar layout in `Nxds.SidebarProvider`, and mount `Nxds.Toaster` once to show toasts.
-- Draw charts with `Nxds.ChartContainer` around `Nxds.Recharts` parts.
+- Wrap a sidebar layout in `Nxds.SidebarProvider`.
+- Show a toast on a static screen with `Nxds.Toast`, placed where the app shows its toasts. `Nxds.Toaster` shows a toast only when code calls `toast()`.
+- Draw a chart with `Nxds.BarChart`, `Nxds.LineChart`, `Nxds.AreaChart` or `Nxds.PieChart`. Give it its rows as JSON in `data`, the category key in `x-key` and the series keys as a comma list in `series`: `series="desktop,mobile"`. Each series takes the next chart colour.
+- For a chart those don't draw, put `Nxds.Recharts` parts inside `Nxds.ChartContainer`, each as its own x-import: `Nxds.Recharts.BarChart` with `data` as JSON, then `Nxds.Recharts.Bar` with `data-key="desktop"`. Name each series' label and colour in ChartContainer's `config`, and fill it with `var(--color-desktop)`. Use the data charts when you want the nxds tooltip and legend.
 
 ## Themes
 
@@ -121,8 +124,22 @@ The System page is read-only for this system. An edit there recompiles tokens.cs
 ## Canvas rules
 
 - Mount a component with `<x-import component-from-global-scope="Nxds.Button">`. Attributes set props, kebab-case to camelCase, and element content becomes `children`.
-- An attribute holds text only. A prop that takes an element, a function or an object has no attribute.
-- Write a boolean prop as `as-child="{{true}}"`. A bare `as-child` arrives as an empty string, which is false.
+- Write each attribute in the form its prop's type in `components/index.d.ts` takes:
+
+| Prop type         | Write it as                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------- |
+| `boolean`         | A bare attribute for true: `disabled`. Or `"true"` or `"false"`.                   |
+| `number`          | Digits: `value="60"`, `min="-10"`, `step="0.5"`.                                   |
+| A list of options | One of them, exactly: `variant="outline"`.                                         |
+| A comma list      | `default-value="20,80"`. Write JSON, `'["a, b","c"]'`, when an item holds a comma. |
+| An ISO date       | `selected="2026-10-28"`, or a month: `default-month="2026-10"`.                    |
+| JSON              | Single quotes around it: `data='[{"month":"Jan","desktop":186}]'`.                 |
+
+- A prop with a doc comment such as "With `type="multiple"`, a comma list" reads its list form only beside that `type`. DatePicker's `selected` follows `mode` the same way: one date, a comma list of dates, or a range as its first and last date, `"2026-10-01,2026-10-07"`.
+- An attribute that doesn't fit its prop logs a `[nxds]` warning and leaves the prop at its default. Read the console when a component looks wrong.
+- `{{...}}` and `dc-props` pass their values through unchanged.
+- A prop that takes a function, a ref or a DOM node has no attribute. `coverage.md` in the export lists them, and why a canvas doesn't need them.
+- Show an overlay open with `default-open` on its root part, such as `Nxds.Dialog`. A modal overlay locks the rest of the artboard while it's open, as it does in an app. Set `modal="false"` on a `Nxds.DropdownMenu` that shouldn't.
 - Lay out artboards with the spacing tokens, not raw pixel values.
 - Mount each part as its own `x-import`, the way a component's README shows. The canvas puts each one in a wrapper, and the parts keep their layout, borders and icon sizes through it. An `as-child` trigger opens its overlay from the element inside the wrapper.
 - Style a component through its props, not with a `style` on its `x-import`. A styled `x-import` turns the canvas's wrapper into a box that sits between the parts.
