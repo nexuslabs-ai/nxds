@@ -6,7 +6,13 @@ import { expect, within } from 'storybook/test';
 import { Badge } from '../components/badge/badge';
 import { Button } from '../components/button/button';
 import { Checkbox } from '../components/checkbox/checkbox';
+import { Input } from '../components/input/input';
 import { Kbd } from '../components/kbd/kbd';
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from '../components/radio-group/radio-group';
+import { Toggle } from '../components/toggle/toggle';
 
 import {
   tokenValue,
@@ -403,7 +409,6 @@ export const GlyphsFollowFontSize: Story = {
     const width = (element: Element | null) =>
       element!.getBoundingClientRect().width;
     const buttonHeights = new Set<number>();
-    const checkWidths = new Set<number>();
     let previous = 0;
     for (const uiFontSize of GLYPH_FONT_SIZES) {
       const row = canvas.getByTestId(`font-${uiFontSize}`);
@@ -423,12 +428,119 @@ export const GlyphsFollowFontSize: Story = {
       await expect(width(row.querySelector('[data-slot="kbd"] svg'))).toBe(
         icon - 4
       );
+      // The Checkbox box is the control icon's size, and its check the small one.
+      await expect(width(row.querySelector('[data-slot="checkbox"]'))).toBe(
+        icon
+      );
+      await expect(
+        width(row.querySelector('[data-slot="checkbox-check"]'))
+      ).toBe(icon - 2);
       buttonHeights.add(button.getBoundingClientRect().height);
-      checkWidths.add(width(row.querySelector('[data-slot="checkbox-check"]')));
     }
-    // Control heights follow density, not the font size. The Checkbox box is
-    // fixed, so its check is too.
+    // Control heights follow density, not the font size.
     await expect(buttonHeights.size).toBe(1);
-    await expect(checkWidths.size).toBe(1);
+  },
+};
+
+const FIT_DENSITIES = [
+  'tight',
+  'compact',
+  'default',
+  'comfortable',
+  'relaxed',
+  'spacious',
+] as const;
+
+// Each part with text, and the spacing step that sets its smallest height.
+const FIT_PARTS = [
+  { slot: 'badge', step: 6 },
+  { slot: 'kbd', step: 5 },
+  { slot: 'button', step: 8 },
+  { slot: 'toggle', step: 7 },
+  { slot: 'input', step: 8 },
+] as const;
+
+export const ContentFitsAtEveryFontSize: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Each box holds its text and border at every density and UI font size, and a box that grows keeps an even height. Checkbox and Radio follow the icon size and keep a 24px target. Each row sets one UI font size and one density.',
+      },
+    },
+  },
+  render: () => (
+    <div className="nx:flex nx:flex-col nx:gap-3 nx:p-10 nx:bg-background">
+      <style>{GLYPH_FONT_SIZES.map(fontSizeCss).join('\n')}</style>
+      {GLYPH_FONT_SIZES.flatMap((uiFontSize) =>
+        FIT_DENSITIES.map((density) => (
+          <div
+            key={`${uiFontSize}-${density}`}
+            data-ui-font={uiFontSize}
+            data-density={density}
+            data-testid={`fit-${uiFontSize}-${density}`}
+            className="nx:flex nx:items-center nx:gap-3"
+          >
+            <Badge isCaps={false}>Active</Badge>
+            <Kbd>K</Kbd>
+            <Button size="sm">Save</Button>
+            <Toggle size="sm">Bold</Toggle>
+            <Input
+              size="sm"
+              defaultValue="Atlas"
+              aria-label={`Name at ${uiFontSize}px, ${density}`}
+            />
+            <Checkbox
+              defaultChecked
+              aria-label={`Checkbox at ${uiFontSize}px, ${density}`}
+            />
+            <RadioGroup
+              defaultValue="on"
+              aria-label={`Radio at ${uiFontSize}px, ${density}`}
+            >
+              <RadioGroupItem value="on" aria-label="On" />
+            </RadioGroup>
+          </div>
+        ))
+      )}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const px = (element: Element, name: string) =>
+      parseFloat(getComputedStyle(element).getPropertyValue(name));
+    for (const uiFontSize of GLYPH_FONT_SIZES) {
+      for (const density of FIT_DENSITIES) {
+        const row = canvas.getByTestId(`fit-${uiFontSize}-${density}`);
+        for (const { slot, step } of FIT_PARTS) {
+          const part = row.querySelector(`[data-slot="${slot}"]`)!;
+          const height = part.getBoundingClientRect().height;
+          const floor = px(row, `--nx-spacing-${step}`);
+          const style = getComputedStyle(part);
+          const content =
+            parseFloat(style.lineHeight) +
+            parseFloat(style.borderTopWidth) +
+            parseFloat(style.borderBottomWidth);
+          await expect(height).toBeGreaterThanOrEqual(content);
+          if (uiFontSize === DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize) {
+            // At the default font size a box keeps its density height, unless
+            // its text and border need more.
+            await expect(height).toBe(Math.max(floor, content));
+          } else if (height > floor) {
+            // A box that grows with its text keeps an even height.
+            await expect(height % 2).toBe(0);
+          }
+        }
+        const glyph = px(row, '--nx-icon-glyph-default');
+        for (const control of row.querySelectorAll(
+          '[data-slot="checkbox"], [data-slot="radio-group-item"]'
+        )) {
+          await expect(control.getBoundingClientRect().width).toBe(glyph);
+          const target = getComputedStyle(control, '::before');
+          await expect(parseFloat(target.width)).toBe(24);
+          await expect(parseFloat(target.height)).toBe(24);
+        }
+      }
+    }
   },
 };

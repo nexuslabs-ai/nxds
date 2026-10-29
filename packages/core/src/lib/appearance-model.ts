@@ -202,20 +202,23 @@ const clampFontSize = (
     ? Math.min(range.max, Math.max(range.min, value))
     : fallback;
 
+const roundToEven = (px: number) => 2 * Math.round(px / 2);
+
 function fontScaleVariables(uiPx: number): string {
   const scale = uiPx / DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize;
   const sizeVars = Object.entries(typographyTokens.size).map(
     ([name, token]) =>
       `  --nx-typography-size-${name}: ${Math.round(token.$value.value * scale)}px;`
   );
+  // Line heights and the default glyph round to even sizes, so a box that grows
+  // with its text keeps an even height and its content centers on whole pixels.
+  // The other glyphs keep their distance from the default one.
   const lineHeightVars = Object.entries(typographyTokens['line-height']).map(
     ([name, token]) =>
-      `  --nx-typography-line-height-${name}: ${Math.round(token.$value.value * scale)}px;`
+      `  --nx-typography-line-height-${name}: ${roundToEven(token.$value.value * scale)}px;`
   );
-  // The default glyph rounds to an even size, so it centers on whole pixels in
-  // an even-height control. The other glyphs keep their distance from it.
   const glyphDefault = iconTokens.glyph.default.$value.value;
-  const scaledDefault = 2 * Math.round((glyphDefault * scale) / 2);
+  const scaledDefault = roundToEven(glyphDefault * scale);
   const glyphVars = Object.entries(iconTokens.glyph).map(
     ([name, token]) =>
       `  --nx-icon-glyph-${name}: ${scaledDefault - (glyphDefault - token.$value.value)}px;`

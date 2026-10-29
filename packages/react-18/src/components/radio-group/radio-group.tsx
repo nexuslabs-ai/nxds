@@ -65,8 +65,9 @@ const RadioGroupItem = React.forwardRef<
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"
       className={cn(
-        'nx:group nx:size-[16px] nx:shrink-0 nx:cursor-pointer nx:rounded-full nx:p-0 nx:border-default nx:border-border-default nx:bg-container',
+        'nx:group nx:relative nx:size-icon-glyph-default nx:shrink-0 nx:cursor-pointer nx:rounded-full nx:p-0 nx:border-default nx:border-border-default nx:bg-container',
         'nx:transition-control',
+        'nx:before:absolute nx:before:inset-[calc((var(--nx-icon-glyph-default)_-_2*var(--nx-borderwidth-default)_-_24px)/2)]',
         'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
         'nx:aria-invalid:border-error-border nx:aria-invalid:focus-visible:outline-focus-error',
         'nx:disabled:cursor-not-allowed nx:disabled:border-border-disabled nx:disabled:bg-disabled',
@@ -85,7 +86,7 @@ const RadioGroupItem = React.forwardRef<
           data-slot="radio-group-dot"
           aria-hidden="true"
           className={cn(
-            'nx:size-[10px] nx:text-current',
+            'nx:size-[calc(var(--nx-icon-glyph-default)_-_6px)] nx:text-current',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )}

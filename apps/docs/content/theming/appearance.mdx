@@ -35,7 +35,9 @@ border width as data attributes. Switching an option needs no rebuild.
 Fonts and font sizes apply to nxds components only. The UI font size takes 12
 to 16px, and the code font size 8 to 32px. The UI font size also sets icon
 sizes, in even pixels, so icons stay in proportion to their text. Control
-heights follow density, not the font size. Reduced motion, pointer cursors and
+heights follow density. A Badge or Kbd grows when its text needs more room, and
+line heights round to even pixels, so a box that grows keeps an even height.
+Checkbox and Radio take the icon size. Reduced motion, pointer cursors and
 font smoothing apply to the whole page. All three are off until a user turns
 them on.
 
