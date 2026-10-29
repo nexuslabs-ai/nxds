@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import iconTokens from '../../tokens/primitives/icon.json';
 import typographyTokens from '../../tokens/primitives/typography/typography-default.json';
 
 import {
@@ -386,6 +387,53 @@ describe('appearancePrefsToCss', () => {
     return (css.match(typographyVarPattern) ?? []).sort();
   }
 
+  // Every UI font size the setting accepts.
+  const uiFontSizes = Array.from({ length: 25 }, (_, index) => index + 8);
+
+  function glyphPx(css: string, name: string) {
+    return Number(
+      new RegExp(`--nx-icon-glyph-${name}: (\\d+)px;`).exec(css)?.[1]
+    );
+  }
+
+  it('rounds the type scale to whole pixels', () => {
+    for (const uiFontSize of uiFontSizes) {
+      const css = appearancePrefsToCss({ ...prefs, uiFontSize });
+      const fractional = typographyDeclarations(css).filter(
+        (declaration) => !/:\s*\d+px;$/.test(declaration)
+      );
+      expect(fractional, `uiFontSize ${uiFontSize}`).toEqual([]);
+    }
+  });
+
+  it('keeps the icon glyph tokens at the default font size', () => {
+    const css = appearancePrefsToCss(prefs);
+    for (const [name, token] of Object.entries(iconTokens.glyph)) {
+      expect(glyphPx(css, name), name).toBe(token.$value.value);
+    }
+  });
+
+  it('scales icon glyphs in even pixels that keep their distance from the default', () => {
+    const base = iconTokens.glyph.default.$value.value;
+    let previous = 0;
+    for (const uiFontSize of uiFontSizes) {
+      const css = appearancePrefsToCss({ ...prefs, uiFontSize });
+      const scaled = glyphPx(css, 'default');
+      expect(scaled % 2, `uiFontSize ${uiFontSize}`).toBe(0);
+      expect(
+        Math.abs(scaled - (base * uiFontSize) / prefs.uiFontSize),
+        `uiFontSize ${uiFontSize}`
+      ).toBeLessThanOrEqual(1);
+      expect(scaled).toBeGreaterThanOrEqual(previous);
+      previous = scaled;
+      for (const [name, token] of Object.entries(iconTokens.glyph)) {
+        expect(glyphPx(css, name), `${name} at ${uiFontSize}`).toBe(
+          scaled - (base - token.$value.value)
+        );
+      }
+    }
+  });
+
   it('scales only px typography dimensions', () => {
     const dimensions = [
       ...Object.entries(typographyTokens.size),
@@ -410,8 +458,8 @@ describe('appearancePrefsToCss', () => {
     expect(css).toContain('--nx-typography-family-font-sans: Inter;');
     expect(css).toContain('--nx-typography-family-font-mono: JetBrains Mono;');
     expect(css).toContain('--nx-typography-size-sm: 32px;');
-    expect(css).toContain('--nx-typography-line-height-xxs: 27.4286px;');
-    expect(css).toContain('--nx-typography-line-height-sm: 45.7143px;');
+    expect(css).toContain('--nx-typography-line-height-xxs: 27px;');
+    expect(css).toContain('--nx-typography-line-height-sm: 46px;');
     expect(css).toContain(
       '.nx\\:font-mono, .nx\\:typography-code-block, .nx\\:typography-code-inline { font-size: 12px; }'
     );
