@@ -42,13 +42,13 @@ const group = useTemplateRef<HTMLDivElement>('group');
 const panelId = useId();
 const localValue = ref(props.defaultValue);
 const localOpen = ref(props.defaultOpen);
-const tools = shallowReactive(new Map<string, HTMLElement>());
+const toolElements = shallowReactive(new Map<string, HTMLElement>());
 const panels = shallowReactive(new Set<string>());
 let switching = false;
 let restoreFocus = true;
 
 const value = computed(() => props.value ?? localValue.value);
-const activeTool = computed(() => tools.get(value.value) ?? null);
+const activeTool = computed(() => toolElements.get(value.value) ?? null);
 const open = computed(
   () =>
     (props.open ?? localOpen.value) &&
@@ -56,17 +56,17 @@ const open = computed(
     activeTool.value !== null
 );
 
-function registerTool(tool: string, element: HTMLElement) {
-  tools.set(tool, element);
+function registerTool(toolValue: string, element: HTMLElement) {
+  toolElements.set(toolValue, element);
   return () => {
-    if (tools.get(tool) === element) tools.delete(tool);
+    if (toolElements.get(toolValue) === element) toolElements.delete(toolValue);
   };
 }
 
-function registerPanel(panel: string) {
-  panels.add(panel);
+function registerPanel(panelValue: string) {
+  panels.add(panelValue);
   return () => {
-    panels.delete(panel);
+    panels.delete(panelValue);
   };
 }
 

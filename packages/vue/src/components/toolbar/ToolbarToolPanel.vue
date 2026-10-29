@@ -14,6 +14,8 @@ import { PopoverContent } from '../popover';
 
 import { injectToolbarToolGroup } from './toolbar-tool-group';
 
+// vue-docgen-api fails on an interface that extends one from a local .vue
+// file, so this repeats nxds PopoverContentProps: Reka's props and class.
 export interface ToolbarToolPanelProps extends RekaPopoverContentProps {
   /** The ToolbarTool this panel belongs to. */
   value: string;
@@ -35,11 +37,17 @@ watchEffect((onCleanup) => onCleanup(tools.registerPanel(props.value)));
 
 // Reka sets the panel's id and aria-labelledby from these, over its attributes.
 popover.contentId = tools.panelId;
+
+/** The panel's own aria-labelledby, else its tool unless it has an aria-label. */
+function labelledBy() {
+  const own = attrs['aria-labelledby'];
+  if (typeof own === 'string') return own;
+  if (attrs['aria-label']) return '';
+  return tools.activeTool.value?.id ?? '';
+}
+
 watchEffect(() => {
-  if (!shown.value) return;
-  popover.triggerId = attrs['aria-label']
-    ? ''
-    : (tools.activeTool.value?.id ?? '');
+  if (shown.value) popover.triggerId = labelledBy();
 });
 
 function handleOpenAutoFocus(event: Event) {

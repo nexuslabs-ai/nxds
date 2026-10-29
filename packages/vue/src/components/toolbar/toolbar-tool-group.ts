@@ -7,7 +7,7 @@ export interface ToolbarToolGroupContext {
   panelId: string;
   panels: ReadonlySet<string>;
   activeTool: Readonly<Ref<HTMLElement | null>>;
-  registerTool: (value: string, tool: HTMLElement) => () => void;
+  registerTool: (value: string, element: HTMLElement) => () => void;
   registerPanel: (value: string) => () => void;
   select: (value: string) => void;
   /** Returns true when focus should stay on the tool that was just chosen. */

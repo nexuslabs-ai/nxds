@@ -1458,6 +1458,65 @@ export const SwitchFromPanel: Story = {
   },
 };
 
+const NamedPanelsDemo = defineComponent({
+  components: {
+    Button,
+    Checkbox,
+    IconEraser,
+    IconPencil,
+    IconPointer,
+    Label,
+    Toolbar,
+    ToolbarTool,
+    ToolbarToolGroup,
+    ToolbarToolPanel,
+  },
+  setup: () => ({ id: useId() }),
+  template: `
+    <div class="nx:flex nx:min-h-64 nx:items-end">
+      <Toolbar aria-label="Canvas">
+        <ToolbarToolGroup aria-label="Drawing tools" default-value="select">
+          <ToolbarTool value="select" size="icon-sm" aria-label="Select">
+            <IconPointer aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
+            <IconPencil aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
+            <IconEraser aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarToolPanel value="draw" side="top" aria-label="Brush options">
+            <Button size="sm">Reset brush</Button>
+          </ToolbarToolPanel>
+          <ToolbarToolPanel value="erase" side="top" :aria-labelledby="id + '-eraser'">
+            <p :id="id + '-eraser'" class="nx:m-0 nx:mb-2 nx:typography-label-default">Eraser settings</p>
+            <div class="nx:flex nx:items-center nx:gap-2">
+              <Checkbox :id="id + '-whole'" />
+              <Label :for="id + '-whole'">Erase whole strokes</Label>
+            </div>
+          </ToolbarToolPanel>
+        </ToolbarToolGroup>
+      </Toolbar>
+    </div>
+  `,
+});
+
+export const NamedPanels: Story = {
+  render: () => NamedPanelsDemo,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    await userEvent.click(canvas.getByRole('button', { name: 'Draw' }));
+    await expect(
+      await page.findByRole('dialog', { name: 'Brush options' })
+    ).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Erase' }));
+    await expect(
+      await page.findByRole('dialog', { name: 'Eraser settings' })
+    ).toBeVisible();
+  },
+};
+
 export const AllVariants: Story = {
   render: () => ({
     components: {
