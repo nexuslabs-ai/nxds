@@ -8,32 +8,7 @@ import * as React from 'react';
 
 import * as RadixSlot from '@radix-ui/react-slot';
 
-import { CANVAS_WRAPPER_CLASS } from './canvas-wrapper.ts';
-
-type WrapperProps = { className?: unknown; children?: React.ReactNode };
-
-// A canvas passes x-import content as an array, even for one child, and keeps
-// the indentation between tags as strings.
-function withoutIndentation(children: React.ReactNode): React.ReactNode {
-  if (!Array.isArray(children)) return children;
-  const content = children.filter(
-    (child) => typeof child !== 'string' || child.trim() !== ''
-  );
-  return content.length === 1 ? content[0] : content;
-}
-
-function isCanvasWrapper(
-  node: React.ReactNode
-): node is React.ReactElement<WrapperProps> {
-  if (!React.isValidElement<WrapperProps>(node)) return false;
-  const { className, children } = node.props;
-  if (typeof node.type !== 'string' || typeof className !== 'string') {
-    return false;
-  }
-  if (!className.split(/\s+/).includes(CANVAS_WRAPPER_CLASS)) return false;
-  const child = withoutIndentation(children);
-  return React.isValidElement(child) && child.type !== React.Fragment;
-}
+import { isCanvasWrapper, withoutIndentation } from './canvas-wrapper.ts';
 
 // `render` applied to the element inside every canvas wrapper around `children`.
 function inWrappers(
