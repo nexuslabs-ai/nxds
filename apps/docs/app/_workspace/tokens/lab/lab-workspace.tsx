@@ -6,8 +6,8 @@ import type { Mode, TokenMap } from '@nxds/core';
 import { Button } from '@nxds/react';
 import { useNxdsAppearance } from '@nxds/react/appearance';
 
+import { useDocsTheme } from '../../../_lib/docs-theme';
 import { AppearanceControls } from '../../appearance-controls';
-import { useAppearanceHistory } from '../../appearance-state';
 import { PageHeading } from '../../page-heading';
 import { PlaygroundViewNav } from '../../playground-view-nav';
 import { WorkspaceLayout } from '../../workspace-layout';
@@ -39,7 +39,8 @@ function overrideCss(overrides: Overrides): string {
 }
 
 export function LabWorkspace({ primitives, scales }: LabData) {
-  const { state, change, startStep } = useAppearanceHistory();
+  const { state, iconLibrary, change, changeIconLibrary, startStep } =
+    useDocsTheme();
   const { resolvedMode } = useNxdsAppearance();
   const [overrides, setOverrides] = useState<Overrides>(NO_OVERRIDES);
   const live = useLiveTheme(overrides);
@@ -62,7 +63,9 @@ export function LabWorkspace({ primitives, scales }: LabData) {
       <AppearanceControls
         state={state}
         resolvedMode={resolvedMode}
+        iconLibrary={iconLibrary}
         onChange={change}
+        onIconLibraryChange={changeIconLibrary}
         onGestureStart={startStep}
       />
       <div className="nx:pt-4 nx:border-t-default nx:border-border-default">

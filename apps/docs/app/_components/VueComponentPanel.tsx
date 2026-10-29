@@ -3,8 +3,9 @@ import {
   type VueDemo,
   vueDemos,
 } from '../../generated/vue/docs';
+import { withoutListed } from '../_lib/icon-library-variants';
 
-import { CodeSample, CodeSampleCard } from './CodeSample';
+import { CodeSample, ExampleCodeCard } from './CodeSample';
 import { ComponentInstallation } from './ComponentInstallation';
 import { DescriptionText } from './DescriptionText';
 import {
@@ -32,12 +33,12 @@ function requireVueDemo(id: string): VueDemo {
 /** One Vue docs story: a live Vue app on the stage, its single-file component below. */
 function VueComponentDemo({ demo }: { demo: VueDemo }) {
   return (
-    <CodeSampleCard
+    <ExampleCodeCard
       data-slot="component-demo"
       data-demo={demo.id}
       className="nx:my-6"
       lang="vue"
-      code={demo.source}
+      sources={demo.sources}
       header={
         <div
           data-md-skip
@@ -113,9 +114,7 @@ export function VueComponentPanel({
               slugs={demo.alsoInstall.filter(
                 (also) => !preview.alsoInstall.includes(also)
               )}
-              packages={demo.packages.filter(
-                (spec) => !preview.packages.includes(spec)
-              )}
+              packages={withoutListed(demo.packages, preview.packages)}
             />
           </section>
         );

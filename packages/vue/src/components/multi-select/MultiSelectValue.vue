@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { IconX } from '@tabler/icons-vue';
 import {
   useDebounceFn,
   useMutationObserver,
@@ -14,6 +13,7 @@ import {
   type VNode,
 } from 'vue';
 
+import { IconX } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 import { Badge } from '../badge';
 

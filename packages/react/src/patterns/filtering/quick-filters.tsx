@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { IconFile, IconTag } from '@tabler/icons-react';
+import { FileIcon, TagIcon } from '@phosphor-icons/react/ssr';
 
 import { AppliedFilters } from '../../blocks/filtering/applied-filters';
 import {
@@ -71,7 +71,7 @@ export function CardFilters() {
       <AppliedFilters>
         <ChoiceFilter
           label="Category"
-          icon={<IconTag aria-hidden="true" />}
+          icon={<TagIcon aria-hidden="true" />}
           value={category}
           options={['Planning', 'Research'].map((value) => ({
             value,
@@ -81,7 +81,7 @@ export function CardFilters() {
         />
         <ChoiceFilter
           label="Format"
-          icon={<IconFile aria-hidden="true" />}
+          icon={<FileIcon aria-hidden="true" />}
           value={format}
           options={['Document', 'Checklist'].map((value) => ({
             value,
@@ -155,7 +155,7 @@ export function FileFiltersExample() {
       <AppliedFilters>
         <ChoiceFilter
           label="Type"
-          icon={<IconFile aria-hidden="true" />}
+          icon={<FileIcon aria-hidden="true" />}
           value={type}
           options={['PDF', 'Image'].map((value) => ({ value, label: value }))}
           onChange={setType}
@@ -164,7 +164,7 @@ export function FileFiltersExample() {
           label="Size"
           unit="KB"
           lowerBound={0}
-          icon={<IconFile aria-hidden="true" />}
+          icon={<FileIcon aria-hidden="true" />}
           value={size}
           onChange={setSize}
         />

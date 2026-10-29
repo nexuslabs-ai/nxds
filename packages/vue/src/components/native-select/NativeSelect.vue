@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { IconChevronDown } from '@tabler/icons-vue';
 import { useVModel } from '@vueuse/core';
 import { computed, type HTMLAttributes, useTemplateRef, watch } from 'vue';
 
+import { IconChevronDown } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 import { type NativeSelectVariants, nativeSelectVariants } from '.';

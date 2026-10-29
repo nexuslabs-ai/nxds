@@ -1,13 +1,13 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconArchive,
-  IconArrowBackUp,
-  IconBold,
-  IconItalic,
-  IconUnderline,
-} from '@tabler/icons-react';
+  ArchiveIcon,
+  ArrowUUpLeftIcon,
+  TextBIcon,
+  TextItalicIcon,
+  TextUnderlineIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -83,7 +83,7 @@ function EditorToolbar() {
                 onClick={() => setFormatting([])}
                 className="nx:text-muted-foreground"
               >
-                <IconArrowBackUp aria-hidden="true" />
+                <ArrowUUpLeftIcon aria-hidden="true" />
               </ToolbarButton>
             </span>
           </TooltipTrigger>
@@ -104,7 +104,7 @@ function EditorToolbar() {
                   aria-label="Bold"
                   size="icon-sm"
                 >
-                  <IconBold aria-hidden="true" />
+                  <TextBIcon aria-hidden="true" />
                 </ToolbarToggleItem>
               </span>
             </TooltipTrigger>
@@ -118,7 +118,7 @@ function EditorToolbar() {
                   aria-label="Italic"
                   size="icon-sm"
                 >
-                  <IconItalic aria-hidden="true" />
+                  <TextItalicIcon aria-hidden="true" />
                 </ToolbarToggleItem>
               </span>
             </TooltipTrigger>
@@ -132,7 +132,7 @@ function EditorToolbar() {
                   aria-label="Underline"
                   size="icon-sm"
                 >
-                  <IconUnderline aria-hidden="true" />
+                  <TextUnderlineIcon aria-hidden="true" />
                 </ToolbarToggleItem>
               </span>
             </TooltipTrigger>
@@ -444,7 +444,7 @@ export const InsideTooltipProvider: Story = {
         <Tooltip>
           <TooltipTrigger asChild>
             <ToolbarButton size="icon-sm" aria-label="Bold">
-              <IconBold aria-hidden="true" />
+              <TextBIcon aria-hidden="true" />
             </ToolbarButton>
           </TooltipTrigger>
           <TooltipContent>Bold</TooltipContent>
@@ -791,7 +791,7 @@ function SelectionExample() {
             </span>
             <ToolbarSeparator className="nx:self-stretch nx:data-[orientation=vertical]:h-auto" />
             <ToolbarButton onClick={archiveSelection}>
-              <IconArchive aria-hidden="true" />
+              <ArchiveIcon aria-hidden="true" />
               Archive
             </ToolbarButton>
           </Toolbar>

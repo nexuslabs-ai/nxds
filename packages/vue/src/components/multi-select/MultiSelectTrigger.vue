@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { IconChevronDown } from '@tabler/icons-vue';
 import { PopoverTrigger } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
+import { IconChevronDown } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 import { injectMultiSelect } from '.';

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { IconX } from '@tabler/icons-vue';
 import type { HTMLAttributes } from 'vue';
 
+import { IconX } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 export interface AlertCloseProps {

@@ -1,18 +1,18 @@
 import { type DemoId, getDemo } from '../../__generated__/demo-index';
 
-import { CodeSampleCard } from './CodeSample';
+import { ExampleCodeCard } from './CodeSample';
 
 /** One docs story on a stage, with its generated source attached below. */
 export async function ComponentDemo({ id }: { id: DemoId }) {
-  const { Component, source } = await getDemo(id).load();
+  const { Component, sources } = await getDemo(id).load();
 
   return (
-    <CodeSampleCard
+    <ExampleCodeCard
       data-slot="component-demo"
       data-demo={id}
       className="nx:my-6"
       lang="tsx"
-      code={source}
+      sources={sources}
       header={
         <div
           data-md-skip

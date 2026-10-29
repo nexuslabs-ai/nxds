@@ -1,8 +1,8 @@
 import * as React from 'react';
 
+import { TextAaIcon } from '@phosphor-icons/react/ssr';
 import { Canvas, Source, Title } from '@storybook/addon-docs/blocks';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconLetterCase } from '@tabler/icons-react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -52,7 +52,7 @@ function Preview({
     >
       <TextFilter
         label="Name"
-        icon={<IconLetterCase aria-hidden="true" />}
+        icon={<TextAaIcon aria-hidden="true" />}
         value={value}
         onChange={change}
         disabled={isDisabled}

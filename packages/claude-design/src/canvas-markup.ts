@@ -76,10 +76,13 @@ function isIcon(value: TreeValue): value is TreeIcon {
 
 let iconNames: Map<string, string> | null = null;
 
-/** `plus` for `IconPlus`, or undefined for a component that isn't an icon the bundle ships. */
+/** `plus` for `PlusIcon`, or undefined for a component that isn't an icon the bundle ships. */
 function iconName(component: string) {
+  // Weighted names go first, so a component's plain name wins over its `-fill` one.
   iconNames ??= new Map(
-    iconSet().map(({ component, name }) => [component, name])
+    [...iconSet()]
+      .sort((a, b) => Number(!a.weight) - Number(!b.weight))
+      .map(({ component, name }) => [component, name])
   );
   return iconNames.get(component);
 }

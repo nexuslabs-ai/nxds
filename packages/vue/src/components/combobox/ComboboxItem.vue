@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { IconCheck } from '@tabler/icons-vue';
 import { reactiveOmit } from '@vueuse/core';
 
+import { IconCheck } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 import { CommandItem, type CommandItemProps } from '../command';
 

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { IconList, IconUsers } from '@tabler/icons-react';
+import { ListBulletsIcon, UsersIcon } from '@phosphor-icons/react/ssr';
 
 import { AppliedFilters } from '../../blocks/filtering/applied-filters';
 import {
@@ -83,7 +83,7 @@ export function TeamDirectory({
       <AppliedFilters>
         <ChoiceFilter
           label="Status"
-          icon={<IconList aria-hidden="true" />}
+          icon={<ListBulletsIcon aria-hidden="true" />}
           value={status}
           options={['Active', 'Invited'].map((value) => ({
             value,
@@ -93,7 +93,7 @@ export function TeamDirectory({
         />
         <ChoiceFilter
           label="Team"
-          icon={<IconUsers aria-hidden="true" />}
+          icon={<UsersIcon aria-hidden="true" />}
           value={team}
           options={['Design', 'Engineering', 'Operations'].map((value) => ({
             value,

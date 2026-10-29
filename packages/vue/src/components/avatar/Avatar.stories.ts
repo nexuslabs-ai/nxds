@@ -1,5 +1,5 @@
+import { PhUser } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { IconUser } from '@tabler/icons-vue';
 import { expect, waitFor, within } from 'storybook/test';
 import type { PropType } from 'vue';
 
@@ -256,7 +256,7 @@ export const AllSizes: Story = {
       AvatarGroup,
       AvatarImage,
       AvatarStatus,
-      IconUser,
+      PhUser,
     },
     setup: () => ({
       sizes: [
@@ -350,7 +350,7 @@ export const AllSizes: Story = {
             <div class="nx:flex nx:flex-col nx:items-center nx:gap-2">
               <Avatar size="xl" role="img" aria-label="Unknown user">
                 <AvatarFallback aria-hidden="true">
-                  <IconUser aria-hidden="true" class="nx:size-6" />
+                  <PhUser aria-hidden="true" class="nx:size-6" />
                 </AvatarFallback>
               </Avatar>
               <span class="nx:typography-label-small nx:text-muted-foreground">Icon</span>
@@ -396,11 +396,11 @@ export const WithFallback: Story = {
 
 export const WithIcon: Story = {
   render: () => ({
-    components: { ...avatarComponents, IconUser },
+    components: { ...avatarComponents, PhUser },
     template: `
       <Avatar role="img" aria-label="Unknown user">
         <AvatarFallback aria-hidden="true">
-          <IconUser aria-hidden="true" class="nx:size-5" />
+          <PhUser aria-hidden="true" class="nx:size-5" />
         </AvatarFallback>
       </Avatar>
     `,
