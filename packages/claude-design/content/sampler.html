@@ -1,0 +1,56 @@
+<div style="display: flex; flex-direction: column; gap: var(--nx-layout-section-gap); padding: var(--nx-spacing-8); background: var(--nx-color-background); color: var(--nx-color-foreground);">
+  <h1 class="typography-heading-large" style="margin: 0;">nxds sampler</h1>
+  <div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--nx-spacing-3);">
+    <x-import component-from-global-scope="Nxds.Button" start-icon="plus">Create project</x-import>
+    <x-import component-from-global-scope="Nxds.Button" variant="outline" end-icon="arrow-right">Continue</x-import>
+    <x-import component-from-global-scope="Nxds.Button" variant="secondary" disabled>Archived</x-import>
+    <x-import component-from-global-scope="Nxds.Button" variant="ghost" loading="true">Saving</x-import>
+    <x-import component-from-global-scope="Nxds.Badge" variant="success" left-icon="circle-check">Active</x-import>
+    <x-import component-from-global-scope="Nxds.Icon" name="settings" aria-label="Settings"></x-import>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--nx-spacing-6);">
+    <x-import component-from-global-scope="Nxds.Card">
+      <x-import component-from-global-scope="Nxds.CardHeader">
+        <x-import component-from-global-scope="Nxds.CardTitle">Notifications</x-import>
+        <x-import component-from-global-scope="Nxds.CardDescription">Choose what reaches you.</x-import>
+      </x-import>
+      <x-import component-from-global-scope="Nxds.CardContent">
+        <div style="display: flex; flex-direction: column; gap: var(--nx-layout-stack-gap);">
+          <x-import component-from-global-scope="Nxds.Switch" default-checked aria-label="Email updates"></x-import>
+          <x-import component-from-global-scope="Nxds.Switch" disabled="false" aria-label="Weekly digest"></x-import>
+          <x-import component-from-global-scope="Nxds.Checkbox" default-checked="indeterminate" aria-label="All projects"></x-import>
+          <x-import component-from-global-scope="Nxds.Slider" default-value="20,80" min="0" max="100" step="5" aria-label="Quiet hours"></x-import>
+          <x-import component-from-global-scope="Nxds.Progress" value="60" aria-label="Storage used"></x-import>
+          <x-import component-from-global-scope="Nxds.ToggleGroup" type="multiple" default-value="bold,italic" variant="outline">
+            <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="bold" aria-label="Bold">
+              <x-import component-from-global-scope="Nxds.Icon" name="bold"></x-import>
+            </x-import>
+            <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="italic" aria-label="Italic">
+              <x-import component-from-global-scope="Nxds.Icon" name="italic"></x-import>
+            </x-import>
+            <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="underline" aria-label="Underline">
+              <x-import component-from-global-scope="Nxds.Icon" name="underline"></x-import>
+            </x-import>
+          </x-import>
+        </div>
+      </x-import>
+    </x-import>
+    <x-import component-from-global-scope="Nxds.Card">
+      <x-import component-from-global-scope="Nxds.CardContent">
+        <x-import component-from-global-scope="Nxds.DatePicker" mode="range" default-month="2026-10" today="2026-10-15" selected="2026-10-01,2026-10-07"></x-import>
+      </x-import>
+    </x-import>
+  </div>
+  <x-import component-from-global-scope="Nxds.Alert" variant="information">
+    <x-import component-from-global-scope="Nxds.AlertIcon">
+      <x-import component-from-global-scope="Nxds.Icon" name="info-circle"></x-import>
+    </x-import>
+    <x-import component-from-global-scope="Nxds.AlertTitle">nxds is installed</x-import>
+    <x-import component-from-global-scope="Nxds.AlertDescription">Every component on this artboard reads the installed tokens.</x-import>
+  </x-import>
+  <x-import component-from-global-scope="Nxds.BarChart" data='[{"month":"Jan","desktop":186,"mobile":80},{"month":"Feb","desktop":305,"mobile":200},{"month":"Mar","desktop":237,"mobile":120},{"month":"Apr","desktop":173,"mobile":190},{"month":"May","desktop":209,"mobile":130},{"month":"Jun","desktop":264,"mobile":140}]' x-key="month" series="desktop,mobile"></x-import>
+  <div data-theme="dark" style="display: flex; align-items: center; gap: var(--nx-spacing-3); padding: var(--nx-spacing-6); border-radius: var(--nx-radius-md); background: var(--nx-color-background);">
+    <x-import component-from-global-scope="Nxds.Button">Dark theme</x-import>
+    <x-import component-from-global-scope="Nxds.Badge" variant="warning" fill="light">Beta</x-import>
+  </div>
+</div>

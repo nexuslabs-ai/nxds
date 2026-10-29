@@ -8,7 +8,7 @@ Export the files with `nxds-cli`:
 npx nxds-cli@latest export claude-design
 ```
 
-The command writes a `nxds-design-system/project/` folder. Publish that folder as a Design System artifact in Claude, unchanged.
+The command writes a `nxds-design-system/` folder. Its `SETUP.md` walks Claude through publishing `project/` as a Design System artifact, installing it on a canvas and checking it.
 
 | File                                        | What it holds                                                                |
 | ------------------------------------------- | ---------------------------------------------------------------------------- |
@@ -18,5 +18,6 @@ The command writes a `nxds-design-system/project/` folder. Publish that folder a
 | `project/components/index.d.ts`             | One `<Name>Props` interface per component part                               |
 | `project/components/<Name>/`                | A preview card and a README per component                                    |
 | `coverage.md`                               | The props the canvas can't set, and why                                      |
+| `SETUP.md`                                  | The setup guide for this release, with the sampler artboard                  |
 
 Docs: <https://nxds.dev>

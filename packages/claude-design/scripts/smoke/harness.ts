@@ -14,6 +14,8 @@ import {
   type Route,
 } from 'playwright';
 
+import { canvasLinks } from '../../src/setup.ts';
+
 const packageRoot = path.join(import.meta.dirname, '..', '..');
 export const projectDir = path.join(packageRoot, 'dist', 'project');
 const require = createRequire(path.join(packageRoot, 'package.json'));
@@ -34,19 +36,9 @@ const REACT = {
 /** The `<link>` and `<script>` lines the README tells a canvas artboard to add, pointed at /project/. */
 function canvasLines() {
   const readme = readFileSync(path.join(projectDir, 'README.md'), 'utf8');
-  const section = /^## On a Design canvas\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(
-    readme
-  )?.[1];
-  const html = /```html\n([\s\S]*?)```/.exec(section ?? '')?.[1];
-  if (!html) {
-    throw new Error(
-      'README.md: no html block under "On a Design canvas" to load the system from.'
-    );
-  }
-  return html
-    .trim()
-    .split('\n')
-    .map((line) => line.replaceAll('ds/<folder>/', '/project/'));
+  return canvasLinks(readme).map((line) =>
+    line.replaceAll('ds/<folder>/', '/project/')
+  );
 }
 
 const PRELOAD = [
