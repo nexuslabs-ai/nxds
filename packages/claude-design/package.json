@@ -1,6 +1,6 @@
 {
   "name": "@nxds/claude-design",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "nxds as a Claude Design System: tokens, a live React 18 component bundle, prop types and previews, ready to publish.",
   "keywords": [
     "nxds",
@@ -24,6 +24,7 @@
     "linkDirectory": false
   },
   "exports": {
+    "./icons": "./src/icons.ts",
     "./system-index": "./src/system-index.ts",
     "./tokens-css": "./src/tokens-css.ts"
   },

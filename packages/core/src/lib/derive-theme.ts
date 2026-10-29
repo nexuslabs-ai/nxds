@@ -21,6 +21,7 @@ import { inRuntimeLayer } from './runtime-layer';
 import {
   CHART_PALETTE_REFERENCES,
   STATUS_PALETTE_FAMILIES,
+  SYNTAX_PALETTE_REFERENCES,
 } from './semantic-palette-references';
 import {
   anchorToStep,
@@ -249,6 +250,15 @@ function deriveChart(mode: Mode): TokenMap {
   );
 }
 
+function deriveSyntax(mode: Mode): TokenMap {
+  return Object.fromEntries(
+    Object.entries(SYNTAX_PALETTE_REFERENCES).map(([role, reference]) => [
+      `--nx-color-syntax-${role}`,
+      getPaletteShade(reference.palette, reference[mode]),
+    ])
+  );
+}
+
 function deriveAlpha(
   surfaceTone: NxdsSurfaceTone,
   mode: Mode,
@@ -417,6 +427,7 @@ export function deriveThemeMode(
     ...deriveSecondary(mode),
     ...deriveStatus(mode),
     ...deriveChart(mode),
+    ...deriveSyntax(mode),
     ...deriveAlpha(surfaceTone, mode, profile),
     '--nx-color-focus-error': getPaletteShade(
       STATUS_PALETTE_FAMILIES.error,

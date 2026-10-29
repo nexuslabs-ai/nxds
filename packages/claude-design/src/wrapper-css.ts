@@ -9,7 +9,7 @@
 import postcss from 'postcss';
 import selectorParser from 'postcss-selector-parser';
 
-import { CANVAS_WRAPPER_CLASS } from './canvas-wrapper.ts';
+import { CANVAS_WRAPPER_CLASS } from './runtime/canvas-names.ts';
 
 const W = `.${CANVAS_WRAPPER_CLASS}`;
 const IS_W = `:where(${W})`;

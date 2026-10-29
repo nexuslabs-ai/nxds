@@ -16,4 +16,4 @@ Pick the icon library nxds components draw their own icons with, and start from 
 
 To keep Tabler Icons, set `"iconLibrary": "tabler"` in `nxds.json` before you run `update`. After `update`, run `npx nxds-cli@latest init --icons tabler` instead.
 
-`@nxds/claude-design` gives Claude Design Phosphor icons as `Nxds.Icons`, such as `Nxds.Icons.PlusIcon`, in place of Tabler's `Nxds.Icons.IconPlus`. Pass `weight="fill"` for a filled icon.
+`@nxds/claude-design` draws Phosphor icons, in place of Tabler. A canvas names them as phosphoricons.com does, such as `Nxds.Icon name="magnifying-glass"`, and `Nxds.Icon` takes `weight` in place of `stroke`.

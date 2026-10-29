@@ -42,7 +42,7 @@ assertIconsRequests();
 
 const nextConfig: NextConfig = {
   output: 'export',
-  transpilePackages: ['@nxds/react'],
+  transpilePackages: ['@nxds/react', '@nxds/claude-design'],
   // let .md/.mdx resolve as modules (for content imported by the dynamic route)
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
   turbopack: {

@@ -5,6 +5,7 @@ export type TokenCategory =
   | 'brand'
   | 'status'
   | 'chart'
+  | 'syntax'
   | 'focus'
   | 'alpha';
 
@@ -132,6 +133,14 @@ const CHART_TOKEN_NAMES = [
   'chart-categorical-5',
 ] as const;
 
+const SYNTAX_TOKEN_NAMES = [
+  'syntax-keyword',
+  'syntax-string',
+  'syntax-function',
+  'syntax-type',
+  'syntax-constant',
+] as const;
+
 const FOCUS_TOKEN_NAMES = ['focus-default', 'focus-error'] as const;
 
 const ALPHA_TOKEN_NAMES = [
@@ -150,6 +159,7 @@ export type SemanticColorName =
   | (typeof BRAND_TOKEN_NAMES)[number]
   | (typeof STATUS_TOKEN_NAMES)[number]
   | (typeof CHART_TOKEN_NAMES)[number]
+  | (typeof SYNTAX_TOKEN_NAMES)[number]
   | (typeof FOCUS_TOKEN_NAMES)[number]
   | (typeof ALPHA_TOKEN_NAMES)[number];
 
@@ -167,6 +177,7 @@ export const SEMANTIC_TOKEN_REGISTRY: readonly SemanticTokenMeta[] = [
   ...metas('brand', BRAND_TOKEN_NAMES),
   ...metas('status', STATUS_TOKEN_NAMES),
   ...metas('chart', CHART_TOKEN_NAMES),
+  ...metas('syntax', SYNTAX_TOKEN_NAMES),
   ...metas('focus', FOCUS_TOKEN_NAMES),
   ...metas('alpha', ALPHA_TOKEN_NAMES),
 ] as const;
