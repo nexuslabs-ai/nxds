@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import {
   expectExitBeforeUnmount,
@@ -238,6 +238,70 @@ export const WithDataAttributes: Story = {
         document.querySelector('[data-slot="popover-content"]')
       ).toBeNull();
     });
+  },
+};
+
+const onPointerDownOutside = fn();
+const onInteractOutside = fn();
+const onCloseAutoFocus = fn();
+
+function clearOutsideClickSpies() {
+  onPointerDownOutside.mockClear();
+  onInteractOutside.mockClear();
+  onCloseAutoFocus.mockClear();
+}
+
+function OutsideClickPopover({ modal = false }: { modal?: boolean }) {
+  return (
+    <Popover modal={modal}>
+      <PopoverTrigger asChild>
+        <Button variant="outline">Open popover</Button>
+      </PopoverTrigger>
+      <PopoverContent
+        onPointerDownOutside={onPointerDownOutside}
+        onInteractOutside={onInteractOutside}
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
+        <p className="nx:typography-body-default">Popover content</p>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+export const OutsideClickInteraction: Story = {
+  beforeEach: clearOutsideClickSpies,
+  render: () => <OutsideClickPopover />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Open popover' }));
+    await within(document.body).findByText('Popover content');
+    await userEvent.click(document.body);
+
+    // Focus returns after the panel unmounts, so that event comes last.
+    await waitFor(() => expect(onCloseAutoFocus).toHaveBeenCalled());
+    await expect(onPointerDownOutside).toHaveBeenCalledTimes(1);
+    await expect(onInteractOutside).toHaveBeenCalledTimes(1);
+    await expect(onCloseAutoFocus).toHaveBeenCalledTimes(1);
+  },
+};
+
+export const ModalOutsideClickInteraction: Story = {
+  beforeEach: clearOutsideClickSpies,
+  render: () => <OutsideClickPopover modal />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Open popover' }));
+    await within(document.body).findByText('Popover content');
+    // A modal popover sets pointer-events: none on the page behind it.
+    await userEvent.click(document.body, { pointerEventsCheck: 0 });
+
+    // Focus returns after the panel unmounts, so that event comes last.
+    await waitFor(() => expect(onCloseAutoFocus).toHaveBeenCalled());
+    await expect(onPointerDownOutside).toHaveBeenCalledTimes(1);
+    await expect(onInteractOutside).toHaveBeenCalledTimes(1);
+    await expect(onCloseAutoFocus).toHaveBeenCalledTimes(1);
   },
 };
 

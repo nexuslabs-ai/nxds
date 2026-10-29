@@ -27,8 +27,19 @@ const props = withDefaults(defineProps<PopoverContentProps>(), {
 });
 const emits = defineEmits<PopoverContentEmits>();
 
+// Reka's modal and non-modal content emit some events twice with the same
+// event object. One event can carry two names, so key on both.
+const reported = new WeakMap<Event, Set<string>>();
+
+function emitOnce(name: keyof PopoverContentEmits, event: Event) {
+  const names = reported.get(event) ?? new Set<string>();
+  if (names.has(name)) return;
+  reported.set(event, names.add(name));
+  (emits as (name: string, event: Event) => void)(name, event);
+}
+
 const delegated = reactiveOmit(props, 'class');
-const forwarded = useForwardPropsEmits(delegated, emits);
+const forwarded = useForwardPropsEmits(delegated, emitOnce);
 </script>
 
 <template>
