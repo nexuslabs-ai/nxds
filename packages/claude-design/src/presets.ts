@@ -7,6 +7,7 @@ import {
   ELEVATION_OPTIONS,
   type NxdsAppearanceDataAttr,
   STROKE_OPTIONS,
+  UI_SCALE_OPTIONS,
 } from '@nxds/core';
 
 import type { ListFamily } from './tokens.ts';
@@ -19,6 +20,11 @@ export interface Preset {
 }
 
 export const PRESETS: Record<NxdsAppearanceDataAttr, Preset> = {
+  'data-ui-scale': {
+    options: UI_SCALE_OPTIONS,
+    initial: DEFAULT_NXDS_APPEARANCE.uiScale,
+    family: 'spacing',
+  },
   'data-density': {
     options: DENSITY_OPTIONS,
     initial: DEFAULT_NXDS_APPEARANCE.density,

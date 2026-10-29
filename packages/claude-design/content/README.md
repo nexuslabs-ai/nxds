@@ -90,9 +90,9 @@ The system has a Light and a Dark theme. Set `data-theme="dark"` on `<html>` to 
 
 ## Appearance
 
-This system shows the default nxds appearance: a near-black brand colour on zinc surfaces, default density, subtle corners, quiet shadows and normal strokes.
+This system shows the default nxds appearance: a near-black brand colour on zinc surfaces, the default UI scale and density, subtle corners, quiet shadows and normal strokes.
 
-Set an attribute on any element to change density, corners, elevation or stroke for everything inside it:
+Set an attribute on any element to change density, corners, elevation or stroke for everything inside it. Set `data-ui-scale` on the artboard's outer element, so the density and corners inside it follow its scale:
 
 <!-- appearance-presets -->
 

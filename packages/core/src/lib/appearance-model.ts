@@ -1,4 +1,4 @@
-import typographyTokens from '../../tokens/primitives/typography/typography-default.json';
+import type { UI_SCALES } from '../token-source/ui-scale';
 
 import { normalizeContrast } from './contrast';
 import type { ThemeDerivationInput, ThemeSeeds } from './derive-theme';
@@ -9,6 +9,7 @@ import { inRuntimeLayer } from './runtime-layer';
 type ModeSeeds = Pick<ThemeSeeds, 'background' | 'foreground'>;
 
 export type NxdsAppearanceMode = 'light' | 'dark' | 'system';
+export type NxdsUiScale = keyof typeof UI_SCALES;
 export type NxdsDensity =
   | 'tight'
   | 'compact'
@@ -28,7 +29,6 @@ export type NxdsStroke = 'fine' | 'normal' | 'strong';
 export interface NxdsAppearancePrefs {
   uiFont: string;
   codeFont: string;
-  uiFontSize: number;
   codeFontSize: number;
   reduceMotion: boolean;
   pointerCursors: boolean;
@@ -41,6 +41,7 @@ export interface NxdsAppearanceState {
   surfaceTone: NxdsSurfaceTone;
   lightContrast: number;
   darkContrast: number;
+  uiScale: NxdsUiScale;
   density: NxdsDensity;
   corners: NxdsCorners;
   elevation: NxdsElevation;
@@ -49,7 +50,12 @@ export interface NxdsAppearanceState {
 }
 
 /** An appearance field that picks one of a token family's preset modes. */
-export type NxdsPresetField = 'density' | 'corners' | 'elevation' | 'stroke';
+export type NxdsPresetField =
+  | 'uiScale'
+  | 'density'
+  | 'corners'
+  | 'elevation'
+  | 'stroke';
 
 export const DEFAULT_BRAND_COLOR = '#0a0a0a';
 
@@ -91,6 +97,13 @@ export const BASE_TONE_SEEDS: Record<
   },
 };
 
+export const UI_SCALE_OPTIONS = [
+  { value: 'small', label: 'Small' },
+  { value: 'default', label: 'Default' },
+  { value: 'large', label: 'Large' },
+  { value: 'larger', label: 'Larger' },
+] as const satisfies readonly { value: NxdsUiScale; label: string }[];
+
 export const DENSITY_OPTIONS = [
   { value: 'tight', label: 'Tight' },
   { value: 'compact', label: 'Compact' },
@@ -128,6 +141,7 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
   surfaceTone: 'zinc',
   lightContrast: 50,
   darkContrast: 50,
+  uiScale: 'default',
   density: 'default',
   corners: 'subtle',
   elevation: 'quiet',
@@ -135,7 +149,6 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
   prefs: {
     uiFont: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     codeFont: 'ui-monospace, "SF Mono", Menlo, monospace',
-    uiFontSize: 14,
     codeFontSize: 12,
     reduceMotion: false,
     pointerCursors: false,
@@ -153,6 +166,9 @@ const APPEARANCE_MODES = new Set<NxdsAppearanceMode>([
 ]);
 const SURFACE_TONES = new Set<NxdsSurfaceTone>(
   BASE_TONE_OPTIONS.map((option) => option.value)
+);
+const SCALES = new Set<NxdsUiScale>(
+  UI_SCALE_OPTIONS.map((option) => option.value)
 );
 const DENSITIES = new Set<NxdsDensity>(
   DENSITY_OPTIONS.map((option) => option.value)
@@ -199,26 +215,12 @@ function formatPx(value: number): string {
   return `${Number(value.toFixed(4))}px`;
 }
 
-function typographyScaleVariables(uiPx: number, codePx: number): string {
-  const scale = uiPx / DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize;
-  const sizeVars = Object.entries(typographyTokens.size).map(
-    ([name, token]) => {
-      const px = name === 'code' ? codePx : token.$value.value * scale;
-      return `  --nx-typography-size-${name}: ${formatPx(px)};`;
-    }
-  );
-  const lineHeightVars = Object.entries(typographyTokens['line-height']).map(
-    ([name, token]) =>
-      `  --nx-typography-line-height-${name}: ${formatPx(token.$value.value * scale)};`
-  );
-
-  return [...sizeVars, ...lineHeightVars].join('\n');
-}
-
 // Retired public-mode codename -> friendly, applied to persisted state on read
 // (see normalizeAppearanceModeIds). Internal; correctness is covered behaviorally
 // by the sanitize codename->friendly tests, so it is not part of the public API.
-const PUBLIC_MODE_RENAME: Record<NxdsPresetField, Record<string, string>> = {
+const PUBLIC_MODE_RENAME: Partial<
+  Record<NxdsPresetField, Record<string, string>>
+> = {
   density: {
     nova: 'compact',
     mira: 'default',
@@ -261,7 +263,6 @@ export function sanitizeNxdsAppearancePrefs(raw: unknown): NxdsAppearancePrefs {
   return {
     uiFont: fontFamilyOr(o.uiFont, d.uiFont),
     codeFont: fontFamilyOr(o.codeFont, d.codeFont),
-    uiFontSize: clampFontSize(o.uiFontSize, d.uiFontSize),
     codeFontSize: clampFontSize(o.codeFontSize, d.codeFontSize),
     reduceMotion: boolOr(o.reduceMotion, d.reduceMotion),
     pointerCursors: boolOr(o.pointerCursors, d.pointerCursors),
@@ -282,6 +283,7 @@ export function sanitizeNxdsAppearance(rawInput: unknown): NxdsAppearanceState {
     surfaceTone: enumOr(raw.surfaceTone, SURFACE_TONES, d.surfaceTone),
     lightContrast: normalizeContrast(raw.lightContrast, d.lightContrast),
     darkContrast: normalizeContrast(raw.darkContrast, d.darkContrast),
+    uiScale: enumOr(raw.uiScale, SCALES, d.uiScale),
     density: enumOr(raw.density, DENSITIES, d.density),
     corners: enumOr(raw.corners, CORNERS, d.corners),
     elevation: enumOr(raw.elevation, ELEVATIONS, d.elevation),
@@ -303,21 +305,17 @@ export function createNxdsThemeContract(
 }
 
 export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
-  const uiPx = clampFontSize(
-    prefs.uiFontSize,
-    DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize
-  );
   const codePx = clampFontSize(
     prefs.codeFontSize,
     DEFAULT_NXDS_APPEARANCE.prefs.codeFontSize
   );
-  // Font and type size reach only nxds. The toggles below apply to the whole
+  // Fonts and code size reach only nxds. The toggles below apply to the whole
   // page, host included, when the user turns them on.
   const blocks: string[] = [
     inRuntimeLayer(`:root {
   --nx-typography-family-font-sans: ${prefs.uiFont};
   --nx-typography-family-font-mono: ${prefs.codeFont};
-${typographyScaleVariables(uiPx, codePx)}
+  --nx-typography-size-code: ${formatPx(codePx)};
 }`),
   ];
   if (prefs.fontSmoothing) {

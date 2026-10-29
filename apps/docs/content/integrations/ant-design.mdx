@@ -227,17 +227,17 @@ export const defaultAppearance = {
 } satisfies NxdsAppearanceState;
 ```
 
-| antd token                                      | Appearance field   | How to match                                                                                                                           |
-| ----------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `colorPrimary`                                  | `brandColor`       | Pass it as is. nxds builds the hover and pressed shades                                                                                |
-| `colorBgBase`, `colorTextBase`                  | `surfaceTone`      | antd's grays are pure, so `neutral` matches                                                                                            |
-| `borderRadius`                                  | `corners`          | `0` is `square`, `2` to `4` is `subtle`, `6` to `8` is `smooth`, `10` to `12` is `round`, `16` is `extra-round`. antd's default is `6` |
-| `compactAlgorithm`, `controlHeight`, `sizeStep` | `density`          | `compactAlgorithm` matches `compact`. Compare others in the [Playground](/playground)                                                  |
-| `boxShadow`                                     | `elevation`        | Compare in the [Playground](/playground). `flat` turns shadows off                                                                     |
-| `lineWidth`                                     | `stroke`           | `1` is `normal`, `2` is `strong`                                                                                                       |
-| `fontFamily`                                    | `prefs.uiFont`     | Pass the same font stack                                                                                                               |
-| `fontSize`                                      | `prefs.uiFontSize` | Both default to 14                                                                                                                     |
-| `darkAlgorithm`                                 | `mode`             | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                                                         |
+| antd token                                      | Appearance field | How to match                                                                                                                           |
+| ----------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `colorPrimary`                                  | `brandColor`     | Pass it as is. nxds builds the hover and pressed shades                                                                                |
+| `colorBgBase`, `colorTextBase`                  | `surfaceTone`    | antd's grays are pure, so `neutral` matches                                                                                            |
+| `borderRadius`                                  | `corners`        | `0` is `square`, `2` to `4` is `subtle`, `6` to `8` is `smooth`, `10` to `12` is `round`, `16` is `extra-round`. antd's default is `6` |
+| `compactAlgorithm`, `controlHeight`, `sizeStep` | `density`        | `compactAlgorithm` matches `compact`. Compare others in the [Playground](/playground)                                                  |
+| `boxShadow`                                     | `elevation`      | Compare in the [Playground](/playground). `flat` turns shadows off                                                                     |
+| `lineWidth`                                     | `stroke`         | `1` is `normal`, `2` is `strong`                                                                                                       |
+| `fontFamily`                                    | `prefs.uiFont`   | Pass the same font stack                                                                                                               |
+| `fontSize`                                      | `uiScale`        | Both default to 14px, which is `'default'`                                                                                             |
+| `darkAlgorithm`                                 | `mode`           | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                                                         |
 
 ## Where nxds fits
 

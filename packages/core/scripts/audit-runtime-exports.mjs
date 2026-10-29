@@ -29,6 +29,7 @@ const EXPECTED_RUNTIME_EXPORTS = [
   'SNAPSHOT_VERSION',
   'STROKE_OPTIONS',
   'TIER_THRESHOLDS',
+  'UI_SCALE_OPTIONS',
   'adjustContrast',
   'apcaLc',
   'applyNxdsAppearance',

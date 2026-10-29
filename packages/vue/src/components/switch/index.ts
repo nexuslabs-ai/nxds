@@ -17,8 +17,9 @@ export const switchVariants = cva(
   {
     variants: {
       size: {
-        default: 'nx:h-[20px] nx:w-[36px]',
-        sm: 'nx:h-[18px] nx:w-[32px]',
+        default:
+          'nx:h-[calc(var(--nx-icon-glyph-default)_+_4px)] nx:w-[calc(var(--nx-icon-glyph-default)*2_+_4px)]',
+        sm: 'nx:h-[calc(var(--nx-icon-glyph-sm)_+_4px)] nx:w-[calc(var(--nx-icon-glyph-sm)*2_+_4px)]',
       },
     },
     defaultVariants: {
@@ -38,8 +39,8 @@ export const switchThumbVariants = cva(
     variants: {
       size: {
         default:
-          'nx:size-[calc(20px_-_2*var(--nx-borderwidth-thick))] nx:data-[state=checked]:translate-x-[16px]',
-        sm: 'nx:size-[calc(18px_-_2*var(--nx-borderwidth-thick))] nx:data-[state=checked]:translate-x-[14px]',
+          'nx:size-[calc(var(--nx-icon-glyph-default)_+_4px_-_2*var(--nx-borderwidth-thick))] nx:data-[state=checked]:translate-x-(--nx-icon-glyph-default)',
+        sm: 'nx:size-[calc(var(--nx-icon-glyph-sm)_+_4px_-_2*var(--nx-borderwidth-thick))] nx:data-[state=checked]:translate-x-(--nx-icon-glyph-sm)',
       },
     },
     defaultVariants: {

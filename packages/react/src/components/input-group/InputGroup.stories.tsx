@@ -613,11 +613,6 @@ const DENSITIES = [
   'spacious',
 ] as const;
 
-/** The line height, snapped down to the 1/64px steps that layout uses. */
-function lineHeight(element: Element) {
-  return Math.floor(parseFloat(getComputedStyle(element).lineHeight) * 64) / 64;
-}
-
 /** The height inside the border and padding, with fractions kept. */
 function contentHeight(element: Element) {
   const style = getComputedStyle(element);
@@ -634,8 +629,8 @@ function contentHeight(element: Element) {
 }
 
 export const ExtraSmallButtonAtEveryDensity: Story = {
-  // Text is tallest at the largest UI font size, so it fits at every smaller one.
-  globals: { uiFontSize: 16 },
+  // Text is tallest at the Larger UI scale, so it fits at every smaller one.
+  globals: { uiScale: 'larger' },
   render: () => (
     <div className="nx:flex nx:w-80 nx:flex-col nx:gap-3">
       {DENSITIES.map((density) => (
@@ -663,7 +658,7 @@ export const ExtraSmallButtonAtEveryDensity: Story = {
       );
       // The label fits inside the extra-small button at every density.
       await expect(contentHeight(element)).toBeGreaterThanOrEqual(
-        lineHeight(element)
+        parseFloat(getComputedStyle(element).lineHeight)
       );
     }
   },

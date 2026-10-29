@@ -41,6 +41,7 @@ import {
   generateThemeCSS,
   generateThemedModesCSS,
   generateTypographyUtilitiesCSS,
+  generateUiScaleCSS,
   getGoogleFontsImportFromTokens,
   log,
   parseArgs,
@@ -348,6 +349,23 @@ function generateVariablesCSS(primitiveTokens, usedModes) {
 }
 
 /**
+ * The px text sizes and line heights the UI scale multiplies. The code size
+ * is left out: the code font size setting owns it.
+ */
+function uiTypeScale(typography) {
+  const values = (group) =>
+    Object.fromEntries(
+      Object.entries(group)
+        .filter(([name]) => name !== 'code')
+        .map(([name, token]) => [name, token.$value.value])
+    );
+  return {
+    sizes: values(typography.size),
+    lineHeights: values(typography['line-height']),
+  };
+}
+
+/**
  * Generate nxds.css using shared generateThemeCSS function.
  *
  * `spacingDefault` controls which mode lands under `:root, [data-density="X"]`
@@ -467,6 +485,13 @@ function generateNxdsCSS(
     attrName: 'data-borderwidth',
     commentLabel: 'BORDER WIDTH',
     duplicateValuePrefix: null,
+  });
+  css += generateUiScaleCSS({
+    spacingModes,
+    spacingDefault,
+    radiusModes: runtimeModes.radiusModes,
+    radiusDefault: usedModes.radius,
+    typography: uiTypeScale(readTokenFile(typographyFilePath)),
   });
   css += `}\n`;
 

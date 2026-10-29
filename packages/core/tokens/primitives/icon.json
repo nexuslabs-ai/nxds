@@ -6,7 +6,7 @@
         "unit": "px"
       },
       "$type": "dimension",
-      "$description": "Icon beside 12px text, such as in Kbd. The same at every density."
+      "$description": "Icon beside 12px text, such as in Kbd. It follows the UI scale and is the same at every density."
     },
     "sm": {
       "$value": {
@@ -14,7 +14,7 @@
         "unit": "px"
       },
       "$type": "dimension",
-      "$description": "Small icon or mark, such as a Badge icon, a menu check or a Checkbox check. The same at every density."
+      "$description": "Small icon, such as a Badge icon or the small Switch. It follows the UI scale and is the same at every density."
     },
     "default": {
       "$value": {
@@ -22,7 +22,7 @@
         "unit": "px"
       },
       "$type": "dimension",
-      "$description": "Icon in a control, at every control size. The same at every density."
+      "$description": "Icon in a control, at every control size, and the Checkbox, Radio and Switch size. It follows the UI scale and is the same at every density."
     }
   }
 }

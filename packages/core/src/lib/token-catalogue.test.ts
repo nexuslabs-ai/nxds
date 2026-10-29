@@ -426,6 +426,21 @@ describe('token catalogue', () => {
     });
   });
 
+  it('names uiScale for every token the [data-ui-scale] type block sets', () => {
+    const block = nxdsCss.match(/\[data-ui-scale='large'\] \{([^}]*)\}/)![1]!;
+    const scaled = new Set(customProperties(block).keys());
+    const controlled = new Set(
+      catalogue
+        .filter(
+          (token) =>
+            token.control?.kind === 'preset' &&
+            token.control.field === 'uiScale'
+        )
+        .map((token) => token.name)
+    );
+    expect(controlled).toEqual(scaled);
+  });
+
   it('names exactly the preference that changes each runtime typography variable', () => {
     const prefs = DEFAULT_NXDS_APPEARANCE.prefs;
     const rootVariables = (changed: Partial<NxdsAppearancePrefs>) =>
@@ -439,7 +454,6 @@ describe('token catalogue', () => {
     for (const [field, value] of [
       ['uiFont', 'serif'],
       ['codeFont', 'monospace'],
-      ['uiFontSize', prefs.uiFontSize + 2],
       ['codeFontSize', prefs.codeFontSize + 2],
     ] as const) {
       for (const [name, after] of rootVariables({ [field]: value })) {

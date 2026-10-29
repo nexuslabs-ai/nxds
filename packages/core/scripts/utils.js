@@ -18,6 +18,10 @@ import {
   pathToCssVarPrefixed,
 } from '../src/token-source/tokens.ts';
 import {
+  scaledModeBlocks,
+  scaledTypeBlocks,
+} from '../src/token-source/ui-scale.ts';
+import {
   BORDER_COLOR_ALIAS_NAMES,
   borderColorAliasName,
   borderWidthAliasUtilities,
@@ -640,6 +644,48 @@ export function generateSpacingModesCSS(modesByName, opts = {}) {
     css += `\n${writeBlock(`[${attrName}="${mode}"]`, modesByName[mode])}`;
   }
 
+  return css;
+}
+
+/**
+ * Emit the `[data-ui-scale="X"]` blocks: one per scale for type and icons,
+ * and every density and radius mode at each scale. The default scale emits
+ * nothing, so the per-mode blocks above apply as they are.
+ *
+ * @param {object} input
+ * @param {Record<string, {cssName: string, value: string}[]>} input.spacingModes
+ * @param {string} input.spacingDefault
+ * @param {Record<string, {cssName: string, value: string}[]>} input.radiusModes
+ * @param {string} input.radiusDefault
+ * @param {{sizes: Record<string, number>, lineHeights: Record<string, number>}} input.typography
+ * @returns {string} CSS string with all UI scale blocks
+ */
+export function generateUiScaleCSS({
+  spacingModes,
+  spacingDefault,
+  radiusModes,
+  radiusDefault,
+  typography,
+}) {
+  const blocks = [
+    ...scaledTypeBlocks(typography),
+    ...scaledModeBlocks(spacingModes, {
+      attrName: 'data-density',
+      defaultMode: spacingDefault,
+    }),
+    ...scaledModeBlocks(radiusModes, {
+      attrName: 'data-radius',
+      defaultMode: radiusDefault,
+    }),
+  ];
+  let css = `\n/* ===== UI SCALE ([data-ui-scale="X"] on the root, modes nest under it) ===== */\n`;
+  for (const { selectors, tokens } of blocks) {
+    css += `\n${selectors.join(',\n')} {\n`;
+    for (const token of tokens) {
+      css += `  --nx-${token.cssName}: ${token.value};\n`;
+    }
+    css += `}\n`;
+  }
   return css;
 }
 

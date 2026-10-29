@@ -7,6 +7,7 @@ import {
   type NxdsAppearanceState,
   sanitizeNxdsAppearance,
   STROKE_OPTIONS,
+  UI_SCALE_OPTIONS,
 } from '@nxds/core';
 import { type Decorator, type Preview, setup } from '@storybook/vue3-vite';
 
@@ -120,13 +121,13 @@ const preview: Preview = {
     surfaceTone: DEFAULT_NXDS_APPEARANCE.surfaceTone,
     lightContrast: DEFAULT_NXDS_APPEARANCE.lightContrast,
     darkContrast: DEFAULT_NXDS_APPEARANCE.darkContrast,
+    uiScale: DEFAULT_NXDS_APPEARANCE.uiScale,
     density: DEFAULT_NXDS_APPEARANCE.density,
     corners: DEFAULT_NXDS_APPEARANCE.corners,
     elevation: DEFAULT_NXDS_APPEARANCE.elevation,
     stroke: DEFAULT_NXDS_APPEARANCE.stroke,
     uiFont: DEFAULT_NXDS_APPEARANCE.prefs.uiFont,
     codeFont: DEFAULT_NXDS_APPEARANCE.prefs.codeFont,
-    uiFontSize: DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize,
     codeFontSize: DEFAULT_NXDS_APPEARANCE.prefs.codeFontSize,
     reduceMotion: DEFAULT_NXDS_APPEARANCE.prefs.reduceMotion,
     pointerCursors: DEFAULT_NXDS_APPEARANCE.prefs.pointerCursors,
@@ -146,6 +147,14 @@ const preview: Preview = {
       toolbar: {
         icon: 'paintbrush',
         items: toolbarItems(BASE_TONE_OPTIONS),
+        dynamicTitle: true,
+      },
+    },
+    uiScale: {
+      name: 'UI scale',
+      toolbar: {
+        icon: 'zoom',
+        items: toolbarItems(UI_SCALE_OPTIONS),
         dynamicTitle: true,
       },
     },

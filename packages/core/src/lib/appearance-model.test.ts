@@ -18,6 +18,7 @@ import {
   sanitizeNxdsAppearance,
   sanitizeNxdsAppearancePrefs,
   STROKE_OPTIONS,
+  UI_SCALE_OPTIONS,
 } from './appearance-model';
 import { deriveTheme } from './derive-theme';
 
@@ -29,12 +30,12 @@ describe('appearance model', () => {
       surfaceTone: 'zinc',
       lightContrast: 50,
       darkContrast: 50,
+      uiScale: 'default',
       density: 'default',
       corners: 'subtle',
       elevation: 'quiet',
       stroke: 'normal',
       prefs: {
-        uiFontSize: 14,
         codeFontSize: 12,
         reduceMotion: false,
         pointerCursors: false,
@@ -115,13 +116,13 @@ describe('sanitizeNxdsAppearance', () => {
       surfaceTone: 'slate' as const,
       lightContrast: 42,
       darkContrast: 82,
+      uiScale: 'large' as const,
       density: 'tight' as const,
       corners: 'extra-round' as const,
       elevation: 'flat' as const,
       stroke: 'fine' as const,
       prefs: {
         ...DEFAULT_NXDS_APPEARANCE.prefs,
-        uiFontSize: 16,
         codeFontSize: 13,
         reduceMotion: true,
         pointerCursors: true,
@@ -132,6 +133,12 @@ describe('sanitizeNxdsAppearance', () => {
   });
 
   it('accepts every shipped layout mode', () => {
+    for (const option of UI_SCALE_OPTIONS) {
+      expect(sanitizeNxdsAppearance({ uiScale: option.value }).uiScale).toBe(
+        option.value
+      );
+    }
+
     for (const option of DENSITY_OPTIONS) {
       expect(sanitizeNxdsAppearance({ density: option.value }).density).toBe(
         option.value
@@ -179,6 +186,12 @@ describe('sanitizeNxdsAppearance', () => {
         lightContrast: 999,
       }).lightContrast
     ).toBe(100);
+    expect(
+      sanitizeNxdsAppearance({
+        ...DEFAULT_NXDS_APPEARANCE,
+        uiScale: 'huge',
+      }).uiScale
+    ).toBe('default');
     expect(
       sanitizeNxdsAppearance({
         ...DEFAULT_NXDS_APPEARANCE,
@@ -240,12 +253,13 @@ describe('normalizeAppearanceModeIds', () => {
 });
 
 describe('sanitizeNxdsAppearancePrefs', () => {
-  it('clamps font sizes into [8,32] and falls back per field', () => {
-    expect(sanitizeNxdsAppearancePrefs({ uiFontSize: 99 }).uiFontSize).toBe(32);
+  it('clamps the code font size into [8,32] and falls back to 12', () => {
+    expect(sanitizeNxdsAppearancePrefs({ codeFontSize: 99 }).codeFontSize).toBe(
+      32
+    );
     expect(sanitizeNxdsAppearancePrefs({ codeFontSize: 2 }).codeFontSize).toBe(
       8
     );
-    expect(sanitizeNxdsAppearancePrefs({ uiFontSize: 0 }).uiFontSize).toBe(14);
     expect(sanitizeNxdsAppearancePrefs({ codeFontSize: 0 }).codeFontSize).toBe(
       12
     );
@@ -379,14 +393,9 @@ describe('createNxdsThemeContract', () => {
 
 describe('appearancePrefsToCss', () => {
   const prefs = DEFAULT_NXDS_APPEARANCE.prefs;
-  const typographyVarPattern =
-    /--nx-typography-(?:size|line-height)-[a-z0-9]+:\s*[^;]+;/g;
+  const codeSizePattern = /--nx-typography-size-code:\s*[^;]+;/;
 
-  function typographyDeclarations(css: string) {
-    return (css.match(typographyVarPattern) ?? []).sort();
-  }
-
-  it('scales only px typography dimensions', () => {
+  it('keeps every typography dimension in px, which the UI scale multiplies', () => {
     const dimensions = [
       ...Object.entries(typographyTokens.size),
       ...Object.entries(typographyTokens['line-height']),
@@ -398,21 +407,23 @@ describe('appearancePrefsToCss', () => {
     expect(nonPx).toEqual([]);
   });
 
-  it('emits font variables, a clamped type scale, and code size', () => {
+  it('emits the font variables and a clamped code size', () => {
     const css = appearancePrefsToCss({
       ...prefs,
       uiFont: 'Inter',
       codeFont: 'JetBrains Mono',
-      uiFontSize: 99,
-      codeFontSize: 0,
+      codeFontSize: 99,
     });
 
     expect(css).toContain('--nx-typography-family-font-sans: Inter;');
     expect(css).toContain('--nx-typography-family-font-mono: JetBrains Mono;');
-    expect(css).toContain('--nx-typography-size-sm: 32px;');
-    expect(css).toContain('--nx-typography-line-height-xxs: 27.4286px;');
-    expect(css).toContain('--nx-typography-line-height-sm: 45.7143px;');
-    expect(css).toContain('--nx-typography-size-code: 12px;');
+    expect(css).toContain('--nx-typography-size-code: 32px;');
+  });
+
+  it('leaves the UI type scale to the [data-ui-scale] blocks', () => {
+    expect(appearancePrefsToCss(prefs)).not.toMatch(
+      /--nx-typography-(?:size-(?!code)|line-height-)/
+    );
   });
 
   it('leaves the page font size alone', () => {
@@ -446,14 +457,14 @@ describe('appearancePrefsToCss', () => {
     expect(off).not.toContain('font-smoothing');
   });
 
-  it('keeps default runtime typography variables in parity with generated tokens', () => {
+  it('keeps the default code size in parity with the generated token', () => {
     const generatedCss = readFileSync(
       resolve(process.cwd(), 'packages/tailwind/variables.css'),
       'utf8'
     );
 
-    expect(typographyDeclarations(appearancePrefsToCss(prefs))).toEqual(
-      typographyDeclarations(generatedCss)
+    expect(appearancePrefsToCss(prefs).match(codeSizePattern)?.[0]).toBe(
+      generatedCss.match(codeSizePattern)?.[0]
     );
   });
 

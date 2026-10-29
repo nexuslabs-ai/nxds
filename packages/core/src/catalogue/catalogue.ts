@@ -80,15 +80,16 @@ const PRESET_CONTROLS: Partial<Record<CatalogueFamily, CatalogueControl>> = {
   shadow: { kind: 'preset', field: 'elevation' },
 };
 
-/** The preference `appearancePrefsToCss` writes each typography primitive from. */
+/** The `[data-ui-scale]` mode that sizes text and icons. */
+const UI_SCALE_CONTROL: CatalogueControl = { kind: 'preset', field: 'uiScale' };
+
+/** The appearance field that sets each typography primitive. */
 function typographyControl(path: readonly string[]): CatalogueControl | null {
   const [group, key] = path;
   if (group === 'size' && key === 'code') {
     return { kind: 'pref', field: 'codeFontSize' };
   }
-  if (group === 'size' || group === 'line-height') {
-    return { kind: 'pref', field: 'uiFontSize' };
-  }
+  if (group === 'size' || group === 'line-height') return UI_SCALE_CONTROL;
   if (group !== 'family') return null;
   if (key === 'font-sans') return { kind: 'pref', field: 'uiFont' };
   if (key === 'font-mono') return { kind: 'pref', field: 'codeFont' };
@@ -104,6 +105,7 @@ function leafControl({
   if (family === 'typography' && file.startsWith('primitives/')) {
     return typographyControl(leaf.path);
   }
+  if (family === 'icon') return UI_SCALE_CONTROL;
   if (preset === null) return null;
   return PRESET_CONTROLS[family] ?? null;
 }

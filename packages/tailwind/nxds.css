@@ -1053,6 +1053,1067 @@
     --nx-borderwidth-default: 2px;
     --nx-borderwidth-thick: 3px;
   }
+
+  /* ===== UI SCALE ([data-ui-scale="X"] on the root, modes nest under it) ===== */
+
+  [data-ui-scale='small'] {
+    --nx-typography-size-xxs: 9px;
+    --nx-typography-size-xs: 10px;
+    --nx-typography-size-sm: 12px;
+    --nx-typography-size-base: 14px;
+    --nx-typography-size-lg: 15px;
+    --nx-typography-size-xl: 17px;
+    --nx-typography-size-2xl: 21px;
+    --nx-typography-size-3xl: 26px;
+    --nx-typography-size-4xl: 31px;
+    --nx-typography-size-5xl: 41px;
+    --nx-typography-size-6xl: 51px;
+    --nx-typography-size-7xl: 62px;
+    --nx-typography-size-8xl: 82px;
+    --nx-typography-size-9xl: 110px;
+    --nx-typography-line-height-xxs: 10px;
+    --nx-typography-line-height-xs: 14px;
+    --nx-typography-line-height-sm: 18px;
+    --nx-typography-line-height-base: 20px;
+    --nx-typography-line-height-lg: 24px;
+    --nx-typography-line-height-xl: 24px;
+    --nx-typography-line-height-2xl: 28px;
+    --nx-typography-line-height-3xl: 30px;
+    --nx-typography-line-height-4xl: 42px;
+    --nx-typography-line-height-5xl: 42px;
+    --nx-typography-line-height-6xl: 52px;
+    --nx-typography-line-height-7xl: 62px;
+    --nx-typography-line-height-8xl: 82px;
+    --nx-typography-line-height-9xl: 110px;
+    --nx-icon-glyph-xs: 10px;
+    --nx-icon-glyph-sm: 12px;
+    --nx-icon-glyph-default: 14px;
+  }
+
+  [data-ui-scale='large'] {
+    --nx-typography-size-xxs: 13px;
+    --nx-typography-size-xs: 14px;
+    --nx-typography-size-sm: 16px;
+    --nx-typography-size-base: 18px;
+    --nx-typography-size-lg: 21px;
+    --nx-typography-size-xl: 23px;
+    --nx-typography-size-2xl: 27px;
+    --nx-typography-size-3xl: 34px;
+    --nx-typography-size-4xl: 41px;
+    --nx-typography-size-5xl: 55px;
+    --nx-typography-size-6xl: 69px;
+    --nx-typography-size-7xl: 82px;
+    --nx-typography-size-8xl: 110px;
+    --nx-typography-size-9xl: 146px;
+    --nx-typography-line-height-xxs: 14px;
+    --nx-typography-line-height-xs: 18px;
+    --nx-typography-line-height-sm: 22px;
+    --nx-typography-line-height-base: 28px;
+    --nx-typography-line-height-lg: 32px;
+    --nx-typography-line-height-xl: 32px;
+    --nx-typography-line-height-2xl: 36px;
+    --nx-typography-line-height-3xl: 42px;
+    --nx-typography-line-height-4xl: 54px;
+    --nx-typography-line-height-5xl: 54px;
+    --nx-typography-line-height-6xl: 68px;
+    --nx-typography-line-height-7xl: 82px;
+    --nx-typography-line-height-8xl: 110px;
+    --nx-typography-line-height-9xl: 146px;
+    --nx-icon-glyph-xs: 14px;
+    --nx-icon-glyph-sm: 16px;
+    --nx-icon-glyph-default: 18px;
+  }
+
+  [data-ui-scale='larger'] {
+    --nx-typography-size-xxs: 14px;
+    --nx-typography-size-xs: 15px;
+    --nx-typography-size-sm: 18px;
+    --nx-typography-size-base: 21px;
+    --nx-typography-size-lg: 23px;
+    --nx-typography-size-xl: 26px;
+    --nx-typography-size-2xl: 31px;
+    --nx-typography-size-3xl: 39px;
+    --nx-typography-size-4xl: 46px;
+    --nx-typography-size-5xl: 62px;
+    --nx-typography-size-6xl: 77px;
+    --nx-typography-size-7xl: 93px;
+    --nx-typography-size-8xl: 123px;
+    --nx-typography-size-9xl: 165px;
+    --nx-typography-line-height-xxs: 16px;
+    --nx-typography-line-height-xs: 20px;
+    --nx-typography-line-height-sm: 26px;
+    --nx-typography-line-height-base: 30px;
+    --nx-typography-line-height-lg: 36px;
+    --nx-typography-line-height-xl: 36px;
+    --nx-typography-line-height-2xl: 42px;
+    --nx-typography-line-height-3xl: 46px;
+    --nx-typography-line-height-4xl: 62px;
+    --nx-typography-line-height-5xl: 62px;
+    --nx-typography-line-height-6xl: 78px;
+    --nx-typography-line-height-7xl: 92px;
+    --nx-typography-line-height-8xl: 124px;
+    --nx-typography-line-height-9xl: 164px;
+    --nx-icon-glyph-xs: 16px;
+    --nx-icon-glyph-sm: 18px;
+    --nx-icon-glyph-default: 20px;
+  }
+
+  [data-ui-scale='small'],
+  [data-ui-scale='small'][data-density='default'],
+  [data-ui-scale='small'] [data-density='default'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 4px;
+    --nx-spacing-2: 7px;
+    --nx-spacing-3: 11px;
+    --nx-spacing-4: 14px;
+    --nx-spacing-5: 18px;
+    --nx-spacing-6: 22px;
+    --nx-spacing-7: 26px;
+    --nx-spacing-8: 28px;
+    --nx-spacing-9: 32px;
+    --nx-spacing-10: 36px;
+    --nx-spacing-11: 40px;
+    --nx-spacing-12: 44px;
+    --nx-spacing-14: 50px;
+    --nx-spacing-16: 58px;
+    --nx-spacing-20: 72px;
+    --nx-spacing-24: 86px;
+    --nx-spacing-28: 100px;
+    --nx-spacing-32: 116px;
+    --nx-spacing-36: 130px;
+    --nx-spacing-40: 144px;
+    --nx-spacing-44: 158px;
+    --nx-spacing-48: 172px;
+    --nx-spacing-52: 188px;
+    --nx-spacing-56: 202px;
+    --nx-spacing-60: 216px;
+    --nx-spacing-64: 230px;
+    --nx-spacing-72: 260px;
+    --nx-spacing-80: 288px;
+    --nx-spacing-96: 346px;
+    --nx-spacing-0_5: 2px;
+    --nx-spacing-1_5: 5px;
+    --nx-spacing-2_5: 9px;
+    --nx-spacing-3_5: 13px;
+    --nx-container-p: 22px;
+    --nx-container-gap: 14px;
+    --nx-layout-section-gap: 28px;
+    --nx-layout-stack-gap: 7px;
+  }
+
+  [data-ui-scale='small'][data-density='comfortable'],
+  [data-ui-scale='small'] [data-density='comfortable'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 4px;
+    --nx-spacing-2: 7px;
+    --nx-spacing-3: 12px;
+    --nx-spacing-4: 15px;
+    --nx-spacing-5: 20px;
+    --nx-spacing-6: 24px;
+    --nx-spacing-7: 28px;
+    --nx-spacing-8: 30px;
+    --nx-spacing-9: 34px;
+    --nx-spacing-10: 38px;
+    --nx-spacing-11: 42px;
+    --nx-spacing-12: 46px;
+    --nx-spacing-14: 52px;
+    --nx-spacing-16: 60px;
+    --nx-spacing-20: 74px;
+    --nx-spacing-24: 88px;
+    --nx-spacing-28: 102px;
+    --nx-spacing-32: 118px;
+    --nx-spacing-36: 132px;
+    --nx-spacing-40: 146px;
+    --nx-spacing-44: 160px;
+    --nx-spacing-48: 174px;
+    --nx-spacing-52: 190px;
+    --nx-spacing-56: 204px;
+    --nx-spacing-60: 218px;
+    --nx-spacing-64: 232px;
+    --nx-spacing-72: 262px;
+    --nx-spacing-80: 290px;
+    --nx-spacing-96: 348px;
+    --nx-spacing-0_5: 2px;
+    --nx-spacing-1_5: 5px;
+    --nx-spacing-2_5: 10px;
+    --nx-spacing-3_5: 14px;
+    --nx-container-p: 26px;
+    --nx-container-gap: 18px;
+    --nx-layout-section-gap: 36px;
+    --nx-layout-stack-gap: 9px;
+  }
+
+  [data-ui-scale='small'][data-density='compact'],
+  [data-ui-scale='small'] [data-density='compact'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 4px;
+    --nx-spacing-2: 7px;
+    --nx-spacing-3: 11px;
+    --nx-spacing-4: 14px;
+    --nx-spacing-5: 18px;
+    --nx-spacing-6: 20px;
+    --nx-spacing-7: 24px;
+    --nx-spacing-8: 28px;
+    --nx-spacing-9: 30px;
+    --nx-spacing-10: 34px;
+    --nx-spacing-11: 38px;
+    --nx-spacing-12: 42px;
+    --nx-spacing-14: 48px;
+    --nx-spacing-16: 56px;
+    --nx-spacing-20: 70px;
+    --nx-spacing-24: 84px;
+    --nx-spacing-28: 100px;
+    --nx-spacing-32: 114px;
+    --nx-spacing-36: 128px;
+    --nx-spacing-40: 142px;
+    --nx-spacing-44: 156px;
+    --nx-spacing-48: 172px;
+    --nx-spacing-52: 186px;
+    --nx-spacing-56: 200px;
+    --nx-spacing-60: 214px;
+    --nx-spacing-64: 228px;
+    --nx-spacing-72: 258px;
+    --nx-spacing-80: 286px;
+    --nx-spacing-96: 344px;
+    --nx-spacing-0_5: 2px;
+    --nx-spacing-1_5: 5px;
+    --nx-spacing-2_5: 9px;
+    --nx-spacing-3_5: 13px;
+    --nx-container-p: 18px;
+    --nx-container-gap: 11px;
+    --nx-layout-section-gap: 26px;
+    --nx-layout-stack-gap: 5px;
+  }
+
+  [data-ui-scale='small'][data-density='relaxed'],
+  [data-ui-scale='small'] [data-density='relaxed'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 4px;
+    --nx-spacing-2: 7px;
+    --nx-spacing-3: 12px;
+    --nx-spacing-4: 16px;
+    --nx-spacing-5: 20px;
+    --nx-spacing-6: 26px;
+    --nx-spacing-7: 28px;
+    --nx-spacing-8: 32px;
+    --nx-spacing-9: 36px;
+    --nx-spacing-10: 40px;
+    --nx-spacing-11: 44px;
+    --nx-spacing-12: 46px;
+    --nx-spacing-14: 54px;
+    --nx-spacing-16: 62px;
+    --nx-spacing-20: 76px;
+    --nx-spacing-24: 90px;
+    --nx-spacing-28: 104px;
+    --nx-spacing-32: 118px;
+    --nx-spacing-36: 134px;
+    --nx-spacing-40: 148px;
+    --nx-spacing-44: 162px;
+    --nx-spacing-48: 176px;
+    --nx-spacing-52: 190px;
+    --nx-spacing-56: 206px;
+    --nx-spacing-60: 220px;
+    --nx-spacing-64: 234px;
+    --nx-spacing-72: 262px;
+    --nx-spacing-80: 292px;
+    --nx-spacing-96: 350px;
+    --nx-spacing-0_5: 2px;
+    --nx-spacing-1_5: 5px;
+    --nx-spacing-2_5: 10px;
+    --nx-spacing-3_5: 14px;
+    --nx-container-p: 26px;
+    --nx-container-gap: 18px;
+    --nx-layout-section-gap: 36px;
+    --nx-layout-stack-gap: 9px;
+  }
+
+  [data-ui-scale='small'][data-density='spacious'],
+  [data-ui-scale='small'] [data-density='spacious'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 4px;
+    --nx-spacing-2: 7px;
+    --nx-spacing-3: 13px;
+    --nx-spacing-4: 18px;
+    --nx-spacing-5: 22px;
+    --nx-spacing-6: 28px;
+    --nx-spacing-7: 30px;
+    --nx-spacing-8: 34px;
+    --nx-spacing-9: 38px;
+    --nx-spacing-10: 42px;
+    --nx-spacing-11: 46px;
+    --nx-spacing-12: 48px;
+    --nx-spacing-14: 56px;
+    --nx-spacing-16: 64px;
+    --nx-spacing-20: 78px;
+    --nx-spacing-24: 92px;
+    --nx-spacing-28: 106px;
+    --nx-spacing-32: 120px;
+    --nx-spacing-36: 136px;
+    --nx-spacing-40: 150px;
+    --nx-spacing-44: 164px;
+    --nx-spacing-48: 178px;
+    --nx-spacing-52: 192px;
+    --nx-spacing-56: 208px;
+    --nx-spacing-60: 222px;
+    --nx-spacing-64: 236px;
+    --nx-spacing-72: 264px;
+    --nx-spacing-80: 294px;
+    --nx-spacing-96: 352px;
+    --nx-spacing-0_5: 2px;
+    --nx-spacing-1_5: 5px;
+    --nx-spacing-2_5: 10px;
+    --nx-spacing-3_5: 15px;
+    --nx-container-p: 36px;
+    --nx-container-gap: 22px;
+    --nx-layout-section-gap: 50px;
+    --nx-layout-stack-gap: 14px;
+  }
+
+  [data-ui-scale='small'][data-density='tight'],
+  [data-ui-scale='small'] [data-density='tight'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 4px;
+    --nx-spacing-2: 7px;
+    --nx-spacing-3: 10px;
+    --nx-spacing-4: 13px;
+    --nx-spacing-5: 15px;
+    --nx-spacing-6: 18px;
+    --nx-spacing-7: 22px;
+    --nx-spacing-8: 26px;
+    --nx-spacing-9: 28px;
+    --nx-spacing-10: 32px;
+    --nx-spacing-11: 36px;
+    --nx-spacing-12: 40px;
+    --nx-spacing-14: 46px;
+    --nx-spacing-16: 54px;
+    --nx-spacing-20: 68px;
+    --nx-spacing-24: 82px;
+    --nx-spacing-28: 98px;
+    --nx-spacing-32: 112px;
+    --nx-spacing-36: 126px;
+    --nx-spacing-40: 140px;
+    --nx-spacing-44: 154px;
+    --nx-spacing-48: 170px;
+    --nx-spacing-52: 184px;
+    --nx-spacing-56: 198px;
+    --nx-spacing-60: 212px;
+    --nx-spacing-64: 226px;
+    --nx-spacing-72: 256px;
+    --nx-spacing-80: 284px;
+    --nx-spacing-96: 342px;
+    --nx-spacing-0_5: 2px;
+    --nx-spacing-1_5: 5px;
+    --nx-spacing-2_5: 9px;
+    --nx-spacing-3_5: 12px;
+    --nx-container-p: 18px;
+    --nx-container-gap: 11px;
+    --nx-layout-section-gap: 26px;
+    --nx-layout-stack-gap: 5px;
+  }
+
+  [data-ui-scale='large'],
+  [data-ui-scale='large'][data-density='default'],
+  [data-ui-scale='large'] [data-density='default'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 4px;
+    --nx-spacing-2: 9px;
+    --nx-spacing-3: 13px;
+    --nx-spacing-4: 18px;
+    --nx-spacing-5: 22px;
+    --nx-spacing-6: 26px;
+    --nx-spacing-7: 30px;
+    --nx-spacing-8: 36px;
+    --nx-spacing-9: 40px;
+    --nx-spacing-10: 44px;
+    --nx-spacing-11: 48px;
+    --nx-spacing-12: 52px;
+    --nx-spacing-14: 62px;
+    --nx-spacing-16: 70px;
+    --nx-spacing-20: 88px;
+    --nx-spacing-24: 106px;
+    --nx-spacing-28: 124px;
+    --nx-spacing-32: 140px;
+    --nx-spacing-36: 158px;
+    --nx-spacing-40: 176px;
+    --nx-spacing-44: 194px;
+    --nx-spacing-48: 212px;
+    --nx-spacing-52: 228px;
+    --nx-spacing-56: 246px;
+    --nx-spacing-60: 264px;
+    --nx-spacing-64: 282px;
+    --nx-spacing-72: 316px;
+    --nx-spacing-80: 352px;
+    --nx-spacing-96: 422px;
+    --nx-spacing-0_5: 2px;
+    --nx-spacing-1_5: 7px;
+    --nx-spacing-2_5: 11px;
+    --nx-spacing-3_5: 15px;
+    --nx-container-p: 26px;
+    --nx-container-gap: 18px;
+    --nx-layout-section-gap: 36px;
+    --nx-layout-stack-gap: 9px;
+  }
+
+  [data-ui-scale='large'][data-density='comfortable'],
+  [data-ui-scale='large'] [data-density='comfortable'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 4px;
+    --nx-spacing-2: 9px;
+    --nx-spacing-3: 14px;
+    --nx-spacing-4: 18px;
+    --nx-spacing-5: 24px;
+    --nx-spacing-6: 28px;
+    --nx-spacing-7: 34px;
+    --nx-spacing-8: 38px;
+    --nx-spacing-9: 42px;
+    --nx-spacing-10: 46px;
+    --nx-spacing-11: 50px;
+    --nx-spacing-12: 56px;
+    --nx-spacing-14: 64px;
+    --nx-spacing-16: 72px;
+    --nx-spacing-20: 90px;
+    --nx-spacing-24: 108px;
+    --nx-spacing-28: 126px;
+    --nx-spacing-32: 144px;
+    --nx-spacing-36: 160px;
+    --nx-spacing-40: 178px;
+    --nx-spacing-44: 196px;
+    --nx-spacing-48: 214px;
+    --nx-spacing-52: 232px;
+    --nx-spacing-56: 248px;
+    --nx-spacing-60: 266px;
+    --nx-spacing-64: 284px;
+    --nx-spacing-72: 320px;
+    --nx-spacing-80: 354px;
+    --nx-spacing-96: 424px;
+    --nx-spacing-0_5: 2px;
+    --nx-spacing-1_5: 7px;
+    --nx-spacing-2_5: 12px;
+    --nx-spacing-3_5: 16px;
+    --nx-container-p: 30px;
+    --nx-container-gap: 22px;
+    --nx-layout-section-gap: 44px;
+    --nx-layout-stack-gap: 11px;
+  }
+
+  [data-ui-scale='large'][data-density='compact'],
+  [data-ui-scale='large'] [data-density='compact'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 4px;
+    --nx-spacing-2: 9px;
+    --nx-spacing-3: 13px;
+    --nx-spacing-4: 16px;
+    --nx-spacing-5: 20px;
+    --nx-spacing-6: 24px;
+    --nx-spacing-7: 28px;
+    --nx-spacing-8: 34px;
+    --nx-spacing-9: 38px;
+    --nx-spacing-10: 42px;
+    --nx-spacing-11: 46px;
+    --nx-spacing-12: 50px;
+    --nx-spacing-14: 60px;
+    --nx-spacing-16: 68px;
+    --nx-spacing-20: 86px;
+    --nx-spacing-24: 104px;
+    --nx-spacing-28: 122px;
+    --nx-spacing-32: 138px;
+    --nx-spacing-36: 156px;
+    --nx-spacing-40: 174px;
+    --nx-spacing-44: 192px;
+    --nx-spacing-48: 210px;
+    --nx-spacing-52: 226px;
+    --nx-spacing-56: 244px;
+    --nx-spacing-60: 262px;
+    --nx-spacing-64: 280px;
+    --nx-spacing-72: 314px;
+    --nx-spacing-80: 350px;
+    --nx-spacing-96: 420px;
+    --nx-spacing-0_5: 2px;
+    --nx-spacing-1_5: 7px;
+    --nx-spacing-2_5: 11px;
+    --nx-spacing-3_5: 15px;
+    --nx-container-p: 22px;
+    --nx-container-gap: 13px;
+    --nx-layout-section-gap: 30px;
+    --nx-layout-stack-gap: 7px;
+  }
+
+  [data-ui-scale='large'][data-density='relaxed'],
+  [data-ui-scale='large'] [data-density='relaxed'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 4px;
+    --nx-spacing-2: 9px;
+    --nx-spacing-3: 14px;
+    --nx-spacing-4: 20px;
+    --nx-spacing-5: 26px;
+    --nx-spacing-6: 30px;
+    --nx-spacing-7: 36px;
+    --nx-spacing-8: 40px;
+    --nx-spacing-9: 44px;
+    --nx-spacing-10: 48px;
+    --nx-spacing-11: 52px;
+    --nx-spacing-12: 58px;
+    --nx-spacing-14: 66px;
+    --nx-spacing-16: 74px;
+    --nx-spacing-20: 92px;
+    --nx-spacing-24: 110px;
+    --nx-spacing-28: 128px;
+    --nx-spacing-32: 146px;
+    --nx-spacing-36: 162px;
+    --nx-spacing-40: 180px;
+    --nx-spacing-44: 198px;
+    --nx-spacing-48: 216px;
+    --nx-spacing-52: 234px;
+    --nx-spacing-56: 250px;
+    --nx-spacing-60: 268px;
+    --nx-spacing-64: 286px;
+    --nx-spacing-72: 322px;
+    --nx-spacing-80: 356px;
+    --nx-spacing-96: 426px;
+    --nx-spacing-0_5: 2px;
+    --nx-spacing-1_5: 7px;
+    --nx-spacing-2_5: 12px;
+    --nx-spacing-3_5: 18px;
+    --nx-container-p: 30px;
+    --nx-container-gap: 22px;
+    --nx-layout-section-gap: 44px;
+    --nx-layout-stack-gap: 11px;
+  }
+
+  [data-ui-scale='large'][data-density='spacious'],
+  [data-ui-scale='large'] [data-density='spacious'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 4px;
+    --nx-spacing-2: 9px;
+    --nx-spacing-3: 15px;
+    --nx-spacing-4: 20px;
+    --nx-spacing-5: 28px;
+    --nx-spacing-6: 34px;
+    --nx-spacing-7: 38px;
+    --nx-spacing-8: 42px;
+    --nx-spacing-9: 46px;
+    --nx-spacing-10: 50px;
+    --nx-spacing-11: 56px;
+    --nx-spacing-12: 60px;
+    --nx-spacing-14: 68px;
+    --nx-spacing-16: 78px;
+    --nx-spacing-20: 94px;
+    --nx-spacing-24: 112px;
+    --nx-spacing-28: 130px;
+    --nx-spacing-32: 148px;
+    --nx-spacing-36: 166px;
+    --nx-spacing-40: 182px;
+    --nx-spacing-44: 200px;
+    --nx-spacing-48: 218px;
+    --nx-spacing-52: 236px;
+    --nx-spacing-56: 254px;
+    --nx-spacing-60: 270px;
+    --nx-spacing-64: 288px;
+    --nx-spacing-72: 324px;
+    --nx-spacing-80: 358px;
+    --nx-spacing-96: 430px;
+    --nx-spacing-0_5: 2px;
+    --nx-spacing-1_5: 7px;
+    --nx-spacing-2_5: 12px;
+    --nx-spacing-3_5: 18px;
+    --nx-container-p: 44px;
+    --nx-container-gap: 26px;
+    --nx-layout-section-gap: 62px;
+    --nx-layout-stack-gap: 18px;
+  }
+
+  [data-ui-scale='large'][data-density='tight'],
+  [data-ui-scale='large'] [data-density='tight'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 4px;
+    --nx-spacing-2: 9px;
+    --nx-spacing-3: 12px;
+    --nx-spacing-4: 15px;
+    --nx-spacing-5: 18px;
+    --nx-spacing-6: 22px;
+    --nx-spacing-7: 26px;
+    --nx-spacing-8: 30px;
+    --nx-spacing-9: 36px;
+    --nx-spacing-10: 40px;
+    --nx-spacing-11: 44px;
+    --nx-spacing-12: 48px;
+    --nx-spacing-14: 58px;
+    --nx-spacing-16: 66px;
+    --nx-spacing-20: 84px;
+    --nx-spacing-24: 102px;
+    --nx-spacing-28: 118px;
+    --nx-spacing-32: 136px;
+    --nx-spacing-36: 154px;
+    --nx-spacing-40: 172px;
+    --nx-spacing-44: 190px;
+    --nx-spacing-48: 206px;
+    --nx-spacing-52: 224px;
+    --nx-spacing-56: 242px;
+    --nx-spacing-60: 260px;
+    --nx-spacing-64: 278px;
+    --nx-spacing-72: 312px;
+    --nx-spacing-80: 348px;
+    --nx-spacing-96: 418px;
+    --nx-spacing-0_5: 2px;
+    --nx-spacing-1_5: 7px;
+    --nx-spacing-2_5: 11px;
+    --nx-spacing-3_5: 14px;
+    --nx-container-p: 22px;
+    --nx-container-gap: 13px;
+    --nx-layout-section-gap: 30px;
+    --nx-layout-stack-gap: 7px;
+  }
+
+  [data-ui-scale='larger'],
+  [data-ui-scale='larger'][data-density='default'],
+  [data-ui-scale='larger'] [data-density='default'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 5px;
+    --nx-spacing-2: 10px;
+    --nx-spacing-3: 15px;
+    --nx-spacing-4: 20px;
+    --nx-spacing-5: 26px;
+    --nx-spacing-6: 30px;
+    --nx-spacing-7: 36px;
+    --nx-spacing-8: 40px;
+    --nx-spacing-9: 46px;
+    --nx-spacing-10: 50px;
+    --nx-spacing-11: 56px;
+    --nx-spacing-12: 60px;
+    --nx-spacing-14: 70px;
+    --nx-spacing-16: 80px;
+    --nx-spacing-20: 100px;
+    --nx-spacing-24: 120px;
+    --nx-spacing-28: 140px;
+    --nx-spacing-32: 160px;
+    --nx-spacing-36: 180px;
+    --nx-spacing-40: 200px;
+    --nx-spacing-44: 220px;
+    --nx-spacing-48: 240px;
+    --nx-spacing-52: 260px;
+    --nx-spacing-56: 280px;
+    --nx-spacing-60: 300px;
+    --nx-spacing-64: 320px;
+    --nx-spacing-72: 360px;
+    --nx-spacing-80: 400px;
+    --nx-spacing-96: 480px;
+    --nx-spacing-0_5: 3px;
+    --nx-spacing-1_5: 8px;
+    --nx-spacing-2_5: 13px;
+    --nx-spacing-3_5: 18px;
+    --nx-container-p: 30px;
+    --nx-container-gap: 20px;
+    --nx-layout-section-gap: 40px;
+    --nx-layout-stack-gap: 10px;
+  }
+
+  [data-ui-scale='larger'][data-density='comfortable'],
+  [data-ui-scale='larger'] [data-density='comfortable'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 5px;
+    --nx-spacing-2: 10px;
+    --nx-spacing-3: 16px;
+    --nx-spacing-4: 22px;
+    --nx-spacing-5: 28px;
+    --nx-spacing-6: 32px;
+    --nx-spacing-7: 38px;
+    --nx-spacing-8: 42px;
+    --nx-spacing-9: 48px;
+    --nx-spacing-10: 52px;
+    --nx-spacing-11: 58px;
+    --nx-spacing-12: 62px;
+    --nx-spacing-14: 72px;
+    --nx-spacing-16: 82px;
+    --nx-spacing-20: 102px;
+    --nx-spacing-24: 122px;
+    --nx-spacing-28: 142px;
+    --nx-spacing-32: 162px;
+    --nx-spacing-36: 182px;
+    --nx-spacing-40: 202px;
+    --nx-spacing-44: 222px;
+    --nx-spacing-48: 242px;
+    --nx-spacing-52: 262px;
+    --nx-spacing-56: 282px;
+    --nx-spacing-60: 302px;
+    --nx-spacing-64: 322px;
+    --nx-spacing-72: 362px;
+    --nx-spacing-80: 402px;
+    --nx-spacing-96: 482px;
+    --nx-spacing-0_5: 3px;
+    --nx-spacing-1_5: 8px;
+    --nx-spacing-2_5: 14px;
+    --nx-spacing-3_5: 18px;
+    --nx-container-p: 36px;
+    --nx-container-gap: 26px;
+    --nx-layout-section-gap: 50px;
+    --nx-layout-stack-gap: 13px;
+  }
+
+  [data-ui-scale='larger'][data-density='compact'],
+  [data-ui-scale='larger'] [data-density='compact'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 5px;
+    --nx-spacing-2: 10px;
+    --nx-spacing-3: 15px;
+    --nx-spacing-4: 20px;
+    --nx-spacing-5: 24px;
+    --nx-spacing-6: 28px;
+    --nx-spacing-7: 32px;
+    --nx-spacing-8: 38px;
+    --nx-spacing-9: 42px;
+    --nx-spacing-10: 48px;
+    --nx-spacing-11: 52px;
+    --nx-spacing-12: 58px;
+    --nx-spacing-14: 68px;
+    --nx-spacing-16: 78px;
+    --nx-spacing-20: 98px;
+    --nx-spacing-24: 118px;
+    --nx-spacing-28: 138px;
+    --nx-spacing-32: 158px;
+    --nx-spacing-36: 178px;
+    --nx-spacing-40: 198px;
+    --nx-spacing-44: 218px;
+    --nx-spacing-48: 238px;
+    --nx-spacing-52: 258px;
+    --nx-spacing-56: 278px;
+    --nx-spacing-60: 298px;
+    --nx-spacing-64: 318px;
+    --nx-spacing-72: 358px;
+    --nx-spacing-80: 398px;
+    --nx-spacing-96: 478px;
+    --nx-spacing-0_5: 3px;
+    --nx-spacing-1_5: 8px;
+    --nx-spacing-2_5: 13px;
+    --nx-spacing-3_5: 18px;
+    --nx-container-p: 26px;
+    --nx-container-gap: 15px;
+    --nx-layout-section-gap: 36px;
+    --nx-layout-stack-gap: 8px;
+  }
+
+  [data-ui-scale='larger'][data-density='relaxed'],
+  [data-ui-scale='larger'] [data-density='relaxed'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 5px;
+    --nx-spacing-2: 10px;
+    --nx-spacing-3: 16px;
+    --nx-spacing-4: 22px;
+    --nx-spacing-5: 28px;
+    --nx-spacing-6: 36px;
+    --nx-spacing-7: 40px;
+    --nx-spacing-8: 46px;
+    --nx-spacing-9: 50px;
+    --nx-spacing-10: 56px;
+    --nx-spacing-11: 60px;
+    --nx-spacing-12: 66px;
+    --nx-spacing-14: 76px;
+    --nx-spacing-16: 86px;
+    --nx-spacing-20: 106px;
+    --nx-spacing-24: 126px;
+    --nx-spacing-28: 146px;
+    --nx-spacing-32: 166px;
+    --nx-spacing-36: 186px;
+    --nx-spacing-40: 206px;
+    --nx-spacing-44: 226px;
+    --nx-spacing-48: 246px;
+    --nx-spacing-52: 266px;
+    --nx-spacing-56: 286px;
+    --nx-spacing-60: 306px;
+    --nx-spacing-64: 326px;
+    --nx-spacing-72: 366px;
+    --nx-spacing-80: 406px;
+    --nx-spacing-96: 486px;
+    --nx-spacing-0_5: 3px;
+    --nx-spacing-1_5: 8px;
+    --nx-spacing-2_5: 14px;
+    --nx-spacing-3_5: 20px;
+    --nx-container-p: 36px;
+    --nx-container-gap: 26px;
+    --nx-layout-section-gap: 50px;
+    --nx-layout-stack-gap: 13px;
+  }
+
+  [data-ui-scale='larger'][data-density='spacious'],
+  [data-ui-scale='larger'] [data-density='spacious'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 5px;
+    --nx-spacing-2: 10px;
+    --nx-spacing-3: 18px;
+    --nx-spacing-4: 24px;
+    --nx-spacing-5: 32px;
+    --nx-spacing-6: 38px;
+    --nx-spacing-7: 42px;
+    --nx-spacing-8: 48px;
+    --nx-spacing-9: 52px;
+    --nx-spacing-10: 58px;
+    --nx-spacing-11: 62px;
+    --nx-spacing-12: 68px;
+    --nx-spacing-14: 78px;
+    --nx-spacing-16: 88px;
+    --nx-spacing-20: 108px;
+    --nx-spacing-24: 128px;
+    --nx-spacing-28: 148px;
+    --nx-spacing-32: 168px;
+    --nx-spacing-36: 188px;
+    --nx-spacing-40: 208px;
+    --nx-spacing-44: 228px;
+    --nx-spacing-48: 248px;
+    --nx-spacing-52: 268px;
+    --nx-spacing-56: 288px;
+    --nx-spacing-60: 308px;
+    --nx-spacing-64: 328px;
+    --nx-spacing-72: 368px;
+    --nx-spacing-80: 408px;
+    --nx-spacing-96: 488px;
+    --nx-spacing-0_5: 3px;
+    --nx-spacing-1_5: 8px;
+    --nx-spacing-2_5: 14px;
+    --nx-spacing-3_5: 22px;
+    --nx-container-p: 50px;
+    --nx-container-gap: 30px;
+    --nx-layout-section-gap: 70px;
+    --nx-layout-stack-gap: 20px;
+  }
+
+  [data-ui-scale='larger'][data-density='tight'],
+  [data-ui-scale='larger'] [data-density='tight'] {
+    --nx-spacing-0: 0px;
+    --nx-spacing-1: 5px;
+    --nx-spacing-2: 10px;
+    --nx-spacing-3: 14px;
+    --nx-spacing-4: 18px;
+    --nx-spacing-5: 22px;
+    --nx-spacing-6: 26px;
+    --nx-spacing-7: 30px;
+    --nx-spacing-8: 36px;
+    --nx-spacing-9: 40px;
+    --nx-spacing-10: 46px;
+    --nx-spacing-11: 50px;
+    --nx-spacing-12: 56px;
+    --nx-spacing-14: 66px;
+    --nx-spacing-16: 76px;
+    --nx-spacing-20: 96px;
+    --nx-spacing-24: 116px;
+    --nx-spacing-28: 136px;
+    --nx-spacing-32: 156px;
+    --nx-spacing-36: 176px;
+    --nx-spacing-40: 196px;
+    --nx-spacing-44: 216px;
+    --nx-spacing-48: 236px;
+    --nx-spacing-52: 256px;
+    --nx-spacing-56: 276px;
+    --nx-spacing-60: 296px;
+    --nx-spacing-64: 316px;
+    --nx-spacing-72: 356px;
+    --nx-spacing-80: 396px;
+    --nx-spacing-96: 476px;
+    --nx-spacing-0_5: 3px;
+    --nx-spacing-1_5: 8px;
+    --nx-spacing-2_5: 13px;
+    --nx-spacing-3_5: 16px;
+    --nx-container-p: 26px;
+    --nx-container-gap: 15px;
+    --nx-layout-section-gap: 36px;
+    --nx-layout-stack-gap: 8px;
+  }
+
+  [data-ui-scale='small'],
+  [data-ui-scale='small'][data-radius='subtle'],
+  [data-ui-scale='small'] [data-radius='subtle'] {
+    --nx-radius-base: 4px;
+    --nx-radius-sm: 2px;
+    --nx-radius-md: 4px;
+    --nx-radius-lg: 5px;
+    --nx-radius-xl: 7px;
+    --nx-radius-2xl: 11px;
+    --nx-radius-3xl: 18px;
+    --nx-radius-4xl: 26px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='small'][data-radius='extra-round'],
+  [data-ui-scale='small'] [data-radius='extra-round'] {
+    --nx-radius-base: 14px;
+    --nx-radius-sm: 13px;
+    --nx-radius-md: 14px;
+    --nx-radius-lg: 16px;
+    --nx-radius-xl: 18px;
+    --nx-radius-2xl: 22px;
+    --nx-radius-3xl: 28px;
+    --nx-radius-4xl: 36px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='small'][data-radius='round'],
+  [data-ui-scale='small'] [data-radius='round'] {
+    --nx-radius-base: 11px;
+    --nx-radius-sm: 9px;
+    --nx-radius-md: 11px;
+    --nx-radius-lg: 13px;
+    --nx-radius-xl: 14px;
+    --nx-radius-2xl: 18px;
+    --nx-radius-3xl: 26px;
+    --nx-radius-4xl: 32px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='small'][data-radius='smooth'],
+  [data-ui-scale='small'] [data-radius='smooth'] {
+    --nx-radius-base: 7px;
+    --nx-radius-sm: 5px;
+    --nx-radius-md: 7px;
+    --nx-radius-lg: 9px;
+    --nx-radius-xl: 11px;
+    --nx-radius-2xl: 14px;
+    --nx-radius-3xl: 22px;
+    --nx-radius-4xl: 28px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='small'][data-radius='square'],
+  [data-ui-scale='small'] [data-radius='square'] {
+    --nx-radius-base: 0px;
+    --nx-radius-sm: 0px;
+    --nx-radius-md: 0px;
+    --nx-radius-lg: 0px;
+    --nx-radius-xl: 0px;
+    --nx-radius-2xl: 0px;
+    --nx-radius-3xl: 0px;
+    --nx-radius-4xl: 0px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='large'],
+  [data-ui-scale='large'][data-radius='subtle'],
+  [data-ui-scale='large'] [data-radius='subtle'] {
+    --nx-radius-base: 4px;
+    --nx-radius-sm: 2px;
+    --nx-radius-md: 4px;
+    --nx-radius-lg: 7px;
+    --nx-radius-xl: 9px;
+    --nx-radius-2xl: 13px;
+    --nx-radius-3xl: 22px;
+    --nx-radius-4xl: 30px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='large'][data-radius='extra-round'],
+  [data-ui-scale='large'] [data-radius='extra-round'] {
+    --nx-radius-base: 18px;
+    --nx-radius-sm: 15px;
+    --nx-radius-md: 18px;
+    --nx-radius-lg: 20px;
+    --nx-radius-xl: 22px;
+    --nx-radius-2xl: 26px;
+    --nx-radius-3xl: 36px;
+    --nx-radius-4xl: 44px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='large'][data-radius='round'],
+  [data-ui-scale='large'] [data-radius='round'] {
+    --nx-radius-base: 13px;
+    --nx-radius-sm: 11px;
+    --nx-radius-md: 13px;
+    --nx-radius-lg: 15px;
+    --nx-radius-xl: 18px;
+    --nx-radius-2xl: 22px;
+    --nx-radius-3xl: 30px;
+    --nx-radius-4xl: 40px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='large'][data-radius='smooth'],
+  [data-ui-scale='large'] [data-radius='smooth'] {
+    --nx-radius-base: 9px;
+    --nx-radius-sm: 7px;
+    --nx-radius-md: 9px;
+    --nx-radius-lg: 11px;
+    --nx-radius-xl: 13px;
+    --nx-radius-2xl: 18px;
+    --nx-radius-3xl: 26px;
+    --nx-radius-4xl: 36px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='large'][data-radius='square'],
+  [data-ui-scale='large'] [data-radius='square'] {
+    --nx-radius-base: 0px;
+    --nx-radius-sm: 0px;
+    --nx-radius-md: 0px;
+    --nx-radius-lg: 0px;
+    --nx-radius-xl: 0px;
+    --nx-radius-2xl: 0px;
+    --nx-radius-3xl: 0px;
+    --nx-radius-4xl: 0px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='larger'],
+  [data-ui-scale='larger'][data-radius='subtle'],
+  [data-ui-scale='larger'] [data-radius='subtle'] {
+    --nx-radius-base: 5px;
+    --nx-radius-sm: 3px;
+    --nx-radius-md: 5px;
+    --nx-radius-lg: 8px;
+    --nx-radius-xl: 10px;
+    --nx-radius-2xl: 15px;
+    --nx-radius-3xl: 26px;
+    --nx-radius-4xl: 36px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='larger'][data-radius='extra-round'],
+  [data-ui-scale='larger'] [data-radius='extra-round'] {
+    --nx-radius-base: 20px;
+    --nx-radius-sm: 18px;
+    --nx-radius-md: 20px;
+    --nx-radius-lg: 22px;
+    --nx-radius-xl: 26px;
+    --nx-radius-2xl: 30px;
+    --nx-radius-3xl: 40px;
+    --nx-radius-4xl: 50px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='larger'][data-radius='round'],
+  [data-ui-scale='larger'] [data-radius='round'] {
+    --nx-radius-base: 15px;
+    --nx-radius-sm: 13px;
+    --nx-radius-md: 15px;
+    --nx-radius-lg: 18px;
+    --nx-radius-xl: 20px;
+    --nx-radius-2xl: 26px;
+    --nx-radius-3xl: 36px;
+    --nx-radius-4xl: 46px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='larger'][data-radius='smooth'],
+  [data-ui-scale='larger'] [data-radius='smooth'] {
+    --nx-radius-base: 10px;
+    --nx-radius-sm: 8px;
+    --nx-radius-md: 10px;
+    --nx-radius-lg: 13px;
+    --nx-radius-xl: 15px;
+    --nx-radius-2xl: 20px;
+    --nx-radius-3xl: 30px;
+    --nx-radius-4xl: 40px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='larger'][data-radius='square'],
+  [data-ui-scale='larger'] [data-radius='square'] {
+    --nx-radius-base: 0px;
+    --nx-radius-sm: 0px;
+    --nx-radius-md: 0px;
+    --nx-radius-lg: 0px;
+    --nx-radius-xl: 0px;
+    --nx-radius-2xl: 0px;
+    --nx-radius-3xl: 0px;
+    --nx-radius-4xl: 0px;
+    --nx-radius-full: 9999px;
+  }
 }
 
 /* ===== NATIVE BROWSER UI THEME ===== */
