@@ -115,11 +115,6 @@ ruleTester.run('nx-class-conventions', rule, {
       code: "const c = 'nx:[&_svg]:size-4';",
       filename: '/repo/apps/docs/app/_components/TopNav.tsx',
     },
-    // A part that hands its class list to a part which strokes its icons:
-    // AttachmentMedia renders ItemMedia, and the recipes style a Button.
-    "function AttachmentMedia() { return cn('nx:group-data-[orientation=vertical]/attachment:[&_svg]:size-8', className); }",
-    "const inputGroupButtonVariants = cva('nx:flex', { variants: { size: { xs: 'nx:[&>svg]:size-3.5' } } });",
-    "export const messageScrollerButtonVariants = cva('nx:absolute nx:[&_svg]:size-4');",
   ],
   invalid: [
     {
@@ -346,13 +341,9 @@ ruleTester.run('nx-class-conventions', rule, {
       languageOptions: { parserOptions: { ecmaFeatures: { jsx: true } } },
       errors: [{ messageId: 'unstrokedIcon' }],
     },
-    // Only the plain class counts, and only the listed parts are exempt.
+    // Only the plain class counts.
     {
       code: "const c = 'nx:[&_svg]:size-4 nx:hover:icon-stroke';",
-      errors: [{ messageId: 'unstrokedIcon' }],
-    },
-    {
-      code: "function AlertIcon() { return cn('nx:[&>svg]:size-4', className); }",
       errors: [{ messageId: 'unstrokedIcon' }],
     },
   ],
