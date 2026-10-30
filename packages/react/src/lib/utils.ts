@@ -162,6 +162,9 @@ export const NXDS_CLASS_GROUPS = {
     'border-color-primary-active',
   ],
   typography: [
+    'typography-display-large',
+    'typography-display-medium',
+    'typography-display-small',
     'typography-heading-large',
     'typography-heading-medium',
     'typography-heading-small',

@@ -17,12 +17,19 @@ const EXPECTED_RUNTIME_EXPORTS = [
   'CORNER_OPTIONS',
   'DEFAULT_BRAND_COLOR',
   'DEFAULT_COOKIE_KEY',
+  'DEFAULT_ICON_LIBRARY',
   'DEFAULT_NXDS_APPEARANCE',
+  'DEFAULT_NXDS_THEME',
   'DEFAULT_STORAGE_KEY',
   'DENSITY_OPTIONS',
   'ELEVATION_OPTIONS',
+  'FONT_OPTIONS',
+  'FONT_SIZE_PX_MAX',
+  'FONT_SIZE_PX_MIN',
+  'ICON_LIBRARY_OPTIONS',
   'NXDS_APPEARANCE_COOKIE_MAX_AGE_SECONDS',
   'NXDS_APPEARANCE_DATA_ATTRS',
+  'NXDS_THEME_FIELDS',
   'PALETTE_KEYS',
   'RUNTIME_LAYER_ORDER',
   'SEMANTIC_TOKEN_REGISTRY',
@@ -32,6 +39,7 @@ const EXPECTED_RUNTIME_EXPORTS = [
   'adjustContrast',
   'apcaLc',
   'applyNxdsAppearance',
+  'applyNxdsThemeFlags',
   'appearancePrefsToCss',
   'createDefaultNxdsAppearanceSnapshot',
   'createNxdsAppearanceBootstrapScript',
@@ -45,6 +53,7 @@ const EXPECTED_RUNTIME_EXPORTS = [
   'isColor',
   'measureThemeContrast',
   'normalizeAppearanceModeIds',
+  'nxdsThemeFlags',
   'parseNxdsAppearanceStateCookie',
   'persistNxdsAppearance',
   'prefersDarkColorScheme',
@@ -56,6 +65,8 @@ const EXPECTED_RUNTIME_EXPORTS = [
   'sanitizeNxdsAppearancePrefs',
   'sanitizeNxdsAppearanceSnapshot',
   'serializeNxdsAppearanceStateCookie',
+  'shuffleNxdsAppearance',
+  'shuffleNxdsIconLibrary',
   'themeToCss',
   'watchColorScheme',
 ];
@@ -73,6 +84,19 @@ const EXPECTED_CATALOGUE_EXPORTS = [
   'SURFACE_TOKENS',
   'createTokenCatalogue',
 ];
+
+const packageJson = JSON.parse(
+  readFileSync(path.join(packageRoot, 'package.json'), 'utf8')
+);
+const publishedExports = Object.fromEntries(
+  Object.entries(packageJson.exports).filter(([key]) => key !== './source/*')
+);
+assert.deepEqual(
+  packageJson.publishConfig.exports,
+  publishedExports,
+  'publishConfig.exports must match exports without ./source/*.'
+);
+console.log('@nxds/core publishConfig.exports matches exports.');
 
 const OKLCH_VALUE = /^oklch\(\d+(\.\d+)? \d+(\.\d+)? \d+(\.\d+)?\)$/;
 

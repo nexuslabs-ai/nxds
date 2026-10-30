@@ -1,5 +1,5 @@
+import { FileIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconFile } from '@tabler/icons-react';
 import { expect, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -41,7 +41,7 @@ export const Default: Story = {
   render: () => (
     <Item variant="outline" className="nx:w-96">
       <ItemMedia variant="icon">
-        <IconFile />
+        <FileIcon />
       </ItemMedia>
       <ItemContent>
         <ItemTitle>Report.pdf</ItemTitle>
@@ -126,7 +126,7 @@ export const Media: Story = {
     <div className="nx:flex nx:w-96 nx:flex-col nx:gap-3">
       <Item variant="outline">
         <ItemMedia variant="icon">
-          <IconFile />
+          <FileIcon />
         </ItemMedia>
         <ItemContent>
           <ItemTitle>Icon media</ItemTitle>
@@ -184,7 +184,7 @@ export const AsChild: Story = {
     <Item asChild variant="outline" className="nx:w-96">
       <a href="/files/report" data-testid="item-link">
         <ItemMedia variant="icon">
-          <IconFile />
+          <FileIcon />
         </ItemMedia>
         <ItemContent>
           <ItemTitle>Open report</ItemTitle>
@@ -205,7 +205,7 @@ export const WithDataAttributes: Story = {
   render: () => (
     <Item variant="muted" size="sm" className="nx:w-96">
       <ItemMedia variant="icon">
-        <IconFile />
+        <FileIcon />
       </ItemMedia>
       <ItemContent>
         <ItemTitle>Inspect me</ItemTitle>
@@ -242,7 +242,7 @@ export const AllVariants: Story = {
     <div className="nx:flex nx:w-96 nx:flex-col nx:gap-3">
       <Item variant="outline">
         <ItemMedia variant="icon">
-          <IconFile />
+          <FileIcon />
         </ItemMedia>
         <ItemContent>
           <ItemTitle>Report.pdf</ItemTitle>

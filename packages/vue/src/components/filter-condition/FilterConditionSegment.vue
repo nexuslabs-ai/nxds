@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { IconChevronDown } from '@tabler/icons-vue';
 import type { HTMLAttributes } from 'vue';
 
+import { IconChevronDown } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 import { buttonVariants } from '../button';
 

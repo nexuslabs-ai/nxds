@@ -1,14 +1,14 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconBook,
-  IconCreditCard,
-  IconFile,
-  IconSettings,
-  IconUser,
-  IconUsers,
-} from '@tabler/icons-react';
+  BookIcon,
+  CreditCardIcon,
+  FileIcon,
+  GearIcon,
+  UserIcon,
+  UsersIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { useCommandState } from 'cmdk';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
@@ -56,7 +56,7 @@ const projectCommands = [
     description: 'View roadmap, milestones, and project notes',
     value: 'open-project-plan',
     keywords: ['roadmap', 'milestones', 'docs'],
-    icon: IconFile,
+    icon: FileIcon,
     shortcut: '⌘P',
   },
   {
@@ -64,7 +64,7 @@ const projectCommands = [
     description: 'Find API references and implementation guides',
     value: 'search-documentation',
     keywords: ['docs', 'api', 'guide'],
-    icon: IconBook,
+    icon: BookIcon,
     shortcut: '⌘D',
   },
   {
@@ -72,7 +72,7 @@ const projectCommands = [
     description: 'Update members, billing, and notifications',
     value: 'project-settings',
     keywords: ['preferences', 'configuration', 'admin'],
-    icon: IconSettings,
+    icon: GearIcon,
     trailing: 'Admin',
   },
   {
@@ -80,7 +80,7 @@ const projectCommands = [
     description: 'Add a member to this workspace',
     value: 'invite-teammate',
     keywords: ['members', 'users', 'people'],
-    icon: IconUsers,
+    icon: UsersIcon,
   },
 ];
 
@@ -293,13 +293,13 @@ export const AdvancedFiltering: Story = {
         label: 'Invite teammate',
         value: 'invite-teammate',
         keywords: ['members', 'users', 'people'],
-        icon: IconUsers,
+        icon: UsersIcon,
       },
       {
         label: 'Open billing',
         value: 'open-billing',
         keywords: ['invoice', 'payment', 'card'],
-        icon: IconCreditCard,
+        icon: CreditCardIcon,
       },
     ];
     const destinationCommands = [
@@ -307,13 +307,13 @@ export const AdvancedFiltering: Story = {
         label: 'Profile',
         value: 'profile',
         keywords: ['account', 'user'],
-        icon: IconUser,
+        icon: UserIcon,
       },
       {
         label: 'Settings',
         value: 'settings',
         keywords: ['preferences', 'configuration'],
-        icon: IconSettings,
+        icon: GearIcon,
       },
     ];
     const matchesSearch = (command: { label: string; keywords: string[] }) => {

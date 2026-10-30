@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
-  IconBook,
-  IconCreditCard,
-  IconFile,
-  IconSettings,
-  IconUser,
-  IconUsers,
-} from '@tabler/icons-vue';
+  PhBook,
+  PhCreditCard,
+  PhFile,
+  PhGear,
+  PhUser,
+  PhUsers,
+} from '@phosphor-icons/vue';
+import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 
@@ -238,7 +238,7 @@ export const RichItems: Story = {
           description: 'View roadmap, milestones, and project notes',
           value: 'open-project-plan',
           keywords: ['roadmap', 'milestones', 'docs'],
-          icon: IconFile,
+          icon: PhFile,
           shortcut: '⌘P',
         },
         {
@@ -246,7 +246,7 @@ export const RichItems: Story = {
           description: 'Find API references and implementation guides',
           value: 'search-documentation',
           keywords: ['docs', 'api', 'guide'],
-          icon: IconBook,
+          icon: PhBook,
           shortcut: '⌘D',
         },
         {
@@ -254,7 +254,7 @@ export const RichItems: Story = {
           description: 'Update members, billing, and notifications',
           value: 'project-settings',
           keywords: ['preferences', 'configuration', 'admin'],
-          icon: IconSettings,
+          icon: PhGear,
           trailing: 'Admin',
         },
         {
@@ -262,7 +262,7 @@ export const RichItems: Story = {
           description: 'Add a member to this workspace',
           value: 'invite-teammate',
           keywords: ['members', 'users', 'people'],
-          icon: IconUsers,
+          icon: PhUsers,
         },
       ],
     }),
@@ -321,13 +321,13 @@ export const AdvancedFiltering: Story = {
           label: 'Invite teammate',
           value: 'invite-teammate',
           keywords: ['members', 'users', 'people'],
-          icon: IconUsers,
+          icon: PhUsers,
         },
         {
           label: 'Open billing',
           value: 'open-billing',
           keywords: ['invoice', 'payment', 'card'],
-          icon: IconCreditCard,
+          icon: PhCreditCard,
         },
       ];
       const destinationCommands = [
@@ -335,13 +335,13 @@ export const AdvancedFiltering: Story = {
           label: 'Profile',
           value: 'profile',
           keywords: ['account', 'user'],
-          icon: IconUser,
+          icon: PhUser,
         },
         {
           label: 'Settings',
           value: 'settings',
           keywords: ['preferences', 'configuration'],
-          icon: IconSettings,
+          icon: PhGear,
         },
       ];
       const matchesSearch = (command: {

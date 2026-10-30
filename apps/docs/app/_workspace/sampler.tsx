@@ -2,13 +2,15 @@
 
 import { type FormEvent, useId, useState } from 'react';
 
+import { Button } from '@/components/button/button';
 import {
-  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+} from '@/components/card/card';
+import {
   Dialog,
   DialogBody,
   DialogClose,
@@ -18,18 +20,22 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  Input,
-  Label,
+} from '@/components/dialog/dialog';
+import { Input } from '@/components/input/input';
+import { Label } from '@/components/label/label';
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+} from '@/components/popover/popover';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Switch,
-} from '@nxds/react';
+} from '@/components/select/select';
+import { Switch } from '@/components/switch/switch';
 
 const FIELD_CLASS = 'nx:flex nx:flex-col nx:gap-2';
 

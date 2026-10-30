@@ -4,6 +4,7 @@ import path from 'node:path';
 import { major, satisfies } from 'semver';
 
 import {
+  type Catalog,
   type CatalogFile,
   type CatalogItem,
   fetchRelease,
@@ -12,6 +13,7 @@ import {
   resolveItems,
   splitInstalled,
   variantFor,
+  withIconLibrary,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
 import { type Config, readConfig, requireConfig } from '../config';
@@ -34,6 +36,12 @@ import {
   VITE_ENTRIES,
 } from '../project';
 import { entryDir } from '../setup/react';
+import {
+  fontImportLine,
+  nxdsThemeSource,
+  resolveTheme,
+  type Theme,
+} from '../theme';
 
 import type { CommandResult } from './result';
 
@@ -46,8 +54,12 @@ export async function diff(
   const config = requireConfig(cwd);
   // `update` installs the app's React major, which may differ from the files'.
   const target = { ...config, react: reactMajor(readProject(cwd)) };
-  const latest = await loadRelease(registry, 'latest', target.react);
-  const previous = await fetchRelease(registry, config.version);
+  const release = await loadRelease(registry, 'latest', target.react);
+  // As `update` does: an app from before icon libraries gets the default.
+  const library = config.iconLibrary ?? release.iconLibraries[0]?.name;
+  const latest = withIconLibrary(release, library);
+  const fetched = await fetchRelease(registry, config.version);
+  const previous = fetched && withIconLibrary(fetched, library);
   const previousFiles = previous && releaseFiles(previous, config);
   const { known, removed } = splitInstalled(latest, config.items);
   const items = resolveItems(
@@ -226,6 +238,122 @@ function packageProblems(
   });
 }
 
+/**
+ * `release` with the icon library nxds.json names. When the release has no
+ * icon libraries or not that one, the `icons` check fails and `release` keeps
+ * its own icons.
+ */
+function iconsCheck(
+  release: Catalog,
+  config: Config,
+  check: (name: string, ok: boolean, message: string) => void
+) {
+  if (config.iconLibrary === undefined) return release;
+  if (release.iconLibraries.length === 0) {
+    check(
+      'icons',
+      false,
+      `nxds ${release.version} has no icon libraries, so lib/icons.ts draws its own icons, not ${config.iconLibrary}. Run \`${CLI_COMMAND} update\`.`
+    );
+    return release;
+  }
+  try {
+    const catalog = withIconLibrary(release, config.iconLibrary);
+    check('icons', true, `lib/icons.ts draws ${config.iconLibrary}`);
+    return catalog;
+  } catch (error) {
+    if (!(error instanceof CliError)) throw error;
+    check('icons', false, error.message);
+    return release;
+  }
+}
+
+/**
+ * The theme nxds.json sets on `release`, after checking that `nxds-theme.ts`
+ * is what `init` writes for it. An app with no theme and no `nxds-theme.ts`
+ * has nothing to check. Null when nxds.json's theme doesn't fit the release.
+ */
+function themeCheck(
+  cwd: string,
+  project: Project,
+  config: Config,
+  release: Catalog,
+  check: (name: string, ok: boolean, message: string) => void
+): Theme | null {
+  let theme: Theme;
+  try {
+    theme = resolveTheme(release, config.theme ?? {});
+  } catch (error) {
+    if (!(error instanceof CliError)) throw error;
+    check('theme', false, error.message);
+    return null;
+  }
+  const file = `${entryDir(project)}/nxds-theme.ts`;
+  const exists = existsSync(path.join(cwd, file));
+  if (!exists && config.theme === undefined) return theme;
+  if (!exists) {
+    check(
+      'theme',
+      false,
+      `${file} is missing. Run \`${CLI_COMMAND} init\` to write it.`
+    );
+    return theme;
+  }
+  const matches = read(cwd, file) === nxdsThemeSource(theme);
+  check(
+    'theme',
+    matches,
+    matches
+      ? `${file} sets the theme in nxds.json`
+      : `${file} differs from the theme in nxds.json, and \`${CLI_COMMAND} init\` rewrites it. Move your edits to appearance-state.ts, then run \`${CLI_COMMAND} init\`.`
+  );
+  return theme;
+}
+
+/**
+ * Whether the CSS entry imports each font the theme uses, and whether the app
+ * has release font packages the theme moved off.
+ */
+function fontsCheck(
+  project: Project,
+  config: Config,
+  release: Catalog,
+  theme: Theme,
+  css: string,
+  check: (name: string, ok: boolean, message: string) => void
+) {
+  const unimported = theme.fonts
+    .filter((font) => !css.includes(fontImportLine(font)))
+    .map((font) => font.package);
+  const unused = release.fonts
+    .filter(
+      (font) =>
+        font.package in project.dependencies &&
+        !theme.fonts.includes(font) &&
+        !css.includes(fontImportLine(font))
+    )
+    .map((font) => font.package);
+  const them = (packages: string[]) => (packages.length === 1 ? 'it' : 'them');
+  const problems: string[] = [];
+  if (unimported.length > 0) {
+    problems.push(
+      `${config.css} doesn't import ${unimported.join(', ')}, which the theme uses. Run \`${CLI_COMMAND} init\` to import ${them(unimported)}.`
+    );
+  }
+  if (unused.length > 0) {
+    problems.push(
+      `Nothing imports ${unused.join(', ')}, and the theme doesn't use ${them(unused)}. Remove ${them(unused)} with \`npm uninstall ${unused.join(' ')}\`.`
+    );
+  }
+  check(
+    'fonts',
+    problems.length === 0,
+    problems.length === 0
+      ? `${config.css} imports each font the theme uses`
+      : problems.join(' ')
+  );
+}
+
 export async function doctor(
   cwd: string,
   registry: string
@@ -246,14 +374,15 @@ export async function doctor(
   }
   if (!config || !project.setup) return report(checks);
 
-  const catalog = await fetchRelease(registry, config.version);
+  const fetched = await fetchRelease(registry, config.version);
   check(
     'release',
-    catalog !== null,
-    catalog
+    fetched !== null,
+    fetched
       ? `Files come from nxds ${config.version}`
       : `${registry} has no nxds ${config.version}. Run \`${CLI_COMMAND} update\`.`
   );
+  const catalog = fetched && iconsCheck(fetched, config, check);
 
   check(
     'tailwind',
@@ -315,6 +444,11 @@ export async function doctor(
   );
 
   if (!catalog) return report(checks);
+
+  const theme = themeCheck(cwd, project, config, catalog, check);
+  if (theme && catalog.fonts.length > 0) {
+    fontsCheck(project, config, catalog, theme, css, check);
+  }
 
   const { known, removed } = splitInstalled(catalog, config.items);
   check(

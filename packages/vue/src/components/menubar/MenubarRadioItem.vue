@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { IconCircleFilled } from '@tabler/icons-vue';
 import { reactiveOmit } from '@vueuse/core';
 import {
   MenubarItemIndicator,
@@ -10,6 +9,7 @@ import {
 } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
+import { IconCircleFilled } from '../../lib/icons';
 import { selectionIndicatorMotionClassName } from '../../lib/motion';
 import { cn } from '../../lib/utils';
 

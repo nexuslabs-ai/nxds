@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { IconLoader2 } from '@tabler/icons-vue';
 import type { HTMLAttributes } from 'vue';
 
+import { IconLoader2 } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 export interface SpinnerProps {

@@ -1,12 +1,12 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconArrowRight,
-  IconDownload,
-  IconSend,
-  IconStar,
-} from '@tabler/icons-react';
+  ArrowRightIcon,
+  DownloadSimpleIcon,
+  PaperPlaneRightIcon,
+  StarIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { expectHeightPinned } from '../../stories/support/story-height-test-utils';
@@ -185,13 +185,13 @@ export const IconOnlySizes: Story = {
   render: () => (
     <div className="nx:flex nx:items-center nx:gap-2">
       <Button size="icon-sm" aria-label="Small icon">
-        <IconStar />
+        <StarIcon />
       </Button>
       <Button size="icon" aria-label="Default icon">
-        <IconStar />
+        <StarIcon />
       </Button>
       <Button size="icon-lg" aria-label="Large icon">
-        <IconStar />
+        <StarIcon />
       </Button>
     </div>
   ),
@@ -214,31 +214,31 @@ export const IconSize: Story = {
   render: () => (
     <div className="nx:flex nx:flex-col nx:items-start nx:gap-3">
       <div className="nx:flex nx:items-center nx:gap-2">
-        <Button size="sm" startIcon={<IconDownload />}>
+        <Button size="sm" startIcon={<DownloadSimpleIcon />}>
           Download
         </Button>
         <Button size="icon-sm" aria-label="Small icon">
-          <IconStar />
+          <StarIcon />
         </Button>
       </div>
       <div className="nx:flex nx:items-center nx:gap-2">
-        <Button startIcon={<IconDownload />}>Download</Button>
+        <Button startIcon={<DownloadSimpleIcon />}>Download</Button>
         <Button size="icon" aria-label="Default icon">
-          <IconStar />
+          <StarIcon />
         </Button>
       </div>
       <div className="nx:flex nx:items-center nx:gap-2">
-        <Button size="lg" startIcon={<IconDownload />}>
+        <Button size="lg" startIcon={<DownloadSimpleIcon />}>
           Download
         </Button>
         <Button size="icon-lg" aria-label="Large icon">
-          <IconStar />
+          <StarIcon />
         </Button>
       </div>
       <div data-density="compact" className="nx:flex nx:items-center nx:gap-2">
-        <Button startIcon={<IconDownload />}>Download</Button>
+        <Button startIcon={<DownloadSimpleIcon />}>Download</Button>
         <Button size="icon" aria-label="Compact icon">
-          <IconStar />
+          <StarIcon />
         </Button>
       </div>
     </div>
@@ -289,8 +289,8 @@ export const Disabled: Story = {
 export const Loading: Story = {
   args: {
     loading: true,
-    startIcon: <IconSend />,
-    endIcon: <IconArrowRight />,
+    startIcon: <PaperPlaneRightIcon />,
+    endIcon: <ArrowRightIcon />,
     children: 'Submitting',
   },
   play: async ({ canvasElement, args }) => {
@@ -513,7 +513,7 @@ export const StartIconSlot: Story = {
     },
   },
   args: {
-    startIcon: <IconDownload data-testid="start-icon" />,
+    startIcon: <DownloadSimpleIcon data-testid="start-icon" />,
     children: 'Download',
   },
   play: async ({ canvasElement }) => {
@@ -538,7 +538,7 @@ export const EndIconSlot: Story = {
     },
   },
   args: {
-    endIcon: <IconArrowRight data-testid="end-icon" />,
+    endIcon: <ArrowRightIcon data-testid="end-icon" />,
     children: 'Continue',
   },
   play: async ({ canvasElement }) => {
@@ -593,13 +593,13 @@ export const AllVariants: Story = {
           <Button size="default">Default</Button>
           <Button size="lg">Large</Button>
           <Button size="icon-sm" aria-label="Small icon">
-            <IconStar />
+            <StarIcon />
           </Button>
           <Button size="icon" aria-label="Icon">
-            <IconStar />
+            <StarIcon />
           </Button>
           <Button size="icon-lg" aria-label="Large icon">
-            <IconStar />
+            <StarIcon />
           </Button>
         </div>
       </div>
@@ -608,8 +608,8 @@ export const AllVariants: Story = {
           Icon slots
         </h3>
         <div className="nx:flex nx:flex-wrap nx:items-center nx:gap-2">
-          <Button startIcon={<IconDownload />}>Start icon</Button>
-          <Button endIcon={<IconArrowRight />}>End icon</Button>
+          <Button startIcon={<DownloadSimpleIcon />}>Start icon</Button>
+          <Button endIcon={<ArrowRightIcon />}>End icon</Button>
         </div>
       </div>
       <div>

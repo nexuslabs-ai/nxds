@@ -1,5 +1,5 @@
+import { PhChecks, PhInfo } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { IconChecks, IconInfoCircle } from '@tabler/icons-vue';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { ref } from 'vue';
 
@@ -723,7 +723,7 @@ export const WithTooltip: Story = {
   render: () => ({
     components: {
       ...bubbleComponents,
-      IconChecks,
+      PhChecks,
       Tooltip,
       TooltipContent,
       TooltipProvider,
@@ -738,7 +738,7 @@ export const WithTooltip: Story = {
             <Tooltip>
               <TooltipTrigger as-child>
                 <button type="button" aria-label="Delivery details" :class="receiptIconClassName">
-                  <IconChecks />
+                  <PhChecks />
                 </button>
               </TooltipTrigger>
               <TooltipContent>Read 09:15 &middot; 24 Aug 2026</TooltipContent>
@@ -784,7 +784,7 @@ export const WithPopover: Story = {
   render: () => ({
     components: {
       ...bubbleComponents,
-      IconInfoCircle,
+      PhInfo,
       Popover,
       PopoverContent,
       PopoverTrigger,
@@ -797,7 +797,7 @@ export const WithPopover: Story = {
           <Popover>
             <PopoverTrigger as-child>
               <button type="button" aria-label="Message details" :class="receiptIconClassName">
-                <IconInfoCircle />
+                <PhInfo />
               </button>
             </PopoverTrigger>
             <PopoverContent aria-labelledby="bubble-popover-heading" class="nx:flex nx:flex-col nx:gap-1">

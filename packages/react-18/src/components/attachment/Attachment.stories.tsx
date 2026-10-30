@@ -1,17 +1,17 @@
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconAlertTriangle,
-  IconCircleCheckFilled,
-  IconDownload,
-  IconFile,
-  IconFileTypeDocx,
-  IconFileTypePdf,
-  IconFileTypeTxt,
-  IconFileTypeZip,
-  IconRefresh,
-  IconUpload,
-  IconX,
-} from '@tabler/icons-react';
+  ArrowClockwiseIcon,
+  CheckCircleIcon,
+  DownloadSimpleIcon,
+  FileDocIcon,
+  FileIcon,
+  FilePdfIcon,
+  FileTxtIcon,
+  FileZipIcon,
+  UploadSimpleIcon,
+  WarningIcon,
+  XIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -62,7 +62,7 @@ export const Default: Story = {
   render: () => (
     <Attachment className="nx:w-80">
       <AttachmentMedia variant="icon">
-        <IconFileTypePdf />
+        <FilePdfIcon />
       </AttachmentMedia>
       <AttachmentContent>
         <AttachmentTitle>report.pdf</AttachmentTitle>
@@ -70,7 +70,7 @@ export const Default: Story = {
       </AttachmentContent>
       <AttachmentActions>
         <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf">
-          <IconX />
+          <XIcon />
         </Button>
       </AttachmentActions>
     </Attachment>
@@ -91,7 +91,7 @@ export const States: Story = {
     <div className="nx:flex nx:w-80 nx:flex-col nx:gap-3">
       <Attachment state="idle">
         <AttachmentMedia variant="icon">
-          <IconUpload />
+          <UploadSimpleIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>Drop a file here</AttachmentTitle>
@@ -99,13 +99,13 @@ export const States: Story = {
         </AttachmentContent>
         <AttachmentActions>
           <Button variant="ghost" size="icon-sm" aria-label="Dismiss">
-            <IconX />
+            <XIcon />
           </Button>
         </AttachmentActions>
       </Attachment>
       <Attachment state="uploading">
         <AttachmentMedia variant="icon">
-          <IconFileTypePdf />
+          <FilePdfIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>report.pdf</AttachmentTitle>
@@ -118,7 +118,7 @@ export const States: Story = {
             size="icon-sm"
             aria-label="Cancel upload of report.pdf"
           >
-            <IconX />
+            <XIcon />
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -136,13 +136,13 @@ export const States: Story = {
             size="icon-sm"
             aria-label="Cancel processing of scan.png"
           >
-            <IconX />
+            <XIcon />
           </Button>
         </AttachmentActions>
       </Attachment>
       <Attachment state="error">
         <AttachmentMedia variant="icon">
-          <IconAlertTriangle />
+          <WarningIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>archive.zip</AttachmentTitle>
@@ -156,25 +156,28 @@ export const States: Story = {
             size="icon-sm"
             aria-label="Retry upload of archive.zip"
           >
-            <IconRefresh />
+            <ArrowClockwiseIcon />
           </Button>
           <Button
             variant="ghost"
             size="icon-sm"
             aria-label="Dismiss archive.zip"
           >
-            <IconX />
+            <XIcon />
           </Button>
         </AttachmentActions>
       </Attachment>
       <Attachment state="done">
         <AttachmentMedia variant="icon">
-          <IconFileTypeTxt />
+          <FileTxtIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle
             trailing={
-              <IconCircleCheckFilled className="nx:size-4 nx:text-success-subtle-foreground" />
+              <CheckCircleIcon
+                weight="fill"
+                className="nx:size-4 nx:text-success-subtle-foreground"
+              />
             }
           >
             notes.txt
@@ -189,10 +192,10 @@ export const States: Story = {
             size="icon-sm"
             aria-label="Download notes.txt"
           >
-            <IconDownload />
+            <DownloadSimpleIcon />
           </Button>
           <Button variant="ghost" size="icon-sm" aria-label="Remove notes.txt">
-            <IconX />
+            <XIcon />
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -214,7 +217,7 @@ export const Sizes: Story = {
     <div className="nx:flex nx:w-80 nx:flex-col nx:gap-3">
       <Attachment size="default">
         <AttachmentMedia variant="icon">
-          <IconFileTypePdf />
+          <FilePdfIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>report.pdf</AttachmentTitle>
@@ -222,13 +225,13 @@ export const Sizes: Story = {
         </AttachmentContent>
         <AttachmentActions>
           <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf">
-            <IconX />
+            <XIcon />
           </Button>
         </AttachmentActions>
       </Attachment>
       <Attachment size="sm">
         <AttachmentMedia variant="icon">
-          <IconFileTypeTxt />
+          <FileTxtIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>notes.txt</AttachmentTitle>
@@ -236,7 +239,7 @@ export const Sizes: Story = {
         </AttachmentContent>
         <AttachmentActions>
           <Button variant="ghost" size="icon-sm" aria-label="Remove notes.txt">
-            <IconX />
+            <XIcon />
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -262,10 +265,10 @@ export const Grouped: Story = {
           size: '412 KB',
           media: <img src={THUMB} alt="" />,
         },
-        { name: 'report.pdf', size: '2.4 MB', media: <IconFileTypePdf /> },
-        { name: 'notes.txt', size: '8 KB', media: <IconFileTypeTxt /> },
-        { name: 'archive.zip', size: '18 MB', media: <IconFileTypeZip /> },
-        { name: 'brief.docx', size: '96 KB', media: <IconFileTypeDocx /> },
+        { name: 'report.pdf', size: '2.4 MB', media: <FilePdfIcon /> },
+        { name: 'notes.txt', size: '8 KB', media: <FileTxtIcon /> },
+        { name: 'archive.zip', size: '18 MB', media: <FileZipIcon /> },
+        { name: 'brief.docx', size: '96 KB', media: <FileDocIcon /> },
       ].map((file) => (
         <Attachment key={file.name} orientation="vertical">
           <AttachmentMedia
@@ -291,7 +294,7 @@ export const GroupKeyboardInteraction: Story = {
       {['cover.png', 'report.pdf', 'notes.txt', 'archive.zip'].map((name) => (
         <Attachment key={name} orientation="vertical">
           <AttachmentMedia variant="icon">
-            <IconFile />
+            <FileIcon />
           </AttachmentMedia>
           <AttachmentContent>
             <AttachmentTitle>{name}</AttachmentTitle>
@@ -330,7 +333,7 @@ export const LongFileName: Story = {
           <TooltipContent>{LONG_NAME}</TooltipContent>
         </Tooltip>
         <AttachmentMedia variant="icon">
-          <IconFileTypePdf />
+          <FilePdfIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>{LONG_NAME}</AttachmentTitle>
@@ -342,7 +345,7 @@ export const LongFileName: Story = {
             size="icon-sm"
             aria-label={`Remove ${LONG_NAME}`}
           >
-            <IconX />
+            <XIcon />
           </Button>
         </AttachmentActions>
       </Attachment>
@@ -367,7 +370,7 @@ export const ClickInteraction: StoryObj<
         <span className="nx:sr-only">Open report.pdf</span>
       </AttachmentTrigger>
       <AttachmentMedia variant="icon">
-        <IconFileTypePdf />
+        <FilePdfIcon />
       </AttachmentMedia>
       <AttachmentContent>
         <AttachmentTitle>report.pdf</AttachmentTitle>
@@ -380,7 +383,7 @@ export const ClickInteraction: StoryObj<
           aria-label="Remove report.pdf"
           onClick={args.onRemove}
         >
-          <IconX />
+          <XIcon />
         </Button>
       </AttachmentActions>
     </Attachment>
@@ -443,7 +446,7 @@ export const Disabled: StoryObj<AttachmentProps & { onRemove: () => void }> = {
           disabled
           onClick={args.onRemove}
         >
-          <IconX />
+          <XIcon />
         </Button>
       </AttachmentActions>
     </Attachment>
@@ -470,7 +473,7 @@ export const WithDataAttributes: Story = {
         </a>
       </AttachmentTrigger>
       <AttachmentMedia variant="icon">
-        <IconFileTypePdf />
+        <FilePdfIcon />
       </AttachmentMedia>
       <AttachmentContent>
         <AttachmentTitle>report.pdf</AttachmentTitle>
@@ -478,7 +481,7 @@ export const WithDataAttributes: Story = {
       </AttachmentContent>
       <AttachmentActions>
         <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf">
-          <IconX />
+          <XIcon />
         </Button>
       </AttachmentActions>
     </Attachment>
@@ -535,7 +538,7 @@ export const AllVariants: Story = {
           (state) => (
             <Attachment key={state} state={state}>
               <AttachmentMedia variant="icon">
-                <IconFile />
+                <FileIcon />
               </AttachmentMedia>
               <AttachmentContent>
                 <AttachmentTitle>{state}</AttachmentTitle>

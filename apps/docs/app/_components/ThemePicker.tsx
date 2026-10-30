@@ -2,16 +2,28 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 
-import { useNxdsAppearance } from '@nxds/react/appearance';
+import {
+  BASE_TONE_OPTIONS,
+  CORNER_OPTIONS,
+  DEFAULT_NXDS_APPEARANCE,
+  DENSITY_OPTIONS,
+  ELEVATION_OPTIONS,
+  ICON_LIBRARY_OPTIONS,
+  type NxdsAppearancePrefs,
+  STROKE_OPTIONS,
+} from '@nxds/core';
 import { cn } from '@nxds/react/utils';
 import { usePathname } from 'next/navigation';
 
 import {
-  getThemeModeOptions,
-  getThemeModeValue,
-  type ThemeMode,
-  updateThemeMode,
+  CODE_FONTS,
+  type FontChoice,
+  fontPick,
+  HEADING_FONTS,
+  MODE_OPTIONS,
+  UI_FONTS,
 } from '../_lib/appearance-controls';
+import { useDocsTheme } from '../_lib/docs-theme';
 
 import {
   Button,
@@ -21,6 +33,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from './nxds';
+import { ThemeActions } from './ThemeActions';
+import { ThemeExport } from './ThemeExport';
+
+const { prefs: DEFAULT_PREFS } = DEFAULT_NXDS_APPEARANCE;
 
 /**
  * Asks for the *expanded* case so the unmatched value — the one the prerendered
@@ -38,7 +54,7 @@ export function ThemePicker() {
 }
 
 function ThemePanel() {
-  const { state, setState } = useNxdsAppearance();
+  const { state, iconLibrary, change, changeIconLibrary } = useDocsTheme();
   const expandedByDefault = useMediaQuery(EXPAND_QUERY);
   const [expandedOverride, setExpandedOverride] = useState<boolean | null>(
     null
@@ -67,9 +83,9 @@ function ThemePanel() {
     };
   }, []);
 
-  const onChange = (mode: ThemeMode) => (value: string) => {
-    setState((current) => updateThemeMode(current, mode, value));
-  };
+  function changePrefs(patch: Partial<NxdsAppearancePrefs>) {
+    change({ prefs: { ...state.prefs, ...patch } });
+  }
 
   return (
     <aside
@@ -95,45 +111,81 @@ function ThemePanel() {
       {expanded && (
         <div className="nx:px-4 nx:pb-4 nx:border-t nx:border-border-default">
           <Section title="Colors">
-            <ModeRow
+            <PickerRow
               label="Scheme"
-              mode="mode"
-              value={getThemeModeValue(state, 'mode')}
-              onChange={onChange('mode')}
+              value={state.mode}
+              options={MODE_OPTIONS}
+              onChange={(mode) => change({ mode })}
             />
-            <ModeRow
+            <PickerRow
               label="Base"
-              mode="base"
-              value={getThemeModeValue(state, 'base')}
-              onChange={onChange('base')}
+              value={state.surfaceTone}
+              options={BASE_TONE_OPTIONS}
+              onChange={(surfaceTone) => change({ surfaceTone })}
             />
           </Section>
           <Section title="Design Tokens">
-            <ModeRow
+            <PickerRow
               label="Size"
-              mode="spacing"
-              value={getThemeModeValue(state, 'spacing')}
-              onChange={onChange('spacing')}
+              value={state.density}
+              options={DENSITY_OPTIONS}
+              onChange={(density) => change({ density })}
             />
-            <ModeRow
+            <PickerRow
               label="Shadow"
-              mode="shadow"
-              value={getThemeModeValue(state, 'shadow')}
-              onChange={onChange('shadow')}
+              value={state.elevation}
+              options={ELEVATION_OPTIONS}
+              onChange={(elevation) => change({ elevation })}
             />
-            <ModeRow
+            <PickerRow
               label="Radius"
-              mode="radius"
-              value={getThemeModeValue(state, 'radius')}
-              onChange={onChange('radius')}
+              value={state.corners}
+              options={CORNER_OPTIONS}
+              onChange={(corners) => change({ corners })}
             />
-            <ModeRow
+            <PickerRow
               label="Border Width"
-              mode="borderwidth"
-              value={getThemeModeValue(state, 'borderwidth')}
-              onChange={onChange('borderwidth')}
+              value={state.stroke}
+              options={STROKE_OPTIONS}
+              onChange={(stroke) => change({ stroke })}
             />
           </Section>
+          <Section title="Typography">
+            <FontRow
+              label="Font"
+              family={state.prefs.uiFont}
+              choices={UI_FONTS}
+              onChange={(uiFont) =>
+                changePrefs({ uiFont: uiFont ?? DEFAULT_PREFS.uiFont })
+              }
+            />
+            <FontRow
+              label="Heading"
+              family={state.prefs.headingFont}
+              choices={HEADING_FONTS}
+              onChange={(headingFont) => changePrefs({ headingFont })}
+            />
+            <FontRow
+              label="Code"
+              family={state.prefs.codeFont}
+              choices={CODE_FONTS}
+              onChange={(codeFont) =>
+                changePrefs({ codeFont: codeFont ?? DEFAULT_PREFS.codeFont })
+              }
+            />
+          </Section>
+          <Section title="Icons">
+            <PickerRow
+              label="Library"
+              value={iconLibrary}
+              options={ICON_LIBRARY_OPTIONS}
+              onChange={changeIconLibrary}
+            />
+          </Section>
+          <div className="nx:flex nx:flex-col nx:gap-2 nx:pt-4">
+            <ThemeActions size="sm" />
+            <ThemeExport className="nx:w-full" />
+          </div>
         </div>
       )}
     </aside>
@@ -157,40 +209,75 @@ function Section({
   );
 }
 
-function ModeRow({
+function PickerRow<T extends string>({
   label,
-  mode,
   value,
+  options,
   onChange,
 }: {
   label: string;
-  mode: ThemeMode;
-  value: string;
-  onChange: (v: string) => void;
+  value: T;
+  options: readonly { value: T; label: string }[];
+  onChange: (value: T) => void;
 }) {
   const id = useId();
+
+  function change(next: string) {
+    const option = options.find((candidate) => candidate.value === next);
+    if (option) onChange(option.value);
+  }
+
   return (
     <div className="nx:grid nx:grid-cols-[1fr_auto] nx:items-center nx:gap-3 nx:py-1">
       <label htmlFor={id} className="nx:typography-label-default">
         {label}
       </label>
-      <Select value={value} onValueChange={onChange}>
+      <Select value={value} onValueChange={change}>
         <SelectTrigger
           id={id}
           size="sm"
-          className="nx:w-[120px] nx:typography-label-small nx:capitalize"
+          className="nx:w-[140px] nx:typography-label-small"
         >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {getThemeModeOptions(mode).map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
     </div>
+  );
+}
+
+/** A font picker row. A stack set some other way shows as Custom. */
+function FontRow({
+  label,
+  family,
+  choices,
+  onChange,
+}: {
+  label: string;
+  family: string | null;
+  choices: FontChoice[];
+  onChange: (family: string | null) => void;
+}) {
+  const { chosen, options } = fontPick(family, choices);
+
+  function change(value: string) {
+    const choice = options.find((option) => option.value === value);
+    if (choice) onChange(choice.family);
+  }
+
+  return (
+    <PickerRow
+      label={label}
+      value={chosen.value}
+      options={options}
+      onChange={change}
+    />
   );
 }
 

@@ -37,7 +37,7 @@ const BUNDLE_MODULES: Record<string, string> = {
   'react-dom': 'module.exports = window.ReactDOM;',
   'react-dom/client':
     'module.exports = { createRoot: window.ReactDOM.createRoot };',
-  '@tabler/icons-react': `module.exports = window.${NAMESPACE}.Icons;`,
+  '@phosphor-icons/react/ssr': `module.exports = window.${NAMESPACE}.Icons;`,
   recharts: `module.exports = window.${NAMESPACE}.Recharts;`,
 };
 
@@ -93,7 +93,10 @@ function storyImports(source: string): Plugin {
         })
       );
       builder.onResolve(
-        { filter: /^(react(-dom(\/client)?)?|@tabler\/icons-react|recharts)$/ },
+        {
+          filter:
+            /^(react(-dom(\/client)?)?|@phosphor-icons\/react\/ssr|recharts)$/,
+        },
         (args) => ({ path: args.path, namespace: 'page-global' })
       );
       builder.onLoad({ filter: /.*/, namespace: 'page-global' }, (args) => ({

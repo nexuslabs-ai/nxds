@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { IconCheck } from '@tabler/icons-vue';
 import { Text, type VNode } from 'vue';
 
+import { IconCheck } from '../../lib/icons';
 import { renderedNodes } from '../../lib/slots';
 import { cn } from '../../lib/utils';
 import { CommandItem, type CommandItemProps } from '../command';

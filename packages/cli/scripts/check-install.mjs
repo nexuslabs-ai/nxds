@@ -1,16 +1,18 @@
 // Installs nxds with the built CLI the way a new user would, into a fresh
-// Next.js App Router app, a fresh Vite + React app and the same Vite app moved
-// to React 18, then checks the result:
+// Next.js App Router app, the same app with a whole theme set by `init` flags,
+// a fresh Vite + React app and the same Vite app moved to React 18, then
+// checks the result:
 // - `init`, then `add` with every catalog item, for the app's React;
 // - running `init` again, and `add --dry-run`, change nothing;
-// - every docs example, pasted as the docs page shows it;
+// - every docs example, pasted as the docs page shows it for the app's icon
+//   library;
 // - the app's own typecheck, lint and production build pass;
 // - `nxds-cli doctor` passes;
 // - `add` and `update` keep a file you edited.
 // The CLI installs from a registry built from this checkout, and the app gets
 // this checkout's @nxds/core as a packed tarball, since neither may be
 // published yet.
-// usage: node packages/cli/scripts/check-install.mjs [next|vite|vite-react18]
+// usage: node packages/cli/scripts/check-install.mjs [next|next-themed|vite|vite-react18]
 // Needs the built CLI (packages/cli/dist), the built core (packages/core/dist)
 // and the docs demos (apps/docs/__generated__/demos).
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -56,29 +58,54 @@ const VITE = {
   react: 19,
 };
 
+const NEXT = {
+  create: [
+    'create-next-app@16',
+    'app',
+    '--ts',
+    '--tailwind',
+    '--app',
+    '--eslint',
+    '--no-src-dir',
+    '--import-alias',
+    '@/*',
+    '--use-npm',
+    '--yes',
+    '--disable-git',
+  ],
+  srcDir: 'app',
+  mount: (names) => writePage('app/nxds-check/page.tsx', 'app', names),
+  checks: [
+    ['npm', ['run', 'build']],
+    ['npm', ['run', 'lint']],
+  ],
+  react: 19,
+};
+
 const APPS = {
-  next: {
-    create: [
-      'create-next-app@16',
-      'app',
-      '--ts',
-      '--tailwind',
-      '--app',
-      '--eslint',
-      '--no-src-dir',
-      '--import-alias',
-      '@/*',
-      '--use-npm',
-      '--yes',
-      '--disable-git',
+  next: NEXT,
+  // The whole theme in one init: another icon library, every font flag and
+  // tokens off their defaults, so the examples paste as Lucide draws them.
+  'next-themed': {
+    ...NEXT,
+    theme: [
+      '--brand-color',
+      '#4f46e5',
+      '--surface-tone',
+      'slate',
+      '--density',
+      'compact',
+      '--corners',
+      'round',
+      '--font',
+      'inter',
+      '--heading-font',
+      'lora',
+      '--code-font',
+      'jetbrains-mono',
+      '--icons',
+      'lucide',
     ],
-    srcDir: 'app',
-    mount: (names) => writePage('app/nxds-check/page.tsx', 'app', names),
-    checks: [
-      ['npm', ['run', 'build']],
-      ['npm', ['run', 'lint']],
-    ],
-    react: 19,
   },
   vite: VITE,
   'vite-react18': {
@@ -184,8 +211,11 @@ function checkEditedFileKept() {
   }
 }
 
-/** The docs' shown code for every example, as a reader copies it. */
-function pasteDemos(srcDir) {
+/**
+ * The docs' shown code for every example, as a reader on `iconLibrary`
+ * copies it.
+ */
+function pasteDemos(srcDir, iconLibrary) {
   const outDir = path.join(appDir, srcDir, 'pasted');
   mkdirSync(outDir, { recursive: true });
   const ids = readdirSync(demosDir, { recursive: true })
@@ -193,7 +223,10 @@ function pasteDemos(srcDir) {
     .map((file) => file.slice(0, -3));
   return ids.map((id, index) => {
     const module = readFileSync(path.join(demosDir, `${id}.ts`), 'utf8');
-    const source = JSON.parse(/export const source = (".*");/.exec(module)[1]);
+    const sources = JSON.parse(
+      /export const sources = (\{.*\});/.exec(module)[1]
+    );
+    const source = sources[iconLibrary];
     const name = `Example${index}`;
     writeFileSync(path.join(outDir, `${name}.tsx`), source);
     return name;
@@ -261,8 +294,8 @@ for (const [name, app] of Object.entries(APPS)) {
   registryDir = path.join(workDir, 'registry');
   writeRegistry(registryDir, [catalog]);
 
-  runCli(['init']);
-  const { react } = JSON.parse(
+  runCli(['init', ...(app.theme ?? [])]);
+  const { react, iconLibrary } = JSON.parse(
     readFileSync(path.join(appDir, 'nxds.json'), 'utf8')
   );
   if (react !== app.react) {
@@ -272,7 +305,7 @@ for (const [name, app] of Object.entries(APPS)) {
   }
   runCli(['add', ...items]);
   checkRerunsChangeNothing(items);
-  app.mount(pasteDemos(app.srcDir));
+  app.mount(pasteDemos(app.srcDir, iconLibrary));
 
   for (const [command, args] of app.checks) run(command, args);
   runCli(['doctor']);

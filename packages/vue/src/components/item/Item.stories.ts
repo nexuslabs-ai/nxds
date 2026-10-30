@@ -1,5 +1,5 @@
+import { PhFile } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { IconFile } from '@tabler/icons-vue';
 import { expect, within } from 'storybook/test';
 
 import { Button } from '../button';
@@ -38,7 +38,7 @@ export const Default: Story = {
   render: () => ({
     components: {
       Button,
-      IconFile,
+      PhFile,
       Item,
       ItemActions,
       ItemContent,
@@ -48,7 +48,7 @@ export const Default: Story = {
     },
     template: `
       <Item variant="outline" class="nx:w-96">
-        <ItemMedia variant="icon"><IconFile /></ItemMedia>
+        <ItemMedia variant="icon"><PhFile /></ItemMedia>
         <ItemContent>
           <ItemTitle>Report.pdf</ItemTitle>
           <ItemDescription>2.4 MB · edited 3 days ago</ItemDescription>
@@ -131,11 +131,11 @@ export const Media: Story = {
     },
   },
   render: () => ({
-    components: { IconFile, Item, ItemContent, ItemMedia, ItemTitle },
+    components: { PhFile, Item, ItemContent, ItemMedia, ItemTitle },
     template: `
       <div class="nx:flex nx:w-96 nx:flex-col nx:gap-3">
         <Item variant="outline">
-          <ItemMedia variant="icon"><IconFile /></ItemMedia>
+          <ItemMedia variant="icon"><PhFile /></ItemMedia>
           <ItemContent>
             <ItemTitle>Icon media</ItemTitle>
           </ItemContent>
@@ -192,7 +192,7 @@ export const AsChild: Story = {
   },
   render: () => ({
     components: {
-      IconFile,
+      PhFile,
       Item,
       ItemContent,
       ItemDescription,
@@ -202,7 +202,7 @@ export const AsChild: Story = {
     template: `
       <Item as-child variant="outline" class="nx:w-96">
         <a href="/files/report" data-testid="item-link">
-          <ItemMedia variant="icon"><IconFile /></ItemMedia>
+          <ItemMedia variant="icon"><PhFile /></ItemMedia>
           <ItemContent>
             <ItemTitle>Open report</ItemTitle>
             <ItemDescription>Navigates to the file.</ItemDescription>
@@ -223,7 +223,7 @@ export const AsChild: Story = {
 export const WithDataAttributes: Story = {
   render: () => ({
     components: {
-      IconFile,
+      PhFile,
       Item,
       ItemContent,
       ItemDescription,
@@ -232,7 +232,7 @@ export const WithDataAttributes: Story = {
     },
     template: `
       <Item variant="muted" size="sm" class="nx:w-96">
-        <ItemMedia variant="icon"><IconFile /></ItemMedia>
+        <ItemMedia variant="icon"><PhFile /></ItemMedia>
         <ItemContent>
           <ItemTitle>Inspect me</ItemTitle>
           <ItemDescription>Hooks for styling and tests.</ItemDescription>
@@ -266,7 +266,7 @@ export const AllVariants: Story = {
   render: () => ({
     components: {
       Button,
-      IconFile,
+      PhFile,
       Item,
       ItemActions,
       ItemContent,
@@ -280,7 +280,7 @@ export const AllVariants: Story = {
     template: `
       <div class="nx:flex nx:w-96 nx:flex-col nx:gap-3">
         <Item variant="outline">
-          <ItemMedia variant="icon"><IconFile /></ItemMedia>
+          <ItemMedia variant="icon"><PhFile /></ItemMedia>
           <ItemContent>
             <ItemTitle>Report.pdf</ItemTitle>
             <ItemDescription>Outline · icon media · action</ItemDescription>
