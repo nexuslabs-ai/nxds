@@ -15,7 +15,10 @@ import {
   type NxdsAppearanceState,
   type NxdsIconLibrary,
   type NxdsResolvedAppearanceMode,
+  type NxdsTextSize,
   STROKE_OPTIONS,
+  TEXT_SIZE_OPTIONS,
+  textSizePx,
   UI_SCALE_OPTIONS,
 } from '@nxds/core';
 import {
@@ -327,6 +330,18 @@ export function AppearanceControls({
           value={state.uiScale}
           options={UI_SCALE_OPTIONS}
           onChange={(uiScale) => onChange({ uiScale })}
+        />
+        <SelectField
+          label="Text size"
+          value={String(state.textSize)}
+          options={TEXT_SIZE_OPTIONS.map((size) => ({
+            value: String(size),
+            label: `${textSizePx(size, state.uiScale)}px`,
+          }))}
+          // Each option's value is a text size as text.
+          onChange={(value) =>
+            onChange({ textSize: Number(value) as NxdsTextSize })
+          }
         />
         <SelectField
           label="Density"

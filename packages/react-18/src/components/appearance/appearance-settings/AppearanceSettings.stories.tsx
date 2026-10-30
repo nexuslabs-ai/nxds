@@ -188,11 +188,11 @@ async function expectSelectOptions(
     await userEvent.click(trigger);
 
     const listbox = await within(document.body).findByRole('listbox');
-    for (const label of labels) {
-      await expect(
-        within(listbox).getByRole('option', { name: label })
-      ).toBeInTheDocument();
-    }
+    await expect(
+      within(listbox)
+        .getAllByRole('option')
+        .map((option) => option.textContent)
+    ).toEqual(labels);
   } finally {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => {
@@ -246,10 +246,12 @@ export const LayoutModeOptions: Story = {
   },
 };
 
-async function pickUiScale(canvasElement: HTMLElement, label: string) {
-  await userEvent.click(
-    within(canvasElement).getByRole('combobox', { name: 'UI scale' })
-  );
+async function pickOption(
+  canvasElement: HTMLElement,
+  name: string,
+  label: string
+) {
+  await userEvent.click(within(canvasElement).getByRole('combobox', { name }));
   await userEvent.click(
     await within(document.body).findByRole('option', { name: label })
   );
@@ -260,15 +262,61 @@ export const UiScaleSelection: Story = {
     const canvas = within(canvasElement);
     const root = canvasElement.ownerDocument.documentElement;
 
-    await pickUiScale(canvasElement, 'Large');
+    await pickOption(canvasElement, 'UI scale', 'Large');
     await expect(canvas.getByText('uiScale: "large",')).toBeInTheDocument();
     await waitFor(() => expect(root).toHaveAttribute('data-ui-scale', 'large'));
 
     // Put the page back at the Default scale for the next story.
-    await pickUiScale(canvasElement, 'Default');
+    await pickOption(canvasElement, 'UI scale', 'Default');
     await waitFor(() =>
       expect(root).toHaveAttribute('data-ui-scale', 'default')
     );
+  },
+};
+
+export const TextSizeLabels: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const root = canvasElement.ownerDocument.documentElement;
+    const preview = canvasElement.querySelector(
+      '[data-slot="appearance-text-size-preview"]'
+    )!;
+
+    // Each option shows the size the text has at the current UI scale.
+    await expect(
+      canvas.getByText('Sizes include the current UI scale.')
+    ).toBeInTheDocument();
+    await expectSelectOptions(canvasElement, 'Text size', [
+      '12px',
+      '13px',
+      '14px',
+      '15px',
+      '16px',
+    ]);
+    await pickOption(canvasElement, 'UI scale', 'Larger');
+    await expectSelectOptions(canvasElement, 'Text size', [
+      '15px',
+      '17px',
+      '18px',
+      '19px',
+      '21px',
+    ]);
+
+    // The preview line shows the text at the chosen size.
+    await pickOption(canvasElement, 'Text size', '21px');
+    await expect(canvas.getByText('textSize: 16,')).toBeInTheDocument();
+    await waitFor(() => expect(root).toHaveAttribute('data-text-size', '16'));
+    await waitFor(() =>
+      expect(getComputedStyle(preview).fontSize).toBe('21px')
+    );
+
+    // Put the page back at the Default scale and text size for the next story.
+    await pickOption(canvasElement, 'Text size', '18px');
+    await pickOption(canvasElement, 'UI scale', 'Default');
+    await waitFor(() => {
+      expect(root).toHaveAttribute('data-text-size', '14');
+      expect(root).toHaveAttribute('data-ui-scale', 'default');
+    });
   },
 };
 

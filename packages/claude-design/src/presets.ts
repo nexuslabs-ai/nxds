@@ -7,6 +7,7 @@ import {
   ELEVATION_OPTIONS,
   type NxdsAppearanceDataAttr,
   STROKE_OPTIONS,
+  TEXT_SIZE_OPTIONS,
   UI_SCALE_OPTIONS,
 } from '@nxds/core';
 
@@ -16,7 +17,7 @@ export interface Preset {
   options: readonly { value: string }[];
   initial: string;
   /** The tokens.json family the attribute swaps. */
-  family: ListFamily;
+  family: ListFamily | 'typeScale';
 }
 
 export const PRESETS: Record<NxdsAppearanceDataAttr, Preset> = {
@@ -24,6 +25,11 @@ export const PRESETS: Record<NxdsAppearanceDataAttr, Preset> = {
     options: UI_SCALE_OPTIONS,
     initial: DEFAULT_NXDS_APPEARANCE.uiScale,
     family: 'spacing',
+  },
+  'data-text-size': {
+    options: TEXT_SIZE_OPTIONS.map((size) => ({ value: String(size) })),
+    initial: String(DEFAULT_NXDS_APPEARANCE.textSize),
+    family: 'typeScale',
   },
   'data-density': {
     options: DENSITY_OPTIONS,
