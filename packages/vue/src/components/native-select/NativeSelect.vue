@@ -53,7 +53,7 @@ watch(
 <template>
   <div
     data-slot="native-select-wrapper"
-    class="nx:group/native-select nx:relative nx:w-full"
+    class="nx:group/native-select nx:relative nx:w-full nx:icon-stroke"
   >
     <select
       ref="select"

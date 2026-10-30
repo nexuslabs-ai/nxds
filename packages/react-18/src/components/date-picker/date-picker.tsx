@@ -256,7 +256,7 @@ function DatePicker({
             caption_label: cn(
               'nx:typography-label-default nx:select-none',
               captionLayout !== 'label' &&
-                'nx:flex nx:h-8 nx:items-center nx:gap-1 nx:rounded-md nx:pr-1 nx:pl-2 nx:[&>svg]:size-3.5 nx:[&>svg]:text-muted-foreground',
+                'nx:flex nx:h-8 nx:items-center nx:gap-1 nx:rounded-md nx:pr-1 nx:pl-2 nx:[&>svg]:size-3.5 nx:[&>svg]:text-muted-foreground nx:icon-stroke',
               defaultClassNames.caption_label
             ),
             day: cn(

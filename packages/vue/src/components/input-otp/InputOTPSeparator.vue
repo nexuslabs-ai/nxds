@@ -15,7 +15,7 @@ const props = defineProps<InputOTPSeparatorProps>();
   <div
     data-slot="input-otp-separator"
     aria-hidden="true"
-    :class="cn('nx:flex nx:items-center', props.class)"
+    :class="cn('nx:flex nx:items-center nx:icon-stroke', props.class)"
   >
     <IconCircleFilled class="nx:size-1 nx:text-muted-foreground" />
   </div>

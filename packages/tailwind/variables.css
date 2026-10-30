@@ -344,6 +344,7 @@
 
     /* icon */
     --nx-icon-glyph-default: 16px;
+    --nx-icon-stroke: 1.75;
 
     /* motion (snappy) */
     --nx-motion-duration-0: 0ms;

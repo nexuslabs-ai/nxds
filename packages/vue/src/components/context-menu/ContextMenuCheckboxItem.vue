@@ -30,7 +30,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     data-slot="context-menu-checkbox-item"
     :class="
       cn(
-        'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center',
+        'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
         'nx:rounded-sm nx:py-1.5 nx:pl-8 nx:pr-2 nx:typography-body-default nx:outline-none',
         'nx:transition-colors',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
