@@ -142,7 +142,7 @@ const InputGroupAddon = React.forwardRef<
 });
 
 const inputGroupButtonVariants = cva(
-  'nx:flex nx:items-center nx:py-0 nx:typography-label-default nx:shadow-none nx:group-data-[disabled=true]/input-group:text-disabled-foreground',
+  'nx:flex nx:items-center nx:py-0 nx:typography-label-default nx:shadow-none nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:icon-stroke',
   {
     variants: {
       size: {
