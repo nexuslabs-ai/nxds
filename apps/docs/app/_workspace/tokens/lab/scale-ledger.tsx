@@ -89,7 +89,7 @@ function isStrokeRatio({ family, type }: ScaleToken): boolean {
 
 function validationProperty(token: ScaleToken): string {
   if (token.type === 'dimension' && isSigned(token)) return 'outline-offset';
-  if (isStrokeRatio(token)) return 'stroke-width';
+  if (isStrokeRatio(token)) return 'flex-grow';
   const property = VALIDATION_PROPERTIES[token.type];
   if (property === undefined) {
     throw new Error(
