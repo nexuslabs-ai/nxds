@@ -33,7 +33,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Button triggers an action. Use it for short, visible labels.\n\n- Use one decorative icon slot at most: `#start-icon` or `#end-icon`.\n- A loading button shows only a spinner and hides its icons.\n- Icon-only buttons need `aria-label` or `aria-labelledby`.\n- Icons are 16px at every size and density.\n- Stroked icons, such as Lucide, draw a 1.75 line, whatever their `strokeWidth`. Filled icons, such as Phosphor, keep their own line.',
+          'Button triggers an action. Use it for short, visible labels.\n\n- Use one decorative icon slot at most: `#start-icon` or `#end-icon`.\n- A loading button shows only a spinner and hides its icons.\n- Icon-only buttons need `aria-label` or `aria-labelledby`.\n- Icons are 16px at every size and density.\n- Stroked icons, such as Lucide, draw a 1.5px line, whatever their `strokeWidth`. Filled icons, such as Phosphor, keep their own line.',
       },
     },
   },
