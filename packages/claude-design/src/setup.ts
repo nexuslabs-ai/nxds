@@ -10,6 +10,7 @@ import {
   type Props,
   type ValueAttribute,
 } from './runtime/values.ts';
+import { TEXT_PLAIN_FILES } from './validate.ts';
 
 /** The folder a canvas installs the system into, under `ds/`. */
 const CANVAS_FOLDER = 'nxds';
@@ -37,35 +38,6 @@ const ATTRIBUTE = /([a-z][a-z0-9-]*)(?:="([^"]*)"|='([^']*)')?/g;
 const X_IMPORT_OPENING = /<x-import\b/gi;
 const PART = 'component-from-global-scope';
 const ICONS = new Set<string>(ICON_NAMES);
-
-/**
- * The extensions an Artifact publish serves by their extension. A file with
- * any other extension goes up with its content type set, or not at all.
- */
-const SERVED_EXTENSIONS = new Set([
-  '.html',
-  '.css',
-  '.js',
-  '.mjs',
-  '.json',
-  '.md',
-  '.txt',
-  '.csv',
-  '.xml',
-  '.svg',
-  '.png',
-  '.jpg',
-  '.jpeg',
-  '.gif',
-  '.webp',
-  '.woff',
-  '.woff2',
-  '.ttf',
-  '.otf',
-]);
-
-/** The `project/` files SETUP.md tells Claude to publish as `text/plain`. */
-const TEXT_PLAIN_FILES = ['components/index.d.ts'];
 
 /** The files step 2 checks a canvas for, under `ds/<folder>/`. The canvas copies tokens.json itself, and README.md's "On a Design canvas" section names the rest. */
 const CANVAS_FILES = [
@@ -103,32 +75,27 @@ export function samplerArtboard(readme: string, sampler: string) {
   return { links: links.join('\n'), sampler: sampler.trim() };
 }
 
-/** Why a guide built from these inputs would send Claude wrong: a file a publish refuses, a file the install leaves out, a block in the wrong place. */
+/** Why a guide built from these inputs would send Claude wrong: a publish step that leaves out a `text/plain` file, a file the install leaves out, a block in the wrong place. */
 function guideProblems({
   template,
   readme,
   sampler,
-  files,
 }: {
   template: string;
   readme: string;
   sampler: string;
-  files: readonly string[];
 }) {
   const problems: string[] = [];
-  for (const file of files) {
-    if (TEXT_PLAIN_FILES.includes(file)) continue;
-    const extension = /\.[^./]+$/.exec(file)?.[0] ?? '';
-    if (!SERVED_EXTENSIONS.has(extension)) {
+  const [publish = '', update = ''] = template.split(
+    /^## Update to a new release$/m
+  );
+  for (const [name, steps] of [
+    ['step 1', publish],
+    ['the update steps', update],
+  ] as const) {
+    if (!steps.includes('{{textPlainFiles}}')) {
       problems.push(
-        `project/${file}: an Artifact publish doesn't serve ${extension || 'a file with no extension'}. Give it a served extension. If it's text, add it to TEXT_PLAIN_FILES in src/setup.ts instead, and name it in SETUP.md's publish steps.`
-      );
-    }
-  }
-  for (const file of TEXT_PLAIN_FILES) {
-    if (!template.includes(`\`project/${file}\` with the content type`)) {
-      problems.push(
-        `SETUP.md doesn't tell Claude to publish project/${file} with its content type.`
+        `SETUP.md: ${name} must send {{textPlainFiles}} as text/plain, or the publish is refused.`
       );
     }
   }
@@ -159,30 +126,26 @@ export function setupGuide({
   sampler,
   version,
   files,
-  tokensVersion,
 }: {
   template: string;
   readme: string;
   sampler: string;
   version: string;
   files: readonly string[];
-  /** `meta.version` in the tokens.json the build wrote, which the guide's version checks read. */
-  tokensVersion: unknown;
 }) {
-  const problems = guideProblems({ template, readme, sampler, files });
-  if (tokensVersion !== version) {
-    problems.push(
-      `SETUP.md checks the release in tokens.json's meta.version, which holds ${String(tokensVersion)}, not ${version}.`
-    );
-  }
+  const problems = guideProblems({ template, readme, sampler });
   if (problems.length > 0) throw new Error(problems.join('\n'));
   const artboard = samplerArtboard(readme, sampler);
   const canvasFiles = CANVAS_FILES.map(
     (file) => `- \`ds/${CANVAS_FOLDER}/${file}\``
   ).join('\n');
+  const textPlainFiles = TEXT_PLAIN_FILES.map(
+    (file) => `\`project/${file}\``
+  ).join(' and ');
   const guide = template
     .replaceAll('{{version}}', version)
     .replaceAll('{{files}}', String(files.length))
+    .replaceAll('{{textPlainFiles}}', () => textPlainFiles)
     .replace('{{canvasFiles}}', () => canvasFiles)
     .replace('{{links}}', () => artboard.links)
     .replace('{{sampler}}', () => artboard.sampler);

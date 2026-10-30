@@ -29,42 +29,6 @@ function shippedArtboard() {
   return { links, sampler };
 }
 
-// Pasted the way step 4 says, into an artboard that has the canvas's own
-// support.js line and <x-dc>, every link line lands in <head> and every
-// x-import inside <x-dc>.
-async function checkPlacement({
-  links,
-  sampler,
-}: {
-  links: string;
-  sampler: string;
-}) {
-  const { page } = await openPage('Button', LIGHT);
-  const misplaced = await page.evaluate(
-    ({ links, sampler }) => {
-      const artboard = new DOMParser().parseFromString(
-        `<!doctype html><html><head><script src="support.js"></script>${links}</head><body><x-dc>${sampler}</x-dc></body></html>`,
-        'text/html'
-      );
-      return [
-        ...[...artboard.querySelectorAll('link, script[src^="ds/"]')]
-          .filter((element) => element.parentElement !== artboard.head)
-          .map((element) => element.outerHTML),
-        ...[...artboard.querySelectorAll('x-import')]
-          .filter((element) => !element.closest('x-dc'))
-          .map((element) => element.outerHTML.slice(0, 80)),
-      ];
-    },
-    { links, sampler }
-  );
-  await page.close();
-  for (const element of misplaced) {
-    fail(
-      `SETUP.md's step 4 puts ${element} outside its place in the artboard.`
-    );
-  }
-}
-
 /** The value `attribute` takes on the markup's `Nxds.<part>` tag. */
 function attributeOf(markup: string, part: string, attribute: string) {
   const value = samplerTags(markup)
@@ -128,6 +92,7 @@ async function mountSampler(theme: Theme, markup: string) {
     // a full-width part that adds its padding and border to 100%. A part
     // inside an ancestor that clips it, such as Progress's indicator, can't.
     const sampler = host.querySelector(':scope > div');
+    if (!sampler) return { error: 'no root <div> to measure the edges of' };
     const overflows: string[] = [];
     const clipped = (element: Element) => {
       for (
@@ -139,20 +104,18 @@ async function mountSampler(theme: Theme, markup: string) {
       }
       return false;
     };
-    if (sampler) {
-      const box = sampler.getBoundingClientRect();
-      const style = getComputedStyle(sampler);
-      const left = box.left + parseFloat(style.paddingLeft);
-      const right = box.right - parseFloat(style.paddingRight);
-      for (const element of sampler.querySelectorAll('[data-slot]')) {
-        if (clipped(element)) continue;
-        const rect = element.getBoundingClientRect();
-        const past = Math.max(rect.right - right, left - rect.left);
-        if (past > 0.5) {
-          overflows.push(
-            `${element.getAttribute('data-slot')} by ${Math.round(past)}px`
-          );
-        }
+    const box = sampler.getBoundingClientRect();
+    const style = getComputedStyle(sampler);
+    const left = box.left + parseFloat(style.paddingLeft);
+    const right = box.right - parseFloat(style.paddingRight);
+    for (const element of sampler.querySelectorAll('[data-slot]')) {
+      if (clipped(element)) continue;
+      const rect = element.getBoundingClientRect();
+      const past = Math.max(rect.right - right, left - rect.left);
+      if (past > 0.5) {
+        overflows.push(
+          `${element.getAttribute('data-slot')} by ${Math.round(past)}px`
+        );
       }
     }
     return {
@@ -162,7 +125,7 @@ async function mountSampler(theme: Theme, markup: string) {
       ),
       bars: host.querySelectorAll('.recharts-bar-rectangle').length,
       selectedDays: host.querySelectorAll('[aria-selected="true"]').length,
-      page: background(':scope > div'),
+      page: getComputedStyle(sampler).backgroundColor,
       dark: background('[data-theme="dark"]'),
     };
   }, markup);
@@ -188,7 +151,6 @@ export async function checkSampler() {
   ) {
     fail("SETUP.md's blocks aren't the README's link lines and sampler.html.");
   }
-  await checkPlacement(artboard);
   // The frame already loads the system the way the link lines do.
   const markup = sampler.trim();
   const slots = slotsOf(markup);

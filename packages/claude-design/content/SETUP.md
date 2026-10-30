@@ -17,7 +17,7 @@ If the person gave you a link to an nxds system they already have, go to [Update
 
 Publish a new Design System artifact from `nxds-design-system/project/`. Send every file at its path under `project/`, such as `project/tokens.css`. Don't add, change or skip a file.
 
-Send `project/components/index.d.ts` with the content type `text/plain`. The artifact doesn't serve `.d.ts` files, so the publish is refused without it. Every other file's type comes from its extension.
+Send {{textPlainFiles}} with the content type `text/plain`. The artifact doesn't serve that file's extension, so the publish is refused without that content type. Every other file's type comes from its extension.
 
 Check: the artifact has {{files}} files under `project/`, its title is nxds, and `project/tokens.json` has `meta.version` {{version}}. Give the person its link. They need it to install nxds on another canvas, and to update it.
 
@@ -73,7 +73,7 @@ When every check passes, tell the person nxds is ready, and give them the system
    ```
 
 3. Read the new `nxds-design-system/SETUP.md`. It belongs to the new release.
-4. Publish `nxds-design-system/project/` to the same artifact link, every file. Send `project/components/index.d.ts` with the content type `text/plain`, as in step 1. Remove each path that `nxds-design-system/removed.json` lists.
+4. Publish `nxds-design-system/project/` to the same artifact link, every file. Send {{textPlainFiles}} with the content type `text/plain`, as in step 1. Remove each path that `nxds-design-system/removed.json` lists.
 5. Check: the artifact has the new release's file count under `project/`, none of the removed paths, and `project/tokens.json` has `meta.version` {{version}}.
 6. Install the system again on each canvas that uses nxds, then run the checks in step 2 on it. A canvas keeps its old copy until you do.
 7. On one canvas, run the checks in step 5 on the sampler.
@@ -82,7 +82,7 @@ When every check passes, tell the person nxds is ready, and give them the system
 
 | You see                                  | Do this                                                                                  |
 | ---------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Components render unstyled               | Check the three link lines, their order and the `../` count.                             |
+| Components render unstyled               | Check the three link lines and their order.                                              |
 | Nothing renders and the console is empty | The markup is outside `<x-dc>`, or the artboard has no `data-dc-script` block.           |
 | `Nxds is not defined`                    | `bundle.js` isn't linked, or its path is wrong.                                          |
 | A `[nxds]` warning                       | The attribute doesn't fit its prop. Write it in the form the warning and README.md give. |

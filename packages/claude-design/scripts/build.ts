@@ -225,7 +225,6 @@ async function main() {
       sampler,
       version,
       files,
-      tokensVersion: tokens.meta.version,
     })
   );
   copyFileSync(

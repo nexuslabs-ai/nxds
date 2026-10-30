@@ -41,6 +41,12 @@ const REFUSED_NAMES = new Set([
   'node_modules',
 ]);
 
+/** The extensions the export writes that an Artifact publish serves by extension. */
+const SERVED_EXTENSIONS = new Set(['.html', '.css', '.js', '.json', '.md']);
+
+/** The files a publish refuses unless they go up as `text/plain`. SETUP.md names each one. */
+export const TEXT_PLAIN_FILES = ['components/index.d.ts'];
+
 const TOKEN_NAME = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
 const HEX = /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 const COLOR_FUNCTION =
@@ -99,6 +105,12 @@ function checkPaths(files: string[], errors: string[]) {
     }
     if (segments.some((segment) => /~\d/.test(segment))) {
       errors.push(`${file}: 8.3 names are refused.`);
+    }
+    const extension = /\.[^./]+$/.exec(file)?.[0] ?? '';
+    if (!SERVED_EXTENSIONS.has(extension) && !TEXT_PLAIN_FILES.includes(file)) {
+      errors.push(
+        `${file}: a publish doesn't serve ${extension || 'a file with no extension'}. Give it one of ${[...SERVED_EXTENSIONS].join(' ')}, or add it to TEXT_PLAIN_FILES if it's text.`
+      );
     }
     if (isPageGenerated(file)) {
       errors.push(`${file}: the page generates this; never write it.`);
