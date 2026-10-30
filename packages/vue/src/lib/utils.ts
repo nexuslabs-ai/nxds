@@ -201,7 +201,6 @@ export const TYPOGRAPHY_CONFLICTS = [
   'font-weight',
   'leading',
   'tracking',
-  'text-wrap',
 ] satisfies DefaultClassGroupIds[];
 
 /** Tailwind-merge configured with `nx:` prefix and nxds custom utility groups. */

@@ -103,7 +103,6 @@ const TYPOGRAPHY_PROPERTY_GROUPS = {
   'font-weight': 'font-weight',
   'line-height': 'leading',
   'letter-spacing': 'tracking',
-  'text-wrap': 'text-wrap',
 };
 
 function emittedThemeTokens(cssKey: string) {
@@ -253,10 +252,15 @@ describe('cn', () => {
     ['font-weight', 'nx:font-bold'],
     ['leading', 'nx:leading-none'],
     ['tracking', 'nx:tracking-wide'],
-    ['text-wrap', 'nx:text-nowrap'],
   ])('lets a typography composite displace the %s atomic', (_group, atomic) => {
     expect(cn(atomic, 'nx:typography-heading-large')).toBe(
       'nx:typography-heading-large'
+    );
+  });
+
+  it('keeps a text-wrap atomic beside a typography composite', () => {
+    expect(cn('nx:text-balance', 'nx:typography-heading-large')).toBe(
+      'nx:text-balance nx:typography-heading-large'
     );
   });
   /* eslint-enable @nxds/nx-class-conventions -- end of the raw-atomics block */

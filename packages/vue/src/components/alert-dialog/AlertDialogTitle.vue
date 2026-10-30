@@ -23,7 +23,9 @@ const forwarded = useForwardProps(delegated);
   <AlertDialogTitle
     v-bind="forwarded"
     data-slot="alert-dialog-title"
-    :class="cn('nx:m-0 nx:typography-heading-small', props.class)"
+    :class="
+      cn('nx:m-0 nx:typography-heading-small nx:text-balance', props.class)
+    "
   >
     <slot />
   </AlertDialogTitle>

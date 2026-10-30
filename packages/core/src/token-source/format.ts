@@ -210,11 +210,11 @@ const TYPOGRAPHY_PROPERTIES = [
 ] as const;
 
 /**
- * Declarations a typography composite emits in its `@utility`. `tokenPath` is
- * e.g. `['heading', 'large']` and `value` is the composite `$value`.
+ * Declarations a typography composite emits in its `@utility`: type only.
+ * `value` is the composite `$value`. A composite sets no `text-wrap`, because
+ * that shorthand would override `truncate` on the same element.
  */
 export function formatTypographyDeclarations(
-  tokenPath: readonly string[],
   value: TokenValue,
   primitiveMap: PrimitiveLookup
 ): CssDeclaration[] {
@@ -230,15 +230,6 @@ export function formatTypographyDeclarations(
     const css =
       fieldValue === 'auto' ? 'normal' : resolveValue(fieldValue, primitiveMap);
     declarations.push({ property, value: css });
-  }
-
-  if (tokenPath[0] === 'display' || tokenPath[0] === 'heading') {
-    declarations.push({ property: 'text-wrap', value: 'balance' });
-  }
-
-  if (tokenPath[0] === 'body') {
-    // orphan/widow protection for multi-line copy
-    declarations.push({ property: 'text-wrap', value: 'pretty' });
   }
 
   return declarations;

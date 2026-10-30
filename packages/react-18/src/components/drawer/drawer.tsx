@@ -259,7 +259,10 @@ const DrawerTitle = React.forwardRef<
   return (
     <DrawerPrimitive.Title
       data-slot="drawer-title"
-      className={cn('nx:m-0 nx:typography-heading-xsmall', className)}
+      className={cn(
+        'nx:m-0 nx:typography-heading-xsmall nx:text-balance',
+        className
+      )}
       {...props}
     />
   );

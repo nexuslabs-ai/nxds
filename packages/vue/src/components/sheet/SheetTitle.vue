@@ -19,7 +19,9 @@ const forwarded = useForwardProps(delegated);
   <DialogTitle
     v-bind="forwarded"
     data-slot="sheet-title"
-    :class="cn('nx:m-0 nx:typography-heading-xsmall', props.class)"
+    :class="
+      cn('nx:m-0 nx:typography-heading-xsmall nx:text-balance', props.class)
+    "
   >
     <slot />
   </DialogTitle>
