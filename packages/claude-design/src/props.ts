@@ -29,6 +29,7 @@ const ELEMENT_DOM_PROPS = new Set([
   'defaultValue',
   'disabled',
   'href',
+  'htmlFor',
   'max',
   'maxLength',
   'min',
