@@ -364,7 +364,7 @@ export default {
       rawLetterSpacing:
         'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
       densityIconSize:
-        'Icon size from a spacing step — a numeric `size-*`, `h-*` or `w-*` on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm`, `-default` or `-lg` (12, 14, 16 or 24px at the Default UI scale). For another size, multiply the default icon, such as `size-[calc(var(--nx-icon-glyph-default)*2)]`, so it follows the UI scale.',
+        'Icon size from a spacing step — a numeric `size-*`, `h-*` or `w-*` on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm`, `-default` or `-lg` (12, 14, 16 or 24px at the Default UI scale). For another size, use a whole multiple of the default icon, such as `size-[calc(var(--nx-icon-glyph-default)*2)]`, so it follows the UI scale.',
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
       unstrokedIcon:
