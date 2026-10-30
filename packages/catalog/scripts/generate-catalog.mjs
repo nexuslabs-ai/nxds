@@ -11,7 +11,11 @@ import {
   componentDescription,
   componentStoryFiles,
 } from '@nxds/source-model/docs-stories.ts';
-import { readCanonical, writeJson } from '@nxds/source-model/files.mjs';
+import {
+  importSpecifiers,
+  readCanonical,
+  writeJson,
+} from '@nxds/source-model/files.mjs';
 import { pascal } from '@nxds/source-model/humanize.ts';
 import {
   blockSources,
@@ -32,13 +36,24 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { catalogSchema, issueLines } from './catalog-schema.ts';
+import {
+  DEFAULT_ICON_LIBRARY,
+  FONT_OPTIONS,
+  ICON_LIBRARY_OPTIONS,
+  NXDS_THEME_FIELDS,
+} from '@nxds/core';
+import {
+  catalogSchema,
+  catalogThemeField,
+  issueLines,
+} from './catalog-schema.ts';
 import {
   dependencyEntries,
   react,
   vue,
   vueWalks,
 } from './dependency-plans.mjs';
+import { packageName } from './install-plans.ts';
 import { CATALOG_FILE } from './roots.mjs';
 
 /**
@@ -47,11 +62,15 @@ import { CATALOG_FILE } from './roots.mjs';
  * @typedef {import('./catalog-schema').Variant} Variant
  * @typedef {import('./catalog-schema').SetupItem} SetupItem
  * @typedef {import('./catalog-schema').SetupVariant} SetupVariant
+ * @typedef {import('./catalog-schema').IconLibrary} IconLibrary
+ * @typedef {import('./catalog-schema').Font} Font
+ * @typedef {import('./catalog-schema').ThemeField} ThemeField
  */
 
 const DOCS_URL = 'https://nxds.dev';
 const SETUP = 'setup';
 const TAILWIND_DIR = path.join(repoRoot, 'packages', 'tailwind');
+const ICONS_FILE = 'lib/icons.ts';
 
 /**
  * What each framework's setup copies and installs: the appearance provider and
@@ -144,6 +163,100 @@ function withReact18(variant) {
     packages: { ...variant.packages, npm },
     react18: { files, packages: { npm: react18Npm } },
   };
+}
+
+/**
+ * React's `lib/icons.ts` drawn by each icon library, the default first. The
+ * default draws `lib/icons.ts` itself; the others are in `lib/icon-libraries/`.
+ * @returns {IconLibrary[]}
+ */
+function iconLibraries() {
+  const libraries = [
+    ...ICON_LIBRARY_OPTIONS.filter(
+      ({ value }) => value === DEFAULT_ICON_LIBRARY
+    ),
+    ...ICON_LIBRARY_OPTIONS.filter(
+      ({ value }) => value !== DEFAULT_ICON_LIBRARY
+    ),
+  ];
+  return libraries.map(({ value, label }) => {
+    const source =
+      value === DEFAULT_ICON_LIBRARY
+        ? ICONS_FILE
+        : `lib/icon-libraries/${value}.ts`;
+    const content = readCanonical(path.join(reactSrc, source));
+    // The swap replaces every React major's file with React 19's.
+    if (readCanonical(path.join(react18Src, source)) !== content) {
+      throw new Error(
+        `catalog: packages/react-18/src/${source} differs from packages/react's. Run \`pnpm --filter @nxds/react-18 generate\`.`
+      );
+    }
+    const walked = react.walkRoots(value, [path.join(reactSrc, source)]);
+    return {
+      name: value,
+      label,
+      file: { path: ICONS_FILE, content },
+      npm: packageRecord(walked.packages.map(react.toInstall)),
+    };
+  });
+}
+
+/**
+ * Fails when a React file other than `lib/icons.ts` imports an icon library,
+ * since `nxds init --icons` swaps only that file.
+ * @param {CatalogItem[]} items
+ * @param {IconLibrary[]} libraries
+ */
+function assertIconsOnlyInIconsFile(items, libraries) {
+  const iconPackages = new Set(
+    libraries.flatMap((library) => Object.keys(library.npm))
+  );
+  for (const item of items) {
+    for (const file of item.variants.react?.files ?? []) {
+      if (file.path === ICONS_FILE || !/\.tsx?$/.test(file.path)) continue;
+      const imported = importSpecifiers(file.content).find((specifier) =>
+        iconPackages.has(packageName(specifier))
+      );
+      if (imported) {
+        throw new Error(
+          `catalog: ${file.path} imports ${imported}. Import nxds's own icons from ${ICONS_FILE}, the one file \`nxds init --icons\` swaps.`
+        );
+      }
+    }
+  }
+}
+
+/** @type {{ devDependencies: Record<string, string> }} */
+const catalogPackage = JSON.parse(
+  readFileSync(
+    path.join(repoRoot, 'packages', 'catalog', 'package.json'),
+    'utf8'
+  )
+);
+
+/**
+ * Each font option, at the range packages/catalog's devDependencies give its
+ * Fontsource package.
+ * @returns {Font[]}
+ */
+function fonts() {
+  return FONT_OPTIONS.map(({ value, category, family, package: name }) => {
+    const range = catalogPackage.devDependencies[name];
+    if (!range) {
+      throw new Error(
+        `catalog: add ${name} to packages/catalog's devDependencies, at the range apps install.`
+      );
+    }
+    return { name: value, category, family, package: name, range };
+  });
+}
+
+/**
+ * The theme flags core takes: the field each sets and the values it accepts.
+ * @returns {ThemeField[]}
+ */
+function themeFields() {
+  return NXDS_THEME_FIELDS.flatMap((field) => catalogThemeField(field) ?? []);
 }
 
 /** Tailwind 4 at the version packages/react builds with, or a newer 4.x. */
@@ -316,13 +429,20 @@ export function buildCatalog() {
     },
   }));
 
+  const items = [setup, ...components, ...blocks];
+  const libraries = iconLibraries();
+  assertIconsOnlyInIconsFile(items, libraries);
+
   /** @type {Catalog} */
   const catalog = {
     schema: 1,
     version: reactPackage.version,
     frameworks: ['react'],
     reactMajors: [18, 19],
-    items: [setup, ...components, ...blocks],
+    items,
+    iconLibraries: libraries,
+    fonts: fonts(),
+    themeFields: themeFields(),
   };
   // Checked, not parsed: parsing would reorder keys in the written JSON.
   const checked = catalogSchema.safeParse(catalog);

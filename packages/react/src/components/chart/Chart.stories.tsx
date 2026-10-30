@@ -1,7 +1,7 @@
 import { useId } from 'react';
 
+import { CheckerboardIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconTexture } from '@tabler/icons-react';
 import * as Recharts from 'recharts';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
@@ -51,7 +51,7 @@ const config = {
   mobile: {
     label: 'Mobile (patterned)',
     color: 'var(--nx-color-chart-categorical-2)',
-    icon: IconTexture,
+    icon: CheckerboardIcon,
   },
 } satisfies ChartConfig;
 

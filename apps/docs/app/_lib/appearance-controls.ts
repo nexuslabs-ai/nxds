@@ -1,11 +1,9 @@
 import {
-  BASE_TONE_OPTIONS,
-  CORNER_OPTIONS,
   DEFAULT_NXDS_APPEARANCE,
-  DENSITY_OPTIONS,
-  ELEVATION_OPTIONS,
+  FONT_OPTIONS,
+  type NxdsAppearanceMode,
   type NxdsAppearanceState,
-  STROKE_OPTIONS,
+  type NxdsFontCategory,
 } from '@nxds/core';
 
 export const DOCS_APPEARANCE_STORAGE_KEY = 'nxds-docs-appearance';
@@ -15,97 +13,50 @@ export const DOCS_APPEARANCE_DEFAULT_STATE = {
   mode: 'system',
 } satisfies NxdsAppearanceState;
 
-export const THEME_MODE_KEYS = [
-  'mode',
-  'base',
-  'spacing',
-  'shadow',
-  'radius',
-  'borderwidth',
-] as const;
-
-export type ThemeMode = (typeof THEME_MODE_KEYS)[number];
-
-const MODE_TO_FIELD = {
-  mode: 'mode',
-  base: 'surfaceTone',
-  spacing: 'density',
-  shadow: 'elevation',
-  radius: 'corners',
-  borderwidth: 'stroke',
-} as const satisfies Record<ThemeMode, keyof NxdsAppearanceState>;
-
-type ThemeModeValueMap = {
-  [K in ThemeMode]: NxdsAppearanceState[(typeof MODE_TO_FIELD)[K]];
-};
-
-export type ThemeModeOption<K extends ThemeMode = ThemeMode> = {
-  value: ThemeModeValueMap[K];
-  label: string;
-};
-
-const MODE_OPTIONS = [
+export const MODE_OPTIONS = [
   { value: 'system', label: 'System' },
   { value: 'light', label: 'Light' },
   { value: 'dark', label: 'Dark' },
-] as const satisfies readonly ThemeModeOption<'mode'>[];
+] as const satisfies readonly { value: NxdsAppearanceMode; label: string }[];
 
-function copyOptions<T extends string>(
-  options: readonly { value: T; label: string }[]
-) {
-  return options.map(({ value, label }) => ({ value, label }));
-}
-
-export const THEME_MODE_OPTIONS = {
-  mode: MODE_OPTIONS,
-  base: copyOptions(BASE_TONE_OPTIONS),
-  spacing: copyOptions(DENSITY_OPTIONS),
-  shadow: copyOptions(ELEVATION_OPTIONS),
-  radius: copyOptions(CORNER_OPTIONS),
-  borderwidth: copyOptions(STROKE_OPTIONS),
-} as const satisfies {
-  [K in ThemeMode]: readonly ThemeModeOption<K>[];
+/**
+ * A font a picker offers. `value` is its `nxds-cli init` flag value, and
+ * `family` is the stack the prefs store, `null` for the UI font.
+ */
+export type FontChoice = {
+  value: string;
+  label: string;
+  family: string | null;
 };
 
-const THEME_MODE_VALUE_SETS = {
-  mode: new Set(THEME_MODE_OPTIONS.mode.map((option) => option.value)),
-  base: new Set(THEME_MODE_OPTIONS.base.map((option) => option.value)),
-  spacing: new Set(THEME_MODE_OPTIONS.spacing.map((option) => option.value)),
-  shadow: new Set(THEME_MODE_OPTIONS.shadow.map((option) => option.value)),
-  radius: new Set(THEME_MODE_OPTIONS.radius.map((option) => option.value)),
-  borderwidth: new Set(
-    THEME_MODE_OPTIONS.borderwidth.map((option) => option.value)
-  ),
-};
-
-export function getThemeModeOptions(
-  mode: ThemeMode
-): readonly ThemeModeOption[] {
-  return THEME_MODE_OPTIONS[mode] as readonly ThemeModeOption[];
+function curatedFonts(categories: readonly NxdsFontCategory[]): FontChoice[] {
+  return FONT_OPTIONS.filter((font) => categories.includes(font.category)).map(
+    ({ value, label, family }) => ({ value, label, family })
+  );
 }
 
-export function getThemeModeValue<K extends ThemeMode>(
-  state: NxdsAppearanceState,
-  mode: K
-): ThemeModeValueMap[K] {
-  return state[MODE_TO_FIELD[mode]] as unknown as ThemeModeValueMap[K];
-}
+const { prefs: DEFAULT_PREFS } = DEFAULT_NXDS_APPEARANCE;
 
-export function sanitizeMode<K extends ThemeMode>(
-  mode: K,
-  value: unknown
-): ThemeModeValueMap[K] {
-  return typeof value === 'string' &&
-    (THEME_MODE_VALUE_SETS[mode] as ReadonlySet<string>).has(value)
-    ? (value as ThemeModeValueMap[K])
-    : getThemeModeValue(DOCS_APPEARANCE_DEFAULT_STATE, mode);
-}
+export const UI_FONTS: FontChoice[] = [
+  { value: 'system', label: 'System', family: DEFAULT_PREFS.uiFont },
+  ...curatedFonts(['sans', 'serif']),
+];
+export const HEADING_FONTS: FontChoice[] = [
+  { value: 'ui', label: 'Same as UI font', family: null },
+  ...curatedFonts(['sans', 'serif']),
+];
+export const CODE_FONTS: FontChoice[] = [
+  { value: 'system', label: 'System', family: DEFAULT_PREFS.codeFont },
+  ...curatedFonts(['mono']),
+];
 
-export function updateThemeMode<K extends ThemeMode>(
-  state: NxdsAppearanceState,
-  mode: K,
-  value: unknown
-): NxdsAppearanceState {
-  const next = { ...state, [MODE_TO_FIELD[mode]]: sanitizeMode(mode, value) };
-  return next as NxdsAppearanceState;
+/**
+ * The choice a font picker shows for `family`, and the choices it offers. A
+ * stack set some other way shows as Custom.
+ */
+export function fontPick(family: string | null, choices: FontChoice[]) {
+  const chosen = choices.find((choice) => choice.family === family);
+  if (chosen) return { chosen, options: choices };
+  const custom = { value: 'custom', label: 'Custom', family };
+  return { chosen: custom, options: [...choices, custom] };
 }

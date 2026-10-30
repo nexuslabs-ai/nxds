@@ -30,6 +30,46 @@ records the nxds version and the items you installed.
 If your app uses `src/`, nxds goes in `src/components/nxds/`. To choose
 another folder, pass `--dir`.
 
+## (Optional) Set your theme
+
+```bash
+npx nxds-cli@latest init --brand-color "#4f46e5" --density compact --font inter --heading-font lora --icons lucide
+```
+
+Each flag sets one part of your theme. To build the command, pick a theme in
+the [Playground](/playground) or the theme panel on any docs page, then open
+**Use this theme**.
+
+| Flag                                  | Values                                                                                                             |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `--brand-color`                       | Any CSS color                                                                                                      |
+| `--surface-tone`                      | `stone`, `neutral`, `zinc` (default), `slate`, `gray`                                                              |
+| `--density`                           | `tight`, `compact`, `default` (default), `comfortable`, `relaxed`, `spacious`                                      |
+| `--corners`                           | `square`, `subtle` (default), `smooth`, `round`, `extra-round`                                                     |
+| `--elevation`                         | `flat`, `quiet` (default), `soft`, `standard`, `strong`                                                            |
+| `--stroke`                            | `fine`, `normal` (default), `strong`                                                                               |
+| `--mode`                              | `light` (default), `dark`, `system`                                                                                |
+| `--light-contrast`, `--dark-contrast` | 0 to 100 (default 50)                                                                                              |
+| `--font`                              | `system` (default), `geist`, `inter`, `figtree`, `dm-sans`, `manrope`, `ibm-plex-sans`, `lora`, `playfair-display` |
+| `--heading-font`                      | `ui` (the UI font, default), or any `--font` value but `system`                                                    |
+| `--code-font`                         | `system` (default), `geist-mono`, `jetbrains-mono`                                                                 |
+| `--font-size`, `--code-font-size`     | 8 to 32, in px (default 14 and 12)                                                                                 |
+| `--icons`                             | `phosphor` (default), `lucide`, `tabler`, `hugeicons`, `remix`                                                     |
+
+`init` writes the theme to `nxds-theme.ts` and records it in `nxds.json`. It
+installs the icon package and each font's Fontsource package, and imports the
+fonts in the nxds CSS entry. Your `appearance-state.ts` spreads `nxdsTheme`, so
+set your own overrides there. Don't edit `nxds-theme.ts`, since `init`
+rewrites it.
+
+To change the theme, run `init` again. A flag you leave out keeps its value.
+An empty flag, such as `--density=`, resets that part to the default. A
+new `--icons` rewrites `lib/icons.ts` in every installed component. A new font
+replaces the old one's import, and `doctor` lists the old package to remove.
+
+If an older `init` wrote your `appearance-state.ts`, `init` asks you to spread
+`nxdsTheme` there once.
+
 ## Add a component
 
 ```bash

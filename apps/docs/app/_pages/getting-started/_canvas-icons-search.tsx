@@ -54,8 +54,8 @@ export function CanvasIconSearch({ icons }: { icons: CanvasIcon[] }) {
       </ul>
       {shown.length === 0 && (
         <p className="nx:typography-body-default nx:text-muted-foreground">
-          No icon matches “{query}”. Search tabler.io for its name, then ask for
-          it to be added.
+          No icon matches “{query}”. Search phosphoricons.com for its name, then
+          ask for it to be added.
         </p>
       )}
     </div>

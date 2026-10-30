@@ -1,5 +1,5 @@
+import { PhCheck } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { IconCheck } from '@tabler/icons-vue';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { ref, useId } from 'vue';
 
@@ -336,12 +336,12 @@ export const VModel: Story = {
 
 export const ThumbSlot: Story = {
   render: () => ({
-    components: { IconCheck, Switch },
+    components: { PhCheck, Switch },
     template: `
       <div class="nx:flex nx:items-center nx:gap-2">
         <Switch id="auto-save">
           <template #thumb="{ checked }">
-            <IconCheck
+            <PhCheck
               v-if="checked"
               aria-hidden="true"
               class="nx:size-4 nx:p-0.5 nx:text-primary-background"

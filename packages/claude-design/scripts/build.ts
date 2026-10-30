@@ -57,7 +57,7 @@ function gitRef() {
 }
 
 // nxds's own budgets, well under the Design System format's caps (src/validate.ts).
-const BUNDLE_BUDGET = 1.6 * 1024 * 1024;
+const BUNDLE_BUDGET = 2.7 * 1024 * 1024;
 const TYPES_BUDGET = 1024 * 1024;
 
 function assertBudget(file: string, contents: string, budget: number) {

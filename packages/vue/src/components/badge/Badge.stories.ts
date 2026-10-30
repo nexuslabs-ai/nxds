@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
-  IconAlertCircle,
-  IconAlertTriangle,
-  IconCheck,
-  IconCircleCheck,
-  IconInfoCircle,
-  IconX,
-} from '@tabler/icons-vue';
+  PhCheck,
+  PhCheckCircle,
+  PhInfo,
+  PhWarning,
+  PhWarningCircle,
+  PhX,
+} from '@phosphor-icons/vue';
+import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
 
 import { Spinner } from '../spinner';
@@ -85,11 +85,11 @@ export const WithRightIcon: Story = {
     },
   },
   render: () => ({
-    components: { Badge, IconX },
+    components: { Badge, PhX },
     template: `
       <Badge variant="secondary" :is-caps="false">
         Dismiss
-        <template #right-icon><IconX /></template>
+        <template #right-icon><PhX /></template>
       </Badge>
     `,
   }),
@@ -106,10 +106,10 @@ export const IconOnly: Story = {
   },
   globals: { density: 'default' },
   render: () => ({
-    components: { Badge, IconCheck },
+    components: { Badge, PhCheck },
     template: `
       <Badge variant="success" fill="light" aria-label="Approved">
-        <template #left-icon><IconCheck /></template>
+        <template #left-icon><PhCheck /></template>
       </Badge>
     `,
   }),
@@ -147,27 +147,27 @@ export const StatusWithIcons: Story = {
   render: () => ({
     components: {
       Badge,
-      IconAlertCircle,
-      IconAlertTriangle,
-      IconCircleCheck,
-      IconInfoCircle,
+      PhWarningCircle,
+      PhWarning,
+      PhCheckCircle,
+      PhInfo,
     },
     template: `
       <div class="nx:flex nx:flex-wrap nx:items-center nx:gap-2">
         <Badge variant="success" fill="light" :is-caps="false">
-          <template #left-icon><IconCircleCheck /></template>
+          <template #left-icon><PhCheckCircle /></template>
           Success
         </Badge>
         <Badge variant="warning" fill="light" :is-caps="false">
-          <template #left-icon><IconAlertTriangle /></template>
+          <template #left-icon><PhWarning /></template>
           Warning
         </Badge>
         <Badge variant="error" fill="light" :is-caps="false">
-          <template #left-icon><IconAlertCircle /></template>
+          <template #left-icon><PhWarningCircle /></template>
           Error
         </Badge>
         <Badge variant="information" fill="light" :is-caps="false">
-          <template #left-icon><IconInfoCircle /></template>
+          <template #left-icon><PhInfo /></template>
           Info
         </Badge>
       </div>
@@ -186,7 +186,7 @@ export const AllVariants: Story = {
     },
   },
   render: () => ({
-    components: { Badge, IconCheck, IconX, Spinner },
+    components: { Badge, PhCheck, PhX, Spinner },
     template: `
       <div class="nx:flex nx:flex-col nx:gap-8">
         <div>
@@ -269,17 +269,17 @@ export const AllVariants: Story = {
         <div>
           <h3 class="nx:text-foreground nx:mb-3 nx:typography-label-default">Icon Only</h3>
           <div class="nx:flex nx:flex-wrap nx:items-center nx:gap-2">
-            <Badge variant="success" fill="light" aria-label="Approved"><template #left-icon><IconCheck /></template></Badge>
-            <Badge variant="default" fill="solid" aria-label="Verified"><template #left-icon><IconCheck /></template></Badge>
-            <Badge variant="error" fill="outline" aria-label="Error"><template #right-icon><IconX /></template></Badge>
+            <Badge variant="success" fill="light" aria-label="Approved"><template #left-icon><PhCheck /></template></Badge>
+            <Badge variant="default" fill="solid" aria-label="Verified"><template #left-icon><PhCheck /></template></Badge>
+            <Badge variant="error" fill="outline" aria-label="Error"><template #right-icon><PhX /></template></Badge>
           </div>
         </div>
         <div>
           <h3 class="nx:text-foreground nx:mb-3 nx:typography-label-default">With Icons</h3>
           <div class="nx:flex nx:flex-wrap nx:items-center nx:gap-2">
-            <Badge variant="default" :is-caps="false"><template #left-icon><IconCheck /></template>Label</Badge>
-            <Badge variant="success" :is-caps="false"><template #left-icon><IconCheck /></template>Label</Badge>
-            <Badge variant="error" :is-caps="false"><template #right-icon><IconX /></template>Label</Badge>
+            <Badge variant="default" :is-caps="false"><template #left-icon><PhCheck /></template>Label</Badge>
+            <Badge variant="success" :is-caps="false"><template #left-icon><PhCheck /></template>Label</Badge>
+            <Badge variant="error" :is-caps="false"><template #right-icon><PhX /></template>Label</Badge>
           </div>
         </div>
         <div>
@@ -338,12 +338,12 @@ export const OutlineFill: Story = {
 
 export const WithBothIcons: Story = {
   render: () => ({
-    components: { Badge, IconCheck, IconX },
+    components: { Badge, PhCheck, PhX },
     template: `
       <Badge variant="default" :is-caps="false">
-        <template #left-icon><IconCheck /></template>
+        <template #left-icon><PhCheck /></template>
         Status
-        <template #right-icon><IconX /></template>
+        <template #right-icon><PhX /></template>
       </Badge>
     `,
   }),

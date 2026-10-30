@@ -17,7 +17,7 @@ import {
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import type { SetupStep } from '../catalog';
+import type { Font, SetupStep } from '../catalog';
 import type { Config } from '../config';
 import { CliError } from '../errors';
 import { relativeImport } from '../files';
@@ -29,6 +29,7 @@ import {
   VITE_CONFIGS,
   VITE_ENTRIES,
 } from '../project';
+import { fontImportLine } from '../theme';
 
 import {
   applyInsertions,
@@ -97,7 +98,11 @@ function read(project: Project, file: string) {
  * The nxds CSS entry: nxds's own Tailwind build, beside the app's. An app
  * without Tailwind has no reset yet, so the entry brings Preflight.
  */
-export function cssEntry(config: Config, withPreflight: boolean) {
+export function cssEntry(
+  config: Config,
+  withPreflight: boolean,
+  fonts: Font[]
+) {
   const tokens = relativeImport(config.css, `${config.dir}/tailwind/nxds.css`);
   return [
     ...(withPreflight
@@ -108,6 +113,7 @@ export function cssEntry(config: Config, withPreflight: boolean) {
       : []),
     `@import '${tokens}';`,
     "@import 'tw-animate-css';",
+    ...fonts.map(fontImportLine),
     '',
   ].join('\n');
 }
@@ -117,13 +123,13 @@ export function cssImportLine(config: Config, file: string) {
   return `@import '${relativeImport(config.css, `${config.dir}/${file}`)}';`;
 }
 
-const APPEARANCE_STATE = `import {
-  DEFAULT_NXDS_APPEARANCE,
-  type NxdsAppearanceState,
-} from '@nxds/core';
+/** `appearance-state.ts`: the app's default appearance, nxds-theme.ts's theme. */
+const APPEARANCE_STATE = `import type { NxdsAppearanceState } from '@nxds/core';
+
+import { nxdsTheme } from './nxds-theme';
 
 export const defaultAppearance = {
-  ...DEFAULT_NXDS_APPEARANCE,
+  ...nxdsTheme,
 } satisfies NxdsAppearanceState;
 `;
 
@@ -553,6 +559,47 @@ function createdUnlessExists(
   return { changes: [{ path: file, content, created: true }], manual: [] };
 }
 
+/** The theme `init` sets up: `nxds-theme.ts`, and the fonts it installs. */
+export type ThemeSetup = {
+  /** `nxds-theme.ts`'s content. */
+  source: string;
+  fonts: Font[];
+  /** Whether the theme sets any part of the appearance. */
+  custom: boolean;
+};
+
+/**
+ * `nxds-theme.ts`, which nxds owns and rewrites, and `appearance-state.ts`,
+ * which the app owns. An existing `appearance-state.ts` that doesn't spread the
+ * theme yet is a manual step, when there is a theme to spread.
+ */
+function planTheme(project: Project, theme: ThemeSetup): WiringPlan {
+  const dir = entryDir(project);
+  const themeFile = `${dir}/nxds-theme.ts`;
+  const stateFile = `${dir}/appearance-state.ts`;
+  const themeExists = existsSync(path.join(project.root, themeFile));
+  const changes: FileChange[] =
+    themeExists && read(project, themeFile) === theme.source
+      ? []
+      : [{ path: themeFile, content: theme.source, created: !themeExists }];
+  if (!existsSync(path.join(project.root, stateFile))) {
+    changes.push({ path: stateFile, content: APPEARANCE_STATE, created: true });
+    return { changes, manual: [] };
+  }
+  if (!theme.custom || read(project, stateFile).includes("'./nxds-theme'")) {
+    return { changes, manual: [] };
+  }
+  return {
+    changes,
+    manual: [
+      {
+        file: stateFile,
+        step: "Spread nxdsTheme from './nxds-theme' into defaultAppearance, in place of DEFAULT_NXDS_APPEARANCE, so the app starts from the theme.",
+      },
+    ],
+  };
+}
+
 /**
  * Every file `init` writes or edits, beside the nxds folder itself, for the
  * setup steps the catalog declares.
@@ -561,23 +608,22 @@ export function planWiring(
   project: Project,
   config: Config,
   addTailwind: boolean,
-  setupSteps: SetupStep[]
+  setupSteps: SetupStep[],
+  theme: ThemeSetup
 ): WiringPlan {
   const steps: Steps = new Set(setupSteps);
   const plans: WiringPlan[] = [wireTsconfigAlias(project)];
   if (steps.has('add-css-import')) {
     plans.push(
-      createdUnlessExists(project, config.css, cssEntry(config, addTailwind))
+      createdUnlessExists(
+        project,
+        config.css,
+        cssEntry(config, addTailwind, theme.fonts)
+      )
     );
   }
   if (steps.has('add-head-script') || steps.has('wrap-root-with-provider')) {
-    plans.push(
-      createdUnlessExists(
-        project,
-        `${entryDir(project)}/appearance-state.ts`,
-        APPEARANCE_STATE
-      )
-    );
+    plans.push(planTheme(project, theme));
   }
   if (project.setup === 'next-app') {
     plans.push(wireNextLayout(project, config, steps));

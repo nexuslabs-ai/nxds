@@ -1,7 +1,7 @@
 import * as React from 'react';
 
+import { ChecksIcon, InfoIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconChecks, IconInfoCircle } from '@tabler/icons-react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -743,7 +743,7 @@ export const WithTooltip: Story = {
                 aria-label="Delivery details"
                 className={receiptIconClassName}
               >
-                <IconChecks />
+                <ChecksIcon />
               </button>
             </TooltipTrigger>
             <TooltipContent>Read 09:15 &middot; 24 Aug 2026</TooltipContent>
@@ -788,7 +788,7 @@ export const WithPopover: Story = {
               aria-label="Message details"
               className={receiptIconClassName}
             >
-              <IconInfoCircle />
+              <InfoIcon />
             </button>
           </PopoverTrigger>
           <PopoverContent

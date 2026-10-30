@@ -10,6 +10,7 @@ import {
   type ReactMajor,
   SETUP,
   variantFor,
+  withIconLibrary,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
 import { type Config, readConfig } from '../config';
@@ -121,7 +122,10 @@ export async function view(
 ): Promise<CommandResult> {
   const config = readConfig(cwd);
   const react = projectReact(cwd);
-  const catalog = await appRelease(registry, config, react);
+  const catalog = withIconLibrary(
+    await appRelease(registry, config, react),
+    config?.iconLibrary
+  );
   const item = findItem(catalog, name);
   const variant = variantFor(item, {
     framework: projectFramework(config, catalog),

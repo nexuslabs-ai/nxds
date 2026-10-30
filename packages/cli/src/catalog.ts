@@ -3,6 +3,7 @@ import {
   CATALOG_SCHEMA,
   type CatalogItem,
   catalogSchema,
+  catalogWithIconLibrary,
   type Framework,
   issueLines,
   type ReactMajor,
@@ -22,9 +23,11 @@ export type {
   Catalog,
   CatalogFile,
   CatalogItem,
+  Font,
   Framework,
   ReactMajor,
   SetupStep,
+  ThemeField,
   Variant,
 } from '@nxds/catalog';
 
@@ -249,6 +252,53 @@ export function releaseFiles(catalog: Catalog, target: Target) {
         )
       )
   );
+}
+
+/**
+ * The release's `kind` entry named `name`. Fails with `fail`'s error, whose
+ * message names the entries there are.
+ */
+export function releaseChoice<E extends { name: string }>(
+  catalog: Catalog,
+  kind: string,
+  name: string,
+  entries: E[],
+  fail: (message: string) => CliError
+): E {
+  const entry = entries.find((candidate) => candidate.name === name);
+  if (entry) return entry;
+  if (entries.length === 0) {
+    throw fail(
+      `nxds ${catalog.version} has no ${kind} choices. Run \`${CLI_COMMAND} update\` to move to a release that has them.`
+    );
+  }
+  throw fail(
+    `nxds ${catalog.version} has no ${kind} "${name}". Pick one of: ${entries.map((candidate) => candidate.name).join(', ')}.`
+  );
+}
+
+/**
+ * `catalog` with `lib/icons.ts` drawn by the icon library `library`, which
+ * nxds.json names. A release from before icon libraries keeps its own
+ * `lib/icons.ts`.
+ */
+export function withIconLibrary(
+  catalog: Catalog,
+  library: string | undefined
+): Catalog {
+  const { iconLibraries } = catalog;
+  if (library === undefined || iconLibraries.length === 0) return catalog;
+  releaseChoice(
+    catalog,
+    'icon library',
+    library,
+    iconLibraries,
+    (message) =>
+      new CliError(
+        `nxds.json: ${message} Run \`${CLI_COMMAND} init --icons <library>\` to switch.`
+      )
+  );
+  return catalogWithIconLibrary(catalog, library);
 }
 
 /** Installed item names this catalog still has, and the ones it dropped. */

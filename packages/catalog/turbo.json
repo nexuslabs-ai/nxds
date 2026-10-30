@@ -3,6 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "generate:catalog": {
+      "dependsOn": ["@nxds/core#build"],
       "inputs": [
         "scripts/**",
         "package.json",
