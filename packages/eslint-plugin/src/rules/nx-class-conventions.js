@@ -35,6 +35,76 @@ export const RAW_LETTER_SPACINGS = [
   'widest',
 ];
 
+// A numeric spacing step sizes an icon from spacing, so the icon follows
+// density. Glyph tokens (`size-icon-glyph-sm`) and arbitrary px values
+// (`size-[24px]`) stay fixed.
+const SPACING_STEP_SIZE = /^(?:size|h|w)-\d/;
+
+// An `Icon*` or `*Icon` JSX element, such as `IconX` or `CheckIcon`.
+const ICON_ELEMENT_NAME = /^Icon(?![a-z])|Icon$/;
+
+/** The `nx:` classes in a class string. */
+function nxClasses(raw) {
+  return raw.split(/\s+/).filter((token) => token.startsWith('nx:'));
+}
+
+/** Splits a class at the `:` separators outside `[…]` and `(…)`. */
+function splitVariants(className) {
+  const parts = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < className.length; i++) {
+    const char = className[i];
+    if (char === '[' || char === '(') depth++;
+    else if (char === ']' || char === ')') depth--;
+    else if (char === ':' && depth === 0) {
+      parts.push(className.slice(start, i));
+      start = i + 1;
+    }
+  }
+  parts.push(className.slice(start));
+  return parts;
+}
+
+/** A selector without its `[…]` and `(…)` groups. */
+function withoutGroups(selector) {
+  let depth = 0;
+  let kept = '';
+  for (const char of selector) {
+    if (char === '[' || char === '(') depth++;
+    else if (char === ']' || char === ')') depth--;
+    else if (depth === 0) kept += char;
+  }
+  return kept;
+}
+
+// An arbitrary variant whose subject is the `svg`, such as `[&_svg]` or
+// `[&>svg:not(…)]`. In `has-[>svg]` and `[&:has(svg)]` the subject is the box
+// around the icon.
+function selectsSvg(variant) {
+  if (!variant.startsWith('[') || !variant.endsWith(']')) return false;
+  const compounds = withoutGroups(variant.slice(1, -1)).split(/[_>+~]/);
+  return /^svg(?![\w-])/.test(compounds.at(-1));
+}
+
+function sizesSvgFromSpacing(raw) {
+  return nxClasses(raw).some((token) => {
+    const variants = splitVariants(token.slice('nx:'.length));
+    const utility = variants.pop();
+    return SPACING_STEP_SIZE.test(utility) && variants.some(selectsSvg);
+  });
+}
+
+function sizesFromSpacing(raw) {
+  return nxClasses(raw).some((token) =>
+    SPACING_STEP_SIZE.test(splitVariants(token).at(-1))
+  );
+}
+
+function isIconElement(name) {
+  return name.type === 'JSXIdentifier' && ICON_ELEMENT_NAME.test(name.name);
+}
+
 const NAMED_VARIANT = String.raw`@?[\w-]+(?:\[[^\s]+?\])?(?:\/[\w-]+)?:`;
 const ARBITRARY_VARIANT = String.raw`\[[^\s]+?\]:`;
 const CHILD_VARIANT = String.raw`\*{1,2}:`;
@@ -82,10 +152,8 @@ const CHECKS = [
     runtimeOnly: true,
   },
   {
-    // An SVG selector with a numeric step sizes the icon from spacing, so the
-    // icon follows density. Glyph tokens and arbitrary px values stay fixed.
     messageId: 'densityIconSize',
-    re: /nx:[^\s'"`]*\[[^\s]*svg[^\s]*\]:size-\d/,
+    test: sizesSvgFromSpacing,
     runtimeOnly: true,
   },
   {
@@ -176,12 +244,12 @@ function shouldRunCheck(check, filename, raw) {
 function matchedMessageIds(raw, filename) {
   const matched = new Set();
   for (const check of CHECKS) {
-    const { messageId, re } = check;
     if (!shouldRunCheck(check, filename, raw)) {
       continue;
     }
-    if (re.test(raw)) {
-      matched.add(messageId);
+    const matches = check.test ? check.test(raw) : check.re.test(raw);
+    if (matches) {
+      matched.add(check.messageId);
     }
   }
   return matched;
@@ -262,7 +330,7 @@ export default {
     type: 'problem',
     docs: {
       description:
-        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, and no ring-fading `transition-colors` on a focus-ring surface.',
+        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, no icon sized from a spacing step, and no ring-fading `transition-colors` on a focus-ring surface.',
     },
     schema: [],
     messages: {
@@ -283,7 +351,7 @@ export default {
       rawLetterSpacing:
         'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
       densityIconSize:
-        'Icon size from a spacing step — `[&_svg]:size-*` with a number follows density. Use `size-icon-glyph-xs`, `-sm` or `-default` (12, 14 or 16px), or a fixed px size such as `size-[24px]`.',
+        'Icon size from a spacing step — a numeric `size-*`, `h-*` or `w-*` on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm` or `-default` (12, 14 or 16px), or a fixed px size such as `size-[24px]`.',
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
     },
@@ -335,6 +403,24 @@ export default {
           return;
         }
         reportScope(node);
+      },
+      JSXOpeningElement(node) {
+        if (isExampleFile(filename) || !isIconElement(node.name)) {
+          return;
+        }
+        const className = node.attributes.find(
+          (attribute) =>
+            attribute.type === 'JSXAttribute' &&
+            attribute.name.name === 'className'
+        );
+        if (!className?.value) {
+          return;
+        }
+        const collected = [];
+        collectClassStrings(className.value, visitorKeys, collected);
+        if (collected.some(sizesFromSpacing)) {
+          context.report({ node: className, messageId: 'densityIconSize' });
+        }
       },
     };
   },

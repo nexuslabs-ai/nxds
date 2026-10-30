@@ -6,7 +6,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
 const toggleVariants = cva(
-  'nx:inline-flex nx:items-center nx:justify-center nx:rounded-md nx:border-0 nx:py-0 nx:whitespace-nowrap nx:text-inherit nx:transition-control nx:hover:bg-background-hover nx:hover:text-foreground nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:disabled:pointer-events-none nx:disabled:text-disabled-foreground nx:aria-invalid:border-error-border nx:aria-invalid:focus-visible:outline-focus-error nx:data-[state=on]:bg-control-background nx:data-[state=on]:text-foreground nx:data-[state=on]:hover:bg-control-background-hover nx:data-[state=on]:disabled:bg-disabled nx:data-[state=on]:disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:shrink-0 nx:[&_svg]:size-icon-glyph-default',
+  'nx:inline-flex nx:items-center nx:justify-center nx:rounded-md nx:border-0 nx:py-0 nx:whitespace-nowrap nx:text-inherit nx:transition-control nx:hover:bg-background-hover nx:hover:text-foreground nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:disabled:pointer-events-none nx:disabled:text-disabled-foreground nx:aria-invalid:border-error-border nx:aria-invalid:focus-visible:outline-focus-error nx:data-[state=on]:bg-control-background nx:data-[state=on]:text-foreground nx:data-[state=on]:hover:bg-control-background-hover nx:data-[state=on]:disabled:bg-disabled nx:data-[state=on]:disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:shrink-0 nx:[&_svg]:size-icon-glyph-default nx:icon-stroke',
   {
     variants: {
       variant: {
@@ -20,9 +20,9 @@ const toggleVariants = cva(
         ],
       },
       size: {
-        default: 'nx:h-9 nx:px-4 nx:gap-2 nx:typography-label-default',
-        sm: 'nx:h-7 nx:px-3 nx:gap-1.5 nx:typography-label-small',
-        lg: 'nx:h-11 nx:px-8 nx:gap-2.5 nx:typography-label-default',
+        default: 'nx:px-4 nx:py-2 nx:gap-2 nx:typography-label-default',
+        sm: 'nx:px-3 nx:py-1.5 nx:gap-1.5 nx:typography-label-small',
+        lg: 'nx:px-8 nx:py-3 nx:gap-2.5 nx:typography-label-default',
       },
     },
     defaultVariants: {

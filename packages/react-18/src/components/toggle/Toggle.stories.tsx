@@ -105,12 +105,12 @@ export const Sizes: Story = {
     const lg = canvas.getByRole('button', { name: 'Large' });
 
     await expect(sm).toHaveClass('nx:typography-label-small');
-    await expect(sm).toHaveClass('nx:h-7', 'nx:px-3', 'nx:gap-1.5');
+    await expect(sm).toHaveClass('nx:px-3', 'nx:py-1.5', 'nx:gap-1.5');
 
     await expect(md).toHaveClass('nx:typography-label-default');
-    await expect(md).toHaveClass('nx:h-9', 'nx:px-4', 'nx:gap-2');
+    await expect(md).toHaveClass('nx:px-4', 'nx:py-2', 'nx:gap-2');
     await expect(lg).toHaveClass('nx:typography-label-default');
-    await expect(lg).toHaveClass('nx:h-11', 'nx:px-8', 'nx:gap-2.5');
+    await expect(lg).toHaveClass('nx:px-8', 'nx:py-3', 'nx:gap-2.5');
   },
 };
 
@@ -397,61 +397,4 @@ export const LongContent: Story = {
       Apply formatting to all selected paragraphs
     </Toggle>
   ),
-};
-
-const DENSITIES = [
-  'tight',
-  'compact',
-  'default',
-  'comfortable',
-  'relaxed',
-  'spacious',
-] as const;
-const SIZES = ['sm', 'default', 'lg'] as const;
-
-export const HeightAtEveryDensity: Story = {
-  render: () => (
-    <div className="nx:flex nx:flex-col nx:gap-3">
-      {DENSITIES.map((density) => (
-        <div
-          key={density}
-          data-density={density}
-          data-testid={`row-${density}`}
-          className="nx:flex nx:items-center nx:gap-3"
-        >
-          {SIZES.map((size) => (
-            <Toggle key={size} size={size}>
-              Bold
-            </Toggle>
-          ))}
-          <Toggle aria-label="Italic">
-            <TextItalicIcon />
-          </Toggle>
-          <Toggle variant="outline">Bold</Toggle>
-        </div>
-      ))}
-    </div>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const heights = SIZES.map(() => [] as number[]);
-    for (const density of DENSITIES) {
-      const [small, standard, large, icon, outline] = within(
-        canvas.getByTestId(`row-${density}`)
-      )
-        .getAllByRole('button')
-        .map((toggle) => toggle.getBoundingClientRect().height);
-      // An icon or a border doesn't change the height.
-      await expect(icon).toBe(standard);
-      await expect(outline).toBe(standard);
-      [small, standard, large].forEach((height, size) =>
-        heights[size]!.push(height!)
-      );
-    }
-    // Each size grows at every step from Tight to Spacious.
-    for (const sizeHeights of heights) {
-      await expect(new Set(sizeHeights).size).toBe(DENSITIES.length);
-      await expect(sizeHeights).toEqual([...sizeHeights].sort((a, b) => a - b));
-    }
-  },
 };

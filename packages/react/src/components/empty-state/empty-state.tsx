@@ -66,7 +66,7 @@ function EmptyStateHeader({ className, ...props }: EmptyStateHeaderProps) {
 }
 
 const emptyStateMediaVariants = cva(
-  'nx:mb-2 nx:flex nx:shrink-0 nx:items-center nx:justify-center nx:[&_svg]:pointer-events-none nx:[&_svg]:shrink-0',
+  'nx:mb-2 nx:flex nx:shrink-0 nx:items-center nx:justify-center nx:[&_svg]:pointer-events-none nx:[&_svg]:shrink-0 nx:icon-stroke',
   {
     variants: {
       variant: {

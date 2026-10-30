@@ -22,7 +22,7 @@ const props = defineProps<AlertCloseProps>();
         'nx:focus-visible:bg-container-hover nx:focus-visible:text-foreground',
         'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
         'nx:disabled:pointer-events-none nx:disabled:text-disabled-foreground',
-        'nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0',
+        'nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
         props.class
       )
     "

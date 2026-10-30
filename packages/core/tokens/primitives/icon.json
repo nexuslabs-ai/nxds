@@ -14,7 +14,7 @@
         "unit": "px"
       },
       "$type": "dimension",
-      "$description": "Small icon or mark, such as a Badge icon, a menu check or a Checkbox check. The same at every density."
+      "$description": "Small icon or mark, such as a Badge icon or a Checkbox check. The same at every density."
     },
     "default": {
       "$value": {
@@ -24,5 +24,10 @@
       "$type": "dimension",
       "$description": "Icon in a control, at every control size. The same at every density."
     }
+  },
+  "stroke": {
+    "$value": 1.75,
+    "$type": "number",
+    "$description": "Line width of a stroked icon, such as Lucide, Tabler or HugeIcons, in a component. Filled icons, such as Phosphor and Remix, keep their own line."
   }
 }
