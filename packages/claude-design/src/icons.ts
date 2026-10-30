@@ -131,6 +131,7 @@ export const ICON_NAMES = [
   'currency-dollar',
   'currency-eur',
   'currency-gbp',
+  'cursor',
   'database',
   'desktop',
   'device-mobile',
