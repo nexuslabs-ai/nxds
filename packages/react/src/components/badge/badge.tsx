@@ -5,7 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
 const badgeVariants = cva(
-  'nx:inline-flex nx:box-border nx:h-6 nx:w-fit nx:items-center nx:justify-center nx:gap-1 nx:rounded-md nx:border-default nx:border-transparent nx:whitespace-nowrap nx:transition-colors nx:icon-stroke',
+  'nx:inline-flex nx:box-border nx:h-6 nx:w-fit nx:items-center nx:justify-center nx:gap-1 nx:rounded-md nx:border-default nx:border-transparent nx:whitespace-nowrap nx:transition-colors',
   {
     variants: {
       variant: {
@@ -133,7 +133,7 @@ const badgeVariants = cva(
 );
 
 const badgeIconClasses =
-  'nx:flex nx:items-center nx:justify-center nx:size-icon-glyph-sm nx:[&>svg]:size-icon-glyph-sm';
+  'nx:flex nx:items-center nx:justify-center nx:size-icon-glyph-sm nx:[&>svg]:size-icon-glyph-sm nx:icon-stroke';
 
 function badgeShapeClasses(
   isNumber: boolean,

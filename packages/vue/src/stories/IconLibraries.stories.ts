@@ -59,7 +59,7 @@ export const AllIcons: Story = {
               <component
                 :is="sets[library.value][name]"
                 aria-hidden="true"
-                class="nx:size-4"
+                class="nx:size-icon-glyph-default"
               />
             </td>
           </tr>

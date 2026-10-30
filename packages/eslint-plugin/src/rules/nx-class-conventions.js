@@ -36,9 +36,12 @@ export const RAW_LETTER_SPACINGS = [
 ];
 
 // A numeric spacing step sizes an icon from spacing, so the icon follows
-// density. Glyph tokens (`size-icon-glyph-sm`) and arbitrary px values
-// (`size-[24px]`) stay fixed.
-const SPACING_STEP_SIZE = /^(?:size|h|w)-\d/;
+// density. Glyph tokens (`size-icon-glyph-sm`) and arbitrary values
+// (`size-[24px]`) do not. A leading `!` is Tailwind's important modifier.
+const SPACING_STEP_SIZE = /^!?(?:size|h|w)-\d/;
+
+// Any size utility: a spacing step, a glyph token or an arbitrary value.
+const ANY_SIZE = /^!?(?:size|h|w)-/;
 
 // An `Icon*` or `*Icon` JSX element, such as `IconX` or `CheckIcon`.
 const ICON_ELEMENT_NAME = /^Icon(?![a-z])|Icon$/;
@@ -87,12 +90,15 @@ function selectsSvg(variant) {
   return /^svg(?![\w-])/.test(compounds.at(-1));
 }
 
+/** Whether an `nx:` class sizes an `svg` with a utility that `size` matches. */
+function sizesSvg(token, size) {
+  const variants = splitVariants(token.slice('nx:'.length));
+  const utility = variants.pop();
+  return size.test(utility) && variants.some(selectsSvg);
+}
+
 function sizesSvgFromSpacing(raw) {
-  return nxClasses(raw).some((token) => {
-    const variants = splitVariants(token.slice('nx:'.length));
-    const utility = variants.pop();
-    return SPACING_STEP_SIZE.test(utility) && variants.some(selectsSvg);
-  });
+  return nxClasses(raw).some((token) => sizesSvg(token, SPACING_STEP_SIZE));
 }
 
 function sizesFromSpacing(raw) {
@@ -142,26 +148,27 @@ const CHECKS = [
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}font-(?:${RAW_FONT_WEIGHTS.join('|')})\\b`
     ),
-    runtimeOnly: true,
+    skipFile: isExampleFile,
   },
   {
     messageId: 'rawLineHeight',
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}leading-(?:${RAW_LINE_HEIGHTS.join('|')}|\\d+|\\[)`
     ),
-    runtimeOnly: true,
+    skipFile: isExampleFile,
   },
   {
     messageId: 'densityIconSize',
     test: sizesSvgFromSpacing,
-    runtimeOnly: true,
+    // Stories are checked: the docs pages copy their code into apps.
+    skipFile: isDocsFile,
   },
   {
     messageId: 'rawLetterSpacing',
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}tracking-(?:${RAW_LETTER_SPACINGS.join('|')}|\\[)`
     ),
-    runtimeOnly: true,
+    skipFile: isExampleFile,
   },
 ];
 
@@ -180,6 +187,14 @@ function fadesItsFocusRing(scope) {
   );
 }
 
+// A class list that sizes its `svg` children, such as `nx:[&_svg]:size-4`,
+// draws the icon, so it sets the icon's line with `nx:icon-stroke` too.
+function leavesIconUnstroked(scope) {
+  const classes = nxClasses(scope);
+  if (classes.includes('nx:icon-stroke')) return false;
+  return classes.some((token) => sizesSvg(token, ANY_SIZE));
+}
+
 function isStoryFile(filename) {
   return /\.stories\.[jt]sx?$/.test(filename);
 }
@@ -188,8 +203,9 @@ function isDocsFile(filename) {
   return /(?:^|[/\\])apps[/\\]docs[/\\]/.test(filename);
 }
 
-// What the runtime-only checks skip: stories and the docs app quote utilities
-// as specimens and prose, and the docs app styles its own chrome off-system.
+// What the raw typography and stroke checks skip: stories and the docs app
+// quote utilities as specimens and prose, and the docs app styles its own
+// chrome off-system.
 function isExampleFile(filename) {
   return isStoryFile(filename) || isDocsFile(filename);
 }
@@ -232,10 +248,7 @@ function isRawTypographyException(check, filename, raw) {
 }
 
 function shouldRunCheck(check, filename, raw) {
-  if (!check.runtimeOnly) {
-    return true;
-  }
-  if (isExampleFile(filename)) {
+  if (check.skipFile?.(filename)) {
     return false;
   }
   return !isRawTypographyException(check, filename, raw);
@@ -330,7 +343,7 @@ export default {
     type: 'problem',
     docs: {
       description:
-        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, no icon sized from a spacing step, and no ring-fading `transition-colors` on a focus-ring surface.',
+        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, no icon sized from a spacing step, no ring-fading `transition-colors` on a focus-ring surface, and no sized `svg` children without `nx:icon-stroke`.',
     },
     schema: [],
     messages: {
@@ -351,9 +364,11 @@ export default {
       rawLetterSpacing:
         'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
       densityIconSize:
-        'Icon size from a spacing step — a numeric `size-*`, `h-*` or `w-*` on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm` or `-default` (12, 14 or 16px), or a fixed px size such as `size-[24px]`.',
+        'Icon size from a spacing step — a numeric `size-*`, `h-*` or `w-*` on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm` or `-default` (12, 14 or 16px). For another size, multiply the default icon, such as `size-[calc(var(--nx-icon-glyph-default)*2)]`.',
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
+      unstrokedIcon:
+        'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-4`), so add `nx:icon-stroke` to draw stroked icons at the icon line width.',
     },
   },
   create(context) {
@@ -367,13 +382,17 @@ export default {
     }
 
     function reportScope(node) {
-      if (isDocsSpecimenPage(filename) || isInsideClassCall(node)) {
+      if (isInsideClassCall(node)) {
         return;
       }
       const collected = [];
       collectClassStrings(node, visitorKeys, collected);
-      if (fadesItsFocusRing(collected.join(' '))) {
+      const scope = collected.join(' ');
+      if (!isDocsSpecimenPage(filename) && fadesItsFocusRing(scope)) {
         context.report({ node, messageId: 'ringFadingTransition' });
+      }
+      if (!isExampleFile(filename) && leavesIconUnstroked(scope)) {
+        context.report({ node, messageId: 'unstrokedIcon' });
       }
     }
 
@@ -405,7 +424,7 @@ export default {
         reportScope(node);
       },
       JSXOpeningElement(node) {
-        if (isExampleFile(filename) || !isIconElement(node.name)) {
+        if (isDocsFile(filename) || !isIconElement(node.name)) {
           return;
         }
         const className = node.attributes.find(
