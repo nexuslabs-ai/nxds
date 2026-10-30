@@ -86,15 +86,28 @@ function guideProblems({
   sampler: string;
 }) {
   const problems: string[] = [];
-  const publish =
-    /^## 1\. Publish the system\n([\s\S]*?)(?=^## )/m.exec(template)?.[1] ?? '';
-  const update =
-    /^## Update to a new release\n[\s\S]*?^(4\. .*)$/m.exec(template)?.[1] ??
-    '';
-  for (const [name, step] of [
-    ['step 1', publish],
-    ['update step 4', update],
+  const publish = /^## 1\. Publish the system\n((?:(?!^## )[\s\S])*)/m.exec(
+    template
+  )?.[1];
+  const update = /^## Update to a new release\n((?:(?!^## )[\s\S])*)/m.exec(
+    template
+  )?.[1];
+  const updateStep =
+    update === undefined ? undefined : /^4\. .*$/m.exec(update)?.[0];
+  for (const [name, step, missing] of [
+    ['step 1', publish, "a '## 1. Publish the system' section"],
+    [
+      'update step 4',
+      updateStep,
+      update === undefined
+        ? "a '## Update to a new release' section"
+        : 'step 4 under Update to a new release',
+    ],
   ] as const) {
+    if (step === undefined) {
+      problems.push(`SETUP.md has no ${missing}.`);
+      continue;
+    }
     if (!step.includes('{{textPlainFiles}}')) {
       problems.push(
         `SETUP.md: ${name} must send {{textPlainFiles}} as text/plain, or the publish is refused.`
