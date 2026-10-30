@@ -26,6 +26,7 @@ Button triggers an action. Use it for short, visible labels.
 - A loading button shows only a spinner and hides its icons.
 - Icon-only buttons need \`aria-label\` or \`aria-labelledby\`.
 - Icons are 16px at every size and density.
+- Stroked icons, such as Lucide, draw a 1.75 line, whatever their \`strokeWidth\`. Filled icons, such as Phosphor, keep their own line.
         `,
       },
     },
@@ -256,7 +257,7 @@ export const IconSize: Story = {
       const { width, height } = svg.getBoundingClientRect();
       await expect(width).toBe(iconToken);
       await expect(height).toBe(iconToken);
-      // Stroked icon sets (Tabler, Lucide) draw at 1.75 in a Button.
+      // Stroked icon sets (Lucide, Tabler, HugeIcons) draw at 1.75 in a Button.
       await expect(getComputedStyle(svg).strokeWidth).toBe('1.75px');
     }
   },

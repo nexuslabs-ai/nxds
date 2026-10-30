@@ -32,5 +32,10 @@
       "$type": "dimension",
       "$description": "Large icon, such as the EmptyState icon. It follows the UI scale and is the same at every density."
     }
+  },
+  "stroke": {
+    "$value": 1.75,
+    "$type": "number",
+    "$description": "Line width of a stroked icon, such as Lucide, Tabler or HugeIcons, in a component. Filled icons, such as Phosphor and Remix, keep their own line."
   }
 }

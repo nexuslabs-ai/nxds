@@ -31,7 +31,7 @@ import {
   borderWidthAliasUtilities,
   DEFAULT_TRANSITION,
   durationUtility,
-  iconSizeUtility,
+  iconUtility,
 } from '../token-source/utilities';
 
 import { RUNTIME_COLOR_DESCRIPTIONS } from './descriptions';
@@ -112,7 +112,7 @@ function leafControls({
   if (family === 'typography' && file.startsWith('primitives/')) {
     return typographyControls(leaf.path);
   }
-  if (family === 'icon') return [UI_SCALE];
+  if (family === 'icon') return leaf.path[0] === 'glyph' ? [UI_SCALE] : [];
   if (preset === null) return [];
   return FAMILY_CONTROLS[family] ?? [];
 }
@@ -317,7 +317,7 @@ function primitiveAliases(
   path: readonly string[]
 ): CatalogueAlias[] {
   const key = path.join('-');
-  if (family === 'icon') return [utility(iconSizeUtility(key).name)];
+  if (family === 'icon') return [utility(iconUtility(path).name)];
   if (family === 'radius') return [cssVariable(`--radius-${key}`)];
   if (family === 'borderwidth') {
     return [

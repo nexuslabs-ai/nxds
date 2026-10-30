@@ -152,6 +152,7 @@ export const overlayCloseButtonClassName = [
   'nx:focus-visible:bg-container-hover nx:focus-visible:text-foreground',
   'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
   'nx:disabled:pointer-events-none',
+  'nx:icon-stroke',
 ].join(' ');
 
 export type OverlayHeaderVariants = VariantProps<typeof overlayHeaderVariants>;

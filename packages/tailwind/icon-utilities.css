@@ -1,4 +1,4 @@
-/* Icon Size Utilities */
+/* Icon Utilities */
 
 @utility size-icon-glyph-xs {
   width: var(--nx-icon-glyph-xs);
@@ -18,4 +18,13 @@
 @utility size-icon-glyph-lg {
   width: var(--nx-icon-glyph-lg);
   height: var(--nx-icon-glyph-lg);
+}
+
+@utility icon-stroke {
+  &:is(svg),
+  &:is(svg) *,
+  & svg,
+  & svg * {
+    stroke-width: var(--nx-icon-stroke);
+  }
 }

@@ -280,6 +280,28 @@ a competing icon set.
 Icons you pass to a component, such as a Button's icon, come from any library
 you like.
 
+### Line width
+
+Stroked icons draw a 1.75 line in every component, whatever their
+`strokeWidth`. Filled icons keep the line their library draws.
+
+| Library      | Draws         | Line in a component |
+| ------------ | ------------- | ------------------- |
+| Lucide       | Strokes       | 1.75                |
+| Tabler Icons | Strokes       | 1.75                |
+| HugeIcons    | Strokes       | 1.75                |
+| Phosphor     | Filled shapes | Its own             |
+| Remix Icon   | Filled shapes | Its own             |
+
+To change the line, set `--nx-icon-stroke`:
+
+```css
+/* app/nxds.css, after the imports */
+:root {
+  --nx-icon-stroke: 1.5;
+}
+```
+
 ## Shuffle
 
 `shuffleNxdsAppearance` returns a random theme built from the curated options.

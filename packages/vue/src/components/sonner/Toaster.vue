@@ -114,7 +114,7 @@ const forwarded = computed(
 </script>
 
 <template>
-  <div data-slot="toaster">
+  <div data-slot="toaster" class="nx:icon-stroke">
     <Sonner
       v-bind="forwarded"
       :id="NXDS_TOASTER_ID"
