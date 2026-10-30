@@ -285,8 +285,8 @@ export const IconSize: Story = {
           <Button size="icon-lg" aria-label="Large icon"><PhStar /></Button>
         </div>
         <div data-density="compact" class="nx:flex nx:items-center nx:gap-2">
-          <Button><template #start-icon><IconDownload /></template>Download</Button>
-          <Button size="icon" aria-label="Compact icon"><IconStar /></Button>
+          <Button><template #start-icon><PhDownloadSimple /></template>Download</Button>
+          <Button size="icon" aria-label="Compact icon"><PhStar /></Button>
         </div>
       </div>
     `,
@@ -304,9 +304,8 @@ export const IconSize: Story = {
       const { width, height } = svg.getBoundingClientRect();
       await expect(width).toBe(iconToken);
       await expect(height).toBe(iconToken);
-      await expect(parseFloat(getComputedStyle(svg).strokeWidth)).toBeLessThan(
-        Number(svg.getAttribute('stroke-width'))
-      );
+      // Stroked icon sets (Tabler, Lucide) draw at 1.75 in a Button.
+      await expect(getComputedStyle(svg).strokeWidth).toBe('1.75px');
     }
   },
 };
