@@ -13,12 +13,11 @@ import {
   projectDir,
   type Theme,
 } from './harness.ts';
+import { exportDir } from './release.ts';
 
-const distDir = path.dirname(projectDir);
-
-/** The artboard markup SETUP.md tells Claude to paste, read from the shipped guide. */
+/** The artboard markup SETUP.md tells Claude to paste, read from the exported guide. */
 function shippedArtboard() {
-  const guide = readFileSync(path.join(distDir, 'SETUP.md'), 'utf8');
+  const guide = readFileSync(path.join(exportDir, 'SETUP.md'), 'utf8');
   const markup = /```html\n([\s\S]*?)\n```/.exec(guide)?.[1];
   if (!markup) throw new Error('SETUP.md: no html block for the sampler.');
   return markup;

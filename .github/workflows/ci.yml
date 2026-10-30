@@ -491,10 +491,11 @@ jobs:
   # ============================================
   # Claude Design System smoke test
   # ============================================
-  # Loads the built @nxds/claude-design output the way Claude Design does:
-  # React 18 globals, then the bundle as a classic script. Every preview
-  # renders in both themes, overlays open and close, and nothing hits the
-  # network.
+  # Packs the built @nxds/claude-design, serves it from a local npm registry
+  # and exports it with the built nxds-cli, as a user's chat does. Then it
+  # loads the export the way Claude Design does: React 18 globals, then the
+  # bundle as a classic script. Every preview renders in both themes, overlays
+  # open and close, the SETUP.md sampler renders, and nothing hits the network.
 
   claude-design-smoke:
     name: Claude Design Smoke

@@ -16,8 +16,10 @@ import {
 
 import { canvasLinks } from '../../src/setup.ts';
 
+import { exportDir } from './release.ts';
+
 const packageRoot = path.join(import.meta.dirname, '..', '..');
-export const projectDir = path.join(packageRoot, 'dist', 'project');
+export const projectDir = path.join(exportDir, 'project');
 const require = createRequire(path.join(packageRoot, 'package.json'));
 const ORIGIN = 'https://system.test';
 

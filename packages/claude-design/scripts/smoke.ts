@@ -1,4 +1,6 @@
-// Loads dist/project the way a Design canvas does — React 18.3.1 as page
+// Exports dist/ with the built nxds-cli from a local npm registry, the way a
+// user gets a release (smoke/release.ts), then loads the exported project/ the
+// way a Design canvas does — React 18.3.1 as page
 // globals, then exactly the files the README's "On a Design canvas" section
 // links, in its order — and fails on anything a viewer would see break: a
 // preview that renders nothing or logs an error in either theme, a theme
