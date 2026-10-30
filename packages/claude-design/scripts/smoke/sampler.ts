@@ -82,7 +82,39 @@ async function mountSampler(theme: Theme, markup: string) {
       const element = host.querySelector(selector);
       return element ? getComputedStyle(element).backgroundColor : null;
     };
+    // A part that spills past the sampler's content box, by how far, such as
+    // a full-width part that adds its padding and border to 100%. A part
+    // inside an ancestor that clips it, such as Progress's indicator, can't.
+    const sampler = host.querySelector(':scope > div');
+    const overflows: string[] = [];
+    const clipped = (element: Element) => {
+      for (
+        let parent = element.parentElement;
+        parent && parent !== sampler;
+        parent = parent.parentElement
+      ) {
+        if (getComputedStyle(parent).overflowX !== 'visible') return true;
+      }
+      return false;
+    };
+    if (sampler) {
+      const box = sampler.getBoundingClientRect();
+      const style = getComputedStyle(sampler);
+      const left = box.left + parseFloat(style.paddingLeft);
+      const right = box.right - parseFloat(style.paddingRight);
+      for (const element of sampler.querySelectorAll('[data-slot]')) {
+        if (clipped(element)) continue;
+        const rect = element.getBoundingClientRect();
+        const past = Math.max(rect.right - right, left - rect.left);
+        if (past > 0.5) {
+          overflows.push(
+            `${element.getAttribute('data-slot')} by ${Math.round(past)}px`
+          );
+        }
+      }
+    }
     return {
+      overflows,
       slots: [...host.querySelectorAll('[data-slot]')].map((element) =>
         element.getAttribute('data-slot')
       ),
@@ -129,6 +161,9 @@ export async function checkSampler() {
     }
     for (const slot of slots) {
       if (!result.slots.includes(slot)) fail(`${name}: no ${slot} renders.`);
+    }
+    for (const overflow of result.overflows) {
+      fail(`${name}: ${overflow} spills past the sampler's edge.`);
     }
     if (result.bars !== bars) {
       fail(`${name}: the bar chart draws ${result.bars} bars, not ${bars}.`);
