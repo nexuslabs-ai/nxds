@@ -17,7 +17,7 @@ If the person gave you a link to an nxds system they already have, go to [Update
 
 Publish a new Design System artifact from `nxds-design-system/project/`. Send every file at its path under `project/`, such as `project/tokens.css`. Don't add, change or skip a file.
 
-Send {{textPlainFiles}} with the content type `text/plain`. The artifact doesn't serve that file's extension, so the publish is refused without that content type. Every other file's type comes from its extension.
+Send {{textPlainFiles}} with the content type `text/plain`. Without that content type, the artifact refuses the publish. Every other file's type comes from its extension.
 
 Check: the artifact has {{files}} files under `project/`, its title is nxds, and `project/tokens.json` has `meta.version` {{version}}. Give the person its link. They need it to install nxds on another canvas, and to update it.
 

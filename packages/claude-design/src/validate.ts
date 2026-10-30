@@ -24,8 +24,8 @@ const CAPS: [RegExp, number, string][] = [
   [/^components\/bundle\.css$/, 2 * MB, 'the stylesheet'],
   [/^components\/[^/]+\/preview\.html$/, 256 * KB, 'a preview'],
   [/^components\/[^/]+\/README\.md$/, 64 * KB, 'a component README'],
+  [/^components\/index\.d\.ts$/, 1.5 * MB, 'the type file'],
 ];
-const MAX_TYPES_BYTES = 1.5 * MB;
 
 const REFUSED_NAMES = new Set([
   'package.json',
@@ -127,7 +127,6 @@ function checkPaths(files: string[], errors: string[]) {
 }
 
 function checkSizes(root: string, files: string[], errors: string[]) {
-  let types = 0;
   for (const file of files) {
     const bytes = statSync(path.join(root, file)).size;
     if (bytes > MAX_FILE_BYTES)
@@ -137,13 +136,6 @@ function checkSizes(root: string, files: string[], errors: string[]) {
         errors.push(`${file}: ${bytes} bytes; ${what} is capped at ${cap}.`);
       }
     }
-    if (/^components\/(?:index|[^/]+\/[^/]+)\.d\.ts$/.test(file))
-      types += bytes;
-  }
-  if (types > MAX_TYPES_BYTES) {
-    errors.push(
-      `type files total ${types} bytes; the cap is ${MAX_TYPES_BYTES}.`
-    );
   }
 }
 

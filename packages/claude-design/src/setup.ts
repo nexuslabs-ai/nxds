@@ -86,14 +86,16 @@ function guideProblems({
   sampler: string;
 }) {
   const problems: string[] = [];
-  const [publish = '', update = ''] = template.split(
-    /^## Update to a new release$/m
-  );
-  for (const [name, steps] of [
+  const publish =
+    /^## 1\. Publish the system\n([\s\S]*?)(?=^## )/m.exec(template)?.[1] ?? '';
+  const update =
+    /^## Update to a new release\n[\s\S]*?^(4\. .*)$/m.exec(template)?.[1] ??
+    '';
+  for (const [name, step] of [
     ['step 1', publish],
-    ['the update steps', update],
+    ['update step 4', update],
   ] as const) {
-    if (!steps.includes('{{textPlainFiles}}')) {
+    if (!step.includes('{{textPlainFiles}}')) {
       problems.push(
         `SETUP.md: ${name} must send {{textPlainFiles}} as text/plain, or the publish is refused.`
       );
