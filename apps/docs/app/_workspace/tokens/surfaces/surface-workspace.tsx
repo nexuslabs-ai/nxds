@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@nxds/react';
+import { Button } from '@/components/button/button';
 
 import { PlaygroundViewNav } from '../../playground-view-nav';
 import { WorkspaceLayout } from '../../workspace-layout';

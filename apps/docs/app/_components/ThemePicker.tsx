@@ -12,11 +12,20 @@ import {
   type NxdsAppearancePrefs,
   STROKE_OPTIONS,
 } from '@nxds/core';
-import { cn } from '@nxds/react/utils';
-import { usePathname } from 'next/navigation';
+
+import { Button } from '@/components/button/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/select/select';
+import { cn } from '@/lib/utils';
 
 import {
   CODE_FONTS,
+  findOption,
   type FontChoice,
   fontPick,
   HEADING_FONTS,
@@ -25,41 +34,14 @@ import {
 } from '../_lib/appearance-controls';
 import { useDocsTheme } from '../_lib/docs-theme';
 
-import {
-  Button,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './nxds';
 import { ThemeActions } from './ThemeActions';
 import { ThemeExport } from './ThemeExport';
 
 const { prefs: DEFAULT_PREFS } = DEFAULT_NXDS_APPEARANCE;
 
-/**
- * Asks for the *expanded* case so the unmatched value — the one the prerendered
- * HTML and the first client render both use — is the collapsed one.
- */
-const EXPAND_QUERY = '(min-width: 64rem)';
-
 export function ThemePicker() {
-  const pathname = usePathname();
-
-  // The landing page ships its own theme swapper, which this would overlap.
-  if (pathname === '/') return null;
-
-  return <ThemePanel />;
-}
-
-function ThemePanel() {
   const { state, iconLibrary, change, changeIconLibrary } = useDocsTheme();
-  const expandedByDefault = useMediaQuery(EXPAND_QUERY);
-  const [expandedOverride, setExpandedOverride] = useState<boolean | null>(
-    null
-  );
-  const expanded = expandedOverride ?? expandedByDefault;
+  const [expanded, setExpanded] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
 
   // Publish the panel's real height so `scroll-pb` clears it and Tab never
@@ -94,7 +76,7 @@ function ThemePanel() {
     >
       <Button
         variant="ghost"
-        onClick={() => setExpandedOverride(!expanded)}
+        onClick={() => setExpanded(!expanded)}
         aria-expanded={expanded}
         className="nx:w-full nx:justify-between nx:rounded-lg"
       >
@@ -223,8 +205,8 @@ function PickerRow<T extends string>({
   const id = useId();
 
   function change(next: string) {
-    const option = options.find((candidate) => candidate.value === next);
-    if (option) onChange(option.value);
+    const option = findOption(options, next);
+    if (option) onChange(option);
   }
 
   return (
@@ -264,33 +246,13 @@ function FontRow({
   choices: FontChoice[];
   onChange: (family: string | null) => void;
 }) {
-  const { chosen, options } = fontPick(family, choices);
-
-  function change(value: string) {
-    const choice = options.find((option) => option.value === value);
-    if (choice) onChange(choice.family);
-  }
-
+  const font = fontPick(family, choices);
   return (
     <PickerRow
       label={label}
-      value={chosen.value}
-      options={options}
-      onChange={change}
+      value={font.value}
+      options={font.options}
+      onChange={(value) => onChange(font.familyOf(value))}
     />
   );
-}
-
-function useMediaQuery(query: string) {
-  const [matches, setMatches] = useState(false);
-
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    const onChange = () => setMatches(mql.matches);
-    onChange();
-    mql.addEventListener('change', onChange);
-    return () => mql.removeEventListener('change', onChange);
-  }, [query]);
-
-  return matches;
 }

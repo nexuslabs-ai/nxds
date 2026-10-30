@@ -18,6 +18,8 @@
 @import '@fontsource-variable/playfair-display';
 @import '@fontsource-variable/geist-mono';
 @import '@fontsource-variable/jetbrains-mono';
+/* The homepage's own utilities (nx:home-section, …). */
+@import './_home/home.css';
 
 /* Generate the nx: utilities used in MDX content and in the shipped
    @nxds/react components by scanning their source directly. We deliberately do
@@ -31,8 +33,20 @@
 @source '../../../packages/vue/src';
 
 :root {
-  --docs-header-h: 3.5rem;
-  --docs-scroll-offset: calc(var(--docs-header-h) + 1.5rem);
+  --site-header-h: 4rem;
+  --site-column: 80rem;
   /* ThemePicker overwrites this with the panel's measured height. */
   --docs-panel-offset: 0px;
+}
+
+/* The one content column of the site: header, footer, docs and homepage. */
+@utility site-column {
+  inline-size: 100%;
+  max-inline-size: calc(var(--site-column) + 2 * var(--nx-spacing-8));
+  margin-inline: auto;
+  padding-inline: var(--nx-spacing-4);
+
+  @media (width >= 48rem) {
+    padding-inline: var(--nx-spacing-8);
+  }
 }

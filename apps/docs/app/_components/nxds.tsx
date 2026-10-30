@@ -1,38 +1,27 @@
 'use client';
 
 /**
- * @nxds/react ships without the "use client" directive at the bundle
- * level, so Next's RSC compiler refuses direct imports from server
- * components. This barrel re-exports the surface as a single client
- * module, so server pages render nxds components as client islands.
+ * The Nexus parts the docs pages use, re-exported from source as one client
+ * module, so server pages render them as client islands.
  */
+export { Badge } from '@/components/badge/badge';
+export { Button } from '@/components/button/button';
+export { Checkbox } from '@/components/checkbox/checkbox';
 export {
-  Badge,
-  Button,
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  Checkbox,
   CodeBlock,
   CodeBlockContent,
   CodeBlockCopyButton,
   CodeBlockLine,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
+} from '@/components/code-block/code-block';
+export {
   EmptyState,
   EmptyStateContent,
   EmptyStateDescription,
   EmptyStateHeader,
   EmptyStateTitle,
-  Input,
+} from '@/components/empty-state/empty-state';
+export { Input } from '@/components/input/input';
+export {
   Select,
   SelectContent,
   SelectGroup,
@@ -41,13 +30,9 @@ export {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-  Sheet,
-  SheetBody,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  Switch,
+} from '@/components/select/select';
+export { Switch } from '@/components/switch/switch';
+export {
   Table,
   TableBody,
   TableCell,
@@ -55,8 +40,10 @@ export {
   TableHeader,
   TableRow,
   TableRowHeader,
+} from '@/components/table/table';
+export {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@nxds/react';
+} from '@/components/tabs/tabs';

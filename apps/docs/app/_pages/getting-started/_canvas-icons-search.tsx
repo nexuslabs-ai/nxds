@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { Input } from '@nxds/react';
+import { Input } from '@/components/input/input';
 
 export interface CanvasIcon {
   name: string;
