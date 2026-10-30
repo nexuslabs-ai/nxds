@@ -46,8 +46,8 @@ export const Sizes: Story = {
     template: `
       <div class="nx:flex nx:items-center nx:gap-4 nx:text-foreground">
         <Spinner class="nx:size-4" />
-        <Spinner class="nx:size-6 nx:[--nx-icon-size:var(--nx-spacing-6)]" />
-        <Spinner class="nx:size-8 nx:[--nx-icon-size:var(--nx-spacing-8)] nx:text-primary-subtle-foreground" />
+        <Spinner class="nx:size-icon-[length:var(--nx-spacing-6)]" />
+        <Spinner class="nx:size-icon-[length:var(--nx-spacing-8)] nx:text-primary-subtle-foreground" />
       </div>
     `,
   }),

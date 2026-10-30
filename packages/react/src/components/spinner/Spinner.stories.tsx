@@ -40,8 +40,8 @@ export const Sizes: Story = {
   render: () => (
     <div className="nx:flex nx:items-center nx:gap-4 nx:text-foreground">
       <Spinner className="nx:size-4" />
-      <Spinner className="nx:size-6 nx:[--nx-icon-size:var(--nx-spacing-6)]" />
-      <Spinner className="nx:size-8 nx:[--nx-icon-size:var(--nx-spacing-8)] nx:text-primary-subtle-foreground" />
+      <Spinner className="nx:size-icon-[length:var(--nx-spacing-6)]" />
+      <Spinner className="nx:size-icon-[length:var(--nx-spacing-8)] nx:text-primary-subtle-foreground" />
     </div>
   ),
 };
@@ -86,8 +86,8 @@ export const AllVariants: Story = {
     <div className="nx:flex nx:flex-col nx:gap-4 nx:text-foreground">
       <div className="nx:flex nx:items-center nx:gap-4">
         <Spinner className="nx:size-4" />
-        <Spinner className="nx:size-6 nx:[--nx-icon-size:var(--nx-spacing-6)]" />
-        <Spinner className="nx:size-8 nx:[--nx-icon-size:var(--nx-spacing-8)]" />
+        <Spinner className="nx:size-icon-[length:var(--nx-spacing-6)]" />
+        <Spinner className="nx:size-icon-[length:var(--nx-spacing-8)]" />
       </div>
       <div className="nx:flex nx:items-center nx:gap-2 nx:typography-label-default nx:text-muted-foreground">
         <Spinner className="nx:size-4" />

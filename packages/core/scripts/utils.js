@@ -18,6 +18,7 @@ import {
   pathToCssVarPrefixed,
 } from '../src/token-source/tokens.ts';
 import {
+  ARBITRARY_ICON_SIZE_UTILITY,
   BORDER_COLOR_ALIAS_NAMES,
   borderColorAliasName,
   borderWidthAliasUtilities,
@@ -423,10 +424,10 @@ export function generateBorderWidthUtilitiesCSS(tokens) {
 }
 
 /**
- * Generate the icon utilities: `size-icon-{name}` for each glyph size, and
- * `icon-stroke`, which draws the line from the two stroke tokens. They read
- * the fixed `--nx-icon-*` variables, so icons keep their size and line at
- * every density.
+ * Generate the icon utilities: `size-icon-{name}` for each glyph size,
+ * `size-icon-[…]` for any other length, and `icon-stroke`, which draws the
+ * line from the two stroke tokens. They read the fixed `--nx-icon-*`
+ * variables, so icons keep their size and line at every density.
  *
  * @param {object[]} tokens - Array of icon tokens with a dotted path property (e.g., "glyph.default")
  * @returns {{ css: string, count: number }} Generated CSS and utility count
@@ -435,7 +436,11 @@ export function generateIconUtilitiesCSS(tokens) {
   const sizeRules = tokens
     .filter((token) => token.path.startsWith('glyph.'))
     .map((token) => iconSizeUtility(token.path.replaceAll('.', '-')));
-  const rules = [...sizeRules, ICON_STROKE_UTILITY];
+  const rules = [
+    ...sizeRules,
+    ARBITRARY_ICON_SIZE_UTILITY,
+    ICON_STROKE_UTILITY,
+  ];
 
   return {
     css: `/* Icon Utilities */\n\n${rules.map(formatUtilityRule).join('')}`,

@@ -124,7 +124,7 @@ function InputOTPSeparator({ className, ...props }: InputOTPSeparatorProps) {
       className={cn('nx:flex nx:items-center nx:icon-stroke', className)}
       {...props}
     >
-      <IconCircleFilled className="nx:size-1 nx:[--nx-icon-size:var(--nx-spacing-1)] nx:text-muted-foreground" />
+      <IconCircleFilled className="nx:size-icon-[length:var(--nx-spacing-1)] nx:text-muted-foreground" />
     </div>
   );
 }

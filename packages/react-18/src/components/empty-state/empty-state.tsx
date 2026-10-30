@@ -91,7 +91,7 @@ const emptyStateMediaVariants = cva(
     variants: {
       variant: {
         default: '',
-        icon: 'nx:size-10 nx:rounded-lg nx:bg-muted nx:text-foreground nx:[&_svg]:size-6 nx:[&_svg]:[--nx-icon-size:var(--nx-spacing-6)] nx:icon-stroke',
+        icon: 'nx:size-10 nx:rounded-lg nx:bg-muted nx:text-foreground nx:[&_svg]:size-icon-[length:var(--nx-spacing-6)] nx:icon-stroke',
       },
     },
     defaultVariants: {
