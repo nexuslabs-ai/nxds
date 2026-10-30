@@ -1,0 +1,53 @@
+import {
+  IconBorderRadius,
+  IconCode,
+  IconColorSwatch,
+  IconComponents,
+  IconDots,
+  IconHandClick,
+  IconKeyboard,
+  IconLayersIntersect,
+  IconLayoutDashboard,
+  IconMail,
+  IconMessage,
+  IconPaint,
+  IconSpacingHorizontal,
+  IconTypography,
+  IconUsers,
+  IconWallet,
+} from '@tabler/icons-react';
+
+import {
+  AntDesignLogo,
+  BootstrapLogo,
+  HeroUILogo,
+  MuiLogo,
+  ShadcnLogo,
+} from './ecosystem-logos';
+
+/** The icon of each chapter toolbar tool, by the tool's name. */
+export const toolIcons = {
+  Components: IconComponents,
+  Dashboard: IconLayoutDashboard,
+  Mail: IconMail,
+  Chat: IconMessage,
+  Finances: IconWallet,
+  CRM: IconUsers,
+  Theme: IconPaint,
+  Colors: IconColorSwatch,
+  Typography: IconTypography,
+  Spacing: IconSpacingHorizontal,
+  Radius: IconBorderRadius,
+  More: IconDots,
+  HeroUI: HeroUILogo,
+  MUI: MuiLogo,
+  'Ant Design': AntDesignLogo,
+  Bootstrap: BootstrapLogo,
+  'shadcn/ui': ShadcnLogo,
+  States: IconLayersIntersect,
+  Interactions: IconHandClick,
+  Callbacks: IconCode,
+  Accessibility: IconKeyboard,
+};
+
+export type ToolName = keyof typeof toolIcons;

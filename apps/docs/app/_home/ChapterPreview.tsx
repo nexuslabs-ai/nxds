@@ -1,0 +1,152 @@
+'use client';
+
+import { type ReactNode, useId } from 'react';
+
+import { Show, type ShowProps } from '@/components/show/show';
+import {
+  Toolbar,
+  ToolbarGroup,
+  ToolbarSeparator,
+  ToolbarTool,
+  ToolbarToolGroup,
+  ToolbarToolPanel,
+} from '@/components/toolbar/toolbar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/tooltip/tooltip';
+
+import { toolIcons, type ToolName } from './tool-icons';
+
+/**
+ * A chapter's preview: the canvas, and under it the toolbar whose tools pick
+ * what the canvas shows.
+ */
+export function ChapterPreview<T extends ToolName>({
+  label,
+  tools,
+  selected,
+  onSelect,
+  grows = false,
+  actions,
+  toolsAbove,
+  panel,
+  children,
+}: {
+  /** Names the toolbar and its tools. */
+  label: string;
+  tools: readonly T[];
+  selected: T;
+  onSelect: (tool: T) => void;
+  /** Below `lg`, the canvas takes its content's height, not the screen's. */
+  grows?: boolean;
+  /** Buttons after the tools, behind a separator. */
+  actions?: ReactNode;
+  /** Hides the tools below this viewport width, leaving only `actions`. */
+  toolsAbove?: ShowProps['above'];
+  /** Controls each tool opens in a panel above the bar. */
+  panel?: ReactNode;
+  /** What the canvas shows. */
+  children: ReactNode;
+}) {
+  const id = useId();
+  const toolId = (index: number) => `${id}-tool-${index}`;
+  function selectTool(value: string) {
+    const tool = tools.find((item) => item === value);
+    if (tool) onSelect(tool);
+  }
+
+  const toolGroup = (
+    <ToolbarToolGroup
+      aria-label={`${label} tools`}
+      value={selected}
+      onValueChange={selectTool}
+    >
+      {tools.map((tool, index) => {
+        const name: ToolName = tool;
+        const Icon = toolIcons[name];
+        return (
+          <Tooltip key={tool}>
+            <TooltipTrigger asChild>
+              <span className="nx:inline-flex">
+                <ToolbarTool
+                  value={tool}
+                  size="icon-sm"
+                  aria-label={tool}
+                  id={toolId(index)}
+                >
+                  <Icon aria-hidden="true" />
+                </ToolbarTool>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{tool}</TooltipContent>
+          </Tooltip>
+        );
+      })}
+      {panel &&
+        tools.map((tool) => (
+          <ToolbarToolPanel key={tool} value={tool} side="top">
+            {panel}
+          </ToolbarToolPanel>
+        ))}
+    </ToolbarToolGroup>
+  );
+  const toolsAndSeparator = (
+    <>
+      {toolGroup}
+      <ToolbarSeparator />
+    </>
+  );
+  const toolsAndActions = actions && (
+    <>
+      {toolsAbove ? (
+        <Show above={toolsAbove} as="div">
+          {toolsAndSeparator}
+        </Show>
+      ) : (
+        toolsAndSeparator
+      )}
+      <ToolbarGroup aria-label={`${label} actions`}>{actions}</ToolbarGroup>
+    </>
+  );
+
+  return (
+    <>
+      <ChapterCanvas grows={grows} labelledBy={toolId(tools.indexOf(selected))}>
+        {children}
+      </ChapterCanvas>
+      <div className="nx:chapter-toolbar">
+        <Toolbar variant="floating" aria-label={label}>
+          {toolsAndActions ?? toolGroup}
+        </Toolbar>
+      </div>
+    </>
+  );
+}
+
+/**
+ * The area under a chapter's title block that shows its preview. With a
+ * toolbar, it is a region named by the selected tool.
+ */
+export function ChapterCanvas({
+  grows = false,
+  labelledBy,
+  children,
+}: {
+  /** Below `lg`, the canvas takes its content's height, not the screen's. */
+  grows?: boolean;
+  labelledBy?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className="nx:chapter-canvas"
+      data-grows={grows || undefined}
+      role={labelledBy ? 'region' : undefined}
+      aria-labelledby={labelledBy}
+    >
+      {children}
+    </div>
+  );
+}

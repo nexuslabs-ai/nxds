@@ -12,8 +12,8 @@ import {
   type NxdsAppearancePrefs,
   STROKE_OPTIONS,
 } from '@nxds/core';
-import { cn } from '@nxds/react/utils';
-import { usePathname } from 'next/navigation';
+
+import { cn } from '@/lib/utils';
 
 import {
   CODE_FONTS,
@@ -38,28 +38,10 @@ import { ThemeExport } from './ThemeExport';
 
 const { prefs: DEFAULT_PREFS } = DEFAULT_NXDS_APPEARANCE;
 
-/**
- * Asks for the *expanded* case so the unmatched value — the one the prerendered
- * HTML and the first client render both use — is the collapsed one.
- */
-const EXPAND_QUERY = '(min-width: 64rem)';
-
 export function ThemePicker() {
-  const pathname = usePathname();
-
-  // The landing page ships its own theme swapper, which this would overlap.
-  if (pathname === '/') return null;
-
-  return <ThemePanel />;
-}
-
-function ThemePanel() {
   const { state, iconLibrary, change, changeIconLibrary } = useDocsTheme();
-  const expandedByDefault = useMediaQuery(EXPAND_QUERY);
-  const [expandedOverride, setExpandedOverride] = useState<boolean | null>(
-    null
-  );
-  const expanded = expandedOverride ?? expandedByDefault;
+  // Starts closed at every width, so the open panel never covers the article.
+  const [expanded, setExpanded] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
 
   // Publish the panel's real height so `scroll-pb` clears it and Tab never
@@ -94,7 +76,7 @@ function ThemePanel() {
     >
       <Button
         variant="ghost"
-        onClick={() => setExpandedOverride(!expanded)}
+        onClick={() => setExpanded(!expanded)}
         aria-expanded={expanded}
         className="nx:w-full nx:justify-between nx:rounded-lg"
       >
@@ -279,18 +261,4 @@ function FontRow({
       onChange={change}
     />
   );
-}
-
-function useMediaQuery(query: string) {
-  const [matches, setMatches] = useState(false);
-
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    const onChange = () => setMatches(mql.matches);
-    onChange();
-    mql.addEventListener('change', onChange);
-    return () => mql.removeEventListener('change', onChange);
-  }, [query]);
-
-  return matches;
 }

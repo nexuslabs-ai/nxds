@@ -3,8 +3,9 @@
 import { useState } from 'react';
 
 import type { Mode, TokenMap } from '@nxds/core';
-import { Button } from '@nxds/react';
 import { useNxdsAppearance } from '@nxds/react/appearance';
+
+import { Button } from '@/components/button/button';
 
 import { useDocsTheme } from '../../../_lib/docs-theme';
 import { AppearanceControls } from '../../appearance-controls';
@@ -113,7 +114,7 @@ export function LabWorkspace({ primitives, scales }: LabData) {
             onOverride={(token, value) => setOverride('shared', token, value)}
           />
         </div>
-        <div className="nx:min-w-0 nx:rounded-lg nx:border-default nx:border-border-default nx:bg-muted nx:p-4 nx:lg:p-6 nx:xl:sticky nx:xl:top-0 nx:xl:max-h-[calc(100svh-var(--docs-header-h)-var(--nx-spacing-12))] nx:xl:overflow-y-auto">
+        <div className="nx:min-w-0 nx:rounded-lg nx:border-default nx:border-border-default nx:bg-muted nx:p-4 nx:lg:p-6 nx:xl:sticky nx:xl:top-0 nx:xl:max-h-[calc(100svh-var(--site-header-h)-var(--nx-spacing-12))] nx:xl:overflow-y-auto">
           <LabPreview />
         </div>
       </div>

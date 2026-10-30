@@ -423,16 +423,26 @@ export default tseslint.config(
   },
 
   {
+    // The docs app builds every Nexus part from source (`@/` resolves to
+    // packages/react/src), like the generated demos. The built package can't
+    // be tree-shaken, so importing it would load a second copy of every part,
+    // and only source parts draw the reader's icon library (see
+    // apps/docs/next.config.ts).
     files: ['apps/docs/**/*.{ts,tsx,js,mjs}'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
-          patterns: [
+          paths: [
             {
-              group: ['@/*'],
+              name: '@nxds/react',
               message:
-                '`@/` resolves to packages/react/src for the generated, paste-ready docs code only — import @nxds/react here.',
+                'Import the part from source, `@/components/<name>/<name>`, so the page loads one copy of it.',
+            },
+            {
+              name: '@nxds/react/utils',
+              message:
+                'Import `cn` from source, `@/lib/utils`, so the page loads one copy of it.',
             },
           ],
         },
@@ -441,26 +451,28 @@ export default tseslint.config(
   },
 
   {
-    // The playground previews the reader's icon library, which only the
-    // components built from source can draw (see apps/docs/next.config.ts).
-    files: [
-      'apps/docs/app/_lib/switchable-icons.tsx',
-      'apps/docs/app/_workspace/sampler.tsx',
-    ],
-    rules: { 'no-restricted-imports': 'off' },
-  },
-
-  {
     files: ['apps/docs/app/_pages/patterns/**/*.tsx'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
+          paths: [
+            {
+              name: '@nxds/react',
+              message:
+                'Import the part from source, `@/components/<name>/<name>`, so the page loads one copy of it.',
+            },
+            {
+              name: '@nxds/react/utils',
+              message:
+                'A pattern page imports its examples from `@/patterns/` and its parts from `@/components/`.',
+            },
+          ],
           patterns: [
             {
-              regex: '^@/(?!patterns/)',
+              regex: '^@/(?!patterns/|components/)',
               message:
-                'A pattern page imports its examples from `@/patterns/`, which @nxds/react does not export — import components from @nxds/react.',
+                'A pattern page imports its examples from `@/patterns/` and its parts from `@/components/`.',
             },
           ],
         },

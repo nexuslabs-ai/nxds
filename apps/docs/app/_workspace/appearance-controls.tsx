@@ -17,27 +17,26 @@ import {
   type NxdsResolvedAppearanceMode,
   STROKE_OPTIONS,
 } from '@nxds/core';
+
+import { NxdsAppearanceBrandColorField } from '@/components/appearance/brand-color-field/brand-color-field';
+import { Input } from '@/components/input/input';
+import { Label } from '@/components/label/label';
 import {
-  Input,
-  Label,
   NativeSelect,
   NativeSelectOption,
-  NxdsAppearanceBrandColorField,
-  Slider,
-  Switch,
-} from '@nxds/react';
+} from '@/components/native-select/native-select';
+import { Slider } from '@/components/slider/slider';
+import { Switch } from '@/components/switch/switch';
 
 import {
   CODE_FONTS,
+  CONTRAST_RANGE,
   type FontChoice,
   fontPick,
   HEADING_FONTS,
   MODE_OPTIONS,
   UI_FONTS,
 } from '../_lib/appearance-controls';
-
-const CONTRAST_MIN = 0;
-const CONTRAST_MAX = 100;
 
 const LABEL_CLASS = 'nx:typography-label-default';
 const FIELD_CLASS = 'nx:flex nx:flex-col nx:gap-2';
@@ -158,8 +157,8 @@ function ContrastField({
       </div>
       <Slider
         aria-labelledby={`${labelId} ${noteId}`}
-        min={CONTRAST_MIN}
-        max={CONTRAST_MAX}
+        min={CONTRAST_RANGE.min}
+        max={CONTRAST_RANGE.max}
         step={1}
         value={[shown]}
         onPointerDown={() => setDraft(value)}

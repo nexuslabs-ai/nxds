@@ -8,10 +8,26 @@ import {
 
 export const DOCS_APPEARANCE_STORAGE_KEY = 'nxds-docs-appearance';
 
+// Taken from the catalogue, not spelled out, so the font pickers name it; a
+// catalogue without DM Sans fails the build here.
+const dmSans = FONT_OPTIONS.find(({ value }) => value === 'dm-sans');
+if (!dmSans) throw new Error('FONT_OPTIONS no longer offers DM Sans.');
+
+/** The look every nxds.dev page opens with, and the one Reset returns to. */
 export const DOCS_APPEARANCE_DEFAULT_STATE = {
   ...DEFAULT_NXDS_APPEARANCE,
   mode: 'system',
+  surfaceTone: 'neutral',
+  corners: 'smooth',
+  prefs: {
+    ...DEFAULT_NXDS_APPEARANCE.prefs,
+    uiFont: dmSans.family,
+    uiFontSize: 16,
+  },
 } satisfies NxdsAppearanceState;
+
+/** The contrast the Playground and the homepage Customize panel both allow. */
+export const CONTRAST_RANGE = { min: 0, max: 100 } as const;
 
 export const MODE_OPTIONS = [
   { value: 'system', label: 'System' },

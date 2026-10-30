@@ -203,7 +203,7 @@ export default function Typography() {
           in running prose.
         </p>
         <CodeSample lang="tsx">
-          {`import { Button } from '@nxds/react';
+          {`import { Button } from '@/components/button/button';
 
 <Button variant="secondary">Ship it</Button>`}
         </CodeSample>

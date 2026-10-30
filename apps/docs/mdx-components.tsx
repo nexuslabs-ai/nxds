@@ -1,5 +1,6 @@
-import { cn } from '@nxds/react/utils';
 import type { MDXComponents } from 'mdx/types';
+
+import { cn } from '@/lib/utils';
 
 import { MdxCodeBlock } from './app/_components/CodeBlock';
 import { ComponentDemo } from './app/_components/ComponentDemo';

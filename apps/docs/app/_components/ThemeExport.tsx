@@ -6,9 +6,12 @@ import {
   type NxdsTheme,
   nxdsThemeFlags,
 } from '@nxds/core';
+import { useNxdsAppearance } from '@nxds/react/appearance';
+import Link from 'next/link';
+
+import { Button } from '@/components/button/button';
+import { CodeBlockLine } from '@/components/code-block/code-block';
 import {
-  Button,
-  CodeBlockLine,
   Dialog,
   DialogBody,
   DialogContent,
@@ -17,9 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@nxds/react';
-import { useNxdsAppearance } from '@nxds/react/appearance';
-import Link from 'next/link';
+} from '@/components/dialog/dialog';
 
 import { useIconLibrary } from '../_lib/icon-library';
 
