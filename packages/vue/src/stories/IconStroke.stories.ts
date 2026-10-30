@@ -66,8 +66,6 @@ const INTERNAL_ICONS = [
   '[data-slot="spinner"]',
 ];
 
-const ICON_STROKE = '1.75px';
-
 /** A Lucide star, stroked on its `<svg>`, and a HugeIcons star, stroked on each path. */
 const StrokedIcons = defineComponent({
   components: { HugeiconsIcon, Star },
@@ -78,6 +76,10 @@ const StrokedIcons = defineComponent({
   `,
 });
 
+function strokeOf(element: Element) {
+  return parseFloat(getComputedStyle(element).strokeWidth);
+}
+
 /** The line each library draws in the part `slot`. */
 function drawnStrokes(page: Document, slot: string) {
   const part = page.querySelector(`[data-slot="${slot}"]`);
@@ -87,15 +89,15 @@ function drawnStrokes(page: Document, slot: string) {
     throw new Error(`${slot} has no Lucide and HugeIcons icon`);
   }
   return {
-    lucide: getComputedStyle(lucide).strokeWidth,
-    hugeicons: getComputedStyle(hugeicons).strokeWidth,
+    lucide: strokeOf(lucide),
+    hugeicons: strokeOf(hugeicons),
   };
 }
 
 function internalStroke(page: Document, selector: string) {
   const icon = page.querySelector(selector);
   if (!icon) throw new Error(`${selector} matches no icon`);
-  return getComputedStyle(icon).strokeWidth;
+  return strokeOf(icon);
 }
 
 /**
@@ -218,6 +220,9 @@ export const EveryComponent: Story = {
   play: async ({ canvasElement }) => {
     const page = canvasElement.ownerDocument;
     await within(page.body).findByRole('menuitem', { name: 'Star' });
+    const iconStroke = parseFloat(
+      getComputedStyle(canvasElement).getPropertyValue('--nx-icon-stroke')
+    );
 
     await expect(
       Object.fromEntries(
@@ -227,12 +232,12 @@ export const EveryComponent: Story = {
       Object.fromEntries(
         STROKED_PARTS.map((slot) => [
           slot,
-          { lucide: ICON_STROKE, hugeicons: ICON_STROKE },
+          { lucide: iconStroke, hugeicons: iconStroke },
         ])
       )
     );
     await expect(
       INTERNAL_ICONS.map((selector) => internalStroke(page, selector))
-    ).toEqual(INTERNAL_ICONS.map(() => ICON_STROKE));
+    ).toEqual(INTERNAL_ICONS.map(() => iconStroke));
   },
 };
