@@ -1,8 +1,7 @@
-// Writes dist/: the system's files under dist/project/, the files the export
-// writes beside project/ (the canvas prop coverage report and SETUP.md),
-// files.json listing both with their hashes for nxds-cli, and the package
-// manifest npm publishes from dist/. Fails when the output breaks the Design
-// System format.
+// Writes dist/: the system's files under dist/project/, files.json listing
+// them with their hashes for nxds-cli, the package manifest npm publishes
+// from dist/, the canvas prop coverage report and SETUP.md. Fails when the
+// output breaks the Design System format.
 import {
   componentLabel,
   exportedComponentSlugs,
@@ -20,7 +19,6 @@ import path from 'node:path';
 
 import { buildBundle } from '../src/bundle.ts';
 import { canvasPartFiles } from '../src/canvas/pages.ts';
-import { FILES_FORMAT } from '../src/files.ts';
 import { CANVAS_PARTS, EXCLUDED_SLUGS, GROUPS } from '../src/groups.ts';
 import { withPresetTable } from '../src/presets.ts';
 import {
@@ -123,14 +121,11 @@ function publishedManifest() {
   };
 }
 
-/** The files the export writes beside project/. */
-const ROOT_FILES = ['coverage.md', 'SETUP.md'];
-
-function fileList(dir: string, files: readonly string[]) {
+function fileList(files: readonly string[]) {
   return files.map((file) => ({
     path: file,
     sha256: createHash('sha256')
-      .update(readFileSync(path.join(dir, file)))
+      .update(readFileSync(path.join(projectDir, file)))
       .digest('hex'),
   }));
 }
@@ -215,6 +210,10 @@ async function main() {
   }
 
   writeFileSync(
+    path.join(distDir, 'files.json'),
+    `${JSON.stringify(fileList(files), null, 2)}\n`
+  );
+  writeFileSync(
     path.join(distDir, 'package.json'),
     `${JSON.stringify(publishedManifest(), null, 2)}\n`
   );
@@ -227,15 +226,6 @@ async function main() {
       version,
       files: files.length,
     })
-  );
-  const fileManifest = {
-    format: FILES_FORMAT,
-    project: fileList(projectDir, files),
-    root: fileList(distDir, ROOT_FILES),
-  };
-  writeFileSync(
-    path.join(distDir, 'files.json'),
-    `${JSON.stringify(fileManifest, null, 2)}\n`
   );
   copyFileSync(
     path.join(contentDir, 'package-readme.md'),

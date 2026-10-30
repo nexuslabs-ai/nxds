@@ -1,4 +1,3 @@
-import { FILES_FORMAT } from '@nxds/claude-design/files';
 import {
   isPageGenerated,
   mergeSystemIndex,
@@ -44,10 +43,8 @@ export type ExportOptions = {
   overwrite: boolean;
 };
 
-type Entry = { path: string; sha256: string };
-
-/** `files.json`: each file the package build wrote under `project/`, and each one it wrote beside it, such as SETUP.md. */
-type Manifest = { project: Entry[]; root: Entry[] };
+/** `files.json`: each file under `project/`, as the package build wrote it. */
+type Manifest = { path: string; sha256: string }[];
 
 type Packument = {
   'dist-tags'?: Record<string, string>;
@@ -223,26 +220,7 @@ function stalePaths(existing: string[], exported: Set<string>) {
     .sort();
 }
 
-const isEntries = (value: unknown): value is Entry[] =>
-  Array.isArray(value) &&
-  value.every(
-    (entry) =>
-      typeof entry?.path === 'string' && typeof entry.sha256 === 'string'
-  );
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-// The nxds-cli to run for a release newer than this one reads. A dist-tag
-// such as `snapshot-<name>`, or a snapshot's prerelease version, names both
-// packages' builds; a stable version doesn't.
-function upgradeCommand(release: string | undefined) {
-  const stable = release === undefined || /^\d+\.\d+\.\d+$/.test(release);
-  return `npx nxds-cli@${stable ? 'latest' : release}`;
-}
-
-// `release` is the --release the export was given, if any.
-function readManifest(root: string, release: string | undefined): Manifest {
+function readManifest(root: string): Manifest {
   const file = path.join(root, 'files.json');
   if (!existsSync(file)) {
     throw new CliError(
@@ -250,116 +228,67 @@ function readManifest(root: string, release: string | undefined): Manifest {
     );
   }
   const value = readJson(file);
-  const format = isRecord(value) ? value['format'] : undefined;
-  const older =
-    Array.isArray(value) ||
-    (isRecord(value) && format === undefined) ||
-    (typeof format === 'number' && format < FILES_FORMAT);
-  if (older) {
-    throw new CliError(
-      `${file} is from a release older than this nxds-cli reads. Export a newer --release.`
-    );
-  }
-  if (typeof format === 'number' && format > FILES_FORMAT) {
-    throw new CliError(
-      `${file} is from a release newer than this nxds-cli reads. Run ${upgradeCommand(release)}.`
-    );
-  }
   if (
-    !isRecord(value) ||
-    format !== FILES_FORMAT ||
-    !isEntries(value['project']) ||
-    !isEntries(value['root'])
+    !Array.isArray(value) ||
+    !value.every(
+      (entry) =>
+        typeof entry?.path === 'string' && typeof entry.sha256 === 'string'
+    )
   ) {
     throw new CliError(
-      `${file} must be a JSON object with format ${FILES_FORMAT}, and project and root arrays of { path, sha256 } entries.`
+      `${file} must be a JSON array of { path, sha256 } entries.`
     );
   }
-  return { project: value['project'], root: value['root'] };
-}
-
-// `shown` names the file in an error, as the release lays it out.
-function readVerified(file: string, entry: Entry, shown: string) {
-  if (!existsSync(file) || !lstatSync(file).isFile()) {
-    throw new CliError(
-      `${shown} is missing from the release, or isn't a regular file.`
-    );
-  }
-  const bytes = readFileSync(file);
-  if (createHash('sha256').update(bytes).digest('hex') !== entry.sha256) {
-    throw new CliError(
-      `${shown} doesn't match the release's files.json, so nothing was written.`
-    );
-  }
-  return bytes;
+  return value;
 }
 
 // The package build validated exactly the files files.json lists, at its
 // hashes, so those are the only files read.
-function readProject(root: string, entries: Entry[]) {
+function readProject(root: string) {
   const projectDir = path.join(root, 'project');
   const files = new Map<string, Buffer>();
-  for (const entry of entries) {
+  for (const entry of readManifest(root)) {
     const file = path.join(projectDir, entry.path);
     const relative = path.relative(projectDir, file);
     if (relative.split(path.sep)[0] === '..' || path.isAbsolute(relative)) {
       throw new CliError(`files.json lists ${entry.path}, outside project/.`);
     }
-    files.set(entry.path, readVerified(file, entry, `project/${entry.path}`));
-  }
-  return files;
-}
-
-// A root file is a plain file name that can't stand in for project/ or a
-// file the export writes itself.
-const isRootName = (name: string) =>
-  path.basename(name) === name &&
-  !['.', '..', 'project', 'removed.json', 'files.json'].includes(name);
-
-// The files a release ships beside project/, such as SETUP.md.
-function readRootFiles(root: string, entries: Entry[]) {
-  const files = new Map<string, Buffer>();
-  for (const entry of entries) {
-    if (!isRootName(entry.path)) {
+    if (!existsSync(file) || !lstatSync(file).isFile()) {
       throw new CliError(
-        `files.json lists ${entry.path} beside project/, which isn't a file name the export can write.`
+        `project/${entry.path} is missing from the release, or isn't a regular file.`
       );
     }
-    files.set(
-      entry.path,
-      readVerified(path.join(root, entry.path), entry, entry.path)
-    );
+    const bytes = readFileSync(file);
+    if (createHash('sha256').update(bytes).digest('hex') !== entry.sha256) {
+      throw new CliError(
+        `project/${entry.path} doesn't match the release's files.json, so nothing was written.`
+      );
+    }
+    files.set(entry.path, bytes);
   }
   return files;
 }
 
-// The root files an earlier export recorded in `out`'s files.json. Anything
-// else in `out` isn't the export's, so it's never removed.
-function recordedRootFiles(out: string): string[] {
-  const file = path.join(out, 'files.json');
-  if (!existsSync(file)) return [];
-  const value = readJson(file);
-  const root = isRecord(value) ? value['root'] : undefined;
-  if (!isEntries(root)) return [];
-  return root.map((entry) => entry.path).filter(isRootName);
+/** The files a release ships beside project/, which the export copies when it has them. */
+const ROOT_FILES = ['coverage.md', 'SETUP.md'];
+
+function readRootFiles(root: string) {
+  const files = new Map<string, Buffer>();
+  for (const name of ROOT_FILES) {
+    const file = path.join(root, name);
+    if (existsSync(file)) files.set(name, readFileSync(file));
+  }
+  return files;
 }
 
-// Removes the `recorded` root files an earlier export wrote that this release
-// doesn't list, then writes this release's and its files.json, for the next
-// export.
-function writeRootFiles(
-  out: string,
-  recorded: string[],
-  files: Map<string, Buffer>,
-  manifest: Buffer
-) {
-  for (const name of recorded) {
-    if (!files.has(name)) rmSync(path.join(out, name), { force: true });
+// Removes a root file the release doesn't have, so an earlier export's copy
+// doesn't outlive its release.
+function writeRootFiles(out: string, files: Map<string, Buffer>) {
+  for (const name of ROOT_FILES) {
+    const bytes = files.get(name);
+    if (bytes) writeFileSync(path.join(out, name), bytes);
+    else rmSync(path.join(out, name), { force: true });
   }
-  for (const [name, bytes] of files) {
-    writeFileSync(path.join(out, name), bytes);
-  }
-  writeFileSync(path.join(out, 'files.json'), manifest);
 }
 
 function mergeIndex(files: Map<string, Buffer>, currentFile: string) {
@@ -451,9 +380,8 @@ export async function exportClaudeDesign(
       );
 
   try {
-    const manifest = readManifest(pkg.root, options.release);
-    const files = readProject(pkg.root, manifest.project);
-    const rootFiles = readRootFiles(pkg.root, manifest.root);
+    const files = readProject(pkg.root);
+    const rootFiles = readRootFiles(pkg.root);
     if (options.index) mergeIndex(files, path.resolve(cwd, options.index));
     const exported = new Set(
       [...files.keys()].map((file) => `project/${file}`)
@@ -461,14 +389,8 @@ export async function exportClaudeDesign(
     const removed = options.existing
       ? stalePaths(readPaths(path.resolve(cwd, options.existing)), exported)
       : [];
-    const recorded = recordedRootFiles(out);
     writeProject(out, files);
-    writeRootFiles(
-      out,
-      recorded,
-      rootFiles,
-      readFileSync(path.join(pkg.root, 'files.json'))
-    );
+    writeRootFiles(out, rootFiles);
     const removedFile = path.join(out, 'removed.json');
     if (options.existing) {
       writeFileSync(removedFile, `${JSON.stringify(removed, null, 2)}\n`);

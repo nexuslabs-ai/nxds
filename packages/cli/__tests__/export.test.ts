@@ -117,20 +117,6 @@ const ROOT: Record<string, string> = {
   'SETUP.md': `# Set up nxds ${VERSION} on a Claude Design canvas\n`,
 };
 
-const entries = (files: Record<string, string>) =>
-  Object.entries(files).map(([file, content]) => ({
-    path: file,
-    sha256: createHash('sha256').update(content).digest('hex'),
-  }));
-
-/** files.json for a release that ships `root` beside `project/`. */
-const filesJson = (root: Record<string, string>) =>
-  JSON.stringify({
-    format: 2,
-    project: entries(PROJECT),
-    root: entries(root),
-  });
-
 /** The files of a small system in the @nxds/claude-design package layout. */
 const PACKAGE_FILES: Record<string, string> = {
   'package.json': JSON.stringify({
@@ -138,7 +124,12 @@ const PACKAGE_FILES: Record<string, string> = {
     version: VERSION,
   }),
   ...ROOT,
-  'files.json': filesJson(ROOT),
+  'files.json': JSON.stringify(
+    Object.entries(PROJECT).map(([file, content]) => ({
+      path: file,
+      sha256: createHash('sha256').update(content).digest('hex'),
+    }))
+  ),
   ...Object.fromEntries(
     Object.entries(PROJECT).map(([file, content]) => [
       `project/${file}`,
@@ -208,15 +199,7 @@ async function npmRegistry(
     integrity,
     tarballUrl,
     tarballQuery = '',
-    distTag = 'latest',
-    version = VERSION,
-  }: {
-    integrity?: string;
-    tarballUrl?: string;
-    tarballQuery?: string;
-    distTag?: string;
-    version?: string;
-  } = {}
+  }: { integrity?: string; tarballUrl?: string; tarballQuery?: string } = {}
 ) {
   const staging = path.join(root, 'staging');
   cpSync(source, path.join(staging, 'package'), { recursive: true });
@@ -231,13 +214,13 @@ async function npmRegistry(
       response.setHeader('content-type', 'application/json');
       response.end(
         JSON.stringify({
-          'dist-tags': { latest: version, [distTag]: version },
+          'dist-tags': { latest: VERSION },
           versions: {
-            [version]: {
+            [VERSION]: {
               dist: {
                 tarball:
                   tarballUrl ??
-                  `http://127.0.0.1:${port}/claude-design-${version}.tgz${tarballQuery}`,
+                  `http://127.0.0.1:${port}/claude-design-${VERSION}.tgz${tarballQuery}`,
                 integrity: integrity ?? digest,
               },
             },
@@ -246,7 +229,7 @@ async function npmRegistry(
       );
       return;
     }
-    if (request.url === `/claude-design-${version}.tgz`) {
+    if (request.url === `/claude-design-${VERSION}.tgz`) {
       response.end(bytes);
       return;
     }
@@ -338,7 +321,8 @@ describe('nxds-cli export claude-design', () => {
   });
 
   it('tells you to publish when the release ships no guide', async () => {
-    const { source, cwd } = setup({ 'files.json': filesJson({}) });
+    const { source, cwd } = setup();
+    for (const name of Object.keys(ROOT)) rmSync(path.join(source, name));
 
     const { exitCode, body } = await cliJson(
       ['export', 'claude-design', '--source', source],
@@ -352,7 +336,6 @@ describe('nxds-cli export claude-design', () => {
     expect(exitCode).toBe(EXIT_CODES.ok);
     expect(body.data.root).toEqual([]);
     expect(readdirSync(path.join(cwd, 'nxds-design-system'))).toEqual([
-      'files.json',
       'project',
     ]);
     expect(lastLine(stdout)).toBe(
@@ -360,14 +343,14 @@ describe('nxds-cli export claude-design', () => {
     );
   });
 
-  it("removes an earlier export's files beside project/ that the release doesn't list, and keeps yours", async () => {
+  it("removes an earlier export's SETUP.md when the release has none, and keeps your files", async () => {
     const { source, cwd } = setup();
     await cli(['export', 'claude-design', '--source', source], cwd);
     writeFileSync(
       path.join(cwd, 'nxds-design-system', 'notes.md'),
       '# Canvas notes\n'
     );
-    writeFileSync(path.join(source, 'files.json'), filesJson({}));
+    rmSync(path.join(source, 'SETUP.md'));
 
     const { exitCode } = await cliJson(
       ['export', 'claude-design', '--source', source, '--overwrite'],
@@ -376,166 +359,10 @@ describe('nxds-cli export claude-design', () => {
 
     expect(exitCode).toBe(EXIT_CODES.ok);
     expect(readdirSync(path.join(cwd, 'nxds-design-system'))).toEqual([
-      'files.json',
+      'coverage.md',
       'notes.md',
       'project',
     ]);
-  });
-
-  it("leaves project/ alone when an earlier export's files.json is unreadable", async () => {
-    const { source, cwd } = setup();
-    await cli(['export', 'claude-design', '--source', source], cwd);
-    writeFileSync(path.join(cwd, 'nxds-design-system', 'files.json'), '{');
-    const readme = 'Set the page on `nx-color-container`.\n';
-    writeFileSync(path.join(source, 'project', 'README.md'), readme);
-    writeFileSync(
-      path.join(source, 'files.json'),
-      JSON.stringify({
-        format: 2,
-        project: entries({ ...PROJECT, 'README.md': readme }),
-        root: entries(ROOT),
-      })
-    );
-
-    const { exitCode } = await cliJson(
-      ['export', 'claude-design', '--source', source, '--overwrite'],
-      cwd
-    );
-
-    expect(exitCode).toBe(EXIT_CODES.error);
-    expect(readOut(cwd, 'files.json')).toBe('{');
-    expect(readOut(cwd, 'project/README.md')).toBe(PROJECT['README.md']);
-  });
-
-  it('names the upgrade when files.json is from another release format', async () => {
-    const older = setup({ 'files.json': JSON.stringify(entries(PROJECT)) });
-    const newer = setup({
-      'files.json': JSON.stringify({
-        ...JSON.parse(filesJson(ROOT)),
-        format: 3,
-      }),
-    });
-
-    const fromOlder = await cliJson(
-      ['export', 'claude-design', '--source', older.source],
-      older.cwd
-    );
-    const fromNewer = await cliJson(
-      ['export', 'claude-design', '--source', newer.source],
-      newer.cwd
-    );
-
-    expect(fromOlder.exitCode).toBe(EXIT_CODES.error);
-    expect(fromOlder.body.error).toMatch(/Export a newer --release\.$/);
-    expect(fromNewer.exitCode).toBe(EXIT_CODES.error);
-    expect(fromNewer.body.error).toMatch(/Run npx nxds-cli@latest\.$/);
-  });
-
-  it('names the snapshot nxds-cli when a snapshot release has a newer files.json', async () => {
-    const { root, source, cwd } = setup({
-      'files.json': JSON.stringify({
-        ...JSON.parse(filesJson(ROOT)),
-        format: 3,
-      }),
-    });
-    const snapshotVersion = '0.0.0-claude-design-setup-20261029195700';
-    const registry = await npmRegistry(root, source, {
-      distTag: 'snapshot-claude-design-setup',
-    });
-    const snapshotRegistry = await npmRegistry(root, source, {
-      version: snapshotVersion,
-    });
-    const exportRelease = (release: string, npmRegistryUrl = registry) =>
-      cliJson(
-        [
-          'export',
-          'claude-design',
-          '--release',
-          release,
-          '--npm-registry',
-          npmRegistryUrl,
-        ],
-        cwd
-      );
-
-    const byTag = await exportRelease('snapshot-claude-design-setup');
-    const byVersion = await exportRelease(VERSION);
-    const bySnapshotVersion = await exportRelease(
-      snapshotVersion,
-      snapshotRegistry
-    );
-
-    expect(byTag.exitCode).toBe(EXIT_CODES.error);
-    expect(byTag.body.error).toMatch(
-      /Run npx nxds-cli@snapshot-claude-design-setup\.$/
-    );
-    expect(byVersion.body.error).toMatch(/Run npx nxds-cli@latest\.$/);
-    expect(bySnapshotVersion.body.error).toMatch(
-      /Run npx nxds-cli@0\.0\.0-claude-design-setup-20261029195700\.$/
-    );
-  });
-
-  it('reports a files.json whose format is malformed as a shape error', async () => {
-    const { source, cwd } = setup({
-      'files.json': JSON.stringify({
-        ...JSON.parse(filesJson(ROOT)),
-        format: '2',
-      }),
-    });
-
-    const { exitCode, body } = await cliJson(
-      ['export', 'claude-design', '--source', source],
-      cwd
-    );
-
-    expect(exitCode).toBe(EXIT_CODES.error);
-    expect(body.error).toMatch(/must be a JSON object with format 2/);
-  });
-
-  it('copies each file files.json lists beside project/', async () => {
-    const { source, cwd } = setup({
-      'CHANGES.md': '# Changes\n',
-      'files.json': filesJson({ ...ROOT, 'CHANGES.md': '# Changes\n' }),
-    });
-
-    const { exitCode } = await cliJson(
-      ['export', 'claude-design', '--source', source],
-      cwd
-    );
-
-    expect(exitCode).toBe(EXIT_CODES.ok);
-    expect(readOut(cwd, 'CHANGES.md')).toBe('# Changes\n');
-  });
-
-  it('refuses a file beside project/ that does not match files.json', async () => {
-    const { source, cwd } = setup({ 'SETUP.md': '# Tampered\n' });
-
-    const { exitCode, body } = await cliJson(
-      ['export', 'claude-design', '--source', source],
-      cwd
-    );
-
-    expect(exitCode).toBe(EXIT_CODES.error);
-    expect(body.error).toMatch(
-      /^SETUP\.md doesn't match the release's files\.json/
-    );
-    expect(existsSync(path.join(cwd, 'nxds-design-system'))).toBe(false);
-  });
-
-  it('refuses a file beside project/ that would land outside the folder', async () => {
-    const { source, cwd } = setup({
-      'files.json': filesJson({ '../escape.md': '# Escape\n' }),
-    });
-
-    const { exitCode, body } = await cliJson(
-      ['export', 'claude-design', '--source', source],
-      cwd
-    );
-
-    expect(exitCode).toBe(EXIT_CODES.error);
-    expect(body.error).toMatch(
-      /files\.json lists \.\.\/escape\.md beside project\//
-    );
   });
 
   it('downloads the release from the npm registry and checks its integrity', async () => {
