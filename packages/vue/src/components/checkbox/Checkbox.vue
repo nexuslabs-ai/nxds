@@ -65,7 +65,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
         aria-hidden="true"
         :class="
           cn(
-            'nx:absolute nx:size-full',
+            'nx:absolute nx:size-full nx:[--nx-icon-size:calc(16px_-_2*var(--nx-borderwidth-default))]',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )
@@ -76,7 +76,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
         aria-hidden="true"
         :class="
           cn(
-            'nx:absolute nx:size-full',
+            'nx:absolute nx:size-full nx:[--nx-icon-size:calc(16px_-_2*var(--nx-borderwidth-default))]',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=indeterminate]:scale-100 nx:group-data-[state=indeterminate]:opacity-100'
           )

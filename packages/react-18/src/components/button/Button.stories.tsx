@@ -26,7 +26,7 @@ Button triggers an action. Use it for short, visible labels.
 - A loading button shows only a spinner and hides its icons.
 - Icon-only buttons need \`aria-label\` or \`aria-labelledby\`.
 - Icons are 16px at every size and density.
-- Stroked icons, such as Lucide, draw a 1.75 line, whatever their \`strokeWidth\`. Filled icons, such as Phosphor, keep their own line.
+- Stroked icons, such as Lucide, draw a 1.5px line, whatever their \`strokeWidth\`. Filled icons, such as Phosphor, keep their own line.
         `,
       },
     },
