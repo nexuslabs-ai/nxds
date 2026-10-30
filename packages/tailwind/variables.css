@@ -396,7 +396,6 @@
     --nx-typography-size-7xl: 72px;
     --nx-typography-size-8xl: 96px;
     --nx-typography-size-9xl: 128px;
-    --nx-typography-size-code: 12px;
     --nx-typography-weight-thin: 100;
     --nx-typography-weight-extralight: 200;
     --nx-typography-weight-light: 300;
@@ -426,5 +425,6 @@
     --nx-typography-letterspacing-wide: 0.4px;
     --nx-typography-letterspacing-wider: 0.8px;
     --nx-typography-letterspacing-widest: 1.6px;
+    --nx-typography-code-size: 12px;
   }
 }

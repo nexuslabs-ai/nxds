@@ -502,7 +502,8 @@ describe('density spacing order', () => {
     return Number.parseFloat(variant!.declarations[0]!.value);
   };
   const step = (n: number) => byName.get(`--nx-spacing-${n}`)!;
-  // Steps 0–2 are density-invariant; the density offset ramps in over 3–6.
+  // Steps 0–2 are density-invariant. The density offset ramps in from step 2.5
+  // and reaches its full size at step 6.
   const RAMP = [3, 4, 5, 6];
 
   it('never reduces spacing when moving to a more spacious density', () => {
@@ -550,17 +551,20 @@ describe('density spacing order', () => {
     }
   });
 
-  it('keeps neighbouring densities apart at each ramp step', () => {
-    for (const n of RAMP) {
-      const values = densities.map((density) => px(step(n), density));
-      for (let i = 0; i < values.length - 1; i++) {
-        // Step 3 carries only 3px of ramp across six densities, so a pair may
-        // share a value there, but never three in a row.
-        const neighbour = n === 3 ? i + 2 : i + 1;
-        if (neighbour >= values.length) continue;
+  it('keeps neighbouring densities apart at each ramp step and role token', () => {
+    const roles = spacing.filter(
+      (token) => !token.name.startsWith('--nx-spacing-')
+    );
+    expect(roles.length).toBeGreaterThan(0);
+    for (const token of [...RAMP.map(step), ...roles]) {
+      const values = densities.map((density) => px(token, density));
+      // Step 3 carries only 3px of ramp across six densities, so a pair may
+      // share a value there, but never three in a row.
+      const reach = token === step(3) ? 2 : 1;
+      for (let i = 0; i + reach < values.length; i++) {
         expect(
-          values[neighbour],
-          `--nx-spacing-${n} ${densities[i]}→${densities[neighbour]}`
+          values[i + reach],
+          `${token.name} ${densities[i]}→${densities[i + reach]}`
         ).toBeGreaterThan(values[i]!);
       }
     }

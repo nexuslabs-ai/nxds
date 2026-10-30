@@ -9,6 +9,8 @@ import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
 
+import { contextMenuInsetClassName } from '.';
+
 export interface ContextMenuLabelProps extends RekaContextMenuLabelProps {
   /**
    * Indents the label to line up with items that have a leading icon or check.
@@ -31,8 +33,7 @@ const forwarded = useForwardProps(delegated);
     :class="
       cn(
         'nx:px-2 nx:py-1.5 nx:typography-label-default',
-        inset &&
-          'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]',
+        inset && contextMenuInsetClassName,
         props.class
       )
     "

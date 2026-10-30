@@ -122,7 +122,7 @@ describe('UI scale CSS', () => {
           expect(px % 2, name).toBe(0);
         }
       }
-      expect(block.has('typography-size-code')).toBe(false);
+      expect(block.has('typography-code-size')).toBe(false);
     }
   });
 });
@@ -159,7 +159,6 @@ describe('Text size CSS', () => {
         expect(block.size, label).toBe(28);
         for (const [name, px] of block) {
           expect(name, label).toMatch(/^typography-(size|line-height)-/);
-          expect(name, label).not.toBe('typography-size-code');
           expect(Number.isInteger(px), `${label}: ${name}`).toBe(true);
           expect(px, `${label}: ${name}`).toBeGreaterThanOrEqual(10);
           if (name.startsWith('typography-line-height-')) {

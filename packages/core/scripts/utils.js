@@ -1524,6 +1524,30 @@ export function generateSurfaceUtilitiesCSS() {
 `;
 }
 
+/**
+ * Target size utility: `target-24` gives a small control a pointer target at
+ * least 24 × 24px (WCAG 2.5.8), centred on it, through an invisible
+ * `::before`. The control must be positioned, such as with `relative`.
+ *
+ * @returns {string} CSS @utility declaration
+ */
+export function generateTargetUtilitiesCSS() {
+  return `
+/* ===== TARGET SIZE UTILITIES ===== */
+@utility target-24 {
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 24px);
+    height: max(100%, 24px);
+    translate: -50% -50%;
+  }
+}
+`;
+}
+
 const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 /**

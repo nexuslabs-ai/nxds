@@ -1,3 +1,4 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import {
   CheckCircleIcon,
   CheckIcon,
@@ -9,6 +10,7 @@ import {
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within } from 'storybook/test';
 
+import { expectTextFits } from '../../stories/support/story-height-test-utils';
 import { Spinner } from '../spinner/spinner';
 
 import { Badge } from './badge';
@@ -64,9 +66,9 @@ const meta: Meta<typeof Badge> = {
 export default meta;
 type Story = StoryObj<typeof Badge>;
 
-// `nx:h-6` / `nx:w-6` at `density: default`.
+// `nx:min-h-6` / `nx:w-6` at `density: default`.
 const BADGE_SIZE_PX = 24;
-// `nx:size-3.5` icon slot.
+// `nx:size-icon-glyph-sm` icon slot.
 const BADGE_ICON_SIZE_PX = 14;
 
 // ============================================
@@ -402,29 +404,7 @@ export const LongContent: Story = {
   },
 };
 
-const DENSITIES = [
-  'tight',
-  'compact',
-  'default',
-  'comfortable',
-  'relaxed',
-  'spacious',
-] as const;
-
-/** The height inside the border and padding, with fractions kept. */
-function contentHeight(element: Element) {
-  const style = getComputedStyle(element);
-  const edges = [
-    'borderTopWidth',
-    'borderBottomWidth',
-    'paddingTop',
-    'paddingBottom',
-  ] as const;
-  return edges.reduce(
-    (height, edge) => height - parseFloat(style[edge]),
-    element.getBoundingClientRect().height
-  );
-}
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
 
 export const TextFitsAtEveryDensity: Story = {
   // Text is tallest at the Larger UI scale, so it fits at every smaller one.
@@ -450,9 +430,7 @@ export const TextFitsAtEveryDensity: Story = {
       const row = within(canvas.getByTestId(`row-${density}`));
       // Caps and sentence-case text fit inside the border at every density.
       for (const element of [row.getByText('Beta'), row.getByText('New')]) {
-        await expect(contentHeight(element)).toBeGreaterThanOrEqual(
-          parseFloat(getComputedStyle(element).lineHeight)
-        );
+        await expectTextFits(element);
       }
     }
   },

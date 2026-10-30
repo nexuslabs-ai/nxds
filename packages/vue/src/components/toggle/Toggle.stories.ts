@@ -1,3 +1,4 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import { PhTextB, PhTextItalic } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
@@ -424,14 +425,7 @@ export const LongContent: Story = {
   }),
 };
 
-const DENSITIES = [
-  'tight',
-  'compact',
-  'default',
-  'comfortable',
-  'relaxed',
-  'spacious',
-] as const;
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
 const SIZES = ['sm', 'default', 'lg'] as const;
 
 export const HeightAtEveryDensity: Story = {
@@ -473,8 +467,8 @@ export const HeightAtEveryDensity: Story = {
       await expect(outline).toBe(standard);
       // Each size matches the Button of the same size.
       await expect([small, standard, large]).toEqual(buttons);
-      [small, standard, large].forEach((height, size) =>
-        heights[size]!.push(height!)
+      [small, standard, large].forEach((height, index) =>
+        heights[index]!.push(height!)
       );
     }
     // Each size grows at every step from Tight to Spacious.

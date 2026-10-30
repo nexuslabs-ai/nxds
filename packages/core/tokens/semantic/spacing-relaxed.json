@@ -242,14 +242,14 @@
   "container": {
     "p": {
       "$value": {
-        "value": 28,
+        "value": 32,
         "unit": "px"
       },
       "$type": "dimension"
     },
     "gap": {
       "$value": {
-        "value": 20,
+        "value": 24,
         "unit": "px"
       },
       "$type": "dimension"
@@ -265,7 +265,7 @@
     },
     "stack-gap": {
       "$value": {
-        "value": 10,
+        "value": 12,
         "unit": "px"
       },
       "$type": "dimension"

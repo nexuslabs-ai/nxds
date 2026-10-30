@@ -71,3 +71,7 @@ export const menubarItemVariants = cva(
 );
 
 export type MenubarItemVariants = VariantProps<typeof menubarItemVariants>;
+
+/** Starts item text after the check column: 8px, the check, then 8px. */
+export const menubarInsetClassName =
+  'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]';

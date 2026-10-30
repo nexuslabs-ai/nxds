@@ -13,6 +13,8 @@ import { IconCircleFilled } from '../../lib/icons';
 import { selectionIndicatorMotionClassName } from '../../lib/motion';
 import { cn } from '../../lib/utils';
 
+import { contextMenuInsetClassName } from '.';
+
 export interface ContextMenuRadioItemProps extends RekaContextMenuRadioItemProps {
   class?: HTMLAttributes['class'];
 }
@@ -31,7 +33,8 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     :class="
       cn(
         'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center',
-        'nx:rounded-sm nx:py-1.5 nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)] nx:pr-2 nx:typography-body-default nx:outline-none',
+        'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
+        contextMenuInsetClassName,
         'nx:transition-colors',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',
@@ -51,7 +54,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
           aria-hidden="true"
           :class="
             cn(
-              'nx:size-2',
+              'nx:size-[8px]',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
             )

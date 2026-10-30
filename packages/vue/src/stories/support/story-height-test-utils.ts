@@ -52,3 +52,51 @@ export async function expectHeightPinned(
   const actual = getControlHeight(canvas, testId, selector);
   expect(actual).toBe(expectedPx);
 }
+
+/** The line height, snapped down to the 1/64px steps that layout uses. */
+function lineHeight(element: Element) {
+  return Math.floor(parseFloat(getComputedStyle(element).lineHeight) * 64) / 64;
+}
+
+/** The height inside the border and padding, with fractions kept. */
+function contentHeight(element: Element) {
+  const style = getComputedStyle(element);
+  const edges = [
+    'borderTopWidth',
+    'borderBottomWidth',
+    'paddingTop',
+    'paddingBottom',
+  ] as const;
+  return edges.reduce(
+    (height, edge) => height - parseFloat(style[edge]),
+    element.getBoundingClientRect().height
+  );
+}
+
+/**
+ * Checks that a line of `element`'s text fits inside its border and padding.
+ * `label` names the case in the failure message.
+ */
+export async function expectTextFits(
+  element: Element,
+  label?: string
+): Promise<void> {
+  await expect(contentHeight(element), label).toBeGreaterThanOrEqual(
+    lineHeight(element)
+  );
+}
+
+/** Checks that `part` stays inside the border of `control`. */
+export async function expectInsideBorder(
+  part: Element,
+  control: HTMLElement
+): Promise<void> {
+  const mark = part.getBoundingClientRect();
+  const box = control.getBoundingClientRect();
+  const top = box.top + control.clientTop;
+  const left = box.left + control.clientLeft;
+  await expect(mark.top).toBeGreaterThanOrEqual(top);
+  await expect(mark.bottom).toBeLessThanOrEqual(top + control.clientHeight);
+  await expect(mark.left).toBeGreaterThanOrEqual(left);
+  await expect(mark.right).toBeLessThanOrEqual(left + control.clientWidth);
+}

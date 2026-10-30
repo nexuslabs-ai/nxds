@@ -42,6 +42,7 @@ export const NXDS_CLASS_GROUPS = {
   'autofill-bg': [{ 'autofill-bg': [validators.isAny] }],
   'autofill-text': [{ 'autofill-text': [validators.isAny] }],
   surface: [{ surface: [validators.isAny] }],
+  target: ['target-24'],
   'ring-color': ['ring-surface'],
   'ring-offset-color': ['ring-offset-surface'],
   z: ['z-overlay', 'z-sticky', 'z-modal', 'z-popover', 'z-toast', 'z-max'],
@@ -185,7 +186,8 @@ export const NXDS_CLASS_GROUPS = {
     | 'typography'
     | 'autofill-bg'
     | 'autofill-text'
-    | 'surface',
+    | 'surface'
+    | 'target',
     (string | Record<string, ClassValidator[]>)[]
   >
 >;
