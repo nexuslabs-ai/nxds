@@ -2,17 +2,25 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { DENSITY_OPTIONS, UI_SCALE_OPTIONS } from './appearance-model';
+import {
+  DENSITY_OPTIONS,
+  TEXT_SIZE_OPTIONS,
+  textSizePx,
+  UI_SCALE_OPTIONS,
+} from './appearance-model';
 
 const nxdsCss = readFileSync(
   resolve(process.cwd(), 'packages/tailwind/nxds.css'),
   'utf8'
 );
 
-/** The numeric declarations of every `[data-ui-scale]` rule, merged per selector. */
+/**
+ * The numeric declarations of every `[data-ui-scale]` and `[data-text-size]`
+ * rule, merged per selector.
+ */
 const blocks = new Map<string, Map<string, number>>();
 for (const [, selectors, body] of nxdsCss.matchAll(
-  /\n\s*(\[data-ui-scale=[^{]*?)\s*\{([^}]*)\}/g
+  /\n\s*(\[data-(?:ui-scale|text-size)=[^{]*?)\s*\{([^}]*)\}/g
 )) {
   for (const selector of selectors!.split(',').map((part) => part.trim())) {
     const declarations = blocks.get(selector) ?? new Map<string, number>();
@@ -25,9 +33,9 @@ for (const [, selectors, body] of nxdsCss.matchAll(
   }
 }
 
-const SCALES = UI_SCALE_OPTIONS.map(({ value }) => value).filter(
-  (scale) => scale !== 'default'
-);
+const ALL_SCALES = UI_SCALE_OPTIONS.map(({ value }) => value);
+const SCALES = ALL_SCALES.filter((scale) => scale !== 'default');
+const TEXT_SIZES = TEXT_SIZE_OPTIONS.filter((textSize) => textSize !== 14);
 
 function spacingBlock(scale: string, density: string) {
   const block = blocks.get(
@@ -115,6 +123,84 @@ describe('UI scale CSS', () => {
         }
       }
       expect(block.has('typography-size-code')).toBe(false);
+    }
+  });
+});
+
+function textSizeBlock(scale: string, textSize: number) {
+  const size = `[data-text-size='${textSize}']`;
+  const block = blocks.get(
+    scale === 'default' ? size : `[data-ui-scale='${scale}']${size}`
+  );
+  if (!block) throw new Error(`no ${scale} × ${textSize} text size block`);
+  return block;
+}
+
+/** The label text size the CSS gives `textSize` at `scale`. */
+function labelPx(scale: string, textSize: number) {
+  if (textSize !== 14) {
+    return textSizeBlock(scale, textSize).get('typography-size-sm');
+  }
+  return scale === 'default'
+    ? 14
+    : blocks.get(`[data-ui-scale='${scale}']`)?.get('typography-size-sm');
+}
+
+describe('Text size CSS', () => {
+  it('emits nothing for the default text size', () => {
+    expect(nxdsCss).not.toContain("[data-text-size='14']");
+  });
+
+  it('sets only the type scale at every text size and scale, whole px and even line heights', () => {
+    for (const scale of ALL_SCALES) {
+      for (const textSize of TEXT_SIZES) {
+        const label = `${scale} × ${textSize}`;
+        const block = textSizeBlock(scale, textSize);
+        expect(block.size, label).toBe(28);
+        for (const [name, px] of block) {
+          expect(name, label).toMatch(/^typography-(size|line-height)-/);
+          expect(name, label).not.toBe('typography-size-code');
+          expect(Number.isInteger(px), `${label}: ${name}`).toBe(true);
+          expect(px, `${label}: ${name}`).toBeGreaterThanOrEqual(10);
+          if (name.startsWith('typography-line-height-')) {
+            expect(px % 2, `${label}: ${name}`).toBe(0);
+          }
+        }
+      }
+    }
+  });
+
+  it('sizes the label text to textSize × the scale label size ÷ 14', () => {
+    const table = Object.fromEntries(
+      ALL_SCALES.map((scale) => [
+        scale,
+        TEXT_SIZE_OPTIONS.map((textSize) => labelPx(scale, textSize)),
+      ])
+    );
+    expect(table).toEqual({
+      small: [10, 11, 12, 13, 14],
+      default: [12, 13, 14, 15, 16],
+      large: [14, 15, 16, 17, 18],
+      larger: [15, 17, 18, 19, 21],
+    });
+  });
+
+  it('gives each text size its own label size at every scale', () => {
+    for (const scale of ALL_SCALES) {
+      const sizes = TEXT_SIZE_OPTIONS.map((textSize) =>
+        labelPx(scale, textSize)
+      );
+      expect(new Set(sizes).size, scale).toBe(sizes.length);
+    }
+  });
+
+  it('labels each picker option with the size the CSS sets', () => {
+    for (const scale of ALL_SCALES) {
+      for (const textSize of TEXT_SIZE_OPTIONS) {
+        expect(textSizePx(textSize, scale), `${scale} × ${textSize}`).toBe(
+          labelPx(scale, textSize)
+        );
+      }
     }
   });
 });

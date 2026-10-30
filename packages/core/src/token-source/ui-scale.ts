@@ -12,6 +12,16 @@ export const UI_SCALES = {
 
 type UiScale = keyof typeof UI_SCALES;
 
+/**
+ * The label text sizes a person can pick, in px at the Default scale. The
+ * Default size, 14, is the label size at that scale.
+ */
+export const TEXT_SIZES = [12, 13, 14, 15, 16] as const;
+
+type TextSize = (typeof TEXT_SIZES)[number];
+
+const DEFAULT_TEXT = UI_SCALES.default.text;
+
 export interface ScaleToken {
   cssName: string;
   value: string;
@@ -20,6 +30,12 @@ export interface ScaleToken {
 export interface ScaleBlock {
   selectors: string[];
   tokens: ScaleToken[];
+}
+
+/** The Default text sizes and line heights, in px, by token name. */
+interface TypeBase {
+  sizes: Readonly<Record<string, number>>;
+  lineHeights: Readonly<Record<string, number>>;
 }
 
 const FULL_RADIUS = '9999px';
@@ -69,7 +85,71 @@ function scaleMode(
   return scaled;
 }
 
-const scaleAttr = (scale: UiScale) => `[data-ui-scale="${scale}"]`;
+const scaleAttr = (scale: UiScale) => `[data-ui-scale='${scale}']`;
+
+/**
+ * How much `textSize` at `scale` multiplies the Default type scale: the text
+ * size over 14, times the scale's label size over 14.
+ */
+function textFactor(textSize: TextSize, scale: UiScale): number {
+  return (textSize * UI_SCALES[scale].text) / (DEFAULT_TEXT * DEFAULT_TEXT);
+}
+
+/** A text size at a factor: whole px, and 10px or more. */
+const textPx = (value: number, factor: number) =>
+  Math.max(MIN_TEXT_PX, Math.round(value * factor));
+
+/** A Default text size, in px, at `textSize` and `scale`. */
+export function scaledTextPx(
+  value: number,
+  textSize: TextSize,
+  scale: UiScale
+): number {
+  return textPx(value, textFactor(textSize, scale));
+}
+
+/** The label text size, in px, that `textSize` shows at `scale`. */
+export function textSizePx(textSize: TextSize, scale: UiScale): number {
+  return scaledTextPx(DEFAULT_TEXT, textSize, scale);
+}
+
+/** The root with a text size other than 14 at `scale`. */
+function textSizeAttr(scale: UiScale, textSize: TextSize) {
+  const sizeAttr = `[data-text-size='${textSize}']`;
+  return scale === 'default' ? sizeAttr : `${scaleAttr(scale)}${sizeAttr}`;
+}
+
+/**
+ * The selector of the root that has `textSize` at `scale`, or null at the
+ * Default scale and size, which write no CSS.
+ */
+export function textSelector(
+  scale: UiScale,
+  textSize: TextSize
+): string | null {
+  if (textSize !== DEFAULT_TEXT) return textSizeAttr(scale, textSize);
+  return scale === 'default' ? null : scaleAttr(scale);
+}
+
+/**
+ * The text sizes (whole px, 10px or more) and line heights (even px, so a box
+ * that grows with its text stays even, and 10px or more) at a factor.
+ */
+function typeTokens(
+  { sizes, lineHeights }: TypeBase,
+  factor: number
+): ScaleToken[] {
+  return [
+    ...Object.entries(sizes).map(([name, value]) => ({
+      cssName: `typography-size-${name}`,
+      value: `${textPx(value, factor)}px`,
+    })),
+    ...Object.entries(lineHeights).map(([name, value]) => ({
+      cssName: `typography-line-height-${name}`,
+      value: `${Math.max(MIN_TEXT_PX, 2 * Math.round((value * factor) / 2))}px`,
+    })),
+  ];
+}
 
 /**
  * One block per scale and mode of a moded family. The default mode also
@@ -120,20 +200,14 @@ function widthTokens(widths: Readonly<Record<string, number>>, factor: number) {
 
 /**
  * The `:root` block with the default factor and page widths, then one block
- * per scale with the text sizes (whole px, 10px or more), the line heights (even px, so a
- * box that grows with its text stays even), the icon glyphs, the page widths
- * and the factor. `sizes` leaves out the code size, which the code font size
- * setting owns.
+ * per scale with the type scale, the icon glyphs, the page widths and the
+ * factor. `sizes` leaves out the code size, which the code font size setting
+ * owns.
  */
 export function scaleBlocks({
-  sizes,
-  lineHeights,
   widths,
-}: {
-  sizes: Readonly<Record<string, number>>;
-  lineHeights: Readonly<Record<string, number>>;
-  widths: Readonly<Record<string, number>>;
-}): ScaleBlock[] {
+  ...type
+}: TypeBase & { widths: Readonly<Record<string, number>> }): ScaleBlock[] {
   const root = {
     selectors: [':root'],
     tokens: widthTokens(widths, UI_SCALES.default.spacing),
@@ -141,17 +215,9 @@ export function scaleBlocks({
   return [
     root,
     ...nonDefaultScales().map((scale) => {
-      const { spacing, text, icon } = UI_SCALES[scale];
-      const factor = text / UI_SCALES.default.text;
+      const { spacing, icon } = UI_SCALES[scale];
       const tokens = [
-        ...Object.entries(sizes).map(([name, value]) => ({
-          cssName: `typography-size-${name}`,
-          value: `${Math.max(MIN_TEXT_PX, Math.round(value * factor))}px`,
-        })),
-        ...Object.entries(lineHeights).map(([name, value]) => ({
-          cssName: `typography-line-height-${name}`,
-          value: `${2 * Math.round((value * factor) / 2)}px`,
-        })),
+        ...typeTokens(type, textFactor(DEFAULT_TEXT, scale)),
         { cssName: 'icon-glyph-xs', value: `${icon - 4}px` },
         { cssName: 'icon-glyph-sm', value: `${icon - 2}px` },
         { cssName: 'icon-glyph-default', value: `${icon}px` },
@@ -160,6 +226,21 @@ export function scaleBlocks({
       return { selectors: [scaleAttr(scale)], tokens };
     }),
   ];
+}
+
+/**
+ * One block per text size other than 14 at each scale, with only the type
+ * scale. Icons, spacing and widths keep the scale's values.
+ */
+export function textSizeBlocks(type: TypeBase): ScaleBlock[] {
+  return (Object.keys(UI_SCALES) as UiScale[]).flatMap((scale) =>
+    TEXT_SIZES.filter((textSize) => textSize !== DEFAULT_TEXT).map(
+      (textSize) => ({
+        selectors: [textSizeAttr(scale, textSize)],
+        tokens: typeTokens(type, textFactor(textSize, scale)),
+      })
+    )
+  );
 }
 
 function nonDefaultScales() {

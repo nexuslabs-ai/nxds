@@ -26,6 +26,7 @@ const THEME: NxdsTheme = {
     lightContrast: 30,
     darkContrast: 80,
     uiScale: 'large',
+    textSize: 15,
     density: 'compact',
     corners: 'round',
     elevation: 'soft',
@@ -107,6 +108,7 @@ describe('theme flags', () => {
     ],
     ['light-contrast', '101', /from 0 to 100/],
     ['ui-scale', 'huge', /--ui-scale "huge" isn't one of small/],
+    ['text-size', '17', /--text-size "17" isn't a whole number from 12 to 16/],
     ['code-font-size', '40', /from 8 to 32/],
     ['icons', 'feather', /--icons "feather" isn't one of phosphor/],
   ])('reject --%s %s', (flag, value, message) => {

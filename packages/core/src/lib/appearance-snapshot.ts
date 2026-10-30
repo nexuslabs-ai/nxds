@@ -13,12 +13,13 @@ import {
 } from './derive-theme';
 import type { Mode } from './palette';
 
-export const SNAPSHOT_VERSION = 12;
+export const SNAPSHOT_VERSION = 13;
 const STATE_COOKIE_VERSION = 6;
 const SNAPSHOT_CACHE_LIMIT = 50;
 
 export const NXDS_APPEARANCE_DATA_ATTRS = [
   'data-ui-scale',
+  'data-text-size',
   'data-density',
   'data-radius',
   'data-shadow',
@@ -227,6 +228,7 @@ export function resolveFirstPaint(
     className: dark ? 'dark' : '',
     dataAttrs: {
       'data-ui-scale': state.uiScale,
+      'data-text-size': String(state.textSize),
       'data-density': state.density,
       'data-radius': state.corners,
       'data-shadow': state.elevation,
@@ -252,5 +254,5 @@ export function createNxdsAppearanceBootstrapScript(
     ? sanitizeNxdsAppearanceSnapshot(options.defaultSnapshot)
     : createDefaultNxdsAppearanceSnapshot();
 
-  return `(function(){try{var k=${escapeInlineScriptJson(storageKey)};var f=${escapeInlineScriptJson(defaultSnapshot)};var s=f;try{if(k!==false){var r=window.localStorage&&window.localStorage.getItem(k);if(r){var p=JSON.parse(r);if(p&&p.version===f.version&&p.state&&typeof p.themeCss==="string"&&typeof p.prefsCss==="string"){s=p;}}}}catch(e){}var st=s.state||f.state;var m=st.mode==="dark"||st.mode==="light"||st.mode==="system"?st.mode:f.state.mode;var sys=false;try{sys=m==="system"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;}catch(e){}var dark=m==="dark"||sys===true;var root=document.documentElement;root.classList.toggle("dark",dark);root.setAttribute("data-ui-scale",typeof st.uiScale==="string"?st.uiScale:f.state.uiScale);root.setAttribute("data-density",typeof st.density==="string"?st.density:f.state.density);root.setAttribute("data-radius",typeof st.corners==="string"?st.corners:f.state.corners);root.setAttribute("data-shadow",typeof st.elevation==="string"?st.elevation:f.state.elevation);root.setAttribute("data-borderwidth",typeof st.stroke==="string"?st.stroke:f.state.stroke);function upsert(attr,css){var list=document.querySelectorAll("style["+attr+"]");var el=list[0]||document.createElement("style");for(var i=1;i<list.length;i++){list[i].remove();}el.setAttribute(attr,"");el.textContent=css||"";if(!el.parentNode){document.head.appendChild(el);}}upsert("data-nxds-appearance-theme",s.themeCss);upsert("data-nxds-appearance-prefs",s.prefsCss);}catch(e){}})();`;
+  return `(function(){try{var k=${escapeInlineScriptJson(storageKey)};var f=${escapeInlineScriptJson(defaultSnapshot)};var s=f;try{if(k!==false){var r=window.localStorage&&window.localStorage.getItem(k);if(r){var p=JSON.parse(r);if(p&&p.version===f.version&&p.state&&typeof p.themeCss==="string"&&typeof p.prefsCss==="string"){s=p;}}}}catch(e){}var st=s.state||f.state;var m=st.mode==="dark"||st.mode==="light"||st.mode==="system"?st.mode:f.state.mode;var sys=false;try{sys=m==="system"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;}catch(e){}var dark=m==="dark"||sys===true;var root=document.documentElement;root.classList.toggle("dark",dark);root.setAttribute("data-ui-scale",typeof st.uiScale==="string"?st.uiScale:f.state.uiScale);root.setAttribute("data-text-size",String(typeof st.textSize==="number"?st.textSize:f.state.textSize));root.setAttribute("data-density",typeof st.density==="string"?st.density:f.state.density);root.setAttribute("data-radius",typeof st.corners==="string"?st.corners:f.state.corners);root.setAttribute("data-shadow",typeof st.elevation==="string"?st.elevation:f.state.elevation);root.setAttribute("data-borderwidth",typeof st.stroke==="string"?st.stroke:f.state.stroke);function upsert(attr,css){var list=document.querySelectorAll("style["+attr+"]");var el=list[0]||document.createElement("style");for(var i=1;i<list.length;i++){list[i].remove();}el.setAttribute(attr,"");el.textContent=css||"";if(!el.parentNode){document.head.appendChild(el);}}upsert("data-nxds-appearance-theme",s.themeCss);upsert("data-nxds-appearance-prefs",s.prefsCss);}catch(e){}})();`;
 }

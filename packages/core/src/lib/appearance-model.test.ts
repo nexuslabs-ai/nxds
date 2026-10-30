@@ -18,6 +18,7 @@ import {
   sanitizeNxdsAppearance,
   sanitizeNxdsAppearancePrefs,
   STROKE_OPTIONS,
+  TEXT_SIZE_OPTIONS,
   UI_SCALE_OPTIONS,
 } from './appearance-model';
 import { deriveTheme } from './derive-theme';
@@ -31,6 +32,7 @@ describe('appearance model', () => {
       lightContrast: 50,
       darkContrast: 50,
       uiScale: 'default',
+      textSize: 14,
       density: 'default',
       corners: 'subtle',
       elevation: 'quiet',
@@ -118,6 +120,7 @@ describe('sanitizeNxdsAppearance', () => {
       lightContrast: 42,
       darkContrast: 82,
       uiScale: 'large' as const,
+      textSize: 16 as const,
       density: 'tight' as const,
       corners: 'extra-round' as const,
       elevation: 'flat' as const,
@@ -139,6 +142,10 @@ describe('sanitizeNxdsAppearance', () => {
       expect(sanitizeNxdsAppearance({ uiScale: option.value }).uiScale).toBe(
         option.value
       );
+    }
+
+    for (const textSize of TEXT_SIZE_OPTIONS) {
+      expect(sanitizeNxdsAppearance({ textSize }).textSize).toBe(textSize);
     }
 
     for (const option of DENSITY_OPTIONS) {
@@ -194,6 +201,13 @@ describe('sanitizeNxdsAppearance', () => {
         uiScale: 'huge',
       }).uiScale
     ).toBe('default');
+    for (const textSize of [11, 17, 14.5, '16']) {
+      expect(
+        sanitizeNxdsAppearance({ ...DEFAULT_NXDS_APPEARANCE, textSize })
+          .textSize,
+        String(textSize)
+      ).toBe(14);
+    }
     expect(
       sanitizeNxdsAppearance({
         ...DEFAULT_NXDS_APPEARANCE,
@@ -453,6 +467,28 @@ describe('appearancePrefsToCss', () => {
     expect(sizes).toEqual({ small: 10, large: 14, larger: 15 });
   });
 
+  it('grows the code size with the text size at each UI scale', () => {
+    const css = appearancePrefsToCss({ ...prefs, codeFontSize: 12 });
+    const sizes = Object.fromEntries(
+      [
+        ...css.matchAll(
+          /^((?:\[data-[a-z-]+='[a-z0-9]+'\])+) \{\s*--nx-typography-size-code: (\d+)px;/gm
+        ),
+      ].map(([, selector, px]) => [selector, Number(px)])
+    );
+    // 12px times 16/14 at the Default scale, times 16/14 × 18/14 at Larger,
+    // and never under 10px.
+    expect(sizes).toMatchObject({
+      "[data-text-size='16']": 14,
+      "[data-ui-scale='larger'][data-text-size='16']": 18,
+      "[data-ui-scale='small'][data-text-size='12']": 10,
+    });
+    // One block for each scale and text size except Default and 14.
+    expect(Object.keys(sizes)).toHaveLength(
+      UI_SCALE_OPTIONS.length * TEXT_SIZE_OPTIONS.length - 1
+    );
+  });
+
   it('leaves the UI type scale to the [data-ui-scale] blocks', () => {
     expect(appearancePrefsToCss(prefs)).not.toMatch(
       /--nx-typography-(?:size-(?!code)|line-height-)/
@@ -478,7 +514,7 @@ describe('appearancePrefsToCss', () => {
     );
     for (const selector of selectors) {
       expect(selector, selector).toMatch(
-        /^(@layer nx-runtime|:root|\[data-ui-scale='[a-z]+'\])$/
+        /^(@layer nx-runtime|:root|(\[data-(ui-scale|text-size)='[a-z0-9]+'\])+)$/
       );
     }
   });
