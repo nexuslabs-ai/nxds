@@ -70,3 +70,7 @@ export const dropdownMenuItemVariants = cva(
 export type DropdownMenuItemVariants = VariantProps<
   typeof dropdownMenuItemVariants
 >;
+
+/** Starts item text after the check column: 8px, the check, then 8px. */
+export const dropdownMenuInsetClassName =
+  'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]';

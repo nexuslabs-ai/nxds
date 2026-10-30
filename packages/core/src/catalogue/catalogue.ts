@@ -86,7 +86,7 @@ const UI_SCALE_CONTROL: CatalogueControl = { kind: 'preset', field: 'uiScale' };
 /** The appearance field that sets each typography primitive. */
 function typographyControl(path: readonly string[]): CatalogueControl | null {
   const [group, key] = path;
-  if (group === 'size' && key === 'code') {
+  if (group === 'code' && key === 'size') {
     return { kind: 'pref', field: 'codeFontSize' };
   }
   if (group === 'size' || group === 'line-height') return UI_SCALE_CONTROL;

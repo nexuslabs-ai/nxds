@@ -258,7 +258,7 @@
   "layout": {
     "section-gap": {
       "$value": {
-        "value": 40,
+        "value": 36,
         "unit": "px"
       },
       "$type": "dimension"

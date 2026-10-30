@@ -114,7 +114,7 @@ describe('UI scale CSS', () => {
           expect(px % 2, name).toBe(0);
         }
       }
-      expect(block.has('typography-size-code')).toBe(false);
+      expect(block.has('typography-code-size')).toBe(false);
     }
   });
 });

@@ -10,7 +10,11 @@ import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
 
-import { type DropdownMenuItemVariants, dropdownMenuItemVariants } from '.';
+import {
+  dropdownMenuInsetClassName,
+  type DropdownMenuItemVariants,
+  dropdownMenuItemVariants,
+} from '.';
 
 export interface DropdownMenuItemProps extends RekaDropdownMenuItemProps {
   variant?: DropdownMenuItemVariants['variant'];
@@ -39,8 +43,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     :class="
       cn(
         dropdownMenuItemVariants({ variant }),
-        inset &&
-          'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]',
+        inset && dropdownMenuInsetClassName,
         props.class
       )
     "

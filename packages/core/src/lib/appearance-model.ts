@@ -321,7 +321,7 @@ function scaledCodeSizes(codePx: number): string {
     .filter(([scale]) => scale !== 'default')
     .map(([scale, { text }]) => {
       const px = Math.round((codePx * text) / UI_SCALES.default.text);
-      return `[data-ui-scale='${scale}'] {\n  --nx-typography-size-code: ${px}px;\n}`;
+      return `[data-ui-scale='${scale}'] {\n  --nx-typography-code-size: ${px}px;\n}`;
     })
     .join('\n');
 }
@@ -338,7 +338,7 @@ export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
   --nx-typography-family-font-sans: ${prefs.uiFont};
   --nx-typography-family-font-heading: ${prefs.headingFont ?? 'var(--nx-typography-family-font-sans)'};
   --nx-typography-family-font-mono: ${prefs.codeFont};
-  --nx-typography-size-code: ${formatPx(codePx)};
+  --nx-typography-code-size: ${formatPx(codePx)};
 }
 ${scaledCodeSizes(codePx)}`),
   ];

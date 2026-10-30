@@ -10,6 +10,8 @@ import type { HTMLAttributes } from 'vue';
 import { IconChevronRight } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
+import { dropdownMenuInsetClassName } from '.';
+
 export interface DropdownMenuSubTriggerProps extends RekaDropdownMenuSubTriggerProps {
   /**
    * Indents the trigger to line up with items that have a leading icon or check.
@@ -36,8 +38,7 @@ const forwarded = useForwardProps(delegated);
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-[state=open]:bg-popover-hover nx:data-[state=open]:text-popover-foreground',
         'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0',
-        inset &&
-          'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]',
+        inset && dropdownMenuInsetClassName,
         props.class
       )
     "

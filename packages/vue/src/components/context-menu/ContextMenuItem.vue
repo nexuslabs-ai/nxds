@@ -10,7 +10,11 @@ import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
 
-import { type ContextMenuItemVariants, contextMenuItemVariants } from '.';
+import {
+  contextMenuInsetClassName,
+  type ContextMenuItemVariants,
+  contextMenuItemVariants,
+} from '.';
 
 export interface ContextMenuItemProps extends RekaContextMenuItemProps {
   variant?: ContextMenuItemVariants['variant'];
@@ -39,8 +43,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     :class="
       cn(
         contextMenuItemVariants({ variant }),
-        inset &&
-          'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]',
+        inset && contextMenuInsetClassName,
         props.class
       )
     "

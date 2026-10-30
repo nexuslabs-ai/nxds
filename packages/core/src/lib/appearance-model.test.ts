@@ -410,7 +410,7 @@ describe('createNxdsThemeContract', () => {
 
 describe('appearancePrefsToCss', () => {
   const prefs = DEFAULT_NXDS_APPEARANCE.prefs;
-  const codeSizePattern = /--nx-typography-size-code:\s*[^;]+;/;
+  const codeSizePattern = /--nx-typography-code-size:\s*[^;]+;/;
 
   it('keeps every typography dimension in px, which the UI scale multiplies', () => {
     const dimensions = [
@@ -437,7 +437,7 @@ describe('appearancePrefsToCss', () => {
     expect(css).toContain(
       '--nx-typography-family-font-heading: var(--nx-typography-family-font-sans);'
     );
-    expect(css).toContain('--nx-typography-size-code: 32px;');
+    expect(css).toContain('--nx-typography-code-size: 32px;');
   });
 
   it('grows the code size with the label text at each UI scale', () => {
@@ -445,7 +445,7 @@ describe('appearancePrefsToCss', () => {
     const sizes = Object.fromEntries(
       [
         ...css.matchAll(
-          /\[data-ui-scale='([a-z]+)'\] \{\s*--nx-typography-size-code: (\d+)px;/g
+          /\[data-ui-scale='([a-z]+)'\] \{\s*--nx-typography-code-size: (\d+)px;/g
         ),
       ].map(([, scale, px]) => [scale, Number(px)])
     );
@@ -455,7 +455,7 @@ describe('appearancePrefsToCss', () => {
 
   it('leaves the UI type scale to the [data-ui-scale] blocks', () => {
     expect(appearancePrefsToCss(prefs)).not.toMatch(
-      /--nx-typography-(?:size-(?!code)|line-height-)/
+      /--nx-typography-(?:size-|line-height-)/
     );
   });
 

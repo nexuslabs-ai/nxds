@@ -39,6 +39,7 @@ import {
   generateSpacingModesCSS,
   generateSpacingRoleUtilitiesCSS,
   generateSurfaceUtilitiesCSS,
+  generateTargetUtilitiesCSS,
   generateThemeCSS,
   generateThemedModesCSS,
   generateTypographyUtilitiesCSS,
@@ -351,15 +352,12 @@ function generateVariablesCSS(primitiveTokens, usedModes) {
 
 /**
  * The px text sizes and line heights the UI scale multiplies, and the rem
- * page widths from Tailwind's own theme (`max-w-*` reads them). The code size
- * is left out: the code font size setting owns it.
+ * page widths from Tailwind's own theme (`max-w-*` reads them).
  */
 function uiScaleBase(typography) {
   const values = (group) =>
     Object.fromEntries(
-      Object.entries(group)
-        .filter(([name]) => name !== 'code')
-        .map(([name, token]) => [name, token.$value.value])
+      Object.entries(group).map(([name, token]) => [name, token.$value.value])
     );
   const tailwindTheme = fs.readFileSync(
     createRequire(import.meta.url).resolve('tailwindcss/theme.css'),
@@ -500,6 +498,7 @@ function generateNxdsCSS(
   css += generateNativeBrowserUIThemeCSS();
   css += generateAutofillUtilitiesCSS();
   css += generateSurfaceUtilitiesCSS();
+  css += generateTargetUtilitiesCSS();
 
   return css;
 }

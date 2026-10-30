@@ -1,8 +1,10 @@
 import * as React from 'react';
 
+import { DENSITY_OPTIONS } from '@nxds/core';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
+import { expectInsideBorder } from '../../stories/support/story-height-test-utils';
 import { Label } from '../label/label';
 
 import { Checkbox } from './checkbox';
@@ -352,26 +354,7 @@ export const WithDataAttributes: Story = {
   },
 };
 
-/** Checks that `part` stays inside the border of `control`. */
-async function expectInsideBorder(part: Element, control: HTMLElement) {
-  const mark = part.getBoundingClientRect();
-  const box = control.getBoundingClientRect();
-  const top = box.top + control.clientTop;
-  const left = box.left + control.clientLeft;
-  await expect(mark.top).toBeGreaterThanOrEqual(top);
-  await expect(mark.bottom).toBeLessThanOrEqual(top + control.clientHeight);
-  await expect(mark.left).toBeGreaterThanOrEqual(left);
-  await expect(mark.right).toBeLessThanOrEqual(left + control.clientWidth);
-}
-
-const DENSITIES = [
-  'tight',
-  'compact',
-  'default',
-  'comfortable',
-  'relaxed',
-  'spacious',
-] as const;
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
 const STROKES = ['fine', 'normal', 'strong'] as const;
 
 export const SizeAtEveryDensity: Story = {

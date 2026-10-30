@@ -1,8 +1,13 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import { PhEnvelope, PhEye, PhMagnifyingGlass, PhX } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, type Mock, userEvent, within } from 'storybook/test';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
+import {
+  expectInsideBorder,
+  expectTextFits,
+} from '../../stories/support/story-height-test-utils';
 import { Spinner } from '../spinner';
 
 import {
@@ -693,29 +698,7 @@ export const WithKbd: Story = {
   },
 };
 
-const DENSITIES = [
-  'tight',
-  'compact',
-  'default',
-  'comfortable',
-  'relaxed',
-  'spacious',
-] as const;
-
-/** The height inside the border and padding, with fractions kept. */
-function contentHeight(element: Element) {
-  const style = getComputedStyle(element);
-  const edges = [
-    'borderTopWidth',
-    'borderBottomWidth',
-    'paddingTop',
-    'paddingBottom',
-  ] as const;
-  return edges.reduce(
-    (height, edge) => height - parseFloat(style[edge]),
-    element.getBoundingClientRect().height
-  );
-}
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
 
 export const ExtraSmallButtonAtEveryDensity: Story = {
   // Text is tallest at the Larger UI scale, so it fits at every smaller one.
@@ -749,13 +732,15 @@ export const ExtraSmallButtonAtEveryDensity: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     for (const density of DENSITIES) {
-      const element = within(canvas.getByTestId(`row-${density}`)).getByRole(
+      const button = within(canvas.getByTestId(`row-${density}`)).getByRole(
         'button',
         { name: 'Copy' }
       );
-      // The label fits inside the extra-small button at every density.
-      await expect(contentHeight(element)).toBeGreaterThanOrEqual(
-        parseFloat(getComputedStyle(element).lineHeight)
+      // The label fits inside the button, and the button inside the group.
+      await expectTextFits(button);
+      await expectInsideBorder(
+        button,
+        button.closest<HTMLElement>('[data-slot="input-group"]')!
       );
     }
   },

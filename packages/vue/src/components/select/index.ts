@@ -65,3 +65,7 @@ export const selectTriggerVariants = cva(
 );
 
 export type SelectTriggerVariants = VariantProps<typeof selectTriggerVariants>;
+
+/** Starts item text after the check column: 8px, the check, then 8px. */
+export const selectItemInsetClassName =
+  'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]';

@@ -1,6 +1,9 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within } from 'storybook/test';
+
+import { expectTextFits } from '../../stories/support/story-height-test-utils';
 
 import { Kbd, KbdGroup } from './kbd';
 
@@ -128,29 +131,7 @@ export const WithDataAttributes: Story = {
   },
 };
 
-const DENSITIES = [
-  'tight',
-  'compact',
-  'default',
-  'comfortable',
-  'relaxed',
-  'spacious',
-] as const;
-
-/** The height inside the border and padding, with fractions kept. */
-function contentHeight(element: Element) {
-  const style = getComputedStyle(element);
-  const edges = [
-    'borderTopWidth',
-    'borderBottomWidth',
-    'paddingTop',
-    'paddingBottom',
-  ] as const;
-  return edges.reduce(
-    (height, edge) => height - parseFloat(style[edge]),
-    element.getBoundingClientRect().height
-  );
-}
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
 
 export const TextFitsAtEveryDensity: Story = {
   // Text is tallest at the Larger UI scale, so it fits at every smaller one.
@@ -175,9 +156,7 @@ export const TextFitsAtEveryDensity: Story = {
         'Ctrl'
       );
       // The key label fits inside the border at every density.
-      await expect(contentHeight(element)).toBeGreaterThanOrEqual(
-        parseFloat(getComputedStyle(element).lineHeight)
-      );
+      await expectTextFits(element);
     }
   },
 };

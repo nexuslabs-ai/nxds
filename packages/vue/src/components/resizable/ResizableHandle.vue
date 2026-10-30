@@ -53,7 +53,7 @@ const group = injectSplitterGroupContext();
       v-if="withHandle"
       class="nx:z-10 nx:flex nx:h-4 nx:w-3 nx:items-center nx:justify-center nx:rounded-sm nx:border-default nx:border-border-default nx:bg-border-default"
     >
-      <IconGripVertical class="nx:size-2.5" />
+      <IconGripVertical class="nx:size-[10px]" />
     </div>
   </SplitterResizeHandle>
 </template>

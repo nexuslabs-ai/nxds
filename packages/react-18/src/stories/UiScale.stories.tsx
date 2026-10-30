@@ -15,6 +15,11 @@ import {
 import { Switch } from '../components/switch/switch';
 import { Toggle } from '../components/toggle/toggle';
 
+import {
+  expectInsideBorder,
+  expectTextFits,
+} from './support/story-height-test-utils';
+
 const SCALES = UI_SCALE_OPTIONS.map(({ value }) => value);
 const DENSITIES = DENSITY_OPTIONS.map(({ value }) => value);
 
@@ -66,28 +71,6 @@ function Matrix() {
 const box = (element: Element) => element.getBoundingClientRect();
 const style = (element: Element) => getComputedStyle(element);
 const lineHeight = (element: Element) => parseFloat(style(element).lineHeight);
-
-/** The height inside the border and padding, with fractions kept. */
-function contentHeight(element: Element) {
-  const { borderTopWidth, borderBottomWidth, paddingTop, paddingBottom } =
-    style(element);
-  return [borderTopWidth, borderBottomWidth, paddingTop, paddingBottom].reduce(
-    (height, edge) => height - parseFloat(edge),
-    box(element).height
-  );
-}
-
-/** Checks that `part` stays inside the border of `control`. */
-async function expectInsideBorder(part: Element, control: HTMLElement) {
-  const mark = box(part);
-  const outer = box(control);
-  const top = outer.top + control.clientTop;
-  const left = outer.left + control.clientLeft;
-  await expect(mark.top).toBeGreaterThanOrEqual(top);
-  await expect(mark.bottom).toBeLessThanOrEqual(top + control.clientHeight);
-  await expect(mark.left).toBeGreaterThanOrEqual(left);
-  await expect(mark.right).toBeLessThanOrEqual(left + control.clientWidth);
-}
 
 function rowParts(canvasElement: HTMLElement, scale: string, density: string) {
   const row = within(
@@ -163,9 +146,7 @@ export const ProportionAtEveryScaleAndDensity: Story = {
           parts.badge,
           parts.kbd,
         ]) {
-          await expect(contentHeight(element), label).toBeGreaterThanOrEqual(
-            lineHeight(element)
-          );
+          await expectTextFits(element);
         }
 
         // Each mark stays inside its control.

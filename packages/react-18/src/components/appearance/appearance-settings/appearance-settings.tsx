@@ -263,7 +263,7 @@ export function NxdsAppearanceSettings() {
               value={state.prefs.uiFont}
               onChange={(event) => updatePrefs({ uiFont: event.target.value })}
               aria-label="UI font"
-              className="nx:w-56 nx:font-mono nx:typography-body-small"
+              className="nx:w-56 nx:typography-code-block"
             />
           </NxdsAppearanceSettingRow>
           <NxdsAppearanceSettingRow label="Heading font">
@@ -274,7 +274,7 @@ export function NxdsAppearanceSettings() {
               }
               placeholder="Same as UI font"
               aria-label="Heading font"
-              className="nx:w-56 nx:font-mono nx:typography-body-small"
+              className="nx:w-56 nx:typography-code-block"
             />
           </NxdsAppearanceSettingRow>
           <NxdsAppearanceSettingRow label="Code font">
@@ -284,7 +284,7 @@ export function NxdsAppearanceSettings() {
                 updatePrefs({ codeFont: event.target.value })
               }
               aria-label="Code font"
-              className="nx:w-56 nx:font-mono nx:typography-body-small"
+              className="nx:w-56 nx:typography-code-block"
             />
           </NxdsAppearanceSettingRow>
           <NxdsAppearanceSettingRow label="Code font size">
