@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 export { default as Badge, type BadgeProps } from './Badge.vue';
 
 export const badgeVariants = cva(
-  'nx:inline-flex nx:box-border nx:h-6 nx:w-fit nx:items-center nx:justify-center nx:gap-1 nx:rounded-md nx:border-default nx:border-transparent nx:whitespace-nowrap nx:transition-colors nx:icon-stroke',
+  'nx:inline-flex nx:box-border nx:h-6 nx:w-fit nx:items-center nx:justify-center nx:gap-1 nx:rounded-md nx:border-default nx:border-transparent nx:whitespace-nowrap nx:transition-colors',
   {
     variants: {
       variant: {
@@ -131,7 +131,7 @@ export const badgeVariants = cva(
 );
 
 export const badgeIconClasses =
-  'nx:flex nx:items-center nx:justify-center nx:size-3.5 nx:[&>svg]:size-3.5';
+  'nx:flex nx:items-center nx:justify-center nx:size-3.5 nx:[&>svg]:size-3.5 nx:icon-stroke';
 
 export function badgeShapeClasses(
   isNumber: boolean,

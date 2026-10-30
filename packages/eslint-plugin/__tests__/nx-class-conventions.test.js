@@ -96,6 +96,30 @@ ruleTester.run('nx-class-conventions', rule, {
       code: "const c = 'nx:transition-colors nx:focus-visible:outline-2';",
       filename: '/repo/apps/docs/app/_pages/foundations/focus.tsx',
     },
+    // A class list that sizes its `svg` children strokes them too, in the
+    // same string or anywhere in the same `cva()` call.
+    "const c = 'nx:[&_svg]:size-4 nx:icon-stroke';",
+    "const c = cva('nx:flex nx:icon-stroke', { variants: { size: { sm: 'nx:[&>svg]:size-3.5' } } });",
+    "const c = cva('nx:flex', { variants: { variant: { default: '', icon: 'nx:[&_svg]:size-6 nx:icon-stroke' } } });",
+    // Sizing the box around an icon, or styling the icon without sizing it,
+    // needs no stroke.
+    "const c = 'nx:has-[>svg]:size-8 nx:[&:has(svg)]:h-9';",
+    "const c = 'nx:[&_svg]:pointer-events-none nx:[&>svg]:text-muted-foreground';",
+    "const c = 'nx:size-4 nx:[&_img]:size-full';",
+    // Stories and docs are specimens, like the other runtime-only checks.
+    {
+      code: "const c = 'nx:[&_svg]:size-4';",
+      filename: '/repo/packages/react/src/components/button/Button.stories.tsx',
+    },
+    {
+      code: "const c = 'nx:[&_svg]:size-4';",
+      filename: '/repo/apps/docs/app/_components/TopNav.tsx',
+    },
+    // A part that hands its class list to a part which strokes its icons:
+    // AttachmentMedia renders ItemMedia, and the recipes style a Button.
+    "function AttachmentMedia() { return cn('nx:group-data-[orientation=vertical]/attachment:[&_svg]:size-8', className); }",
+    "const inputGroupButtonVariants = cva('nx:flex', { variants: { size: { xs: 'nx:[&>svg]:size-3.5' } } });",
+    "export const messageScrollerButtonVariants = cva('nx:absolute nx:[&_svg]:size-4');",
   ],
   invalid: [
     {
@@ -294,6 +318,42 @@ ruleTester.run('nx-class-conventions', rule, {
       code: "const c = 'nx:transition-colors nx:focus-visible:outline-2';",
       filename: '/repo/apps/docs/app/_components/TopNav.tsx',
       errors: [{ messageId: 'ringFadingTransition' }],
+    },
+    // A class list that sizes its `svg` children must stroke them.
+    {
+      code: "const c = 'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-4';",
+      errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    {
+      code: "const c = 'nx:[&>svg]:h-3 nx:[&>svg]:w-3';",
+      errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    {
+      code: "const c = `nx:[&_svg:not([class*='size-'])]:size-4`;",
+      errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    {
+      code: "const c = 'nx:group-data-[orientation=vertical]/attachment:[&_svg]:size-8';",
+      errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    // The whole `cva()` call is one class list, reported once.
+    {
+      code: "const c = cva('nx:flex', { variants: { variant: { default: '', icon: 'nx:[&_svg]:size-6' } } });",
+      errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    {
+      code: "const x = <span className={cn('nx:[&>svg]:size-4', className)} />;",
+      languageOptions: { parserOptions: { ecmaFeatures: { jsx: true } } },
+      errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    // Only the plain class counts, and only the listed parts are exempt.
+    {
+      code: "const c = 'nx:[&_svg]:size-4 nx:hover:icon-stroke';",
+      errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    {
+      code: "function AlertIcon() { return cn('nx:[&>svg]:size-4', className); }",
+      errors: [{ messageId: 'unstrokedIcon' }],
     },
   ],
 });

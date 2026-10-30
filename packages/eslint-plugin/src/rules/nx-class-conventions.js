@@ -105,6 +105,73 @@ function fadesItsFocusRing(scope) {
   );
 }
 
+/** Splits a class at the `:` separators outside `[…]` and `(…)`. */
+function classSegments(className) {
+  const parts = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < className.length; i++) {
+    const char = className[i];
+    if (char === '[' || char === '(') depth++;
+    else if (char === ']' || char === ')') depth--;
+    else if (char === ':' && depth === 0) {
+      parts.push(className.slice(start, i));
+      start = i + 1;
+    }
+  }
+  parts.push(className.slice(start));
+  return parts;
+}
+
+// An arbitrary variant whose subject is a child `svg`, such as `[&_svg]` or
+// `[&>svg:not([class*='size-'])]`. Nested groups are dropped first, so in
+// `[&:has(svg)]` the subject is the box around the icon.
+function selectsChildSvg(variant) {
+  if (!variant.startsWith('[') || !variant.endsWith(']')) return false;
+  let depth = 0;
+  let selector = '';
+  for (const char of variant.slice(1, -1)) {
+    if (char === '[' || char === '(') depth++;
+    else if (char === ']' || char === ')') depth--;
+    else if (depth === 0) selector += char;
+  }
+  return /^svg(?![\w-])/.test(selector.split(/[_>+~]/).at(-1));
+}
+
+// A class list that sizes its `svg` children, such as `nx:[&_svg]:size-4`,
+// draws the icon, so it sets the icon's line with `nx:icon-stroke` too.
+function leavesIconUnstroked(scope) {
+  const classes = scope.split(/\s+/);
+  if (classes.includes('nx:icon-stroke')) return false;
+  return classes.some((token) => {
+    if (!token.startsWith('nx:')) return false;
+    const parts = classSegments(token.slice('nx:'.length));
+    const utility = parts.pop();
+    return /^(?:size|h|w)-/.test(utility) && parts.some(selectsChildSvg);
+  });
+}
+
+// Class lists handed to a part that already strokes its icons: AttachmentMedia
+// renders ItemMedia, and the two recipes style a Button.
+const STROKED_BY_INNER_PART = new Set([
+  'AttachmentMedia',
+  'inputGroupButtonVariants',
+  'messageScrollerButtonVariants',
+]);
+
+/** The name of the function or variable a class list is written in. */
+function ownerName(node) {
+  for (let current = node.parent; current; current = current.parent) {
+    if (
+      current.type === 'FunctionDeclaration' ||
+      current.type === 'VariableDeclarator'
+    ) {
+      return current.id?.name;
+    }
+  }
+  return undefined;
+}
+
 function isStoryFile(filename) {
   return /\.stories\.[jt]sx?$/.test(filename);
 }
@@ -255,7 +322,7 @@ export default {
     type: 'problem',
     docs: {
       description:
-        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, and no ring-fading `transition-colors` on a focus-ring surface.',
+        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, no ring-fading `transition-colors` on a focus-ring surface, and no sized `svg` children without `nx:icon-stroke`.',
     },
     schema: [],
     messages: {
@@ -277,6 +344,8 @@ export default {
         'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
+      unstrokedIcon:
+        'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-4`), so add `nx:icon-stroke` to draw stroked icons at `--nx-icon-stroke`.',
     },
   },
   create(context) {
@@ -290,13 +359,21 @@ export default {
     }
 
     function reportScope(node) {
-      if (isDocsSpecimenPage(filename) || isInsideClassCall(node)) {
+      if (isInsideClassCall(node)) {
         return;
       }
       const collected = [];
       collectClassStrings(node, visitorKeys, collected);
-      if (fadesItsFocusRing(collected.join(' '))) {
+      const scope = collected.join(' ');
+      if (!isDocsSpecimenPage(filename) && fadesItsFocusRing(scope)) {
         context.report({ node, messageId: 'ringFadingTransition' });
+      }
+      if (
+        !isExampleFile(filename) &&
+        !STROKED_BY_INNER_PART.has(ownerName(node)) &&
+        leavesIconUnstroked(scope)
+      ) {
+        context.report({ node, messageId: 'unstrokedIcon' });
       }
     }
 
