@@ -40,15 +40,13 @@ export function emptyInstallResult(): InstallResult {
 function addCssImports(
   project: Project,
   config: Config,
-  files: string[],
+  lines: string[],
   dryRun: boolean
 ) {
-  if (files.length === 0) return [];
+  if (lines.length === 0) return [];
   const entry = path.join(project.root, config.css);
   const current = existsSync(entry) ? readFileSync(entry, 'utf8') : '';
-  const added = [...new Set(files)]
-    .map((file) => cssImportLine(config, file))
-    .filter((line) => !current.includes(line));
+  const added = [...new Set(lines)].filter((line) => !current.includes(line));
   if (added.length > 0 && !dryRun) {
     writeFileSync(entry, `${current.trimEnd()}\n${added.join('\n')}\n`);
   }
@@ -57,9 +55,9 @@ function addCssImports(
 
 /**
  * Installs `names` and everything they need: files, npm packages and
- * component stylesheet imports. A file that matches `previous` is replaced;
- * nxds's changes are merged into any other changed file (see `writeFiles`).
- * Updates `config` in place.
+ * component stylesheet imports, plus `extraPackages`. A file that matches
+ * `previous` is replaced; nxds's changes are merged into any other changed
+ * file (see `writeFiles`). Updates `config` in place.
  */
 export function installItems(
   catalog: Catalog,
@@ -67,7 +65,8 @@ export function installItems(
   config: Config,
   names: string[],
   previous: PreviousFiles,
-  options: InstallOptions
+  options: InstallOptions,
+  extraPackages: Record<string, string> = {}
 ): InstallResult {
   const items = resolveItems(catalog, config.framework, names);
   const variants = items.map((item) => variantFor(item, config));
@@ -88,7 +87,11 @@ export function installItems(
 
   const packages = packagesToInstall(
     project,
-    Object.assign({}, ...variants.map((variant) => variant.packages.npm))
+    Object.assign(
+      {},
+      ...variants.map((variant) => variant.packages.npm),
+      extraPackages
+    )
   );
   if (options.install && !options.dryRun) {
     installPackages(project, packages, { dev: false });
@@ -97,7 +100,9 @@ export function installItems(
   const cssImports = addCssImports(
     project,
     config,
-    variants.flatMap((variant) => variant.css),
+    variants
+      .flatMap((variant) => variant.css)
+      .map((file) => cssImportLine(config, file)),
     options.dryRun
   );
 

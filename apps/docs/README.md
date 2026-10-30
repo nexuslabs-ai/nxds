@@ -24,13 +24,17 @@ product scene built from public nxds components.
   `nxds-docs-appearance`, and every page, including `/playground`, renders with it.
   The example scene renders inline under that same appearance. Its overlays
   portal into the docs document, so they look the same as the canvas.
-- **Undo and Reset.** `useAppearanceHistory` (`app/_workspace/appearance-state.ts`)
-  keeps up to 100 undo steps. Each edit or reset records the previous values of
-  only the keys it changed, and Undo writes those back, so changes made outside
-  the panel (such as the top-nav light/dark toggle) survive an Undo. The history
-  is per visit and is not persisted.
-- **Export.** "Use this theme" shows three files, each with a copy control:
+- **Icons.** The icon library lives outside the appearance, in
+  `app/_lib/icon-library.ts`, since an app picks it when it installs nxds.
+- **Shuffle, Undo and Reset.** `useDocsTheme` (`app/_lib/docs-theme.ts`) keeps
+  one history of up to 100 undo steps for every theme control: the theme panel
+  on docs pages, the playground and the token lab. Each edit, shuffle or reset
+  records the previous values of only what it changed, and Undo writes those
+  back, so changes made elsewhere (such as the top-nav light/dark toggle)
+  survive an Undo. The history is per visit and is not persisted.
+- **Export.** "Use this theme", in the theme panel and the playground, shows the
+  `nxds-cli init` command that sets up the theme, with a flag for each part
+  that differs from nxds's default. Below it, for apps without the CLI,
   `nxds-appearance.ts` holds the appearance state to pass as `defaultState`,
-  `theme.css` holds the derived light and dark themes, and `preferences.css`
-  holds the font and motion preferences. The CSS comes from the same appearance
-  snapshot the provider applies to the page.
+  `theme.css` the derived light and dark themes, and `preferences.css` the font
+  and motion preferences.

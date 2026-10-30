@@ -457,6 +457,7 @@ describe('token catalogue', () => {
     const changedBy = new Map<string, string>();
     for (const [field, value] of [
       ['uiFont', 'serif'],
+      ['headingFont', 'serif'],
       ['codeFont', 'monospace'],
       ['codeFontSize', prefs.codeFontSize + 2],
     ] as const) {

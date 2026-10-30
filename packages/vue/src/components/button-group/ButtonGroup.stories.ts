@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
-  IconBold,
-  IconChevronDown,
-  IconItalic,
-  IconLink,
-  IconUnderline,
-} from '@tabler/icons-vue';
+  PhCaretDown,
+  PhLink,
+  PhTextB,
+  PhTextItalic,
+  PhTextUnderline,
+} from '@phosphor-icons/vue';
+import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
 
 import { Button } from '../button';
@@ -173,25 +173,25 @@ export const WithSeparator: Story = {
       Button,
       ButtonGroup,
       ButtonGroupSeparator,
-      IconBold,
-      IconItalic,
-      IconLink,
-      IconUnderline,
+      PhTextB,
+      PhTextItalic,
+      PhLink,
+      PhTextUnderline,
     },
     template: `
       <ButtonGroup>
         <Button variant="ghost" size="icon" aria-label="Bold">
-          <IconBold />
+          <PhTextB />
         </Button>
         <Button variant="ghost" size="icon" aria-label="Italic">
-          <IconItalic />
+          <PhTextItalic />
         </Button>
         <Button variant="ghost" size="icon" aria-label="Underline">
-          <IconUnderline />
+          <PhTextUnderline />
         </Button>
         <ButtonGroupSeparator />
         <Button variant="ghost" size="icon" aria-label="Add link">
-          <IconLink />
+          <PhLink />
         </Button>
       </ButtonGroup>
     `,
@@ -314,7 +314,7 @@ export const SplitButton: Story = {
       DropdownMenuContent,
       DropdownMenuItem,
       DropdownMenuTrigger,
-      IconChevronDown,
+      PhCaretDown,
     },
     template: `
       <ButtonGroup size="sm">
@@ -323,7 +323,7 @@ export const SplitButton: Story = {
           <DropdownMenuTrigger as-child>
             <Button>
               Options
-              <template #end-icon><IconChevronDown /></template>
+              <template #end-icon><PhCaretDown /></template>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

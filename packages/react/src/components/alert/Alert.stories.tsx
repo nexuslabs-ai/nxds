@@ -1,12 +1,12 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconAlertCircle,
-  IconAlertTriangle,
-  IconCircleCheck,
-  IconInfoCircle,
-} from '@tabler/icons-react';
+  CheckCircleIcon,
+  InfoIcon,
+  WarningCircleIcon,
+  WarningIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -87,7 +87,7 @@ function DismissibleCloseButtonExample(
   return (
     <Alert {...props} className="nx:max-w-xl">
       <AlertIcon>
-        <IconInfoCircle />
+        <InfoIcon />
       </AlertIcon>
       <AlertContent>
         <AlertTitle>Invite ready</AlertTitle>
@@ -126,7 +126,7 @@ export const WithIcon: Story = {
   render: (args) => (
     <Alert {...args} className="nx:max-w-md">
       <AlertIcon>
-        <IconInfoCircle />
+        <InfoIcon />
       </AlertIcon>
       <AlertTitle>Information</AlertTitle>
       <AlertDescription>
@@ -153,7 +153,7 @@ export const BannerPresentation: Story = {
   render: (args) => (
     <Alert {...args} className="nx:max-w-md">
       <AlertIcon>
-        <IconInfoCircle />
+        <InfoIcon />
       </AlertIcon>
       <AlertTitle>Information</AlertTitle>
       <AlertDescription>
@@ -177,7 +177,7 @@ export const DestructiveWithIcon: Story = {
   render: (args) => (
     <Alert {...args} className="nx:max-w-md">
       <AlertIcon>
-        <IconAlertCircle />
+        <WarningCircleIcon />
       </AlertIcon>
       <AlertTitle>Error</AlertTitle>
       <AlertDescription>
@@ -194,7 +194,7 @@ export const InformationWithIcon: Story = {
   render: (args) => (
     <Alert {...args} className="nx:max-w-md">
       <AlertIcon>
-        <IconInfoCircle />
+        <InfoIcon />
       </AlertIcon>
       <AlertTitle>Information</AlertTitle>
       <AlertDescription>
@@ -211,7 +211,7 @@ export const SuccessWithIcon: Story = {
   render: (args) => (
     <Alert {...args} className="nx:max-w-md">
       <AlertIcon>
-        <IconCircleCheck />
+        <CheckCircleIcon />
       </AlertIcon>
       <AlertTitle>Success</AlertTitle>
       <AlertDescription>
@@ -228,7 +228,7 @@ export const WarningWithIcon: Story = {
   render: (args) => (
     <Alert {...args} className="nx:max-w-md">
       <AlertIcon>
-        <IconAlertTriangle />
+        <WarningIcon />
       </AlertIcon>
       <AlertTitle>Warning</AlertTitle>
       <AlertDescription>
@@ -342,7 +342,7 @@ export const InlineAction: Story = {
   render: (args) => (
     <Alert {...args} className="nx:max-w-xl">
       <AlertIcon>
-        <IconAlertTriangle />
+        <WarningIcon />
       </AlertIcon>
       <AlertContent>
         <AlertTitle>Storage almost full</AlertTitle>
@@ -362,7 +362,7 @@ export const DescriptionLinkAction: Story = {
   render: (args) => (
     <Alert {...args} className="nx:max-w-md">
       <AlertIcon>
-        <IconInfoCircle />
+        <InfoIcon />
       </AlertIcon>
       <AlertTitle>Sync is paused</AlertTitle>
       <AlertDescription>
@@ -395,7 +395,7 @@ export const ActionsBelowDescription: Story = {
   render: (args) => (
     <Alert {...args} className="nx:max-w-md">
       <AlertIcon>
-        <IconAlertTriangle />
+        <WarningIcon />
       </AlertIcon>
       <AlertContent>
         <AlertTitle>Plan limit reached</AlertTitle>
@@ -420,7 +420,7 @@ export const InlineActionsWithClose: Story = {
   render: (args) => (
     <Alert {...args} className="nx:max-w-2xl">
       <AlertIcon>
-        <IconCircleCheck />
+        <CheckCircleIcon />
       </AlertIcon>
       <AlertContent>
         <AlertTitle>Deployment complete</AlertTitle>
@@ -444,7 +444,7 @@ export const DisabledClose: Story = {
   render: (args) => (
     <Alert {...args} className="nx:max-w-2xl">
       <AlertIcon>
-        <IconCircleCheck />
+        <CheckCircleIcon />
       </AlertIcon>
       <AlertContent>
         <AlertTitle>Deployment complete</AlertTitle>
@@ -479,7 +479,7 @@ export const HelperBanner: Story = {
   render: (args) => (
     <Alert {...args} className="nx:max-w-3xl">
       <AlertIcon>
-        <IconInfoCircle />
+        <InfoIcon />
       </AlertIcon>
       <AlertContent>
         <AlertDescription>
@@ -513,7 +513,7 @@ export const TextCloseLabel: Story = {
   render: (args) => (
     <Alert {...args} className="nx:max-w-xl">
       <AlertIcon>
-        <IconInfoCircle />
+        <InfoIcon />
       </AlertIcon>
       <AlertContent>
         <AlertTitle>Text close control</AlertTitle>
@@ -550,7 +550,7 @@ export const WithDataAttributes: Story = {
       </Alert>
       <Alert variant="warning" layout="inline" className="nx:max-w-xl">
         <AlertIcon>
-          <IconAlertTriangle />
+          <WarningIcon />
         </AlertIcon>
         <AlertContent>
           <AlertTitle>Storage almost full</AlertTitle>
@@ -611,7 +611,7 @@ export const AllVariants: Story = {
         </div>
         <Alert className="nx:max-w-md">
           <AlertIcon>
-            <IconInfoCircle />
+            <InfoIcon />
           </AlertIcon>
           <AlertTitle>Default Alert</AlertTitle>
           <AlertDescription>
@@ -626,7 +626,7 @@ export const AllVariants: Story = {
         </div>
         <Alert variant="information" className="nx:max-w-md">
           <AlertIcon>
-            <IconInfoCircle />
+            <InfoIcon />
           </AlertIcon>
           <AlertTitle>Information Alert</AlertTitle>
           <AlertDescription>This is an informational alert.</AlertDescription>
@@ -639,7 +639,7 @@ export const AllVariants: Story = {
         </div>
         <Alert variant="destructive" className="nx:max-w-md">
           <AlertIcon>
-            <IconAlertCircle />
+            <WarningCircleIcon />
           </AlertIcon>
           <AlertTitle>Destructive Alert</AlertTitle>
           <AlertDescription>
@@ -654,7 +654,7 @@ export const AllVariants: Story = {
         </div>
         <Alert variant="success" className="nx:max-w-md">
           <AlertIcon>
-            <IconCircleCheck />
+            <CheckCircleIcon />
           </AlertIcon>
           <AlertTitle>Success Alert</AlertTitle>
           <AlertDescription>This is a success alert.</AlertDescription>
@@ -667,7 +667,7 @@ export const AllVariants: Story = {
         </div>
         <Alert variant="warning" className="nx:max-w-md">
           <AlertIcon>
-            <IconAlertTriangle />
+            <WarningIcon />
           </AlertIcon>
           <AlertTitle>Warning Alert</AlertTitle>
           <AlertDescription>This is a warning alert.</AlertDescription>
@@ -686,7 +686,7 @@ export const AllBannerVariants: Story = {
         </div>
         <Alert presentation="banner" className="nx:max-w-md">
           <AlertIcon>
-            <IconInfoCircle />
+            <InfoIcon />
           </AlertIcon>
           <AlertTitle>Default Alert</AlertTitle>
           <AlertDescription>
@@ -705,7 +705,7 @@ export const AllBannerVariants: Story = {
           className="nx:max-w-md"
         >
           <AlertIcon>
-            <IconInfoCircle />
+            <InfoIcon />
           </AlertIcon>
           <AlertTitle>Information Alert</AlertTitle>
           <AlertDescription>This is an informational alert.</AlertDescription>
@@ -722,7 +722,7 @@ export const AllBannerVariants: Story = {
           className="nx:max-w-md"
         >
           <AlertIcon>
-            <IconAlertCircle />
+            <WarningCircleIcon />
           </AlertIcon>
           <AlertTitle>Destructive Alert</AlertTitle>
           <AlertDescription>
@@ -737,7 +737,7 @@ export const AllBannerVariants: Story = {
         </div>
         <Alert presentation="banner" variant="success" className="nx:max-w-md">
           <AlertIcon>
-            <IconCircleCheck />
+            <CheckCircleIcon />
           </AlertIcon>
           <AlertTitle>Success Alert</AlertTitle>
           <AlertDescription>This is a success alert.</AlertDescription>
@@ -750,7 +750,7 @@ export const AllBannerVariants: Story = {
         </div>
         <Alert presentation="banner" variant="warning" className="nx:max-w-md">
           <AlertIcon>
-            <IconAlertTriangle />
+            <WarningIcon />
           </AlertIcon>
           <AlertTitle>Warning Alert</AlertTitle>
           <AlertDescription>This is a warning alert.</AlertDescription>

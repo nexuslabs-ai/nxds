@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { IconDots } from '@tabler/icons-vue';
 import type { HTMLAttributes } from 'vue';
 
+import { IconDots } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 export interface PaginationEllipsisProps {

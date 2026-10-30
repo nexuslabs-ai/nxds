@@ -211,6 +211,115 @@ Each mode keeps its own value, so a user can raise contrast in dark mode only.
 For the contrast targets behind each value, see
 [Color](/foundations/color#contrast-setting).
 
+## Fonts
+
+`prefs.uiFont`, `prefs.headingFont` and `prefs.codeFont` set the
+`font-family` stacks for UI text, headings and code.
+
+```ts
+// app/appearance-state.ts
+import { DEFAULT_NXDS_APPEARANCE, type NxdsAppearanceState } from '@nxds/core';
+
+export const defaultAppearance = {
+  ...DEFAULT_NXDS_APPEARANCE,
+  prefs: {
+    ...DEFAULT_NXDS_APPEARANCE.prefs,
+    uiFont:
+      '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    headingFont: '"Lora Variable", Georgia, serif',
+  },
+} satisfies NxdsAppearanceState;
+```
+
+`headingFont` is `null` by default, so headings use the UI font.
+
+Load a font before you name it. Install its Fontsource package, then import it
+in your nxds CSS entry:
+
+```css
+/* app/nxds.css */
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/lora';
+```
+
+[`init --font`](/getting-started/install#optional-set-your-theme) does both
+steps, and sets the font in your theme. `FONT_OPTIONS` in `@nxds/core` lists the fonts it offers,
+with each font's stack and package:
+
+| Category | Fonts                                                  |
+| -------- | ------------------------------------------------------ |
+| Sans     | Geist, Inter, Figtree, DM Sans, Manrope, IBM Plex Sans |
+| Serif    | Lora, Playfair Display                                 |
+| Mono     | Geist Mono, JetBrains Mono                             |
+
+## Icons
+
+nxds components draw their own icons, such as a Select's chevron, from
+`lib/icons.ts`. That file draws Phosphor. To use another library, pick it when
+you set up:
+
+```bash
+npx nxds-cli@latest init --icons lucide
+```
+
+| Library      | `--icons`   |
+| ------------ | ----------- |
+| Phosphor     | `phosphor`  |
+| Lucide       | `lucide`    |
+| Tabler Icons | `tabler`    |
+| HugeIcons    | `hugeicons` |
+| Remix Icon   | `remix`     |
+
+Remix Icon uses the Remix Icon License, not MIT. It bars logo use and building
+a competing icon set.
+
+Icons you pass to a component, such as a Button's icon, come from any library
+you like.
+
+## Shuffle
+
+`shuffleNxdsAppearance` returns a random theme built from the curated options.
+It picks the brand preset, surface tone, density, corners, elevation, stroke,
+UI font and heading font.
+
+```tsx
+// components/shuffle-button.tsx
+'use client';
+
+import { shuffleNxdsAppearance } from '@nxds/core';
+
+import { useNxdsAppearance } from '@/components/nxds/components/appearance/provider';
+
+export function ShuffleButton() {
+  const { setState } = useNxdsAppearance();
+
+  return (
+    <button
+      type="button"
+      onClick={() => setState((current) => shuffleNxdsAppearance(current))}
+    >
+      Shuffle
+    </button>
+  );
+}
+```
+
+Shuffle keeps mode, contrast and the other preferences. Every brand preset
+passes the contrast checks on every surface tone.
+
+Shuffle picks from every font in `FONT_OPTIONS`. If your app loads only some
+of them, pass those as `fonts`:
+
+```ts
+shuffleNxdsAppearance(current, {
+  fonts: FONT_OPTIONS.filter((font) => font.value === 'inter'),
+});
+```
+
+To try it, select **Shuffle** in the theme panel on any docs page, or in the
+[Playground](/playground). Then select **Use this theme** to copy the `init`
+command that sets it up.
+
 ## Save the theme
 
 The provider saves the appearance and restores it before the page paints.

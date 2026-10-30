@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconAlertCircle,
-  IconAlertTriangle,
-  IconCheck,
-  IconCircleCheck,
-  IconInfoCircle,
-  IconX,
-} from '@tabler/icons-react';
+  CheckCircleIcon,
+  CheckIcon,
+  InfoIcon,
+  WarningCircleIcon,
+  WarningIcon,
+  XIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within } from 'storybook/test';
 
 import { Spinner } from '../spinner/spinner';
@@ -198,7 +198,7 @@ export const WithLeftIcon: Story = {
     children: 'Verified',
     variant: 'success',
     isCaps: false,
-    leftIcon: <IconCheck />,
+    leftIcon: <CheckIcon />,
   },
 };
 
@@ -215,7 +215,7 @@ export const WithRightIcon: Story = {
     children: 'Dismiss',
     variant: 'secondary',
     isCaps: false,
-    rightIcon: <IconX />,
+    rightIcon: <XIcon />,
   },
 };
 
@@ -224,8 +224,8 @@ export const WithBothIcons: Story = {
     children: 'Status',
     variant: 'default',
     isCaps: false,
-    leftIcon: <IconCheck />,
-    rightIcon: <IconX />,
+    leftIcon: <CheckIcon />,
+    rightIcon: <XIcon />,
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -255,7 +255,7 @@ export const IconOnly: Story = {
   args: {
     variant: 'success',
     fill: 'light',
-    leftIcon: <IconCheck />,
+    leftIcon: <CheckIcon />,
     'aria-label': 'Approved',
   },
   play: async ({ canvasElement }) => {
@@ -324,7 +324,7 @@ export const StatusWithIcons: Story = {
         variant="success"
         fill="light"
         isCaps={false}
-        leftIcon={<IconCircleCheck />}
+        leftIcon={<CheckCircleIcon />}
       >
         Success
       </Badge>
@@ -332,7 +332,7 @@ export const StatusWithIcons: Story = {
         variant="warning"
         fill="light"
         isCaps={false}
-        leftIcon={<IconAlertTriangle />}
+        leftIcon={<WarningIcon />}
       >
         Warning
       </Badge>
@@ -340,7 +340,7 @@ export const StatusWithIcons: Story = {
         variant="error"
         fill="light"
         isCaps={false}
-        leftIcon={<IconAlertCircle />}
+        leftIcon={<WarningCircleIcon />}
       >
         Error
       </Badge>
@@ -348,7 +348,7 @@ export const StatusWithIcons: Story = {
         variant="information"
         fill="light"
         isCaps={false}
-        leftIcon={<IconInfoCircle />}
+        leftIcon={<InfoIcon />}
       >
         Info
       </Badge>
@@ -652,19 +652,19 @@ export const AllVariants: Story = {
           <Badge
             variant="success"
             fill="light"
-            leftIcon={<IconCheck />}
+            leftIcon={<CheckIcon />}
             aria-label="Approved"
           />
           <Badge
             variant="default"
             fill="solid"
-            leftIcon={<IconCheck />}
+            leftIcon={<CheckIcon />}
             aria-label="Verified"
           />
           <Badge
             variant="error"
             fill="outline"
-            rightIcon={<IconX />}
+            rightIcon={<XIcon />}
             aria-label="Error"
           />
         </div>
@@ -676,13 +676,13 @@ export const AllVariants: Story = {
           With Icons
         </h3>
         <div className="nx:flex nx:flex-wrap nx:items-center nx:gap-2">
-          <Badge variant="default" isCaps={false} leftIcon={<IconCheck />}>
+          <Badge variant="default" isCaps={false} leftIcon={<CheckIcon />}>
             Label
           </Badge>
-          <Badge variant="success" isCaps={false} leftIcon={<IconCheck />}>
+          <Badge variant="success" isCaps={false} leftIcon={<CheckIcon />}>
             Label
           </Badge>
-          <Badge variant="error" isCaps={false} rightIcon={<IconX />}>
+          <Badge variant="error" isCaps={false} rightIcon={<XIcon />}>
             Label
           </Badge>
         </div>

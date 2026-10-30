@@ -92,6 +92,7 @@ function typographyControl(path: readonly string[]): CatalogueControl | null {
   if (group === 'size' || group === 'line-height') return UI_SCALE_CONTROL;
   if (group !== 'family') return null;
   if (key === 'font-sans') return { kind: 'pref', field: 'uiFont' };
+  if (key === 'font-heading') return { kind: 'pref', field: 'headingFont' };
   if (key === 'font-mono') return { kind: 'pref', field: 'codeFont' };
   return null;
 }

@@ -1,5 +1,10 @@
-import { ICON_NAMES, iconComponent } from '@nxds/claude-design/icons';
-import * as TablerIcons from '@tabler/icons-react';
+import {
+  ICON_NAMES,
+  iconComponent,
+  iconWeight,
+} from '@nxds/claude-design/icons';
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
+import * as PhosphorIcons from '@phosphor-icons/react/ssr';
 
 import { CanvasIconSearch } from './_canvas-icons-search';
 
@@ -12,9 +17,9 @@ import { CanvasIconSearch } from './_canvas-icons-search';
 export const description =
   'Every icon a Claude Design canvas can name with nxds, and how to place one.';
 
-const icons = TablerIcons as unknown as Record<
+const icons = PhosphorIcons as unknown as Record<
   string,
-  TablerIcons.Icon | undefined
+  PhosphorIcon | undefined
 >;
 
 export default function CanvasIcons() {
@@ -22,10 +27,13 @@ export default function CanvasIcons() {
     const Icon = icons[iconComponent(name)];
     if (!Icon) {
       throw new Error(
-        `Canvas icons: @tabler/icons-react has no ${iconComponent(name)}. Align its version with @nxds/react-18's.`
+        `Canvas icons: @phosphor-icons/react has no ${iconComponent(name)}. Align its version with @nxds/react-18's.`
       );
     }
-    return { name, icon: <Icon size={20} aria-hidden /> };
+    return {
+      name,
+      icon: <Icon size={20} weight={iconWeight(name)} aria-hidden />,
+    };
   });
 
   return (
@@ -46,7 +54,8 @@ export default function CanvasIcons() {
       <p className="nx:typography-body-default nx:text-muted-foreground nx:mb-8 nx:max-w-[64ch]">
         <code>Nxds.Icon</code> places an icon on its own. Button, Badge and the
         other parts with an icon prop take the name in that prop. In an app,
-        import the same icon from <code>@tabler/icons-react</code>.
+        import the same icon from <code>@phosphor-icons/react</code>. A{' '}
+        <code>-fill</code> name draws the filled icon.
       </p>
       <CanvasIconSearch icons={items} />
     </>

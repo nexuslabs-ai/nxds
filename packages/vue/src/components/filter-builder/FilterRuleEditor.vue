@@ -1,11 +1,4 @@
 <script setup lang="ts">
-import {
-  IconCalendar,
-  IconHash,
-  IconLetterCase,
-  IconList,
-  IconX,
-} from '@tabler/icons-vue';
 import { computed, useId } from 'vue';
 
 import {
@@ -18,6 +11,13 @@ import {
   getFilterOperators,
   isValuelessOperator,
 } from '../../lib/filter-model';
+import {
+  IconCalendar,
+  IconHash,
+  IconLetterCase,
+  IconList,
+  IconX,
+} from '../../lib/icons';
 import { cn } from '../../lib/utils';
 import { Button } from '../button';
 

@@ -28,6 +28,8 @@ export type NxdsStroke = 'fine' | 'normal' | 'strong';
 
 export interface NxdsAppearancePrefs {
   uiFont: string;
+  /** The heading `font-family` stack. `null` follows `uiFont`. */
+  headingFont: string | null;
   codeFont: string;
   codeFontSize: number;
   reduceMotion: boolean;
@@ -148,6 +150,7 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
   stroke: 'normal',
   prefs: {
     uiFont: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    headingFont: null,
     codeFont: 'ui-monospace, "SF Mono", Menlo, monospace',
     codeFontSize: 12,
     reduceMotion: false,
@@ -156,8 +159,9 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
   },
 };
 
-const FONT_PX_MIN = 8;
-const FONT_PX_MAX = 32;
+/** The font sizes, in px, the appearance prefs take. */
+export const FONT_SIZE_PX_MIN = 8;
+export const FONT_SIZE_PX_MAX = 32;
 
 const APPEARANCE_MODES = new Set<NxdsAppearanceMode>([
   'light',
@@ -189,7 +193,10 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 // Font families are interpolated into a `<style>` rule, so reject characters that
 // could break out of the declaration (`;` `{` `}`) or open a tag (`<`).
 const FONT_FAMILY_UNSAFE = /[;{}<]/;
-const fontFamilyOr = (value: unknown, fallback: string): string =>
+const fontFamilyOr = <T extends string | null>(
+  value: unknown,
+  fallback: T
+): string | T =>
   typeof value === 'string' &&
   value.length > 0 &&
   !FONT_FAMILY_UNSAFE.test(value)
@@ -208,7 +215,7 @@ const enumOr = <T extends string>(
 
 const clampFontSize = (value: unknown, fallback: number): number =>
   typeof value === 'number' && Number.isFinite(value) && value > 0
-    ? Math.min(FONT_PX_MAX, Math.max(FONT_PX_MIN, value))
+    ? Math.min(FONT_SIZE_PX_MAX, Math.max(FONT_SIZE_PX_MIN, value))
     : fallback;
 
 function formatPx(value: number): string {
@@ -262,6 +269,7 @@ export function sanitizeNxdsAppearancePrefs(raw: unknown): NxdsAppearancePrefs {
   const d = DEFAULT_NXDS_APPEARANCE.prefs;
   return {
     uiFont: fontFamilyOr(o.uiFont, d.uiFont),
+    headingFont: fontFamilyOr(o.headingFont, d.headingFont),
     codeFont: fontFamilyOr(o.codeFont, d.codeFont),
     codeFontSize: clampFontSize(o.codeFontSize, d.codeFontSize),
     reduceMotion: boolOr(o.reduceMotion, d.reduceMotion),
@@ -314,6 +322,7 @@ export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
   const blocks: string[] = [
     inRuntimeLayer(`:root {
   --nx-typography-family-font-sans: ${prefs.uiFont};
+  --nx-typography-family-font-heading: ${prefs.headingFont ?? 'var(--nx-typography-family-font-sans)'};
   --nx-typography-family-font-mono: ${prefs.codeFont};
   --nx-typography-size-code: ${formatPx(codePx)};
 }`),

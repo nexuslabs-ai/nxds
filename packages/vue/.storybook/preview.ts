@@ -127,6 +127,7 @@ const preview: Preview = {
     elevation: DEFAULT_NXDS_APPEARANCE.elevation,
     stroke: DEFAULT_NXDS_APPEARANCE.stroke,
     uiFont: DEFAULT_NXDS_APPEARANCE.prefs.uiFont,
+    headingFont: DEFAULT_NXDS_APPEARANCE.prefs.headingFont,
     codeFont: DEFAULT_NXDS_APPEARANCE.prefs.codeFont,
     codeFontSize: DEFAULT_NXDS_APPEARANCE.prefs.codeFontSize,
     reduceMotion: DEFAULT_NXDS_APPEARANCE.prefs.reduceMotion,

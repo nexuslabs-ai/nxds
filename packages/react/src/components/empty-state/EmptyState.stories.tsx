@@ -1,5 +1,5 @@
+import { UsersIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconUsers } from '@tabler/icons-react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -37,7 +37,7 @@ export const Default: Story = {
     <EmptyState>
       <EmptyStateHeader>
         <EmptyStateMedia variant="icon">
-          <IconUsers aria-hidden />
+          <UsersIcon aria-hidden />
         </EmptyStateMedia>
         <EmptyStateTitle>No contacts yet</EmptyStateTitle>
         <EmptyStateDescription>
@@ -65,7 +65,7 @@ export const WithoutAction: Story = {
     <EmptyState>
       <EmptyStateHeader>
         <EmptyStateMedia variant="icon">
-          <IconUsers aria-hidden />
+          <UsersIcon aria-hidden />
         </EmptyStateMedia>
         <EmptyStateTitle>No results</EmptyStateTitle>
         <EmptyStateDescription>
@@ -91,7 +91,7 @@ export const TitleAsHeading: Story = {
       <EmptyState>
         <EmptyStateHeader>
           <EmptyStateMedia variant="icon">
-            <IconUsers aria-hidden />
+            <UsersIcon aria-hidden />
           </EmptyStateMedia>
           <EmptyStateTitle asChild>
             <h2 id="empty-state-section-heading">No contacts yet</h2>
@@ -122,7 +122,7 @@ export const WithDataAttributes: Story = {
     <EmptyState>
       <EmptyStateHeader>
         <EmptyStateMedia variant="icon">
-          <IconUsers aria-hidden />
+          <UsersIcon aria-hidden />
         </EmptyStateMedia>
         <EmptyStateTitle>No contacts yet</EmptyStateTitle>
         <EmptyStateDescription>Add your first contact.</EmptyStateDescription>
@@ -160,7 +160,7 @@ export const LongCopyWithLink: Story = {
     <EmptyState>
       <EmptyStateHeader>
         <EmptyStateMedia variant="icon">
-          <IconUsers aria-hidden />
+          <UsersIcon aria-hidden />
         </EmptyStateMedia>
         <EmptyStateTitle>
           No team members match the filters you have applied to this view
@@ -208,7 +208,7 @@ export const Bordered: Story = {
     <EmptyState bordered>
       <EmptyStateHeader>
         <EmptyStateMedia variant="icon">
-          <IconUsers aria-hidden />
+          <UsersIcon aria-hidden />
         </EmptyStateMedia>
         <EmptyStateTitle>No contacts yet</EmptyStateTitle>
         <EmptyStateDescription>
@@ -246,7 +246,7 @@ export const AllVariants: Story = {
       <EmptyState bordered>
         <EmptyStateHeader>
           <EmptyStateMedia variant="icon">
-            <IconUsers aria-hidden />
+            <UsersIcon aria-hidden />
           </EmptyStateMedia>
           <EmptyStateTitle>No contacts yet</EmptyStateTitle>
           <EmptyStateDescription>
@@ -261,7 +261,7 @@ export const AllVariants: Story = {
       <EmptyState>
         <EmptyStateHeader>
           <EmptyStateMedia variant="default">
-            <IconUsers
+            <UsersIcon
               aria-hidden
               className="nx:size-12 nx:text-muted-foreground"
             />

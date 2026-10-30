@@ -35,6 +35,7 @@ const FAMILIES: Record<ScaleFamily, string> = {
 
 const PREF_LABELS: Record<keyof NxdsAppearancePrefs, string> = {
   uiFont: 'UI font',
+  headingFont: 'heading font',
   codeFont: 'code font',
   codeFontSize: 'code font size',
   reduceMotion: 'reduce motion',

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
+import { TextBIcon, TextItalicIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconBold, IconItalic } from '@tabler/icons-react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -35,7 +35,7 @@ export const Default: Story = {
   tags: ['docs'],
   render: () => (
     <Toggle aria-label="Bold">
-      <IconBold />
+      <TextBIcon />
     </Toggle>
   ),
   play: async ({ canvasElement }) => {
@@ -61,17 +61,17 @@ export const Variants: Story = {
   render: () => (
     <div className="nx:flex nx:gap-3">
       <Toggle variant="default" aria-label="Bold">
-        <IconBold />
+        <TextBIcon />
       </Toggle>
       <Toggle variant="outline" aria-label="Italic">
-        <IconItalic />
+        <TextItalicIcon />
       </Toggle>
       <Toggle
         variant="outline-primary"
         aria-label="Outline primary bold"
         defaultPressed
       >
-        <IconBold />
+        <TextBIcon />
       </Toggle>
     </div>
   ),
@@ -90,13 +90,13 @@ export const Sizes: Story = {
   render: () => (
     <div className="nx:flex nx:items-center nx:gap-3">
       <Toggle size="sm" aria-label="Small">
-        <IconBold />
+        <TextBIcon />
       </Toggle>
       <Toggle size="default" aria-label="Default">
-        <IconBold />
+        <TextBIcon />
       </Toggle>
       <Toggle size="lg" aria-label="Large">
-        <IconBold />
+        <TextBIcon />
       </Toggle>
     </div>
   ),
@@ -128,7 +128,7 @@ export const WithText: Story = {
   },
   render: () => (
     <Toggle aria-label="Bold" defaultPressed>
-      <IconBold />
+      <TextBIcon />
       Bold
     </Toggle>
   ),
@@ -139,7 +139,7 @@ export const ClickInteraction: Story = {
   args: { onPressedChange: fn() },
   render: (args) => (
     <Toggle aria-label="Bold" onPressedChange={args.onPressedChange}>
-      <IconBold />
+      <TextBIcon />
     </Toggle>
   ),
   play: async ({ canvasElement, args }) => {
@@ -162,7 +162,7 @@ export const KeyboardInteraction: Story = {
       aria-label="Italic"
       onPressedChange={args.onPressedChange}
     >
-      <IconItalic />
+      <TextItalicIcon />
     </Toggle>
   ),
   play: async ({ canvasElement, args }) => {
@@ -209,7 +209,7 @@ export const Disabled: Story = {
   },
   render: () => (
     <Toggle aria-label="Bold" disabled>
-      <IconBold />
+      <TextBIcon />
     </Toggle>
   ),
   play: async ({ canvasElement }) => {
@@ -228,7 +228,7 @@ export const DisabledInteraction: Story = {
   args: { onPressedChange: fn() },
   render: (args) => (
     <Toggle aria-label="Bold" disabled onPressedChange={args.onPressedChange}>
-      <IconBold />
+      <TextBIcon />
     </Toggle>
   ),
   play: async ({ canvasElement, args }) => {
@@ -246,7 +246,7 @@ export const DisabledInteraction: Story = {
 export const WithDataAttributes: Story = {
   render: () => (
     <Toggle aria-label="Bold" variant="outline" size="sm">
-      <IconBold />
+      <TextBIcon />
     </Toggle>
   ),
   play: async ({ canvasElement }) => {
@@ -269,37 +269,37 @@ export const AllVariants: Story = {
     <div className="nx:flex nx:flex-col nx:gap-4">
       <div className="nx:flex nx:items-center nx:gap-3">
         <Toggle aria-label="Default off">
-          <IconBold />
+          <TextBIcon />
         </Toggle>
         <Toggle aria-label="Default on" defaultPressed>
-          <IconBold />
+          <TextBIcon />
         </Toggle>
         <Toggle variant="outline" aria-label="Outline off">
-          <IconItalic />
+          <TextItalicIcon />
         </Toggle>
         <Toggle variant="outline" aria-label="Outline on" defaultPressed>
-          <IconItalic />
+          <TextItalicIcon />
         </Toggle>
         <Toggle variant="outline-primary" aria-label="Outline primary off">
-          <IconBold />
+          <TextBIcon />
         </Toggle>
         <Toggle
           variant="outline-primary"
           aria-label="Outline primary on"
           defaultPressed
         >
-          <IconBold />
+          <TextBIcon />
         </Toggle>
       </div>
       <div className="nx:flex nx:items-center nx:gap-3">
         <Toggle size="sm" aria-label="Small">
-          <IconBold />
+          <TextBIcon />
         </Toggle>
         <Toggle size="default" aria-label="Medium">
-          <IconBold />
+          <TextBIcon />
         </Toggle>
         <Toggle size="lg" aria-label="Large">
-          <IconBold />
+          <TextBIcon />
         </Toggle>
       </div>
     </div>
@@ -427,7 +427,7 @@ export const HeightAtEveryDensity: Story = {
             </Toggle>
           ))}
           <Toggle aria-label="Italic">
-            <IconItalic />
+            <TextItalicIcon />
           </Toggle>
           <Toggle variant="outline">Bold</Toggle>
           {SIZES.map((size) => (

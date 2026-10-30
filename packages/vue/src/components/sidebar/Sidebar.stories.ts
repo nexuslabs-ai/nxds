@@ -1,19 +1,19 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
-  IconCalendar,
-  IconChartBar,
-  IconChevronRight,
-  IconDots,
-  IconFolder,
-  IconHome,
-  IconInbox,
-  IconLayoutGrid,
-  IconPlus,
-  IconSearch,
-  IconSettings,
-  IconUser,
-  IconUsers,
-} from '@tabler/icons-vue';
+  PhCalendarBlank,
+  PhCaretRight,
+  PhChartBar,
+  PhDotsThree,
+  PhFolder,
+  PhGear,
+  PhHouse,
+  PhMagnifyingGlass,
+  PhPlus,
+  PhSquaresFour,
+  PhTray,
+  PhUser,
+  PhUsers,
+} from '@phosphor-icons/vue';
+import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { defineComponent } from 'vue';
 
@@ -72,11 +72,11 @@ interface SidebarControlsArgs {
 type ControlsStory = StoryObj<SidebarControlsArgs>;
 
 const NAV_ITEMS = [
-  { title: 'Home', icon: IconHome },
-  { title: 'Inbox', icon: IconInbox, badge: '4' },
-  { title: 'Calendar', icon: IconCalendar },
-  { title: 'Search', icon: IconSearch },
-  { title: 'Settings', icon: IconSettings },
+  { title: 'Home', icon: PhHouse },
+  { title: 'Inbox', icon: PhTray, badge: '4' },
+  { title: 'Calendar', icon: PhCalendarBlank },
+  { title: 'Search', icon: PhMagnifyingGlass },
+  { title: 'Settings', icon: PhGear },
 ];
 
 /**
@@ -86,8 +86,8 @@ const NAV_ITEMS = [
  */
 const DemoSidebar = defineComponent({
   components: {
-    IconLayoutGrid,
-    IconUser,
+    PhSquaresFour,
+    PhUser,
     Sidebar,
     SidebarContent,
     SidebarFooter,
@@ -108,7 +108,7 @@ const DemoSidebar = defineComponent({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" tooltip="Acme Inc">
-              <IconLayoutGrid />
+              <PhSquaresFour />
               <span>Acme Inc</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -134,7 +134,7 @@ const DemoSidebar = defineComponent({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton tooltip="Account">
-              <IconUser />
+              <PhUser />
               <span>Account</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -256,11 +256,11 @@ export const AllVariants: Story = {
   tags: ['docs'],
   render: () => ({
     components: {
-      IconCalendar,
-      IconHome,
-      IconInbox,
-      IconLayoutGrid,
-      IconSettings,
+      PhCalendarBlank,
+      PhHouse,
+      PhTray,
+      PhSquaresFour,
+      PhGear,
       Sidebar,
       SidebarContent,
       SidebarGroup,
@@ -282,7 +282,7 @@ export const AllVariants: Story = {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton size="lg">
-                    <IconLayoutGrid />
+                    <PhSquaresFour />
                     <span>Acme Inc</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -295,26 +295,26 @@ export const AllVariants: Story = {
                   <SidebarMenu>
                     <SidebarMenuItem>
                       <SidebarMenuButton is-active>
-                        <IconHome />
+                        <PhHouse />
                         <span>Active</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton variant="outline">
-                        <IconInbox />
+                        <PhTray />
                         <span>Outline</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton size="sm">
-                        <IconCalendar />
+                        <PhCalendarBlank />
                         <span>Small</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton as-child>
                         <a href="https://example.com">
-                          <IconSettings />
+                          <PhGear />
                           <span>As link</span>
                         </a>
                       </SidebarMenuButton>
@@ -437,9 +437,9 @@ export const WithSubmenu: Story = {
   },
   render: () => ({
     components: {
-      IconChevronRight,
-      IconFolder,
-      IconInbox,
+      PhCaretRight,
+      PhFolder,
+      PhTray,
       Sidebar,
       SidebarContent,
       SidebarGroup,
@@ -468,9 +468,9 @@ export const WithSubmenu: Story = {
                   <SidebarMenu>
                     <SidebarMenuItem>
                       <SidebarMenuButton is-active>
-                        <IconFolder />
+                        <PhFolder />
                         <span>Design System</span>
-                        <IconChevronRight class="nx:ml-auto" />
+                        <PhCaretRight class="nx:ml-auto" />
                       </SidebarMenuButton>
                       <SidebarMenuSub>
                         <SidebarMenuSubItem>
@@ -493,7 +493,7 @@ export const WithSubmenu: Story = {
                   <SidebarMenu>
                     <SidebarMenuItem>
                       <SidebarMenuButton>
-                        <IconInbox />
+                        <PhTray />
                         <span>Inbox</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -690,7 +690,7 @@ export const KeyboardInteraction: Story = {
 export const Disabled: Story = {
   render: () => ({
     components: {
-      IconHome,
+      PhHouse,
       Sidebar,
       SidebarContent,
       SidebarGroup,
@@ -709,7 +709,7 @@ export const Disabled: Story = {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton disabled>
-                      <IconHome />
+                      <PhHouse />
                       <span>Disabled item</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -741,18 +741,18 @@ export const Complex: Story = {
   render: () => ({
     components: {
       DemoInset,
-      IconCalendar,
-      IconChartBar,
-      IconChevronRight,
-      IconDots,
-      IconFolder,
-      IconHome,
-      IconInbox,
-      IconLayoutGrid,
-      IconPlus,
-      IconSettings,
-      IconUser,
-      IconUsers,
+      PhCalendarBlank,
+      PhChartBar,
+      PhCaretRight,
+      PhDotsThree,
+      PhFolder,
+      PhHouse,
+      PhTray,
+      PhSquaresFour,
+      PhPlus,
+      PhGear,
+      PhUser,
+      PhUsers,
       Sidebar,
       SidebarContent,
       SidebarFooter,
@@ -780,9 +780,9 @@ export const Complex: Story = {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton size="lg" tooltip="Acme Inc">
-                  <IconLayoutGrid />
+                  <PhSquaresFour />
                   <span>Acme Inc</span>
-                  <IconChevronRight class="nx:ml-auto" />
+                  <PhCaretRight class="nx:ml-auto" />
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -792,29 +792,29 @@ export const Complex: Story = {
             <SidebarGroup>
               <SidebarGroupLabel>Platform</SidebarGroupLabel>
               <SidebarGroupAction aria-label="Add project">
-                <IconPlus />
+                <PhPlus />
               </SidebarGroupAction>
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton is-active tooltip="Dashboard">
-                      <IconHome />
+                      <PhHouse />
                       <span>Dashboard</span>
                     </SidebarMenuButton>
                     <SidebarMenuBadge>3</SidebarMenuBadge>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton tooltip="Inbox">
-                      <IconInbox />
+                      <PhTray />
                       <span>Inbox</span>
                     </SidebarMenuButton>
                     <SidebarMenuBadge>12</SidebarMenuBadge>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton tooltip="Projects">
-                      <IconFolder />
+                      <PhFolder />
                       <span>Projects</span>
-                      <IconChevronRight class="nx:ml-auto" />
+                      <PhCaretRight class="nx:ml-auto" />
                     </SidebarMenuButton>
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
@@ -830,11 +830,11 @@ export const Complex: Story = {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton tooltip="Tasks">
-                      <IconCalendar />
+                      <PhCalendarBlank />
                       <span>Tasks</span>
                     </SidebarMenuButton>
                     <SidebarMenuAction aria-label="Task options">
-                      <IconDots />
+                      <PhDotsThree />
                     </SidebarMenuAction>
                   </SidebarMenuItem>
                 </SidebarMenu>
@@ -846,22 +846,22 @@ export const Complex: Story = {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton tooltip="Members">
-                      <IconUsers />
+                      <PhUsers />
                       <span>Members</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton tooltip="Reports">
-                      <IconChartBar />
+                      <PhChartBar />
                       <span>Reports</span>
                     </SidebarMenuButton>
                     <SidebarMenuBadge>New</SidebarMenuBadge>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton tooltip="Settings">
-                      <IconSettings />
+                      <PhGear />
                       <span>Settings</span>
-                      <IconChevronRight class="nx:ml-auto" />
+                      <PhCaretRight class="nx:ml-auto" />
                     </SidebarMenuButton>
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
@@ -880,9 +880,9 @@ export const Complex: Story = {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton size="lg" tooltip="Jane Doe">
-                  <IconUser />
+                  <PhUser />
                   <span>Jane Doe</span>
-                  <IconChevronRight class="nx:ml-auto" />
+                  <PhCaretRight class="nx:ml-auto" />
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -907,9 +907,9 @@ export const Compact: Story = {
   },
   render: () => ({
     components: {
-      IconChevronRight,
-      IconFolder,
-      IconUser,
+      PhCaretRight,
+      PhFolder,
+      PhUser,
       Sidebar,
       SidebarContent,
       SidebarFooter,
@@ -932,11 +932,11 @@ export const Compact: Story = {
     },
     setup: () => ({
       items: [
-        { title: 'Home', icon: IconHome },
-        { title: 'Inbox', icon: IconInbox, badge: '4' },
-        { title: 'Calendar', icon: IconCalendar },
-        { title: 'Search', icon: IconSearch },
-        { title: 'Settings', icon: IconSettings },
+        { title: 'Home', icon: PhHouse },
+        { title: 'Inbox', icon: PhTray, badge: '4' },
+        { title: 'Calendar', icon: PhCalendarBlank },
+        { title: 'Search', icon: PhMagnifyingGlass },
+        { title: 'Settings', icon: PhGear },
       ],
     }),
     template: `
@@ -960,9 +960,9 @@ export const Compact: Story = {
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton size="sm" tooltip="Projects">
-                        <IconFolder />
+                        <PhFolder />
                         <span>Projects</span>
-                        <IconChevronRight class="nx:ml-auto" />
+                        <PhCaretRight class="nx:ml-auto" />
                       </SidebarMenuButton>
                       <SidebarMenuSub>
                         <SidebarMenuSubItem>
@@ -981,7 +981,7 @@ export const Compact: Story = {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton size="sm" tooltip="Account">
-                    <IconUser />
+                    <PhUser />
                     <span>Account</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -1027,11 +1027,11 @@ export const Flat: Story = {
     },
     setup: () => ({
       items: [
-        { title: 'Home', icon: IconHome },
-        { title: 'Inbox', icon: IconInbox, badge: '4' },
-        { title: 'Calendar', icon: IconCalendar },
-        { title: 'Search', icon: IconSearch },
-        { title: 'Settings', icon: IconSettings },
+        { title: 'Home', icon: PhHouse },
+        { title: 'Inbox', icon: PhTray, badge: '4' },
+        { title: 'Calendar', icon: PhCalendarBlank },
+        { title: 'Search', icon: PhMagnifyingGlass },
+        { title: 'Settings', icon: PhGear },
       ],
     }),
     template: `

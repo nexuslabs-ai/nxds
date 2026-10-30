@@ -8,10 +8,14 @@ import { formatOklch } from './oklch-format';
 import { type Mode, type Tier, TIER_THRESHOLDS } from './palette';
 import { seedOklch } from './perceptual-ramp';
 
-/** Clamp to an integer 0–100; anything non-finite falls back. */
+/** The range of a contrast setting. */
+export const CONTRAST_MIN = 0;
+export const CONTRAST_MAX = 100;
+
+/** Clamp to an integer in the contrast range; anything non-finite falls back. */
 export function normalizeContrast(value: unknown, fallback = 50): number {
   return typeof value === 'number' && Number.isFinite(value)
-    ? Math.round(Math.max(0, Math.min(100, value)))
+    ? Math.round(Math.max(CONTRAST_MIN, Math.min(CONTRAST_MAX, value)))
     : fallback;
 }
 

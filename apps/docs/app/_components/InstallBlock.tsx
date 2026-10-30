@@ -1,5 +1,8 @@
+import type { NxdsIconLibrary } from '@nxds/core';
+
 import { loadInstallPlan } from '../_lib/catalog';
 import type { Framework } from '../_lib/frameworks';
+import { byIconLibrary } from '../_lib/icon-library-variants';
 
 import { DocsCodeBlock } from './CodeBlock';
 import {
@@ -44,13 +47,28 @@ export function InstallBlock({
   );
 }
 
-/** The components and packages an example needs beyond its page's component. */
+/**
+ * The components and packages an example needs beyond its page's component,
+ * for the reader's icon library.
+ */
 export function ExampleInstall({
   slugs,
   packages,
 }: {
   slugs: readonly string[];
-  /** `name@range` packages the example imports that `slugs` don't install. */
+  /** `name@range` packages the example imports that `slugs` don't install, by icon library. */
+  packages: Readonly<Record<NxdsIconLibrary, readonly string[]>>;
+}) {
+  return byIconLibrary(packages, (needed) => (
+    <ExampleNeeds slugs={slugs} packages={needed} />
+  ));
+}
+
+function ExampleNeeds({
+  slugs,
+  packages,
+}: {
+  slugs: readonly string[];
   packages: readonly string[];
 }) {
   if (slugs.length + packages.length === 0) return null;

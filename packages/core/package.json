@@ -1,6 +1,6 @@
 {
   "name": "@nxds/core",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "type": "module",
   "description": "nxds theme engine: a framework-agnostic appearance model, runtime theme derivation and first-paint snapshots.",
   "keywords": [
@@ -30,7 +30,39 @@
     "directory": "packages/core"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "import": {
+          "types": "./dist/runtime/index.d.ts",
+          "default": "./dist/runtime/index.js"
+        },
+        "require": {
+          "types": "./dist/runtime/index.d.cts",
+          "default": "./dist/runtime/index.cjs"
+        }
+      },
+      "./palette": {
+        "import": {
+          "types": "./dist/runtime/palette.d.ts",
+          "default": "./dist/runtime/palette.js"
+        },
+        "require": {
+          "types": "./dist/runtime/palette.d.cts",
+          "default": "./dist/runtime/palette.cjs"
+        }
+      },
+      "./catalogue": {
+        "import": {
+          "types": "./dist/runtime/catalogue.d.ts",
+          "default": "./dist/runtime/catalogue.js"
+        },
+        "require": {
+          "types": "./dist/runtime/catalogue.d.cts",
+          "default": "./dist/runtime/catalogue.cjs"
+        }
+      }
+    }
   },
   "files": [
     "dist/runtime"
@@ -65,7 +97,8 @@
         "types": "./dist/runtime/catalogue.d.cts",
         "default": "./dist/runtime/catalogue.cjs"
       }
-    }
+    },
+    "./source/*": "./src/*"
   },
   "scripts": {
     "build": "tsup",

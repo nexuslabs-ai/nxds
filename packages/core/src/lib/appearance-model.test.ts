@@ -36,6 +36,7 @@ describe('appearance model', () => {
       elevation: 'quiet',
       stroke: 'normal',
       prefs: {
+        headingFont: null,
         codeFontSize: 12,
         reduceMotion: false,
         pointerCursors: false,
@@ -123,6 +124,7 @@ describe('sanitizeNxdsAppearance', () => {
       stroke: 'fine' as const,
       prefs: {
         ...DEFAULT_NXDS_APPEARANCE.prefs,
+        headingFont: '"Lora Variable", Georgia, serif',
         codeFontSize: 13,
         reduceMotion: true,
         pointerCursors: true,
@@ -281,6 +283,18 @@ describe('sanitizeNxdsAppearancePrefs', () => {
     });
   });
 
+  it('keeps a null heading font, which follows the UI font', () => {
+    expect(
+      sanitizeNxdsAppearancePrefs({ headingFont: null }).headingFont
+    ).toBeNull();
+    expect(
+      sanitizeNxdsAppearancePrefs({ headingFont: 'Lora' }).headingFont
+    ).toBe('Lora');
+    expect(sanitizeNxdsAppearancePrefs({ headingFont: 7 }).headingFont).toBe(
+      DEFAULT_NXDS_APPEARANCE.prefs.headingFont
+    );
+  });
+
   it('rejects font families with CSS-breaking characters', () => {
     // appearancePrefsToCss interpolates these into a <style> rule.
     expect(
@@ -290,6 +304,9 @@ describe('sanitizeNxdsAppearancePrefs', () => {
     expect(
       sanitizeNxdsAppearancePrefs({ codeFont: 'Mono; color:red' }).codeFont
     ).toBe(DEFAULT_NXDS_APPEARANCE.prefs.codeFont);
+    expect(
+      sanitizeNxdsAppearancePrefs({ headingFont: 'Lora</style>' }).headingFont
+    ).toBe(DEFAULT_NXDS_APPEARANCE.prefs.headingFont);
   });
 });
 
@@ -417,6 +434,9 @@ describe('appearancePrefsToCss', () => {
 
     expect(css).toContain('--nx-typography-family-font-sans: Inter;');
     expect(css).toContain('--nx-typography-family-font-mono: JetBrains Mono;');
+    expect(css).toContain(
+      '--nx-typography-family-font-heading: var(--nx-typography-family-font-sans);'
+    );
     expect(css).toContain('--nx-typography-size-code: 32px;');
   });
 
@@ -424,6 +444,12 @@ describe('appearancePrefsToCss', () => {
     expect(appearancePrefsToCss(prefs)).not.toMatch(
       /--nx-typography-(?:size-(?!code)|line-height-)/
     );
+  });
+
+  it('emits a chosen heading font in place of the UI font', () => {
+    const css = appearancePrefsToCss({ ...prefs, headingFont: 'Lora' });
+
+    expect(css).toContain('--nx-typography-family-font-heading: Lora;');
   });
 
   it('leaves the page font size alone', () => {

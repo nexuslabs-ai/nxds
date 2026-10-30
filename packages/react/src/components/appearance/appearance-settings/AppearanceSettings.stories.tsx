@@ -201,6 +201,26 @@ async function expectSelectOptions(
   }
 }
 
+export const HeadingFont: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const heading = canvas.getByRole('heading', { name: 'Typography' });
+    const body = canvas.getByText('UI, heading and code font preferences.');
+    const input = canvas.getByRole('textbox', { name: 'Heading font' });
+    const fontOf = (element: HTMLElement) =>
+      getComputedStyle(element).fontFamily;
+
+    await expect(input).toHaveAttribute('placeholder', 'Same as UI font');
+    await expect(fontOf(heading)).toBe(fontOf(body));
+
+    await userEvent.type(input, 'Georgia');
+    await waitFor(() => expect(fontOf(heading)).toBe('Georgia'));
+
+    await userEvent.clear(input);
+    await waitFor(() => expect(fontOf(heading)).toBe(fontOf(body)));
+  },
+};
+
 export const LayoutModeOptions: Story = {
   play: async ({ canvasElement }) => {
     await expectSelectOptions(

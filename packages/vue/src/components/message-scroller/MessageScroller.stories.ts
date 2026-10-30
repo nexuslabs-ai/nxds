@@ -1,5 +1,5 @@
+import { PhChatText } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { IconMessage2 } from '@tabler/icons-vue';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { defineComponent, ref } from 'vue';
 
@@ -255,7 +255,7 @@ export const EmptyStream: Story = {
       EmptyStateHeader,
       EmptyStateMedia,
       EmptyStateTitle,
-      IconMessage2,
+      PhChatText,
       MessageScroller,
       MessageScrollerButton,
       MessageScrollerContent,
@@ -269,7 +269,7 @@ export const EmptyStream: Story = {
             <MessageScrollerContent>
               <EmptyState>
                 <EmptyStateHeader>
-                  <EmptyStateMedia variant="icon"><IconMessage2 /></EmptyStateMedia>
+                  <EmptyStateMedia variant="icon"><PhChatText /></EmptyStateMedia>
                   <EmptyStateTitle>No messages yet</EmptyStateTitle>
                   <EmptyStateDescription>Send the first message to start this conversation.</EmptyStateDescription>
                 </EmptyStateHeader>

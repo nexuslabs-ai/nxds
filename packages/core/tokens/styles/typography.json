@@ -1,4 +1,39 @@
 {
+  "display": {
+    "large": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{family.font-heading}",
+        "fontSize": "{size.5xl}",
+        "fontWeight": "{weight.semibold}",
+        "lineHeight": "{line-height.5xl}",
+        "letterSpacing": "{letterspacing.tighter}"
+      },
+      "$description": "Largest display title — hero and landing-page section titles"
+    },
+    "medium": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{family.font-heading}",
+        "fontSize": "{size.4xl}",
+        "fontWeight": "{weight.semibold}",
+        "lineHeight": "{line-height.4xl}",
+        "letterSpacing": "{letterspacing.tighter}"
+      },
+      "$description": "Display title one step below display-large, for page sections"
+    },
+    "small": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{family.font-heading}",
+        "fontSize": "{size.3xl}",
+        "fontWeight": "{weight.semibold}",
+        "lineHeight": "{line-height.3xl}",
+        "letterSpacing": "{letterspacing.tighter}"
+      },
+      "$description": "Smallest display title — page-section titles in narrow layouts"
+    }
+  },
   "heading": {
     "large": {
       "$type": "typography",

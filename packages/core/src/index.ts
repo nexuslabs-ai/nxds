@@ -7,6 +7,7 @@ export { adjustContrast } from './lib/adjust-contrast';
 export { apcaLc } from './lib/apca';
 export * from './lib/appearance-dom';
 export * from './lib/appearance-model';
+export * from './lib/appearance-shuffle';
 export * from './lib/appearance-snapshot';
 export * from './lib/brand-presets';
 export type {
@@ -17,6 +18,8 @@ export type {
   TokenMap,
 } from './lib/derive-theme';
 export { deriveTheme, themeToCss } from './lib/derive-theme';
+export * from './lib/font-options';
+export * from './lib/icon-libraries';
 export type { Mode, NxdsSurfaceTone, Tier } from './lib/palette';
 export { PALETTE_KEYS, TIER_THRESHOLDS } from './lib/palette';
 export { isColor } from './lib/perceptual-ramp';
@@ -24,6 +27,7 @@ export { RUNTIME_LAYER_ORDER } from './lib/runtime-layer';
 export type { SurfaceToken } from './lib/surface-ladder';
 export type { ThemeContrastCheck } from './lib/theme-contrast';
 export { measureThemeContrast } from './lib/theme-contrast';
+export * from './lib/theme-fields';
 export {
   SEMANTIC_TOKEN_REGISTRY,
   type SemanticColorName,

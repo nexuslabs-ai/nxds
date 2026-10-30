@@ -69,18 +69,27 @@ function exportsModule(slugs: readonly string[]) {
   ].join('\n');
 }
 
-function iconsModule() {
-  return `export { ${iconSet()
-    .map(({ component }) => component)
-    .join(', ')} } from '@tabler/icons-react';`;
+function iconComponents() {
+  return [...new Set(iconSet().map(({ component }) => component))].join(', ');
 }
 
-// Each icon by its canvas name, for Nxds.Icon and icon props.
+function iconsModule() {
+  return `export { ${iconComponents()} } from '@phosphor-icons/react/ssr';`;
+}
+
+// Each icon by its canvas name, for Nxds.Icon and icon props. A `-fill` name
+// draws its component's filled weight.
 function iconNamesModule() {
-  const icons = iconSet();
+  const entries = iconSet().map(({ component, name, weight }) => {
+    const drawn = weight
+      ? `(props) => createElement(${component}, { weight: ${JSON.stringify(weight)}, ...props })`
+      : component;
+    return `${JSON.stringify(name)}: ${drawn}`;
+  });
   return [
-    `import { ${icons.map(({ component }) => component).join(', ')} } from '@tabler/icons-react';`,
-    `export const ICON_COMPONENTS = { ${icons.map(({ component, name }) => `${JSON.stringify(name)}: ${component}`).join(', ')} };`,
+    "import { createElement } from 'react';",
+    `import { ${iconComponents()} } from '@phosphor-icons/react/ssr';`,
+    `export const ICON_COMPONENTS = { ${entries.join(', ')} };`,
   ].join('\n');
 }
 
