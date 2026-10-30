@@ -418,6 +418,22 @@ export const ThumbAtEveryStroke: Story = {
   },
 };
 
+export const TargetArea: Story = {
+  render: () => <Switch aria-label="Email alerts" />,
+  play: async ({ canvasElement }) => {
+    const control = within(canvasElement).getByRole('switch');
+    const box = control.getBoundingClientRect();
+    // A press 1px outside the track still lands on its 24px-high target,
+    // at the middle and near the end of the track.
+    await expect(
+      document.elementFromPoint(box.left + box.width / 2, box.top - 1)
+    ).toBe(control);
+    await expect(document.elementFromPoint(box.left + 3, box.bottom + 1)).toBe(
+      control
+    );
+  },
+};
+
 // ============================================
 // ALL VARIANTS GRID
 // ============================================
