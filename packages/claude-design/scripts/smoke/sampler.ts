@@ -15,12 +15,54 @@ import {
   type Theme,
 } from './harness.ts';
 
-/** The artboard markup SETUP.md tells Claude to paste, read from the exported guide. */
+/** The two blocks SETUP.md tells Claude to paste, read from the exported guide: the link lines, then the sampler. */
 function shippedArtboard() {
   const guide = readFileSync(path.join(exportDir, 'SETUP.md'), 'utf8');
-  const markup = /```html\n([\s\S]*?)\n```/.exec(guide)?.[1];
-  if (!markup) throw new Error('SETUP.md: no html block for the sampler.');
-  return markup;
+  const [links, sampler, ...rest] = [
+    ...guide.matchAll(/```html\n([\s\S]*?)\n```/g),
+  ].map(([, block = '']) => block);
+  if (links === undefined || sampler === undefined || rest.length > 0) {
+    throw new Error(
+      'SETUP.md: not exactly two html blocks, the link lines and the sampler.'
+    );
+  }
+  return { links, sampler };
+}
+
+// Pasted the way step 4 says, into an artboard that has the canvas's own
+// support.js line and <x-dc>, every link line lands in <head> and every
+// x-import inside <x-dc>.
+async function checkPlacement({
+  links,
+  sampler,
+}: {
+  links: string;
+  sampler: string;
+}) {
+  const { page } = await openPage('Button', LIGHT);
+  const misplaced = await page.evaluate(
+    ({ links, sampler }) => {
+      const artboard = new DOMParser().parseFromString(
+        `<!doctype html><html><head><script src="support.js"></script>${links}</head><body><x-dc>${sampler}</x-dc></body></html>`,
+        'text/html'
+      );
+      return [
+        ...[...artboard.querySelectorAll('link, script[src^="ds/"]')]
+          .filter((element) => element.parentElement !== artboard.head)
+          .map((element) => element.outerHTML),
+        ...[...artboard.querySelectorAll('x-import')]
+          .filter((element) => !element.closest('x-dc'))
+          .map((element) => element.outerHTML.slice(0, 80)),
+      ];
+    },
+    { links, sampler }
+  );
+  await page.close();
+  for (const element of misplaced) {
+    fail(
+      `SETUP.md's step 4 puts ${element} outside its place in the artboard.`
+    );
+  }
 }
 
 /** The value `attribute` takes on the markup's `Nxds.<part>` tag. */
@@ -128,10 +170,10 @@ async function mountSampler(theme: Theme, markup: string) {
   return { result, problems };
 }
 
-// The sampler SETUP.md ships, pasted after the README's link lines and
-// mounted the way a canvas does, renders every part with no console problem
-// in both themes. The sampler has no table, so the canvas wrapper's own
-// nesting warning doesn't apply either.
+// The sampler SETUP.md ships, pasted inside <x-dc> with the link lines in
+// <head>, mounted the way a canvas does, renders every part with no console
+// problem and stays inside its edges in both themes. The sampler has no
+// table, so the canvas wrapper's own nesting warning doesn't apply either.
 export async function checkSampler() {
   const artboard = shippedArtboard();
   const readme = readFileSync(path.join(projectDir, 'README.md'), 'utf8');
@@ -139,9 +181,14 @@ export async function checkSampler() {
     path.join(import.meta.dirname, '..', '..', 'content', 'sampler.html'),
     'utf8'
   );
-  if (artboard !== samplerArtboard(readme, sampler)) {
-    fail("SETUP.md's sampler isn't the README's link lines and sampler.html.");
+  const expected = samplerArtboard(readme, sampler);
+  if (
+    artboard.links !== expected.links ||
+    artboard.sampler !== expected.sampler
+  ) {
+    fail("SETUP.md's blocks aren't the README's link lines and sampler.html.");
   }
+  await checkPlacement(artboard);
   // The frame already loads the system the way the link lines do.
   const markup = sampler.trim();
   const slots = slotsOf(markup);

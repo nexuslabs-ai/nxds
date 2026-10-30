@@ -38,12 +38,55 @@ const X_IMPORT_OPENING = /<x-import\b/gi;
 const PART = 'component-from-global-scope';
 const ICONS = new Set<string>(ICON_NAMES);
 
-/** The `<link>` and `<script>` lines README.md's "On a Design canvas" section gives an artboard, with its `ds/<folder>/` paths. */
-export function canvasLinks(readme: string) {
+/**
+ * The extensions an Artifact publish serves by their extension. A file with
+ * any other extension goes up with its content type set, or not at all.
+ */
+const SERVED_EXTENSIONS = new Set([
+  '.html',
+  '.css',
+  '.js',
+  '.mjs',
+  '.json',
+  '.md',
+  '.txt',
+  '.csv',
+  '.xml',
+  '.svg',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.webp',
+  '.woff',
+  '.woff2',
+  '.ttf',
+  '.otf',
+]);
+
+/** The `project/` files SETUP.md tells Claude to publish as `text/plain`. */
+const TEXT_PLAIN_FILES = ['components/index.d.ts'];
+
+/** The files step 2 checks a canvas for, under `ds/<folder>/`. The canvas copies tokens.json itself, and README.md's "On a Design canvas" section names the rest. */
+const CANVAS_FILES = [
+  'tokens.json',
+  'tokens.css',
+  'components/bundle.css',
+  'components/bundle.js',
+  'components/index.d.ts',
+];
+
+function canvasSection(readme: string) {
   const section = /^## On a Design canvas\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(
     readme
   )?.[1];
-  const html = /```html\n([\s\S]*?)```/.exec(section ?? '')?.[1];
+  if (!section) throw new Error('README.md: no "On a Design canvas" section.');
+  return section;
+}
+
+/** The `<link>` and `<script>` lines README.md's "On a Design canvas" section gives an artboard, with its `ds/<folder>/` paths. */
+export function canvasLinks(readme: string) {
+  const html = /```html\n([\s\S]*?)```/.exec(canvasSection(readme))?.[1];
   if (!html) {
     throw new Error(
       'README.md: no html block under "On a Design canvas" to link the system from.'
@@ -52,12 +95,62 @@ export function canvasLinks(readme: string) {
   return html.trim().split('\n');
 }
 
-/** The markup SETUP.md tells Claude to paste: the README's link lines, then the sampler. */
+/** What SETUP.md tells Claude to paste: the README's link lines for `<head>`, and the sampler for inside `<x-dc>`. */
 export function samplerArtboard(readme: string, sampler: string) {
   const links = canvasLinks(readme).map((line) =>
     line.replaceAll('ds/<folder>/', `ds/${CANVAS_FOLDER}/`)
   );
-  return [...links, '', sampler.trim()].join('\n');
+  return { links: links.join('\n'), sampler: sampler.trim() };
+}
+
+/** Why a guide built from these inputs would send Claude wrong: a file a publish refuses, a file the install leaves out, a block in the wrong place. */
+function guideProblems({
+  template,
+  readme,
+  sampler,
+  files,
+}: {
+  template: string;
+  readme: string;
+  sampler: string;
+  files: readonly string[];
+}) {
+  const problems: string[] = [];
+  for (const file of files) {
+    if (TEXT_PLAIN_FILES.includes(file)) continue;
+    const extension = /\.[^./]+$/.exec(file)?.[0] ?? '';
+    if (!SERVED_EXTENSIONS.has(extension)) {
+      problems.push(
+        `project/${file}: an Artifact publish doesn't serve ${extension || 'a file with no extension'}. Give it a served extension. If it's text, add it to TEXT_PLAIN_FILES in src/setup.ts instead, and name it in SETUP.md's publish steps.`
+      );
+    }
+  }
+  for (const file of TEXT_PLAIN_FILES) {
+    if (!template.includes(`\`project/${file}\` with the content type`)) {
+      problems.push(
+        `SETUP.md doesn't tell Claude to publish project/${file} with its content type.`
+      );
+    }
+  }
+  const section = canvasSection(readme);
+  for (const file of CANVAS_FILES.filter((file) => file !== 'tokens.json')) {
+    if (!section.includes(`\`${file}\``)) {
+      problems.push(
+        `README.md's "On a Design canvas" section doesn't name ${file}, so a canvas install leaves it out.`
+      );
+    }
+  }
+  if (canvasLinks(readme).some((line) => !/^<(?:link|script) /.test(line))) {
+    problems.push(
+      'README.md: the "On a Design canvas" html block holds a line that isn\'t a <link> or <script>. Those lines go in <head>.'
+    );
+  }
+  if (/<(?:link|script)\b/.test(sampler)) {
+    problems.push(
+      'sampler.html links or runs a file. It goes inside <x-dc>, and the link lines go in <head>.'
+    );
+  }
+  return problems;
 }
 
 export function setupGuide({
@@ -66,17 +159,33 @@ export function setupGuide({
   sampler,
   version,
   files,
+  tokensVersion,
 }: {
   template: string;
   readme: string;
   sampler: string;
   version: string;
-  files: number;
+  files: readonly string[];
+  /** `meta.version` in the tokens.json the build wrote, which the guide's version checks read. */
+  tokensVersion: unknown;
 }) {
+  const problems = guideProblems({ template, readme, sampler, files });
+  if (tokensVersion !== version) {
+    problems.push(
+      `SETUP.md checks the release in tokens.json's meta.version, which holds ${String(tokensVersion)}, not ${version}.`
+    );
+  }
+  if (problems.length > 0) throw new Error(problems.join('\n'));
+  const artboard = samplerArtboard(readme, sampler);
+  const canvasFiles = CANVAS_FILES.map(
+    (file) => `- \`ds/${CANVAS_FOLDER}/${file}\``
+  ).join('\n');
   const guide = template
     .replaceAll('{{version}}', version)
-    .replaceAll('{{files}}', String(files))
-    .replace('{{sampler}}', () => samplerArtboard(readme, sampler));
+    .replaceAll('{{files}}', String(files.length))
+    .replace('{{canvasFiles}}', () => canvasFiles)
+    .replace('{{links}}', () => artboard.links)
+    .replace('{{sampler}}', () => artboard.sampler);
   const left = /\{\{\w+\}\}/.exec(guide);
   if (left) throw new Error(`SETUP.md: ${left[0]} has no value.`);
   return guide;
