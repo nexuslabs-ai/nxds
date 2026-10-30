@@ -21,8 +21,11 @@ export const NAV_LINKS: NavLink[] = [
 export const HEADER_LINKS: NavLink[] = [
   { href: requireSection('getting-started').href, label: 'Docs' },
   { href: requireSection('components').href, label: 'Components' },
+  { href: requireSection('blocks').href, label: 'Blocks' },
+  { href: requireSection('patterns').href, label: 'Patterns' },
   { href: requireSection('foundations').href, label: 'Foundations' },
   { href: requireSection('theming').href, label: 'Theming' },
+  { href: requireSection('integrations').href, label: 'Integrations' },
   { href: '/playground', label: 'Playground' },
 ];
 
