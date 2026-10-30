@@ -9,12 +9,9 @@ import {
 import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
+import { menuItemInsetClassName } from '../overlay-layout/overlay-layout';
 
-import {
-  menubarInsetClassName,
-  type MenubarItemVariants,
-  menubarItemVariants,
-} from '.';
+import { type MenubarItemVariants, menubarItemVariants } from '.';
 
 export interface MenubarItemProps extends RekaMenubarItemProps {
   variant?: MenubarItemVariants['variant'];
@@ -43,7 +40,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     :class="
       cn(
         menubarItemVariants({ variant }),
-        inset && menubarInsetClassName,
+        inset && menuItemInsetClassName,
         props.class
       )
     "

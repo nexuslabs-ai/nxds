@@ -8,13 +8,10 @@ import { IconCheck, IconChevronDown, IconChevronUp } from '../../lib/icons';
 import { selectionIndicatorMotionClassName } from '../../lib/motion';
 import { cn } from '../../lib/utils';
 import {
+  menuItemInsetClassName,
   overlayFloatingTransitionClassName,
   popoverSurfaceClassName,
 } from '../overlay-layout/overlay-layout';
-
-/** Starts item text after the check column: 8px, the check, then 8px. */
-const selectItemInsetClassName =
-  'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]';
 
 /**
  * Root of the select. Holds the open state and the selected value.
@@ -215,7 +212,7 @@ function SelectItem({ className, children, ...props }: SelectItemProps) {
       className={cn(
         'nx:group nx:relative nx:flex nx:w-full nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
         'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
-        selectItemInsetClassName,
+        menuItemInsetClassName,
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',
         className

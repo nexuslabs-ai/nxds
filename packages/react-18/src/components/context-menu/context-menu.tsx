@@ -7,13 +7,10 @@ import { IconCheck, IconChevronRight, IconCircleFilled } from '../../lib/icons';
 import { selectionIndicatorMotionClassName } from '../../lib/motion';
 import { cn } from '../../lib/utils';
 import {
+  menuItemInsetClassName,
   overlayFloatingTransitionClassName,
   popoverSurfaceClassName,
 } from '../overlay-layout/overlay-layout';
-
-/** Starts item text after the check column: 8px, the check, then 8px. */
-const contextMenuInsetClassName =
-  'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]';
 
 /**
  * Root component for the context menu. Opens when the trigger is right-clicked.
@@ -109,7 +106,7 @@ const ContextMenuSubTrigger = React.forwardRef<
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-[state=open]:bg-popover-hover nx:data-[state=open]:text-popover-foreground',
         'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
-        inset && contextMenuInsetClassName,
+        inset && menuItemInsetClassName,
         className
       )}
       {...props}
@@ -258,7 +255,7 @@ const ContextMenuItem = React.forwardRef<
       data-variant={variant}
       className={cn(
         contextMenuItemVariants({ variant }),
-        inset && contextMenuInsetClassName,
+        inset && menuItemInsetClassName,
         className
       )}
       {...props}
@@ -299,7 +296,7 @@ const ContextMenuCheckboxItem = React.forwardRef<
       className={cn(
         'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
         'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
-        contextMenuInsetClassName,
+        menuItemInsetClassName,
         'nx:transition-colors',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',
@@ -362,7 +359,7 @@ const ContextMenuRadioItem = React.forwardRef<
       className={cn(
         'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
         'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
-        contextMenuInsetClassName,
+        menuItemInsetClassName,
         'nx:transition-colors',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',
@@ -428,7 +425,7 @@ const ContextMenuLabel = React.forwardRef<
       data-inset={inset}
       className={cn(
         'nx:px-2 nx:py-1.5 nx:typography-label-default',
-        inset && contextMenuInsetClassName,
+        inset && menuItemInsetClassName,
         className
       )}
       {...props}

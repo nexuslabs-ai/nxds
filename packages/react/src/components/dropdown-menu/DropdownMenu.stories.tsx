@@ -1,9 +1,9 @@
 import * as React from 'react';
 
-import { DENSITY_OPTIONS } from '@nxds/core';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { expectMenuItemInsetAtEveryDensity } from '../../stories/support/menu-item-inset-test-utils';
 import {
   expectExitBeforeUnmount,
   expectInterruptibleOverlayMotion,
@@ -412,8 +412,6 @@ export const WithInsetItems: Story = {
 // INTERACTION TESTS
 // ============================================
 
-const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
-
 export const CheckInsetAtEveryDensity: Story = {
   render: (_args) => (
     <DropdownMenu>
@@ -437,22 +435,10 @@ export const CheckInsetAtEveryDensity: Story = {
     const check = item.querySelector<HTMLElement>(
       '[data-slot="dropdown-menu-checkbox-indicator"]'
     )!.parentElement!;
-    const inset = (element: Element) =>
-      parseFloat(getComputedStyle(element).paddingLeft);
-    for (const density of DENSITIES) {
-      // The density applies to the open panel and everything in it.
-      menu.setAttribute('data-density', density);
-      // The check sits 8px in, and the text starts 8px after it.
-      await expect(check.offsetLeft).toBe(8);
-      await expect(inset(item) - check.offsetLeft - check.offsetWidth).toBe(8);
-      // Inset items and labels line up with that text.
-      await expect(
-        inset(within(menu).getByRole('menuitem', { name: 'Reset view' }))
-      ).toBe(inset(item));
-      await expect(inset(within(menu).getByText('Appearance'))).toBe(
-        inset(item)
-      );
-    }
+    await expectMenuItemInsetAtEveryDensity(menu, item, check, [
+      within(menu).getByRole('menuitem', { name: 'Reset view' }),
+      within(menu).getByText('Appearance'),
+    ]);
 
     await userEvent.keyboard('{Escape}');
     await expectExitBeforeUnmount(menu);
