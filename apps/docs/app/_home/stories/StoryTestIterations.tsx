@@ -53,13 +53,19 @@ import { ChapterPreview } from '../ChapterPreview';
 
 import type { StoryCode } from './story-code';
 import {
+  type accessibilityStory,
+  type callbackStory,
   type Check,
   type CheckStatus,
+  type CheckStep,
+  type CheckSteps,
   describeStory,
   initialChecks,
+  type interactionStories,
   isExample,
   result,
   resultSummary,
+  type stateStory,
   type StoryChoices,
   storyLabels,
   type StoryModeId,
@@ -120,8 +126,13 @@ function stepDelay(reduceMotion: boolean) {
   );
 }
 
-/** One step per check of a story, each run on the live switch. */
-type CheckStep = () => Check;
+type InteractionStories = typeof interactionStories;
+
+/** The checks each Space press runs: the new state, then its call. */
+const spacePressChecks = [
+  ['Space turns it on', 'Reports true'],
+  ['Space turns it off', 'Reports false'],
+] as const;
 
 /**
  * The Stories chapter: a live Switch, the story that tests it, and a toolbar
@@ -247,7 +258,6 @@ export function StoryTestIterations({
     spacePressed.current = event.key === ' ';
   }
 
-  // Each Space press runs the next two checks: the new state, then its call.
   function onKeyUp(event: KeyboardEvent<HTMLButtonElement>) {
     if (!keyboardChecks.current || !spacePressed.current || event.key !== ' ')
       return;
@@ -255,19 +265,17 @@ export function StoryTestIterations({
     frame.current = requestAnimationFrame(() => {
       const element = example.current;
       const next = keyboardChecks.current;
-      if (run !== sequence.current || !element || !next) return;
-      const first = spacePresses.current === 0;
-      const at = first ? 1 : 3;
-      next[at] = result(
-        isOn(element) === first,
-        `After Space: ${onOff(element)}`
-      );
-      next[at + 1] = reported(first);
+      const labels = spacePressChecks[spacePresses.current];
+      if (run !== sequence.current || !element || !next || !labels) return;
+      const steps = keyboardSteps(element);
+      for (const label of labels)
+        next[story.checks.indexOf(label)] = steps[label]();
       spacePresses.current += 1;
       spacePressed.current = false;
       setChecks([...next]);
-      if (first) {
-        setActiveLine(code?.lines[3] ?? -1);
+      const following = spacePressChecks[spacePresses.current];
+      if (following) {
+        setActiveLine(code?.lines[story.checks.indexOf(following[0])] ?? -1);
         setStatus('Press Space again');
         return;
       }
@@ -287,15 +295,17 @@ export function StoryTestIterations({
     setStatus('Keyboard check paused · focus the example again');
   }
 
-  function stateSteps(element: HTMLButtonElement): CheckStep[] {
+  function stateSteps(
+    element: HTMLButtonElement
+  ): CheckSteps<ReturnType<typeof stateStory>> {
     const choice = choices.states;
-    return [
-      () =>
+    return {
+      'Visible state': () =>
         result(
           isOn(element) === (choice === 'on'),
           `Expected: ${choice === 'on' ? 'on' : 'off'} · received: ${onOff(element)}`
         ),
-      () => {
+      'Disabled behavior': () => {
         const was = isOn(element);
         clickExample(element);
         const changed = isOn(element) !== was;
@@ -307,7 +317,7 @@ export function StoryTestIterations({
         });
         return result(ok, changed ? 'Click accepted' : 'Click ignored');
       },
-      () =>
+      'Validation state': () =>
         result(
           (element.getAttribute('aria-invalid') === 'true') ===
             (choice === 'invalid'),
@@ -315,70 +325,97 @@ export function StoryTestIterations({
             ? 'Invalid state · error linked below'
             : 'No error state'
         ),
-    ];
+    };
   }
 
-  function clickSteps(element: HTMLButtonElement): CheckStep[] {
-    return [
-      () => result(!isOn(element), 'Expected initial state: off'),
-      () => {
+  function clickSteps(
+    element: HTMLButtonElement
+  ): CheckSteps<InteractionStories['click']> {
+    return {
+      'Starts off': () => result(!isOn(element), 'Expected initial state: off'),
+      'Click turns on': () => {
         clickExample(element);
         return result(isOn(element), `After first click: ${onOff(element)}`);
       },
-      () => reported(true),
-      () => {
+      'Reports true': () => reported(true),
+      'Click turns off': () => {
         clickExample(element);
         return result(!isOn(element), `After second click: ${onOff(element)}`);
       },
-      () => reported(false),
-    ];
+      'Reports false': () => reported(false),
+    };
   }
 
-  function disabledSteps(element: HTMLButtonElement): CheckStep[] {
-    return [
-      () => result(element.disabled, 'Expected disabled control'),
-      () => {
+  function disabledSteps(
+    element: HTMLButtonElement
+  ): CheckSteps<InteractionStories['disabled']> {
+    return {
+      'Is disabled': () =>
+        result(element.disabled, 'Expected disabled control'),
+      'Stays off': () => {
         clickExample(element);
         return result(!isOn(element), `After click: ${onOff(element)}`);
       },
-      () =>
+      'No callback': () =>
         result(
           callsRef.current.length === 0,
           `Expected: 0 calls · received: ${callsRef.current.length}`
         ),
-    ];
+    };
   }
 
-  function interactionSteps(element: HTMLButtonElement): CheckStep[] {
+  function keyboardSteps(
+    element: HTMLButtonElement
+  ): CheckSteps<InteractionStories['keyboard']> {
+    return {
+      'Receives focus': () =>
+        result(
+          document.activeElement === element,
+          'Switch focused · press Space'
+        ),
+      'Space turns it on': () =>
+        result(isOn(element), `After Space: ${onOff(element)}`),
+      'Reports true': () => reported(true),
+      'Space turns it off': () =>
+        result(!isOn(element), `After Space: ${onOff(element)}`),
+      'Reports false': () => reported(false),
+    };
+  }
+
+  function interactionSteps(element: HTMLButtonElement) {
     if (choices.interactions === 'disabled') return disabledSteps(element);
     return clickSteps(element);
   }
 
-  function callbackSteps(element: HTMLButtonElement): CheckStep[] {
-    return [
-      () => {
+  function callbackSteps(
+    element: HTMLButtonElement
+  ): CheckSteps<typeof callbackStory> {
+    return {
+      'Switch is on': () => {
         clickExample(element);
         return result(
           isOn(element),
           `Expected: on · received: ${onOff(element)}`
         );
       },
-      () =>
+      'One callback': () =>
         result(
           callsRef.current.length === 1,
           `Expected: 1 call · received: ${callsRef.current.length}`
         ),
-      () =>
+      'Callback is true': () =>
         result(
           callsRef.current.at(-1) === true,
           `Expected: true · received: ${callsRef.current.length ? String(callsRef.current.at(-1)) : 'nothing'}`
         ),
-    ];
+    };
   }
 
-  function nameSteps(element: HTMLButtonElement): CheckStep[] {
-    return [
-      () => {
+  function nameSteps(
+    element: HTMLButtonElement
+  ): CheckSteps<typeof accessibilityStory> {
+    return {
+      'Accessible name': () => {
         const name = Array.from(element.labels, (label) =>
           label.textContent.trim()
         ).join(' ');
@@ -387,12 +424,12 @@ export function StoryTestIterations({
           name || 'No associated accessible name'
         );
       },
-    ];
+    };
   }
 
   const checkSteps: Record<
     StoryModeId,
-    (element: HTMLButtonElement) => CheckStep[]
+    (element: HTMLButtonElement) => Partial<Record<string, CheckStep>>
   > = {
     states: stateSteps,
     interactions: interactionSteps,
@@ -403,14 +440,14 @@ export function StoryTestIterations({
   function armKeyboard(element: HTMLButtonElement) {
     element.focus({ preventScroll: true });
     const next = initialChecks(story);
-    next[0] = result(
-      document.activeElement === element,
-      'Switch focused · press Space'
-    );
+    next[story.checks.indexOf('Receives focus')] =
+      keyboardSteps(element)['Receives focus']();
     keyboardChecks.current = next;
     spacePresses.current = 0;
     setChecks([...next]);
-    setActiveLine(code?.lines[1] ?? -1);
+    setActiveLine(
+      code?.lines[story.checks.indexOf(spacePressChecks[0][0])] ?? -1
+    );
     setStatus('Press Space to test the switch');
   }
 
@@ -426,7 +463,10 @@ export function StoryTestIterations({
     const next = initialChecks(story);
     setRunning(true);
     setStatus('Running local checks…');
-    for (const [index, step] of checkSteps[mode.id](element).entries()) {
+    const steps = checkSteps[mode.id](element);
+    for (const [index, label] of story.checks.entries()) {
+      const step = steps[label];
+      if (!step) throw new Error(`${story.name} has no step for "${label}".`);
       if (run !== sequence.current) return;
       next[index] = { status: 'running', detail: 'Checking…' };
       setChecks([...next]);

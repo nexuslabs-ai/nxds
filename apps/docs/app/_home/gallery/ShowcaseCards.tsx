@@ -85,7 +85,7 @@ import {
 import { IconPlus } from '../../_lib/switchable-icons';
 
 const statusClassName =
-  'nx:m-0 nx:typography-body-small nx:text-muted-foreground nx:wrap-anywhere';
+  'nx:m-0 nx:typography-body-small nx:text-muted-foreground nx:wrap-anywhere nx:empty:sr-only';
 const proseClassName =
   'nx:m-0 nx:typography-body-default nx:text-muted-foreground';
 const stackClassName = 'nx:flex nx:flex-col nx:gap-3.5';
@@ -377,11 +377,9 @@ export function TeamCard() {
             Invite a teammate
           </Button>
         )}
-        {invited && (
-          <p className={statusClassName} role="status">
-            {invited} added to this demo. No invitation sent.
-          </p>
-        )}
+        <p className={statusClassName} role="status">
+          {invited && `${invited} added to this demo. No invitation sent.`}
+        </p>
       </div>
     </ShowcaseCard>
   );
@@ -630,11 +628,9 @@ export function InboxCard() {
             </button>
           </Item>
         ))}
-        {matches.length === 0 && (
-          <p className={statusClassName} role="status">
-            No conversations match “{query}”.
-          </p>
-        )}
+        <p className={statusClassName} role="status">
+          {matches.length === 0 && `No conversations match “${query}”.`}
+        </p>
       </ItemGroup>
       <Separator className="nx:my-6" />
       <Person name={selected.name} detail={selected.time} />
@@ -781,12 +777,10 @@ export function BillingCard() {
           >
             {reviewing ? 'Close plan details' : 'Review plan'}
           </Button>
-          {reviewing && (
-            <p className={statusClassName} role="status">
-              5 seats, 20 GB storage, unlimited projects. Demo only; no payment
-              is taken.
-            </p>
-          )}
+          <p className={statusClassName} role="status">
+            {reviewing &&
+              '5 seats, 20 GB storage, unlimited projects. Demo only; no payment is taken.'}
+          </p>
         </div>
       </ShowcaseCard>
     </Tabs>
@@ -887,11 +881,9 @@ export function ContactCard() {
           </NativeSelect>
         </Field>
         <Button type="submit">Save contact</Button>
-        {saved && (
-          <p className={statusClassName} role="status">
-            Contact updated in this preview.
-          </p>
-        )}
+        <p className={statusClassName} role="status">
+          {saved && 'Contact updated in this preview.'}
+        </p>
       </form>
     </ShowcaseCard>
   );

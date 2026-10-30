@@ -67,14 +67,14 @@ export type StoryChoices = {
  * A story read from `Switch.stories.tsx`. Each check labels one `expect` line
  * of its play function, in order.
  */
-type FileStory = {
+type FileStory<Label extends string = string> = {
   name: string;
-  checks: readonly string[];
+  checks: readonly Label[];
   manualChecks?: readonly string[];
 };
 
 /** A hand-written story that illustrates one idea. It is not in the file. */
-type ExampleStory = FileStory & {
+type ExampleStory<Label extends string = string> = FileStory<Label> & {
   source: readonly string[];
   /** The source line each check runs. */
   lines: readonly number[];
@@ -91,16 +91,16 @@ export function isExample(story: Story): story is ExampleStory {
 }
 
 /** A line of story source, or one that runs the named check. */
-type SourceLine = string | { code: string; check: string };
+type SourceLine<Label extends string> = string | { code: string; check: Label };
 
 /** An example story whose checks are marked on the lines that run them. */
-function example(
+function example<const Label extends string>(
   name: string,
-  source: readonly SourceLine[],
+  source: readonly SourceLine<Label>[],
   manualChecks?: readonly string[]
-): ExampleStory {
+): ExampleStory<Label> {
   const lines: number[] = [];
-  const checks: string[] = [];
+  const checks: Label[] = [];
   source.forEach((line, index) => {
     if (typeof line === 'string') return;
     lines.push(index);
@@ -115,7 +115,7 @@ function example(
   };
 }
 
-function stateStory(choice: StoryChoices['states']): Story {
+export function stateStory(choice: StoryChoices['states']) {
   return example(`${choice.charAt(0).toUpperCase()}${choice.slice(1)}State`, [
     'args: {',
     { code: `  defaultChecked: ${choice === 'on'},`, check: 'Visible state' },
@@ -134,7 +134,7 @@ function stateStory(choice: StoryChoices['states']): Story {
   ]);
 }
 
-const interactionStories: Record<StoryChoices['interactions'], Story> = {
+export const interactionStories = {
   click: {
     name: 'ClickInteraction',
     checks: [
@@ -159,9 +159,9 @@ const interactionStories: Record<StoryChoices['interactions'], Story> = {
       'Reports false',
     ],
   },
-};
+} as const satisfies Record<StoryChoices['interactions'], Story>;
 
-const callbackStory = example('CallbackContract', [
+export const callbackStory = example('CallbackContract', [
   'args: { onCheckedChange: fn() },',
   '',
   'play: async ({ canvas, args }) => {',
@@ -175,7 +175,7 @@ const callbackStory = example('CallbackContract', [
   '};',
 ]);
 
-const accessibilityStory = example(
+export const accessibilityStory = example(
   'AccessibleName',
   [
     '// Storybook can also run axe checks.',
@@ -232,6 +232,15 @@ export function initialChecks(story: Story): Check[] {
     ),
   ];
 }
+
+/** Runs one check on the live example. */
+export type CheckStep = () => Check;
+
+/** The step that runs each of a story's checks, by check label. */
+export type CheckSteps<S extends Story> = Record<
+  S['checks'][number],
+  CheckStep
+>;
 
 export function result(ok: boolean, detail: string): Check {
   return { status: ok ? 'pass' : 'fail', detail };

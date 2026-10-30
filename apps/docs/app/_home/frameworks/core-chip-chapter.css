@@ -1,9 +1,14 @@
 /* The Frameworks chapter: design tokens -> Nexus core -> frameworks. */
 
-/* The diagram's two tight layouts, as variants for the classes of its parts:
-   a short or narrow desktop diagram, and the stacked phone diagram. */
+/* The diagram's tight layouts, as variants for its parts and utilities: a
+   short or narrow desktop diagram, a narrow one, and the stacked phone one. */
 @custom-variant framework-compact {
   @container framework (min-width: 701px) and ((max-height: 752px) or (max-width: 959px)) {
+    @slot;
+  }
+}
+@custom-variant framework-medium {
+  @container framework (min-width: 701px) and (max-width: 959px) {
     @slot;
   }
 }
@@ -43,7 +48,7 @@
   &[data-flow-motion='true'] {
     --chip-signal: flow-signal;
   }
-  @container framework (min-width: 701px) and ((max-height: 752px) or (max-width: 959px)) {
+  @variant framework-compact {
     --chip-label-size: var(--nx-typography-size-xs);
     --chip-label-leading: var(--nx-typography-line-height-xs);
     --chip-label-gap: var(--nx-spacing-3);
@@ -51,11 +56,11 @@
     --chip-output-gap: var(--nx-spacing-3);
     --chip-icon-size: var(--nx-spacing-3_5);
   }
-  @container framework (min-width: 701px) and (max-width: 959px) {
+  @variant framework-medium {
     --chip-space: var(--nx-spacing-2);
   }
   /* Phones: a simpler diagram that keeps only the frameworks. */
-  @container framework (max-width: 700px) {
+  @variant framework-narrow {
     --chip-label-size: var(--nx-typography-size-xs);
     --chip-label-leading: var(--nx-typography-line-height-xs);
     --chip-label-gap: var(--nx-spacing-2);
@@ -77,7 +82,7 @@
   @apply nx:framework-group;
   grid-column: span 3;
 
-  @container framework (max-width: 700px) {
+  @variant framework-narrow {
     display: none;
   }
 }
@@ -85,7 +90,7 @@
   @apply nx:framework-group;
   grid-column: span 6;
 
-  @container framework (max-width: 700px) {
+  @variant framework-narrow {
     display: none;
   }
 }
@@ -93,7 +98,7 @@
   @apply nx:framework-group;
   grid-column: span 3;
 
-  @container framework (max-width: 700px) {
+  @variant framework-narrow {
     grid-column: auto;
   }
 }
@@ -187,7 +192,7 @@
     animation-delay: var(--chip-phase, 0ms);
   }
   /* Phones keep only the frameworks, with no traces. */
-  @container framework (max-width: 700px) {
+  @variant framework-narrow {
     display: none;
   }
   /* Across both containers' padding and the column gap. */
@@ -234,7 +239,7 @@
   &[data-state='on'] {
     --chip-trace-color: var(--nx-color-border-focus);
   }
-  @container framework (max-width: 700px) {
+  @variant framework-narrow {
     & strong {
       font-size: var(--nx-typography-size-sm);
     }
