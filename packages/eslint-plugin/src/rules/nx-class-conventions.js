@@ -203,9 +203,9 @@ function isDocsFile(filename) {
   return /(?:^|[/\\])apps[/\\]docs[/\\]/.test(filename);
 }
 
-// What the raw typography checks skip: stories and the docs app quote
-// utilities as specimens and prose, and the docs app styles its own chrome
-// off-system.
+// What the raw typography and stroke checks skip: stories and the docs app
+// quote utilities as specimens and prose, and the docs app styles its own
+// chrome off-system.
 function isExampleFile(filename) {
   return isStoryFile(filename) || isDocsFile(filename);
 }
