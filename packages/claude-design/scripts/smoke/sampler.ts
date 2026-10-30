@@ -5,7 +5,6 @@ import {
   boardEntry,
   SAMPLER_FILE,
   samplerFile,
-  samplerHeight,
   samplerTags,
 } from '../../src/setup.ts';
 
@@ -40,8 +39,9 @@ function barsOf(markup: string) {
     unknown
   >[];
   const series = attributeOf(markup, 'BarChart', 'series').split(',');
-  return rows.flatMap((row) => series.filter((key) => row[key] !== null))
-    .length;
+  return rows.flatMap((row) =>
+    series.filter((key) => typeof row[key] === 'number')
+  ).length;
 }
 
 /** The days the sampler's DatePicker range covers, both ends included. */
@@ -94,16 +94,23 @@ function shippedBoardEntry() {
   return blocks[0]?.[1]?.trim();
 }
 
-async function mountSampler(markup: string, height: number, mode: Mode) {
+type Size = { width: number; height: number };
+
+/** The background of each surface that has to switch with the mode, by its slot. */
+const SURFACES =
+  '[data-slot="card"], [data-slot="sidebar-inner"], [data-slot="sidebar-inset"], [data-slot="popover-content"]';
+
+async function mountSampler(markup: string, size: Size, mode: Mode) {
   const { page, problems } = await openPage('Button', LIGHT);
-  await page.setViewportSize({ width: 1440, height });
-  const result = await page.evaluate(
+  await page.setViewportSize(size);
+  const board = await page.evaluate(
     async ({ markup, height }) => {
       const { ReactDOM, __nxdsMarkup, __nxdsSettle } =
         window as unknown as PageGlobals;
       document.body.replaceChildren();
       document.body.style.margin = '0';
       const host = document.createElement('div');
+      host.id = 'sampler';
       document.body.append(host);
       try {
         ReactDOM.flushSync(() =>
@@ -159,32 +166,6 @@ async function mountSampler(markup: string, height: number, mode: Mode) {
           );
         }
       }
-      const backgrounds = [
-        root,
-        ...root.querySelectorAll(
-          '[data-slot="card"], [data-slot="sidebar-inner"], [data-slot="sidebar-inset"]'
-        ),
-      ].map((element) => getComputedStyle(element).backgroundColor);
-
-      const trigger = [...root.querySelectorAll('button')].find(
-        (button) => button.textContent?.trim() === 'This quarter'
-      );
-      let selectedDays = -1;
-      let closes = false;
-      if (trigger) {
-        trigger.click();
-        await __nxdsSettle(document.body);
-        const popover = document.querySelector('[data-slot="popover-content"]');
-        selectedDays =
-          popover?.querySelectorAll(
-            '[aria-selected="true"]:not([data-outside])'
-          ).length ?? -1;
-        document.activeElement?.dispatchEvent(
-          new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
-        );
-        await __nxdsSettle(document.body);
-        closes = !document.querySelector('[data-slot="popover-content"]');
-      }
       return {
         overflows,
         slots: [...root.querySelectorAll('[data-slot]')].map((element) =>
@@ -195,17 +176,49 @@ async function mountSampler(markup: string, height: number, mode: Mode) {
           content.getBoundingClientRect().bottom -
             root.getBoundingClientRect().top
         ),
-        scrolls: document.documentElement.scrollHeight > height,
-        backgrounds,
-        trigger: Boolean(trigger),
-        selectedDays,
-        closes,
+        scrollHeight: Math.max(document.documentElement.scrollHeight, height),
       };
     },
-    { markup: markup.replace('{{mode}}', mode), height }
+    { markup: markup.replaceAll('{{mode}}', mode), height: size.height }
   );
+  if (board.error !== undefined) {
+    await page.close();
+    return { error: board.error, problems };
+  }
+
+  const trigger = page.getByRole('button', { name: 'This quarter' });
+  const popover = page.locator('[data-slot="popover-content"]');
+  const opens = (await trigger.count()) === 1;
+  if (opens) {
+    await trigger.click();
+    await popover.waitFor();
+  }
+  const open = await page.evaluate(async (surfaces) => {
+    const { __nxdsSettle } = window as unknown as PageGlobals;
+    await __nxdsSettle(document.body);
+    const root = document.querySelector('#sampler > div');
+    return {
+      selectedDays: document.querySelectorAll(
+        '[data-slot="popover-content"] [aria-selected="true"]:not([data-outside])'
+      ).length,
+      backgrounds: [root, ...document.querySelectorAll(surfaces)].map(
+        (element) => ({
+          slot: element?.getAttribute('data-slot') ?? 'the root',
+          color: element ? getComputedStyle(element).backgroundColor : '',
+        })
+      ),
+    };
+  }, SURFACES);
+  let closes = false;
+  if (opens) {
+    await page.keyboard.press('Escape');
+    closes = await popover
+      .waitFor({ state: 'detached', timeout: 2000 })
+      .then(() => true)
+      .catch(() => false);
+  }
   await page.close();
-  return { result, problems };
+  return { board: { ...board, ...open, opens, closes }, problems };
 }
 
 // The sampler the export ships, mounted the way a canvas does in each mode
@@ -241,43 +254,58 @@ export async function checkSampler() {
     );
   }
 
-  const { markup } = samplerFile(source);
-  const height = samplerHeight(source) ?? 0;
+  const { markup, width, height } = samplerFile(source);
+  if (width === undefined || height === undefined) {
+    throw new Error(`${SAMPLER_FILE}: $preview has no whole width and height.`);
+  }
   const slots = slotsOf(markup);
   const bars = barsOf(markup);
   const days = rangeDaysOf(markup);
-  const backgrounds: Partial<Record<Mode, string[]>> = {};
+  const backgrounds: Partial<Record<Mode, { slot: string; color: string }[]>> =
+    {};
 
   for (const mode of MODES) {
     const name = `the sampler in ${mode}`;
-    const { result, problems } = await mountSampler(markup, height, mode);
-    failOnProblems(name, problems, true);
-    if ('error' in result) {
-      fail(`${name}: ${result.error}`);
+    const mounted = await mountSampler(markup, { width, height }, mode);
+    failOnProblems(name, mounted.problems, true);
+    if ('error' in mounted) {
+      fail(`${name}: ${mounted.error}`);
       continue;
     }
+    const { board } = mounted;
     for (const slot of slots) {
-      if (!result.slots.includes(slot)) fail(`${name}: no ${slot} renders.`);
+      if (!board.slots.includes(slot)) fail(`${name}: no ${slot} renders.`);
     }
-    for (const overflow of result.overflows) fail(`${name}: ${overflow}.`);
-    if (result.bars !== bars) {
-      fail(`${name}: the bar chart draws ${result.bars} bars, not ${bars}.`);
+    for (const overflow of board.overflows) fail(`${name}: ${overflow}.`);
+    if (board.bars !== bars) {
+      fail(`${name}: the bar chart draws ${board.bars} bars, not ${bars}.`);
     }
-    if (Math.abs(result.bottom - height) > 1 || result.scrolls) {
+    if (Math.abs(board.bottom - height) > 1) {
       fail(
-        `${name}: the page ends at ${result.bottom}px, but $preview and the canvas.json entry give ${height}px. Set $preview's height to ${result.bottom}.`
+        `${name}: the page ends at ${board.bottom}px, but $preview and the canvas.json entry give ${height}px. Set $preview's height to ${board.bottom}.`
       );
     }
-    if (!result.trigger) fail(`${name}: no This quarter button.`);
-    else if (result.selectedDays !== days || !result.closes) {
+    if (board.scrollHeight > height) {
       fail(
-        `${name}: This quarter's calendar selects ${result.selectedDays} days, not ${days}, or Escape doesn't close it.`
+        `${name}: the board scrolls to ${board.scrollHeight}px, past its ${height}px height.`
       );
     }
-    backgrounds[mode] = result.backgrounds;
+    if (!board.opens) {
+      fail(`${name}: no This quarter button to open the calendar from.`);
+      continue;
+    }
+    if (board.selectedDays !== days) {
+      fail(
+        `${name}: This quarter's calendar selects ${board.selectedDays} days, not ${days}.`
+      );
+    }
+    if (!board.closes)
+      fail(`${name}: Escape doesn't close This quarter's calendar.`);
+    backgrounds[mode] = board.backgrounds;
   }
-  const [lightPage] = backgrounds.light ?? [];
-  if (backgrounds.dark?.some((background) => background === lightPage)) {
-    fail('the sampler in dark: a part keeps the light page background.');
+  for (const [index, { slot, color }] of (backgrounds.dark ?? []).entries()) {
+    if (color === backgrounds.light?.[index]?.color) {
+      fail(`the sampler in dark: ${slot} keeps its light background.`);
+    }
   }
 }

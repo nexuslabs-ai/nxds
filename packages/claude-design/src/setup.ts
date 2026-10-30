@@ -101,7 +101,18 @@ function canvasRootLinks(readme: string) {
 const decodeAttribute = (value: string) =>
   value.replaceAll('&quot;', '"').replaceAll('&amp;', '&');
 
-/** The pieces of the sampler file: its head lines, the markup inside `<x-dc>` after its `<helmet>`, its tweaks and its script. */
+function tweaksOf(attribute: string) {
+  try {
+    return JSON.parse(decodeAttribute(attribute)) as Record<string, unknown>;
+  } catch {
+    throw new Error(`${SAMPLER_FILE}: data-props isn't JSON.`);
+  }
+}
+
+const whole = (value: unknown) =>
+  Number.isInteger(value) ? (value as number) : undefined;
+
+/** The pieces of the sampler file: its head lines, the markup inside `<x-dc>` after its `<helmet>`, its tweaks, its script, and the size its `$preview` gives. */
 export function samplerFile(file: string) {
   const head = /<head>\n([\s\S]*?)\n<\/head>/.exec(file)?.[1];
   const dc =
@@ -117,38 +128,32 @@ export function samplerFile(file: string) {
       `${SAMPLER_FILE}: no <head>, <x-dc> or data-dc-script block where a canvas artboard has one.`
     );
   }
+  const props = tweaksOf(script[1] ?? '');
+  const preview = props['$preview'] as Record<string, unknown> | undefined;
   return {
     title: /<title>([^<]*)<\/title>/.exec(head)?.[1],
     head: head.split('\n'),
     markup: dc,
-    props: JSON.parse(decodeAttribute(script[1] ?? '')) as Record<
-      string,
-      unknown
-    >,
+    props,
     script: script[2] ?? '',
+    width: whole(preview?.['width']),
+    height: whole(preview?.['height']),
   };
-}
-
-/** The sampler's height at its width, as its `$preview` gives it. */
-export function samplerHeight(file: string) {
-  const preview = samplerFile(file).props['$preview'] as
-    | { height?: unknown }
-    | undefined;
-  return typeof preview?.height === 'number' ? preview.height : undefined;
 }
 
 /** The `boards` entry SETUP.md tells Claude to add to the canvas's `canvas.json`. */
 export function boardEntry(file: string) {
+  const { title, width, height } = samplerFile(file);
   return JSON.stringify({
     path: SAMPLER_FILE,
-    title: samplerFile(file).title,
+    title,
     expand: 'fill',
-    w: SAMPLER_WIDTH,
-    h: samplerHeight(file),
+    w: width,
+    h: height,
   });
 }
 
-const CLASS_ATTRIBUTE = /\sclass(?:-name)?="([^"]*)"/g;
+const CLASS_ATTRIBUTE = /\sclass(?:-name)?=(?:"([^"]*)"|'([^']*)')/g;
 
 // Whether `css` has a rule for `.name`, escaped the way Tailwind writes it.
 function definesClass(css: string, name: string) {
@@ -163,18 +168,13 @@ function definesClass(css: string, name: string) {
   return false;
 }
 
-/** Why the sampler file wouldn't show or check on a canvas: a name the canvas skips, a head that doesn't link the system, state beyond the `mode` tweak, or a class no stylesheet defines. */
-export function samplerFileProblems(
+/** Why the sampler file wouldn't show or check on a canvas: a head that doesn't link the system, state beyond the `mode` tweak, or a class no stylesheet defines. */
+function fileProblems(
   file: string,
   { readme, stylesheets }: { readme: string; stylesheets: string }
 ) {
   const problems: string[] = [];
-  if (!SAMPLER_FILE.endsWith('.dc.html') || /\s/.test(SAMPLER_FILE)) {
-    problems.push(
-      `${SAMPLER_FILE}: a canvas shows a file as an artboard only when its name ends .dc.html and has no spaces.`
-    );
-  }
-  const { head, markup, props, script } = samplerFile(file);
+  const { head, markup, props, script, width, height } = samplerFile(file);
   const links = canvasRootLinks(readme);
   const support = head.indexOf('<script src="./support.js"></script>');
   if (
@@ -185,13 +185,15 @@ export function samplerFileProblems(
       `${SAMPLER_FILE}: <head> must have the support.js line, then the README's link lines in order.`
     );
   }
+  // An overlay's content renders outside the root, so it takes the mode too.
   const bindings = file.match(/\{\{[^}]*\}\}/g) ?? [];
+  const themed = file.match(/\sdata-theme="\{\{mode\}\}"/g) ?? [];
   if (
-    bindings.length !== 1 ||
+    bindings.length !== themed.length ||
     !markup.startsWith('<div data-theme="{{mode}}"')
   ) {
     problems.push(
-      `${SAMPLER_FILE}: the only binding is the root's data-theme="{{mode}}". Found ${bindings.join(', ') || 'none'}.`
+      `${SAMPLER_FILE}: the only binding is data-theme="{{mode}}", on the root and on overlay content. Found ${bindings.join(', ') || 'none'}.`
     );
   }
   for (const [pattern, what] of [
@@ -206,9 +208,8 @@ export function samplerFileProblems(
     }
   }
   const mode = props['mode'] as Record<string, unknown> | undefined;
-  const preview = props['$preview'] as Record<string, unknown> | undefined;
   if (
-    Object.keys(props).join() !== 'mode,$preview' ||
+    Object.keys(props).sort().join() !== '$preview,mode' ||
     mode?.['editor'] !== 'enum' ||
     JSON.stringify(mode['options']) !== '["light","dark"]' ||
     mode['default'] !== 'light'
@@ -217,10 +218,7 @@ export function samplerFileProblems(
       `${SAMPLER_FILE}: data-props holds only mode, an enum of light and dark that defaults to light, and $preview.`
     );
   }
-  if (
-    preview?.['width'] !== SAMPLER_WIDTH ||
-    !Number.isInteger(preview['height'])
-  ) {
+  if (width !== SAMPLER_WIDTH || height === undefined) {
     problems.push(
       `${SAMPLER_FILE}: $preview is ${SAMPLER_WIDTH} wide, with its height at that width in whole px.`
     );
@@ -231,8 +229,8 @@ export function samplerFileProblems(
     );
   }
   const classes = new Set(
-    [...markup.matchAll(CLASS_ATTRIBUTE)].flatMap(([, value = '']) =>
-      value.split(/\s+/).filter(Boolean)
+    [...markup.matchAll(CLASS_ATTRIBUTE)].flatMap(([, double, single]) =>
+      (double ?? single ?? '').split(/\s+/).filter(Boolean)
     )
   );
   for (const name of classes) {
@@ -245,7 +243,7 @@ export function samplerFileProblems(
   return problems;
 }
 
-/** Why a guide built from these inputs would send Claude wrong: a publish step that leaves out a `text/plain` file, a file the install leaves out, a block in the wrong place. */
+/** Why a guide built from these inputs would send Claude wrong: a publish step that leaves out a `text/plain` file, a file the install leaves out, or a link line that isn't one. */
 function guideProblems({
   template,
   readme,
@@ -400,7 +398,7 @@ export function samplerTags(markup: string) {
 }
 
 /** Every part and attribute in the sampler the bundle can't mount, and every form it leaves out. */
-export function samplerProblems(sampler: string, parts: FlatComponent[]) {
+function attributeProblems(sampler: string, parts: FlatComponent[]) {
   const byName = new Map(parts.map((part) => [part.name, part]));
   const problems: string[] = [];
   const written = new Set<SamplerForm>();
@@ -439,4 +437,15 @@ export function samplerProblems(sampler: string, parts: FlatComponent[]) {
       problems.push(`${SAMPLER_FILE} writes no prop as ${form}.`);
   }
   return problems;
+}
+
+/** Everything that would keep the sampler file from showing, checking or mounting on a canvas. */
+export function samplerProblems(
+  file: string,
+  context: { readme: string; stylesheets: string; parts: FlatComponent[] }
+) {
+  return [
+    ...fileProblems(file, context),
+    ...attributeProblems(samplerFile(file).markup, context.parts),
+  ];
 }

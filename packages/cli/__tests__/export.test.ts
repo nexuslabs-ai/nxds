@@ -119,6 +119,13 @@ const ROOT: Record<string, string> = {
     '<!doctype html>\n<html lang="en">\n<head>\n<title>nxds sampler</title>\n</head>\n</html>\n',
 };
 
+function manifestEntries(files: Record<string, string>) {
+  return Object.entries(files).map(([file, content]) => ({
+    path: file,
+    sha256: createHash('sha256').update(content).digest('hex'),
+  }));
+}
+
 /** The files of a small system in the @nxds/claude-design package layout. */
 const PACKAGE_FILES: Record<string, string> = {
   'package.json': JSON.stringify({
@@ -126,12 +133,10 @@ const PACKAGE_FILES: Record<string, string> = {
     version: VERSION,
   }),
   ...ROOT,
-  'files.json': JSON.stringify(
-    Object.entries(PROJECT).map(([file, content]) => ({
-      path: file,
-      sha256: createHash('sha256').update(content).digest('hex'),
-    }))
-  ),
+  'files.json': JSON.stringify({
+    project: manifestEntries(PROJECT),
+    root: manifestEntries(ROOT),
+  }),
   ...Object.fromEntries(
     Object.entries(PROJECT).map(([file, content]) => [
       `project/${file}`,
@@ -327,7 +332,12 @@ describe('nxds-cli export claude-design', () => {
   });
 
   it('tells you to publish when the release ships no guide', async () => {
-    const { source, cwd } = setup();
+    const { source, cwd } = setup({
+      'files.json': JSON.stringify({
+        project: manifestEntries(PROJECT),
+        root: [],
+      }),
+    });
     for (const name of Object.keys(ROOT)) rmSync(path.join(source, name));
 
     const { exitCode, body } = await cliJson(
@@ -349,14 +359,13 @@ describe('nxds-cli export claude-design', () => {
     );
   });
 
-  it("removes an earlier export's SETUP.md when the release has none, and keeps your files", async () => {
+  it('keeps your files beside project/ when it exports again', async () => {
     const { source, cwd } = setup();
     await cli(['export', 'claude-design', '--source', source], cwd);
     writeFileSync(
       path.join(cwd, 'nxds-design-system', 'notes.md'),
       '# Canvas notes\n'
     );
-    rmSync(path.join(source, 'SETUP.md'));
 
     const { exitCode } = await cliJson(
       ['export', 'claude-design', '--source', source, '--overwrite'],
@@ -364,12 +373,9 @@ describe('nxds-cli export claude-design', () => {
     );
 
     expect(exitCode).toBe(EXIT_CODES.ok);
-    expect(readdirSync(path.join(cwd, 'nxds-design-system'))).toEqual([
-      'coverage.md',
-      'notes.md',
-      'nxds-sampler.dc.html',
-      'project',
-    ]);
+    expect(readdirSync(path.join(cwd, 'nxds-design-system')).sort()).toEqual(
+      [...Object.keys(ROOT), 'notes.md', 'project'].sort()
+    );
   });
 
   it("refuses a release whose SETUP.md isn't a regular file", async () => {
@@ -383,8 +389,43 @@ describe('nxds-cli export claude-design', () => {
     );
 
     expect(exitCode).toBe(EXIT_CODES.error);
-    expect(body.error).toBe("The release's SETUP.md isn't a regular file.");
+    expect(body.error).toBe(
+      "SETUP.md is missing from the release, or isn't a regular file."
+    );
     expect(existsSync(path.join(cwd, 'nxds-design-system'))).toBe(false);
+  });
+
+  it("refuses a release whose sampler doesn't match files.json", async () => {
+    const { source, cwd } = setup({
+      'nxds-sampler.dc.html': '<!doctype html>\n<title>Edited</title>\n',
+    });
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toBe(
+      "nxds-sampler.dc.html doesn't match the release's files.json, so nothing was written."
+    );
+    expect(existsSync(path.join(cwd, 'nxds-design-system'))).toBe(false);
+  });
+
+  it('refuses a files.json that lists only project/', async () => {
+    const { source, cwd } = setup({
+      'files.json': JSON.stringify(manifestEntries(PROJECT)),
+    });
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toMatch(
+      /files\.json must hold project and root, each a JSON array/
+    );
   });
 
   it('downloads the release from the npm registry and checks its integrity', async () => {

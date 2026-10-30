@@ -142,7 +142,7 @@ body{margin:0}
               <x-import component-from-global-scope="Nxds.PopoverTrigger" as-child>
                 <x-import component-from-global-scope="Nxds.Button" variant="outline" start-icon="calendar-dots" end-icon="caret-down">This quarter</x-import>
               </x-import>
-              <x-import component-from-global-scope="Nxds.PopoverContent" align="end" class-name="nx:w-auto">
+              <x-import component-from-global-scope="Nxds.PopoverContent" data-theme="{{mode}}" align="end" class-name="nx:w-auto">
                 <x-import component-from-global-scope="Nxds.DatePicker" mode="range" number-of-months="3" default-month="2026-10" today="2026-10-24" selected="2026-10-01,2026-12-31"></x-import>
               </x-import>
             </x-import>
@@ -153,7 +153,7 @@ body{margin:0}
           <x-import component-from-global-scope="Nxds.Card">
             <x-import component-from-global-scope="Nxds.CardHeader">
               <x-import component-from-global-scope="Nxds.CardDescription">Open pipeline</x-import>
-              <p class="nx:col-start-1 nx:min-w-0 nx:typography-heading-large nx:text-foreground nx:tabular-nums" style="margin: 0;">$1.84M</p>
+              <p class="typography-heading-large" style="grid-column-start: 1; min-width: 0; margin: 0; color: var(--nx-color-foreground); font-variant-numeric: tabular-nums;">$1.84M</p>
             </x-import>
             <x-import component-from-global-scope="Nxds.CardContent">
               <div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--nx-spacing-2);">
@@ -165,7 +165,7 @@ body{margin:0}
           <x-import component-from-global-scope="Nxds.Card">
             <x-import component-from-global-scope="Nxds.CardHeader">
               <x-import component-from-global-scope="Nxds.CardDescription">Won this quarter</x-import>
-              <p class="nx:col-start-1 nx:min-w-0 nx:typography-heading-large nx:text-foreground nx:tabular-nums" style="margin: 0;">$186K</p>
+              <p class="typography-heading-large" style="grid-column-start: 1; min-width: 0; margin: 0; color: var(--nx-color-foreground); font-variant-numeric: tabular-nums;">$186K</p>
             </x-import>
             <x-import component-from-global-scope="Nxds.CardContent">
               <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-2);">
@@ -177,7 +177,7 @@ body{margin:0}
           <x-import component-from-global-scope="Nxds.Card">
             <x-import component-from-global-scope="Nxds.CardHeader">
               <x-import component-from-global-scope="Nxds.CardDescription">Win rate</x-import>
-              <p class="nx:col-start-1 nx:min-w-0 nx:typography-heading-large nx:text-foreground nx:tabular-nums" style="margin: 0;">28.6%</p>
+              <p class="typography-heading-large" style="grid-column-start: 1; min-width: 0; margin: 0; color: var(--nx-color-foreground); font-variant-numeric: tabular-nums;">28.6%</p>
             </x-import>
             <x-import component-from-global-scope="Nxds.CardContent">
               <div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--nx-spacing-2);">
@@ -189,7 +189,7 @@ body{margin:0}
           <x-import component-from-global-scope="Nxds.Card">
             <x-import component-from-global-scope="Nxds.CardHeader">
               <x-import component-from-global-scope="Nxds.CardDescription">Avg. sales cycle</x-import>
-              <p class="nx:col-start-1 nx:min-w-0 nx:typography-heading-large nx:text-foreground nx:tabular-nums" style="margin: 0;">38 days</p>
+              <p class="typography-heading-large" style="grid-column-start: 1; min-width: 0; margin: 0; color: var(--nx-color-foreground); font-variant-numeric: tabular-nums;">38 days</p>
             </x-import>
             <x-import component-from-global-scope="Nxds.CardContent">
               <div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--nx-spacing-2);">
@@ -233,35 +233,35 @@ body{margin:0}
                   <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-2);">
                     <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--nx-spacing-2);">
                       <span class="typography-label-default">Lead <span class="typography-body-default" style="color: var(--nx-color-muted-foreground);">· 24 deals</span></span>
-                      <span class="nx:typography-label-default nx:tabular-nums">$612K</span>
+                      <span class="typography-label-default" style="font-variant-numeric: tabular-nums;">$612K</span>
                     </div>
                     <x-import component-from-global-scope="Nxds.Progress" value="100" aria-label="Lead: 24 deals, $612K"></x-import>
                   </div>
                   <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-2);">
                     <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--nx-spacing-2);">
                       <span class="typography-label-default">Qualified <span class="typography-body-default" style="color: var(--nx-color-muted-foreground);">· 16 deals</span></span>
-                      <span class="nx:typography-label-default nx:tabular-nums">$498K</span>
+                      <span class="typography-label-default" style="font-variant-numeric: tabular-nums;">$498K</span>
                     </div>
                     <x-import component-from-global-scope="Nxds.Progress" value="81" aria-label="Qualified: 16 deals, $498K"></x-import>
                   </div>
                   <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-2);">
                     <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--nx-spacing-2);">
                       <span class="typography-label-default">Proposal <span class="typography-body-default" style="color: var(--nx-color-muted-foreground);">· 11 deals</span></span>
-                      <span class="nx:typography-label-default nx:tabular-nums">$386K</span>
+                      <span class="typography-label-default" style="font-variant-numeric: tabular-nums;">$386K</span>
                     </div>
                     <x-import component-from-global-scope="Nxds.Progress" value="63" aria-label="Proposal: 11 deals, $386K"></x-import>
                   </div>
                   <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-2);">
                     <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--nx-spacing-2);">
                       <span class="typography-label-default">Negotiation <span class="typography-body-default" style="color: var(--nx-color-muted-foreground);">· 7 deals</span></span>
-                      <span class="nx:typography-label-default nx:tabular-nums">$262K</span>
+                      <span class="typography-label-default" style="font-variant-numeric: tabular-nums;">$262K</span>
                     </div>
                     <x-import component-from-global-scope="Nxds.Progress" value="43" aria-label="Negotiation: 7 deals, $262K"></x-import>
                   </div>
                   <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-2);">
                     <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--nx-spacing-2);">
                       <span class="typography-label-default">Verbal commit <span class="typography-body-default" style="color: var(--nx-color-muted-foreground);">· 4 deals</span></span>
-                      <span class="nx:typography-label-default nx:tabular-nums">$82K</span>
+                      <span class="typography-label-default" style="font-variant-numeric: tabular-nums;">$82K</span>
                     </div>
                     <x-import component-from-global-scope="Nxds.Progress" value="13" aria-label="Verbal commit: 4 deals, $82K"></x-import>
                   </div>
@@ -438,7 +438,7 @@ body{margin:0}
               </x-import>
               <x-import component-from-global-scope="Nxds.CardFooter">
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--nx-spacing-2); width: 100%;">
-                  <span class="nx:typography-label-small nx:text-muted-foreground nx:tabular-nums">Showing 6 of 62 deals</span>
+                  <span class="typography-label-small" style="color: var(--nx-color-muted-foreground); font-variant-numeric: tabular-nums;">Showing 6 of 62 deals</span>
                   <x-import component-from-global-scope="Nxds.Button" variant="link" size="sm" end-icon="arrow-up-right">View all deals</x-import>
                 </div>
               </x-import>

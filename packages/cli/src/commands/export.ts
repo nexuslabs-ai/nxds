@@ -43,8 +43,10 @@ export type ExportOptions = {
   overwrite: boolean;
 };
 
-/** `files.json`: each file under `project/`, as the package build wrote it. */
-type Manifest = { path: string; sha256: string }[];
+type ManifestEntry = { path: string; sha256: string };
+
+/** `files.json`: each file the release ships, as the package build wrote it. `project` paths are under `project/`, and `root` files sit beside it. */
+type Manifest = { project: ManifestEntry[]; root: ManifestEntry[] };
 
 type Packument = {
   'dist-tags'?: Record<string, string>;
@@ -220,6 +222,13 @@ function stalePaths(existing: string[], exported: Set<string>) {
     .sort();
 }
 
+const isEntryList = (value: unknown): value is ManifestEntry[] =>
+  Array.isArray(value) &&
+  value.every(
+    (entry) =>
+      typeof entry?.path === 'string' && typeof entry.sha256 === 'string'
+  );
+
 function readManifest(root: string): Manifest {
   const file = path.join(root, 'files.json');
   if (!existsSync(file)) {
@@ -227,41 +236,34 @@ function readManifest(root: string): Manifest {
       `${root} has no files.json. Export from an @nxds/claude-design release or a built dist folder.`
     );
   }
-  const value = readJson(file);
-  if (
-    !Array.isArray(value) ||
-    !value.every(
-      (entry) =>
-        typeof entry?.path === 'string' && typeof entry.sha256 === 'string'
-    )
-  ) {
+  const value = readJson(file) as Partial<Manifest> | null;
+  if (!isEntryList(value?.project) || !isEntryList(value.root)) {
     throw new CliError(
-      `${file} must be a JSON array of { path, sha256 } entries.`
+      `${file} must hold project and root, each a JSON array of { path, sha256 } entries.`
     );
   }
-  return value;
+  return { project: value.project, root: value.root };
 }
 
-// The package build validated exactly the files files.json lists, at its
-// hashes, so those are the only files read.
-function readProject(root: string) {
-  const projectDir = path.join(root, 'project');
+// The bytes of each entry under `dir`, checked against its hash. `shown` is
+// how an error names the entry's path.
+function readEntries(
+  dir: string,
+  entries: ManifestEntry[],
+  shown: (entry: string) => string
+) {
   const files = new Map<string, Buffer>();
-  for (const entry of readManifest(root)) {
-    const file = path.join(projectDir, entry.path);
-    const relative = path.relative(projectDir, file);
-    if (relative.split(path.sep)[0] === '..' || path.isAbsolute(relative)) {
-      throw new CliError(`files.json lists ${entry.path}, outside project/.`);
-    }
+  for (const entry of entries) {
+    const file = path.join(dir, entry.path);
     if (!existsSync(file) || !lstatSync(file).isFile()) {
       throw new CliError(
-        `project/${entry.path} is missing from the release, or isn't a regular file.`
+        `${shown(entry.path)} is missing from the release, or isn't a regular file.`
       );
     }
     const bytes = readFileSync(file);
     if (createHash('sha256').update(bytes).digest('hex') !== entry.sha256) {
       throw new CliError(
-        `project/${entry.path} doesn't match the release's files.json, so nothing was written.`
+        `${shown(entry.path)} doesn't match the release's files.json, so nothing was written.`
       );
     }
     files.set(entry.path, bytes);
@@ -269,30 +271,36 @@ function readProject(root: string) {
   return files;
 }
 
-/** The files a release ships beside project/, which the export copies when it has them. */
-const ROOT_FILES = ['coverage.md', 'SETUP.md', 'nxds-sampler.dc.html'];
-
-function readRootFiles(root: string) {
-  const files = new Map<string, Buffer>();
-  for (const name of ROOT_FILES) {
-    const file = path.join(root, name);
-    if (!existsSync(file)) continue;
-    if (!lstatSync(file).isFile()) {
-      throw new CliError(`The release's ${name} isn't a regular file.`);
+// The package build validated exactly the files files.json lists, at its
+// hashes, so those are the only files read: `project/` and the files beside it.
+function readRelease(root: string) {
+  const manifest = readManifest(root);
+  const projectDir = path.join(root, 'project');
+  for (const { path: file } of manifest.project) {
+    const relative = path.relative(projectDir, path.join(projectDir, file));
+    if (relative.split(path.sep)[0] === '..' || path.isAbsolute(relative)) {
+      throw new CliError(`files.json lists ${file}, outside project/.`);
     }
-    files.set(name, readFileSync(file));
   }
-  return files;
+  for (const { path: file } of manifest.root) {
+    if (path.basename(file) !== file) {
+      throw new CliError(
+        `files.json lists ${file} as a root file, but it isn't a file beside project/.`
+      );
+    }
+  }
+  return {
+    files: readEntries(
+      projectDir,
+      manifest.project,
+      (file) => `project/${file}`
+    ),
+    rootFiles: readEntries(root, manifest.root, (file) => file),
+  };
 }
 
-// Removes a root file the release doesn't have, so an earlier export's copy
-// doesn't outlive its release.
 function writeRootFiles(out: string, files: Map<string, Buffer>) {
-  for (const name of ROOT_FILES) {
-    const bytes = files.get(name);
-    if (bytes) writeFileSync(path.join(out, name), bytes);
-    else rmSync(path.join(out, name), { force: true });
-  }
+  for (const [name, bytes] of files) writeFileSync(path.join(out, name), bytes);
 }
 
 function mergeIndex(files: Map<string, Buffer>, currentFile: string) {
@@ -384,8 +392,7 @@ export async function exportClaudeDesign(
       );
 
   try {
-    const files = readProject(pkg.root);
-    const rootFiles = readRootFiles(pkg.root);
+    const { files, rootFiles } = readRelease(pkg.root);
     if (options.index) mergeIndex(files, path.resolve(cwd, options.index));
     const exported = new Set(
       [...files.keys()].map((file) => `project/${file}`)

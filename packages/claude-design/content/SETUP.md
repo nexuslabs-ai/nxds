@@ -47,7 +47,7 @@ The export wrote `nxds-design-system/nxds-sampler.dc.html`. It's a sales dashboa
 1. Publish the file to the canvas at the path `nxds-sampler.dc.html`, at the canvas root:
    - If the Artifact tool takes `files` as a map, map `nxds-sampler.dc.html` to the local file `nxds-design-system/nxds-sampler.dc.html`.
    - If it takes a list of absolute paths, copy the file unchanged into the canvas's own folder first: `cp nxds-design-system/nxds-sampler.dc.html /mnt/user-data/outputs/artifacts/<canvas id>/nxds-sampler.dc.html`. Then publish that path.
-2. Add this entry to `boards` in the canvas's `canvas.json`. Keep every other entry and key as it is.
+2. Add this entry to `boards` in the canvas's `canvas.json`. If `boards` already has an entry whose `path` is `nxds-sampler.dc.html`, replace that entry. Keep every other entry and key as it is.
 
    ```json
    {{boardEntry}}
@@ -59,7 +59,7 @@ Check: read `nxds-sampler.dc.html` back from the canvas. It matches the export's
 
 If you can't see the canvas, read its console or open its panels, ask the person to check that item and tell you what they see.
 
-- The console shows no `[nxds]` warning and no error.
+- The console shows no `[nxds]` warning and no error. The one exception is a React `validateDOMNesting` warning about the deals table. The canvas's own wrappers around its rows and cells cause it.
 - Every section renders: the sidebar, the header with search, the `Sales overview` page header with its actions, the four metric cards, the `Closed won` bar chart, `Pipeline by stage`, the `Open deals` table and the `Today` tasks.
 - Nothing is cut off at the bottom of the artboard, and nothing spills past its card.
 - Click `This quarter`. A calendar opens on October to December 2026 with the whole quarter selected. Press Escape to close it.
