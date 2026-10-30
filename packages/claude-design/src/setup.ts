@@ -48,10 +48,19 @@ const CANVAS_FILES = [
   'components/index.d.ts',
 ];
 
+/** The lines under `## <heading>` up to the next `## ` heading, or undefined when there is no such heading. */
+function markdownSection(text: string, heading: string) {
+  const lines = text.split('\n');
+  const start = lines.indexOf(`## ${heading}`);
+  if (start === -1) return undefined;
+  const end = lines.findIndex(
+    (line, index) => index > start && line.startsWith('## ')
+  );
+  return lines.slice(start + 1, end === -1 ? undefined : end).join('\n');
+}
+
 function canvasSection(readme: string) {
-  const section = /^## On a Design canvas\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(
-    readme
-  )?.[1];
+  const section = markdownSection(readme, 'On a Design canvas');
   if (!section) throw new Error('README.md: no "On a Design canvas" section.');
   return section;
 }
@@ -86,14 +95,9 @@ function guideProblems({
   sampler: string;
 }) {
   const problems: string[] = [];
-  const publish = /^## 1\. Publish the system\n((?:(?!^## )[\s\S])*)/m.exec(
-    template
-  )?.[1];
-  const update = /^## Update to a new release\n((?:(?!^## )[\s\S])*)/m.exec(
-    template
-  )?.[1];
-  const updateStep =
-    update === undefined ? undefined : /^4\. .*$/m.exec(update)?.[0];
+  const publish = markdownSection(template, '1. Publish the system');
+  const update = markdownSection(template, 'Update to a new release');
+  const updateStep = update?.match(/^4\. .*$/m)?.[0];
   for (const [name, step, missing] of [
     ['step 1', publish, "a '## 1. Publish the system' section"],
     [
