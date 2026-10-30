@@ -14,6 +14,7 @@ import {
   DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
   type NxdsAppearancePrefs,
+  UI_SCALE_OPTIONS,
 } from './appearance-model';
 import type { Mode } from './palette';
 
@@ -508,14 +509,17 @@ describe('token catalogue', () => {
 describe('density spacing order', () => {
   const densities = DENSITY_OPTIONS.map((option) => option.value);
   const spacing = catalogue.filter((token) => token.family === 'spacing');
-  const px = (token: CatalogueToken, density: string) => {
+  const variantOf = (token: CatalogueToken, density: string) => {
     const variant = token.variants.find((value) => value.preset === density);
     expect(variant, `${token.name} ${density}`).toBeDefined();
-    return Number.parseFloat(variant!.declarations[0]!.value);
+    return variant!;
   };
+  const px = (token: CatalogueToken, density: string) =>
+    Number.parseFloat(variantOf(token, density).declarations[0]!.value);
   const step = (n: number) => byName.get(`--nx-spacing-${n}`)!;
   // Steps 0–2 are density-invariant. The density offset ramps in from step 2.5
-  // and reaches its full size at step 6.
+  // and reaches its full size at step 6. Step 2.5 moves only 1px across the
+  // densities, so neighbours can't stay apart there, and RAMP starts at step 3.
   const RAMP = [3, 4, 5, 6];
 
   it('never reduces spacing when moving to a more spacious density', () => {
@@ -563,12 +567,34 @@ describe('density spacing order', () => {
     }
   });
 
-  it('keeps neighbouring densities apart at each ramp step and role token', () => {
+  it('gives each role token the value of the step it references, at every density and UI scale', () => {
     const roles = spacing.filter(
       (token) => !token.name.startsWith('--nx-spacing-')
     );
+    const scales = UI_SCALE_OPTIONS.map(({ value }) => value).filter(
+      (scale) => scale !== 'default'
+    );
     expect(roles.length).toBeGreaterThan(0);
-    for (const token of [...RAMP.map(step), ...roles]) {
+    for (const token of roles) {
+      for (const density of densities) {
+        const { target } = only(variantOf(token, density).references);
+        expect(px(token, density), `${token.name} ${density}`).toBe(
+          px(byName.get(target)!, density)
+        );
+        for (const scale of scales) {
+          const block = modeBlock(
+            `[data-ui-scale='${scale}'][data-density='${density}']`
+          );
+          const label = `${token.name} ${scale} × ${density}`;
+          expect(block.get(token.name), label).toBeDefined();
+          expect(block.get(token.name), label).toBe(block.get(target));
+        }
+      }
+    }
+  });
+
+  it('keeps neighbouring densities apart at each ramp step', () => {
+    for (const token of RAMP.map(step)) {
       const values = densities.map((density) => px(token, density));
       // Step 3 carries only 3px of ramp across six densities, so a pair may
       // share a value there, but never three in a row.

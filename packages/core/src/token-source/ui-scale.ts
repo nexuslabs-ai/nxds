@@ -30,6 +30,12 @@ export interface ScaleBlock {
   tokens: ScaleToken[];
 }
 
+/** A token of a density or radius mode, before the UI scale. */
+export interface ModeToken extends ScaleToken {
+  /** The spacing step a role token takes its value from, such as `spacing-6`. */
+  step?: string;
+}
+
 const FULL_RADIUS = '9999px';
 
 /** No text that starts at this size or larger scales below it. */
@@ -66,30 +72,35 @@ const stepOf = (cssName: string) =>
 /**
  * Scales one density or radius mode. Numeric spacing steps stay in order: a
  * step that rounds onto the one before it moves up to the next allowed length.
+ * A role token takes the scaled value of the step it references.
  */
-function scaleMode(
-  tokens: readonly ScaleToken[],
-  factor: number
-): ScaleToken[] {
-  const scaled = tokens.map(({ cssName, value }) => ({
-    cssName,
-    value:
-      value === FULL_RADIUS ? value : `${scaleLength(px(value), factor)}px`,
-  }));
-  const steps = scaled
-    .filter(({ cssName }) => /^spacing-\d/.test(cssName))
-    .sort((a, b) => stepOf(a.cssName) - stepOf(b.cssName));
-  const bumped = new Map<string, string>();
+function scaleMode(tokens: readonly ModeToken[], factor: number): ScaleToken[] {
+  const scaled = new Map(
+    tokens
+      .filter(({ step }) => !step)
+      .map(({ cssName, value }) => [
+        cssName,
+        value === FULL_RADIUS ? value : `${scaleLength(px(value), factor)}px`,
+      ])
+  );
+  const steps = [...scaled]
+    .filter(([cssName]) => /^spacing-\d/.test(cssName))
+    .sort(([a], [b]) => stepOf(a) - stepOf(b));
   let previous = -1;
-  for (const { cssName, value } of steps) {
+  for (const [cssName, value] of steps) {
     const length = px(value) > previous ? px(value) : above(previous);
-    if (length !== px(value)) bumped.set(cssName, `${length}px`);
+    scaled.set(cssName, `${length}px`);
     previous = length;
   }
-  return scaled.map(({ cssName, value }) => ({
-    cssName,
-    value: bumped.get(cssName) ?? value,
-  }));
+  return tokens.map(({ cssName, step }) => {
+    const value = scaled.get(step ?? cssName);
+    if (value === undefined) {
+      throw new Error(
+        `scaleMode: ${cssName} references ${step}, which its mode lacks`
+      );
+    }
+    return { cssName, value };
+  });
 }
 
 /**
@@ -98,7 +109,7 @@ function scaleMode(
  * too. Modes nest under the scale, which sits on the root.
  */
 export function scaledModeBlocks(
-  modesByName: Readonly<Record<string, readonly ScaleToken[]>>,
+  modesByName: Readonly<Record<string, readonly ModeToken[]>>,
   { attrName, defaultMode }: { attrName: string; defaultMode: string }
 ): ScaleBlock[] {
   const entries = Object.entries(modesByName);

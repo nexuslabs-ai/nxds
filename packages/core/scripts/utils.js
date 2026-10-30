@@ -10,6 +10,7 @@ import {
   inlineVariables,
 } from '../src/token-source/format.ts';
 import {
+  referencedStep,
   SPACING_MODE_FILE_PATTERN,
   spacingRoleUtility,
 } from '../src/token-source/spacing.ts';
@@ -128,10 +129,10 @@ export function discoverPrimitives(primitivesDir) {
 }
 
 /**
- * Find the per-mode spacing files in `semantic/`. Their values are direct px
- * (no `{N}` refs) and emit per-mode `[data-density="X"]` blocks via
- * `collectSpacingTokens`. Every other semantic file is read by a collector
- * that names it directly.
+ * Find the per-mode spacing files in `semantic/`. Steps are direct px, role
+ * tokens reference a step in the same file, and both emit per-mode
+ * `[data-density="X"]` blocks via `collectSpacingTokens`. Every other
+ * semantic file is read by a collector that names it directly.
  *
  * @param {string} semanticDir - Path to semantic directory
  * @returns {Record<string, string>} Mode name keyed to its `spacing-{mode}.json` filename
@@ -506,13 +507,17 @@ export const CANONICAL_SPACING_DEFAULT_MODE = 'default';
  *  - `@utility` role declarations reference the prefixed form
  *    (`var(--nx-container-p)`). See `generateSpacingRoleUtilitiesCSS`.
  *
+ * A role token's `{spacing.N}` reference resolves to step N's value in the
+ * same mode (`referencedStep`), and the token keeps that step's cssName as
+ * `step`, so the UI scale gives the role its step's scaled value.
+ *
  * Throws on cssName collisions across paths within a single mode — two paths
  * flattening to the same name (e.g. `layout.section-gap` and
  * `layout.section.gap` both → `layout-section-gap`) would silently lose
  * one declaration.
  *
  * @param {string} semanticDir - Path to semantic directory
- * @returns {Record<string, {cssName: string, path: string[], value: string}[]>}
+ * @returns {Record<string, {cssName: string, path: string[], value: string, step?: string}[]>}
  *   Modes keyed by name (e.g. `vega`, `lyra`, `maia`, `mira`, `nova`, `luma`, `sera`).
  *   Each token carries the original JSON `path` so downstream emitters
  *   (`generateSpacingRoleUtilitiesCSS`) can derive structure without
@@ -545,11 +550,14 @@ export function collectSpacingTokens(semanticDir) {
         );
       }
       seen.add(cssName);
-      tokens.push({
+      const step = referencedStep(token, extracted);
+      const entry = {
         cssName,
         path: token.path,
-        value: formatTokenValue(token.value, token.type, token.path),
-      });
+        value: formatTokenValue((step ?? token).value, token.type, token.path),
+      };
+      if (step) entry.step = step.path.join('-');
+      tokens.push(entry);
     }
 
     result[mode] = tokens;
@@ -656,7 +664,7 @@ export function generateSpacingModesCSS(modesByName, opts = {}) {
  * the per-mode blocks above apply as they are.
  *
  * @param {object} input
- * @param {Record<string, {cssName: string, value: string}[]>} input.spacingModes
+ * @param {Record<string, {cssName: string, value: string, step?: string}[]>} input.spacingModes
  * @param {string} input.spacingDefault
  * @param {Record<string, {cssName: string, value: string}[]>} input.radiusModes
  * @param {string} input.radiusDefault

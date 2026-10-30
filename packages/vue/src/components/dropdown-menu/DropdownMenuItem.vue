@@ -9,12 +9,9 @@ import {
 import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
+import { menuItemInsetClassName } from '../overlay-layout/overlay-layout';
 
-import {
-  dropdownMenuInsetClassName,
-  type DropdownMenuItemVariants,
-  dropdownMenuItemVariants,
-} from '.';
+import { type DropdownMenuItemVariants, dropdownMenuItemVariants } from '.';
 
 export interface DropdownMenuItemProps extends RekaDropdownMenuItemProps {
   variant?: DropdownMenuItemVariants['variant'];
@@ -43,7 +40,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     :class="
       cn(
         dropdownMenuItemVariants({ variant }),
-        inset && dropdownMenuInsetClassName,
+        inset && menuItemInsetClassName,
         props.class
       )
     "

@@ -151,8 +151,9 @@ function RolesStory() {
         </h2>
         <p className="nx:text-muted-foreground nx:typography-body-default nx:max-w-2xl">
           Role tokens express semantic rhythm for cards, dialogs, sections, and
-          stacks. They are the density-sensitive spacing controls most UI
-          components consume.
+          stacks. Each has one step&rsquo;s value at every density:
+          `container-p` is step 6, `container-gap` step 4, `layout-section-gap`
+          step 8 and `layout-stack-gap` step 2, which stays 8px.
         </p>
       </div>
       <section className="nx:flex nx:flex-col nx:gap-1">

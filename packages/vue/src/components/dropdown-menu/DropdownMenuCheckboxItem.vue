@@ -12,8 +12,7 @@ import type { HTMLAttributes } from 'vue';
 import { IconCheck } from '../../lib/icons';
 import { selectionIndicatorMotionClassName } from '../../lib/motion';
 import { cn } from '../../lib/utils';
-
-import { dropdownMenuInsetClassName } from '.';
+import { menuItemInsetClassName } from '../overlay-layout/overlay-layout';
 
 export interface DropdownMenuCheckboxItemProps extends RekaDropdownMenuCheckboxItemProps {
   class?: HTMLAttributes['class'];
@@ -34,7 +33,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
       cn(
         'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
         'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
-        dropdownMenuInsetClassName,
+        menuItemInsetClassName,
         'nx:transition-colors',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',

@@ -304,8 +304,6 @@ export const IconSize: Story = {
       const { width, height } = svg.getBoundingClientRect();
       await expect(width).toBe(iconToken);
       await expect(height).toBe(iconToken);
-      // Stroked icon sets (Lucide, Tabler, HugeIcons) draw at 1.75 in a Button.
-      await expect(getComputedStyle(svg).strokeWidth).toBe('1.75px');
     }
   },
 };

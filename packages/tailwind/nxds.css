@@ -572,10 +572,10 @@
     --nx-spacing-1_5: 6px;
     --nx-spacing-2_5: 11px;
     --nx-spacing-3_5: 15px;
-    --nx-container-p: 28px;
-    --nx-container-gap: 20px;
-    --nx-layout-section-gap: 36px;
-    --nx-layout-stack-gap: 10px;
+    --nx-container-p: 26px;
+    --nx-container-gap: 17px;
+    --nx-layout-section-gap: 34px;
+    --nx-layout-stack-gap: 8px;
   }
 
   [data-density='compact'] {
@@ -613,10 +613,10 @@
     --nx-spacing-1_5: 6px;
     --nx-spacing-2_5: 10px;
     --nx-spacing-3_5: 14px;
-    --nx-container-p: 20px;
-    --nx-container-gap: 12px;
-    --nx-layout-section-gap: 28px;
-    --nx-layout-stack-gap: 6px;
+    --nx-container-p: 22px;
+    --nx-container-gap: 15px;
+    --nx-layout-section-gap: 30px;
+    --nx-layout-stack-gap: 8px;
   }
 
   [data-density='relaxed'] {
@@ -654,10 +654,10 @@
     --nx-spacing-1_5: 6px;
     --nx-spacing-2_5: 11px;
     --nx-spacing-3_5: 16px;
-    --nx-container-p: 32px;
-    --nx-container-gap: 24px;
-    --nx-layout-section-gap: 40px;
-    --nx-layout-stack-gap: 12px;
+    --nx-container-p: 28px;
+    --nx-container-gap: 18px;
+    --nx-layout-section-gap: 36px;
+    --nx-layout-stack-gap: 8px;
   }
 
   [data-density='spacious'] {
@@ -695,10 +695,10 @@
     --nx-spacing-1_5: 6px;
     --nx-spacing-2_5: 11px;
     --nx-spacing-3_5: 17px;
-    --nx-container-p: 40px;
-    --nx-container-gap: 28px;
-    --nx-layout-section-gap: 56px;
-    --nx-layout-stack-gap: 16px;
+    --nx-container-p: 30px;
+    --nx-container-gap: 19px;
+    --nx-layout-section-gap: 38px;
+    --nx-layout-stack-gap: 8px;
   }
 
   [data-density='tight'] {
@@ -736,10 +736,10 @@
     --nx-spacing-1_5: 6px;
     --nx-spacing-2_5: 10px;
     --nx-spacing-3_5: 13px;
-    --nx-container-p: 16px;
-    --nx-container-gap: 8px;
-    --nx-layout-section-gap: 24px;
-    --nx-layout-stack-gap: 4px;
+    --nx-container-p: 20px;
+    --nx-container-gap: 14px;
+    --nx-layout-section-gap: 28px;
+    --nx-layout-stack-gap: 8px;
   }
 
   /* ===== PER-MODE RADIUS (mode swap via [data-radius="X"] on any ancestor) ===== */
@@ -1302,10 +1302,10 @@
     --nx-spacing-1_5: 5px;
     --nx-spacing-2_5: 10px;
     --nx-spacing-3_5: 14px;
-    --nx-container-p: 26px;
-    --nx-container-gap: 18px;
-    --nx-layout-section-gap: 32px;
-    --nx-layout-stack-gap: 9px;
+    --nx-container-p: 24px;
+    --nx-container-gap: 15px;
+    --nx-layout-section-gap: 30px;
+    --nx-layout-stack-gap: 7px;
   }
 
   [data-ui-scale='small'][data-density='compact'],
@@ -1344,10 +1344,10 @@
     --nx-spacing-1_5: 5px;
     --nx-spacing-2_5: 9px;
     --nx-spacing-3_5: 13px;
-    --nx-container-p: 18px;
-    --nx-container-gap: 11px;
-    --nx-layout-section-gap: 26px;
-    --nx-layout-stack-gap: 5px;
+    --nx-container-p: 20px;
+    --nx-container-gap: 14px;
+    --nx-layout-section-gap: 28px;
+    --nx-layout-stack-gap: 7px;
   }
 
   [data-ui-scale='small'][data-density='relaxed'],
@@ -1386,10 +1386,10 @@
     --nx-spacing-1_5: 5px;
     --nx-spacing-2_5: 10px;
     --nx-spacing-3_5: 14px;
-    --nx-container-p: 28px;
-    --nx-container-gap: 22px;
-    --nx-layout-section-gap: 36px;
-    --nx-layout-stack-gap: 11px;
+    --nx-container-p: 26px;
+    --nx-container-gap: 16px;
+    --nx-layout-section-gap: 32px;
+    --nx-layout-stack-gap: 7px;
   }
 
   [data-ui-scale='small'][data-density='spacious'],
@@ -1428,10 +1428,10 @@
     --nx-spacing-1_5: 5px;
     --nx-spacing-2_5: 10px;
     --nx-spacing-3_5: 15px;
-    --nx-container-p: 36px;
-    --nx-container-gap: 26px;
-    --nx-layout-section-gap: 50px;
-    --nx-layout-stack-gap: 14px;
+    --nx-container-p: 28px;
+    --nx-container-gap: 18px;
+    --nx-layout-section-gap: 34px;
+    --nx-layout-stack-gap: 7px;
   }
 
   [data-ui-scale='small'][data-density='tight'],
@@ -1470,10 +1470,10 @@
     --nx-spacing-1_5: 5px;
     --nx-spacing-2_5: 9px;
     --nx-spacing-3_5: 12px;
-    --nx-container-p: 14px;
-    --nx-container-gap: 7px;
-    --nx-layout-section-gap: 22px;
-    --nx-layout-stack-gap: 4px;
+    --nx-container-p: 18px;
+    --nx-container-gap: 13px;
+    --nx-layout-section-gap: 26px;
+    --nx-layout-stack-gap: 7px;
   }
 
   [data-ui-scale='large'],
@@ -1555,10 +1555,10 @@
     --nx-spacing-1_5: 7px;
     --nx-spacing-2_5: 12px;
     --nx-spacing-3_5: 16px;
-    --nx-container-p: 30px;
-    --nx-container-gap: 22px;
-    --nx-layout-section-gap: 40px;
-    --nx-layout-stack-gap: 11px;
+    --nx-container-p: 28px;
+    --nx-container-gap: 18px;
+    --nx-layout-section-gap: 38px;
+    --nx-layout-stack-gap: 9px;
   }
 
   [data-ui-scale='large'][data-density='compact'],
@@ -1597,10 +1597,10 @@
     --nx-spacing-1_5: 7px;
     --nx-spacing-2_5: 11px;
     --nx-spacing-3_5: 15px;
-    --nx-container-p: 22px;
-    --nx-container-gap: 13px;
-    --nx-layout-section-gap: 30px;
-    --nx-layout-stack-gap: 7px;
+    --nx-container-p: 24px;
+    --nx-container-gap: 16px;
+    --nx-layout-section-gap: 34px;
+    --nx-layout-stack-gap: 9px;
   }
 
   [data-ui-scale='large'][data-density='relaxed'],
@@ -1639,10 +1639,10 @@
     --nx-spacing-1_5: 7px;
     --nx-spacing-2_5: 12px;
     --nx-spacing-3_5: 18px;
-    --nx-container-p: 36px;
-    --nx-container-gap: 26px;
-    --nx-layout-section-gap: 44px;
-    --nx-layout-stack-gap: 13px;
+    --nx-container-p: 30px;
+    --nx-container-gap: 20px;
+    --nx-layout-section-gap: 40px;
+    --nx-layout-stack-gap: 9px;
   }
 
   [data-ui-scale='large'][data-density='spacious'],
@@ -1681,10 +1681,10 @@
     --nx-spacing-1_5: 7px;
     --nx-spacing-2_5: 12px;
     --nx-spacing-3_5: 18px;
-    --nx-container-p: 44px;
-    --nx-container-gap: 30px;
-    --nx-layout-section-gap: 62px;
-    --nx-layout-stack-gap: 18px;
+    --nx-container-p: 34px;
+    --nx-container-gap: 20px;
+    --nx-layout-section-gap: 42px;
+    --nx-layout-stack-gap: 9px;
   }
 
   [data-ui-scale='large'][data-density='tight'],
@@ -1723,10 +1723,10 @@
     --nx-spacing-1_5: 7px;
     --nx-spacing-2_5: 11px;
     --nx-spacing-3_5: 14px;
-    --nx-container-p: 18px;
-    --nx-container-gap: 9px;
-    --nx-layout-section-gap: 26px;
-    --nx-layout-stack-gap: 4px;
+    --nx-container-p: 22px;
+    --nx-container-gap: 15px;
+    --nx-layout-section-gap: 30px;
+    --nx-layout-stack-gap: 9px;
   }
 
   [data-ui-scale='larger'],
@@ -1808,10 +1808,10 @@
     --nx-spacing-1_5: 8px;
     --nx-spacing-2_5: 14px;
     --nx-spacing-3_5: 18px;
-    --nx-container-p: 36px;
-    --nx-container-gap: 26px;
-    --nx-layout-section-gap: 46px;
-    --nx-layout-stack-gap: 13px;
+    --nx-container-p: 32px;
+    --nx-container-gap: 22px;
+    --nx-layout-section-gap: 42px;
+    --nx-layout-stack-gap: 10px;
   }
 
   [data-ui-scale='larger'][data-density='compact'],
@@ -1850,10 +1850,10 @@
     --nx-spacing-1_5: 8px;
     --nx-spacing-2_5: 13px;
     --nx-spacing-3_5: 18px;
-    --nx-container-p: 26px;
-    --nx-container-gap: 15px;
-    --nx-layout-section-gap: 36px;
-    --nx-layout-stack-gap: 8px;
+    --nx-container-p: 28px;
+    --nx-container-gap: 20px;
+    --nx-layout-section-gap: 38px;
+    --nx-layout-stack-gap: 10px;
   }
 
   [data-ui-scale='larger'][data-density='relaxed'],
@@ -1892,10 +1892,10 @@
     --nx-spacing-1_5: 8px;
     --nx-spacing-2_5: 14px;
     --nx-spacing-3_5: 20px;
-    --nx-container-p: 40px;
-    --nx-container-gap: 30px;
-    --nx-layout-section-gap: 50px;
-    --nx-layout-stack-gap: 15px;
+    --nx-container-p: 36px;
+    --nx-container-gap: 22px;
+    --nx-layout-section-gap: 46px;
+    --nx-layout-stack-gap: 10px;
   }
 
   [data-ui-scale='larger'][data-density='spacious'],
@@ -1934,10 +1934,10 @@
     --nx-spacing-1_5: 8px;
     --nx-spacing-2_5: 14px;
     --nx-spacing-3_5: 22px;
-    --nx-container-p: 50px;
-    --nx-container-gap: 36px;
-    --nx-layout-section-gap: 70px;
-    --nx-layout-stack-gap: 20px;
+    --nx-container-p: 38px;
+    --nx-container-gap: 24px;
+    --nx-layout-section-gap: 48px;
+    --nx-layout-stack-gap: 10px;
   }
 
   [data-ui-scale='larger'][data-density='tight'],
@@ -1976,10 +1976,10 @@
     --nx-spacing-1_5: 8px;
     --nx-spacing-2_5: 13px;
     --nx-spacing-3_5: 16px;
-    --nx-container-p: 20px;
-    --nx-container-gap: 10px;
-    --nx-layout-section-gap: 30px;
-    --nx-layout-stack-gap: 5px;
+    --nx-container-p: 26px;
+    --nx-container-gap: 18px;
+    --nx-layout-section-gap: 36px;
+    --nx-layout-stack-gap: 10px;
   }
 
   [data-ui-scale='small'],

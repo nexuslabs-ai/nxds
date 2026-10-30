@@ -241,33 +241,21 @@
   },
   "container": {
     "p": {
-      "$value": {
-        "value": 32,
-        "unit": "px"
-      },
+      "$value": "{spacing.6}",
       "$type": "dimension"
     },
     "gap": {
-      "$value": {
-        "value": 24,
-        "unit": "px"
-      },
+      "$value": "{spacing.4}",
       "$type": "dimension"
     }
   },
   "layout": {
     "section-gap": {
-      "$value": {
-        "value": 40,
-        "unit": "px"
-      },
+      "$value": "{spacing.8}",
       "$type": "dimension"
     },
     "stack-gap": {
-      "$value": {
-        "value": 12,
-        "unit": "px"
-      },
+      "$value": "{spacing.2}",
       "$type": "dimension"
     }
   }

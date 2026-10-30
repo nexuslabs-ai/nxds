@@ -9,12 +9,9 @@ import {
 import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
+import { menuItemInsetClassName } from '../overlay-layout/overlay-layout';
 
-import {
-  contextMenuInsetClassName,
-  type ContextMenuItemVariants,
-  contextMenuItemVariants,
-} from '.';
+import { type ContextMenuItemVariants, contextMenuItemVariants } from '.';
 
 export interface ContextMenuItemProps extends RekaContextMenuItemProps {
   variant?: ContextMenuItemVariants['variant'];
@@ -43,7 +40,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     :class="
       cn(
         contextMenuItemVariants({ variant }),
-        inset && contextMenuInsetClassName,
+        inset && menuItemInsetClassName,
         props.class
       )
     "
