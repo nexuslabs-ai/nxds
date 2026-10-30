@@ -7,16 +7,25 @@ import { cn } from '../../lib/utils';
 import { TooltipGroupKey } from '../tooltip/tooltip-group';
 import TooltipProvider from '../tooltip/TooltipProvider.vue';
 
+import { toolbarVariants } from '.';
+
+type ToolbarVariant = 'default' | 'floating';
+
 export interface ToolbarProps extends ToolbarRootProps {
+  /** Floating lifts the toolbar above the content it sits over, like a canvas. */
+  variant?: ToolbarVariant;
   class?: HTMLAttributes['class'];
 }
 
 defineOptions({ inheritAttrs: false });
 
 // Radix wraps arrow-key focus by default; Reka doesn't.
-const props = withDefaults(defineProps<ToolbarProps>(), { loop: true });
+const props = withDefaults(defineProps<ToolbarProps>(), {
+  loop: true,
+  variant: 'default',
+});
 
-const delegated = reactiveOmit(props, 'class');
+const delegated = reactiveOmit(props, 'class', 'variant');
 const forwarded = useForwardProps(delegated);
 
 const Passthrough: FunctionalComponent = (_, { slots }) => slots.default?.();
@@ -35,12 +44,8 @@ function dropTabStop(event: KeyboardEvent) {
     <ToolbarRoot
       v-bind="{ ...$attrs, ...forwarded }"
       data-slot="toolbar"
-      :class="
-        cn(
-          'nx:flex nx:w-fit nx:max-w-full nx:min-w-0 nx:flex-wrap nx:items-center nx:gap-0.5 nx:rounded-lg nx:border-default nx:border-border-default nx:bg-container nx:p-0.5 nx:shadow-sm nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
-          props.class
-        )
-      "
+      :data-variant="variant"
+      :class="cn(toolbarVariants({ variant }), props.class)"
       @keydown.capture="dropTabStop"
     >
       <slot />

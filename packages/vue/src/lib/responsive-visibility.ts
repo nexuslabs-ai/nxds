@@ -106,8 +106,15 @@ const CONTAINER_BELOW: Record<Breakpoint, string> = {
 /**
  * Resolve the visibility class string for the one provided axis. `invert` swaps
  * show/hide so `<Hide>` is `<Show>` with the maps flipped (hide-above === show-below).
+ *
+ * The string starts with `gap: inherit`. A `contents` box lays out nothing, so
+ * this passes its parent's gap to a child that inherits it, like a toolbar group.
  */
-export function visibilityClassName(
+export function visibilityClassName(axis: AxisValues, invert: boolean): string {
+  return `nx:gap-[inherit] ${axisClassName(axis, invert)}`;
+}
+
+function axisClassName(
   { above, below, containerAbove, containerBelow }: AxisValues,
   invert: boolean
 ): string {
