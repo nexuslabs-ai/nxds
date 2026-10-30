@@ -2,7 +2,12 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { DENSITY_OPTIONS, UI_SCALE_OPTIONS } from './appearance-model';
+import {
+  appearancePrefsToCss,
+  DEFAULT_NXDS_APPEARANCE,
+  DENSITY_OPTIONS,
+  UI_SCALE_OPTIONS,
+} from './appearance-model';
 
 const nxdsCss = readFileSync(
   resolve(process.cwd(), 'packages/tailwind/nxds.css'),
@@ -106,7 +111,7 @@ describe('UI scale CSS', () => {
     ]);
     for (const block of type) {
       for (const [name, px] of block) {
-        if (name.startsWith('typography-size-')) {
+        if (/^typography-(size-|code-size)/.test(name)) {
           expect(Number.isInteger(px), name).toBe(true);
           expect(px, name).toBeGreaterThanOrEqual(10);
         }
@@ -114,7 +119,42 @@ describe('UI scale CSS', () => {
           expect(px % 2, name).toBe(0);
         }
       }
-      expect(block.has('typography-code-size')).toBe(false);
     }
+  });
+
+  it('scales the default 12px code text to 10, 14 and 15px', () => {
+    expect(
+      SCALES.map((scale) =>
+        blocks.get(`[data-ui-scale='${scale}']`)!.get('typography-code-size')
+      )
+    ).toEqual([10, 14, 15]);
+  });
+
+  it('sets the same code size as the provider at the default setting', () => {
+    const provider = appearancePrefsToCss(DEFAULT_NXDS_APPEARANCE.prefs);
+    for (const scale of SCALES) {
+      const px = blocks
+        .get(`[data-ui-scale='${scale}']`)!
+        .get('typography-code-size');
+      expect(provider).toContain(
+        `[data-ui-scale='${scale}'] {\n  --nx-typography-code-size: ${px}px;\n}`
+      );
+    }
+  });
+
+  it('scales every icon glyph by the length rule', () => {
+    const glyphs = SCALES.map((scale) =>
+      [...blocks.get(`[data-ui-scale='${scale}']`)!].filter(([name]) =>
+        name.startsWith('icon-glyph-')
+      )
+    );
+    expect(
+      glyphs.map((block) => new Map(block).get('icon-glyph-default'))
+    ).toEqual([14, 18, 20]);
+    for (const [name, px] of glyphs.flat()) {
+      expect(Number.isInteger(px), name).toBe(true);
+      if (px >= 16) expect(px % 2, name).toBe(0);
+    }
+    expect(glyphs.flat().map(([name]) => name)).toContain('icon-glyph-lg');
   });
 });

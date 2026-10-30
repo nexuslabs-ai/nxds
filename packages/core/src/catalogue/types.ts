@@ -24,6 +24,7 @@ export type CatalogueFamily =
   | 'shadow'
   | 'spacing'
   | 'typography'
+  | 'ui-scale'
   | 'z-index';
 
 /**
@@ -79,7 +80,10 @@ export interface CatalogueVariant {
    * file.
    */
   readonly preset: string | null;
-  /** The authored leaf, or `null` for a colour the engine derives. */
+  /**
+   * The authored leaf, or `null` for a colour the engine derives and for the
+   * UI scale factor and page widths.
+   */
   readonly source: CatalogueSource | null;
   /** The full appearance config a derived colour was computed from. */
   readonly appearance: DeepReadonly<NxdsAppearanceState> | null;
@@ -95,8 +99,9 @@ export interface CatalogueVariant {
 }
 
 /**
- * The appearance setting that writes a token at runtime: a preset field that
- * picks one of its moded values, or a preference the provider computes it from.
+ * An appearance setting that writes a token at runtime: a preset field that
+ * picks one of its moded values or scales it, or a preference the provider
+ * computes it from.
  */
 export type CatalogueControl =
   | { readonly kind: 'preset'; readonly field: NxdsPresetField }
@@ -114,7 +119,7 @@ export interface CatalogueToken {
   readonly type: string;
   readonly description: string | null;
   readonly aliases: readonly CatalogueAlias[];
-  /** The appearance setting that writes it, or `null` when nothing does. */
-  readonly control: CatalogueControl | null;
+  /** The appearance settings that write it. Empty when nothing does. */
+  readonly controls: readonly CatalogueControl[];
   readonly variants: readonly CatalogueVariant[];
 }

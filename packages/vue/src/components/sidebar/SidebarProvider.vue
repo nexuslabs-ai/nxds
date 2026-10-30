@@ -9,9 +9,7 @@ import { SidebarKey } from './sidebar-context';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = 'var(--nx-container-3xs)';
-const SIDEBAR_WIDTH_ICON =
-  'calc(var(--nx-spacing-8) + var(--nx-spacing-2) * 2)';
+const SIDEBAR_WIDTH = 'calc(16rem*var(--nx-ui-scale))';
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
 
 /** Whether the event target is a text-entry element (input, textarea, or contenteditable). */
@@ -106,10 +104,7 @@ provide(SidebarKey, {
   <TooltipProvider :delay-duration="0">
     <div
       data-slot="sidebar-wrapper"
-      :style="{
-        '--sidebar-width': SIDEBAR_WIDTH,
-        '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
-      }"
+      :style="{ '--sidebar-width': SIDEBAR_WIDTH }"
       :class="
         cn(
           'nx:group/sidebar-wrapper nx:flex nx:min-h-svh nx:w-full nx:has-data-[variant=inset]:bg-nav-background',

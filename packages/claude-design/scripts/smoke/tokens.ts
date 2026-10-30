@@ -1,5 +1,6 @@
 import { fail, LIGHT, openPage } from './harness.ts';
 import {
+  BREADCRUMB_PAGE,
   BUTTON,
   CARD,
   CARD_CONTENT,
@@ -73,6 +74,13 @@ export const TOKEN_CASES: (Probe & {
     value: '23px',
     ...ICON_BUTTON,
     property: 'width',
+  },
+  {
+    family: 'uiScale',
+    name: '--nx-ui-scale',
+    value: '2',
+    ...BREADCRUMB_PAGE,
+    property: 'max-width',
   },
   {
     family: 'typeScale',

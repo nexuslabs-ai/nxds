@@ -24,7 +24,12 @@ export const NXDS_THEME_SCALES = {
  * each one extends, so a conflicting pair collapses to last-wins in `cn()`.
  */
 export const NXDS_CLASS_GROUPS = {
-  size: ['size-icon-glyph-xs', 'size-icon-glyph-sm', 'size-icon-glyph-default'],
+  size: [
+    'size-icon-glyph-xs',
+    'size-icon-glyph-sm',
+    'size-icon-glyph-default',
+    'size-icon-glyph-lg',
+  ],
   animate: ['animate-overlay-presence-exit'],
   duration: [
     'duration-0',

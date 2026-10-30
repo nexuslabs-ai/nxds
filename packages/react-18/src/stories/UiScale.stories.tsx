@@ -1,6 +1,6 @@
 import { DENSITY_OPTIONS, UI_SCALE_OPTIONS } from '@nxds/core';
+import { MagnifyingGlassIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconSearch } from '@tabler/icons-react';
 import { expect, within } from 'storybook/test';
 
 import { Badge } from '../components/badge/badge';
@@ -39,7 +39,7 @@ function Row({ scale, density }: { scale: string; density: string }) {
         {scale} · {density}
       </span>
       <Button variant="outline">
-        <IconSearch aria-hidden />
+        <MagnifyingGlassIcon aria-hidden />
         Search
       </Button>
       <Input aria-label={`Name, ${name}`} className="nx:w-full nx:max-w-3xs" />
@@ -179,5 +179,16 @@ export const ProportionAtEveryScaleAndDensity: Story = {
         previousHeight = height;
       }
     }
+  },
+};
+
+export const CustomCodeSizeAtLargeScale: Story = {
+  // The theme's Large block sets 14px code. The code size setting must win.
+  globals: { uiScale: 'large', codeFontSize: 16 },
+  render: () => <code className="nx:typography-code-inline">npm install</code>,
+  play: async ({ canvasElement }) => {
+    const code = within(canvasElement).getByText('npm install');
+    // 16px code at the Default scale is 18px at Large: 16 × 16/14, rounded.
+    await expect(getComputedStyle(code).fontSize).toBe('18px');
   },
 };

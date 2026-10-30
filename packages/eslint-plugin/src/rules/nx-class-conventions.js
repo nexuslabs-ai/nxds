@@ -36,8 +36,8 @@ export const RAW_LETTER_SPACINGS = [
 ];
 
 // A numeric spacing step sizes an icon from spacing, so the icon follows
-// density. Glyph tokens (`size-icon-glyph-sm`) and arbitrary px values
-// (`size-[24px]`) stay fixed.
+// density. Glyph tokens (`size-icon-glyph-sm`) and arbitrary values
+// (`size-[24px]`) do not.
 const SPACING_STEP_SIZE = /^(?:size|h|w)-\d/;
 
 // An `Icon*` or `*Icon` JSX element, such as `IconX` or `CheckIcon`.
@@ -351,7 +351,7 @@ export default {
       rawLetterSpacing:
         'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
       densityIconSize:
-        'Icon size from a spacing step — a numeric `size-*`, `h-*` or `w-*` on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm` or `-default` (12, 14 or 16px at the Default UI scale). For a larger icon, multiply the default icon, such as `size-[calc(var(--nx-icon-glyph-default)*1.5)]`, so it follows the UI scale.',
+        'Icon size from a spacing step — a numeric `size-*`, `h-*` or `w-*` on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm`, `-default` or `-lg` (12, 14, 16 or 24px at the Default UI scale). For another size, multiply the default icon, such as `size-[calc(var(--nx-icon-glyph-default)*2)]`, so it follows the UI scale.',
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
     },

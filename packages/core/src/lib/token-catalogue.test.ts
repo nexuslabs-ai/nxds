@@ -200,6 +200,12 @@ function familyTokens(family: CatalogueFamily): CatalogueToken[] {
   return authored.filter((token) => token.family === family);
 }
 
+function presetFieldsOf(token: CatalogueToken): string[] {
+  return token.controls.flatMap((control) =>
+    control.kind === 'preset' ? [control.field] : []
+  );
+}
+
 /** The variant `:root` carries: the root preset, in light for shadows. */
 function rootVariant(token: CatalogueToken): VariantKey {
   const attribute = MODE_ATTRIBUTES[token.family];
@@ -242,10 +248,17 @@ describe('token catalogue', () => {
     expect(byName.has('--nx-color-border-active')).toBe(false);
   });
 
-  it('declares the default runtime colours and z-index layers in the theme layer', () => {
+  it('declares the default runtime colours, z-index layers, UI scale factor and page widths in the theme layer', () => {
     const light = blockDeclarations(nxdsTheme, ':root');
     const dark = blockDeclarations(nxdsTheme, '.dark');
-    for (const token of familyTokens('z-index')) {
+    const rootTokens = [
+      ...familyTokens('z-index'),
+      ...familyTokens('ui-scale'),
+    ];
+    expect(familyTokens('ui-scale').map((token) => token.name)).toContain(
+      '--nx-container-lg'
+    );
+    for (const token of rootTokens) {
       expect(light.get(token.name), token.name).toBe(
         variantValue(token, { preset: null, mode: null })
       );
@@ -405,41 +418,36 @@ describe('token catalogue', () => {
     }
   });
 
-  it('names the preset field for every token a mode attribute swaps', () => {
+  it('names the preset fields for every token a mode attribute swaps', () => {
     const presetFields = Object.fromEntries(
       Object.keys(MODE_ATTRIBUTES).map((family) => [
         family,
         new Set(
           familyTokens(family as CatalogueFamily)
             .filter((token) => token.variants.some((v) => v.preset !== null))
-            .map((token) =>
-              token.control?.kind === 'preset' ? token.control.field : null
-            )
+            .flatMap((token) => presetFieldsOf(token))
         ),
       ])
     );
     expect(presetFields).toEqual({
-      spacing: new Set(['density']),
-      radius: new Set(['corners']),
+      spacing: new Set(['density', 'uiScale']),
+      radius: new Set(['corners', 'uiScale']),
       borderwidth: new Set(['stroke']),
       shadow: new Set(['elevation']),
     });
   });
 
-  it('names uiScale for every text and icon token the [data-ui-scale] block sets', () => {
-    const block = nxdsCss.match(/\[data-ui-scale='large'\] \{([^}]*)\}/)![1]!;
+  it('names uiScale for exactly the tokens the [data-ui-scale] blocks set', () => {
     const scaled = new Set(
-      [...customProperties(block).keys()].filter((name) =>
-        /^--nx-(typography|icon)-/.test(name)
-      )
+      nxdsBlocks
+        .filter(({ selectors }) =>
+          selectors.some((selector) => selector.startsWith('[data-ui-scale='))
+        )
+        .flatMap(({ declarations }) => [...declarations.keys()])
     );
     const controlled = new Set(
       catalogue
-        .filter(
-          (token) =>
-            token.control?.kind === 'preset' &&
-            token.control.field === 'uiScale'
-        )
+        .filter((token) => presetFieldsOf(token).includes('uiScale'))
         .map((token) => token.name)
     );
     expect(controlled).toEqual(scaled);
@@ -467,9 +475,9 @@ describe('token catalogue', () => {
     }
     const controlled = new Map(
       catalogue.flatMap((token) =>
-        token.control?.kind === 'pref'
-          ? [[token.name, token.control.field] as const]
-          : []
+        token.controls.flatMap((control) =>
+          control.kind === 'pref' ? [[token.name, control.field] as const] : []
+        )
       )
     );
     expect(controlled).toEqual(changedBy);

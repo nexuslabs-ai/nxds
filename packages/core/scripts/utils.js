@@ -646,7 +646,7 @@ export function generateSpacingModesCSS(modesByName, opts = {}) {
 
 /**
  * Emit the UI scale: the default factor and page widths on `:root`, one
- * `[data-ui-scale="X"]` block per scale for type, icons and widths, and every
+ * `[data-ui-scale="X"]` block per scale for type, code, icons and widths, and every
  * density and radius mode at each scale. The default scale has no block, so
  * the per-mode blocks above apply as they are.
  *
@@ -655,8 +655,8 @@ export function generateSpacingModesCSS(modesByName, opts = {}) {
  * @param {string} input.spacingDefault
  * @param {Record<string, {cssName: string, value: string}[]>} input.radiusModes
  * @param {string} input.radiusDefault
- * @param {{sizes: Record<string, number>, lineHeights: Record<string, number>, widths: Record<string, number>}} input.base
- *   The default text sizes and line heights in px, and page widths in rem.
+ * @param {import('../src/token-source/ui-scale.ts').UiScaleBase} input.base
+ *   The Default sizes the UI scale multiplies.
  * @returns {string} CSS string with all UI scale blocks
  */
 export function generateUiScaleCSS({

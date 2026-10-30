@@ -1,16 +1,24 @@
 /**
- * The sizes of each UI scale. `spacing` multiplies every density and radius
- * step, `text` is the 14px label size at that scale, and `icon` is the
- * default icon glyph.
+ * Each UI scale, as factors of the Default scale. `spacing` multiplies every
+ * density and radius step and the page widths, `text` every type size, and
+ * `icon` every icon glyph. `text: 12 / 14` turns 14px label text into 12px.
  */
 export const UI_SCALES = {
-  small: { spacing: 0.9, text: 12, icon: 14 },
-  default: { spacing: 1, text: 14, icon: 16 },
-  large: { spacing: 1.1, text: 16, icon: 18 },
-  larger: { spacing: 1.25, text: 18, icon: 20 },
+  small: { spacing: 0.9, text: 12 / 14, icon: 14 / 16 },
+  default: { spacing: 1, text: 1, icon: 1 },
+  large: { spacing: 1.1, text: 16 / 14, icon: 18 / 16 },
+  larger: { spacing: 1.25, text: 18 / 14, icon: 20 / 16 },
 } as const;
 
-type UiScale = keyof typeof UI_SCALES;
+export type UiScale = keyof typeof UI_SCALES;
+
+/** Every scale but Default, which writes no block of its own. */
+export const NON_DEFAULT_UI_SCALES = (
+  Object.keys(UI_SCALES) as UiScale[]
+).filter((scale) => scale !== 'default');
+
+/** The selector that matches the root of a UI scale. */
+export const uiScaleSelector = (scale: UiScale) => `[data-ui-scale='${scale}']`;
 
 export interface ScaleToken {
   cssName: string;
@@ -24,7 +32,7 @@ export interface ScaleBlock {
 
 const FULL_RADIUS = '9999px';
 
-/** No text gets smaller than this, at any scale. */
+/** No text that starts at this size or larger scales below it. */
 const MIN_TEXT_PX = 10;
 
 const px = (value: string) => Number.parseFloat(value);
@@ -33,6 +41,15 @@ const px = (value: string) => Number.parseFloat(value);
 export function scaleLength(value: number, factor: number): number {
   const scaled = value * factor;
   return scaled >= 16 ? 2 * Math.round(scaled / 2) : Math.round(scaled);
+}
+
+/**
+ * A text size at a scale, in whole px. It stops at 10px, or at its own
+ * Default size when that is smaller, so a small size never grows at Small.
+ */
+export function scaleText(size: number, scale: UiScale): number {
+  const floor = Math.min(Math.round(size), MIN_TEXT_PX);
+  return Math.max(floor, Math.round(size * UI_SCALES[scale].text));
 }
 
 /** The smallest length the rule allows that is larger than `previous`. */
@@ -60,16 +77,18 @@ function scaleMode(
   const steps = scaled
     .filter(({ cssName }) => /^spacing-\d/.test(cssName))
     .sort((a, b) => stepOf(a.cssName) - stepOf(b.cssName));
+  const bumped = new Map<string, string>();
   let previous = -1;
-  for (const step of steps) {
-    const value = px(step.value) > previous ? px(step.value) : above(previous);
-    step.value = `${value}px`;
-    previous = value;
+  for (const { cssName, value } of steps) {
+    const length = px(value) > previous ? px(value) : above(previous);
+    if (length !== px(value)) bumped.set(cssName, `${length}px`);
+    previous = length;
   }
-  return scaled;
+  return scaled.map(({ cssName, value }) => ({
+    cssName,
+    value: bumped.get(cssName) ?? value,
+  }));
 }
-
-const scaleAttr = (scale: UiScale) => `[data-ui-scale="${scale}"]`;
 
 /**
  * One block per scale and mode of a moded family. The default mode also
@@ -87,14 +106,14 @@ export function scaledModeBlocks(
       .filter(([mode]) => mode !== defaultMode)
       .sort(([a], [b]) => a.localeCompare(b)),
   ];
-  return nonDefaultScales().flatMap((scale) =>
+  return NON_DEFAULT_UI_SCALES.flatMap((scale) =>
     modes.map(([mode, tokens]) => {
-      const modeAttr = `[${attrName}="${mode}"]`;
+      const modeAttr = `[${attrName}='${mode}']`;
       const selectors = [
-        `${scaleAttr(scale)}${modeAttr}`,
-        `${scaleAttr(scale)} ${modeAttr}`,
+        `${uiScaleSelector(scale)}${modeAttr}`,
+        `${uiScaleSelector(scale)} ${modeAttr}`,
       ];
-      if (mode === defaultMode) selectors.unshift(scaleAttr(scale));
+      if (mode === defaultMode) selectors.unshift(uiScaleSelector(scale));
       return {
         selectors,
         tokens: scaleMode(tokens, UI_SCALES[scale].spacing),
@@ -103,67 +122,73 @@ export function scaledModeBlocks(
   );
 }
 
-/** A `rem` width at a factor. A maximum width needs no rounding. */
-const remAt = (rem: number, factor: number) =>
-  `${Number((rem * factor).toFixed(4))}rem`;
-
-/** The scale factor and the page widths (`max-w-*`, `w-*`) at that factor. */
-function widthTokens(widths: Readonly<Record<string, number>>, factor: number) {
+/** The scale factor and the page widths (`max-w-*`, `w-*`) at a scale. */
+export function widthTokens(
+  widths: Readonly<Record<string, number>>,
+  scale: UiScale
+): ScaleToken[] {
+  const factor = UI_SCALES[scale].spacing;
   return [
     { cssName: 'ui-scale', value: String(factor) },
     ...Object.entries(widths).map(([name, rem]) => ({
       cssName: `container-${name}`,
-      value: remAt(rem, factor),
+      value: `${Number((rem * factor).toFixed(4))}rem`,
     })),
   ];
 }
 
+/** The Default sizes the UI scale multiplies. */
+export interface UiScaleBase {
+  /** Type sizes in px, by name. */
+  sizes: Readonly<Record<string, number>>;
+  /** Line heights in px, by name. */
+  lineHeights: Readonly<Record<string, number>>;
+  /** The code text size in px. */
+  codeSize: number;
+  /** Icon glyphs in px, by name. */
+  glyphs: Readonly<Record<string, number>>;
+  /** Page widths in rem, by name. */
+  widths: Readonly<Record<string, number>>;
+}
+
 /**
  * The `:root` block with the default factor and page widths, then one block
- * per scale with the text sizes (whole px, 10px or more), the line heights (even px, so a
- * box that grows with its text stays even), the icon glyphs, the page widths
- * and the factor. `sizes` leaves out the code size, which the code font size
- * setting owns.
+ * per scale with the type sizes and the code size (`scaleText`), the line
+ * heights (even px), the icon glyphs (`scaleLength`), the page widths and the
+ * factor.
  */
 export function scaleBlocks({
   sizes,
   lineHeights,
+  codeSize,
+  glyphs,
   widths,
-}: {
-  sizes: Readonly<Record<string, number>>;
-  lineHeights: Readonly<Record<string, number>>;
-  widths: Readonly<Record<string, number>>;
-}): ScaleBlock[] {
-  const root = {
-    selectors: [':root'],
-    tokens: widthTokens(widths, UI_SCALES.default.spacing),
-  };
+}: UiScaleBase): ScaleBlock[] {
+  const root = { selectors: [':root'], tokens: widthTokens(widths, 'default') };
   return [
     root,
-    ...nonDefaultScales().map((scale) => {
-      const { spacing, text, icon } = UI_SCALES[scale];
-      const factor = text / UI_SCALES.default.text;
+    ...NON_DEFAULT_UI_SCALES.map((scale) => {
+      const { text, icon } = UI_SCALES[scale];
       const tokens = [
-        ...Object.entries(sizes).map(([name, value]) => ({
+        ...Object.entries(sizes).map(([name, size]) => ({
           cssName: `typography-size-${name}`,
-          value: `${Math.max(MIN_TEXT_PX, Math.round(value * factor))}px`,
+          value: `${scaleText(size, scale)}px`,
         })),
-        ...Object.entries(lineHeights).map(([name, value]) => ({
+        ...Object.entries(lineHeights).map(([name, lineHeight]) => ({
           cssName: `typography-line-height-${name}`,
-          value: `${2 * Math.round((value * factor) / 2)}px`,
+          value: `${2 * Math.round((lineHeight * text) / 2)}px`,
         })),
-        { cssName: 'icon-glyph-xs', value: `${icon - 4}px` },
-        { cssName: 'icon-glyph-sm', value: `${icon - 2}px` },
-        { cssName: 'icon-glyph-default', value: `${icon}px` },
-        ...widthTokens(widths, spacing),
+        {
+          cssName: 'typography-code-size',
+          value: `${scaleText(codeSize, scale)}px`,
+        },
+        ...Object.entries(glyphs).map(([name, glyph]) => ({
+          cssName: `icon-glyph-${name}`,
+          value: `${scaleLength(glyph, icon)}px`,
+        })),
+        ...widthTokens(widths, scale),
       ];
-      return { selectors: [scaleAttr(scale)], tokens };
+      return { selectors: [uiScaleSelector(scale)], tokens };
     }),
   ];
-}
-
-function nonDefaultScales() {
-  return (Object.keys(UI_SCALES) as UiScale[]).filter(
-    (scale) => scale !== 'default'
-  );
 }

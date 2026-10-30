@@ -23,6 +23,14 @@
       },
       "$type": "dimension",
       "$description": "Icon in a control, at every control size, and the Checkbox, Radio and Switch size. It follows the UI scale and is the same at every density."
+    },
+    "lg": {
+      "$value": {
+        "value": 24,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$description": "Large icon, such as the EmptyState icon. It follows the UI scale and is the same at every density."
     }
   }
 }

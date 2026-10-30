@@ -1102,9 +1102,11 @@
     --nx-typography-line-height-7xl: 62px;
     --nx-typography-line-height-8xl: 82px;
     --nx-typography-line-height-9xl: 110px;
-    --nx-icon-glyph-xs: 10px;
+    --nx-typography-code-size: 10px;
+    --nx-icon-glyph-xs: 11px;
     --nx-icon-glyph-sm: 12px;
     --nx-icon-glyph-default: 14px;
+    --nx-icon-glyph-lg: 22px;
     --nx-ui-scale: 0.9;
     --nx-container-3xs: 14.4rem;
     --nx-container-2xs: 16.2rem;
@@ -1150,9 +1152,11 @@
     --nx-typography-line-height-7xl: 82px;
     --nx-typography-line-height-8xl: 110px;
     --nx-typography-line-height-9xl: 146px;
+    --nx-typography-code-size: 14px;
     --nx-icon-glyph-xs: 14px;
     --nx-icon-glyph-sm: 16px;
     --nx-icon-glyph-default: 18px;
+    --nx-icon-glyph-lg: 28px;
     --nx-ui-scale: 1.1;
     --nx-container-3xs: 17.6rem;
     --nx-container-2xs: 19.8rem;
@@ -1198,9 +1202,11 @@
     --nx-typography-line-height-7xl: 92px;
     --nx-typography-line-height-8xl: 124px;
     --nx-typography-line-height-9xl: 164px;
-    --nx-icon-glyph-xs: 16px;
+    --nx-typography-code-size: 15px;
+    --nx-icon-glyph-xs: 15px;
     --nx-icon-glyph-sm: 18px;
     --nx-icon-glyph-default: 20px;
+    --nx-icon-glyph-lg: 30px;
     --nx-ui-scale: 1.25;
     --nx-container-3xs: 20rem;
     --nx-container-2xs: 22.5rem;

@@ -1,8 +1,8 @@
 import fs from 'fs';
-import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
+import { PAGE_WIDTHS_REM } from '../src/lib/token-scales.generated.ts';
 import { formatTokenValue, resolveValue } from '../src/token-source/format.ts';
 import {
   SPACING_MODE_FILE_PATTERN,
@@ -351,27 +351,20 @@ function generateVariablesCSS(primitiveTokens, usedModes) {
 }
 
 /**
- * The px text sizes and line heights the UI scale multiplies, and the rem
- * page widths from Tailwind's own theme (`max-w-*` reads them).
+ * The Default sizes the UI scale multiplies: the px type sizes, line heights,
+ * code size and icon glyphs, and Tailwind's rem page widths.
  */
-function uiScaleBase(typography) {
+function uiScaleBase(typography, icon) {
   const values = (group) =>
     Object.fromEntries(
       Object.entries(group).map(([name, token]) => [name, token.$value.value])
     );
-  const tailwindTheme = fs.readFileSync(
-    createRequire(import.meta.url).resolve('tailwindcss/theme.css'),
-    'utf8'
-  );
-  const widths = Object.fromEntries(
-    [...tailwindTheme.matchAll(/--container-([\w-]+):\s*([\d.]+)rem;/g)].map(
-      ([, name, rem]) => [name, Number(rem)]
-    )
-  );
   return {
     sizes: values(typography.size),
     lineHeights: values(typography['line-height']),
-    widths,
+    codeSize: typography.code.size.$value.value,
+    glyphs: values(icon.glyph),
+    widths: PAGE_WIDTHS_REM,
   };
 }
 
@@ -491,7 +484,10 @@ function generateNxdsCSS(
     spacingDefault,
     radiusModes: runtimeModes.radiusModes,
     radiusDefault: usedModes.radius,
-    base: uiScaleBase(readTokenFile(typographyFilePath)),
+    base: uiScaleBase(
+      readTokenFile(typographyFilePath),
+      readTokenFile(path.join(PRIMITIVES_DIR, 'icon.json'))
+    ),
   });
   css += `}\n`;
 

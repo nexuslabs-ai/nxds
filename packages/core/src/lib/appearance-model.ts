@@ -1,4 +1,9 @@
-import { UI_SCALES } from '../token-source/ui-scale';
+import {
+  NON_DEFAULT_UI_SCALES,
+  scaleText,
+  type UiScale,
+  uiScaleSelector,
+} from '../token-source/ui-scale';
 
 import { normalizeContrast } from './contrast';
 import type { ThemeDerivationInput, ThemeSeeds } from './derive-theme';
@@ -9,7 +14,7 @@ import { inRuntimeLayer } from './runtime-layer';
 type ModeSeeds = Pick<ThemeSeeds, 'background' | 'foreground'>;
 
 export type NxdsAppearanceMode = 'light' | 'dark' | 'system';
-export type NxdsUiScale = keyof typeof UI_SCALES;
+export type NxdsUiScale = UiScale;
 export type NxdsDensity =
   | 'tight'
   | 'compact'
@@ -218,15 +223,12 @@ const clampFontSize = (value: unknown, fallback: number): number =>
     ? Math.min(FONT_SIZE_PX_MAX, Math.max(FONT_SIZE_PX_MIN, value))
     : fallback;
 
-function formatPx(value: number): string {
-  return `${Number(value.toFixed(4))}px`;
-}
-
 // Retired public-mode codename -> friendly, applied to persisted state on read
 // (see normalizeAppearanceModeIds). Internal; correctness is covered behaviorally
 // by the sanitize codename->friendly tests, so it is not part of the public API.
-const PUBLIC_MODE_RENAME: Partial<
-  Record<NxdsPresetField, Record<string, string>>
+const PUBLIC_MODE_RENAME: Record<
+  Exclude<NxdsPresetField, 'uiScale'>,
+  Record<string, string>
 > = {
   density: {
     nova: 'compact',
@@ -317,13 +319,10 @@ export function createNxdsThemeContract(
  * Default scale, and code text grows with the label text.
  */
 function scaledCodeSizes(codePx: number): string {
-  return Object.entries(UI_SCALES)
-    .filter(([scale]) => scale !== 'default')
-    .map(([scale, { text }]) => {
-      const px = Math.round((codePx * text) / UI_SCALES.default.text);
-      return `[data-ui-scale='${scale}'] {\n  --nx-typography-code-size: ${px}px;\n}`;
-    })
-    .join('\n');
+  return NON_DEFAULT_UI_SCALES.map(
+    (scale) =>
+      `${uiScaleSelector(scale)} {\n  --nx-typography-code-size: ${scaleText(codePx, scale)}px;\n}`
+  ).join('\n');
 }
 
 export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
@@ -338,7 +337,7 @@ export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
   --nx-typography-family-font-sans: ${prefs.uiFont};
   --nx-typography-family-font-heading: ${prefs.headingFont ?? 'var(--nx-typography-family-font-sans)'};
   --nx-typography-family-font-mono: ${prefs.codeFont};
-  --nx-typography-code-size: ${formatPx(codePx)};
+  --nx-typography-code-size: ${scaleText(codePx, 'default')}px;
 }
 ${scaledCodeSizes(codePx)}`),
   ];
