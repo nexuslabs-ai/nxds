@@ -10,7 +10,11 @@ import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
 
-import { type MenubarItemVariants, menubarItemVariants } from '.';
+import {
+  menubarInsetClassName,
+  type MenubarItemVariants,
+  menubarItemVariants,
+} from '.';
 
 export interface MenubarItemProps extends RekaMenubarItemProps {
   variant?: MenubarItemVariants['variant'];
@@ -39,8 +43,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     :class="
       cn(
         menubarItemVariants({ variant }),
-        inset &&
-          'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]',
+        inset && menubarInsetClassName,
         props.class
       )
     "

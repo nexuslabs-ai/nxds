@@ -1103,3 +1103,16 @@
 @utility ring-offset-surface {
   --tw-ring-offset-color: var(--nx-surface, --theme(--color-background));
 }
+
+/* ===== TARGET SIZE UTILITIES ===== */
+@utility target-24 {
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 24px);
+    height: max(100%, 24px);
+    translate: -50% -50%;
+  }
+}

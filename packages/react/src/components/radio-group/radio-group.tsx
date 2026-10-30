@@ -41,9 +41,8 @@ function RadioGroupItem({ className, ...props }: RadioGroupItemProps) {
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"
       className={cn(
-        'nx:group nx:relative nx:size-[16px] nx:shrink-0 nx:cursor-pointer nx:rounded-full nx:p-0 nx:border-default nx:border-border-default nx:bg-container',
+        'nx:group nx:relative nx:target-24 nx:size-[16px] nx:shrink-0 nx:cursor-pointer nx:rounded-full nx:p-0 nx:border-default nx:border-border-default nx:bg-container',
         'nx:transition-control',
-        'nx:before:absolute nx:before:top-1/2 nx:before:left-1/2 nx:before:size-[24px] nx:before:-translate-x-1/2 nx:before:-translate-y-1/2',
         'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
         'nx:aria-invalid:border-error-border nx:aria-invalid:focus-visible:outline-focus-error',
         'nx:disabled:cursor-not-allowed nx:disabled:border-border-disabled nx:disabled:bg-disabled',

@@ -83,7 +83,7 @@ const PRESET_CONTROLS: Partial<Record<CatalogueFamily, CatalogueControl>> = {
 /** The preference `appearancePrefsToCss` writes each typography primitive from. */
 function typographyControl(path: readonly string[]): CatalogueControl | null {
   const [group, key] = path;
-  if (group === 'size' && key === 'code') {
+  if (group === 'code' && key === 'size') {
     return { kind: 'pref', field: 'codeFontSize' };
   }
   if (group === 'size' || group === 'line-height') {

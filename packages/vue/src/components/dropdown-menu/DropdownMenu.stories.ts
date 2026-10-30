@@ -1,3 +1,4 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { ref } from 'vue';
@@ -466,14 +467,7 @@ const threeItemMenu = (labels: [string, string, string]) => () => ({
   `,
 });
 
-const DENSITIES = [
-  'tight',
-  'compact',
-  'default',
-  'comfortable',
-  'relaxed',
-  'spacious',
-] as const;
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
 
 export const CheckInsetAtEveryDensity: Story = {
   render: () => ({

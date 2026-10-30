@@ -1,6 +1,9 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import { PhMagnifyingGlass } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
+
+import { expectTextFits } from '../../stories/support/story-height-test-utils';
 
 import { Kbd, KbdGroup } from '.';
 
@@ -140,37 +143,10 @@ export const WithDataAttributes: Story = {
   },
 };
 
-const DENSITIES = [
-  'tight',
-  'compact',
-  'default',
-  'comfortable',
-  'relaxed',
-  'spacious',
-] as const;
-
-/** The line height, snapped down to the 1/64px steps that layout uses. */
-function lineHeight(element: Element) {
-  return Math.floor(parseFloat(getComputedStyle(element).lineHeight) * 64) / 64;
-}
-
-/** The height inside the border and padding, with fractions kept. */
-function contentHeight(element: Element) {
-  const style = getComputedStyle(element);
-  const edges = [
-    'borderTopWidth',
-    'borderBottomWidth',
-    'paddingTop',
-    'paddingBottom',
-  ] as const;
-  return edges.reduce(
-    (height, edge) => height - parseFloat(style[edge]),
-    element.getBoundingClientRect().height
-  );
-}
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
 
 export const TextFitsAtEveryDensity: Story = {
-  // Text is tallest at the largest UI font size, so it fits at every smaller one.
+  // At 16px UI text, the text line is taller than the Tight minimum height.
   globals: { uiFontSize: 16 },
   render: () => ({
     components: { Kbd },
@@ -195,9 +171,7 @@ export const TextFitsAtEveryDensity: Story = {
         'Ctrl'
       );
       // The key label fits inside the border at every density.
-      await expect(contentHeight(element)).toBeGreaterThanOrEqual(
-        lineHeight(element)
-      );
+      await expectTextFits(element);
     }
   },
 };

@@ -1,3 +1,4 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import {
   PhCheck,
   PhCheckCircle,
@@ -9,6 +10,7 @@ import {
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
 
+import { expectTextFits } from '../../stories/support/story-height-test-utils';
 import { Spinner } from '../spinner';
 
 import { Badge } from '.';
@@ -23,9 +25,9 @@ const VARIANTS = [
 ] as const;
 const FILLS = ['solid', 'light', 'outline'] as const;
 
-// `nx:h-6` / `nx:w-6` at `density: default`.
+// `nx:min-h-6` / `nx:w-6` at `density: default`.
 const BADGE_SIZE_PX = 24;
-// `nx:size-3.5` icon slot.
+// `nx:size-icon-glyph-sm` icon slot.
 const BADGE_ICON_SIZE_PX = 14;
 
 const meta = {
@@ -175,37 +177,10 @@ export const StatusWithIcons: Story = {
   }),
 };
 
-const DENSITIES = [
-  'tight',
-  'compact',
-  'default',
-  'comfortable',
-  'relaxed',
-  'spacious',
-] as const;
-
-/** The line height, snapped down to the 1/64px steps that layout uses. */
-function lineHeight(element: Element) {
-  return Math.floor(parseFloat(getComputedStyle(element).lineHeight) * 64) / 64;
-}
-
-/** The height inside the border and padding, with fractions kept. */
-function contentHeight(element: Element) {
-  const style = getComputedStyle(element);
-  const edges = [
-    'borderTopWidth',
-    'borderBottomWidth',
-    'paddingTop',
-    'paddingBottom',
-  ] as const;
-  return edges.reduce(
-    (height, edge) => height - parseFloat(style[edge]),
-    element.getBoundingClientRect().height
-  );
-}
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
 
 export const TextFitsAtEveryDensity: Story = {
-  // Text is tallest at the largest UI font size, so it fits at every smaller one.
+  // At 16px UI text, the text line is taller than the Tight minimum height.
   globals: { uiFontSize: 16 },
   render: () => ({
     components: { Badge },
@@ -231,9 +206,7 @@ export const TextFitsAtEveryDensity: Story = {
       const row = within(canvas.getByTestId(`row-${density}`));
       // Caps and sentence-case text fit inside the border at every density.
       for (const element of [row.getByText('Beta'), row.getByText('New')]) {
-        await expect(contentHeight(element)).toBeGreaterThanOrEqual(
-          lineHeight(element)
-        );
+        await expectTextFits(element);
       }
     }
   },

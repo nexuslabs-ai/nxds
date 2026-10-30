@@ -397,7 +397,7 @@ describe('createNxdsThemeContract', () => {
 describe('appearancePrefsToCss', () => {
   const prefs = DEFAULT_NXDS_APPEARANCE.prefs;
   const typographyVarPattern =
-    /--nx-typography-(?:size|line-height)-[a-z0-9]+:\s*[^;]+;/g;
+    /--nx-typography-(?:size|line-height|code)-[a-z0-9]+:\s*[^;]+;/g;
 
   function typographyDeclarations(css: string) {
     return (css.match(typographyVarPattern) ?? []).sort();
@@ -432,7 +432,7 @@ describe('appearancePrefsToCss', () => {
     expect(css).toContain('--nx-typography-size-sm: 32px;');
     expect(css).toContain('--nx-typography-line-height-xxs: 27.4286px;');
     expect(css).toContain('--nx-typography-line-height-sm: 45.7143px;');
-    expect(css).toContain('--nx-typography-size-code: 12px;');
+    expect(css).toContain('--nx-typography-code-size: 12px;');
   });
 
   it('emits a chosen heading font in place of the UI font', () => {

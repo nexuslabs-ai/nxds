@@ -3,6 +3,8 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { ref, useId } from 'vue';
 
+import { expectInsideBorder } from '../../stories/support/story-height-test-utils';
+
 import { Switch } from '.';
 
 // `aria-label` falls through to the switch element, so it is not a declared prop.
@@ -314,18 +316,6 @@ export const WithDataAttributes: Story = {
   },
 };
 
-/** Checks that `part` stays inside the border of `control`. */
-async function expectInsideBorder(part: Element, control: HTMLElement) {
-  const mark = part.getBoundingClientRect();
-  const box = control.getBoundingClientRect();
-  const top = box.top + control.clientTop;
-  const left = box.left + control.clientLeft;
-  await expect(mark.top).toBeGreaterThanOrEqual(top);
-  await expect(mark.bottom).toBeLessThanOrEqual(top + control.clientHeight);
-  await expect(mark.left).toBeGreaterThanOrEqual(left);
-  await expect(mark.right).toBeLessThanOrEqual(left + control.clientWidth);
-}
-
 const DENSITIES = [
   'tight',
   'compact',
@@ -403,12 +393,15 @@ export const ThumbAtEveryStroke: Story = {
       const controls = within(canvas.getByTestId(`row-${stroke}`)).getAllByRole(
         'switch'
       );
-      // The thumb stays inside the track's border, on and off, at every stroke.
+      // The thumb is a circle as tall as the inside of the track, and it
+      // stays inside the border, on and off, at every stroke.
       for (const control of controls) {
-        await expectInsideBorder(
-          control.querySelector('[data-slot="switch-thumb"]')!,
-          control
-        );
+        const thumb = control.querySelector<HTMLElement>(
+          '[data-slot="switch-thumb"]'
+        )!;
+        await expect(thumb.offsetHeight).toBe(control.clientHeight);
+        await expect(thumb.offsetWidth).toBe(thumb.offsetHeight);
+        await expectInsideBorder(thumb, control);
       }
     }
   },
