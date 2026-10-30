@@ -6,6 +6,7 @@ import {
   provide,
   ref,
   shallowReactive,
+  shallowRef,
   useId,
   useTemplateRef,
 } from 'vue';
@@ -42,13 +43,12 @@ const group = useTemplateRef<HTMLDivElement>('group');
 const panelId = useId();
 const localValue = ref(props.defaultValue);
 const localOpen = ref(props.defaultOpen);
-const toolElements = shallowReactive(new Map<string, HTMLElement>());
 const panels = shallowReactive(new Set<string>());
-let switching = false;
+const activeTool = shallowRef<HTMLElement | null>(null);
+let switchingTo: string | null = null;
 let restoreFocus = true;
 
 const value = computed(() => props.value ?? localValue.value);
-const activeTool = computed(() => toolElements.get(value.value) ?? null);
 const open = computed(
   () =>
     (props.open ?? localOpen.value) &&
@@ -56,11 +56,8 @@ const open = computed(
     activeTool.value !== null
 );
 
-function registerTool(toolValue: string, element: HTMLElement) {
-  toolElements.set(toolValue, element);
-  return () => {
-    if (toolElements.get(toolValue) === element) toolElements.delete(toolValue);
-  };
+function setActiveTool(tool: HTMLElement | null) {
+  activeTool.value = tool;
 }
 
 function registerPanel(panelValue: string) {
@@ -78,7 +75,7 @@ function setOpen(next: boolean) {
 function select(next: string) {
   const wasOpen = open.value;
   const nextOpen = panels.has(next) && (next !== value.value || !wasOpen);
-  switching = wasOpen && nextOpen;
+  switchingTo = wasOpen && nextOpen ? next : null;
   if (next !== value.value) {
     if (props.value === undefined) localValue.value = next;
     emit('value-change', next);
@@ -86,19 +83,20 @@ function select(next: string) {
   if (nextOpen !== wasOpen) setOpen(nextOpen);
 }
 
-function handlePanelOpen() {
-  restoreFocus = true;
-  const keepFocusOnTool = switching;
-  switching = false;
-  return keepFocusOnTool;
+function consumeSwitch(panelValue: string) {
+  const switched = switchingTo === panelValue;
+  switchingTo = null;
+  return switched;
 }
 
 // Reka reports the close while the panel still holds focus, so wait a task
 // for focus to leave it, as Radix does.
 function handlePanelClose() {
+  const restore = restoreFocus;
+  restoreFocus = true;
   setTimeout(() => {
     const tool = activeTool.value;
-    if (!restoreFocus || !tool) return;
+    if (!restore || !tool) return;
     // Focus falls to the body only when it was inside the closed panel.
     if (tool.ownerDocument.activeElement !== tool.ownerDocument.body) return;
     tool.focus({ preventScroll: true });
@@ -119,10 +117,10 @@ provide(ToolbarToolGroupKey, {
   panelId,
   panels,
   activeTool,
-  registerTool,
+  setActiveTool,
   registerPanel,
   select,
-  handlePanelOpen,
+  consumeSwitch,
   handlePanelClose,
   isInGroup,
   handlePressOutside,

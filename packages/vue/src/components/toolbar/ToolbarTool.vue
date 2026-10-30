@@ -24,7 +24,6 @@ export interface ToolbarToolProps extends RekaToolbarButtonProps {
   class?: HTMLAttributes['class'];
 }
 
-// The tool's own click runs after yours, so it can check defaultPrevented.
 defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<ToolbarToolProps>(), {
@@ -44,12 +43,17 @@ const delegated = reactiveOmit(props, 'class', 'size', 'value');
 watchEffect(
   (onCleanup) => {
     const element = unrefElement(button);
-    if (!(element instanceof HTMLElement)) return;
-    onCleanup(tools.registerTool(props.value, element));
+    if (!selected.value || !(element instanceof HTMLElement)) return;
+    tools.setActiveTool(element);
+    onCleanup(() => {
+      // The next selected tool may already have reported itself.
+      if (tools.activeTool.value === element) tools.setActiveTool(null);
+    });
   },
   { flush: 'post' }
 );
 
+// @click is bound after $attrs, so your click runs first and can prevent this.
 function handleClick(event: MouseEvent) {
   if (!event.defaultPrevented) tools.select(props.value);
 }

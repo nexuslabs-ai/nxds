@@ -6,6 +6,7 @@ import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import { cva, type VariantProps } from 'class-variance-authority';
 
+import { useIsomorphicLayoutEffect } from '../../hooks/use-isomorphic-layout-effect';
 import { cn } from '../../lib/utils';
 import { buttonVariants } from '../button/button';
 import {
@@ -16,9 +17,6 @@ import {
 } from '../popover/popover';
 import { TooltipProvider } from '../tooltip/tooltip';
 import { TooltipGroupContext } from '../tooltip/tooltip-group';
-
-const useIsomorphicLayoutEffect =
-  typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
 
 type ToolbarVariant = 'default' | 'floating';
 
@@ -164,8 +162,8 @@ type ToolbarToolGroupContextValue = {
   setActiveTool: (tool: HTMLButtonElement | null) => void;
   registerPanel: (value: string) => () => void;
   select: (value: string) => void;
-  /** Returns true when focus should stay on the tool that was just chosen. */
-  handlePanelOpen: () => boolean;
+  /** Returns true when the panel opened because the user switched to its tool. */
+  consumeSwitch: (value: string) => boolean;
   handlePanelClose: () => void;
   isInGroup: (target: Node) => boolean;
   handlePressOutside: () => void;
@@ -216,7 +214,7 @@ function ToolbarToolGroup({
   const group = React.useRef<HTMLDivElement>(null);
   const composedRef = useComposedRefs(ref, group);
   const activeToolRef = React.useRef<HTMLButtonElement | null>(null);
-  const switching = React.useRef(false);
+  const switchingTo = React.useRef<string | null>(null);
   const restoreFocus = React.useRef(true);
   const panelId = React.useId();
   const [localValue, setLocalValue] = React.useState(defaultValue);
@@ -252,7 +250,7 @@ function ToolbarToolGroup({
 
   function select(next: string) {
     const nextOpen = panels.has(next) && (next !== value || !open);
-    switching.current = open && nextOpen;
+    switchingTo.current = open && nextOpen ? next : null;
     if (next !== value) {
       if (valueProp === undefined) setLocalValue(next);
       onValueChange?.(next);
@@ -260,16 +258,17 @@ function ToolbarToolGroup({
     if (nextOpen !== open) setOpen(nextOpen);
   }
 
-  function handlePanelOpen() {
-    restoreFocus.current = true;
-    const keepFocusOnTool = switching.current;
-    switching.current = false;
-    return keepFocusOnTool;
+  function consumeSwitch(panel: string) {
+    const switched = switchingTo.current === panel;
+    switchingTo.current = null;
+    return switched;
   }
 
   function handlePanelClose() {
+    const restore = restoreFocus.current;
+    restoreFocus.current = true;
     const tool = activeToolRef.current;
-    if (!restoreFocus.current || !tool) return;
+    if (!restore || !tool) return;
     // Focus falls to the body only when it was inside the closed panel.
     if (tool.ownerDocument.activeElement !== tool.ownerDocument.body) return;
     tool.focus({ preventScroll: true });
@@ -292,7 +291,7 @@ function ToolbarToolGroup({
     setActiveTool,
     registerPanel,
     select,
-    handlePanelOpen,
+    consumeSwitch,
     handlePanelClose,
     isInGroup,
     handlePressOutside,
@@ -404,7 +403,7 @@ function ToolbarToolPanel({
   function handleOpenAutoFocus(event: Event) {
     onOpenAutoFocus?.(event);
     // Switching tools keeps focus on the tool that was just chosen.
-    if (tools.handlePanelOpen()) event.preventDefault();
+    if (tools.consumeSwitch(value)) event.preventDefault();
   }
 
   function handleCloseAutoFocus(event: Event) {
@@ -420,7 +419,8 @@ function ToolbarToolPanel({
     onInteractOutside?.(event);
     if (event.defaultPrevented) return;
     // Tools handle their own clicks, so the panel can stay open while switching.
-    if (tools.isInGroup(event.target as Node)) event.preventDefault();
+    if (event.target instanceof Node && tools.isInGroup(event.target))
+      event.preventDefault();
     else tools.handlePressOutside();
   };
 

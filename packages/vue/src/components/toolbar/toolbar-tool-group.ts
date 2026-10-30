@@ -7,11 +7,11 @@ export interface ToolbarToolGroupContext {
   panelId: string;
   panels: ReadonlySet<string>;
   activeTool: Readonly<Ref<HTMLElement | null>>;
-  registerTool: (value: string, element: HTMLElement) => () => void;
+  setActiveTool: (tool: HTMLElement | null) => void;
   registerPanel: (value: string) => () => void;
   select: (value: string) => void;
-  /** Returns true when focus should stay on the tool that was just chosen. */
-  handlePanelOpen: () => boolean;
+  /** Returns true when the panel opened because the user switched to its tool. */
+  consumeSwitch: (value: string) => boolean;
   handlePanelClose: () => void;
   isInGroup: (target: Node) => boolean;
   handlePressOutside: () => void;

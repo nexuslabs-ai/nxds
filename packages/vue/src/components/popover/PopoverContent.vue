@@ -27,8 +27,19 @@ const props = withDefaults(defineProps<PopoverContentProps>(), {
 });
 const emits = defineEmits<PopoverContentEmits>();
 
+// Reka's content emits closeAutoFocus, interactOutside and pointerDownOutside
+// twice with the same event. Pass each one on once, as Radix does.
+const emitted = new WeakMap<Event, Set<string>>();
+
+function emitOnce(name: keyof PopoverContentEmits, event: Event) {
+  const names = emitted.get(event) ?? new Set<string>();
+  if (names.has(name)) return;
+  emitted.set(event, names.add(name));
+  (emits as (name: string, event: Event) => void)(name, event);
+}
+
 const delegated = reactiveOmit(props, 'class');
-const forwarded = useForwardPropsEmits(delegated, emits);
+const forwarded = useForwardPropsEmits(delegated, emitOnce);
 </script>
 
 <template>

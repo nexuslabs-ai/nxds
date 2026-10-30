@@ -42,27 +42,22 @@ popover.contentId = tools.panelId;
 function labelledBy() {
   const own = attrs['aria-labelledby'];
   if (typeof own === 'string') return own;
-  if (attrs['aria-label']) return '';
-  return tools.activeTool.value?.id ?? '';
+  if (attrs['aria-label']) return undefined;
+  return tools.activeTool.value?.id;
 }
 
 watchEffect(() => {
-  if (shown.value) popover.triggerId = labelledBy();
+  // Reka types triggerId as a string, but leaving it unset omits the attribute.
+  if (shown.value) popover.triggerId = labelledBy() as string;
 });
 
 function handleOpenAutoFocus(event: Event) {
   emits('openAutoFocus', event);
   // Switching tools keeps focus on the tool that was just chosen.
-  if (tools.handlePanelOpen()) event.preventDefault();
+  if (tools.consumeSwitch(props.value)) event.preventDefault();
 }
 
-// Reka's non-modal content reports each close and outside interaction twice,
-// with the same event.
-const reported = new WeakSet<Event>();
-
 function handleCloseAutoFocus(event: Event) {
-  if (reported.has(event)) return;
-  reported.add(event);
   emits('closeAutoFocus', event);
   if (event.defaultPrevented) return;
   event.preventDefault();
@@ -72,12 +67,11 @@ function handleCloseAutoFocus(event: Event) {
 function handleInteractOutside(
   event: PointerDownOutsideEvent | FocusOutsideEvent
 ) {
-  if (reported.has(event)) return;
-  reported.add(event);
   emits('interactOutside', event);
   if (event.defaultPrevented) return;
   // Tools handle their own clicks, so the panel can stay open while switching.
-  if (tools.isInGroup(event.target as Node)) event.preventDefault();
+  if (event.target instanceof Node && tools.isInGroup(event.target))
+    event.preventDefault();
   else tools.handlePressOutside();
 }
 
