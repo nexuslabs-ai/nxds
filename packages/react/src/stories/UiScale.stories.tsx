@@ -41,6 +41,7 @@ function Row({ scale, density }: { scale: string; density: string }) {
       <Toggle variant="outline">Bold</Toggle>
       <Badge isCaps={false}>New</Badge>
       <Kbd>Ctrl</Kbd>
+      <code className="nx:typography-code-inline">npm install</code>
       <Checkbox defaultChecked aria-label={`Accept, ${name}`} />
       <RadioGroup defaultValue="team" aria-label={`Plan, ${name}`}>
         <RadioGroupItem value="team" aria-label={`Team, ${name}`} />
@@ -100,13 +101,14 @@ function rowParts(canvasElement: HTMLElement, scale: string, density: string) {
     toggle: row.getByRole('button', { name: 'Bold' }),
     badge: row.getByText('New'),
     kbd: row.getByText('Ctrl'),
+    code: row.getByText('npm install'),
     checkbox: row.getByRole('checkbox'),
     radio: row.getByRole('radio'),
     switchControl: row.getByRole('switch'),
   };
 }
 
-/** The ratios a UI scale must keep: control, icon, box and width to text. */
+/** The ratios a UI scale must keep: control, icon, box, code and width to text. */
 function ratios(parts: ReturnType<typeof rowParts>) {
   const text = lineHeight(parts.button);
   return {
@@ -115,6 +117,9 @@ function ratios(parts: ReturnType<typeof rowParts>) {
       box(parts.icon).width / parseFloat(style(parts.button).fontSize),
     'Checkbox to the text beside it': box(parts.checkbox).width / text,
     'Switch to the text beside it': box(parts.switchControl).height / text,
+    'Code text to the label text':
+      parseFloat(style(parts.code).fontSize) /
+      parseFloat(style(parts.button).fontSize),
     'Input width to its text':
       parseFloat(style(parts.input).maxWidth) /
       parseFloat(style(parts.input).fontSize),

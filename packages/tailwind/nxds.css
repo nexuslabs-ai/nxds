@@ -1074,7 +1074,7 @@
   }
 
   [data-ui-scale='small'] {
-    --nx-typography-size-xxs: 9px;
+    --nx-typography-size-xxs: 10px;
     --nx-typography-size-xs: 10px;
     --nx-typography-size-sm: 12px;
     --nx-typography-size-base: 14px;

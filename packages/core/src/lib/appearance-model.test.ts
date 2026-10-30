@@ -440,6 +440,19 @@ describe('appearancePrefsToCss', () => {
     expect(css).toContain('--nx-typography-size-code: 32px;');
   });
 
+  it('grows the code size with the label text at each UI scale', () => {
+    const css = appearancePrefsToCss({ ...prefs, codeFontSize: 12 });
+    const sizes = Object.fromEntries(
+      [
+        ...css.matchAll(
+          /\[data-ui-scale='([a-z]+)'\] \{\s*--nx-typography-size-code: (\d+)px;/g
+        ),
+      ].map(([, scale, px]) => [scale, Number(px)])
+    );
+    // 12px at the Default scale, times 12/14, 16/14 and 18/14, rounded.
+    expect(sizes).toEqual({ small: 10, large: 14, larger: 15 });
+  });
+
   it('leaves the UI type scale to the [data-ui-scale] blocks', () => {
     expect(appearancePrefsToCss(prefs)).not.toMatch(
       /--nx-typography-(?:size-(?!code)|line-height-)/
@@ -464,7 +477,9 @@ describe('appearancePrefsToCss', () => {
       ([, list = '']) => list.split(',').map((selector) => selector.trim())
     );
     for (const selector of selectors) {
-      expect(selector, selector).toMatch(/^(@layer nx-runtime|:root)$/);
+      expect(selector, selector).toMatch(
+        /^(@layer nx-runtime|:root|\[data-ui-scale='[a-z]+'\])$/
+      );
     }
   });
 

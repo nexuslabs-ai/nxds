@@ -76,6 +76,11 @@
         "react-dom"
       ],
       "limit": "45 kB"
+    },
+    {
+      "name": "@nxds/tailwind (nxds.css)",
+      "path": "packages/tailwind/nxds.css",
+      "limit": "13 kB"
     }
   ],
   "devDependencies": {

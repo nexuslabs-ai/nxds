@@ -283,7 +283,7 @@ export default {
       rawLetterSpacing:
         'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
       densityIconSize:
-        'Icon size from a spacing step — `[&_svg]:size-*` with a number follows density. Use `size-icon-glyph-xs`, `-sm` or `-default` (12, 14 or 16px), or a fixed px size such as `size-[24px]`.',
+        'Icon size from a spacing step — `[&_svg]:size-*` with a number follows density. Use `size-icon-glyph-xs`, `-sm` or `-default` (12, 14 or 16px at the Default UI scale). For a larger icon, multiply the default icon, such as `size-[calc(var(--nx-icon-glyph-default)*1.5)]`, so it follows the UI scale.',
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
     },

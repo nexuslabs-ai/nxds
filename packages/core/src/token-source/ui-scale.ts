@@ -24,6 +24,9 @@ export interface ScaleBlock {
 
 const FULL_RADIUS = '9999px';
 
+/** No text gets smaller than this, at any scale. */
+const MIN_TEXT_PX = 10;
+
 const px = (value: string) => Number.parseFloat(value);
 
 /** A length at a scale: whole px below 16px, even px from 16px. */
@@ -117,7 +120,7 @@ function widthTokens(widths: Readonly<Record<string, number>>, factor: number) {
 
 /**
  * The `:root` block with the default factor and page widths, then one block
- * per scale with the text sizes (whole px), the line heights (even px, so a
+ * per scale with the text sizes (whole px, 10px or more), the line heights (even px, so a
  * box that grows with its text stays even), the icon glyphs, the page widths
  * and the factor. `sizes` leaves out the code size, which the code font size
  * setting owns.
@@ -143,7 +146,7 @@ export function scaleBlocks({
       const tokens = [
         ...Object.entries(sizes).map(([name, value]) => ({
           cssName: `typography-size-${name}`,
-          value: `${Math.round(value * factor)}px`,
+          value: `${Math.max(MIN_TEXT_PX, Math.round(value * factor))}px`,
         })),
         ...Object.entries(lineHeights).map(([name, value]) => ({
           cssName: `typography-line-height-${name}`,

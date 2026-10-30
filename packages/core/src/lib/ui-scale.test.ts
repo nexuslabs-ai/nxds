@@ -97,7 +97,7 @@ describe('UI scale CSS', () => {
     }
   });
 
-  it('scales text to 12, 16 and 18px with even line heights', () => {
+  it('scales text to 12, 16 and 18px, never under 10px, with even line heights', () => {
     const type = SCALES.map(
       (scale) => blocks.get(`[data-ui-scale='${scale}']`)!
     );
@@ -108,6 +108,7 @@ describe('UI scale CSS', () => {
       for (const [name, px] of block) {
         if (name.startsWith('typography-size-')) {
           expect(Number.isInteger(px), name).toBe(true);
+          expect(px, name).toBeGreaterThanOrEqual(10);
         }
         if (name.startsWith('typography-line-height-')) {
           expect(px % 2, name).toBe(0);

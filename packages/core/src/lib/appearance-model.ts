@@ -1,4 +1,4 @@
-import type { UI_SCALES } from '../token-source/ui-scale';
+import { UI_SCALES } from '../token-source/ui-scale';
 
 import { normalizeContrast } from './contrast';
 import type { ThemeDerivationInput, ThemeSeeds } from './derive-theme';
@@ -312,6 +312,20 @@ export function createNxdsThemeContract(
   };
 }
 
+/**
+ * The code size at each other UI scale. `codeFontSize` is the size at the
+ * Default scale, and code text grows with the label text.
+ */
+function scaledCodeSizes(codePx: number): string {
+  return Object.entries(UI_SCALES)
+    .filter(([scale]) => scale !== 'default')
+    .map(([scale, { text }]) => {
+      const px = Math.round((codePx * text) / UI_SCALES.default.text);
+      return `[data-ui-scale='${scale}'] {\n  --nx-typography-size-code: ${px}px;\n}`;
+    })
+    .join('\n');
+}
+
 export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
   const codePx = clampFontSize(
     prefs.codeFontSize,
@@ -325,7 +339,8 @@ export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
   --nx-typography-family-font-heading: ${prefs.headingFont ?? 'var(--nx-typography-family-font-sans)'};
   --nx-typography-family-font-mono: ${prefs.codeFont};
   --nx-typography-size-code: ${formatPx(codePx)};
-}`),
+}
+${scaledCodeSizes(codePx)}`),
   ];
   if (prefs.fontSmoothing) {
     blocks.push(
