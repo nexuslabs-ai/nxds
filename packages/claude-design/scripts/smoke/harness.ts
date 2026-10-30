@@ -1,5 +1,6 @@
 // The page a Design canvas loads, and the helpers every check renders and
-// reads it with. A check records each problem with `fail`.
+// reads it with. `openCanvas` points them at an exported folder before any
+// check runs. A check records each problem with `fail`.
 import type * as ReactModule from 'react';
 import type * as ReactDOMModule from 'react-dom';
 import type * as ReactDOMClient from 'react-dom/client';
@@ -8,14 +9,17 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import {
+  type Browser,
+  type BrowserContext,
   type BrowserContextOptions,
   chromium,
   type Page,
   type Route,
 } from 'playwright';
 
+import { canvasLinks } from '../../src/setup.ts';
+
 const packageRoot = path.join(import.meta.dirname, '..', '..');
-export const projectDir = path.join(packageRoot, 'dist', 'project');
 const require = createRequire(path.join(packageRoot, 'package.json'));
 const ORIGIN = 'https://system.test';
 
@@ -34,26 +38,17 @@ const REACT = {
 /** The `<link>` and `<script>` lines the README tells a canvas artboard to add, pointed at /project/. */
 function canvasLines() {
   const readme = readFileSync(path.join(projectDir, 'README.md'), 'utf8');
-  const section = /^## On a Design canvas\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(
-    readme
-  )?.[1];
-  const html = /```html\n([\s\S]*?)```/.exec(section ?? '')?.[1];
-  if (!html) {
-    throw new Error(
-      'README.md: no html block under "On a Design canvas" to load the system from.'
-    );
-  }
-  return html
-    .trim()
-    .split('\n')
-    .map((line) => line.replaceAll('ds/<folder>/', '/project/'));
+  return canvasLinks(readme).map((line) =>
+    line.replaceAll('ds/<folder>/', '/project/')
+  );
 }
 
-const PRELOAD = [
-  '<script src="/lib/react.js"></script>',
-  '<script src="/lib/react-dom.js"></script>',
-  ...canvasLines(),
-].join('\n');
+/** The folder `nxds-cli export claude-design` wrote: `project/`, SETUP.md and the rest. */
+export let exportDir = '';
+export let projectDir = '';
+let preload = '';
+export let browser: Browser;
+let context: BrowserContext;
 
 export type Theme = { attribute: string | null; darkClass: boolean };
 export const LIGHT: Theme = { attribute: 'light', darkClass: false };
@@ -69,7 +64,7 @@ export interface PageGlobals {
   Nxds: Record<string, unknown>;
   __nxdsElement: (tree: Part | string) => ReactModule.ReactNode;
   __nxdsMarkup: (markup: string, wrapped: boolean) => ReactModule.ReactNode;
-  __nxdsSignature: (host: Element) => string[];
+  __nxdsSettle: (host: Element) => Promise<string[]>;
 }
 
 export function fail(message: string) {
@@ -83,7 +78,7 @@ function frame(previewHtml: string, theme: Theme) {
   ].join(' ');
   return previewHtml
     .replace(/<html([^>]*)>/, `<html$1 ${attributes}>`)
-    .replace('<head>', `<head>\n${PRELOAD}`);
+    .replace('<head>', `<head>\n${preload}`);
 }
 
 export function cards() {
@@ -120,8 +115,6 @@ export async function openPage(card: string, theme: Theme, on = context) {
   return { page, problems };
 }
 
-export const browser = await chromium.launch();
-
 // `window.__nxdsElement(tree)` renders a `Part` tree as plain React: each
 // prop holds its real value, as nxds's own stories pass it.
 //
@@ -133,8 +126,9 @@ export const browser = await chromium.launch();
 // `<div class="sc-host-x" style="display: contents">`. Without, it leaves out
 // the wrappers and the indentation.
 //
-// `window.__nxdsSignature(host)` lists what a viewer and a screen reader get
-// from each element: tag, part, role, state, classes and text.
+// `window.__nxdsSettle(host)` waits until what a viewer and a screen reader
+// get from each element stops changing, up to four seconds, and returns it:
+// tag, part, role, state, classes and text.
 function pageHelpers() {
   const NAMES: Record<string, string> = {
     class: 'className',
@@ -307,10 +301,20 @@ function pageHelpers() {
           .trim();
         return `${node.tagName.toLowerCase()}${classes ? `.${classes}` : ''}${states.length > 0 ? ` [${states.join(' ')}]` : ''}${text ? ` "${text}"` : ''}`;
       });
+  const settle = async (host: Element) => {
+    let last: string[] = [];
+    for (let tries = 0; tries < 20; tries += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      const next = signature(host);
+      if (next.join('\n') === last.join('\n')) break;
+      last = next;
+    }
+    return last;
+  };
   Object.assign(window, {
     __nxdsElement: element,
     __nxdsMarkup: markup,
-    __nxdsSignature: signature,
+    __nxdsSettle: settle,
   });
 }
 
@@ -344,7 +348,18 @@ export async function canvasContext(options: BrowserContextOptions = {}) {
   return created;
 }
 
-const context = await canvasContext();
+/** Loads the export in `folder` the way a canvas does, for every check after it. */
+export async function openCanvas(folder: string) {
+  exportDir = folder;
+  projectDir = path.join(folder, 'project');
+  preload = [
+    '<script src="/lib/react.js"></script>',
+    '<script src="/lib/react-dom.js"></script>',
+    ...canvasLines(),
+  ].join('\n');
+  browser = await chromium.launch();
+  context = await canvasContext();
+}
 
 export async function rendered(page: Page) {
   return page.evaluate(() => {
@@ -424,7 +439,7 @@ type Mount = { tree: Part } | { markup: string };
 // chart's entry animation has finished.
 export async function signatureOf(page: Page, mount: Mount) {
   return page.evaluate(async (mount) => {
-    const { ReactDOM, __nxdsElement, __nxdsMarkup, __nxdsSignature } =
+    const { ReactDOM, __nxdsElement, __nxdsMarkup, __nxdsSettle } =
       window as unknown as PageGlobals;
     const host = document.createElement('div');
     host.style.width = '640px';
@@ -443,16 +458,10 @@ export async function signatureOf(page: Page, mount: Mount) {
       host.remove();
       return { error: error instanceof Error ? error.message : String(error) };
     }
-    let last: string[] = [];
-    for (let tries = 0; tries < 20; tries += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      const next = __nxdsSignature(host);
-      if (next.join('\n') === last.join('\n')) break;
-      last = next;
-    }
+    const signature = await __nxdsSettle(host);
     root.unmount();
     host.remove();
-    return { signature: last };
+    return { signature };
   }, mount);
 }
 

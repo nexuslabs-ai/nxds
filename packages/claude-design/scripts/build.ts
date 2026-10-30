@@ -1,7 +1,7 @@
 // Writes dist/: the system's files under dist/project/, files.json listing
 // them with their hashes for nxds-cli, the package manifest npm publishes
-// from dist/, and the canvas prop coverage report. Fails when the output
-// breaks the Design System format.
+// from dist/, the canvas prop coverage report and SETUP.md. Fails when the
+// output breaks the Design System format.
 import {
   componentLabel,
   exportedComponentSlugs,
@@ -34,6 +34,7 @@ import {
   renderIndexDts,
 } from '../src/props.ts';
 import { componentReads, variablesRead } from '../src/reads.ts';
+import { samplerProblems, setupGuide } from '../src/setup.ts';
 import { buildStyles } from '../src/styles.ts';
 import { buildSystemIndex } from '../src/system-index.ts';
 import { buildTokens, typeStyleRules } from '../src/tokens.ts';
@@ -146,16 +147,19 @@ async function main() {
   const tokensCss = compileTokensCss(tokens, typeStyleRules());
   write('tokens.json', `${JSON.stringify(tokens, null, 2)}\n`);
   write('tokens.css', tokensCss);
-  write(
-    'README.md',
-    withPresetTable(readFileSync(path.join(contentDir, 'README.md'), 'utf8'))
+  const readme = withPresetTable(
+    readFileSync(path.join(contentDir, 'README.md'), 'utf8')
   );
+  write('README.md', readme);
   write(
     'components/Cover/preview.html',
     readFileSync(path.join(contentDir, 'cover.html'), 'utf8')
   );
 
   const parts = flatComponents();
+  const sampler = readFileSync(path.join(contentDir, 'sampler.html'), 'utf8');
+  const samplerErrors = samplerProblems(sampler, parts);
+  if (samplerErrors.length > 0) throw new Error(samplerErrors.join('\n'));
   const { code } = await buildBundle(folders, parts);
   const indexDts = renderIndexDts(parts);
   assertBudget('components/bundle.js', code, BUNDLE_BUDGET);
@@ -212,6 +216,16 @@ async function main() {
   writeFileSync(
     path.join(distDir, 'package.json'),
     `${JSON.stringify(publishedManifest(), null, 2)}\n`
+  );
+  writeFileSync(
+    path.join(distDir, 'SETUP.md'),
+    setupGuide({
+      template: readFileSync(path.join(contentDir, 'SETUP.md'), 'utf8'),
+      readme,
+      sampler,
+      version,
+      files: files.length,
+    })
   );
   copyFileSync(
     path.join(contentDir, 'package-readme.md'),

@@ -186,12 +186,14 @@ Everything lives under the `@nxds` scope — the published packages on npm and t
 The packages authenticate to npm with **trusted publishing** (OIDC): GitHub Actions mints a short-lived credential at publish time, so there is **no `NPM_TOKEN` secret** in the repo. A new package is bootstrapped once, by hand:
 
 1. Publish it manually with `npm publish` from the branch that introduces it. Trusted publishing can't be configured until a package exists on npm.
-2. Register a **trusted publisher** on npmjs.com (_Settings → Trusted Publisher → GitHub Actions_) pointing at `nexuslabs-ai/nxds` and the `release.yml` workflow.
+2. Register a **trusted publisher** on npmjs.com (_Settings → Trusted Publisher → GitHub Actions_) pointing at `nexuslabs-ai/nxds`, the `release.yml` workflow and the `npm` environment.
 3. Lock the package to OIDC: _Settings → Publishing access → Require two-factor authentication and disallow tokens_. Then revoke the token used for the manual publish.
 
 The release workflow also needs a repo secret, **`RELEASE_TOKEN`**. It is a fine-grained PAT from `nexuslabs-ai-bot` with **contents: read/write** and **pull requests: read/write** on this repo. It authenticates the "Version Packages" PR. The default `GITHUB_TOKEN` can't be used here: PRs it opens don't fire `pull_request`, so the required `CI Status` check would never run on the version PR and it couldn't merge. Rotate the PAT before it expires.
 
 The workflow grants `id-token: write` for the OIDC exchange, upgrades npm to a trusted-publishing-capable version (≥ 11.5.1) on the `.nvmrc` Node, and uses `RELEASE_TOKEN` for the release PR and tags. There is **no npm token** — publish auth is OIDC. Provenance attestations are emitted automatically.
+
+The release job runs in the **`npm`** environment, whose only deployment branch is `main`. Each package's trusted publisher names that environment, so no other branch can publish.
 
 ### Day-to-day: adding a changeset
 

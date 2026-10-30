@@ -36,9 +36,13 @@ With `--json`, a command prints one object: `{ "ok": true, "exitCode": 0,
 npx nxds-cli@latest export claude-design
 ```
 
-The command writes a `nxds-design-system` folder. Ask Claude to publish that
-folder as a Design System artifact, unchanged. Your canvas then mounts every
-nxds component, shows its props as controls and lists the nxds tokens.
+The command writes a `nxds-design-system` folder. Its `SETUP.md` walks the
+agent through publishing the system as a Design System artifact, installing it
+on a canvas and checking it. Your canvas then mounts every nxds component, shows
+its props as controls and lists the nxds tokens.
+
+In a Claude chat, start from the [Claude Design](/getting-started/claude-design)
+prompt instead.
 
 | Option              | What it does                                                                     |
 | ------------------- | -------------------------------------------------------------------------------- |
@@ -47,8 +51,8 @@ nxds component, shows its props as controls and lists the nxds tokens.
 | `--index <path>`    | Keep the title and creation date from your system's current `design-system.json` |
 | `--existing <path>` | List, in `removed.json`, the files your system has that this release drops       |
 
-If you republish over an existing system, remove the files in `removed.json`
-too, so no old component stays on the page.
+`SETUP.md`'s update steps use `--index` and `--existing` to republish over an
+existing system.
 
 On the canvas, every prop is an attribute. A bare `disabled` is true,
 `value="60"` is a number and `default-value="20,80"` is a list. Each

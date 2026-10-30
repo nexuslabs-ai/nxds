@@ -219,7 +219,7 @@ function program(
       '--existing <path>',
       "a JSON list of the system's current file paths, to list the ones this release removes"
     )
-    .option('--overwrite', 'replace the project/ folder in --out', false)
+    .option('--overwrite', 'replace the export in --out', false)
     .option(
       '--source <path>',
       'a built @nxds/claude-design dist folder, instead of the npm release'

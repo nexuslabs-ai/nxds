@@ -51,6 +51,7 @@ export const PAGE_REGISTRY = {
       { slug: 'install', label: 'Install' },
       { slug: 'examples', label: 'Examples' },
       { slug: 'ai-agents', label: 'AI agents' },
+      { slug: 'claude-design', label: 'Claude Design' },
       { slug: 'canvas-icons', label: 'Canvas icons' },
     ],
   },

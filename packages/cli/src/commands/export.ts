@@ -192,7 +192,7 @@ function localPackage(source: string) {
 function assertWritable(out: string, overwrite: boolean) {
   if (!existsSync(out) || readdirSync(out).length === 0 || overwrite) return;
   throw new UsageError(
-    `${out} already has files. Pass --overwrite to replace its project/ folder, or choose another --out.`
+    `${out} already has files. Pass --overwrite to replace the export in it, or choose another --out.`
   );
 }
 
@@ -267,6 +267,32 @@ function readProject(root: string) {
     files.set(entry.path, bytes);
   }
   return files;
+}
+
+/** The files a release ships beside project/, which the export copies when it has them. */
+const ROOT_FILES = ['coverage.md', 'SETUP.md'];
+
+function readRootFiles(root: string) {
+  const files = new Map<string, Buffer>();
+  for (const name of ROOT_FILES) {
+    const file = path.join(root, name);
+    if (!existsSync(file)) continue;
+    if (!lstatSync(file).isFile()) {
+      throw new CliError(`The release's ${name} isn't a regular file.`);
+    }
+    files.set(name, readFileSync(file));
+  }
+  return files;
+}
+
+// Removes a root file the release doesn't have, so an earlier export's copy
+// doesn't outlive its release.
+function writeRootFiles(out: string, files: Map<string, Buffer>) {
+  for (const name of ROOT_FILES) {
+    const bytes = files.get(name);
+    if (bytes) writeFileSync(path.join(out, name), bytes);
+    else rmSync(path.join(out, name), { force: true });
+  }
 }
 
 function mergeIndex(files: Map<string, Buffer>, currentFile: string) {
@@ -359,6 +385,7 @@ export async function exportClaudeDesign(
 
   try {
     const files = readProject(pkg.root);
+    const rootFiles = readRootFiles(pkg.root);
     if (options.index) mergeIndex(files, path.resolve(cwd, options.index));
     const exported = new Set(
       [...files.keys()].map((file) => `project/${file}`)
@@ -366,39 +393,44 @@ export async function exportClaudeDesign(
     const removed = options.existing
       ? stalePaths(readPaths(path.resolve(cwd, options.existing)), exported)
       : [];
-    const coverageFile = path.join(pkg.root, 'coverage.md');
-    const coverage = existsSync(coverageFile)
-      ? readFileSync(coverageFile)
-      : undefined;
-
     writeProject(out, files);
-    if (coverage) writeFileSync(path.join(out, 'coverage.md'), coverage);
+    writeRootFiles(out, rootFiles);
+    const removedFile = path.join(out, 'removed.json');
     if (options.existing) {
-      writeFileSync(
-        path.join(out, 'removed.json'),
-        `${JSON.stringify(removed, null, 2)}\n`
-      );
+      writeFileSync(removedFile, `${JSON.stringify(removed, null, 2)}\n`);
+    } else {
+      rmSync(removedFile, { force: true });
     }
 
     const relative = path.relative(cwd, out) || '.';
     const lines = [
       `Exported nxds ${pkg.version} as a Claude Design System: ${files.size} files in ${path.join(relative, 'project')}.`,
-      `Publish ${relative} as a Design System artifact in Claude, with ${relative} as the root.`,
     ];
+    if (rootFiles.has('coverage.md')) {
+      lines.push(
+        `The props the canvas can't set are in ${path.join(relative, 'coverage.md')}.`
+      );
+    }
     if (removed.length > 0) {
       lines.push(
         `Remove the ${removed.length} files the system has and this release doesn't: they're listed in ${path.join(relative, 'removed.json')}.`
       );
     }
-    if (coverage) {
-      lines.push(
-        `The props the canvas can't set are in ${path.join(relative, 'coverage.md')}.`
-      );
-    }
+    lines.push(
+      rootFiles.has('SETUP.md')
+        ? `Read ${path.join(relative, 'SETUP.md')} and follow it. It publishes the system, installs it on a canvas and checks it.`
+        : `Publish ${relative} as a Design System artifact in Claude, with ${relative} as the root.`
+    );
     return {
       ok: true,
       lines,
-      data: { version: pkg.version, out, files: files.size, removed },
+      data: {
+        version: pkg.version,
+        out,
+        files: files.size,
+        removed,
+        root: [...rootFiles.keys()].map((name) => path.join(out, name)),
+      },
     };
   } finally {
     pkg.cleanup();
