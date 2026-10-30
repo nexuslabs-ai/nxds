@@ -478,6 +478,9 @@ describe('token catalogue', () => {
 describe('density spacing order', () => {
   const densities = DENSITY_OPTIONS.map((option) => option.value);
   const spacing = catalogue.filter((token) => token.family === 'spacing');
+  const roles = spacing.filter(
+    (token) => !token.name.startsWith('--nx-spacing-')
+  );
   const variantOf = (token: CatalogueToken, density: string) => {
     const variant = token.variants.find((value) => value.preset === density);
     expect(variant, `${token.name} ${density}`).toBeDefined();
@@ -537,9 +540,6 @@ describe('density spacing order', () => {
   });
 
   it('gives each role token the value of the step it references, at every density', () => {
-    const roles = spacing.filter(
-      (token) => !token.name.startsWith('--nx-spacing-')
-    );
     expect(roles.length).toBeGreaterThan(0);
     for (const token of roles) {
       for (const density of densities) {
@@ -548,6 +548,17 @@ describe('density spacing order', () => {
           px(byName.get(target)!, density)
         );
       }
+    }
+  });
+
+  it('references the same step from each role token at every density', () => {
+    for (const token of roles) {
+      const targets = new Set(
+        densities.map(
+          (density) => only(variantOf(token, density).references).target
+        )
+      );
+      expect([...targets], token.name).toHaveLength(1);
     }
   });
 
