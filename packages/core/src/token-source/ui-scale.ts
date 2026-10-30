@@ -100,36 +100,63 @@ export function scaledModeBlocks(
   );
 }
 
+/** A `rem` width at a factor. A maximum width needs no rounding. */
+const remAt = (rem: number, factor: number) =>
+  `${Number((rem * factor).toFixed(4))}rem`;
+
+/** The scale factor and the page widths (`max-w-*`, `w-*`) at that factor. */
+function widthTokens(widths: Readonly<Record<string, number>>, factor: number) {
+  return [
+    { cssName: 'ui-scale', value: String(factor) },
+    ...Object.entries(widths).map(([name, rem]) => ({
+      cssName: `container-${name}`,
+      value: remAt(rem, factor),
+    })),
+  ];
+}
+
 /**
- * One block per scale with the text sizes (whole px), the line heights (even
- * px, so a box that grows with its text stays even) and the icon glyphs.
- * `sizes` leaves out the code size, which the code font size setting owns.
+ * The `:root` block with the default factor and page widths, then one block
+ * per scale with the text sizes (whole px), the line heights (even px, so a
+ * box that grows with its text stays even), the icon glyphs, the page widths
+ * and the factor. `sizes` leaves out the code size, which the code font size
+ * setting owns.
  */
-export function scaledTypeBlocks({
+export function scaleBlocks({
   sizes,
   lineHeights,
+  widths,
 }: {
   sizes: Readonly<Record<string, number>>;
   lineHeights: Readonly<Record<string, number>>;
+  widths: Readonly<Record<string, number>>;
 }): ScaleBlock[] {
-  return nonDefaultScales().map((scale) => {
-    const { text, icon } = UI_SCALES[scale];
-    const factor = text / UI_SCALES.default.text;
-    const tokens = [
-      ...Object.entries(sizes).map(([name, value]) => ({
-        cssName: `typography-size-${name}`,
-        value: `${Math.round(value * factor)}px`,
-      })),
-      ...Object.entries(lineHeights).map(([name, value]) => ({
-        cssName: `typography-line-height-${name}`,
-        value: `${2 * Math.round((value * factor) / 2)}px`,
-      })),
-      { cssName: 'icon-glyph-xs', value: `${icon - 4}px` },
-      { cssName: 'icon-glyph-sm', value: `${icon - 2}px` },
-      { cssName: 'icon-glyph-default', value: `${icon}px` },
-    ];
-    return { selectors: [scaleAttr(scale)], tokens };
-  });
+  const root = {
+    selectors: [':root'],
+    tokens: widthTokens(widths, UI_SCALES.default.spacing),
+  };
+  return [
+    root,
+    ...nonDefaultScales().map((scale) => {
+      const { spacing, text, icon } = UI_SCALES[scale];
+      const factor = text / UI_SCALES.default.text;
+      const tokens = [
+        ...Object.entries(sizes).map(([name, value]) => ({
+          cssName: `typography-size-${name}`,
+          value: `${Math.round(value * factor)}px`,
+        })),
+        ...Object.entries(lineHeights).map(([name, value]) => ({
+          cssName: `typography-line-height-${name}`,
+          value: `${2 * Math.round((value * factor) / 2)}px`,
+        })),
+        { cssName: 'icon-glyph-xs', value: `${icon - 4}px` },
+        { cssName: 'icon-glyph-sm', value: `${icon - 2}px` },
+        { cssName: 'icon-glyph-default', value: `${icon}px` },
+        ...widthTokens(widths, spacing),
+      ];
+      return { selectors: [scaleAttr(scale)], tokens };
+    }),
+  ];
 }
 
 function nonDefaultScales() {

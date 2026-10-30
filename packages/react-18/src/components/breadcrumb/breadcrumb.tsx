@@ -138,7 +138,7 @@ const BreadcrumbLink = React.forwardRef<
     <Comp
       data-slot="breadcrumb-link"
       className={cn(
-        'nx:inline-flex nx:min-w-0 nx:max-w-[150px] nx:items-center nx:gap-1 nx:rounded-md nx:px-1.5 nx:text-inherit nx:no-underline nx:typography-label-default nx:transition-control nx:hover:bg-background-hover nx:active:bg-background-active nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:[&>span]:min-w-0 nx:[&>span]:truncate nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0',
+        'nx:inline-flex nx:min-w-0 nx:max-w-[calc(150px*var(--nx-ui-scale))] nx:items-center nx:gap-1 nx:rounded-md nx:px-1.5 nx:text-inherit nx:no-underline nx:typography-label-default nx:transition-control nx:hover:bg-background-hover nx:active:bg-background-active nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:[&>span]:min-w-0 nx:[&>span]:truncate nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0',
         className
       )}
       {...props}
@@ -174,7 +174,7 @@ const BreadcrumbPage = React.forwardRef<
       data-slot="breadcrumb-page"
       aria-current="page"
       className={cn(
-        'nx:inline-flex nx:min-w-0 nx:max-w-[150px] nx:items-center nx:gap-1 nx:rounded-md nx:px-1.5 nx:typography-label-default nx:text-foreground nx:[&>span]:min-w-0 nx:[&>span]:truncate nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0',
+        'nx:inline-flex nx:min-w-0 nx:max-w-[calc(150px*var(--nx-ui-scale))] nx:items-center nx:gap-1 nx:rounded-md nx:px-1.5 nx:typography-label-default nx:text-foreground nx:[&>span]:min-w-0 nx:[&>span]:truncate nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0',
         className
       )}
       {...props}

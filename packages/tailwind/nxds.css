@@ -1056,6 +1056,23 @@
 
   /* ===== UI SCALE ([data-ui-scale="X"] on the root, modes nest under it) ===== */
 
+  :root {
+    --nx-ui-scale: 1;
+    --nx-container-3xs: 16rem;
+    --nx-container-2xs: 18rem;
+    --nx-container-xs: 20rem;
+    --nx-container-sm: 24rem;
+    --nx-container-md: 28rem;
+    --nx-container-lg: 32rem;
+    --nx-container-xl: 36rem;
+    --nx-container-2xl: 42rem;
+    --nx-container-3xl: 48rem;
+    --nx-container-4xl: 56rem;
+    --nx-container-5xl: 64rem;
+    --nx-container-6xl: 72rem;
+    --nx-container-7xl: 80rem;
+  }
+
   [data-ui-scale='small'] {
     --nx-typography-size-xxs: 9px;
     --nx-typography-size-xs: 10px;
@@ -1088,6 +1105,20 @@
     --nx-icon-glyph-xs: 10px;
     --nx-icon-glyph-sm: 12px;
     --nx-icon-glyph-default: 14px;
+    --nx-ui-scale: 0.9;
+    --nx-container-3xs: 14.4rem;
+    --nx-container-2xs: 16.2rem;
+    --nx-container-xs: 18rem;
+    --nx-container-sm: 21.6rem;
+    --nx-container-md: 25.2rem;
+    --nx-container-lg: 28.8rem;
+    --nx-container-xl: 32.4rem;
+    --nx-container-2xl: 37.8rem;
+    --nx-container-3xl: 43.2rem;
+    --nx-container-4xl: 50.4rem;
+    --nx-container-5xl: 57.6rem;
+    --nx-container-6xl: 64.8rem;
+    --nx-container-7xl: 72rem;
   }
 
   [data-ui-scale='large'] {
@@ -1122,6 +1153,20 @@
     --nx-icon-glyph-xs: 14px;
     --nx-icon-glyph-sm: 16px;
     --nx-icon-glyph-default: 18px;
+    --nx-ui-scale: 1.1;
+    --nx-container-3xs: 17.6rem;
+    --nx-container-2xs: 19.8rem;
+    --nx-container-xs: 22rem;
+    --nx-container-sm: 26.4rem;
+    --nx-container-md: 30.8rem;
+    --nx-container-lg: 35.2rem;
+    --nx-container-xl: 39.6rem;
+    --nx-container-2xl: 46.2rem;
+    --nx-container-3xl: 52.8rem;
+    --nx-container-4xl: 61.6rem;
+    --nx-container-5xl: 70.4rem;
+    --nx-container-6xl: 79.2rem;
+    --nx-container-7xl: 88rem;
   }
 
   [data-ui-scale='larger'] {
@@ -1156,6 +1201,20 @@
     --nx-icon-glyph-xs: 16px;
     --nx-icon-glyph-sm: 18px;
     --nx-icon-glyph-default: 20px;
+    --nx-ui-scale: 1.25;
+    --nx-container-3xs: 20rem;
+    --nx-container-2xs: 22.5rem;
+    --nx-container-xs: 25rem;
+    --nx-container-sm: 30rem;
+    --nx-container-md: 35rem;
+    --nx-container-lg: 40rem;
+    --nx-container-xl: 45rem;
+    --nx-container-2xl: 52.5rem;
+    --nx-container-3xl: 60rem;
+    --nx-container-4xl: 70rem;
+    --nx-container-5xl: 80rem;
+    --nx-container-6xl: 90rem;
+    --nx-container-7xl: 100rem;
   }
 
   [data-ui-scale='small'],

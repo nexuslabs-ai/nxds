@@ -37,7 +37,7 @@ function Row({ scale, density }: { scale: string; density: string }) {
         <IconSearch aria-hidden />
         Search
       </Button>
-      <Input aria-label={`Name, ${name}`} className="nx:w-32" />
+      <Input aria-label={`Name, ${name}`} className="nx:w-full nx:max-w-3xs" />
       <Toggle variant="outline">Bold</Toggle>
       <Badge isCaps={false}>New</Badge>
       <Kbd>Ctrl</Kbd>
@@ -106,7 +106,7 @@ function rowParts(canvasElement: HTMLElement, scale: string, density: string) {
   };
 }
 
-/** The ratios a UI scale must keep: control to text, icon to text, box to text. */
+/** The ratios a UI scale must keep: control, icon, box and width to text. */
 function ratios(parts: ReturnType<typeof rowParts>) {
   const text = lineHeight(parts.button);
   return {
@@ -115,6 +115,9 @@ function ratios(parts: ReturnType<typeof rowParts>) {
       box(parts.icon).width / parseFloat(style(parts.button).fontSize),
     'Checkbox to the text beside it': box(parts.checkbox).width / text,
     'Switch to the text beside it': box(parts.switchControl).height / text,
+    'Input width to its text':
+      parseFloat(style(parts.input).maxWidth) /
+      parseFloat(style(parts.input).fontSize),
   };
 }
 

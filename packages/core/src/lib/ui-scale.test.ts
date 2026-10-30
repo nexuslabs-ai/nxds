@@ -9,7 +9,7 @@ const nxdsCss = readFileSync(
   'utf8'
 );
 
-/** The px declarations of every `[data-ui-scale]` rule, merged per selector. */
+/** The numeric declarations of every `[data-ui-scale]` rule, merged per selector. */
 const blocks = new Map<string, Map<string, number>>();
 for (const [, selectors, body] of nxdsCss.matchAll(
   /\n\s*(\[data-ui-scale=[^{]*?)\s*\{([^}]*)\}/g
@@ -17,7 +17,7 @@ for (const [, selectors, body] of nxdsCss.matchAll(
   for (const selector of selectors!.split(',').map((part) => part.trim())) {
     const declarations = blocks.get(selector) ?? new Map<string, number>();
     for (const [, name, value] of body!.matchAll(
-      /--nx-([\w-]+):\s*([\d.]+)px;/g
+      /--nx-([\w-]+):\s*([\d.]+)(?:px|rem)?;/g
     )) {
       declarations.set(name!, Number(value));
     }
@@ -74,6 +74,26 @@ describe('UI scale CSS', () => {
       expect(blocks.get(`[data-ui-scale='${scale}']`)?.get('spacing-10')).toBe(
         spacingBlock(scale, 'default').get('spacing-10')
       );
+    }
+  });
+
+  it('scales the page widths and the factor with the spacing', () => {
+    const [small, large, larger] = SCALES.map(
+      (scale) => blocks.get(`[data-ui-scale='${scale}']`)!
+    );
+    expect(
+      [small, large, larger].map((block) => block!.get('ui-scale'))
+    ).toEqual([0.9, 1.1, 1.25]);
+    // `max-w-lg` is 32rem at the Default scale.
+    expect(
+      [small, large, larger].map((block) => block!.get('container-lg'))
+    ).toEqual([28.8, 35.2, 40]);
+    const widths = [...larger!].filter(([name]) =>
+      /^container-(\d?x[sl]|sm|md|lg)$/.test(name)
+    );
+    expect(widths).toHaveLength(13);
+    for (const [name, rem] of widths) {
+      expect(rem / small!.get(name)!, name).toBeCloseTo(1.25 / 0.9, 4);
     }
   });
 

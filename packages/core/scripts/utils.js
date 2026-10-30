@@ -17,10 +17,7 @@ import {
   extractTokens,
   pathToCssVarPrefixed,
 } from '../src/token-source/tokens.ts';
-import {
-  scaledModeBlocks,
-  scaledTypeBlocks,
-} from '../src/token-source/ui-scale.ts';
+import { scaleBlocks, scaledModeBlocks } from '../src/token-source/ui-scale.ts';
 import {
   BORDER_COLOR_ALIAS_NAMES,
   borderColorAliasName,
@@ -648,16 +645,18 @@ export function generateSpacingModesCSS(modesByName, opts = {}) {
 }
 
 /**
- * Emit the `[data-ui-scale="X"]` blocks: one per scale for type and icons,
- * and every density and radius mode at each scale. The default scale emits
- * nothing, so the per-mode blocks above apply as they are.
+ * Emit the UI scale: the default factor and page widths on `:root`, one
+ * `[data-ui-scale="X"]` block per scale for type, icons and widths, and every
+ * density and radius mode at each scale. The default scale has no block, so
+ * the per-mode blocks above apply as they are.
  *
  * @param {object} input
  * @param {Record<string, {cssName: string, value: string}[]>} input.spacingModes
  * @param {string} input.spacingDefault
  * @param {Record<string, {cssName: string, value: string}[]>} input.radiusModes
  * @param {string} input.radiusDefault
- * @param {{sizes: Record<string, number>, lineHeights: Record<string, number>}} input.typography
+ * @param {{sizes: Record<string, number>, lineHeights: Record<string, number>, widths: Record<string, number>}} input.base
+ *   The default text sizes and line heights in px, and page widths in rem.
  * @returns {string} CSS string with all UI scale blocks
  */
 export function generateUiScaleCSS({
@@ -665,10 +664,10 @@ export function generateUiScaleCSS({
   spacingDefault,
   radiusModes,
   radiusDefault,
-  typography,
+  base,
 }) {
   const blocks = [
-    ...scaledTypeBlocks(typography),
+    ...scaleBlocks(base),
     ...scaledModeBlocks(spacingModes, {
       attrName: 'data-density',
       defaultMode: spacingDefault,

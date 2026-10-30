@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -349,32 +350,33 @@ function generateVariablesCSS(primitiveTokens, usedModes) {
 }
 
 /**
- * The px text sizes and line heights the UI scale multiplies. The code size
+ * The px text sizes and line heights the UI scale multiplies, and the rem
+ * page widths from Tailwind's own theme (`max-w-*` reads them). The code size
  * is left out: the code font size setting owns it.
  */
-function uiTypeScale(typography) {
+function uiScaleBase(typography) {
   const values = (group) =>
     Object.fromEntries(
       Object.entries(group)
         .filter(([name]) => name !== 'code')
         .map(([name, token]) => [name, token.$value.value])
     );
+  const tailwindTheme = fs.readFileSync(
+    createRequire(import.meta.url).resolve('tailwindcss/theme.css'),
+    'utf8'
+  );
+  const widths = Object.fromEntries(
+    [...tailwindTheme.matchAll(/--container-([\w-]+):\s*([\d.]+)rem;/g)].map(
+      ([, name, rem]) => [name, Number(rem)]
+    )
+  );
   return {
     sizes: values(typography.size),
     lineHeights: values(typography['line-height']),
+    widths,
   };
 }
 
-/**
- * Generate nxds.css using shared generateThemeCSS function.
- *
- * `spacingDefault` controls which mode lands under `:root, [data-density="X"]`
- * (i.e. which mode applies when no `data-density` attribute is set). All six
- * modes still ship in the bundle either way — the other five emit as plain
- * `[data-density="X"]` blocks. The @theme numeric subset always comes from the
- * canonical default baseline because @theme drives Tailwind's utility codegen
- * (build-time); the cascade flip happens at runtime via the per-mode blocks.
- */
 function generateNxdsCSS(
   primitiveMap,
   lightSemanticTokens,
@@ -491,7 +493,7 @@ function generateNxdsCSS(
     spacingDefault,
     radiusModes: runtimeModes.radiusModes,
     radiusDefault: usedModes.radius,
-    typography: uiTypeScale(readTokenFile(typographyFilePath)),
+    base: uiScaleBase(readTokenFile(typographyFilePath)),
   });
   css += `}\n`;
 

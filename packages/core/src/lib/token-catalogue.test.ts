@@ -426,9 +426,13 @@ describe('token catalogue', () => {
     });
   });
 
-  it('names uiScale for every token the [data-ui-scale] type block sets', () => {
+  it('names uiScale for every text and icon token the [data-ui-scale] block sets', () => {
     const block = nxdsCss.match(/\[data-ui-scale='large'\] \{([^}]*)\}/)![1]!;
-    const scaled = new Set(customProperties(block).keys());
+    const scaled = new Set(
+      [...customProperties(block).keys()].filter((name) =>
+        /^--nx-(typography|icon)-/.test(name)
+      )
+    );
     const controlled = new Set(
       catalogue
         .filter(

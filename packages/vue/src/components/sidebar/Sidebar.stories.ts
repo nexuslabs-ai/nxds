@@ -350,6 +350,40 @@ export const Collapsed: Story = {
   }),
 };
 
+export const CollapsedRailAtLargerScale: Story = {
+  // The largest scale with the smallest density gives the rail the most to hold.
+  globals: { uiScale: 'larger', density: 'tight' },
+  render: () => ({
+    components: { DemoInset, DemoSidebar, SidebarProvider },
+    template: `
+      <SidebarProvider :default-open="false">
+        <DemoSidebar collapsible="icon" />
+        <DemoInset>The icon rail grows with the UI scale.</DemoInset>
+      </SidebarProvider>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const rail = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="sidebar-container"]'
+    )!;
+    const left = rail.getBoundingClientRect().left + rail.clientLeft;
+    const right = left + rail.clientWidth;
+    const buttons = canvasElement.querySelectorAll(
+      '[data-slot="sidebar-menu-button"]'
+    );
+    await expect(buttons.length).toBeGreaterThan(0);
+    // Each button sits inside the rail with the same space on both sides.
+    for (const button of buttons) {
+      const box = button.getBoundingClientRect();
+      await expect(box.left - left).toBeGreaterThanOrEqual(0);
+      await expect(right - box.right).toBeGreaterThanOrEqual(0);
+      await expect(
+        Math.abs(box.left - left - (right - box.right))
+      ).toBeLessThanOrEqual(1);
+    }
+  },
+};
+
 export const CollapsedTooltip: Story = {
   render: () => ({
     components: { DemoInset, DemoSidebar, SidebarProvider },

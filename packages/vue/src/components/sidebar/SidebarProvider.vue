@@ -9,8 +9,9 @@ import { SidebarKey } from './sidebar-context';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = '16rem';
-const SIDEBAR_WIDTH_ICON = '3rem';
+const SIDEBAR_WIDTH = 'var(--nx-container-3xs)';
+const SIDEBAR_WIDTH_ICON =
+  'calc(var(--nx-spacing-8) + var(--nx-spacing-2) * 2)';
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
 
 /** Whether the event target is a text-entry element (input, textarea, or contenteditable). */

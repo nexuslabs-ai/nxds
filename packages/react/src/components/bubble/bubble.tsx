@@ -27,7 +27,7 @@ function BubbleGroup({ className, ...props }: BubbleGroupProps) {
 
 const bubbleVariants = cva(
   [
-    'nx:relative nx:w-fit nx:max-w-[min(80%,45rem)] nx:rounded-xl nx:border-default nx:border-transparent nx:typography-body-default',
+    'nx:relative nx:w-fit nx:max-w-[min(80%,calc(45rem*var(--nx-ui-scale)))] nx:rounded-xl nx:border-default nx:border-transparent nx:typography-body-default',
     'nx:has-[>[data-bubble-part=reactions][data-side=top]]:mt-3 nx:has-[>[data-bubble-part=reactions][data-side=bottom]]:mb-3',
   ],
   {

@@ -12,7 +12,7 @@ import {
 
 import { useSidebar } from '.';
 
-const SIDEBAR_WIDTH_NARROW = '18rem';
+const SIDEBAR_WIDTH_NARROW = 'var(--nx-container-2xs)';
 
 export interface SidebarProps {
   /**
@@ -78,10 +78,10 @@ function restoreFocus(event: Event) {
       :side="side"
       :class="
         cn(
-          'nx:inset-y-2 nx:h-auto nx:w-(--sidebar-width) nx:max-w-[calc(100vw-1rem)] nx:rounded-lg nx:border-default nx:border-nav-border nx:bg-nav-background nx:p-0 nx:text-nav-foreground',
+          'nx:inset-y-2 nx:h-auto nx:w-(--sidebar-width) nx:max-w-[calc(100vw-var(--nx-spacing-2)*2)] nx:rounded-lg nx:border-default nx:border-nav-border nx:bg-nav-background nx:p-0 nx:text-nav-foreground',
           side === 'left'
-            ? 'nx:left-2 nx:data-[state=closed]:-translate-x-[calc(100%+0.5rem)]'
-            : 'nx:right-2 nx:data-[state=closed]:translate-x-[calc(100%+0.5rem)]',
+            ? 'nx:left-2 nx:data-[state=closed]:-translate-x-[calc(100%+var(--nx-spacing-2))]'
+            : 'nx:right-2 nx:data-[state=closed]:translate-x-[calc(100%+var(--nx-spacing-2))]',
           props.class
         )
       "
@@ -116,7 +116,7 @@ function restoreFocus(event: Event) {
           'nx:group-data-[collapsible=offcanvas]:w-0',
           'nx:group-data-[side=right]:rotate-180',
           variant === 'floating' || variant === 'inset'
-            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+1rem)]'
+            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+var(--nx-spacing-2)*2)]'
             : 'nx:group-data-[collapsible=icon]:w-(--sidebar-width-icon)'
         )
       "
@@ -131,7 +131,7 @@ function restoreFocus(event: Event) {
             : 'nx:right-0 nx:group-data-[collapsible=offcanvas]:-right-(--sidebar-width)',
           (variant === 'floating' || variant === 'inset') && 'nx:p-2',
           variant === 'floating' || variant === 'inset'
-            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+1rem+2px)]'
+            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+var(--nx-spacing-2)*2+var(--nx-borderwidth-default)*2)]'
             : 'nx:group-data-[collapsible=icon]:w-(--sidebar-width-icon) nx:group-data-[side=left]:border-r-default nx:group-data-[side=right]:border-l-default nx:border-nav-border',
           props.class
         )

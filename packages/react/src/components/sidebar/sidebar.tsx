@@ -29,9 +29,10 @@ import {
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = '16rem';
-const SIDEBAR_WIDTH_NARROW = '18rem';
-const SIDEBAR_WIDTH_ICON = '3rem';
+const SIDEBAR_WIDTH = 'var(--nx-container-3xs)';
+const SIDEBAR_WIDTH_NARROW = 'var(--nx-container-2xs)';
+const SIDEBAR_WIDTH_ICON =
+  'calc(var(--nx-spacing-8) + var(--nx-spacing-2) * 2)';
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
 
 /** Whether the event target is a text-entry element (input, textarea, or contenteditable). */
@@ -260,10 +261,10 @@ function Sidebar({
           onOpenAutoFocus={rememberFocus}
           onCloseAutoFocus={restoreFocus}
           className={cn(
-            'nx:inset-y-2 nx:h-auto nx:w-(--sidebar-width) nx:max-w-[calc(100vw-1rem)] nx:rounded-lg nx:border-default nx:border-nav-border nx:bg-nav-background nx:p-0 nx:text-nav-foreground',
+            'nx:inset-y-2 nx:h-auto nx:w-(--sidebar-width) nx:max-w-[calc(100vw-var(--nx-spacing-2)*2)] nx:rounded-lg nx:border-default nx:border-nav-border nx:bg-nav-background nx:p-0 nx:text-nav-foreground',
             side === 'left'
-              ? 'nx:left-2 nx:data-[state=closed]:-translate-x-[calc(100%+0.5rem)]'
-              : 'nx:right-2 nx:data-[state=closed]:translate-x-[calc(100%+0.5rem)]',
+              ? 'nx:left-2 nx:data-[state=closed]:-translate-x-[calc(100%+var(--nx-spacing-2))]'
+              : 'nx:right-2 nx:data-[state=closed]:translate-x-[calc(100%+var(--nx-spacing-2))]',
             className
           )}
           style={
@@ -305,7 +306,7 @@ function Sidebar({
           'nx:group-data-[collapsible=offcanvas]:w-0',
           'nx:group-data-[side=right]:rotate-180',
           variant === 'floating' || variant === 'inset'
-            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+1rem)]'
+            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+var(--nx-spacing-2)*2)]'
             : 'nx:group-data-[collapsible=icon]:w-(--sidebar-width-icon)'
         )}
       />
@@ -316,11 +317,11 @@ function Sidebar({
           side === 'left'
             ? 'nx:left-0 nx:group-data-[collapsible=offcanvas]:-left-(--sidebar-width)'
             : 'nx:right-0 nx:group-data-[collapsible=offcanvas]:-right-(--sidebar-width)',
-          // Floating and inset variants gain padding around the panel; the
-          // +1rem in the icon-collapse width below matches this inset.
+          // Floating and inset variants gain padding around the panel. The
+          // icon-collapse width below adds this padding and the panel border.
           (variant === 'floating' || variant === 'inset') && 'nx:p-2',
           variant === 'floating' || variant === 'inset'
-            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+1rem+2px)]'
+            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+var(--nx-spacing-2)*2+var(--nx-borderwidth-default)*2)]'
             : 'nx:group-data-[collapsible=icon]:w-(--sidebar-width-icon) nx:group-data-[side=left]:border-r-default nx:group-data-[side=right]:border-l-default nx:border-nav-border',
           className
         )}
