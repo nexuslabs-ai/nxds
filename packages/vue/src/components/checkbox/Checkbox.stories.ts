@@ -443,6 +443,23 @@ export const MarkAtEveryStroke: Story = {
           control.querySelector('[data-slot="checkbox-minus"]')!,
           control
         );
+        // Each mark draws the line for the box less its two borders.
+        const box = getComputedStyle(control);
+        const markSize =
+          parseFloat(box.width) -
+          2 * parseFloat(box.getPropertyValue('--nx-borderwidth-default'));
+        for (const mark of control.querySelectorAll('svg')) {
+          const style = getComputedStyle(mark);
+          const base = parseFloat(
+            style.getPropertyValue('--nx-icon-stroke-base')
+          );
+          const ratio = parseFloat(
+            style.getPropertyValue('--nx-icon-stroke-ratio')
+          );
+          await expect(parseFloat(style.strokeWidth)).toBeCloseTo(
+            base + markSize * ratio
+          );
+        }
       }
     }
   },

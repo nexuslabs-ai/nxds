@@ -282,28 +282,55 @@ you like.
 
 ### Line width
 
-Stroked icons draw a 1.75 line in every component, whatever their
+Stroked icons draw a line that grows with the icon, whatever their
 `strokeWidth`. Filled icons keep the line their library draws.
 
 | Library      | Draws         | Line in a component |
 | ------------ | ------------- | ------------------- |
-| Lucide       | Strokes       | 1.75                |
-| Tabler Icons | Strokes       | 1.75                |
-| HugeIcons    | Strokes       | 1.75                |
+| Lucide       | Strokes       | Grows with the icon |
+| Tabler Icons | Strokes       | Grows with the icon |
+| HugeIcons    | Strokes       | Grows with the icon |
 | Phosphor     | Filled shapes | Its own             |
 | Remix Icon   | Filled shapes | Its own             |
 
-To change the line, set `--nx-icon-stroke`:
+The line is `--nx-icon-stroke-base` plus the icon size times
+`--nx-icon-stroke-ratio`. The line is in screen pixels, so a small icon keeps
+a line you can see.
+
+| Icon size | Line    |
+| --------- | ------- |
+| 12px      | 1.25px  |
+| 14px      | 1.375px |
+| 16px      | 1.5px   |
+| 24px      | 2px     |
+| 48px      | 3.5px   |
+
+Icon sizes follow the UI scale, so the line does too. At `'larger'`, a default
+icon is 20px and draws a 1.75px line. The two stroke tokens are the same at
+every scale.
+
+To change the line, set the two tokens:
 
 ```css
 /* app/nxds.css, after the imports */
 :root {
-  --nx-icon-stroke: 1.5;
+  --nx-icon-stroke-base: 0.75px;
+  --nx-icon-stroke-ratio: 0.05;
 }
 ```
 
-To change the line in one component, add `nx:[--nx-icon-stroke:2]` to its
-class. A `stroke-*` class doesn't change the line.
+To change the line in one component, set the tokens in its class, such as
+`nx:[--nx-icon-stroke-base:1px]`. A `stroke-*` class doesn't change the line.
+
+An icon sized with `nx:size-icon-glyph-xs`, `-sm`, `-default` or `-lg` draws the
+line for its size. An icon you size another way draws the line for a default
+icon. Set `--nx-icon-size` to the same size beside it:
+
+```tsx
+<StarIcon className="nx:size-[calc(var(--nx-icon-glyph-default)*2)] nx:[--nx-icon-size:calc(var(--nx-icon-glyph-default)*2)]" />
+```
+
+A whole multiple of the default icon follows the UI scale.
 
 ## Shuffle
 

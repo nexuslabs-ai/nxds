@@ -61,7 +61,7 @@ function Checkbox({ className, ...props }: CheckboxProps) {
           data-slot="checkbox-check"
           aria-hidden="true"
           className={cn(
-            'nx:absolute nx:size-full',
+            'nx:absolute nx:size-full nx:[--nx-icon-size:calc(var(--nx-icon-glyph-default)_-_2*var(--nx-borderwidth-default))]',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )}
@@ -70,7 +70,7 @@ function Checkbox({ className, ...props }: CheckboxProps) {
           data-slot="checkbox-minus"
           aria-hidden="true"
           className={cn(
-            'nx:absolute nx:size-full',
+            'nx:absolute nx:size-full nx:[--nx-icon-size:calc(var(--nx-icon-glyph-default)_-_2*var(--nx-borderwidth-default))]',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=indeterminate]:scale-100 nx:group-data-[state=indeterminate]:opacity-100'
           )}

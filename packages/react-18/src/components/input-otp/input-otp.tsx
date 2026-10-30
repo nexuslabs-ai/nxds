@@ -170,7 +170,7 @@ const InputOTPSeparator = React.forwardRef<
       className={cn('nx:flex nx:items-center nx:icon-stroke', className)}
       {...props}
     >
-      <IconCircleFilled className="nx:size-[4px] nx:text-muted-foreground" />
+      <IconCircleFilled className="nx:size-[4px] nx:[--nx-icon-size:4px] nx:text-muted-foreground" />
     </div>
   );
 });

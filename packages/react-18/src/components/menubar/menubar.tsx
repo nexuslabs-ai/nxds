@@ -412,7 +412,7 @@ const MenubarRadioItem = React.forwardRef<
             data-slot="menubar-radio-indicator-icon"
             aria-hidden="true"
             className={cn(
-              'nx:size-[8px]',
+              'nx:size-[8px] nx:[--nx-icon-size:8px]',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
             )}

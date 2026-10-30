@@ -383,7 +383,8 @@ describe('token catalogue', () => {
     const aliased = catalogue.flatMap((token) =>
       aliasesOf(token, 'utility').map((alias) => ({ alias, token }))
     );
-    expect(aliased.map(({ alias }) => alias).sort()).toEqual(
+    // A utility can read several tokens, as icon-stroke reads both stroke tokens.
+    expect([...new Set(aliased.map(({ alias }) => alias))].sort()).toEqual(
       [...utilities.keys()]
         .filter((name) => !STATIC_UTILITIES.includes(name))
         .sort()
