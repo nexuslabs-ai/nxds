@@ -471,9 +471,9 @@ describe('appearancePrefsToCss', () => {
     expect(scaledCodeSizes(12)).toEqual({ small: 10, large: 14, larger: 15 });
   });
 
-  it('never shrinks code below 10px, and keeps smaller code from growing at Small', () => {
-    expect(scaledCodeSizes(11)).toMatchObject({ small: 10 });
-    expect(scaledCodeSizes(9)).toMatchObject({ small: 9 });
+  it('never shrinks code below 8px, and keeps smaller code from growing at Small', () => {
+    expect(scaledCodeSizes(9)).toMatchObject({ small: 8 });
+    expect(scaledCodeSizes(8)).toMatchObject({ small: 8 });
   });
 
   it('writes the code size in whole px at every scale', () => {
@@ -496,11 +496,11 @@ describe('appearancePrefsToCss', () => {
       ].map(([, selector, px]) => [selector, Number(px)])
     );
     // 12px times 16/14 at the Default scale, times 16/14 × 18/14 at Larger,
-    // and never under 10px.
+    // and never under 8px.
     expect(sizes).toMatchObject({
       "[data-text-size='16']": 14,
       "[data-ui-scale='larger'][data-text-size='16']": 18,
-      "[data-ui-scale='small'][data-text-size='12']": 10,
+      "[data-ui-scale='small'][data-text-size='12']": 9,
     });
     // One block for each scale and text size except Default and 14.
     expect(Object.keys(sizes)).toHaveLength(

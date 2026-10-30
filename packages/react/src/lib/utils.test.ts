@@ -115,6 +115,12 @@ function emittedThemeTokens(cssKey: string) {
 }
 
 describe('cn', () => {
+  it('lets a later height or size replace a control min-height', () => {
+    expect(cn('nx:h-fit nx:min-h-10', 'nx:h-8')).toBe('nx:h-8');
+    expect(cn('nx:h-fit nx:min-h-10', 'nx:size-8')).toBe('nx:size-8');
+    expect(cn('nx:h-8', 'nx:min-h-0')).toBe('nx:h-8 nx:min-h-0');
+  });
+
   it.each(['primary', 'error', 'information', 'success', 'warning'])(
     'keeps border widths while merging renamed %s colors and aliases',
     (family) => {

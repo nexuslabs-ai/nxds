@@ -107,7 +107,7 @@ describe('UI scale CSS', () => {
     }
   });
 
-  it('scales text to 12, 16 and 18px, never under 10px, with even line heights', () => {
+  it('scales text to 12, 16 and 18px, never under 8px, with even line heights', () => {
     const type = SCALES.map(
       (scale) => blocks.get(`[data-ui-scale='${scale}']`)!
     );
@@ -118,7 +118,7 @@ describe('UI scale CSS', () => {
       for (const [name, px] of block) {
         if (/^typography-(size-|code-size)/.test(name)) {
           expect(Number.isInteger(px), name).toBe(true);
-          expect(px, name).toBeGreaterThanOrEqual(10);
+          expect(px, name).toBeGreaterThanOrEqual(8);
         }
         if (name.startsWith('typography-line-height-')) {
           expect(px % 2, name).toBe(0);
@@ -199,7 +199,7 @@ describe('Text size CSS', () => {
             /^typography-(size-|line-height-|code-size$)/
           );
           expect(Number.isInteger(px), `${label}: ${name}`).toBe(true);
-          expect(px, `${label}: ${name}`).toBeGreaterThanOrEqual(10);
+          expect(px, `${label}: ${name}`).toBeGreaterThanOrEqual(8);
           if (name.startsWith('typography-line-height-')) {
             expect(px % 2, `${label}: ${name}`).toBe(0);
           }
@@ -221,6 +221,28 @@ describe('Text size CSS', () => {
       large: [14, 15, 16, 17, 18],
       larger: [15, 17, 18, 19, 21],
     });
+  });
+
+  it('keeps every type size larger than the one below it', () => {
+    for (const scale of ALL_SCALES) {
+      for (const textSize of TEXT_SIZE_OPTIONS) {
+        // The Default scale and text size use the base tokens.
+        if (scale === 'default' && textSize === 14) continue;
+        const label = `${scale} × ${textSize}`;
+        const block =
+          textSize === 14
+            ? blocks.get(`[data-ui-scale='${scale}']`)!
+            : textSizeBlock(scale, textSize);
+        const sizes = [...block]
+          .filter(([name]) => name.startsWith('typography-size-'))
+          .map(([, px]) => px);
+        sizes.slice(1).forEach((px, index) => {
+          expect(px, `${label}: ${sizes.join(', ')}`).toBeGreaterThan(
+            sizes[index]!
+          );
+        });
+      }
+    }
   });
 
   it('gives each text size its own label size at every scale', () => {

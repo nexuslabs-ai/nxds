@@ -220,6 +220,10 @@ const twMerge = extendTailwindMerge<NxdsClassGroupId>({
     classGroups: NXDS_CLASS_GROUPS,
     conflictingClassGroups: {
       typography: TYPOGRAPHY_CONFLICTS,
+      // A control sets `h-fit min-h-N`, so a caller's `h-*` or `size-*` must
+      // drop the min-height too, or the control stays N tall.
+      h: ['min-h'],
+      size: ['min-h'],
     },
   },
 });

@@ -169,7 +169,7 @@ export function NxdsAppearanceSettings() {
 
   const textSizeOptions = TEXT_SIZE_OPTIONS.map((size) => ({
     value: String(size),
-    label: `${textSizePx(size, state.uiScale)}px`,
+    label: `${size}px`,
   }));
 
   const contrastKey =
@@ -331,7 +331,7 @@ export function NxdsAppearanceSettings() {
           </NxdsAppearanceSettingRow>
           <NxdsAppearanceSettingRow
             label="Text size"
-            description="Sizes include the current UI scale."
+            description="The size at the Default UI scale."
           >
             <AxisSelect
               value={String(state.textSize)}
@@ -344,7 +344,8 @@ export function NxdsAppearanceSettings() {
             data-slot="appearance-text-size-preview"
             className="nx:m-0 nx:pb-3 nx:typography-body-default nx:text-foreground"
           >
-            Your text shows at this size.
+            At this UI scale, your text shows at{' '}
+            {textSizePx(state.textSize, state.uiScale)}px.
           </p>
           <NxdsAppearanceSettingRow label="Density">
             <AxisSelect<NxdsDensity>

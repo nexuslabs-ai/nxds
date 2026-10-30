@@ -1074,7 +1074,7 @@
   }
 
   [data-ui-scale='small'] {
-    --nx-typography-size-xxs: 10px;
+    --nx-typography-size-xxs: 9px;
     --nx-typography-size-xs: 10px;
     --nx-typography-size-sm: 12px;
     --nx-typography-size-base: 14px;
@@ -1224,8 +1224,8 @@
   }
 
   [data-ui-scale='small'][data-text-size='12'] {
-    --nx-typography-size-xxs: 10px;
-    --nx-typography-size-xs: 10px;
+    --nx-typography-size-xxs: 8px;
+    --nx-typography-size-xs: 9px;
     --nx-typography-size-sm: 10px;
     --nx-typography-size-base: 12px;
     --nx-typography-size-lg: 13px;
@@ -1238,7 +1238,7 @@
     --nx-typography-size-7xl: 53px;
     --nx-typography-size-8xl: 71px;
     --nx-typography-size-9xl: 94px;
-    --nx-typography-line-height-xxs: 10px;
+    --nx-typography-line-height-xxs: 8px;
     --nx-typography-line-height-xs: 12px;
     --nx-typography-line-height-sm: 14px;
     --nx-typography-line-height-base: 18px;
@@ -1252,11 +1252,11 @@
     --nx-typography-line-height-7xl: 52px;
     --nx-typography-line-height-8xl: 70px;
     --nx-typography-line-height-9xl: 94px;
-    --nx-typography-code-size: 10px;
+    --nx-typography-code-size: 9px;
   }
 
   [data-ui-scale='small'][data-text-size='13'] {
-    --nx-typography-size-xxs: 10px;
+    --nx-typography-size-xxs: 9px;
     --nx-typography-size-xs: 10px;
     --nx-typography-size-sm: 11px;
     --nx-typography-size-base: 13px;
@@ -1352,7 +1352,7 @@
   }
 
   [data-text-size='12'] {
-    --nx-typography-size-xxs: 10px;
+    --nx-typography-size-xxs: 9px;
     --nx-typography-size-xs: 10px;
     --nx-typography-size-sm: 12px;
     --nx-typography-size-base: 14px;

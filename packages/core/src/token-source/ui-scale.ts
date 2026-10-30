@@ -63,7 +63,7 @@ export interface ScaleBlock {
 const FULL_RADIUS = '9999px';
 
 /** No text that starts at this size or larger scales below it. */
-const MIN_TEXT_PX = 10;
+const MIN_TEXT_PX = 8;
 
 const px = (value: string) => Number.parseFloat(value);
 
@@ -78,7 +78,7 @@ const textFactor = (scale: UiScale, textSize: TextSize) =>
   UI_SCALES[scale].text * (textSize / DEFAULT_TEXT_SIZE);
 
 /**
- * A text size at a scale and text size, in whole px. It stops at 10px, or at
+ * A text size at a scale and text size, in whole px. It stops at 8px, or at
  * its own Default size when that is smaller, so a small size never grows at
  * Small.
  */

@@ -18,7 +18,6 @@ import {
   type NxdsTextSize,
   STROKE_OPTIONS,
   TEXT_SIZE_OPTIONS,
-  textSizePx,
   UI_SCALE_OPTIONS,
 } from '@nxds/core';
 import {
@@ -336,7 +335,7 @@ export function AppearanceControls({
           value={String(state.textSize)}
           options={TEXT_SIZE_OPTIONS.map((size) => ({
             value: String(size),
-            label: `${textSizePx(size, state.uiScale)}px`,
+            label: `${size}px`,
           }))}
           // Each option's value is a text size as text.
           onChange={(value) =>
