@@ -1,8 +1,8 @@
 ---
-'@nxds/core': patch
-'@nxds/tailwind': patch
-'@nxds/react': patch
-'@nxds/vue': patch
+'@nxds/core': minor
+'@nxds/tailwind': minor
+'@nxds/react': minor
+'@nxds/vue': minor
 ---
 
 Controls hold their parts at every stroke and density.
