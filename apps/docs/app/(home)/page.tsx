@@ -13,6 +13,7 @@ import { StorybookLink } from '../_home/stories/StorybookLink';
 import { StoryTestIterations } from '../_home/stories/StoryTestIterations';
 import { requirePage, requireSection } from '../_lib/manifest';
 import {
+  DISCORD_URL,
   NPM_CORE_URL,
   pageMetadata,
   REPO_URL,
@@ -23,6 +24,7 @@ import {
   SITE_TITLE,
   SITE_URL,
   STORYBOOK_URL,
+  X_URL,
 } from '../_lib/site';
 
 export const metadata = pageMetadata({
@@ -58,7 +60,7 @@ const STRUCTURED_DATA = {
         name: 'Nexus Labs',
         url: 'https://github.com/nexuslabs-ai',
       },
-      sameAs: [REPO_URL, NPM_CORE_URL, STORYBOOK_URL],
+      sameAs: [REPO_URL, NPM_CORE_URL, STORYBOOK_URL, DISCORD_URL, X_URL],
     },
   ],
 };

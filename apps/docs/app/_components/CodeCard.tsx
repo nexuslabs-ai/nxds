@@ -34,7 +34,7 @@ export function CodeCard({
 
   const returnToCard = () => {
     const card = cardRef.current;
-    if (card && card.getBoundingClientRect().top < getScrollOffset()) {
+    if (card && card.getBoundingClientRect().top < getScrollOffset(card)) {
       card.scrollIntoView({ block: 'start' });
     }
   };

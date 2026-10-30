@@ -31,6 +31,7 @@ import { Switch } from '@/components/switch/switch';
 import {
   CODE_FONTS,
   CONTRAST_RANGE,
+  findOption,
   type FontChoice,
   fontPick,
   HEADING_FONTS,
@@ -70,15 +71,14 @@ function SelectField<T extends string>({
   onChange: (value: T) => void;
 }) {
   const id = useId();
+  function change(event: ChangeEvent<HTMLSelectElement>) {
+    const option = findOption(options, event.target.value);
+    if (option) onChange(option);
+  }
   return (
     <div className={FIELD_CLASS}>
       <Label htmlFor={id}>{label}</Label>
-      <NativeSelect
-        id={id}
-        value={value}
-        // The options are exactly `options`, so the selected value is a `T`.
-        onChange={(event) => onChange(event.target.value as T)}
-      >
+      <NativeSelect id={id} value={value} onChange={change}>
         {options.map((option) => (
           <NativeSelectOption key={option.value} value={option.value}>
             {option.label}
@@ -103,19 +103,13 @@ function FontField({
   choices: FontChoice[];
   onChange: (family: string | null) => void;
 }) {
-  const { chosen, options } = fontPick(family, choices);
-
-  function change(value: string) {
-    const choice = options.find((option) => option.value === value);
-    if (choice) onChange(choice.family);
-  }
-
+  const font = fontPick(family, choices);
   return (
     <SelectField
       label={label}
-      value={chosen.value}
-      options={options}
-      onChange={change}
+      value={font.value}
+      options={font.options}
+      onChange={(value) => onChange(font.familyOf(value))}
     />
   );
 }

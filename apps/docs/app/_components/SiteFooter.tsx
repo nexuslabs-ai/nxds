@@ -4,14 +4,16 @@ import { Button } from '@/components/button/button';
 import { cn } from '@/lib/utils';
 
 import { PAGE_MANIFEST } from '../_lib/manifest';
-import { NPM_CORE_URL, REPO_URL, STORYBOOK_URL } from '../_lib/site';
 import {
-  brandLinkClassName,
   DISCORD_URL,
   LICENSE_URL,
-  navLinkClassName,
+  NPM_CORE_URL,
+  REPO_URL,
+  SITE_BRAND,
+  STORYBOOK_URL,
   X_URL,
-} from '../_lib/site-links';
+} from '../_lib/site';
+import { brandLinkClassName, navLinkClassName } from '../_lib/site-links';
 
 /** `file` marks a file the build writes, which gets a plain link, not a page link. */
 type FooterLink = { label: string; href: string; file?: boolean };
@@ -79,7 +81,7 @@ export function SiteFooter({ className }: { className?: string }) {
             size="sm"
             className={cn(brandLinkClassName, 'nx:self-start')}
           >
-            <Link href="/">Nexus Design System</Link>
+            <Link href="/">{SITE_BRAND}</Link>
           </Button>
           <p className="nx:m-0 nx:typography-body-small nx:text-muted-foreground">
             © 2026 Nexus Labs ·{' '}

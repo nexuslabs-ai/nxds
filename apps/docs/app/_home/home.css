@@ -50,10 +50,6 @@
     --section-space-top: var(--first-section-space-top);
     --heading-space-bottom: var(--first-heading-space-bottom);
   }
-  /* Land right under the header, not with the docs headings' extra space. */
-  scroll-margin-block-start: calc(
-    var(--site-header-h) - var(--docs-scroll-offset)
-  );
 }
 
 @utility chapter-heading {

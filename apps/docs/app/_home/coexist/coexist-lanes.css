@@ -64,18 +64,16 @@
   row-gap: var(--lane-flow);
   min-inline-size: 0;
 
-  /* The lane's colours, which its chips, flow line and verdict read. The
+  /* The lane's colours, which its flow line and verdict read. The
      other library writes names or rules your app depends on. */
   &[data-lane='other'] {
     --lane-border: var(--nx-color-error-border);
-    --lane-surface: var(--nx-color-error-subtle);
     --lane-text: var(--nx-color-error-subtle-foreground);
   }
 
   /* Nexus writes names only it reads: nothing reaches your app. */
   &[data-lane='nexus'] {
     --lane-border: var(--nx-color-success-border);
-    --lane-surface: var(--nx-color-success-subtle);
     --lane-text: var(--nx-color-success-subtle-foreground);
   }
 }
@@ -139,26 +137,6 @@
   align-content: start;
   gap: var(--nx-spacing-2);
   margin: 0;
-}
-
-@utility coexist-lanes-chip {
-  /* Toggle always sets these attributes. Together they outrank its own
-     padding, border, hover and pressed styles, so a chip keeps its lane's
-     colours. */
-  &[data-slot='toggle'][aria-pressed][data-state] {
-    padding: var(--nx-spacing-1) var(--nx-spacing-2);
-    border: var(--nx-borderwidth-default) solid var(--lane-border);
-    border-radius: var(--nx-radius-md);
-    outline-offset: var(--nx-spacing-0_5);
-    background: var(--lane-surface);
-    color: var(--lane-text);
-  }
-  &[data-active] {
-    outline: var(--nx-borderwidth-thick) solid currentColor;
-  }
-  &[data-state]:focus-visible {
-    outline: var(--nx-borderwidth-thick) solid var(--nx-color-border-focus);
-  }
 }
 
 /* The app sits centred on its stage, which takes the card's spare height. */

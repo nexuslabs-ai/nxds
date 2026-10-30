@@ -1,19 +1,5 @@
 import type { ToolName } from '../tool-icons';
 
-export type StoryModeId =
-  | 'states'
-  | 'interactions'
-  | 'callbacks'
-  | 'accessibility';
-
-type StoryMode = {
-  id: StoryModeId;
-  /** The label of the option select in the tool's panel. */
-  field: string;
-  description: string;
-  options: readonly { value: string; label: string }[];
-};
-
 /** The Stories chapter's tools, in toolbar order. */
 export const storyTools = [
   'States',
@@ -25,7 +11,7 @@ export const storyTools = [
 export type StoryTool = (typeof storyTools)[number];
 
 /** The story each tool shows, and the choices in its panel. */
-export const storyModes: Record<StoryTool, StoryMode> = {
+export const storyModes = {
   States: {
     id: 'states',
     field: 'Starting state',
@@ -66,156 +52,185 @@ export const storyModes: Record<StoryTool, StoryMode> = {
       { value: 'missing', label: 'Name missing' },
     ],
   },
+} as const;
+
+type StoryModes = typeof storyModes;
+
+export type StoryModeId = StoryModes[StoryTool]['id'];
+
+/** The picked option of every mode, by mode id. */
+export type StoryChoices = {
+  [Tool in StoryTool as StoryModes[Tool]['id']]: StoryModes[Tool]['options'][number]['value'];
 };
 
-type Story = {
+/**
+ * A story read from `Switch.stories.tsx`. Each check labels one `expect` line
+ * of its play function, in order.
+ */
+type FileStory = {
   name: string;
-  source: string[];
-  /** The source line each check runs, or -1 for a check outside the story. */
-  lines: number[];
-  labels: string[];
+  checks: readonly string[];
+  manualChecks?: readonly string[];
 };
+
+/** A hand-written story that illustrates one idea. It is not in the file. */
+type ExampleStory = FileStory & {
+  source: readonly string[];
+  /** The source line each check runs. */
+  lines: readonly number[];
+};
+
+export type Story = FileStory | ExampleStory;
+
+/** The file the chapter reads its stories from, relative to the repo root. */
+export const STORY_FILE =
+  'packages/react/src/components/switch/Switch.stories.tsx';
+
+export function isExample(story: Story): story is ExampleStory {
+  return 'source' in story;
+}
 
 /** A line of story source, or one that runs the named check. */
 type SourceLine = string | { code: string; check: string };
 
-/**
- * A story whose checks are marked on the lines that run them, then the
- * manual checks, which no line runs.
- */
-function story(
+/** An example story whose checks are marked on the lines that run them. */
+function example(
   name: string,
   source: readonly SourceLine[],
-  manualChecks: readonly string[] = []
-): Story {
+  manualChecks?: readonly string[]
+): ExampleStory {
   const lines: number[] = [];
-  const labels: string[] = [];
+  const checks: string[] = [];
   source.forEach((line, index) => {
     if (typeof line === 'string') return;
     lines.push(index);
-    labels.push(line.check);
+    checks.push(line.check);
   });
   return {
     name,
     source: source.map((line) => (typeof line === 'string' ? line : line.code)),
-    lines: [...lines, ...manualChecks.map(() => -1)],
-    labels: [...labels, ...manualChecks],
+    lines,
+    checks,
+    manualChecks,
   };
 }
 
-const clickSource: SourceLine[] = [
+function stateStory(choice: StoryChoices['states']): Story {
+  return example(`${choice.charAt(0).toUpperCase()}${choice.slice(1)}State`, [
+    'args: {',
+    { code: `  defaultChecked: ${choice === 'on'},`, check: 'Visible state' },
+    {
+      code: `  disabled: ${choice === 'disabled'},`,
+      check: 'Disabled behavior',
+    },
+    {
+      code: `  "aria-invalid": ${choice === 'invalid'},`,
+      check: 'Validation state',
+    },
+    '},',
+    '',
+    '// Each state is a living example.',
+    '// Run the example to verify it.',
+  ]);
+}
+
+const interactionStories: Record<StoryChoices['interactions'], Story> = {
+  click: {
+    name: 'ClickInteraction',
+    checks: [
+      'Starts off',
+      'Click turns on',
+      'Reports true',
+      'Click turns off',
+      'Reports false',
+    ],
+  },
+  disabled: {
+    name: 'DisabledInteraction',
+    checks: ['Is disabled', 'Stays off', 'No callback'],
+  },
+  keyboard: {
+    name: 'KeyboardInteraction',
+    checks: [
+      'Receives focus',
+      'Space turns it on',
+      'Reports true',
+      'Space turns it off',
+      'Reports false',
+    ],
+  },
+};
+
+const callbackStory = example('CallbackContract', [
+  'args: { onCheckedChange: fn() },',
+  '',
   'play: async ({ canvas, args }) => {',
   '  const el = canvas.getByRole("switch");',
-  { code: '  await expect(el).not.toBeChecked();', check: 'Starts off' },
   '  await userEvent.click(el);',
-  { code: '  await expect(el).toBeChecked();', check: 'Click turns on' },
-  '  await userEvent.click(el);',
-  { code: '  await expect(el).not.toBeChecked();', check: 'Click turns off' },
+  { code: '  await expect(el).toBeChecked();', check: 'Switch is on' },
+  '  await expect(args.onCheckedChange)',
+  { code: '    .toHaveBeenCalledTimes(1);', check: 'One callback' },
+  '  await expect(args.onCheckedChange)',
+  { code: '    .toHaveBeenCalledWith(true);', check: 'Callback is true' },
   '};',
-];
+]);
 
-export function describeStory(mode: StoryModeId, choice: string): Story {
-  if (mode === 'states')
-    return story(choice.charAt(0).toUpperCase() + choice.slice(1), [
-      'args: {',
-      {
-        code: `  defaultChecked: ${choice === 'on'},`,
-        check: 'Visible state',
-      },
-      {
-        code: `  disabled: ${choice === 'disabled'},`,
-        check: 'Disabled behavior',
-      },
-      {
-        code: `  "aria-invalid": ${choice === 'invalid'},`,
-        check: 'Validation state',
-      },
-      '},',
-      '',
-      '// Each state is a living example.',
-      '// Run the example to verify it.',
-    ]);
-  if (mode === 'callbacks')
-    return story('CallbackContract', [
-      'args: { onCheckedChange: fn() },',
-      '',
-      'play: async ({ canvas, args }) => {',
-      '  const el = canvas.getByRole("switch");',
-      '  await userEvent.click(el);',
-      { code: '  await expect(el).toBeChecked();', check: 'Switch is on' },
-      '  await expect(args.onCheckedChange)',
-      { code: '    .toHaveBeenCalledTimes(1);', check: 'One callback' },
-      '  await expect(args.onCheckedChange)',
-      { code: '    .toHaveBeenCalledWith(true);', check: 'Callback is true' },
-      '};',
-    ]);
-  if (mode === 'accessibility')
-    return story(
-      'AccessibleName',
-      [
-        '// Storybook can also run axe checks.',
-        'parameters: { a11y: { test: "error" } },',
-        '',
-        '// This demo checks the name only:',
-        'play: async ({ canvas }) => {',
-        '  const el = canvas.getByRole("switch");',
-        {
-          code: '  await expect(el).toHaveAccessibleName(',
-          check: 'Accessible name',
-        },
-        '    "Email notifications"',
-        '  );',
-        '};',
-        '// Manual accessibility review matters too.',
-      ],
-      ['Keyboard review', 'Screen-reader review']
-    );
-  if (choice === 'disabled')
-    return story('DisabledInteraction', [
-      'args: { disabled: true, onCheckedChange: fn() },',
-      '',
-      'play: async ({ canvas, args }) => {',
-      '  const el = canvas.getByRole("switch");',
-      { code: '  await expect(el).toBeDisabled();', check: 'Is disabled' },
-      '  await userEvent.click(el);',
-      { code: '  await expect(el).not.toBeChecked();', check: 'Stays off' },
-      '  await expect(args.onCheckedChange)',
-      { code: '    .not.toHaveBeenCalled();', check: 'No callback' },
-      '};',
-    ]);
-  if (choice === 'keyboard')
-    return story('KeyboardInteraction', [
-      'play: async ({ canvas, args }) => {',
-      '  const el = canvas.getByRole("switch");',
-      '  await userEvent.tab();',
-      { code: '  await expect(el).toHaveFocus();', check: 'Receives focus' },
-      '  await userEvent.keyboard(" ");',
-      {
-        code: '  await expect(el).toBeChecked();',
-        check: 'Space turns it on',
-      },
-      '  await expect(args.onCheckedChange)',
-      {
-        code: '    .toHaveBeenCalledWith(true);',
-        check: 'Reports new value',
-      },
-      '};',
-    ]);
-  return story('ClickInteraction', clickSource);
+const accessibilityStory = example(
+  'AccessibleName',
+  [
+    '// Storybook can also run axe checks.',
+    'parameters: { a11y: { test: "error" } },',
+    '',
+    '// This demo checks the name only:',
+    'play: async ({ canvas }) => {',
+    '  const el = canvas.getByRole("switch");',
+    {
+      code: '  await expect(el).toHaveAccessibleName(',
+      check: 'Accessible name',
+    },
+    '    "Email notifications"',
+    '  );',
+    '};',
+    '// Manual accessibility review matters too.',
+  ],
+  ['Keyboard review', 'Screen-reader review']
+);
+
+/** The story a mode shows for the picked choices. */
+export function describeStory(mode: StoryModeId, choices: StoryChoices): Story {
+  if (mode === 'states') return stateStory(choices.states);
+  if (mode === 'interactions') return interactionStories[choices.interactions];
+  if (mode === 'callbacks') return callbackStory;
+  return accessibilityStory;
+}
+
+/** Every story the chapter can show. */
+export function allStories(): Story[] {
+  return [
+    ...storyModes.States.options.map(({ value }) => stateStory(value)),
+    ...Object.values(interactionStories),
+    callbackStory,
+    accessibilityStory,
+  ];
+}
+
+export function storyLabels(story: Story) {
+  return [...story.checks, ...(story.manualChecks ?? [])];
 }
 
 export type CheckStatus = 'pending' | 'running' | 'pass' | 'fail' | 'manual';
 
 export type Check = { status: CheckStatus; detail: string };
 
-export function initialChecks(mode: StoryModeId): Check[] {
-  const notRun: Check = { status: 'pending', detail: 'Not run' };
-  if (mode !== 'accessibility') return [notRun, notRun, notRun];
-  const manual: Check = {
-    status: 'manual',
-    detail: 'Separate review required',
-  };
-  return [notRun, manual, manual];
+export function initialChecks(story: Story): Check[] {
+  return [
+    ...story.checks.map(
+      (): Check => ({ status: 'pending', detail: 'Not run' })
+    ),
+    ...(story.manualChecks ?? []).map(
+      (): Check => ({ status: 'manual', detail: 'Separate review required' })
+    ),
+  ];
 }
 
 export function result(ok: boolean, detail: string): Check {

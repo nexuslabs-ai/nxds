@@ -1,6 +1,17 @@
-/* The Frameworks chapter: design tokens -> Nexus core -> frameworks.
-   A rule that overrides a Nexus part's own utilities also selects the part's
-   data-slot, so it wins whatever order Tailwind emits the utilities in. */
+/* The Frameworks chapter: design tokens -> Nexus core -> frameworks. */
+
+/* The diagram's two tight layouts, as variants for the classes of its parts:
+   a short or narrow desktop diagram, and the stacked phone diagram. */
+@custom-variant framework-compact {
+  @container framework (min-width: 701px) and ((max-height: 752px) or (max-width: 959px)) {
+    @slot;
+  }
+}
+@custom-variant framework-narrow {
+  @container framework (max-width: 700px) {
+    @slot;
+  }
+}
 
 @utility framework-chapter {
   container: framework / size;
@@ -121,14 +132,6 @@
   min-block-size: 0;
 }
 
-@utility chip-token {
-  @container framework (min-width: 701px) and ((max-height: 752px) or (max-width: 959px)) {
-    &[data-slot='button'] {
-      padding-inline: var(--nx-spacing-2);
-    }
-  }
-}
-
 @utility chip-module {
   text-wrap: balance;
 }
@@ -214,15 +217,6 @@
 }
 
 @utility chip-destination {
-  /* Logo and name share a centered row; the status badge spans the row below. */
-  &[data-slot='toggle'] {
-    display: grid;
-    grid-template-columns: 1fr auto auto 1fr;
-    align-content: center;
-    align-items: center;
-    column-gap: var(--nx-spacing-2);
-    row-gap: var(--nx-spacing-3);
-  }
   & > svg {
     grid-column: 2;
   }
@@ -240,20 +234,7 @@
   &[data-state='on'] {
     --chip-trace-color: var(--nx-color-border-focus);
   }
-  @container framework (min-width: 701px) and ((max-height: 752px) or (max-width: 959px)) {
-    &[data-slot='toggle'] {
-      row-gap: var(--nx-spacing-2);
-      padding-block: 0;
-      padding-inline: var(--nx-spacing-2);
-    }
-  }
   @container framework (max-width: 700px) {
-    &[data-slot='toggle'] {
-      display: flex;
-      justify-content: flex-start;
-      gap: var(--nx-spacing-3);
-      padding-inline: var(--nx-spacing-4);
-    }
     & strong {
       font-size: var(--nx-typography-size-sm);
     }
@@ -263,11 +244,4 @@
 @utility chip-status {
   grid-column: 1 / -1;
   justify-self: center;
-
-  /* Phones keep each framework's name only. */
-  @container framework (max-width: 700px) {
-    &[data-slot='badge'] {
-      display: none;
-    }
-  }
 }

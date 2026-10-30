@@ -13,10 +13,19 @@ import {
   STROKE_OPTIONS,
 } from '@nxds/core';
 
+import { Button } from '@/components/button/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/select/select';
 import { cn } from '@/lib/utils';
 
 import {
   CODE_FONTS,
+  findOption,
   type FontChoice,
   fontPick,
   HEADING_FONTS,
@@ -25,14 +34,6 @@ import {
 } from '../_lib/appearance-controls';
 import { useDocsTheme } from '../_lib/docs-theme';
 
-import {
-  Button,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './nxds';
 import { ThemeActions } from './ThemeActions';
 import { ThemeExport } from './ThemeExport';
 
@@ -40,7 +41,6 @@ const { prefs: DEFAULT_PREFS } = DEFAULT_NXDS_APPEARANCE;
 
 export function ThemePicker() {
   const { state, iconLibrary, change, changeIconLibrary } = useDocsTheme();
-  // Starts closed at every width, so the open panel never covers the article.
   const [expanded, setExpanded] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
 
@@ -205,8 +205,8 @@ function PickerRow<T extends string>({
   const id = useId();
 
   function change(next: string) {
-    const option = options.find((candidate) => candidate.value === next);
-    if (option) onChange(option.value);
+    const option = findOption(options, next);
+    if (option) onChange(option);
   }
 
   return (
@@ -246,19 +246,13 @@ function FontRow({
   choices: FontChoice[];
   onChange: (family: string | null) => void;
 }) {
-  const { chosen, options } = fontPick(family, choices);
-
-  function change(value: string) {
-    const choice = options.find((option) => option.value === value);
-    if (choice) onChange(choice.family);
-  }
-
+  const font = fontPick(family, choices);
   return (
     <PickerRow
       label={label}
-      value={chosen.value}
-      options={options}
-      onChange={change}
+      value={font.value}
+      options={font.options}
+      onChange={(value) => onChange(font.familyOf(value))}
     />
   );
 }

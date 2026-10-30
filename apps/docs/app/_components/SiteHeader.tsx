@@ -9,7 +9,7 @@ import { Hide } from '@/components/hide/hide';
 import { Show } from '@/components/show/show';
 
 import { HEADER_LINKS, isActive } from '../_lib/nav-links';
-import { REPO_URL } from '../_lib/site';
+import { REPO_URL, SITE_BRAND } from '../_lib/site';
 import { GitHubMark, SiteMoonIcon, SiteSunIcon } from '../_lib/site-icons';
 import { brandLinkClassName, navLinkClassName } from '../_lib/site-links';
 
@@ -38,7 +38,7 @@ export function SiteHeader() {
       </Button>
       <div className="nx:site-column nx:flex nx:h-full nx:items-center nx:justify-between nx:gap-4">
         <Button asChild variant="link" size="sm" className={brandLinkClassName}>
-          <Link href="/" aria-label="Nexus Design System home">
+          <Link href="/" aria-label={`${SITE_BRAND} home`}>
             <img
               src="/brand/nx-icon-light.svg"
               alt=""
@@ -49,7 +49,7 @@ export function SiteHeader() {
               alt=""
               className="nx:hidden nx:size-6 nx:dark:block"
             />
-            Nexus Design System
+            {SITE_BRAND}
           </Link>
         </Button>
         <Show above="lg" as="div">

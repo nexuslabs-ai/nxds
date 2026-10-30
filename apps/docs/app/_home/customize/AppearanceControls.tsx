@@ -36,6 +36,7 @@ import { Switch } from '@/components/switch/switch';
 
 import {
   CONTRAST_RANGE,
+  findOption,
   type FontChoice,
   fontPick,
   HEADING_FONTS,
@@ -69,8 +70,8 @@ function AppearanceSelect<T extends string>({
 }) {
   const id = useId();
   function change(event: ChangeEvent<HTMLSelectElement>) {
-    const option = options.find((item) => item.value === event.target.value);
-    if (option) onChange(option.value);
+    const option = findOption(options, event.target.value);
+    if (option) onChange(option);
   }
   return (
     <div className="nx:flex nx:min-w-0 nx:flex-col nx:gap-2">
@@ -236,17 +237,13 @@ function FontSelect({
   choices: FontChoice[];
   onChange: (family: string | null) => void;
 }) {
-  const { chosen, options } = fontPick(family, choices);
-  function change(value: string) {
-    const choice = options.find((option) => option.value === value);
-    if (choice) onChange(choice.family);
-  }
+  const font = fontPick(family, choices);
   return (
     <AppearanceSelect
       label={label}
-      value={chosen.value}
-      options={options}
-      onChange={change}
+      value={font.value}
+      options={font.options}
+      onChange={(value) => onChange(font.familyOf(value))}
     />
   );
 }
@@ -307,13 +304,14 @@ function ThemePanel() {
         </FieldLabel>
         <Switch
           id={id}
+          aria-describedby={`${id}-help`}
           checked={resolvedMode === 'dark'}
           onCheckedChange={(checked) =>
             update('mode', checked ? 'dark' : 'light')
           }
         />
       </Field>
-      <FieldDescription className={descriptionClass}>
+      <FieldDescription id={`${id}-help`} className={descriptionClass}>
         Updates the whole site, not only this page.
       </FieldDescription>
       <AppearanceRange

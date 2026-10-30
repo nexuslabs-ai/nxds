@@ -60,13 +60,13 @@ type SiteIconProps = Omit<
   'children' | 'strokeWidth'
 >;
 
-function hugeicon(icon: IconSvgElement) {
+export function hugeicon(icon: IconSvgElement) {
   return function Hugeicon(props: SiteIconProps) {
     return <HugeiconsIcon icon={icon} {...props} />;
   };
 }
 
-function siteIcon(
+export function siteIcon(
   name: string,
   icons: Record<NxdsIconLibrary, ComponentType<SiteIconProps>>
 ) {

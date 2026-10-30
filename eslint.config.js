@@ -465,14 +465,14 @@ export default tseslint.config(
             {
               name: '@nxds/react/utils',
               message:
-                'A pattern page imports its examples from `@/patterns/` and its parts from `@/components/`.',
+                'Import `cn` from source, `@/lib/utils`, so the page loads one copy of it.',
             },
           ],
           patterns: [
             {
-              regex: '^@/(?!patterns/|components/)',
+              regex: '^@/(?!patterns/|components/|lib/utils$)',
               message:
-                'A pattern page imports its examples from `@/patterns/` and its parts from `@/components/`.',
+                'A pattern page imports its examples from `@/patterns/`, its parts from `@/components/` and `cn` from `@/lib/utils`.',
             },
           ],
         },

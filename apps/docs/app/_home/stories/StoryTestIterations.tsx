@@ -57,8 +57,11 @@ import {
   type CheckStatus,
   describeStory,
   initialChecks,
+  isExample,
   result,
   resultSummary,
+  type StoryChoices,
+  storyLabels,
   type StoryModeId,
   storyModes,
   type StoryTool,
@@ -104,6 +107,10 @@ function isOn(element: HTMLButtonElement) {
   return element.getAttribute('aria-checked') === 'true';
 }
 
+function onOff(element: HTMLButtonElement) {
+  return isOn(element) ? 'on' : 'off';
+}
+
 function stepDelay(reduceMotion: boolean) {
   if (reduceMotion) return 0;
   return parseFloat(
@@ -112,6 +119,9 @@ function stepDelay(reduceMotion: boolean) {
     )
   );
 }
+
+/** One step per check of a story, each run on the live switch. */
+type CheckStep = () => Check;
 
 /**
  * The Stories chapter: a live Switch, the story that tests it, and a toolbar
@@ -125,7 +135,7 @@ export function StoryTestIterations({
 }) {
   const { state } = useNxdsAppearance();
   const [tool, setTool] = useState<StoryTool>('Interactions');
-  const [choices, setChoices] = useState<Record<StoryModeId, string>>({
+  const [choices, setChoices] = useState<StoryChoices>({
     states: 'off',
     interactions: 'click',
     callbacks: 'correct',
@@ -133,7 +143,9 @@ export function StoryTestIterations({
   });
   const [checked, setChecked] = useState(false);
   const [calls, setCalls] = useState<boolean[]>([]);
-  const [checks, setChecks] = useState(() => initialChecks('interactions'));
+  const [checks, setChecks] = useState(() =>
+    initialChecks(describeStory('interactions', choices))
+  );
   const [status, setStatus] = useState('Ready to run');
   const [running, setRunning] = useState(false);
   const [activeLine, setActiveLine] = useState(-1);
@@ -141,18 +153,21 @@ export function StoryTestIterations({
   const callsRef = useRef<boolean[]>([]);
   const sequence = useRef(0);
   const programmatic = useRef(false);
-  const keyboardArmed = useRef(false);
+  const keyboardChecks = useRef<Check[] | null>(null);
+  const spacePresses = useRef(0);
   const spacePressed = useRef(false);
   const frame = useRef(0);
   const id = useId();
   const mode = storyModes[tool];
-  const choice = choices[mode.id];
-  const story = describeStory(mode.id, choice);
+  const story = describeStory(mode.id, choices);
+  const code = storyCode[story.name];
+  const labels = storyLabels(story);
   const disabled =
-    (mode.id === 'states' || mode.id === 'interactions') &&
-    choice === 'disabled';
-  const invalid = mode.id === 'states' && choice === 'invalid';
-  const nameless = mode.id === 'accessibility' && choice === 'missing';
+    (mode.id === 'states' && choices.states === 'disabled') ||
+    (mode.id === 'interactions' && choices.interactions === 'disabled');
+  const invalid = mode.id === 'states' && choices.states === 'invalid';
+  const nameless =
+    mode.id === 'accessibility' && choices.accessibility === 'missing';
 
   useEffect(
     () => () => {
@@ -162,15 +177,19 @@ export function StoryTestIterations({
     []
   );
 
-  function reset(nextMode: StoryModeId, nextChoice: string) {
-    sequence.current += 1;
-    cancelAnimationFrame(frame.current);
-    keyboardArmed.current = false;
-    spacePressed.current = false;
+  function clearCalls() {
     callsRef.current = [];
     setCalls([]);
-    setChecked(nextMode === 'states' && nextChoice === 'on');
-    setChecks(initialChecks(nextMode));
+  }
+
+  function reset(nextMode: StoryModeId, nextChoices: StoryChoices) {
+    sequence.current += 1;
+    cancelAnimationFrame(frame.current);
+    keyboardChecks.current = null;
+    spacePressed.current = false;
+    clearCalls();
+    setChecked(nextMode === 'states' && nextChoices.states === 'on');
+    setChecks(initialChecks(describeStory(nextMode, nextChoices)));
     setRunning(false);
     setActiveLine(-1);
     setStatus(
@@ -180,19 +199,22 @@ export function StoryTestIterations({
 
   function selectTool(next: StoryTool) {
     if (next === tool) return;
-    const nextMode = storyModes[next].id;
-    reset(nextMode, choices[nextMode]);
+    reset(storyModes[next].id, choices);
     setTool(next);
   }
 
   function selectChoice(value: string) {
-    reset(mode.id, value);
-    setChoices((current) => ({ ...current, [mode.id]: value }));
+    const option = mode.options.find((item) => item.value === value);
+    if (!option) return;
+    const next = { ...choices, [mode.id]: option.value };
+    reset(mode.id, next);
+    setChoices(next);
   }
 
   function onCheckedChange(value: boolean) {
     setChecked(value);
-    const implementation = mode.id === 'callbacks' ? choice : 'correct';
+    const implementation =
+      mode.id === 'callbacks' ? choices.callbacks : 'correct';
     if (implementation !== 'missing') {
       callsRef.current = [
         ...callsRef.current,
@@ -200,11 +222,11 @@ export function StoryTestIterations({
       ];
       setCalls(callsRef.current);
     }
-    if (programmatic.current || keyboardArmed.current) return;
+    if (programmatic.current || keyboardChecks.current) return;
     sequence.current += 1;
     setRunning(false);
     setActiveLine(-1);
-    setChecks(initialChecks(mode.id));
+    setChecks(initialChecks(story));
     setStatus('Example changed · run again');
   }
 
@@ -214,34 +236,42 @@ export function StoryTestIterations({
     programmatic.current = false;
   }
 
+  function reported(value: boolean): Check {
+    return result(
+      callsRef.current.includes(value),
+      `Expected a call with ${value} · received: ${JSON.stringify(callsRef.current)}`
+    );
+  }
+
   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
     spacePressed.current = event.key === ' ';
   }
 
+  // Each Space press runs the next two checks: the new state, then its call.
   function onKeyUp(event: KeyboardEvent<HTMLButtonElement>) {
-    if (!keyboardArmed.current || !spacePressed.current || event.key !== ' ')
+    if (!keyboardChecks.current || !spacePressed.current || event.key !== ' ')
       return;
     const run = sequence.current;
     frame.current = requestAnimationFrame(() => {
       const element = example.current;
-      if (run !== sequence.current || !element) return;
-      const next = [
-        result(
-          document.activeElement === element,
-          'Expected focus on the switch'
-        ),
-        result(
-          isOn(element),
-          `Expected: on · received: ${isOn(element) ? 'on' : 'off'}`
-        ),
-        result(
-          callsRef.current.length === 1 && callsRef.current[0] === true,
-          `Expected: true once · received: ${JSON.stringify(callsRef.current)}`
-        ),
-      ];
-      keyboardArmed.current = false;
+      const next = keyboardChecks.current;
+      if (run !== sequence.current || !element || !next) return;
+      const first = spacePresses.current === 0;
+      const at = first ? 1 : 3;
+      next[at] = result(
+        isOn(element) === first,
+        `After Space: ${onOff(element)}`
+      );
+      next[at + 1] = reported(first);
+      spacePresses.current += 1;
       spacePressed.current = false;
-      setChecks(next);
+      setChecks([...next]);
+      if (first) {
+        setActiveLine(code?.lines[3] ?? -1);
+        setStatus('Press Space again');
+        return;
+      }
+      keyboardChecks.current = null;
       setStatus(resultSummary(next));
       setActiveLine(-1);
     });
@@ -249,133 +279,158 @@ export function StoryTestIterations({
 
   function cancelKeyboard() {
     spacePressed.current = false;
-    if (!keyboardArmed.current) return;
-    keyboardArmed.current = false;
+    if (!keyboardChecks.current) return;
+    keyboardChecks.current = null;
     sequence.current += 1;
-    setChecks(initialChecks('interactions'));
+    setChecks(initialChecks(story));
     setActiveLine(-1);
     setStatus('Keyboard check paused · focus the example again');
   }
 
-  // One step per check of the current story, each run on the live switch.
-  function checkSteps(element: HTMLButtonElement): (() => Check)[] {
-    if (mode.id === 'callbacks')
-      return [
-        () => {
-          clickExample(element);
-          return result(
-            isOn(element),
-            `Expected: on · received: ${isOn(element) ? 'on' : 'off'}`
-          );
-        },
-        () =>
-          result(
-            callsRef.current.length === 1,
-            `Expected: 1 call · received: ${callsRef.current.length}`
-          ),
-        () =>
-          result(
-            callsRef.current.at(-1) === true,
-            `Expected: true · received: ${callsRef.current.length ? String(callsRef.current.at(-1)) : 'nothing'}`
-          ),
-      ];
-    if (mode.id === 'accessibility')
-      return [
-        () => {
-          const name = Array.from(element.labels, (label) =>
-            label.textContent.trim()
-          ).join(' ');
-          return result(
-            name === 'Email notifications',
-            name || 'No associated accessible name'
-          );
-        },
-      ];
-    if (mode.id === 'states')
-      return [
-        () =>
-          result(
-            isOn(element) === (choice === 'on'),
-            `Expected: ${choice === 'on' ? 'on' : 'off'} · received: ${isOn(element) ? 'on' : 'off'}`
-          ),
-        () => {
-          const was = isOn(element);
-          clickExample(element);
-          const changed = isOn(element) !== was;
-          const ok = choice === 'disabled' ? !changed : changed;
-          flushSync(() => setChecked(was));
-          return result(ok, changed ? 'Click accepted' : 'Click ignored');
-        },
-        () =>
-          result(
-            (element.getAttribute('aria-invalid') === 'true') ===
-              (choice === 'invalid'),
-            choice === 'invalid'
-              ? 'Invalid state · error linked below'
-              : 'No error state'
-          ),
-      ];
-    if (choice === 'disabled')
-      return [
-        () => result(element.disabled, 'Expected disabled control'),
-        () => {
-          clickExample(element);
-          return result(
-            !isOn(element),
-            `After click: ${isOn(element) ? 'on' : 'off'}`
-          );
-        },
-        () =>
-          result(
-            callsRef.current.length === 0,
-            `Expected: 0 calls · received: ${callsRef.current.length}`
-          ),
-      ];
+  function stateSteps(element: HTMLButtonElement): CheckStep[] {
+    const choice = choices.states;
+    return [
+      () =>
+        result(
+          isOn(element) === (choice === 'on'),
+          `Expected: ${choice === 'on' ? 'on' : 'off'} · received: ${onOff(element)}`
+        ),
+      () => {
+        const was = isOn(element);
+        clickExample(element);
+        const changed = isOn(element) !== was;
+        const ok = choice === 'disabled' ? !changed : changed;
+        // The click only probes the state: restore it and its callback.
+        flushSync(() => {
+          setChecked(was);
+          clearCalls();
+        });
+        return result(ok, changed ? 'Click accepted' : 'Click ignored');
+      },
+      () =>
+        result(
+          (element.getAttribute('aria-invalid') === 'true') ===
+            (choice === 'invalid'),
+          choice === 'invalid'
+            ? 'Invalid state · error linked below'
+            : 'No error state'
+        ),
+    ];
+  }
+
+  function clickSteps(element: HTMLButtonElement): CheckStep[] {
     return [
       () => result(!isOn(element), 'Expected initial state: off'),
       () => {
         clickExample(element);
-        return result(
-          isOn(element),
-          `After first click: ${isOn(element) ? 'on' : 'off'}`
-        );
+        return result(isOn(element), `After first click: ${onOff(element)}`);
       },
+      () => reported(true),
+      () => {
+        clickExample(element);
+        return result(!isOn(element), `After second click: ${onOff(element)}`);
+      },
+      () => reported(false),
+    ];
+  }
+
+  function disabledSteps(element: HTMLButtonElement): CheckStep[] {
+    return [
+      () => result(element.disabled, 'Expected disabled control'),
+      () => {
+        clickExample(element);
+        return result(!isOn(element), `After click: ${onOff(element)}`);
+      },
+      () =>
+        result(
+          callsRef.current.length === 0,
+          `Expected: 0 calls · received: ${callsRef.current.length}`
+        ),
+    ];
+  }
+
+  function interactionSteps(element: HTMLButtonElement): CheckStep[] {
+    if (choices.interactions === 'disabled') return disabledSteps(element);
+    return clickSteps(element);
+  }
+
+  function callbackSteps(element: HTMLButtonElement): CheckStep[] {
+    return [
       () => {
         clickExample(element);
         return result(
-          !isOn(element),
-          `After second click: ${isOn(element) ? 'on' : 'off'}`
+          isOn(element),
+          `Expected: on · received: ${onOff(element)}`
+        );
+      },
+      () =>
+        result(
+          callsRef.current.length === 1,
+          `Expected: 1 call · received: ${callsRef.current.length}`
+        ),
+      () =>
+        result(
+          callsRef.current.at(-1) === true,
+          `Expected: true · received: ${callsRef.current.length ? String(callsRef.current.at(-1)) : 'nothing'}`
+        ),
+    ];
+  }
+
+  function nameSteps(element: HTMLButtonElement): CheckStep[] {
+    return [
+      () => {
+        const name = Array.from(element.labels, (label) =>
+          label.textContent.trim()
+        ).join(' ');
+        return result(
+          name === 'Email notifications',
+          name || 'No associated accessible name'
         );
       },
     ];
   }
 
+  const checkSteps: Record<
+    StoryModeId,
+    (element: HTMLButtonElement) => CheckStep[]
+  > = {
+    states: stateSteps,
+    interactions: interactionSteps,
+    callbacks: callbackSteps,
+    accessibility: nameSteps,
+  };
+
+  function armKeyboard(element: HTMLButtonElement) {
+    element.focus({ preventScroll: true });
+    const next = initialChecks(story);
+    next[0] = result(
+      document.activeElement === element,
+      'Switch focused · press Space'
+    );
+    keyboardChecks.current = next;
+    spacePresses.current = 0;
+    setChecks([...next]);
+    setActiveLine(code?.lines[1] ?? -1);
+    setStatus('Press Space to test the switch');
+  }
+
   async function runExample() {
-    flushSync(() => reset(mode.id, choice));
+    flushSync(() => reset(mode.id, choices));
     const element = example.current;
     if (!element) return;
-    const run = sequence.current;
-    const next = initialChecks(mode.id);
-    if (mode.id === 'interactions' && choice === 'keyboard') {
-      element.focus({ preventScroll: true });
-      keyboardArmed.current = true;
-      next[0] = result(
-        document.activeElement === element,
-        'Switch focused · press Space'
-      );
-      setChecks(next);
-      setActiveLine(story.lines[0] ?? -1);
-      setStatus('Press Space to test the switch');
+    if (mode.id === 'interactions' && choices.interactions === 'keyboard') {
+      armKeyboard(element);
       return;
     }
+    const run = sequence.current;
+    const next = initialChecks(story);
     setRunning(true);
     setStatus('Running local checks…');
-    const steps = checkSteps(element);
-    for (const [index, step] of steps.entries()) {
+    for (const [index, step] of checkSteps[mode.id](element).entries()) {
       if (run !== sequence.current) return;
       next[index] = { status: 'running', detail: 'Checking…' };
       setChecks([...next]);
-      setActiveLine(story.lines[index] ?? -1);
+      setActiveLine(code?.lines[index] ?? -1);
       await new Promise((resolve) =>
         setTimeout(resolve, stepDelay(state.prefs.reduceMotion))
       );
@@ -390,7 +445,7 @@ export function StoryTestIterations({
   }
 
   function lineStatus(line: number) {
-    const check = checks[story.lines.indexOf(line)];
+    const check = checks[code?.lines.indexOf(line) ?? -1];
     return check && lineStatuses[check.status];
   }
 
@@ -414,7 +469,7 @@ export function StoryTestIterations({
         <NativeSelect
           id={`${id}-choice`}
           size="sm"
-          value={choice}
+          value={choices[mode.id]}
           onChange={(event) => selectChoice(event.target.value)}
         >
           {mode.options.map((option) => (
@@ -526,12 +581,12 @@ export function StoryTestIterations({
               {checks.map((check, index) => {
                 const { label, ...badge } = checkBadges[check.status];
                 return (
-                  <Item key={story.labels[index]} role="listitem" size="sm">
+                  <Item key={labels[index]} role="listitem" size="sm">
                     <ItemMedia>
                       <CheckIcon status={check.status} />
                     </ItemMedia>
                     <ItemContent>
-                      <ItemTitle>{story.labels[index]}</ItemTitle>
+                      <ItemTitle>{labels[index]}</ItemTitle>
                       {detailed.includes(check.status) && (
                         <ItemDescription>{check.detail}</ItemDescription>
                       )}
@@ -550,7 +605,9 @@ export function StoryTestIterations({
             role="group"
           >
             <CardHeader className="nx:items-center nx:py-4">
-              <CardTitle>Switch.stories.tsx</CardTitle>
+              <CardTitle>
+                {isExample(story) ? 'Example story' : 'Switch.stories.tsx'}
+              </CardTitle>
               <CardAction className="nx:row-span-1 nx:self-center">
                 <code className="nx:typography-code-inline nx:text-muted-foreground">
                   {story.name}
@@ -560,7 +617,7 @@ export function StoryTestIterations({
             <Separator />
             <CodeBlock variant="flush" className="nx:min-h-0 nx:flex-1">
               <CodeBlockContent className="nx:h-full">
-                {storyCode[story.name]?.map((tokens, index) => (
+                {code?.tokens.map((tokens, index) => (
                   <CodeBlockLine
                     key={index}
                     number={index + 1}

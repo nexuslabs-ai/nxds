@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 
 import type { ManifestSection } from '../_lib/manifest';
 import { isActive, NAV_LINKS } from '../_lib/nav-links';
-import { REPO_URL } from '../_lib/site';
+import { REPO_URL, SITE_BRAND } from '../_lib/site';
 import { GitHubMark, SiteMenuIcon } from '../_lib/site-icons';
 
 import { SectionPageList } from './SectionPageList';
@@ -65,7 +65,7 @@ export function SiteMenu() {
         onOpenAutoFocus={focusCurrentPage}
       >
         <SheetHeader>
-          <SheetTitle>Nexus Design System</SheetTitle>
+          <SheetTitle>{SITE_BRAND}</SheetTitle>
         </SheetHeader>
         <SheetBody className="nx:pb-6">
           <nav aria-label="Main navigation">
@@ -88,7 +88,7 @@ export function SiteMenu() {
                       href={link.href}
                       onClick={close}
                       aria-current={
-                        isActive(pathname, link.href) ? 'true' : undefined
+                        isActive(pathname, link.href) ? 'page' : undefined
                       }
                       className={ROW_BASE}
                     >

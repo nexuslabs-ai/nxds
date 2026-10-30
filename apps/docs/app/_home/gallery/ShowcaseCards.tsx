@@ -5,8 +5,10 @@ import {
   type FormEvent,
   type ReactNode,
   useId,
+  useRef,
   useState,
 } from 'react';
+import { flushSync } from 'react-dom';
 
 import { Bar, BarChart, XAxis } from 'recharts';
 
@@ -314,10 +316,22 @@ export function TeamCard() {
   const id = useId();
   const [inviting, setInviting] = useState(false);
   const [invited, setInvited] = useState('');
+  const emailRef = useRef<HTMLInputElement>(null);
+  const inviteRef = useRef<HTMLButtonElement>(null);
+  // Opening and closing the form unmounts the focused button, so focus moves
+  // to the control that replaces it.
+  function openForm() {
+    flushSync(() => setInviting(true));
+    emailRef.current?.focus();
+  }
+  function closeForm() {
+    flushSync(() => setInviting(false));
+    inviteRef.current?.focus();
+  }
   function invite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setInvited(String(new FormData(event.currentTarget).get('email')));
-    setInviting(false);
+    closeForm();
   }
   return (
     <ShowcaseCard title="Team access">
@@ -340,6 +354,7 @@ export function TeamCard() {
             <Field>
               <FieldLabel htmlFor={id}>Email address</FieldLabel>
               <Input
+                ref={emailRef}
                 id={id}
                 name="email"
                 type="email"
@@ -351,17 +366,13 @@ export function TeamCard() {
               <Button size="sm" type="submit">
                 Add to team
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setInviting(false)}
-              >
+              <Button size="sm" variant="ghost" onClick={closeForm}>
                 Cancel
               </Button>
             </div>
           </form>
         ) : (
-          <Button variant="outline" onClick={() => setInviting(true)}>
+          <Button ref={inviteRef} variant="outline" onClick={openForm}>
             <IconPlus aria-hidden="true" />
             Invite a teammate
           </Button>
@@ -583,6 +594,11 @@ type Mail = (typeof mail)[number];
 export function InboxCard() {
   const [selected, setSelected] = useState<Mail>(mail[0]);
   const [query, setQuery] = useState('');
+  const matches = mail.filter((message) =>
+    `${message.name} ${message.title}`
+      .toLowerCase()
+      .includes(query.toLowerCase())
+  );
   return (
     <ShowcaseCard title="Inbox">
       <Input
@@ -592,36 +608,32 @@ export function InboxCard() {
         onChange={(event) => setQuery(event.target.value)}
       />
       <ItemGroup className="nx:my-5 nx:gap-2">
-        {mail.map(
-          (message) =>
-            (!query ||
-              `${message.name} ${message.title}`
-                .toLowerCase()
-                .includes(query.toLowerCase())) && (
-              <Item
-                asChild
-                size="sm"
-                variant={selected === message ? 'outline' : 'default'}
-                key={message.title}
-                onClick={() => setSelected(message)}
-                aria-pressed={selected === message}
-              >
-                <button
-                  type="button"
-                  className="nx:text-start nx:cursor-pointer"
-                >
-                  <ItemContent>
-                    <ItemTitle>{message.name}</ItemTitle>
-                    <ItemDescription>{message.title}</ItemDescription>
-                  </ItemContent>
-                  <ItemActions>
-                    <span className="nx:typography-label-small nx:text-muted-foreground">
-                      {message.time}
-                    </span>
-                  </ItemActions>
-                </button>
-              </Item>
-            )
+        {matches.map((message) => (
+          <Item
+            asChild
+            size="sm"
+            variant={selected === message ? 'outline' : 'default'}
+            key={message.title}
+            onClick={() => setSelected(message)}
+            aria-pressed={selected === message}
+          >
+            <button type="button" className="nx:text-start nx:cursor-pointer">
+              <ItemContent>
+                <ItemTitle>{message.name}</ItemTitle>
+                <ItemDescription>{message.title}</ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <span className="nx:typography-label-small nx:text-muted-foreground">
+                  {message.time}
+                </span>
+              </ItemActions>
+            </button>
+          </Item>
+        ))}
+        {matches.length === 0 && (
+          <p className={statusClassName} role="status">
+            No conversations match “{query}”.
+          </p>
         )}
       </ItemGroup>
       <Separator className="nx:my-6" />

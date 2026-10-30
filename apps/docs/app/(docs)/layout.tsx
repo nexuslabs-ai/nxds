@@ -10,7 +10,9 @@ export default function DocsLayout({
   return (
     <>
       <SiteHeader />
-      <main id="main">{children}</main>
+      <main id="main" className="nx:[&_[id]]:scroll-mt-6">
+        {children}
+      </main>
       <ThemePicker />
       <SiteFooter className="nx:mt-16 nx:pb-(--docs-panel-offset)" />
     </>

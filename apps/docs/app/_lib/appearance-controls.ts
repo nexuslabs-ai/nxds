@@ -67,12 +67,28 @@ export const CODE_FONTS: FontChoice[] = [
 ];
 
 /**
- * The choice a font picker shows for `family`, and the choices it offers. A
- * stack set some other way shows as Custom.
+ * The option of `options` a select picked, narrowed from the select's string
+ * value. Every appearance editor reads its selects through this.
+ */
+export function findOption<T extends string>(
+  options: readonly { value: T }[],
+  value: string
+): T | undefined {
+  return options.find((option) => option.value === value)?.value;
+}
+
+/**
+ * A font picker for `family`: the value it shows, the choices it offers, and
+ * the family a picked value names. A stack set some other way shows as Custom.
  */
 export function fontPick(family: string | null, choices: FontChoice[]) {
   const chosen = choices.find((choice) => choice.family === family);
-  if (chosen) return { chosen, options: choices };
   const custom = { value: 'custom', label: 'Custom', family };
-  return { chosen: custom, options: [...choices, custom] };
+  const options = chosen ? choices : [...choices, custom];
+  return {
+    value: (chosen ?? custom).value,
+    options,
+    familyOf: (value: string) =>
+      options.find((option) => option.value === value)?.family ?? family,
+  };
 }

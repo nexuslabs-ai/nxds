@@ -4,14 +4,18 @@ import { type SyntheticEvent, useState } from 'react';
 
 import {
   IconBorderAll,
+  IconBorderRadius,
   IconBrandAngular,
   IconBrandReact,
   IconBrandReactNative,
   IconBrandSvelte,
   IconBrandVue,
   IconBrightness,
+  IconColorSwatch,
   IconShadow,
+  IconSpacingHorizontal,
   IconStack2,
+  IconTypography,
   IconWaveSine,
 } from '@tabler/icons-react';
 
@@ -19,14 +23,12 @@ import { Badge } from '@/components/badge/badge';
 import { Button } from '@/components/button/button';
 import { Toggle } from '@/components/toggle/toggle';
 
-import { toolIcons } from '../tool-icons';
-
 const inputGroups = [
   {
     name: 'Theme inputs',
     lane: 'theme',
     items: [
-      { name: 'Brand color', Icon: toolIcons.Colors },
+      { name: 'Brand color', Icon: IconColorSwatch },
       { name: 'Surfaces', Icon: IconStack2 },
       { name: 'Contrast', Icon: IconBrightness },
     ],
@@ -35,9 +37,9 @@ const inputGroups = [
     name: 'Appearance inputs',
     lane: 'appearance',
     items: [
-      { name: 'Typography', Icon: toolIcons.Typography },
-      { name: 'Spacing', Icon: toolIcons.Spacing },
-      { name: 'Radius', Icon: toolIcons.Radius },
+      { name: 'Typography', Icon: IconTypography },
+      { name: 'Spacing', Icon: IconSpacingHorizontal },
+      { name: 'Radius', Icon: IconBorderRadius },
       { name: 'Borders', Icon: IconBorderAll },
       { name: 'Shadows', Icon: IconShadow },
       { name: 'Motion', Icon: IconWaveSine },
@@ -61,7 +63,7 @@ const modules = [
 ];
 
 /** The frameworks the diagram ends in, in order. */
-export const frameworks = [
+const frameworks = [
   'React',
   'Vue',
   'Svelte',
@@ -69,7 +71,7 @@ export const frameworks = [
   'React Native',
 ] as const;
 
-export type Framework = (typeof frameworks)[number];
+type Framework = (typeof frameworks)[number];
 
 const frameworkIcons = {
   React: IconBrandReact,
@@ -93,6 +95,11 @@ const nodeClassName =
 
 const tileClassName = `${nodeClassName} nx:bg-control-background`;
 
+// Logo and name share a centered row; the status badge spans the row below.
+// Phones stack the frameworks as one row each.
+const destinationClassName =
+  'nx:grid nx:grid-cols-[1fr_auto_auto_1fr] nx:content-center nx:gap-x-2 nx:gap-y-3 nx:rounded-xl nx:bg-muted nx:data-[flowing=true]:bg-control-background nx:[&_svg]:size-(--chip-icon-size) nx:framework-compact:gap-y-2 nx:framework-compact:px-2 nx:framework-compact:py-0 nx:framework-narrow:flex nx:framework-narrow:justify-start nx:framework-narrow:gap-3 nx:framework-narrow:px-4';
+
 function FlowTrace({
   kind,
   active,
@@ -115,20 +122,13 @@ function FlowTrace({
 /**
  * The Frameworks chapter: the design tokens feed the Nexus core, and the
  * shared theme reaches every framework. Hovering or focusing a node traces
- * its flow.
+ * its flow; pressing a framework keeps its flow traced.
  */
-export function CoreChipChapter({
-  framework,
-  onSelect,
-}: {
-  /** The pressed framework. */
-  framework: Framework;
-  /** Presses this framework. */
-  onSelect: (framework: Framework) => void;
-}) {
+export function CoreChipChapter() {
   const [hovered, setHovered] = useState<string | null>(null);
   const [focused, setFocused] = useState<string | null>(null);
-  const active = hovered ?? focused;
+  const [pinned, setPinned] = useState<Framework | null>(null);
+  const active = hovered ?? focused ?? pinned;
   const activeGroup = inputGroups.find(({ items }) =>
     items.some(({ name }) => name === active)
   );
@@ -194,7 +194,7 @@ export function CoreChipChapter({
                   return (
                     <Button
                       variant="secondary"
-                      className={`nx:chip-token ${tileClassName} nx:[&_svg]:size-(--chip-icon-size)`}
+                      className={`${tileClassName} nx:framework-compact:px-2 nx:[&_svg]:size-(--chip-icon-size)`}
                       data-flow-node={name}
                       data-flowing={flowing}
                       key={name}
@@ -250,9 +250,9 @@ export function CoreChipChapter({
                 Boolean(active) && (!activeFramework || active === name);
               return (
                 <Toggle
-                  className={`nx:chip-destination ${nodeClassName} nx:rounded-xl nx:bg-muted nx:data-[flowing=true]:bg-control-background nx:[&_svg]:size-(--chip-icon-size)`}
-                  pressed={name === framework}
-                  onPressedChange={() => onSelect(name)}
+                  className={`nx:chip-destination ${nodeClassName} ${destinationClassName}`}
+                  pressed={name === pinned}
+                  onPressedChange={(on) => setPinned(on ? name : null)}
                   aria-label={`${name}, ${status}`}
                   data-planned={status === 'Planned' || undefined}
                   data-flow-node={name}
@@ -262,7 +262,10 @@ export function CoreChipChapter({
                 >
                   <Icon stroke={1.5} aria-hidden="true" />
                   <strong className="nx:font-medium">{name}</strong>
-                  <Badge variant="secondary" className="nx:chip-status">
+                  <Badge
+                    variant="secondary"
+                    className="nx:chip-status nx:framework-narrow:hidden"
+                  >
                     {status}
                   </Badge>
                   <FlowTrace kind="output" active={flowing} />

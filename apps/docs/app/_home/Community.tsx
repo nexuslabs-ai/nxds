@@ -1,8 +1,7 @@
 import { Button } from '@/components/button/button';
 
-import { REPO_URL } from '../_lib/site';
+import { DISCORD_URL, REPO_URL, X_URL } from '../_lib/site';
 import { DiscordMark, GitHubMark, XMark } from '../_lib/site-icons';
-import { DISCORD_URL, X_URL } from '../_lib/site-links';
 
 import type { HomeSection } from './ChapterSection';
 

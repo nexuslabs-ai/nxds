@@ -1,11 +1,10 @@
 'use client';
 
-import { IconArrowsShuffle, IconRestore } from '@tabler/icons-react';
-
 import { Show } from '@/components/show/show';
 import { ToolbarButton } from '@/components/toolbar/toolbar';
 
 import { useDocsTheme } from '../../_lib/docs-theme';
+import { ResetActionIcon, ShuffleActionIcon } from '../tool-icons';
 
 const actionClass =
   'nx:typography-label-default nx:sm:w-auto nx:sm:gap-2 nx:sm:px-2.5';
@@ -24,7 +23,7 @@ export function AppearanceActions() {
         className={actionClass}
         onClick={shuffle}
       >
-        <IconArrowsShuffle aria-hidden="true" />
+        <ShuffleActionIcon aria-hidden="true" />
         <Show above="sm">Shuffle</Show>
       </ToolbarButton>
       <ToolbarButton
@@ -33,7 +32,7 @@ export function AppearanceActions() {
         className={actionClass}
         onClick={reset}
       >
-        <IconRestore aria-hidden="true" />
+        <ResetActionIcon aria-hidden="true" />
         <Show above="sm">Reset</Show>
       </ToolbarButton>
     </>

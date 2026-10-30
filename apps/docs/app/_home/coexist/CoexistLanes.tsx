@@ -2,15 +2,15 @@
 
 import { type ReactNode, useState } from 'react';
 
+import { Badge } from '@/components/badge/badge';
+import { Toggle } from '@/components/toggle/toggle';
+import { cn } from '@/lib/utils';
+
 import {
   IconAlertTriangle,
   IconChevronDown,
   IconCircleCheck,
-} from '@tabler/icons-react';
-
-import { Badge } from '@/components/badge/badge';
-import { Toggle } from '@/components/toggle/toggle';
-
+} from '../../_lib/switchable-icons';
 import { toolIcons, type ToolName } from '../tool-icons';
 
 /**
@@ -43,6 +43,18 @@ type Lane = Library & {
   verdictIcon: ReactNode;
   /** The kind of conflict, when the library changes your app. */
   clash?: string;
+};
+
+// A name chip keeps its lane's colours at rest, on hover and when pressed.
+// The pointed name is outlined in its text colour.
+const chipClassName =
+  'nx:h-auto nx:px-2 nx:py-1 nx:whitespace-normal nx:border-default nx:outline-offset-2 nx:typography-code-inline nx:not-focus-visible:data-active:outline-thick nx:not-focus-visible:data-active:outline-current';
+
+const laneChipClassName: Record<LaneName, string> = {
+  other:
+    'nx:border-error-border nx:bg-error-subtle nx:text-error-subtle-foreground nx:hover:bg-error-subtle nx:hover:text-error-subtle-foreground nx:data-[state=on]:bg-error-subtle nx:data-[state=on]:text-error-subtle-foreground nx:data-[state=on]:hover:bg-error-subtle',
+  nexus:
+    'nx:border-success-border nx:bg-success-subtle nx:text-success-subtle-foreground nx:hover:bg-success-subtle nx:hover:text-success-subtle-foreground nx:data-[state=on]:bg-success-subtle nx:data-[state=on]:text-success-subtle-foreground nx:data-[state=on]:hover:bg-success-subtle',
 };
 
 /** The name the visitor points at. */
@@ -216,8 +228,16 @@ type HostExample = {
   writes: readonly Write[];
   /** The app reads `.dark` on `<html>`, so it follows the mode Nexus sets. */
   readsDark: boolean;
-  Sketch: typeof TokensSketch;
 };
+
+/** The sketch of each host app, which shows the parts its names reach. */
+const sketches = {
+  'shadcn/ui': PrimarySketch,
+  MUI: ResetSketch,
+  'Ant Design': ResetSketch,
+  Bootstrap: NavSketch,
+  HeroUI: TokensSketch,
+} satisfies Record<HostTab, unknown>;
 
 // One example per host app.
 const hosts: Record<HostTab, HostExample> = {
@@ -232,7 +252,6 @@ const hosts: Record<HostTab, HostExample> = {
       ['button { border-radius: 0 }', 'action'],
     ],
     readsDark: true,
-    Sketch: PrimarySketch,
   },
   MUI: {
     clash: 'Global reset',
@@ -242,7 +261,6 @@ const hosts: Record<HostTab, HostExample> = {
       ['ul { list-style: none }', 'list'],
     ],
     readsDark: false,
-    Sketch: ResetSketch,
   },
   'Ant Design': {
     clash: 'Global reset',
@@ -252,14 +270,12 @@ const hosts: Record<HostTab, HostExample> = {
       ['ul { list-style: none }', 'list'],
     ],
     readsDark: false,
-    Sketch: ResetSketch,
   },
   Bootstrap: {
     clash: 'Class name clash',
     adds: shadcnSelect,
     writes: [['.collapse { visibility: collapse }', 'nav']],
     readsDark: false,
-    Sketch: NavSketch,
   },
   HeroUI: {
     clash: 'Token name clash',
@@ -271,7 +287,6 @@ const hosts: Record<HostTab, HostExample> = {
       ['--radius', 'surface'],
     ],
     readsDark: true,
-    Sketch: TokensSketch,
   },
 };
 
@@ -305,7 +320,7 @@ function HostLanes({ tab, example }: { tab: HostTab; example: HostExample }) {
   const [hovered, setHovered] = useState<Target | null>(null);
   const [pinned, setPinned] = useState<Target | null>(null);
   const pointed = hovered ?? pinned;
-  const { Sketch } = example;
+  const Sketch = sketches[tab];
   const HostIcon = toolIcons[tab];
   const lanes: readonly Lane[] = [
     {
@@ -358,7 +373,7 @@ function HostLanes({ tab, example }: { tab: HostTab; example: HostExample }) {
                         <Toggle
                           key={written}
                           size="sm"
-                          className="nx:coexist-lanes-chip nx:h-auto nx:whitespace-normal nx:typography-code-inline"
+                          className={cn(chipClassName, laneChipClassName[lane])}
                           pressed={pinned?.written === written}
                           onPressedChange={(on) =>
                             setPinned(on ? target : null)

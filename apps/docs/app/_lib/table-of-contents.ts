@@ -52,12 +52,12 @@ export function getActiveHeadingId(entries: TocEntry[]): string | null {
   const maxScroll = root.scrollHeight - window.innerHeight;
   if (maxScroll > 2 && window.scrollY >= maxScroll - 2) return last.id;
 
-  // scroll-padding-top is where an anchor jump lands, so a clicked entry stays
-  // active; 1px of tolerance because that jump ends on a fractional pixel.
-  const offset = getScrollOffset();
+  // A clicked entry lands at its scroll offset, so it stays active; 1px of
+  // tolerance because that jump ends on a fractional pixel.
   const active = entries.findLast((entry) => {
-    const top = document.getElementById(entry.id)?.getBoundingClientRect().top;
-    return top !== undefined && top - offset <= 1;
+    const heading = document.getElementById(entry.id);
+    if (!heading) return false;
+    return heading.getBoundingClientRect().top - getScrollOffset(heading) <= 1;
   });
 
   return active?.id ?? first.id;
