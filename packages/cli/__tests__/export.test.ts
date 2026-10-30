@@ -115,6 +115,8 @@ const PROJECT: Record<string, string> = {
 const ROOT: Record<string, string> = {
   'coverage.md': '# Canvas prop coverage\n',
   'SETUP.md': `# Set up nxds ${VERSION} on a Claude Design canvas\n`,
+  'nxds-sampler.dc.html':
+    '<!doctype html>\n<html lang="en">\n<head>\n<title>nxds sampler</title>\n</head>\n</html>\n',
 };
 
 /** The files of a small system in the @nxds/claude-design package layout. */
@@ -263,7 +265,7 @@ describe('nxds-cli export claude-design', () => {
     ).toBe(true);
   });
 
-  it('writes the setup guide beside project/ and ends by pointing at it', async () => {
+  it('writes the setup guide and the sampler beside project/ and ends by pointing at the guide', async () => {
     const { source, cwd } = setup();
     const { exitCode, stdout } = await cli(
       ['export', 'claude-design', '--source', source],
@@ -272,6 +274,9 @@ describe('nxds-cli export claude-design', () => {
 
     expect(exitCode).toBe(EXIT_CODES.ok);
     expect(readOut(cwd, 'SETUP.md')).toBe(PACKAGE_FILES['SETUP.md']);
+    expect(readOut(cwd, 'nxds-sampler.dc.html')).toBe(
+      PACKAGE_FILES['nxds-sampler.dc.html']
+    );
     expect(
       existsSync(path.join(cwd, 'nxds-design-system', 'project', 'SETUP.md'))
     ).toBe(false);
@@ -294,6 +299,7 @@ describe('nxds-cli export claude-design', () => {
     expect(json.body.data.root).toEqual([
       path.join(cwd, 'design', 'nxds', 'coverage.md'),
       path.join(cwd, 'design', 'nxds', 'SETUP.md'),
+      path.join(cwd, 'design', 'nxds', 'nxds-sampler.dc.html'),
     ]);
   });
 
@@ -361,6 +367,7 @@ describe('nxds-cli export claude-design', () => {
     expect(readdirSync(path.join(cwd, 'nxds-design-system'))).toEqual([
       'coverage.md',
       'notes.md',
+      'nxds-sampler.dc.html',
       'project',
     ]);
   });

@@ -270,7 +270,7 @@ function readProject(root: string) {
 }
 
 /** The files a release ships beside project/, which the export copies when it has them. */
-const ROOT_FILES = ['coverage.md', 'SETUP.md'];
+const ROOT_FILES = ['coverage.md', 'SETUP.md', 'nxds-sampler.dc.html'];
 
 function readRootFiles(root: string) {
   const files = new Map<string, Buffer>();
