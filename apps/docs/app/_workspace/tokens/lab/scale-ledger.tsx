@@ -84,20 +84,17 @@ function isSigned({ family, group }: ScaleToken): boolean {
   return family === 'typography' && group === 'letterspacing';
 }
 
-/** The UI scale factor is a fraction, which `z-index` rejects. */
-function isFraction({ family }: ScaleToken): boolean {
-  return family === 'ui-scale';
-}
-
-/** The icon stroke ratio is a number, and it need not be a whole one. */
-function isStrokeRatio({ family, type }: ScaleToken): boolean {
-  return family === 'icon' && type === 'number';
+/**
+ * The UI scale factor and the icon stroke ratio are fractions, which
+ * `z-index` rejects.
+ */
+function isFraction({ family, type }: ScaleToken): boolean {
+  return family === 'ui-scale' || (family === 'icon' && type === 'number');
 }
 
 function validationProperty(token: ScaleToken): string {
   if (token.type === 'dimension' && isSigned(token)) return 'outline-offset';
   if (isFraction(token)) return 'flex-grow';
-  if (isStrokeRatio(token)) return 'stroke-width';
   const property = VALIDATION_PROPERTIES[token.type];
   if (property === undefined) {
     throw new Error(

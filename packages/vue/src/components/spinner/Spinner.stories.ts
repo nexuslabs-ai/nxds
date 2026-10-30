@@ -37,7 +37,7 @@ export const Sizes: Story = {
     docs: {
       description: {
         story:
-          'Size the spinner with `nx:size-*`. A glyph utility, such as `nx:size-icon-glyph-lg`, also sets its line. For another size, set `--nx-icon-size` to the same size, so its line grows with it. Tint it with `nx:text-*`.',
+          'Size the spinner with a `size-icon` class, such as `nx:size-icon-glyph-lg` or `nx:size-icon-[calc(var(--nx-icon-glyph-default)*2)]`, so its line grows with it. Tint it with `nx:text-*`.',
       },
     },
   },
@@ -45,9 +45,9 @@ export const Sizes: Story = {
     components: { Spinner },
     template: `
       <div class="nx:flex nx:items-center nx:gap-4 nx:text-foreground">
-        <Spinner class="nx:size-4" />
+        <Spinner />
         <Spinner class="nx:size-icon-glyph-lg" />
-        <Spinner class="nx:size-[calc(var(--nx-icon-glyph-default)*2)] nx:[--nx-icon-size:calc(var(--nx-icon-glyph-default)*2)] nx:text-primary-subtle-foreground" />
+        <Spinner class="nx:size-icon-[calc(var(--nx-icon-glyph-default)*2)] nx:text-primary-subtle-foreground" />
       </div>
     `,
   }),
@@ -66,7 +66,7 @@ export const WithText: Story = {
     components: { Spinner },
     template: `
       <div class="nx:flex nx:items-center nx:gap-2 nx:typography-body-default nx:text-muted-foreground">
-        <Spinner class="nx:size-4" />
+        <Spinner />
         Loading results…
       </div>
     `,

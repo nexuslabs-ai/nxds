@@ -323,14 +323,15 @@ To change the line in one component, set the tokens in its class, such as
 `nx:[--nx-icon-stroke-base:1px]`. A `stroke-*` class doesn't change the line.
 
 An icon sized with `nx:size-icon-glyph-xs`, `-sm`, `-default` or `-lg` draws the
-line for its size. An icon you size another way draws the line for a default
-icon. Set `--nx-icon-size` to the same size beside it:
+line for its size. For another size, use a `size-icon` class with a length. It
+sets the icon's width, height and line from one value:
 
 ```tsx
-<StarIcon className="nx:size-[calc(var(--nx-icon-glyph-default)*2)] nx:[--nx-icon-size:calc(var(--nx-icon-glyph-default)*2)]" />
+<StarIcon className="nx:size-icon-[calc(var(--nx-icon-glyph-default)*2)]" />
 ```
 
-A whole multiple of the default icon follows the UI scale.
+A whole multiple of the default icon follows the UI scale. An icon sized another
+way, such as with `nx:size-[32px]`, draws the line for a default icon.
 
 ## Shuffle
 

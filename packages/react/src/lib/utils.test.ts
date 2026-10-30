@@ -191,6 +191,21 @@ describe('cn', () => {
       'nx:size-icon-glyph-lg',
     ],
     [
+      'arbitrary icon size',
+      'nx:size-4 nx:size-icon-[10px]',
+      'nx:size-icon-[10px]',
+    ],
+    [
+      'arbitrary icon size over a glyph size',
+      'nx:size-icon-glyph-default nx:size-icon-[length:var(--nx-spacing-3)]',
+      'nx:size-icon-[length:var(--nx-spacing-3)]',
+    ],
+    [
+      'size over an arbitrary icon size',
+      'nx:size-icon-[calc(var(--nx-icon-glyph-default)*2)] nx:size-5',
+      'nx:size-5',
+    ],
+    [
       'spacing role',
       'nx:gap-container nx:gap-layout-stack',
       'nx:gap-layout-stack',

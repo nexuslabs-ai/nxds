@@ -33,15 +33,15 @@ export const Sizes: Story = {
     docs: {
       description: {
         story:
-          'Size the spinner with `nx:size-*`. A glyph utility, such as `nx:size-icon-glyph-lg`, also sets its line. For another size, set `--nx-icon-size` to the same size, so its line grows with it. Tint it with `nx:text-*`.',
+          'Size the spinner with a glyph utility, such as `nx:size-icon-glyph-lg`, or with `nx:size-icon-[…]`, so its line grows with it. Tint it with `nx:text-*`.',
       },
     },
   },
   render: () => (
     <div className="nx:flex nx:items-center nx:gap-4 nx:text-foreground">
-      <Spinner className="nx:size-4" />
+      <Spinner />
       <Spinner className="nx:size-icon-glyph-lg" />
-      <Spinner className="nx:size-[calc(var(--nx-icon-glyph-default)*2)] nx:[--nx-icon-size:calc(var(--nx-icon-glyph-default)*2)] nx:text-primary-subtle-foreground" />
+      <Spinner className="nx:size-icon-[calc(var(--nx-icon-glyph-default)*2)] nx:text-primary-subtle-foreground" />
     </div>
   ),
 };
@@ -58,7 +58,7 @@ export const WithText: Story = {
   },
   render: () => (
     <div className="nx:flex nx:items-center nx:gap-2 nx:typography-body-default nx:text-muted-foreground">
-      <Spinner className="nx:size-4" />
+      <Spinner />
       Loading results…
     </div>
   ),
@@ -85,12 +85,12 @@ export const AllVariants: Story = {
   render: () => (
     <div className="nx:flex nx:flex-col nx:gap-4 nx:text-foreground">
       <div className="nx:flex nx:items-center nx:gap-4">
-        <Spinner className="nx:size-4" />
+        <Spinner />
         <Spinner className="nx:size-icon-glyph-lg" />
-        <Spinner className="nx:size-[calc(var(--nx-icon-glyph-default)*2)] nx:[--nx-icon-size:calc(var(--nx-icon-glyph-default)*2)]" />
+        <Spinner className="nx:size-icon-[calc(var(--nx-icon-glyph-default)*2)]" />
       </div>
       <div className="nx:flex nx:items-center nx:gap-2 nx:typography-label-default nx:text-muted-foreground">
-        <Spinner className="nx:size-4" />
+        <Spinner />
         <span>Loading more…</span>
       </div>
     </div>
