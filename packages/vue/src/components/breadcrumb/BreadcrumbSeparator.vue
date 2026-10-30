@@ -17,7 +17,7 @@ const props = defineProps<BreadcrumbSeparatorProps>();
     aria-hidden="true"
     :class="
       cn(
-        'nx:inline-flex nx:shrink-0 nx:items-center nx:typography-body-default nx:text-muted-foreground nx:[&>svg]:size-3.5 nx:icon-stroke',
+        'nx:inline-flex nx:shrink-0 nx:items-center nx:typography-body-default nx:text-muted-foreground nx:[&>svg]:size-3.5 nx:[&>svg]:[--nx-icon-size:var(--nx-spacing-3_5)] nx:icon-stroke',
         props.class
       )
     "

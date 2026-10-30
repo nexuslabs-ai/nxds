@@ -17,6 +17,8 @@ const props = defineProps<InputOTPSeparatorProps>();
     aria-hidden="true"
     :class="cn('nx:flex nx:items-center nx:icon-stroke', props.class)"
   >
-    <IconCircleFilled class="nx:size-1 nx:text-muted-foreground" />
+    <IconCircleFilled
+      class="nx:size-1 nx:[--nx-icon-size:var(--nx-spacing-1)] nx:text-muted-foreground"
+    />
   </div>
 </template>

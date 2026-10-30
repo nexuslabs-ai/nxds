@@ -85,7 +85,7 @@ const RadioGroupItem = React.forwardRef<
           data-slot="radio-group-dot"
           aria-hidden="true"
           className={cn(
-            'nx:size-2.5 nx:text-current',
+            'nx:size-2.5 nx:[--nx-icon-size:var(--nx-spacing-2_5)] nx:text-current',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )}

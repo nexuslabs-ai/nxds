@@ -133,7 +133,7 @@ const badgeVariants = cva(
 );
 
 const badgeIconClasses =
-  'nx:flex nx:items-center nx:justify-center nx:size-3.5 nx:[&>svg]:size-3.5 nx:icon-stroke';
+  'nx:flex nx:items-center nx:justify-center nx:size-3.5 nx:[&>svg]:size-3.5 nx:[&>svg]:[--nx-icon-size:var(--nx-spacing-3_5)] nx:icon-stroke';
 
 function badgeShapeClasses(
   isNumber: boolean,

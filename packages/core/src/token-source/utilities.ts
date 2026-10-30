@@ -61,28 +61,46 @@ export function durationUtility(key: string): UtilityRule {
 }
 
 /**
- * The utility an icon token emits. A glyph size (e.g. `glyph.default`) emits
- * `size-icon-glyph-default`. The stroke emits `icon-stroke`, which sets the
- * line width on an `<svg>` the class sits on or contains, and on each shape
- * inside it, because HugeIcons sets `stroke-width` on every path.
+ * The `size-icon-*` utility a glyph size `key` (e.g. `glyph-default`) emits.
+ * It also sets `--nx-icon-size`, the size `icon-stroke` draws the line for.
  */
-export function iconUtility(path: readonly string[]): UtilityRule {
-  const key = path.join('-');
+export function iconSizeUtility(key: string): UtilityRule {
   const value = `var(--nx-icon-${key})`;
-  if (key === 'stroke') {
-    return {
-      name: 'icon-stroke',
-      selectors: ['&:is(svg)', '&:is(svg) *', '& svg', '& svg *'],
-      declarations: [{ property: 'stroke-width', value }],
-    };
-  }
   return {
     name: `size-icon-${key}`,
     declarations: [
       { property: 'width', value },
       { property: 'height', value },
+      { property: '--nx-icon-size', value },
     ],
   };
+}
+
+/**
+ * `icon-stroke` sets the line on an `<svg>` the class sits on or contains,
+ * and on each shape inside it, because HugeIcons sets `stroke-width` on every
+ * path. The line is the stroke base plus `--nx-icon-size` times the stroke
+ * ratio, and an icon without `--nx-icon-size` draws the default glyph's line.
+ * `non-scaling-stroke` draws it in screen pixels, whatever the icon's
+ * `viewBox`.
+ */
+export const ICON_STROKE_UTILITY: UtilityRule = {
+  name: 'icon-stroke',
+  selectors: ['&:is(svg)', '&:is(svg) *', '& svg', '& svg *'],
+  declarations: [
+    {
+      property: 'stroke-width',
+      value:
+        'calc(var(--nx-icon-stroke-base) + var(--nx-icon-size, var(--nx-icon-glyph-default)) * var(--nx-icon-stroke-ratio))',
+    },
+    { property: 'vector-effect', value: 'non-scaling-stroke' },
+  ],
+};
+
+/** The utility an icon token feeds: a glyph size's `size-icon-*`, or `icon-stroke`. */
+export function iconUtility(path: readonly string[]): UtilityRule {
+  if (path[0] === 'stroke') return ICON_STROKE_UTILITY;
+  return iconSizeUtility(path.join('-'));
 }
 
 /**

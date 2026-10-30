@@ -30,7 +30,7 @@ const forwarded = useForwardProps(delegated);
   >
     <slot />{{ ' ' }}
     <IconChevronDown
-      class="nx:relative nx:top-px nx:ml-1 nx:size-3 nx:transition nx:duration-slow nx:group-data-[state=open]:rotate-180"
+      class="nx:relative nx:top-px nx:ml-1 nx:size-3 nx:[--nx-icon-size:var(--nx-spacing-3)] nx:transition nx:duration-slow nx:group-data-[state=open]:rotate-180"
       aria-hidden="true"
     />
   </NavigationMenuTrigger>

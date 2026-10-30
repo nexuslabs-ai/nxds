@@ -324,7 +324,7 @@ export default {
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
       unstrokedIcon:
-        'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-4`), so add `nx:icon-stroke` to draw stroked icons at `--nx-icon-stroke`.',
+        'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-4`), so add `nx:icon-stroke` to draw stroked icons at the icon line width.',
     },
   },
   create(context) {

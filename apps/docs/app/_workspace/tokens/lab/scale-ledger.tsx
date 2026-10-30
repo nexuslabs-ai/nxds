@@ -82,14 +82,14 @@ function isSigned({ family, group }: ScaleToken): boolean {
   return family === 'typography' && group === 'letterspacing';
 }
 
-/** The icon stroke is a number, and it need not be a whole one. */
-function isStroke({ family, type }: ScaleToken): boolean {
+/** The icon stroke ratio is a number, and it need not be a whole one. */
+function isStrokeRatio({ family, type }: ScaleToken): boolean {
   return family === 'icon' && type === 'number';
 }
 
 function validationProperty(token: ScaleToken): string {
   if (token.type === 'dimension' && isSigned(token)) return 'outline-offset';
-  if (isStroke(token)) return 'stroke-width';
+  if (isStrokeRatio(token)) return 'stroke-width';
   const property = VALIDATION_PROPERTIES[token.type];
   if (property === undefined) {
     throw new Error(

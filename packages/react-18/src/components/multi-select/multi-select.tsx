@@ -351,7 +351,7 @@ const MultiSelectValue = React.forwardRef<
           {clickToRemove && (
             <IconX
               aria-hidden="true"
-              className="nx:size-3 nx:text-muted-foreground nx:transition-colors nx:group-hover/chip:text-error-subtle-foreground"
+              className="nx:size-3 nx:[--nx-icon-size:var(--nx-spacing-3)] nx:text-muted-foreground nx:transition-colors nx:group-hover/chip:text-error-subtle-foreground"
             />
           )}
         </Badge>

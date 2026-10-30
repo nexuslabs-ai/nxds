@@ -37,7 +37,7 @@ export const Sizes: Story = {
     docs: {
       description: {
         story:
-          'Size the spinner with `nx:size-*` and tint it with `nx:text-*`.',
+          'Size the spinner with `nx:size-*`. Set `--nx-icon-size` to the same size, so its line grows with it. Tint it with `nx:text-*`.',
       },
     },
   },
@@ -46,8 +46,8 @@ export const Sizes: Story = {
     template: `
       <div class="nx:flex nx:items-center nx:gap-4 nx:text-foreground">
         <Spinner class="nx:size-4" />
-        <Spinner class="nx:size-6" />
-        <Spinner class="nx:size-8 nx:text-primary-subtle-foreground" />
+        <Spinner class="nx:size-6 nx:[--nx-icon-size:var(--nx-spacing-6)]" />
+        <Spinner class="nx:size-8 nx:[--nx-icon-size:var(--nx-spacing-8)] nx:text-primary-subtle-foreground" />
       </div>
     `,
   }),

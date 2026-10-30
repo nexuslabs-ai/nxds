@@ -53,7 +53,7 @@ const dropdownRootClass =
 const dropdownClass = 'nx:absolute nx:inset-0 nx:bg-popover nx:opacity-0';
 const dropdownLabelClass = cn(
   'nx:typography-label-default nx:select-none',
-  'nx:flex nx:h-8 nx:items-center nx:gap-1 nx:rounded-md nx:pr-1 nx:pl-2 nx:[&>svg]:size-3.5 nx:[&>svg]:text-muted-foreground nx:icon-stroke'
+  'nx:flex nx:h-8 nx:items-center nx:gap-1 nx:rounded-md nx:pr-1 nx:pl-2 nx:[&>svg]:size-3.5 nx:[&>svg]:[--nx-icon-size:var(--nx-spacing-3_5)] nx:[&>svg]:text-muted-foreground nx:icon-stroke'
 );
 </script>
 
