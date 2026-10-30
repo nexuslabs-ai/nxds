@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { PageActions } from './PageActions';
+
 export function Breadcrumb({
   items,
   markdownHref,
@@ -9,21 +11,13 @@ export function Breadcrumb({
   markdownHref?: string;
 }) {
   return (
-    <div className="nx:flex nx:flex-wrap nx:items-baseline nx:gap-x-4 nx:typography-label-small nx:text-muted-foreground-subtle nx:mb-3">
+    <div className="nx:flex nx:flex-wrap nx:items-center nx:gap-x-4 nx:gap-y-2 nx:typography-label-small nx:text-muted-foreground-subtle nx:mb-3">
       <nav aria-label="Breadcrumb" className="nx:me-auto">
         {items.map((item, i) => (
           <Crumb key={i} item={item} last={i === items.length - 1} />
         ))}
       </nav>
-      {markdownHref && (
-        <a
-          href={markdownHref}
-          data-md-skip
-          className="nx:text-muted-foreground-subtle nx:no-underline nx:hover:text-muted-foreground"
-        >
-          View as Markdown
-        </a>
-      )}
+      {markdownHref && <PageActions markdownHref={markdownHref} />}
     </div>
   );
 }

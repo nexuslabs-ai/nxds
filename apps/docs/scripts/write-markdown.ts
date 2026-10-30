@@ -10,6 +10,7 @@ import type { VFile } from 'vfile';
 
 import { frameworkLabel, isFramework } from '../app/_lib/frameworks.ts';
 import { PAGE_MANIFEST } from '../app/_lib/manifest.ts';
+import { SITE_URL } from '../app/_lib/site.ts';
 import { DOCS_ARTICLE_ID } from '../app/_lib/table-of-contents.ts';
 
 import { docsRoot } from './docs-root.mjs';
@@ -95,6 +96,26 @@ function internalLinks(node: ElementContent): string[] {
   return [...own, ...node.children.flatMap(internalLinks)];
 }
 
+const pageRoutes = new Set(
+  PAGE_MANIFEST.flatMap((section) => section.pages.map((page) => page.route))
+);
+
+/**
+ * Points root-relative links at nxds.dev, and docs pages at their Markdown,
+ * so the links still work once the Markdown is pasted elsewhere.
+ */
+function absoluteLinks(node: ElementContent) {
+  if (node.type !== 'element') return;
+  const href = String(node.properties.href);
+  if (node.tagName === 'a' && href.startsWith('/')) {
+    const [location = '', id] = href.split('#');
+    const route = location.replace(/\/$/, '');
+    const target = pageRoutes.has(route) ? `${route}.md` : location;
+    node.properties.href = `${SITE_URL}${target}${id ? `#${id}` : ''}`;
+  }
+  for (const child of node.children) absoluteLinks(child);
+}
+
 /** Keeps only the page's article, minus anything that only works on screen. */
 function articleOnly() {
   return (tree: Root, file: VFile) => {
@@ -106,6 +127,7 @@ function articleOnly() {
     }
     prune(article);
     file.data.links = internalLinks(article);
+    absoluteLinks(article);
     tree.children = [article];
   };
 }

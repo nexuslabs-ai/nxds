@@ -6,6 +6,7 @@
  */
 export { Badge } from '@/components/badge/badge';
 export { Button } from '@/components/button/button';
+export { ButtonGroup } from '@/components/button-group/button-group';
 export { Checkbox } from '@/components/checkbox/checkbox';
 export {
   CodeBlock,
@@ -13,6 +14,12 @@ export {
   CodeBlockCopyButton,
   CodeBlockLine,
 } from '@/components/code-block/code-block';
+export {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/dropdown-menu/dropdown-menu';
 export {
   EmptyState,
   EmptyStateContent,
