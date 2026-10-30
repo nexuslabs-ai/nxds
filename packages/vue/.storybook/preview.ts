@@ -1,5 +1,6 @@
 import {
   BASE_TONE_OPTIONS,
+  BRAND_COLOR_PRESETS,
   CORNER_OPTIONS,
   DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
@@ -125,6 +126,7 @@ const preview: Preview = {
     elevation: DEFAULT_NXDS_APPEARANCE.elevation,
     stroke: DEFAULT_NXDS_APPEARANCE.stroke,
     uiFont: DEFAULT_NXDS_APPEARANCE.prefs.uiFont,
+    headingFont: DEFAULT_NXDS_APPEARANCE.prefs.headingFont,
     codeFont: DEFAULT_NXDS_APPEARANCE.prefs.codeFont,
     uiFontSize: DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize,
     codeFontSize: DEFAULT_NXDS_APPEARANCE.prefs.codeFontSize,
@@ -138,6 +140,17 @@ const preview: Preview = {
       toolbar: {
         icon: 'circlehollow',
         items: toolbarItems(MODE_OPTIONS),
+        dynamicTitle: true,
+      },
+    },
+    brandColor: {
+      name: 'Primary',
+      toolbar: {
+        icon: 'circle',
+        items: BRAND_COLOR_PRESETS.map(({ color, label }) => ({
+          value: color,
+          title: label,
+        })),
         dynamicTitle: true,
       },
     },

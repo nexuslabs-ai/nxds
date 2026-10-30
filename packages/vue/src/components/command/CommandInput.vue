@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { IconSearch } from '@tabler/icons-vue';
 import { ListboxFilter } from 'reka-ui';
 import { watch } from 'vue';
 
+import { IconSearch } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 import { type CommandInputProps, injectCommand } from '.';

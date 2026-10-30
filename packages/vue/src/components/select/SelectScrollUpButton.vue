@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { IconChevronUp } from '@tabler/icons-vue';
 import { reactiveOmit } from '@vueuse/core';
 import {
   SelectScrollUpButton,
@@ -8,6 +7,7 @@ import {
 } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
+import { IconChevronUp } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 export interface SelectScrollUpButtonProps extends RekaSelectScrollUpButtonProps {

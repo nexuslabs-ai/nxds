@@ -1,5 +1,5 @@
+import { PhX } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { IconX } from '@tabler/icons-vue';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { ref } from 'vue';
 
@@ -249,7 +249,7 @@ export const WithHeaderActions: Story = {
       DrawerHeader,
       DrawerTitle,
       DrawerTrigger,
-      IconX,
+      PhX,
     },
     template: `
       <Drawer direction="right">
@@ -264,7 +264,7 @@ export const WithHeaderActions: Story = {
             </div>
             <DrawerClose as-child>
               <Button variant="ghost" size="icon" aria-label="Close drawer">
-                <IconX aria-hidden="true" />
+                <PhX aria-hidden="true" />
               </Button>
             </DrawerClose>
           </DrawerHeader>

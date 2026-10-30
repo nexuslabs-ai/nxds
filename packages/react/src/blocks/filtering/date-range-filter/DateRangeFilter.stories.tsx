@@ -1,8 +1,8 @@
 import * as React from 'react';
 
+import { CalendarBlankIcon } from '@phosphor-icons/react/ssr';
 import { Canvas, Source, Title } from '@storybook/addon-docs/blocks';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconCalendar } from '@tabler/icons-react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -59,7 +59,7 @@ function Preview({
     >
       <DateRangeFilter
         label="Created"
-        icon={<IconCalendar aria-hidden="true" />}
+        icon={<CalendarBlankIcon aria-hidden="true" />}
         value={value}
         onChange={change}
         disabled={isDisabled}

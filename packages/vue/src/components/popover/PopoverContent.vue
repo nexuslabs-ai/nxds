@@ -27,14 +27,14 @@ const props = withDefaults(defineProps<PopoverContentProps>(), {
 });
 const emits = defineEmits<PopoverContentEmits>();
 
-// Reka's modal and non-modal content emit some events twice with the same
-// event object. One event can carry two names, so key on both.
-const reported = new WeakMap<Event, Set<string>>();
+// Reka's content emits closeAutoFocus, interactOutside and pointerDownOutside
+// twice with the same event. Pass each one on once, as Radix does.
+const emitted = new WeakMap<Event, Set<string>>();
 
 function emitOnce(name: keyof PopoverContentEmits, event: Event) {
-  const names = reported.get(event) ?? new Set<string>();
+  const names = emitted.get(event) ?? new Set<string>();
   if (names.has(name)) return;
-  reported.set(event, names.add(name));
+  emitted.set(event, names.add(name));
   (emits as (name: string, event: Event) => void)(name, event);
 }
 

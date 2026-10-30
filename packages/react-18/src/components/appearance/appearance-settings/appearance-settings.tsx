@@ -260,7 +260,9 @@ export function NxdsAppearanceSettings() {
       <Card>
         <CardHeader>
           <CardTitle>Typography</CardTitle>
-          <CardDescription>UI and code font preferences.</CardDescription>
+          <CardDescription>
+            UI, heading and code font preferences.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <NxdsAppearanceSettingRow label="UI font">
@@ -268,6 +270,17 @@ export function NxdsAppearanceSettings() {
               value={state.prefs.uiFont}
               onChange={(event) => updatePrefs({ uiFont: event.target.value })}
               aria-label="UI font"
+              className="nx:w-56 nx:font-mono nx:typography-body-small"
+            />
+          </NxdsAppearanceSettingRow>
+          <NxdsAppearanceSettingRow label="Heading font">
+            <Input
+              value={state.prefs.headingFont ?? ''}
+              onChange={(event) =>
+                updatePrefs({ headingFont: event.target.value || null })
+              }
+              placeholder="Same as UI font"
+              aria-label="Heading font"
               className="nx:w-56 nx:font-mono nx:typography-body-small"
             />
           </NxdsAppearanceSettingRow>

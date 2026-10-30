@@ -3,13 +3,13 @@
 import * as React from 'react';
 
 import {
-  IconCalendar,
-  IconFile,
-  IconHash,
-  IconLetterCase,
-  IconList,
-  IconUsers,
-} from '@tabler/icons-react';
+  CalendarBlankIcon,
+  FileIcon,
+  HashIcon,
+  ListBulletsIcon,
+  TextAaIcon,
+  UsersIcon,
+} from '@phosphor-icons/react/ssr';
 
 import {
   type ChoiceCondition,
@@ -87,7 +87,7 @@ export function SingleChoiceExample() {
     >
       <ChoiceFilter
         label="Status"
-        icon={<IconList aria-hidden="true" />}
+        icon={<ListBulletsIcon aria-hidden="true" />}
         value={value}
         options={['Active', 'Invited', 'Suspended'].map((value) => ({
           value,
@@ -115,7 +115,7 @@ export function MultipleChoiceExample() {
     >
       <MultiChoiceFilter
         label="Teams"
-        icon={<IconUsers aria-hidden="true" />}
+        icon={<UsersIcon aria-hidden="true" />}
         value={value}
         onChange={setValue}
         options={['Design', 'Engineering', 'Operations'].map((value) => ({
@@ -143,7 +143,7 @@ export function NumberExample() {
     >
       <NumberComparisonFilter
         label="Amount"
-        icon={<IconHash aria-hidden="true" />}
+        icon={<HashIcon aria-hidden="true" />}
         value={value}
         onChange={setValue}
         lowerBound={0}
@@ -166,7 +166,7 @@ export function RangeExample() {
     <Example title="Numeric range" description="A lower and upper limit.">
       <NumberRangeFilter
         label="Size"
-        icon={<IconFile aria-hidden="true" />}
+        icon={<FileIcon aria-hidden="true" />}
         unit="KB"
         lowerBound={0}
         value={value}
@@ -199,7 +199,7 @@ export function DateExample({ today }: { today?: Date } = {}) {
     >
       <DateRangeFilter
         label="Created"
-        icon={<IconCalendar aria-hidden="true" />}
+        icon={<CalendarBlankIcon aria-hidden="true" />}
         value={value}
         onChange={setValue}
         today={today}
@@ -224,7 +224,7 @@ export function TextExample() {
     >
       <TextFilter
         label="Name"
-        icon={<IconLetterCase aria-hidden="true" />}
+        icon={<TextAaIcon aria-hidden="true" />}
         value={value}
         onChange={setValue}
       />

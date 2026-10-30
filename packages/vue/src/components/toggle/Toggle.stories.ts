@@ -1,5 +1,5 @@
+import { PhTextB, PhTextItalic } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { IconBold, IconItalic } from '@tabler/icons-vue';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { ref } from 'vue';
 
@@ -31,10 +31,10 @@ function tokenColor(element: Element, name: string) {
 export const Default: Story = {
   tags: ['docs'],
   render: () => ({
-    components: { IconBold, Toggle },
+    components: { PhTextB, Toggle },
     template: `
       <Toggle aria-label="Bold">
-        <IconBold />
+        <PhTextB />
       </Toggle>
     `,
   }),
@@ -59,17 +59,17 @@ export const Variants: Story = {
     },
   },
   render: () => ({
-    components: { IconBold, IconItalic, Toggle },
+    components: { PhTextB, PhTextItalic, Toggle },
     template: `
       <div class="nx:flex nx:gap-3">
         <Toggle variant="default" aria-label="Bold">
-          <IconBold />
+          <PhTextB />
         </Toggle>
         <Toggle variant="outline" aria-label="Italic">
-          <IconItalic />
+          <PhTextItalic />
         </Toggle>
         <Toggle variant="outline-primary" aria-label="Outline primary bold" :default-value="true">
-          <IconBold />
+          <PhTextB />
         </Toggle>
       </div>
     `,
@@ -87,17 +87,17 @@ export const Sizes: Story = {
     },
   },
   render: () => ({
-    components: { IconBold, Toggle },
+    components: { PhTextB, Toggle },
     template: `
       <div class="nx:flex nx:items-center nx:gap-3">
         <Toggle size="sm" aria-label="Small">
-          <IconBold />
+          <PhTextB />
         </Toggle>
         <Toggle size="default" aria-label="Default">
-          <IconBold />
+          <PhTextB />
         </Toggle>
         <Toggle size="lg" aria-label="Large">
-          <IconBold />
+          <PhTextB />
         </Toggle>
       </div>
     `,
@@ -129,10 +129,10 @@ export const WithText: Story = {
     },
   },
   render: () => ({
-    components: { IconBold, Toggle },
+    components: { PhTextB, Toggle },
     template: `
       <Toggle aria-label="Bold" :default-value="true">
-        <IconBold />
+        <PhTextB />
         Bold
       </Toggle>
     `,
@@ -143,11 +143,11 @@ export const WithText: Story = {
 export const ClickInteraction: Story = {
   args: { 'onUpdate:modelValue': fn() },
   render: (args) => ({
-    components: { IconBold, Toggle },
+    components: { PhTextB, Toggle },
     setup: () => ({ args }),
     template: `
       <Toggle v-bind="args" aria-label="Bold">
-        <IconBold />
+        <PhTextB />
       </Toggle>
     `,
   }),
@@ -166,11 +166,11 @@ export const ClickInteraction: Story = {
 export const KeyboardInteraction: Story = {
   args: { 'onUpdate:modelValue': fn() },
   render: (args) => ({
-    components: { IconItalic, Toggle },
+    components: { PhTextItalic, Toggle },
     setup: () => ({ args }),
     template: `
       <Toggle v-bind="args" variant="outline-primary" aria-label="Italic">
-        <IconItalic />
+        <PhTextItalic />
       </Toggle>
     `,
   }),
@@ -217,10 +217,10 @@ export const Disabled: Story = {
     },
   },
   render: () => ({
-    components: { IconBold, Toggle },
+    components: { PhTextB, Toggle },
     template: `
       <Toggle aria-label="Bold" disabled>
-        <IconBold />
+        <PhTextB />
       </Toggle>
     `,
   }),
@@ -239,11 +239,11 @@ export const Disabled: Story = {
 export const DisabledInteraction: Story = {
   args: { 'onUpdate:modelValue': fn() },
   render: (args) => ({
-    components: { IconBold, Toggle },
+    components: { PhTextB, Toggle },
     setup: () => ({ args }),
     template: `
       <Toggle v-bind="args" aria-label="Bold" disabled>
-        <IconBold />
+        <PhTextB />
       </Toggle>
     `,
   }),
@@ -261,10 +261,10 @@ export const DisabledInteraction: Story = {
 // data-slot identifies the component; data-variant / data-size reflect props.
 export const WithDataAttributes: Story = {
   render: () => ({
-    components: { IconBold, Toggle },
+    components: { PhTextB, Toggle },
     template: `
       <Toggle aria-label="Bold" variant="outline" size="sm">
-        <IconBold />
+        <PhTextB />
       </Toggle>
     `,
   }),
@@ -285,38 +285,38 @@ export const WithDataAttributes: Story = {
 // exercises the data-[state=on] fill.
 export const AllVariants: Story = {
   render: () => ({
-    components: { IconBold, IconItalic, Toggle },
+    components: { PhTextB, PhTextItalic, Toggle },
     template: `
       <div class="nx:flex nx:flex-col nx:gap-4">
         <div class="nx:flex nx:items-center nx:gap-3">
           <Toggle aria-label="Default off">
-            <IconBold />
+            <PhTextB />
           </Toggle>
           <Toggle aria-label="Default on" :default-value="true">
-            <IconBold />
+            <PhTextB />
           </Toggle>
           <Toggle variant="outline" aria-label="Outline off">
-            <IconItalic />
+            <PhTextItalic />
           </Toggle>
           <Toggle variant="outline" aria-label="Outline on" :default-value="true">
-            <IconItalic />
+            <PhTextItalic />
           </Toggle>
           <Toggle variant="outline-primary" aria-label="Outline primary off">
-            <IconBold />
+            <PhTextB />
           </Toggle>
           <Toggle variant="outline-primary" aria-label="Outline primary on" :default-value="true">
-            <IconBold />
+            <PhTextB />
           </Toggle>
         </div>
         <div class="nx:flex nx:items-center nx:gap-3">
           <Toggle size="sm" aria-label="Small">
-            <IconBold />
+            <PhTextB />
           </Toggle>
           <Toggle size="default" aria-label="Medium">
-            <IconBold />
+            <PhTextB />
           </Toggle>
           <Toggle size="lg" aria-label="Large">
-            <IconBold />
+            <PhTextB />
           </Toggle>
         </div>
       </div>

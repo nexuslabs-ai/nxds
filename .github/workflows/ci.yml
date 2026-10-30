@@ -459,7 +459,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [next, vite, vite-react18]
+        app: [next, next-themed, vite, vite-react18]
     steps:
       - name: Checkout
         uses: actions/checkout@v4

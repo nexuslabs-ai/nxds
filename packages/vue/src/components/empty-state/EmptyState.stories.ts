@@ -1,5 +1,5 @@
+import { PhUsers } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { IconUsers } from '@tabler/icons-vue';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Button } from '../button';
@@ -42,13 +42,13 @@ export const Default: Story = {
       EmptyStateHeader,
       EmptyStateMedia,
       EmptyStateTitle,
-      IconUsers,
+      PhUsers,
     },
     template: `
       <EmptyState>
         <EmptyStateHeader>
           <EmptyStateMedia variant="icon">
-            <IconUsers aria-hidden="true" />
+            <PhUsers aria-hidden="true" />
           </EmptyStateMedia>
           <EmptyStateTitle>No contacts yet</EmptyStateTitle>
           <EmptyStateDescription>Add your first contact to start building your CRM.</EmptyStateDescription>
@@ -77,13 +77,13 @@ export const WithoutAction: Story = {
       EmptyStateHeader,
       EmptyStateMedia,
       EmptyStateTitle,
-      IconUsers,
+      PhUsers,
     },
     template: `
       <EmptyState>
         <EmptyStateHeader>
           <EmptyStateMedia variant="icon">
-            <IconUsers aria-hidden="true" />
+            <PhUsers aria-hidden="true" />
           </EmptyStateMedia>
           <EmptyStateTitle>No results</EmptyStateTitle>
           <EmptyStateDescription>Try adjusting your filters or search terms.</EmptyStateDescription>
@@ -110,14 +110,14 @@ export const TitleAsHeading: Story = {
       EmptyStateHeader,
       EmptyStateMedia,
       EmptyStateTitle,
-      IconUsers,
+      PhUsers,
     },
     template: `
       <section aria-labelledby="empty-state-section-heading">
         <EmptyState>
           <EmptyStateHeader>
             <EmptyStateMedia variant="icon">
-              <IconUsers aria-hidden="true" />
+              <PhUsers aria-hidden="true" />
             </EmptyStateMedia>
             <EmptyStateTitle as-child>
               <h2 id="empty-state-section-heading">No contacts yet</h2>
@@ -155,13 +155,13 @@ export const Bordered: Story = {
       EmptyStateHeader,
       EmptyStateMedia,
       EmptyStateTitle,
-      IconUsers,
+      PhUsers,
     },
     template: `
       <EmptyState bordered>
         <EmptyStateHeader>
           <EmptyStateMedia variant="icon">
-            <IconUsers aria-hidden="true" />
+            <PhUsers aria-hidden="true" />
           </EmptyStateMedia>
           <EmptyStateTitle>No contacts yet</EmptyStateTitle>
           <EmptyStateDescription>Add your first contact to get started.</EmptyStateDescription>
@@ -195,14 +195,14 @@ export const AllVariants: Story = {
       EmptyStateHeader,
       EmptyStateMedia,
       EmptyStateTitle,
-      IconUsers,
+      PhUsers,
     },
     template: `
       <div class="nx:flex nx:flex-col nx:gap-6">
         <EmptyState bordered>
           <EmptyStateHeader>
             <EmptyStateMedia variant="icon">
-              <IconUsers aria-hidden="true" />
+              <PhUsers aria-hidden="true" />
             </EmptyStateMedia>
             <EmptyStateTitle>No contacts yet</EmptyStateTitle>
             <EmptyStateDescription>Add your first contact to get started.</EmptyStateDescription>
@@ -215,7 +215,7 @@ export const AllVariants: Story = {
         <EmptyState>
           <EmptyStateHeader>
             <EmptyStateMedia variant="default">
-              <IconUsers aria-hidden="true" class="nx:size-12 nx:text-muted-foreground" />
+              <PhUsers aria-hidden="true" class="nx:size-12 nx:text-muted-foreground" />
             </EmptyStateMedia>
             <EmptyStateTitle>No results</EmptyStateTitle>
             <EmptyStateDescription>Try adjusting your filters.</EmptyStateDescription>
@@ -238,13 +238,13 @@ export const WithDataAttributes: Story = {
       EmptyStateHeader,
       EmptyStateMedia,
       EmptyStateTitle,
-      IconUsers,
+      PhUsers,
     },
     template: `
       <EmptyState>
         <EmptyStateHeader>
           <EmptyStateMedia variant="icon">
-            <IconUsers aria-hidden="true" />
+            <PhUsers aria-hidden="true" />
           </EmptyStateMedia>
           <EmptyStateTitle>No contacts yet</EmptyStateTitle>
           <EmptyStateDescription>Add your first contact.</EmptyStateDescription>
@@ -284,13 +284,13 @@ export const LongCopyWithLink: Story = {
       EmptyStateHeader,
       EmptyStateMedia,
       EmptyStateTitle,
-      IconUsers,
+      PhUsers,
     },
     template: `
       <EmptyState>
         <EmptyStateHeader>
           <EmptyStateMedia variant="icon">
-            <IconUsers aria-hidden="true" />
+            <PhUsers aria-hidden="true" />
           </EmptyStateMedia>
           <EmptyStateTitle>No team members match the filters you have applied to this view</EmptyStateTitle>
           <EmptyStateDescription>

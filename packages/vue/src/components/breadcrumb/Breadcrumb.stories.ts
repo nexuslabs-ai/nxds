@@ -1,5 +1,5 @@
+import { PhFolder, PhGear, PhHouse } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { IconFolder, IconHome, IconSettings } from '@tabler/icons-vue';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -186,14 +186,14 @@ export const WithIcons: Story = {
       DropdownMenuContent,
       DropdownMenuItem,
       DropdownMenuTrigger,
-      IconFolder,
+      PhFolder,
     },
     template: `
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink href="#">
-              <IconFolder aria-hidden="true" />
+              <PhFolder aria-hidden="true" />
               <span>Workspace</span>
             </BreadcrumbLink>
             <DropdownMenu>
@@ -216,7 +216,7 @@ export const WithIcons: Story = {
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink href="#">
-              <IconFolder aria-hidden="true" />
+              <PhFolder aria-hidden="true" />
               <span>Projects</span>
             </BreadcrumbLink>
             <DropdownMenu>
@@ -239,7 +239,7 @@ export const WithIcons: Story = {
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbPage>
-              <IconFolder aria-hidden="true" />
+              <PhFolder aria-hidden="true" />
               <span>Breadcrumb</span>
             </BreadcrumbPage>
             <DropdownMenu>
@@ -288,25 +288,25 @@ export const WithIcons: Story = {
 
 export const IconOnly: Story = {
   render: () => ({
-    components: { ...breadcrumbComponents, IconFolder, IconHome, IconSettings },
+    components: { ...breadcrumbComponents, PhFolder, PhHouse, PhGear },
     template: `
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink href="/home" aria-label="Home">
-              <IconHome aria-hidden="true" />
+              <PhHouse aria-hidden="true" />
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink href="/projects" aria-label="Projects">
-              <IconFolder aria-hidden="true" />
+              <PhFolder aria-hidden="true" />
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbPage>
-              <IconSettings aria-hidden="true" />
+              <PhGear aria-hidden="true" />
               <span class="nx:sr-only">Settings</span>
             </BreadcrumbPage>
           </BreadcrumbItem>

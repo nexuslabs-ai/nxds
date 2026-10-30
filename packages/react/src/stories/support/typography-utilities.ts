@@ -3,6 +3,14 @@ export const COMPOSITE_UTILITIES: {
   items: { cls: string; sample: string }[];
 }[] = [
   {
+    group: 'Display',
+    items: [
+      { cls: 'nx:typography-display-large', sample: 'Display Large' },
+      { cls: 'nx:typography-display-medium', sample: 'Display Medium' },
+      { cls: 'nx:typography-display-small', sample: 'Display Small' },
+    ],
+  },
+  {
     group: 'Heading',
     items: [
       { cls: 'nx:typography-heading-large', sample: 'Heading Large' },

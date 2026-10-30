@@ -1,8 +1,8 @@
 import * as React from 'react';
 
+import { UsersIcon } from '@phosphor-icons/react/ssr';
 import { Canvas, Source, Title } from '@storybook/addon-docs/blocks';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconUsers } from '@tabler/icons-react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -71,7 +71,7 @@ function Preview({
     >
       <MultiChoiceFilter
         label="Team"
-        icon={<IconUsers aria-hidden="true" />}
+        icon={<UsersIcon aria-hidden="true" />}
         value={value}
         onChange={change}
         disabled={isDisabled}

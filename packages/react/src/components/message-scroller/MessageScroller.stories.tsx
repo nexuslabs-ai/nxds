@@ -1,7 +1,7 @@
 import * as React from 'react';
 
+import { ChatTextIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconMessage2 } from '@tabler/icons-react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { AvatarFallback } from '../avatar/avatar';
@@ -195,7 +195,7 @@ export const EmptyStream: Story = {
             <EmptyState>
               <EmptyStateHeader>
                 <EmptyStateMedia variant="icon">
-                  <IconMessage2 />
+                  <ChatTextIcon />
                 </EmptyStateMedia>
                 <EmptyStateTitle>No messages yet</EmptyStateTitle>
                 <EmptyStateDescription>
