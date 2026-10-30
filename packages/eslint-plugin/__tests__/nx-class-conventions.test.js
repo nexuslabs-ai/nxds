@@ -25,22 +25,28 @@ const rule = plugin.rules['nx-class-conventions'];
 
 ruleTester.run('nx-class-conventions', rule, {
   valid: [
-    // Icon sizes from glyph tokens or fixed px, and box sizes, stay legal.
+    // Icon sizes from glyph tokens or arbitrary values, and box sizes, stay legal.
     "const c = 'nx:[&_svg]:size-icon-glyph-default';",
     "const c = 'nx:[&>svg]:size-icon-glyph-sm nx:text-muted-foreground';",
+    "const c = 'nx:[&_svg]:size-[calc(var(--nx-icon-glyph-default)*2)]';",
     "const c = 'nx:[&_svg]:size-[24px]';",
     "const c = 'nx:size-8 nx:rounded-sm';",
     // A `:has()` selector sizes the box around the icon, not the icon.
     "const c = 'nx:has-[>svg]:size-8';",
-    "const c = 'nx:[&:has(svg)]:size-9';",
+    "const c = 'nx:[&:has(>svg)]:size-9';",
     "const x = <IconX className='nx:size-icon-glyph-xs nx:shrink-0' />;",
     "const x = <CheckIcon className={cn('nx:size-[24px]', className)} />;",
     // Only an `Icon*` or `*Icon` element is an icon.
     "const x = <Badge className='nx:size-4' />;",
-    // Stories and docs are specimens, like the other runtime-only checks.
+    "const x = <Iconography className='nx:size-8' />;",
+    // The docs app styles its own chrome.
     {
       code: "const x = <IconX className='nx:size-4' />;",
-      filename: '/repo/packages/react/src/components/kbd/Kbd.stories.tsx',
+      filename: '/repo/apps/docs/app/_components/Nav.tsx',
+    },
+    {
+      code: "const c = 'nx:[&_svg]:size-4';",
+      filename: '/repo/apps/docs/app/_components/Nav.tsx',
     },
     // Correct prefix order + complete semantic paths.
     "const c = 'nx:hover:bg-primary-background';",
@@ -149,6 +155,21 @@ ruleTester.run('nx-class-conventions', rule, {
     },
     {
       code: "const x = <CheckIcon className={cn('nx:h-4 nx:w-4', className)} />;",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&_svg]:!size-4';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    // The docs pages copy a story's code into apps.
+    {
+      code: "const x = <IconX className='nx:size-4' />;",
+      filename: '/repo/packages/react/src/components/kbd/Kbd.stories.tsx',
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&_svg]:size-4';",
+      filename: '/repo/packages/react/src/components/kbd/Kbd.stories.tsx',
       errors: [{ messageId: 'densityIconSize' }],
     },
     {

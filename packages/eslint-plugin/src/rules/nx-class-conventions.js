@@ -36,9 +36,9 @@ export const RAW_LETTER_SPACINGS = [
 ];
 
 // A numeric spacing step sizes an icon from spacing, so the icon follows
-// density. Glyph tokens (`size-icon-glyph-sm`) and arbitrary px values
-// (`size-[24px]`) stay fixed.
-const SPACING_STEP_SIZE = /^(?:size|h|w)-\d/;
+// density. Glyph tokens (`size-icon-glyph-sm`) and arbitrary values
+// (`size-[24px]`) do not. A leading `!` is Tailwind's important modifier.
+const SPACING_STEP_SIZE = /^!?(?:size|h|w)-\d/;
 
 // An `Icon*` or `*Icon` JSX element, such as `IconX` or `CheckIcon`.
 const ICON_ELEMENT_NAME = /^Icon(?![a-z])|Icon$/;
@@ -142,26 +142,27 @@ const CHECKS = [
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}font-(?:${RAW_FONT_WEIGHTS.join('|')})\\b`
     ),
-    runtimeOnly: true,
+    skipFile: isExampleFile,
   },
   {
     messageId: 'rawLineHeight',
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}leading-(?:${RAW_LINE_HEIGHTS.join('|')}|\\d+|\\[)`
     ),
-    runtimeOnly: true,
+    skipFile: isExampleFile,
   },
   {
     messageId: 'densityIconSize',
     test: sizesSvgFromSpacing,
-    runtimeOnly: true,
+    // Stories are checked: the docs pages copy their code into apps.
+    skipFile: isDocsFile,
   },
   {
     messageId: 'rawLetterSpacing',
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}tracking-(?:${RAW_LETTER_SPACINGS.join('|')}|\\[)`
     ),
-    runtimeOnly: true,
+    skipFile: isExampleFile,
   },
 ];
 
@@ -188,8 +189,9 @@ function isDocsFile(filename) {
   return /(?:^|[/\\])apps[/\\]docs[/\\]/.test(filename);
 }
 
-// What the runtime-only checks skip: stories and the docs app quote utilities
-// as specimens and prose, and the docs app styles its own chrome off-system.
+// What the raw typography checks skip: stories and the docs app quote
+// utilities as specimens and prose, and the docs app styles its own chrome
+// off-system.
 function isExampleFile(filename) {
   return isStoryFile(filename) || isDocsFile(filename);
 }
@@ -232,10 +234,7 @@ function isRawTypographyException(check, filename, raw) {
 }
 
 function shouldRunCheck(check, filename, raw) {
-  if (!check.runtimeOnly) {
-    return true;
-  }
-  if (isExampleFile(filename)) {
+  if (check.skipFile?.(filename)) {
     return false;
   }
   return !isRawTypographyException(check, filename, raw);
@@ -351,7 +350,7 @@ export default {
       rawLetterSpacing:
         'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
       densityIconSize:
-        'Icon size from a spacing step — a numeric `size-*`, `h-*` or `w-*` on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm` or `-default` (12, 14 or 16px), or a fixed px size such as `size-[24px]`.',
+        'Icon size from a spacing step — a numeric `size-*`, `h-*` or `w-*` on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm` or `-default` (12, 14 or 16px). For another size, multiply the default icon, such as `size-[calc(var(--nx-icon-glyph-default)*2)]`.',
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
     },
@@ -405,7 +404,7 @@ export default {
         reportScope(node);
       },
       JSXOpeningElement(node) {
-        if (isExampleFile(filename) || !isIconElement(node.name)) {
+        if (isDocsFile(filename) || !isIconElement(node.name)) {
           return;
         }
         const className = node.attributes.find(

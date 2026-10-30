@@ -190,7 +190,7 @@ export const States: Story = {
           <AttachmentMedia variant="icon"><PhFileTxt /></AttachmentMedia>
           <AttachmentContent>
             <AttachmentTitle>notes.txt<template #trailing>
-                <PhCheckCircle weight="fill" class="nx:size-4 nx:text-success-subtle-foreground" />
+                <PhCheckCircle weight="fill" class="nx:size-icon-glyph-default nx:text-success-subtle-foreground" />
               </template></AttachmentTitle>
             <AttachmentDescription>8 KB · Uploaded just now</AttachmentDescription>
           </AttachmentContent>
