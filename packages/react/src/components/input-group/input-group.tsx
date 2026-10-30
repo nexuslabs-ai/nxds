@@ -76,7 +76,7 @@ function InputGroup({ className, variant, ...props }: InputGroupProps) {
 }
 
 const inputGroupAddonVariants = cva(
-  'nx:flex nx:h-auto nx:cursor-text nx:items-center nx:justify-start nx:gap-2 nx:py-1.5 nx:typography-label-default nx:text-muted-foreground nx:select-none nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:[&>kbd]:rounded-sm nx:[&>svg]:size-icon-glyph-default',
+  'nx:flex nx:h-auto nx:cursor-text nx:items-center nx:justify-start nx:gap-2 nx:py-1.5 nx:typography-label-default nx:text-muted-foreground nx:select-none nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:[&>kbd]:rounded-sm nx:[&>svg]:size-icon-glyph-default nx:icon-stroke',
   {
     variants: {
       align: {
@@ -179,7 +179,7 @@ function InputGroupText({ className, ...props }: InputGroupTextProps) {
     <span
       data-slot="input-group-text"
       className={cn(
-        'nx:flex nx:items-center nx:gap-2 nx:typography-body-default nx:text-muted-foreground nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default',
+        'nx:flex nx:items-center nx:gap-2 nx:typography-body-default nx:text-muted-foreground nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:icon-stroke',
         className
       )}
       {...props}

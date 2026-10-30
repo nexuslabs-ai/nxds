@@ -26,7 +26,7 @@ const forwarded = useForwardProps(delegated);
     data-slot="select-scroll-down-button"
     :class="
       cn(
-        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1',
+        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1 nx:icon-stroke',
         props.class
       )
     "

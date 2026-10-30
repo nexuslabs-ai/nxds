@@ -23,7 +23,7 @@ import {
   borderWidthAliasUtilities,
   DEFAULT_TRANSITION,
   durationUtility,
-  iconSizeUtility,
+  iconUtility,
 } from '../src/token-source/utilities.ts';
 
 /**
@@ -383,12 +383,19 @@ export function generateTypographyUtilitiesCSS(tokensDir, primitiveMap) {
  * @param {import('../src/token-source/utilities.ts').UtilityRule} rule
  * @returns {string}
  */
-function formatUtilityRule({ name, declarations }) {
-  let css = `@utility ${name} {\n`;
-  for (const { property, value } of declarations) {
-    css += `  ${property}: ${value};\n`;
-  }
-  return `${css}}\n\n`;
+function formatUtilityRule({ name, selectors, declarations }) {
+  const declarationLines = declarations
+    .map(({ property, value }) => `${property}: ${value};`)
+    .join('\n');
+  const body = selectors
+    ? `${selectors.join(',\n')} {\n${indentLines(declarationLines)}\n}`
+    : declarationLines;
+  return `@utility ${name} {\n${indentLines(body)}\n}\n\n`;
+}
+
+/** `text` with every line indented by two spaces. */
+function indentLines(text) {
+  return text.replace(/^/gm, '  ');
 }
 
 /**
@@ -415,20 +422,18 @@ export function generateBorderWidthUtilitiesCSS(tokens) {
 }
 
 /**
- * Generate the `size-icon-{name}` utilities for every icon token. They read
- * the fixed `--nx-icon-*` variables, so icons keep their size at every
- * density.
+ * Generate the utility for every icon token: `size-icon-{name}` for each
+ * glyph size and `icon-stroke` for the line width. They read the fixed
+ * `--nx-icon-*` variables, so icons keep their size and line at every density.
  *
- * @param {object[]} tokens - Array of icon tokens with cssName property (e.g., "nx-icon-glyph-default")
+ * @param {object[]} tokens - Array of icon tokens with a dotted path property (e.g., "glyph.default")
  * @returns {{ css: string, count: number }} Generated CSS and utility count
  */
 export function generateIconUtilitiesCSS(tokens) {
-  const rules = tokens.map((token) =>
-    iconSizeUtility(token.cssName.replace('nx-icon-', ''))
-  );
+  const rules = tokens.map((token) => iconUtility(token.path.split('.')));
 
   return {
-    css: `/* Icon Size Utilities */\n\n${rules.map(formatUtilityRule).join('')}`,
+    css: `/* Icon Utilities */\n\n${rules.map(formatUtilityRule).join('')}`,
     count: rules.length,
   };
 }

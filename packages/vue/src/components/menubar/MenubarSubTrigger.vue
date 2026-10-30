@@ -37,7 +37,7 @@ const forwarded = useForwardProps(delegated);
         'nx:rounded-sm nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-[state=open]:bg-popover-hover nx:data-[state=open]:text-popover-foreground',
-        'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0',
+        'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
         inset && menubarInsetClassName,
         props.class
       )

@@ -254,6 +254,13 @@ describe('cn', () => {
     );
   });
 
+  it("keeps the icon stroke beside the element's own stroke utilities", () => {
+    expect(cn('nx:icon-stroke', 'nx:stroke-2 nx:stroke-current')).toBe(
+      'nx:icon-stroke nx:stroke-2 nx:stroke-current'
+    );
+    expect(cn('nx:icon-stroke', 'nx:icon-stroke')).toBe('nx:icon-stroke');
+  });
+
   it('merges custom utilities within the same modifier scope', () => {
     expect(cn('nx:hover:duration-fast nx:hover:duration-slow')).toBe(
       'nx:hover:duration-slow'

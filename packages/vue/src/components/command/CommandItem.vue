@@ -92,7 +92,7 @@ const itemAttrs = computed(() => ({
     'nx:gap-3 nx:px-3 nx:py-2.5',
     'nx:data-[selected=true]:bg-popover-hover nx:data-[selected=true]:text-popover-foreground',
     'nx:data-[disabled=true]:pointer-events-none nx:data-[disabled=true]:text-disabled-foreground',
-    'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0',
+    'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
     props.class
   ),
 }));
