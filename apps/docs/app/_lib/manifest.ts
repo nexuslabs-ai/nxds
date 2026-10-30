@@ -20,6 +20,11 @@ export function requireSection(slug: string): ManifestSection {
   return section;
 }
 
+/** The route a section's own URL redirects to: its first page. */
+export function sectionHomeRoute(section: ManifestSection): string | undefined {
+  return section.pages[0]?.route;
+}
+
 export function requirePage(
   sectionSlug: string,
   pageSlug: string

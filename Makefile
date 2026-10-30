@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup fresh clean dev dev-vue docs dev-all build tokens \
+.PHONY: help setup fresh clean dev dev-vue docs docs-preview dev-all build tokens \
         lint typecheck audit verify \
         up down serve publish
 
@@ -39,6 +39,10 @@ dev-vue: ## Storybook for @nxds/vue, on port 6007
 
 docs: ## Docs site + live @nxds/react (turbo: docs + react watcher)
 	pnpm turbo dev --filter=@nxds/docs...
+
+docs-preview: ## Production docs build with its .md pages, served on :4321
+	pnpm turbo build --filter=@nxds/docs...
+	pnpm --filter @nxds/docs exec wrangler dev --port 4321
 
 dev-all: ## Everything: docs + storybook + package watchers (turbo)
 	pnpm turbo dev storybook

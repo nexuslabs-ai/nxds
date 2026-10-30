@@ -22,12 +22,13 @@ That's the whole first-time setup. It also wires the Husky pre-commit hook, whic
 
 Pick the surface you're working on — each is one `make` command that turbo orchestrates (parallel servers, prefixed logs, one Ctrl-C stops all):
 
-| Command        | Brings up                                                                   |
-| -------------- | --------------------------------------------------------------------------- |
-| `make dev`     | **Storybook** — the component catalog + interaction tests. The 90% surface. |
-| `make dev-vue` | the **`@nxds/vue`** Storybook, on port 6007                                 |
-| `make docs`    | the docs site **+ live `@nxds/react`**                                      |
-| `make dev-all` | everything: docs + storybook + all package watchers                         |
+| Command             | Brings up                                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------- |
+| `make dev`          | **Storybook** — the component catalog + interaction tests. The 90% surface.                 |
+| `make dev-vue`      | the **`@nxds/vue`** Storybook, on port 6007                                                 |
+| `make docs`         | the docs site **+ live `@nxds/react`**                                                      |
+| `make docs-preview` | the **production** docs build on port 4321, with each page's `.md` and the Copy page button |
+| `make dev-all`      | everything: docs + storybook + all package watchers                                         |
 
 > **The docs site's generated inputs come from the turbo graph**, not from its package scripts, and none of them are committed: `apps/docs/turbo.json` puts `generate:manifest` (the page manifest and its loader map), `generate:demos` (the docs code generated from every story tagged `docs`, under `__generated__/`), `@nxds/catalog#generate:catalog` (the install catalog the docs and the `nxds` CLI share) and `generate:props` (the per-component props JSON that `PropsTable` reads) ahead of both `build` and `dev`, and the two the TypeScript graph imports — `generate:manifest` and `generate:demos` — ahead of `typecheck`. `make build`, `make docs` and `make typecheck` get them. `PropsTable` reads the props JSON on each request, so after changing a component's props or JSDoc during `make docs`, rerun `pnpm --filter @nxds/docs generate:props` and reload — no restart. A bare `pnpm --filter @nxds/docs dev` runs only the docs-story watcher: on a clean checkout there is no page manifest, demo index or install catalog, so start the docs with `make docs`.
 
