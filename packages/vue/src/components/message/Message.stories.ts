@@ -1,5 +1,5 @@
+import { PhArrowClockwise, PhCopy, PhFileText } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { IconCopy, IconFileText, IconRefresh } from '@tabler/icons-vue';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { ref } from 'vue';
 
@@ -64,7 +64,7 @@ const attachmentComponents = {
   AttachmentDescription,
   AttachmentMedia,
   AttachmentTitle,
-  IconFileText,
+  PhFileText,
 };
 
 const topDelta = (a: Element, b: Element) =>
@@ -517,8 +517,8 @@ export const WithActions: Story = {
       Bubble,
       BubbleContent,
       Button,
-      IconCopy,
-      IconRefresh,
+      PhCopy,
+      PhArrowClockwise,
       Message,
       MessageAvatar,
       MessageContent,
@@ -540,13 +540,13 @@ export const WithActions: Story = {
               </Bubble>
               <MessageFooter>09:18<Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="sm" icon-only variant="ghost"><template #start-icon><IconCopy /></template>Copy reply</Button>
+                    <Button size="sm" icon-only variant="ghost"><template #start-icon><PhCopy /></template>Copy reply</Button>
                   </TooltipTrigger>
                   <TooltipContent>Copy</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="sm" icon-only variant="ghost"><template #start-icon><IconRefresh /></template>Regenerate reply</Button>
+                    <Button size="sm" icon-only variant="ghost"><template #start-icon><PhArrowClockwise /></template>Regenerate reply</Button>
                   </TooltipTrigger>
                   <TooltipContent>Regenerate</TooltipContent>
                 </Tooltip>
@@ -562,13 +562,13 @@ export const WithActions: Story = {
               <MessageFooter>09:20 &middot; <span class="nx:text-error-subtle-foreground">Failed to send</span>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="sm" icon-only variant="ghost"><template #start-icon><IconCopy /></template>Copy message</Button>
+                    <Button size="sm" icon-only variant="ghost"><template #start-icon><PhCopy /></template>Copy message</Button>
                   </TooltipTrigger>
                   <TooltipContent>Copy</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="sm" icon-only variant="ghost"><template #start-icon><IconRefresh /></template>Retry sending</Button>
+                    <Button size="sm" icon-only variant="ghost"><template #start-icon><PhArrowClockwise /></template>Retry sending</Button>
                   </TooltipTrigger>
                   <TooltipContent>Retry</TooltipContent>
                 </Tooltip>
@@ -668,7 +668,7 @@ export const WithAttachment: Story = {
       AttachmentMedia,
       AttachmentTitle,
       AvatarFallback,
-      IconFileText,
+      PhFileText,
       Message,
       MessageAvatar,
       MessageContent,
@@ -683,7 +683,7 @@ export const WithAttachment: Story = {
           <MessageContent>
             <MessageHeader>Ana Bianchi</MessageHeader>
             <Attachment>
-              <AttachmentMedia><IconFileText /></AttachmentMedia>
+              <AttachmentMedia><PhFileText /></AttachmentMedia>
               <AttachmentContent>
                 <AttachmentTitle>sales-dashboard.pdf</AttachmentTitle>
                 <AttachmentDescription>2.4 MB</AttachmentDescription>
@@ -696,7 +696,7 @@ export const WithAttachment: Story = {
           <MessageAvatar><AvatarFallback>YOU</AvatarFallback></MessageAvatar>
           <MessageContent>
             <Attachment>
-              <AttachmentMedia><IconFileText /></AttachmentMedia>
+              <AttachmentMedia><PhFileText /></AttachmentMedia>
               <AttachmentContent>
                 <AttachmentTitle>contrast-audit.log</AttachmentTitle>
                 <AttachmentDescription>18 KB</AttachmentDescription>
@@ -831,7 +831,7 @@ export const ComposedScene: Story = {
               <BubbleContent>Here is the audit output from this morning&rsquo;s run.</BubbleContent>
             </Bubble>
             <Attachment>
-              <AttachmentMedia><IconFileText /></AttachmentMedia>
+              <AttachmentMedia><PhFileText /></AttachmentMedia>
               <AttachmentContent>
                 <AttachmentTitle>contrast-audit.log</AttachmentTitle>
                 <AttachmentDescription>18 KB</AttachmentDescription>

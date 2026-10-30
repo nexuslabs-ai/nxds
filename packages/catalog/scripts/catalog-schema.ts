@@ -4,6 +4,7 @@
  * `nxds-cli` fetches from the registry. The generator and the CLI both
  * validate against these schemas, and the types are inferred from them.
  */
+import type { NxdsThemeField } from '@nxds/core';
 import path from 'node:path';
 import { valid, validRange } from 'semver';
 import { z } from 'zod';
@@ -205,6 +206,93 @@ const catalogItemSchema = z.discriminatedUnion('kind', [
 
 export type CatalogItem = z.infer<typeof catalogItemSchema>;
 
+const iconLibrarySchema = z.object({
+  name: z.string(),
+  label: z.string(),
+  /** `lib/icons.ts`, drawn by this library. */
+  file: catalogFileSchema,
+  /** The packages `file` imports. */
+  npm: npmPackagesSchema,
+});
+
+export type IconLibrary = z.infer<typeof iconLibrarySchema>;
+
+const fontSchema = z.object({
+  /** Its `init` flag value, such as `inter`. */
+  name: z.string(),
+  /** Its kind, such as `sans` or `mono`, which decides the flags that take it. */
+  category: z.string(),
+  /** The `font-family` stack the appearance prefs store. */
+  family: z.string(),
+  /** The Fontsource package that self-hosts the font, and its range. */
+  package: npmNameSchema,
+  range: rangeSchema,
+});
+
+export type Font = z.infer<typeof fontSchema>;
+
+const themeFieldInfo = {
+  /** Its `init` flag, without the `--`, such as `density`. */
+  flag: z.string(),
+  /** The appearance field it sets, such as `density` or `prefs.uiFont`. The CLI writes it into `nxds-theme.ts` as source. */
+  key: z.string().regex(/^(prefs\.)?[A-Za-z]+$/),
+};
+
+const themeFieldSchema = z.discriminatedUnion('kind', [
+  z.object({ ...themeFieldInfo, kind: z.literal('color') }),
+  z.object({
+    ...themeFieldInfo,
+    kind: z.literal('choice'),
+    values: z.array(z.string()).min(1),
+  }),
+  z.object({
+    ...themeFieldInfo,
+    kind: z.literal('integer'),
+    min: z.number().int(),
+    max: z.number().int(),
+  }),
+  z.object({
+    ...themeFieldInfo,
+    kind: z.literal('font'),
+    /** It takes the release's fonts of these categories, and `fallback.value`. */
+    categories: z.array(z.string()).min(1),
+    /** The value that names no font, and the family it writes. */
+    fallback: z.object({ value: z.string(), family: z.string().nullable() }),
+  }),
+]);
+
+export type ThemeField = z.infer<typeof themeFieldSchema>;
+
+const THEME_FIELD_KINDS: string[] = themeFieldSchema.options.map(
+  (option) => option.shape.kind.value
+);
+
+/**
+ * The catalog's copy of one of core's theme fields: what the CLI needs to
+ * check and write its flag. Null for `--icons`, since the release lists its
+ * icon libraries.
+ */
+export function catalogThemeField(field: NxdsThemeField): ThemeField | null {
+  if (field.key === undefined) return null;
+  const { flag, key } = field;
+  switch (field.kind) {
+    case 'color':
+      return { flag, key, kind: field.kind };
+    case 'choice':
+      return { flag, key, kind: field.kind, values: [...field.values] };
+    case 'integer':
+      return { flag, key, kind: field.kind, min: field.min, max: field.max };
+    case 'font':
+      return {
+        flag,
+        key,
+        kind: field.kind,
+        categories: [...field.categories],
+        fallback: field.fallback,
+      };
+  }
+}
+
 /** The `schema` this package writes and the CLI reads. */
 export const CATALOG_SCHEMA = 1;
 
@@ -219,6 +307,18 @@ export const catalogSchema = z.object({
   /** The React majors this release has files for. Releases from before React 18 support leave it out, and have React 19 files only. */
   reactMajors: z.array(reactMajorSchema).nonempty().default([19]),
   items: z.array(catalogItemSchema),
+  /** The libraries React's `lib/icons.ts` can draw. Items carry the first one's file. Releases from before icon libraries leave it out. */
+  iconLibraries: z.array(iconLibrarySchema).default([]),
+  /** The fonts an app can start with. Releases from before fonts leave it out. */
+  fonts: z.array(fontSchema).default([]),
+  /** The theme flags this release's `@nxds/core` takes, beside `--icons`. Releases from before themes leave it out. Kinds this version doesn't know are dropped. */
+  themeFields: z
+    .array(z.looseObject({ kind: z.string() }))
+    .transform((fields) =>
+      fields.filter((field) => THEME_FIELD_KINDS.includes(field.kind))
+    )
+    .pipe(z.array(themeFieldSchema))
+    .default([]),
 });
 
 export type Catalog = z.infer<typeof catalogSchema>;
@@ -256,6 +356,67 @@ function releaseItem(item: CatalogItem, frameworks: Framework[]): CatalogItem {
     return { ...item, variants: installedVariants(item.variants, frameworks) };
   }
   return { ...item, variants: installedVariants(item.variants, frameworks) };
+}
+
+/** `variant` with `library`'s `lib/icons.ts` and packages in place of `fallback`'s. */
+function withIconLibrary<V extends Variant>(
+  variant: V,
+  library: IconLibrary,
+  fallback: IconLibrary
+): V {
+  if (!variant.files.some((file) => file.path === library.file.path)) {
+    return variant;
+  }
+  const npm = Object.fromEntries(
+    Object.entries(variant.packages.npm).filter(
+      ([pkg]) => !(pkg in fallback.npm)
+    )
+  );
+  return {
+    ...variant,
+    files: variant.files.map((file) =>
+      file.path === library.file.path ? library.file : file
+    ),
+    packages: { ...variant.packages, npm: { ...npm, ...library.npm } },
+  };
+}
+
+/** `item` with `library`'s `lib/icons.ts`. Setup never carries the file. */
+function itemWithIconLibrary(
+  item: CatalogItem,
+  library: IconLibrary,
+  fallback: IconLibrary
+): CatalogItem {
+  if (item.kind === 'setup') return item;
+  const { react } = item.variants;
+  if (!react) return item;
+  return {
+    ...item,
+    variants: {
+      ...item.variants,
+      react: withIconLibrary(react, library, fallback),
+    },
+  };
+}
+
+/**
+ * `catalog` with every React `lib/icons.ts` drawn by the icon library `name`:
+ * each item that carries the file gets that library's copy and packages in
+ * place of the default library's.
+ */
+export function catalogWithIconLibrary(
+  catalog: Catalog,
+  name: string
+): Catalog {
+  const [fallback] = catalog.iconLibraries;
+  const library = catalog.iconLibraries.find((entry) => entry.name === name);
+  if (!fallback || !library || library === fallback) return catalog;
+  return {
+    ...catalog,
+    items: catalog.items.map((item) =>
+      itemWithIconLibrary(item, library, fallback)
+    ),
+  };
 }
 
 /** `catalog` with only the variants the CLI installs: what a release publishes. */

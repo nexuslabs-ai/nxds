@@ -1,12 +1,7 @@
 'use client';
 
+import { BASE_TONE_OPTIONS } from '@nxds/core';
 import { useNxdsAppearance } from '@nxds/react/appearance';
-
-import {
-  getThemeModeOptions,
-  getThemeModeValue,
-  updateThemeMode,
-} from '../_lib/appearance-controls';
 
 import { Button } from './nxds';
 
@@ -16,15 +11,15 @@ import { Button } from './nxds';
  * corner picker.
  */
 
-const BASES = getThemeModeOptions('base').map((option) => option.value);
+const BASES = BASE_TONE_OPTIONS.map((option) => option.value);
 
 export function LiveThemeSwapper() {
   const { state, setState } = useNxdsAppearance();
-  const base = getThemeModeValue(state, 'base');
 
-  const pick = (value: string) => {
-    setState((current) => updateThemeMode(current, 'base', value));
-  };
+  function pick(value: string) {
+    const surfaceTone = BASES.find((base) => base === value);
+    if (surfaceTone) setState((current) => ({ ...current, surfaceTone }));
+  }
 
   return (
     <div className="nx:h-full nx:rounded-xl nx:border nx:border-border-default nx:bg-container nx:p-5 nx:flex nx:flex-col nx:gap-4">
@@ -38,7 +33,12 @@ export function LiveThemeSwapper() {
         </span>
       </div>
 
-      <ChipRow label="Base" values={BASES} active={base} onPick={pick} />
+      <ChipRow
+        label="Base"
+        values={BASES}
+        active={state.surfaceTone}
+        onPick={pick}
+      />
 
       <div className="nx:mt-auto nx:flex nx:flex-wrap nx:items-center nx:gap-2 nx:border-t nx:border-border-default nx:pt-4">
         <Button size="sm">Primary</Button>

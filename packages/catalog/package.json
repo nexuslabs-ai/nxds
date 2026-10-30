@@ -1,6 +1,6 @@
 {
   "name": "@nxds/catalog",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "The install catalog the docs read and nxds-cli fetches, built from the React and Vue sources",
   "type": "module",
@@ -16,11 +16,22 @@
     "snapshot:release": "node scripts/snapshot-release.mjs"
   },
   "dependencies": {
+    "@nxds/core": "workspace:*",
     "@nxds/source-model": "workspace:*",
     "semver": "^7.8.5",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@fontsource-variable/dm-sans": "^5.3.0",
+    "@fontsource-variable/figtree": "^5.3.0",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "@fontsource-variable/ibm-plex-sans": "^5.3.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/lora": "^5.3.0",
+    "@fontsource-variable/manrope": "^5.3.0",
+    "@fontsource-variable/playfair-display": "^5.3.0",
     "@types/node": "^25.9.1",
     "@types/semver": "^7.8.0",
     "typescript": "^5.9.3"

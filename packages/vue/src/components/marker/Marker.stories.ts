@@ -1,13 +1,13 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
-  IconBook,
-  IconCheck,
-  IconFileText,
-  IconGitBranch,
-  IconPencil,
-  IconRotate,
-  IconSearch,
-} from '@tabler/icons-vue';
+  PhArrowCounterClockwise,
+  PhBook,
+  PhCheck,
+  PhFileText,
+  PhGitBranch,
+  PhMagnifyingGlass,
+  PhPencilSimple,
+} from '@phosphor-icons/vue';
+import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Spinner } from '../spinner';
@@ -85,9 +85,9 @@ export const Border: Story = {
   },
   render: () => ({
     components: {
-      IconFileText,
-      IconGitBranch,
-      IconSearch,
+      PhFileText,
+      PhGitBranch,
+      PhMagnifyingGlass,
       Marker,
       MarkerContent,
       MarkerIcon,
@@ -95,15 +95,15 @@ export const Border: Story = {
     template: `
       <div class="nx:flex nx:w-full nx:max-w-sm nx:flex-col nx:gap-6">
         <Marker variant="border">
-          <MarkerIcon><IconGitBranch /></MarkerIcon>
+          <MarkerIcon><PhGitBranch /></MarkerIcon>
           <MarkerContent>Switched to release-candidate</MarkerContent>
         </Marker>
         <Marker variant="border">
-          <MarkerIcon><IconSearch /></MarkerIcon>
+          <MarkerIcon><PhMagnifyingGlass /></MarkerIcon>
           <MarkerContent>Reviewed 8 related files</MarkerContent>
         </Marker>
         <Marker variant="border">
-          <MarkerIcon><IconFileText /></MarkerIcon>
+          <MarkerIcon><PhFileText /></MarkerIcon>
           <MarkerContent>Opened implementation notes</MarkerContent>
         </Marker>
       </div>
@@ -122,9 +122,9 @@ export const WithIcon: Story = {
   },
   render: () => ({
     components: {
-      IconBook,
-      IconPencil,
-      IconSearch,
+      PhBook,
+      PhPencilSimple,
+      PhMagnifyingGlass,
       Marker,
       MarkerContent,
       MarkerIcon,
@@ -132,15 +132,15 @@ export const WithIcon: Story = {
     template: `
       <div class="nx:flex nx:w-full nx:max-w-sm nx:flex-col nx:gap-6">
         <Marker>
-          <MarkerIcon><IconPencil /></MarkerIcon>
+          <MarkerIcon><PhPencilSimple /></MarkerIcon>
           <MarkerContent>Edited 2 minutes ago</MarkerContent>
         </Marker>
         <Marker variant="separator">
-          <MarkerIcon><IconSearch /></MarkerIcon>
+          <MarkerIcon><PhMagnifyingGlass /></MarkerIcon>
           <MarkerContent>Explored 4 files</MarkerContent>
         </Marker>
         <Marker variant="border">
-          <MarkerIcon><IconBook /></MarkerIcon>
+          <MarkerIcon><PhBook /></MarkerIcon>
           <MarkerContent>Syncing completed</MarkerContent>
         </Marker>
       </div>
@@ -191,7 +191,7 @@ export const InContext: Story = {
     },
   },
   render: () => ({
-    components: { IconPencil, Marker, MarkerContent, MarkerIcon },
+    components: { PhPencilSimple, Marker, MarkerContent, MarkerIcon },
     template: `
       <div class="nx:flex nx:w-full nx:max-w-sm nx:flex-col nx:gap-3">
         <div class="nx:rounded-md nx:border-default nx:border-border-default nx:bg-container nx:p-3 nx:typography-body-default nx:text-container-foreground">Rewrote the onboarding copy</div>
@@ -201,7 +201,7 @@ export const InContext: Story = {
         <div class="nx:rounded-md nx:border-default nx:border-border-default nx:bg-container nx:p-3 nx:typography-body-default nx:text-container-foreground">Shipped the appearance provider</div>
         <div class="nx:rounded-md nx:border-default nx:border-border-default nx:bg-container nx:p-3 nx:typography-body-default nx:text-container-foreground">Reviewed the token audit</div>
         <Marker>
-          <MarkerIcon><IconPencil /></MarkerIcon>
+          <MarkerIcon><PhPencilSimple /></MarkerIcon>
           <MarkerContent>Edited 2 minutes ago</MarkerContent>
         </Marker>
       </div>
@@ -220,11 +220,11 @@ export const AsChildLink: Story = {
     },
   },
   render: () => ({
-    components: { IconGitBranch, Marker, MarkerContent, MarkerIcon },
+    components: { PhGitBranch, Marker, MarkerContent, MarkerIcon },
     template: `
       <Marker as-child>
         <a href="#pull-request">
-          <MarkerIcon><IconGitBranch /></MarkerIcon>
+          <MarkerIcon><PhGitBranch /></MarkerIcon>
           <MarkerContent>View the pull request</MarkerContent>
         </a>
       </Marker>
@@ -277,8 +277,8 @@ export const Disabled: RevertStory = {
   args: { onRevert: fn() },
   render: (args) => ({
     components: {
-      IconGitBranch,
-      IconRotate,
+      PhGitBranch,
+      PhArrowCounterClockwise,
       Marker,
       MarkerContent,
       MarkerIcon,
@@ -288,19 +288,19 @@ export const Disabled: RevertStory = {
       <div class="nx:flex nx:w-full nx:max-w-sm nx:flex-col nx:gap-6">
         <Marker as-child>
           <button type="button" @click="args.onRevert">
-            <MarkerIcon><IconRotate /></MarkerIcon>
+            <MarkerIcon><PhArrowCounterClockwise /></MarkerIcon>
             <MarkerContent>Revert this change</MarkerContent>
           </button>
         </Marker>
         <Marker as-child>
           <button type="button" disabled @click="args.onRevert">
-            <MarkerIcon><IconRotate /></MarkerIcon>
+            <MarkerIcon><PhArrowCounterClockwise /></MarkerIcon>
             <MarkerContent>Delete this draft</MarkerContent>
           </button>
         </Marker>
         <Marker as-child>
           <a href="#pull-request" aria-disabled="true" tabindex="-1">
-            <MarkerIcon><IconGitBranch /></MarkerIcon>
+            <MarkerIcon><PhGitBranch /></MarkerIcon>
             <MarkerContent>View the pull request</MarkerContent>
           </a>
         </Marker>
@@ -334,12 +334,12 @@ export const Disabled: RevertStory = {
 export const ClickInteraction: RevertStory = {
   args: { onRevert: fn() },
   render: (args) => ({
-    components: { IconRotate, Marker, MarkerContent, MarkerIcon },
+    components: { PhArrowCounterClockwise, Marker, MarkerContent, MarkerIcon },
     setup: () => ({ args }),
     template: `
       <Marker as-child>
         <button type="button" @click="args.onRevert">
-          <MarkerIcon><IconRotate /></MarkerIcon>
+          <MarkerIcon><PhArrowCounterClockwise /></MarkerIcon>
           <MarkerContent>Revert this change</MarkerContent>
         </button>
       </Marker>
@@ -385,10 +385,10 @@ export const KeyboardInteraction: RevertStory = {
 
 export const WithDataAttributes: Story = {
   render: () => ({
-    components: { IconCheck, Marker, MarkerContent, MarkerIcon },
+    components: { PhCheck, Marker, MarkerContent, MarkerIcon },
     template: `
       <Marker variant="separator">
-        <MarkerIcon><IconCheck /></MarkerIcon>
+        <MarkerIcon><PhCheck /></MarkerIcon>
         <MarkerContent>Today</MarkerContent>
       </Marker>
     `,
@@ -410,7 +410,7 @@ export const WithDataAttributes: Story = {
 
 export const AllVariants: Story = {
   render: () => ({
-    components: { IconCheck, Marker, MarkerContent, MarkerIcon },
+    components: { PhCheck, Marker, MarkerContent, MarkerIcon },
     setup: () => ({ variants: ['default', 'separator', 'border'] as const }),
     template: `
       <div class="nx:flex nx:w-full nx:max-w-sm nx:flex-col nx:gap-6">
@@ -420,7 +420,7 @@ export const AllVariants: Story = {
             <MarkerContent>Today</MarkerContent>
           </Marker>
           <Marker :variant="variant">
-            <MarkerIcon><IconCheck /></MarkerIcon>
+            <MarkerIcon><PhCheck /></MarkerIcon>
             <MarkerContent>Today, with an icon</MarkerContent>
           </Marker>
         </div>

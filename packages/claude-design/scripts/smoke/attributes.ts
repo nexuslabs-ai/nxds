@@ -314,19 +314,19 @@ export const ATTRIBUTE_CASES: {
   },
   {
     name: 'an end icon takes an icon name',
-    markup: x('Button', 'variant="outline" end-icon="chevron-down"', 'Sort'),
+    markup: x('Button', 'variant="outline" end-icon="caret-down"', 'Sort'),
     expected: part(
       'Button',
-      { variant: 'outline', endIcon: { __icon: 'chevron-down' } },
+      { variant: 'outline', endIcon: { __icon: 'caret-down' } },
       'Sort'
     ),
   },
   {
     name: 'Badge icons take icon names',
-    markup: x('Badge', 'left-icon="circle-check" right-icon="x"', 'Paid'),
+    markup: x('Badge', 'left-icon="check-circle" right-icon="x"', 'Paid'),
     expected: part(
       'Badge',
-      { leftIcon: { __icon: 'circle-check' }, rightIcon: { __icon: 'x' } },
+      { leftIcon: { __icon: 'check-circle' }, rightIcon: { __icon: 'x' } },
       'Paid'
     ),
   },
@@ -339,7 +339,11 @@ export const ATTRIBUTE_CASES: {
       x(
         'InputGroupAddon',
         'align="inline-end"',
-        x('InputGroupButton', 'start-icon="search" aria-label="Search"')
+        x(
+          'InputGroupButton',
+          'icon-only start-icon="magnifying-glass"',
+          'Search'
+        )
       )
     ),
     expected: part(
@@ -349,27 +353,28 @@ export const ATTRIBUTE_CASES: {
       part(
         'InputGroupAddon',
         { align: 'inline-end' },
-        part('InputGroupButton', {
-          startIcon: { __icon: 'search' },
-          'aria-label': 'Search',
-        })
+        part(
+          'InputGroupButton',
+          { iconOnly: true, startIcon: { __icon: 'magnifying-glass' } },
+          'Search'
+        )
       )
     ),
   },
   {
     name: 'an icon element in an icon slot passes through',
-    markup: x('Button', '', x('Icon', 'name="device-floppy"'), 'Save'),
+    markup: x('Button', '', x('Icon', 'name="floppy-disk"'), 'Save'),
     expected: part(
       'Button',
       null,
-      part('Icon', { name: 'device-floppy' }),
+      part('Icon', { name: 'floppy-disk' }),
       'Save'
     ),
   },
   {
-    name: 'Icon takes its size and stroke as numbers',
-    markup: x('Icon', 'name="bell" size="20" stroke="1.5"'),
-    expected: part('Icon', { name: 'bell', size: 20, stroke: 1.5 }),
+    name: 'Icon takes its size as a number and its weight as a dropdown value',
+    markup: x('Icon', 'name="bell" size="20" weight="bold"'),
+    expected: part('Icon', { name: 'bell', size: 20, weight: 'bold' }),
   },
   {
     name: 'an empty Icon label leaves the icon hidden',

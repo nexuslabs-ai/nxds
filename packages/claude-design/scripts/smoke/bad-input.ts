@@ -148,10 +148,10 @@ export const BAD_INPUT_CASES: {
   },
   {
     name: 'a component name points at the icon name',
-    markup: x('Button', 'start-icon="IconPlus"', 'Create project'),
+    markup: x('Button', 'start-icon="PlusIcon"', 'Create project'),
     expected: part('Button', null, 'Create project'),
     warnings: [
-      /^\[nxds\] Button: start-icon="IconPlus" isn't an icon name; write "plus"\. Using the default\.$/,
+      /^\[nxds\] Button: start-icon="PlusIcon" isn't an icon name; write "plus"\. Using the default\.$/,
     ],
   },
   {

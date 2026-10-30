@@ -1,8 +1,8 @@
 import * as React from 'react';
 
+import { HashIcon } from '@phosphor-icons/react/ssr';
 import { Canvas, Source, Title } from '@storybook/addon-docs/blocks';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconHash } from '@tabler/icons-react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -63,7 +63,7 @@ function Preview({
     >
       <NumberComparisonFilter
         label="Amount"
-        icon={<IconHash aria-hidden="true" />}
+        icon={<HashIcon aria-hidden="true" />}
         value={value}
         onChange={change}
         disabled={isDisabled}

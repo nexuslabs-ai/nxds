@@ -1,6 +1,9 @@
 import type { ComponentProps } from 'react';
 
+import type { NxdsIconLibrary } from '@nxds/core';
+
 import { type CodeSampleLanguage, highlightSample } from '../_lib/code-sample';
+import { byIconLibrary } from '../_lib/icon-library-variants';
 
 import { DocsCodeBlock } from './CodeBlock';
 import { CodeCard } from './CodeCard';
@@ -34,6 +37,33 @@ export async function CodeSample({
         </CodeBlockLine>
       ))}
     </DocsCodeBlock>
+  );
+}
+
+/**
+ * A docs example's code attached beneath `header` in a `CodeCard`, as the
+ * reader's icon library draws it.
+ */
+export function ExampleCodeCard({
+  lang,
+  sources,
+  ...props
+}: Omit<ComponentProps<typeof CodeCard>, 'lines' | 'children'> & {
+  lang: CodeSampleLanguage;
+  sources: Readonly<Record<NxdsIconLibrary, string>>;
+}) {
+  const lines = Math.max(
+    ...Object.values(sources).map((code) => code.trimEnd().split('\n').length)
+  );
+
+  return (
+    <CodeCard lines={lines} {...props}>
+      {byIconLibrary(sources, (code) => (
+        <CodeSample lang={lang} framed>
+          {code}
+        </CodeSample>
+      ))}
+    </CodeCard>
   );
 }
 

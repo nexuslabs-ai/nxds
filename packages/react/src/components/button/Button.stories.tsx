@@ -1,12 +1,13 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconArrowRight,
-  IconDownload,
-  IconSend,
-  IconStar,
-} from '@tabler/icons-react';
+  ArrowRightIcon,
+  DownloadSimpleIcon,
+  PaperPlaneRightIcon,
+  StarIcon,
+  UploadSimpleIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { expectHeightPinned } from '../../stories/support/story-height-test-utils';
@@ -192,14 +193,14 @@ export const IconOnlySizes: Story = {
   },
   render: () => (
     <div className="nx:flex nx:items-center nx:gap-2">
-      <Button size="sm" iconOnly startIcon={<IconStar />}>
+      <Button size="sm" iconOnly startIcon={<StarIcon />}>
         Add to favorites
       </Button>
-      <Button iconOnly startIcon={<IconDownload />}>
+      <Button iconOnly startIcon={<DownloadSimpleIcon />}>
         Download
       </Button>
-      <Button size="lg" iconOnly startIcon={<IconSend />}>
-        Send
+      <Button size="lg" iconOnly startIcon={<UploadSimpleIcon />}>
+        Upload
       </Button>
     </div>
   ),
@@ -226,7 +227,7 @@ export const IconOnlySizes: Story = {
 
 export const IconOnlyName: Story = {
   render: () => (
-    <Button iconOnly startIcon={<IconDownload />}>
+    <Button iconOnly startIcon={<DownloadSimpleIcon />}>
       Download
     </Button>
   ),
@@ -245,7 +246,7 @@ export const IconOnlyName: Story = {
 
 export const IconOnlyInteraction: Story = {
   render: (args) => (
-    <Button onClick={args.onClick} iconOnly startIcon={<IconDownload />}>
+    <Button onClick={args.onClick} iconOnly startIcon={<DownloadSimpleIcon />}>
       Download
     </Button>
   ),
@@ -269,9 +270,9 @@ export const IconOnlyInteraction: Story = {
 // `startIcon`, and refuses `asChild`.
 const _rejectedIconOnlyButtons = [
   // @ts-expect-error An icon-only button needs a name.
-  <Button key="no-name" iconOnly startIcon={<IconStar />} />,
+  <Button key="no-name" iconOnly startIcon={<StarIcon />} />,
   // @ts-expect-error The name must be text.
-  <Button key="node-name" iconOnly startIcon={<IconStar />}>
+  <Button key="node-name" iconOnly startIcon={<StarIcon />}>
     <span>Download</span>
   </Button>,
   // @ts-expect-error An icon-only button needs an icon.
@@ -279,7 +280,7 @@ const _rejectedIconOnlyButtons = [
     Download
   </Button>,
   // @ts-expect-error asChild can't render an icon-only button.
-  <Button key="as-child" iconOnly asChild startIcon={<IconStar />}>
+  <Button key="as-child" iconOnly asChild startIcon={<StarIcon />}>
     Download
   </Button>,
 ];
@@ -287,7 +288,7 @@ const _rejectedIconOnlyButtons = [
 // A screen-size switch is one boolean prop.
 function _ResponsiveDownload({ isNarrow }: { isNarrow: boolean }) {
   return (
-    <Button iconOnly={isNarrow} startIcon={<IconDownload />}>
+    <Button iconOnly={isNarrow} startIcon={<DownloadSimpleIcon />}>
       Download
     </Button>
   );
@@ -297,30 +298,30 @@ export const IconSize: Story = {
   render: () => (
     <div className="nx:flex nx:flex-col nx:items-start nx:gap-3">
       <div className="nx:flex nx:items-center nx:gap-2">
-        <Button size="sm" startIcon={<IconDownload />}>
+        <Button size="sm" startIcon={<DownloadSimpleIcon />}>
           Download
         </Button>
-        <Button size="sm" iconOnly startIcon={<IconStar />}>
+        <Button size="sm" iconOnly startIcon={<StarIcon />}>
           Add to favorites
         </Button>
       </div>
       <div className="nx:flex nx:items-center nx:gap-2">
-        <Button startIcon={<IconDownload />}>Download</Button>
-        <Button iconOnly startIcon={<IconStar />}>
+        <Button startIcon={<DownloadSimpleIcon />}>Download</Button>
+        <Button iconOnly startIcon={<StarIcon />}>
           Add to favorites
         </Button>
       </div>
       <div className="nx:flex nx:items-center nx:gap-2">
-        <Button size="lg" startIcon={<IconDownload />}>
+        <Button size="lg" startIcon={<DownloadSimpleIcon />}>
           Download
         </Button>
-        <Button size="lg" iconOnly startIcon={<IconStar />}>
+        <Button size="lg" iconOnly startIcon={<StarIcon />}>
           Add to favorites
         </Button>
       </div>
       <div data-density="compact" className="nx:flex nx:items-center nx:gap-2">
-        <Button startIcon={<IconDownload />}>Download</Button>
-        <Button iconOnly startIcon={<IconStar />}>
+        <Button startIcon={<DownloadSimpleIcon />}>Download</Button>
+        <Button iconOnly startIcon={<StarIcon />}>
           Add to favorites
         </Button>
       </div>
@@ -339,9 +340,8 @@ export const IconSize: Story = {
       const { width, height } = svg.getBoundingClientRect();
       await expect(width).toBe(iconToken);
       await expect(height).toBe(iconToken);
-      await expect(parseFloat(getComputedStyle(svg).strokeWidth)).toBeLessThan(
-        Number(svg.getAttribute('stroke-width'))
-      );
+      // Stroked icon sets (Tabler, Lucide) draw at 1.75 in a Button.
+      await expect(getComputedStyle(svg).strokeWidth).toBe('1.75px');
     }
   },
 };
@@ -372,8 +372,8 @@ export const Disabled: Story = {
 export const Loading: Story = {
   args: {
     loading: true,
-    startIcon: <IconSend />,
-    endIcon: <IconArrowRight />,
+    startIcon: <PaperPlaneRightIcon />,
+    endIcon: <ArrowRightIcon />,
     children: 'Submitting',
   },
   play: async ({ canvasElement, args }) => {
@@ -596,7 +596,7 @@ export const StartIconSlot: Story = {
     },
   },
   args: {
-    startIcon: <IconDownload data-testid="start-icon" />,
+    startIcon: <DownloadSimpleIcon data-testid="start-icon" />,
     children: 'Download',
   },
   play: async ({ canvasElement }) => {
@@ -621,7 +621,7 @@ export const EndIconSlot: Story = {
     },
   },
   args: {
-    endIcon: <IconArrowRight data-testid="end-icon" />,
+    endIcon: <ArrowRightIcon data-testid="end-icon" />,
     children: 'Continue',
   },
   play: async ({ canvasElement }) => {
@@ -675,13 +675,13 @@ export const AllVariants: Story = {
           <Button size="sm">Small</Button>
           <Button size="default">Default</Button>
           <Button size="lg">Large</Button>
-          <Button size="sm" iconOnly startIcon={<IconStar />}>
+          <Button size="sm" iconOnly startIcon={<StarIcon />}>
             Add to favorites
           </Button>
-          <Button iconOnly startIcon={<IconStar />}>
+          <Button iconOnly startIcon={<StarIcon />}>
             Add to favorites
           </Button>
-          <Button size="lg" iconOnly startIcon={<IconStar />}>
+          <Button size="lg" iconOnly startIcon={<StarIcon />}>
             Add to favorites
           </Button>
         </div>
@@ -691,8 +691,8 @@ export const AllVariants: Story = {
           Icon slots
         </h3>
         <div className="nx:flex nx:flex-wrap nx:items-center nx:gap-2">
-          <Button startIcon={<IconDownload />}>Start icon</Button>
-          <Button endIcon={<IconArrowRight />}>End icon</Button>
+          <Button startIcon={<DownloadSimpleIcon />}>Start icon</Button>
+          <Button endIcon={<ArrowRightIcon />}>End icon</Button>
         </div>
       </div>
       <div>

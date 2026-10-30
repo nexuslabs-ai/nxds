@@ -54,7 +54,7 @@ export const WRAPPED_CASES: { name: string; markup: string; reads: Read[] }[] =
             'as-child',
             x(
               'Button',
-              'variant="outline" icon-only start-icon="chevron-down"',
+              'variant="outline" icon-only start-icon="caret-down"',
               'More options'
             )
           )
@@ -111,7 +111,7 @@ export const WRAPPED_CASES: { name: string; markup: string; reads: Read[] }[] =
       markup: x(
         'InputGroup',
         '',
-        x('InputGroupAddon', '', x('Icons.IconSearch')),
+        x('InputGroupAddon', '', x('Icons.MagnifyingGlassIcon')),
         x('InputGroupInput', 'placeholder="Search" aria-label="Search"')
       ),
       reads: [
@@ -124,7 +124,7 @@ export const WRAPPED_CASES: { name: string; markup: string; reads: Read[] }[] =
       markup: x(
         'Alert',
         '',
-        x('AlertIcon', '', x('Icons.IconInfoCircle')),
+        x('AlertIcon', '', x('Icons.InfoIcon')),
         x('AlertTitle', '', 'Heads up'),
         x('AlertDescription', '', 'Your trial ends in three days.')
       ),
@@ -154,7 +154,7 @@ export const WRAPPED_CASES: { name: string; markup: string; reads: Read[] }[] =
                 x(
                   'SidebarMenuButton',
                   '',
-                  x('Icons.IconInbox'),
+                  x('Icons.TrayIcon'),
                   el('span', '', 'Inbox')
                 ),
                 x('SidebarMenuBadge', '', '24')

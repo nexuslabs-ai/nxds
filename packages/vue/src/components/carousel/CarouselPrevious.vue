@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { IconArrowLeft } from '@tabler/icons-vue';
 import { reactiveOmit } from '@vueuse/core';
 
+import { IconArrowLeft } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 import { Button, type ButtonProps, type ButtonVariants } from '../button';
 

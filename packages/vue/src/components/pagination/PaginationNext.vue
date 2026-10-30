@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { IconChevronRight } from '@tabler/icons-vue';
-
+import { IconChevronRight } from '../../lib/icons';
 import type { ButtonVariants } from '../button';
 
 import PaginationAnchor from './PaginationAnchor.vue';

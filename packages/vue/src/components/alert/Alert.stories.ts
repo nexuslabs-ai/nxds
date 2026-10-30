@@ -1,10 +1,10 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
-  IconAlertCircle,
-  IconAlertTriangle,
-  IconCircleCheck,
-  IconInfoCircle,
-} from '@tabler/icons-vue';
+  PhCheckCircle,
+  PhInfo,
+  PhWarning,
+  PhWarningCircle,
+} from '@phosphor-icons/vue';
+import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { ref } from 'vue';
 
@@ -69,11 +69,11 @@ export const WithIcon: Story = {
       AlertDescription,
       AlertIcon,
       AlertTitle,
-      IconInfoCircle,
+      PhInfo,
     },
     template: `
       <Alert class="nx:max-w-md">
-        <AlertIcon><IconInfoCircle /></AlertIcon>
+        <AlertIcon><PhInfo /></AlertIcon>
         <AlertTitle>Information</AlertTitle>
         <AlertDescription>This is an informational alert with an icon.</AlertDescription>
       </Alert>
@@ -97,11 +97,11 @@ export const BannerPresentation: Story = {
       AlertDescription,
       AlertIcon,
       AlertTitle,
-      IconInfoCircle,
+      PhInfo,
     },
     template: `
       <Alert variant="information" presentation="banner" class="nx:max-w-md">
-        <AlertIcon><IconInfoCircle /></AlertIcon>
+        <AlertIcon><PhInfo /></AlertIcon>
         <AlertTitle>Information</AlertTitle>
         <AlertDescription>New workspace invitations are available for review.</AlertDescription>
       </Alert>
@@ -134,12 +134,12 @@ export const DismissibleCloseButton: Story = {
       AlertDescription,
       AlertIcon,
       AlertTitle,
-      IconInfoCircle,
+      PhInfo,
     },
     setup: () => ({ visible: ref(true) }),
     template: `
       <Alert v-if="visible" variant="information" layout="inline" class="nx:max-w-xl">
-        <AlertIcon><IconInfoCircle /></AlertIcon>
+        <AlertIcon><PhInfo /></AlertIcon>
         <AlertContent>
           <AlertTitle>Invite ready</AlertTitle>
           <AlertDescription>The workspace invitation can now be sent.</AlertDescription>
@@ -186,11 +186,11 @@ export const ActionsBelowDescription: Story = {
       AlertIcon,
       AlertTitle,
       Button,
-      IconAlertTriangle,
+      PhWarning,
     },
     template: `
       <Alert variant="warning" class="nx:max-w-md">
-        <AlertIcon><IconAlertTriangle /></AlertIcon>
+        <AlertIcon><PhWarning /></AlertIcon>
         <AlertContent>
           <AlertTitle>Plan limit reached</AlertTitle>
           <AlertDescription>Upgrade the workspace or remove unused seats before inviting more members.</AlertDescription>
@@ -220,17 +220,17 @@ export const AllVariants: Story = {
       AlertDescription,
       AlertIcon,
       AlertTitle,
-      IconAlertCircle,
-      IconAlertTriangle,
-      IconCircleCheck,
-      IconInfoCircle,
+      PhWarningCircle,
+      PhWarning,
+      PhCheckCircle,
+      PhInfo,
     },
     template: `
       <div class="nx:flex nx:flex-col nx:gap-6">
         <div>
           <div class="nx:mb-4 nx:typography-label-default nx:text-foreground">Default</div>
           <Alert class="nx:max-w-md">
-            <AlertIcon><IconInfoCircle /></AlertIcon>
+            <AlertIcon><PhInfo /></AlertIcon>
             <AlertTitle>Default Alert</AlertTitle>
             <AlertDescription>This is a default informational alert.</AlertDescription>
           </Alert>
@@ -238,7 +238,7 @@ export const AllVariants: Story = {
         <div>
           <div class="nx:mb-4 nx:typography-label-default nx:text-foreground">Information</div>
           <Alert variant="information" class="nx:max-w-md">
-            <AlertIcon><IconInfoCircle /></AlertIcon>
+            <AlertIcon><PhInfo /></AlertIcon>
             <AlertTitle>Information Alert</AlertTitle>
             <AlertDescription>This is an informational alert.</AlertDescription>
           </Alert>
@@ -246,7 +246,7 @@ export const AllVariants: Story = {
         <div>
           <div class="nx:mb-4 nx:typography-label-default nx:text-foreground">Destructive</div>
           <Alert variant="destructive" class="nx:max-w-md">
-            <AlertIcon><IconAlertCircle /></AlertIcon>
+            <AlertIcon><PhWarningCircle /></AlertIcon>
             <AlertTitle>Destructive Alert</AlertTitle>
             <AlertDescription>This is a destructive/error alert.</AlertDescription>
           </Alert>
@@ -254,7 +254,7 @@ export const AllVariants: Story = {
         <div>
           <div class="nx:mb-4 nx:typography-label-default nx:text-foreground">Success</div>
           <Alert variant="success" class="nx:max-w-md">
-            <AlertIcon><IconCircleCheck /></AlertIcon>
+            <AlertIcon><PhCheckCircle /></AlertIcon>
             <AlertTitle>Success Alert</AlertTitle>
             <AlertDescription>This is a success alert.</AlertDescription>
           </Alert>
@@ -262,7 +262,7 @@ export const AllVariants: Story = {
         <div>
           <div class="nx:mb-4 nx:typography-label-default nx:text-foreground">Warning</div>
           <Alert variant="warning" class="nx:max-w-md">
-            <AlertIcon><IconAlertTriangle /></AlertIcon>
+            <AlertIcon><PhWarning /></AlertIcon>
             <AlertTitle>Warning Alert</AlertTitle>
             <AlertDescription>This is a warning alert.</AlertDescription>
           </Alert>
@@ -288,11 +288,11 @@ export const DisabledClose: Story = {
       AlertIcon,
       AlertTitle,
       Button,
-      IconCircleCheck,
+      PhCheckCircle,
     },
     template: `
       <Alert variant="success" layout="inline" class="nx:max-w-2xl">
-        <AlertIcon><IconCircleCheck /></AlertIcon>
+        <AlertIcon><PhCheckCircle /></AlertIcon>
         <AlertContent>
           <AlertTitle>Deployment complete</AlertTitle>
           <AlertDescription>Version 2.4.0 is live in the production environment.</AlertDescription>
@@ -325,11 +325,11 @@ export const HelperBanner: Story = {
       AlertContent,
       AlertDescription,
       AlertIcon,
-      IconInfoCircle,
+      PhInfo,
     },
     template: `
       <Alert variant="information" layout="inline" presentation="banner" class="nx:max-w-3xl">
-        <AlertIcon><IconInfoCircle /></AlertIcon>
+        <AlertIcon><PhInfo /></AlertIcon>
         <AlertContent>
           <AlertDescription>
             Scheduled maintenance begins at 9 PM.
@@ -360,11 +360,11 @@ export const TextCloseLabel: Story = {
       AlertDescription,
       AlertIcon,
       AlertTitle,
-      IconInfoCircle,
+      PhInfo,
     },
     template: `
       <Alert variant="information" layout="inline" class="nx:max-w-xl">
-        <AlertIcon><IconInfoCircle /></AlertIcon>
+        <AlertIcon><PhInfo /></AlertIcon>
         <AlertContent>
           <AlertTitle>Text close control</AlertTitle>
           <AlertDescription>Text children self-label, so the button keeps its visible name.</AlertDescription>
@@ -416,7 +416,7 @@ export const WithDataAttributes: Story = {
       AlertIcon,
       AlertTitle,
       Button,
-      IconAlertTriangle,
+      PhWarning,
     },
     template: `
       <div class="nx:flex nx:flex-col nx:gap-4">
@@ -425,7 +425,7 @@ export const WithDataAttributes: Story = {
           <AlertDescription>Testing data attributes.</AlertDescription>
         </Alert>
         <Alert variant="warning" layout="inline" class="nx:max-w-xl">
-          <AlertIcon><IconAlertTriangle /></AlertIcon>
+          <AlertIcon><PhWarning /></AlertIcon>
           <AlertContent>
             <AlertTitle>Storage almost full</AlertTitle>
             <AlertDescription>Uploads may fail soon.</AlertDescription>

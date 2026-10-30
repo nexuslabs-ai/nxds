@@ -6,7 +6,7 @@ import { cn } from '../../lib/utils';
 /**
  * Props for Spinner.
  */
-type SpinnerProps = React.ComponentProps<'svg'>;
+type SpinnerProps = Omit<React.ComponentProps<'svg'>, 'children'>;
 
 /**
  * Rotating loading indicator with `role="status"` and a default `aria-label`

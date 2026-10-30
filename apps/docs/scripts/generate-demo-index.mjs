@@ -16,6 +16,13 @@ import {
   PREVIEWLESS_COMPONENTS,
   readDocsStories,
 } from '@nxds/source-model/docs-stories.ts';
+import { reactExampleSource } from '@nxds/source-model/example-icon-sources.ts';
+import {
+  EXAMPLE_ICONS,
+  ICON_LIBRARIES,
+  ICON_PACKAGES,
+  iconExport,
+} from '@nxds/source-model/example-icons.ts';
 import {
   importSpecifiers,
   readCanonical,
@@ -28,6 +35,8 @@ import {
   exportedComponentSlugs,
 } from '@nxds/source-model/react-sources.mjs';
 import { reactRoot, reactSrc, toRepoPath } from '@nxds/source-model/roots.mjs';
+
+import prettier from 'prettier';
 
 import { dependencyEntries } from '@nxds/catalog/scripts/dependency-plans.mjs';
 import { buildCatalog } from '@nxds/catalog/scripts/generate-catalog.mjs';
@@ -69,6 +78,8 @@ const DOCS_DEPENDENCIES = JSON.parse(
 const INDEX_FILE = 'demo-index.ts';
 const MODULES_DIR = 'demos';
 const BOUNDARY_SUFFIX = '.client';
+/** The module previews draw story icons from, beside `MODULES_DIR`. */
+const EXAMPLE_ICONS_MODULE = 'example-icons';
 const WATCH_DEBOUNCE_MS = 50;
 
 const GENERATED_BY =
@@ -79,6 +90,7 @@ const REGENERATE_HINT =
 const INDEX_HEADER = `${GENERATED_BY}
 ${REGENERATE_HINT}
 
+import type { NxdsIconLibrary } from '@nxds/core';
 import type { ComponentType } from 'react';
 
 export interface Demo {
@@ -90,10 +102,13 @@ export interface Demo {
   description: string | null;
   /** Install blocks the demo needs beyond its component's own. */
   alsoInstall: readonly string[];
-  /** \`name@range\` packages it imports that none of its install blocks install. */
-  packages: readonly string[];
-  /** Loads the demo's component and its own source text together. */
-  load: () => Promise<{ Component: ComponentType; source: string }>;
+  /** \`name@range\` packages it imports that none of its install blocks install, by icon library. */
+  packages: Readonly<Record<NxdsIconLibrary, readonly string[]>>;
+  /** Loads the demo's component and its source text, as each icon library draws it. */
+  load: () => Promise<{
+    Component: ComponentType;
+    sources: Readonly<Record<NxdsIconLibrary, string>>;
+  }>;
 }
 
 export interface ComponentDocs {
@@ -164,10 +179,36 @@ export function getBlockDocs(slug: string): BlockDocs {
  * @property {string} slug The component the story belongs to.
  * @property {string} title The example's heading.
  * @property {string | null} description The example's caption.
- * @property {string} source The generated module's full contents.
+ * @property {string} source The generated module's full contents, drawing Phosphor.
+ * @property {Record<string, string>} sources `source` as each icon library draws it, by library.
  * @property {string[]} alsoInstall Install blocks it needs beyond its component's.
- * @property {string[]} packages `name@range` packages none of its blocks install.
+ * @property {Record<string, string[]>} packages `name@range` packages none of its blocks install, by icon library.
  */
+
+/**
+ * `source` as each icon library draws it, formatted as the docs show it.
+ * @param {string} id
+ * @param {string} source
+ * @param {import('prettier').Options} formatOptions
+ * @returns {Promise<Record<string, string>>}
+ */
+async function iconLibrarySources(id, source, formatOptions) {
+  const drawn = await Promise.all(
+    ICON_LIBRARIES.map(async (library) => {
+      const rewritten = reactExampleSource(id, source, library);
+      return [
+        library,
+        rewritten === source
+          ? source
+          : await prettier.format(rewritten, {
+              ...formatOptions,
+              parser: 'typescript',
+            }),
+      ];
+    })
+  );
+  return Object.fromEntries(drawn);
+}
 
 function walk(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -411,18 +452,23 @@ async function collectDemos(exported) {
           story,
           formatOptions
         );
-        const specifiers = importSpecifiers(source);
         const { own, extra } = installSlugsFor(
           id,
-          specifiers,
+          importSpecifiers(source),
           installBlocks,
           exported
         );
-        const packages = demoPackages(
-          id,
-          specifiers,
-          own ? [own, ...extra] : extra,
-          installBlocks
+        const sources = await iconLibrarySources(id, source, formatOptions);
+        const packages = Object.fromEntries(
+          ICON_LIBRARIES.map((library) => [
+            library,
+            demoPackages(
+              id,
+              importSpecifiers(sources[library]),
+              own ? [own, ...extra] : extra,
+              installBlocks
+            ),
+          ])
         );
         demos.push({
           id,
@@ -430,6 +476,7 @@ async function collectDemos(exported) {
           title,
           description,
           source,
+          sources,
           alsoInstall: extra,
           packages,
         });
@@ -453,8 +500,11 @@ async function collectDemos(exported) {
         title,
         description,
         source,
+        sources: await iconLibrarySources(id, source, formatOptions),
         alsoInstall: [],
-        packages: [],
+        packages: Object.fromEntries(
+          ICON_LIBRARIES.map((library) => [library, []])
+        ),
       });
     } catch (error) {
       problems.push(error.message);
@@ -587,7 +637,123 @@ ${REGENERATE_HINT}
 
 export { default as Component } from ${JSON.stringify(boundarySpecifier(demo.id))};
 
-export const source = ${JSON.stringify(pasteReady(demo.source))};
+export const sources = ${JSON.stringify(
+    Object.fromEntries(
+      Object.entries(demo.sources).map(([library, source]) => [
+        library,
+        pasteReady(source),
+      ])
+    )
+  )};
+`;
+}
+
+/**
+ * The preview's own module: the story, with its Phosphor icons drawn by the
+ * icon library the reader picks.
+ * @param {DemoFile} demo
+ */
+function renderBoundary(demo) {
+  const from = path.posix.relative(
+    path.posix.dirname(`${MODULES_DIR}/${demo.id}`),
+    EXAMPLE_ICONS_MODULE
+  );
+  return demo.source.replace(
+    `from '${ICON_PACKAGES.phosphor.react.icons}'`,
+    `from '${from}'`
+  );
+}
+
+/**
+ * The icons previews draw: each example icon, drawn by the reader's icon
+ * library. Every library's icon is imported by name, so only these ship.
+ */
+function renderExampleIcons() {
+  const others = ICON_LIBRARIES.filter((library) => library !== 'phosphor');
+  const alias = (library, name) =>
+    `${library[0].toUpperCase()}${library.slice(1)}${name}`;
+  const imports = new Map(
+    ICON_LIBRARIES.map((library) => [
+      ICON_PACKAGES[library].react.icons,
+      new Set(),
+    ])
+  );
+  const icons = Object.entries(EXAMPLE_ICONS).map(([phosphor, names]) => {
+    const drawn = (library, name) => {
+      const exported = iconExport(library, 'react', name);
+      imports
+        .get(ICON_PACKAGES[library].react.icons)
+        .add(`${exported} as ${alias(library, exported)}`);
+      return alias(library, exported);
+    };
+    const own = Object.fromEntries([
+      ['phosphor', drawn('phosphor', phosphor)],
+      ...others.map((library) => [library, drawn(library, names[library])]),
+    ]);
+    const filled = Object.entries(names.filled ?? {}).map(
+      ([library, name]) => `${library}: ${drawn(library, name)}`
+    );
+    const set = Object.entries(own)
+      .map(([library, name]) => `${library}: ${name}`)
+      .join(', ');
+    return `export const ${phosphor}Icon = exampleIcon('${phosphor}Icon', { ${set} }${filled.length > 0 ? `, { ${filled.join(', ')} }` : ''});`;
+  });
+  return `${GENERATED_BY}
+${REGENERATE_HINT}
+
+'use client';
+
+import type { NxdsIconLibrary } from '@nxds/core';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
+import type { IconWeight } from '@phosphor-icons/react';
+import type { ComponentPropsWithoutRef, JSXElementConstructor } from 'react';
+${[...imports]
+  .map(
+    ([from, names]) =>
+      `import { ${[...names].sort().join(', ')} } from '${from}';`
+  )
+  .join('\n')}
+
+import { useIconLibrary } from '../app/_lib/icon-library';
+
+// HugeIcons takes a number for strokeWidth, and stories set none.
+type ExampleIconProps = Omit<
+  ComponentPropsWithoutRef<'svg'>,
+  'children' | 'strokeWidth'
+> & {
+  weight?: IconWeight;
+};
+type Drawn = JSXElementConstructor<Omit<ComponentPropsWithoutRef<'svg'>, 'children'>>;
+type Icons = Record<Exclude<NxdsIconLibrary, 'phosphor' | 'hugeicons'>, Drawn> & {
+  phosphor: JSXElementConstructor<ExampleIconProps>;
+  hugeicons: IconSvgElement;
+};
+
+/** A Phosphor icon a story draws, drawn by the reader's icon library. */
+function exampleIcon(
+  name: string,
+  icons: Icons,
+  filled: Partial<Omit<Icons, 'phosphor'>> = {}
+) {
+  function ExampleIcon({ weight, ...props }: ExampleIconProps) {
+    const library = useIconLibrary();
+    const fill = weight === 'fill';
+    if (library === 'phosphor') {
+      const Phosphor = icons.phosphor;
+      return <Phosphor weight={weight} {...props} />;
+    }
+    if (library === 'hugeicons') {
+      const icon = (fill ? filled.hugeicons : undefined) ?? icons.hugeicons;
+      return <HugeiconsIcon icon={icon} {...props} />;
+    }
+    const Icon = (fill ? filled[library] : undefined) ?? icons[library];
+    return <Icon {...props} />;
+  }
+  ExampleIcon.displayName = name;
+  return ExampleIcon;
+}
+
+${icons.join('\n')}
 `;
 }
 
@@ -670,7 +836,19 @@ async function generateDemoIndex() {
     )
   );
 
-  const keep = new Set([indexFile]);
+  const exampleIconsFile = path.join(
+    GENERATED_DIR,
+    `${EXAMPLE_ICONS_MODULE}.tsx`
+  );
+  writeIfChanged(
+    exampleIconsFile,
+    await prettier.format(renderExampleIcons(), {
+      ...(await resolveFormatOptions(docsRoot)),
+      parser: 'typescript',
+    })
+  );
+
+  const keep = new Set([indexFile, exampleIconsFile]);
   for (const demo of demos) {
     const moduleFile = path.join(modulesDir, `${demo.id}.ts`);
     const boundaryFile = path.join(
@@ -679,7 +857,7 @@ async function generateDemoIndex() {
     );
 
     writeIfChanged(moduleFile, renderDemoModule(demo));
-    writeIfChanged(boundaryFile, demo.source);
+    writeIfChanged(boundaryFile, renderBoundary(demo));
     keep.add(moduleFile);
     keep.add(boundaryFile);
   }

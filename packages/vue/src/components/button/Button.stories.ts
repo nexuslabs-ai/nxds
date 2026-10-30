@@ -1,10 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
-  IconArrowRight,
-  IconDownload,
-  IconSend,
-  IconStar,
-} from '@tabler/icons-vue';
+  PhArrowRight,
+  PhDownloadSimple,
+  PhPaperPlaneRight,
+  PhStar,
+  PhUploadSimple,
+} from '@phosphor-icons/vue';
+import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, type Mock, userEvent, within } from 'storybook/test';
 
 import { expectHeightPinned } from '../../stories/support/story-height-test-utils';
@@ -87,15 +88,15 @@ export const IconOnlySizes: Story = {
     },
   },
   render: () => ({
-    components: { Button, IconDownload, IconSend, IconStar },
+    components: { Button, PhDownloadSimple, PhStar, PhUploadSimple },
     template: `
       <div class="nx:flex nx:items-center nx:gap-2">
         <Button size="sm" icon-only>
-          <template #start-icon><IconStar /></template>Add to favorites</Button>
+          <template #start-icon><PhStar /></template>Add to favorites</Button>
         <Button icon-only>
-          <template #start-icon><IconDownload /></template>Download</Button>
+          <template #start-icon><PhDownloadSimple /></template>Download</Button>
         <Button size="lg" icon-only>
-          <template #start-icon><IconSend /></template>Send</Button>
+          <template #start-icon><PhUploadSimple /></template>Upload</Button>
       </div>
     `,
   }),
@@ -131,10 +132,10 @@ export const StartIconSlot: Story = {
     },
   },
   render: () => ({
-    components: { Button, IconDownload },
+    components: { Button, PhDownloadSimple },
     template: `
       <Button>
-        <template #start-icon><IconDownload data-testid="start-icon" /></template>Download</Button>
+        <template #start-icon><PhDownloadSimple data-testid="start-icon" /></template>Download</Button>
     `,
   }),
   play: async ({ canvasElement }) => {
@@ -160,11 +161,11 @@ export const EndIconSlot: Story = {
     },
   },
   render: () => ({
-    components: { Button, IconArrowRight },
+    components: { Button, PhArrowRight },
     template: `
       <Button>
         Continue
-        <template #end-icon><IconArrowRight data-testid="end-icon" /></template>
+        <template #end-icon><PhArrowRight data-testid="end-icon" /></template>
       </Button>
     `,
   }),
@@ -191,7 +192,7 @@ export const AllVariants: Story = {
     },
   },
   render: () => ({
-    components: { Button, IconArrowRight, IconDownload, IconStar },
+    components: { Button, PhArrowRight, PhDownloadSimple, PhStar },
     template: `
       <div class="nx:flex nx:flex-col nx:gap-6">
         <div>
@@ -213,16 +214,16 @@ export const AllVariants: Story = {
             <Button size="sm">Small</Button>
             <Button size="default">Default</Button>
             <Button size="lg">Large</Button>
-            <Button size="sm" icon-only><template #start-icon><IconStar /></template>Add to favorites</Button>
-            <Button icon-only><template #start-icon><IconStar /></template>Add to favorites</Button>
-            <Button size="lg" icon-only><template #start-icon><IconStar /></template>Add to favorites</Button>
+            <Button size="sm" icon-only><template #start-icon><PhStar /></template>Add to favorites</Button>
+            <Button icon-only><template #start-icon><PhStar /></template>Add to favorites</Button>
+            <Button size="lg" icon-only><template #start-icon><PhStar /></template>Add to favorites</Button>
           </div>
         </div>
         <div>
           <h3 class="nx:text-foreground nx:mb-2 nx:typography-label-default">Icon slots</h3>
           <div class="nx:flex nx:flex-wrap nx:items-center nx:gap-2">
-            <Button><template #start-icon><IconDownload /></template>Start icon</Button>
-            <Button>End icon<template #end-icon><IconArrowRight /></template></Button>
+            <Button><template #start-icon><PhDownloadSimple /></template>Start icon</Button>
+            <Button>End icon<template #end-icon><PhArrowRight /></template></Button>
           </div>
         </div>
         <div>
@@ -256,7 +257,7 @@ export const AllVariants: Story = {
 
 /** A story render that binds the story args, so `args.onClick` stays a spy. */
 const labelled = (template: string) => (args: ButtonArgs) => ({
-  components: { Button, IconArrowRight, IconSend },
+  components: { Button, PhArrowRight, PhPaperPlaneRight },
   setup: () => ({ args }),
   template,
 });
@@ -281,24 +282,24 @@ export const Link: Story = {
 
 export const IconSize: Story = {
   render: () => ({
-    components: { Button, IconDownload, IconStar },
+    components: { Button, PhDownloadSimple, PhStar },
     template: `
       <div class="nx:flex nx:flex-col nx:items-start nx:gap-3">
         <div class="nx:flex nx:items-center nx:gap-2">
-          <Button size="sm"><template #start-icon><IconDownload /></template>Download</Button>
-          <Button size="sm" icon-only><template #start-icon><IconStar /></template>Add to favorites</Button>
+          <Button size="sm"><template #start-icon><PhDownloadSimple /></template>Download</Button>
+          <Button size="sm" icon-only><template #start-icon><PhStar /></template>Add to favorites</Button>
         </div>
         <div class="nx:flex nx:items-center nx:gap-2">
-          <Button><template #start-icon><IconDownload /></template>Download</Button>
-          <Button icon-only><template #start-icon><IconStar /></template>Add to favorites</Button>
+          <Button><template #start-icon><PhDownloadSimple /></template>Download</Button>
+          <Button icon-only><template #start-icon><PhStar /></template>Add to favorites</Button>
         </div>
         <div class="nx:flex nx:items-center nx:gap-2">
-          <Button size="lg"><template #start-icon><IconDownload /></template>Download</Button>
-          <Button size="lg" icon-only><template #start-icon><IconStar /></template>Add to favorites</Button>
+          <Button size="lg"><template #start-icon><PhDownloadSimple /></template>Download</Button>
+          <Button size="lg" icon-only><template #start-icon><PhStar /></template>Add to favorites</Button>
         </div>
         <div data-density="compact" class="nx:flex nx:items-center nx:gap-2">
-          <Button><template #start-icon><IconDownload /></template>Download</Button>
-          <Button icon-only><template #start-icon><IconStar /></template>Add to favorites</Button>
+          <Button><template #start-icon><PhDownloadSimple /></template>Download</Button>
+          <Button icon-only><template #start-icon><PhStar /></template>Add to favorites</Button>
         </div>
       </div>
     `,
@@ -316,19 +317,18 @@ export const IconSize: Story = {
       const { width, height } = svg.getBoundingClientRect();
       await expect(width).toBe(iconToken);
       await expect(height).toBe(iconToken);
-      await expect(parseFloat(getComputedStyle(svg).strokeWidth)).toBeLessThan(
-        Number(svg.getAttribute('stroke-width'))
-      );
+      // Stroked icon sets (Tabler, Lucide) draw at 1.75 in a Button.
+      await expect(getComputedStyle(svg).strokeWidth).toBe('1.75px');
     }
   },
 };
 
 export const IconOnlyName: Story = {
   render: () => ({
-    components: { Button, IconDownload },
+    components: { Button, PhDownloadSimple },
     template: `
       <Button icon-only>
-        <template #start-icon><IconDownload /></template>Download</Button>
+        <template #start-icon><PhDownloadSimple /></template>Download</Button>
     `,
   }),
   play: async ({ canvasElement }) => {
@@ -346,11 +346,11 @@ export const IconOnlyName: Story = {
 
 export const IconOnlyInteraction: Story = {
   render: (args) => ({
-    components: { Button, IconDownload },
+    components: { Button, PhDownloadSimple },
     setup: () => ({ args }),
     template: `
       <Button icon-only @click="args.onClick">
-        <template #start-icon><IconDownload /></template>Download</Button>
+        <template #start-icon><PhDownloadSimple /></template>Download</Button>
     `,
   }),
   play: async ({ canvasElement, args }) => {
@@ -388,9 +388,9 @@ export const Disabled: Story = {
 export const Loading: Story = {
   render: labelled(`
     <Button v-bind="args" loading>
-      <template #start-icon><IconSend /></template>
+      <template #start-icon><PhPaperPlaneRight /></template>
       Submitting
-      <template #end-icon><IconArrowRight /></template>
+      <template #end-icon><PhArrowRight /></template>
     </Button>
   `),
   play: async ({ canvasElement, args }) => {

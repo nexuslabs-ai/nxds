@@ -1,14 +1,14 @@
 import { type ReactNode, useRef, useState } from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconAlertCircle,
-  IconChevronDown,
-  IconChevronLeft,
-  IconChevronRight,
-  IconChevronUp,
-  IconSearch,
-} from '@tabler/icons-react';
+  CaretDownIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
+  CaretUpIcon,
+  MagnifyingGlassIcon,
+  WarningCircleIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -912,7 +912,7 @@ export const ColumnPriority: Story = {
 function SortableHeaderDemo() {
   const [sort, setSort] = useState<'asc' | 'desc'>('asc');
   const ariaSort = sort === 'asc' ? 'ascending' : 'descending';
-  const Icon = sort === 'asc' ? IconChevronUp : IconChevronDown;
+  const Icon = sort === 'asc' ? CaretUpIcon : CaretDownIcon;
   const rows = [...invoices].sort((a, b) =>
     sort === 'asc'
       ? a.amount.localeCompare(b.amount)
@@ -1180,7 +1180,7 @@ function DataTableRecipeDemo() {
   const [page, setPage] = useState(0);
 
   const ariaSort = sort === 'asc' ? 'ascending' : 'descending';
-  const SortIcon = sort === 'asc' ? IconChevronUp : IconChevronDown;
+  const SortIcon = sort === 'asc' ? CaretUpIcon : CaretDownIcon;
   const filtered = recipeRows
     .filter((row) => row.invoice.toLowerCase().includes(query.toLowerCase()))
     .sort((a, b) =>
@@ -1211,7 +1211,7 @@ function DataTableRecipeDemo() {
     <div className="nx:space-y-4">
       <InputGroup className="nx:max-w-xs">
         <InputGroupAddon>
-          <IconSearch />
+          <MagnifyingGlassIcon />
         </InputGroupAddon>
         <InputGroupInput
           placeholder="Filter by invoice..."
@@ -1293,7 +1293,7 @@ function DataTableRecipeDemo() {
             variant="outline"
             size="sm"
             iconOnly
-            startIcon={<IconChevronLeft />}
+            startIcon={<CaretLeftIcon />}
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={safePage === 0}
           >
@@ -1303,7 +1303,7 @@ function DataTableRecipeDemo() {
             variant="outline"
             size="sm"
             iconOnly
-            startIcon={<IconChevronRight />}
+            startIcon={<CaretRightIcon />}
             onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
             disabled={safePage >= pageCount - 1}
           >
@@ -1358,7 +1358,7 @@ function SortableRecipeHead({
   const isActive = activeKey === sortKey;
   const ariaSort = isActive ? direction : 'none';
   const SortIcon =
-    isActive && direction === 'descending' ? IconChevronDown : IconChevronUp;
+    isActive && direction === 'descending' ? CaretDownIcon : CaretUpIcon;
 
   return (
     <TableHead
@@ -1670,7 +1670,7 @@ function DataTableErrorRows() {
           className="nx:py-8 nx:text-center nx:text-muted-foreground"
         >
           <div className="nx:flex nx:flex-col nx:items-center nx:gap-3">
-            <IconAlertCircle aria-hidden className="nx:size-5" />
+            <WarningCircleIcon aria-hidden className="nx:size-5" />
             <span>
               {retried ? 'Retry queued.' : 'Could not load invoices.'}
             </span>

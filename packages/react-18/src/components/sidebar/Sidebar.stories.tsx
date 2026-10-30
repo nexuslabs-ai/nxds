@@ -1,21 +1,21 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconCalendar,
-  IconChartBar,
-  IconChevronRight,
-  IconDots,
-  IconFolder,
-  IconHome,
-  IconInbox,
-  IconLayoutGrid,
-  IconPlus,
-  IconSearch,
-  IconSettings,
-  IconUser,
-  IconUsers,
-} from '@tabler/icons-react';
+  CalendarBlankIcon,
+  CaretRightIcon,
+  ChartBarIcon,
+  DotsThreeIcon,
+  FolderIcon,
+  GearIcon,
+  HouseIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  SquaresFourIcon,
+  TrayIcon,
+  UserIcon,
+  UsersIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
@@ -74,11 +74,11 @@ type SidebarControlsArgs = Pick<
 type ControlsStory = StoryObj<SidebarControlsArgs>;
 
 const NAV_ITEMS = [
-  { title: 'Home', icon: IconHome },
-  { title: 'Inbox', icon: IconInbox, badge: '4' },
-  { title: 'Calendar', icon: IconCalendar },
-  { title: 'Search', icon: IconSearch },
-  { title: 'Settings', icon: IconSettings },
+  { title: 'Home', icon: HouseIcon },
+  { title: 'Inbox', icon: TrayIcon, badge: '4' },
+  { title: 'Calendar', icon: CalendarBlankIcon },
+  { title: 'Search', icon: MagnifyingGlassIcon },
+  { title: 'Settings', icon: GearIcon },
 ];
 
 /**
@@ -93,7 +93,7 @@ function DemoSidebar(props: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" tooltip="Acme Inc">
-              <IconLayoutGrid />
+              <SquaresFourIcon />
               <span>Acme Inc</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -129,7 +129,7 @@ function DemoSidebar(props: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton tooltip="Account">
-              <IconUser />
+              <UserIcon />
               <span>Account</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -258,7 +258,7 @@ export const AllVariants: Story = {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton size="lg">
-                  <IconLayoutGrid />
+                  <SquaresFourIcon />
                   <span>Acme Inc</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -271,26 +271,26 @@ export const AllVariants: Story = {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton isActive>
-                      <IconHome />
+                      <HouseIcon />
                       <span>Active</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton variant="outline">
-                      <IconInbox />
+                      <TrayIcon />
                       <span>Outline</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton size="sm">
-                      <IconCalendar />
+                      <CalendarBlankIcon />
                       <span>Small</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <a href="https://example.com">
-                        <IconSettings />
+                        <GearIcon />
                         <span>As link</span>
                       </a>
                     </SidebarMenuButton>
@@ -377,9 +377,9 @@ export const WithSubmenu: Story = {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton isActive>
-                      <IconFolder />
+                      <FolderIcon />
                       <span>Design System</span>
-                      <IconChevronRight className="nx:ml-auto" />
+                      <CaretRightIcon className="nx:ml-auto" />
                     </SidebarMenuButton>
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
@@ -408,7 +408,7 @@ export const WithSubmenu: Story = {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton>
-                      <IconInbox />
+                      <TrayIcon />
                       <span>Inbox</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -581,7 +581,7 @@ export const Disabled: Story = {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton disabled>
-                    <IconHome />
+                    <HouseIcon />
                     <span>Disabled item</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -616,9 +616,9 @@ export const Complex: Story = {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" tooltip="Acme Inc">
-                <IconLayoutGrid />
+                <SquaresFourIcon />
                 <span>Acme Inc</span>
-                <IconChevronRight className="nx:ml-auto" />
+                <CaretRightIcon className="nx:ml-auto" />
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -628,29 +628,29 @@ export const Complex: Story = {
           <SidebarGroup>
             <SidebarGroupLabel>Platform</SidebarGroupLabel>
             <SidebarGroupAction aria-label="Add project">
-              <IconPlus />
+              <PlusIcon />
             </SidebarGroupAction>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton isActive tooltip="Dashboard">
-                    <IconHome />
+                    <HouseIcon />
                     <span>Dashboard</span>
                   </SidebarMenuButton>
                   <SidebarMenuBadge>3</SidebarMenuBadge>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton tooltip="Inbox">
-                    <IconInbox />
+                    <TrayIcon />
                     <span>Inbox</span>
                   </SidebarMenuButton>
                   <SidebarMenuBadge>12</SidebarMenuBadge>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton tooltip="Projects">
-                    <IconFolder />
+                    <FolderIcon />
                     <span>Projects</span>
-                    <IconChevronRight className="nx:ml-auto" />
+                    <CaretRightIcon className="nx:ml-auto" />
                   </SidebarMenuButton>
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
@@ -672,11 +672,11 @@ export const Complex: Story = {
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton tooltip="Tasks">
-                    <IconCalendar />
+                    <CalendarBlankIcon />
                     <span>Tasks</span>
                   </SidebarMenuButton>
                   <SidebarMenuAction aria-label="Task options">
-                    <IconDots />
+                    <DotsThreeIcon />
                   </SidebarMenuAction>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -688,22 +688,22 @@ export const Complex: Story = {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton tooltip="Members">
-                    <IconUsers />
+                    <UsersIcon />
                     <span>Members</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton tooltip="Reports">
-                    <IconChartBar />
+                    <ChartBarIcon />
                     <span>Reports</span>
                   </SidebarMenuButton>
                   <SidebarMenuBadge>New</SidebarMenuBadge>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton tooltip="Settings">
-                    <IconSettings />
+                    <GearIcon />
                     <span>Settings</span>
-                    <IconChevronRight className="nx:ml-auto" />
+                    <CaretRightIcon className="nx:ml-auto" />
                   </SidebarMenuButton>
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
@@ -726,9 +726,9 @@ export const Complex: Story = {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" tooltip="Jane Doe">
-                <IconUser />
+                <UserIcon />
                 <span>Jane Doe</span>
-                <IconChevronRight className="nx:ml-auto" />
+                <CaretRightIcon className="nx:ml-auto" />
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -782,9 +782,9 @@ export const Compact: Story = {
                   })}
                   <SidebarMenuItem>
                     <SidebarMenuButton size="sm" tooltip="Projects">
-                      <IconFolder />
+                      <FolderIcon />
                       <span>Projects</span>
-                      <IconChevronRight className="nx:ml-auto" />
+                      <CaretRightIcon className="nx:ml-auto" />
                     </SidebarMenuButton>
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
@@ -807,7 +807,7 @@ export const Compact: Story = {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton size="sm" tooltip="Account">
-                  <IconUser />
+                  <UserIcon />
                   <span>Account</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>

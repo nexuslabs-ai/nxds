@@ -13,12 +13,32 @@ import { SectionHeading, SubsectionHeading } from '../../_components/Heading';
  */
 
 export const description =
-  'The nxds type scale. Each of its twelve steps is one class that sets size, weight, line height and letter spacing.';
+  'The nxds type scale. Each of its sixteen steps is one class that sets size, weight, line height and letter spacing.';
 
 const SCALE: {
   group: string;
   tiers: { cls: string; name: string; sample: string }[];
 }[] = [
+  {
+    group: 'Display',
+    tiers: [
+      {
+        cls: 'nx:typography-display-large',
+        name: 'display-large',
+        sample: 'One system, every brand',
+      },
+      {
+        cls: 'nx:typography-display-medium',
+        name: 'display-medium',
+        sample: 'Copy it, then own it',
+      },
+      {
+        cls: 'nx:typography-display-small',
+        name: 'display-small',
+        sample: 'Built to be read',
+      },
+    ],
+  },
   {
     group: 'Heading',
     tiers: [
@@ -141,7 +161,7 @@ export default function Typography() {
           The scale
         </SectionHeading>
         <p className="nx:typography-body-small nx:text-muted-foreground nx:mb-6 nx:max-w-[64ch]">
-          Twelve steps in five groups. <code>label-caps</code> adds 0.8px letter
+          Sixteen steps in six groups. <code>label-caps</code> adds 0.8px letter
           spacing so all-caps text stays readable. <code>shortcut</code> adds
           1.6px for keyboard hints.
         </p>

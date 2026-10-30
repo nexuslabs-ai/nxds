@@ -7,8 +7,8 @@ import {
   type NxdsAppearanceMode,
   type NxdsSurfaceTone,
 } from '@nxds/core';
-import { IconPalette } from '@tabler/icons-react';
 
+import { IconPalette } from '../../../lib/icons';
 import { cn } from '../../../lib/utils';
 import { Button } from '../../button/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../../popover/popover';

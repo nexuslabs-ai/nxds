@@ -1,5 +1,5 @@
+import { PhEnvelope, PhEye, PhMagnifyingGlass, PhX } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { IconEye, IconMail, IconSearch, IconX } from '@tabler/icons-vue';
 import { expect, fn, type Mock, userEvent, within } from 'storybook/test';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
@@ -39,11 +39,16 @@ type Story = StoryObj<InputGroupArgs>;
 export const Default: Story = {
   tags: ['docs'],
   render: () => ({
-    components: { IconSearch, InputGroup, InputGroupAddon, InputGroupInput },
+    components: {
+      PhMagnifyingGlass,
+      InputGroup,
+      InputGroupAddon,
+      InputGroupInput,
+    },
     template: `
       <InputGroup class="nx:w-80">
         <InputGroupAddon>
-          <IconSearch aria-hidden="true" />
+          <PhMagnifyingGlass aria-hidden="true" />
         </InputGroupAddon>
         <InputGroupInput aria-label="Search" placeholder="Search…" />
       </InputGroup>
@@ -120,8 +125,8 @@ export const Alignments: Story = {
   },
   render: () => ({
     components: {
-      IconMail,
-      IconX,
+      PhEnvelope,
+      PhX,
       InputGroup,
       InputGroupAddon,
       InputGroupButton,
@@ -132,7 +137,7 @@ export const Alignments: Story = {
       <div class="nx:flex nx:w-80 nx:flex-col nx:gap-3">
         <InputGroup>
           <InputGroupAddon align="inline-start">
-            <IconMail aria-hidden="true" />
+            <PhEnvelope aria-hidden="true" />
           </InputGroupAddon>
           <InputGroupInput aria-label="Email" placeholder="you@example.com" />
         </InputGroup>
@@ -140,7 +145,7 @@ export const Alignments: Story = {
           <InputGroupInput aria-label="Search" placeholder="Search projects" />
           <InputGroupAddon align="inline-end">
             <InputGroupButton icon-only>
-              <template #start-icon><IconX /></template>Clear</InputGroupButton>
+              <template #start-icon><PhX /></template>Clear</InputGroupButton>
           </InputGroupAddon>
         </InputGroup>
         <InputGroup>
@@ -167,8 +172,8 @@ export const Alignments: Story = {
 export const ButtonSizes: Story = {
   render: () => ({
     components: {
-      IconEye,
-      IconX,
+      PhEye,
+      PhX,
       InputGroup,
       InputGroupAddon,
       InputGroupButton,
@@ -187,9 +192,9 @@ export const ButtonSizes: Story = {
           <InputGroupInput aria-label="Icon buttons" placeholder="icon sizes" />
           <InputGroupAddon align="inline-end">
             <InputGroupButton icon-only>
-              <template #start-icon><IconEye /></template>Show</InputGroupButton>
+              <template #start-icon><PhEye /></template>Show</InputGroupButton>
             <InputGroupButton size="sm" icon-only>
-              <template #start-icon><IconX /></template>Clear</InputGroupButton>
+              <template #start-icon><PhX /></template>Clear</InputGroupButton>
           </InputGroupAddon>
         </InputGroup>
       </div>
@@ -322,11 +327,16 @@ export const ClickInteraction: Story = {
 // Typing into the control updates its value.
 export const KeyboardInteraction: Story = {
   render: () => ({
-    components: { IconSearch, InputGroup, InputGroupAddon, InputGroupInput },
+    components: {
+      PhMagnifyingGlass,
+      InputGroup,
+      InputGroupAddon,
+      InputGroupInput,
+    },
     template: `
       <InputGroup class="nx:w-80">
         <InputGroupAddon>
-          <IconSearch aria-hidden="true" />
+          <PhMagnifyingGlass aria-hidden="true" />
         </InputGroupAddon>
         <InputGroupInput aria-label="Search" placeholder="Search…" />
       </InputGroup>
@@ -387,12 +397,17 @@ export const Disabled: Story = {
 
 export const BorderlessStates: Story = {
   render: () => ({
-    components: { IconSearch, InputGroup, InputGroupAddon, InputGroupInput },
+    components: {
+      PhMagnifyingGlass,
+      InputGroup,
+      InputGroupAddon,
+      InputGroupInput,
+    },
     template: `
       <div class="nx:flex nx:w-80 nx:flex-col nx:gap-3">
         <InputGroup data-testid="ig-borderless-empty" variant="borderless">
           <InputGroupAddon>
-            <IconSearch aria-hidden="true" />
+            <PhMagnifyingGlass aria-hidden="true" />
           </InputGroupAddon>
           <InputGroupInput aria-label="Borderless search" placeholder="Search…" />
         </InputGroup>
@@ -622,24 +637,29 @@ export const Sizes: Story = {
     },
   },
   render: () => ({
-    components: { IconSearch, InputGroup, InputGroupAddon, InputGroupInput },
+    components: {
+      PhMagnifyingGlass,
+      InputGroup,
+      InputGroupAddon,
+      InputGroupInput,
+    },
     template: `
       <div class="nx:flex nx:w-80 nx:flex-col nx:gap-3">
         <InputGroup>
           <InputGroupAddon>
-            <IconSearch aria-hidden="true" />
+            <PhMagnifyingGlass aria-hidden="true" />
           </InputGroupAddon>
           <InputGroupInput size="sm" aria-label="Search, small" placeholder="Search" />
         </InputGroup>
         <InputGroup>
           <InputGroupAddon>
-            <IconSearch aria-hidden="true" />
+            <PhMagnifyingGlass aria-hidden="true" />
           </InputGroupAddon>
           <InputGroupInput aria-label="Search, default" placeholder="Search" />
         </InputGroup>
         <InputGroup>
           <InputGroupAddon>
-            <IconSearch aria-hidden="true" />
+            <PhMagnifyingGlass aria-hidden="true" />
           </InputGroupAddon>
           <InputGroupInput size="lg" aria-label="Search, large" placeholder="Search" />
         </InputGroup>
@@ -679,8 +699,8 @@ export const WithKbd: Story = {
 export const AllVariants: Story = {
   render: () => ({
     components: {
-      IconSearch,
-      IconX,
+      PhMagnifyingGlass,
+      PhX,
       InputGroup,
       InputGroupAddon,
       InputGroupButton,
@@ -692,7 +712,7 @@ export const AllVariants: Story = {
       <div class="nx:flex nx:w-80 nx:flex-col nx:gap-3">
         <InputGroup>
           <InputGroupAddon>
-            <IconSearch aria-hidden="true" />
+            <PhMagnifyingGlass aria-hidden="true" />
           </InputGroupAddon>
           <InputGroupInput aria-label="Search" placeholder="Search…" />
         </InputGroup>
@@ -703,7 +723,7 @@ export const AllVariants: Story = {
           <InputGroupInput aria-label="URL" placeholder="nxds.dev" />
           <InputGroupAddon align="inline-end">
             <InputGroupButton icon-only>
-              <template #start-icon><IconX /></template>Clear</InputGroupButton>
+              <template #start-icon><PhX /></template>Clear</InputGroupButton>
           </InputGroupAddon>
         </InputGroup>
         <InputGroup>
@@ -714,7 +734,7 @@ export const AllVariants: Story = {
         </InputGroup>
         <InputGroup variant="borderless">
           <InputGroupAddon>
-            <IconSearch aria-hidden="true" />
+            <PhMagnifyingGlass aria-hidden="true" />
           </InputGroupAddon>
           <InputGroupInput aria-label="Borderless search" placeholder="Borderless search…" />
         </InputGroup>

@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconBold,
-  IconChevronDown,
-  IconItalic,
-  IconLink,
-  IconUnderline,
-} from '@tabler/icons-react';
+  CaretDownIcon,
+  LinkIcon,
+  TextBIcon,
+  TextItalicIcon,
+  TextUnderlineIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -161,17 +161,17 @@ export const WithSeparator: Story = {
   },
   render: () => (
     <ButtonGroup>
-      <Button variant="ghost" iconOnly startIcon={<IconBold />}>
+      <Button variant="ghost" iconOnly startIcon={<TextBIcon />}>
         Bold
       </Button>
-      <Button variant="ghost" iconOnly startIcon={<IconItalic />}>
+      <Button variant="ghost" iconOnly startIcon={<TextItalicIcon />}>
         Italic
       </Button>
-      <Button variant="ghost" iconOnly startIcon={<IconUnderline />}>
+      <Button variant="ghost" iconOnly startIcon={<TextUnderlineIcon />}>
         Underline
       </Button>
       <ButtonGroupSeparator />
-      <Button variant="ghost" iconOnly startIcon={<IconLink />}>
+      <Button variant="ghost" iconOnly startIcon={<LinkIcon />}>
         Add link
       </Button>
     </ButtonGroup>
@@ -195,7 +195,7 @@ export const IconOnlyInSmallGroup: Story = {
   render: () => (
     <ButtonGroup size="sm">
       <Button variant="outline">Copy link</Button>
-      <Button variant="outline" iconOnly startIcon={<IconChevronDown />}>
+      <Button variant="outline" iconOnly startIcon={<CaretDownIcon />}>
         More share options
       </Button>
     </ButtonGroup>
@@ -301,7 +301,7 @@ export const SplitButton: Story = {
       <Button>Deploy</Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button endIcon={<IconChevronDown />}>Options</Button>
+          <Button endIcon={<CaretDownIcon />}>Options</Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem>Deploy to staging</DropdownMenuItem>

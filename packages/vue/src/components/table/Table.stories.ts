@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
-  IconAlertCircle,
-  IconChevronDown,
-  IconChevronLeft,
-  IconChevronRight,
-  IconChevronUp,
-  IconSearch,
-} from '@tabler/icons-vue';
+  PhCaretDown,
+  PhCaretLeft,
+  PhCaretRight,
+  PhCaretUp,
+  PhMagnifyingGlass,
+  PhWarningCircle,
+} from '@phosphor-icons/vue';
+import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, within } from 'storybook/test';
 import { computed, defineComponent, type PropType, ref } from 'vue';
 
@@ -637,8 +637,8 @@ export const SortableHeader: Story = {
   },
   render: () => ({
     components: {
-      IconChevronDown,
-      IconChevronUp,
+      PhCaretDown,
+      PhCaretUp,
       Table,
       TableBody,
       TableCell,
@@ -667,7 +667,7 @@ export const SortableHeader: Story = {
                 type="button"
                 class="nx:ml-auto nx:inline-flex nx:items-center nx:gap-1 nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default"
                 @click="sort = sort === 'asc' ? 'desc' : 'asc'"
-              >Amount<component :is="sort === 'asc' ? IconChevronUp : IconChevronDown" class="nx:size-4" aria-hidden="true" /></button>
+              >Amount<component :is="sort === 'asc' ? PhCaretUp : PhCaretDown" class="nx:size-4" aria-hidden="true" /></button>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -1372,9 +1372,9 @@ const DataTableRecipeDemo = defineComponent({
     ...tableComponents,
     Button,
     Checkbox,
-    IconChevronLeft,
-    IconChevronRight,
-    IconSearch,
+    PhCaretLeft,
+    PhCaretRight,
+    PhMagnifyingGlass,
     InputGroup,
     InputGroupAddon,
     InputGroupInput,
@@ -1389,7 +1389,7 @@ const DataTableRecipeDemo = defineComponent({
       sort.value === 'asc' ? 'ascending' : 'descending'
     );
     const sortIcon = computed(() =>
-      sort.value === 'asc' ? IconChevronUp : IconChevronDown
+      sort.value === 'asc' ? PhCaretUp : PhCaretDown
     );
     const filtered = computed(() =>
       recipeRows
@@ -1446,7 +1446,7 @@ const DataTableRecipeDemo = defineComponent({
   template: `
     <div class="nx:space-y-4">
       <InputGroup class="nx:max-w-xs">
-        <InputGroupAddon><IconSearch /></InputGroupAddon>
+        <InputGroupAddon><PhMagnifyingGlass /></InputGroupAddon>
         <InputGroupInput
           placeholder="Filter by invoice..."
           :model-value="query"
@@ -1512,7 +1512,7 @@ const DataTableRecipeDemo = defineComponent({
             :disabled="safePage === 0"
             @click="page = Math.max(0, page - 1)"
           >
-            <template #start-icon><IconChevronLeft /></template>Previous page</Button>
+            <template #start-icon><PhCaretLeft /></template>Previous page</Button>
           <Button
             variant="outline"
             size="sm"
@@ -1520,7 +1520,7 @@ const DataTableRecipeDemo = defineComponent({
             :disabled="safePage >= pageCount - 1"
             @click="page = Math.min(pageCount - 1, page + 1)"
           >
-            <template #start-icon><IconChevronRight /></template>Next page</Button>
+            <template #start-icon><PhCaretRight /></template>Next page</Button>
         </div>
       </div>
     </div>
@@ -1554,7 +1554,7 @@ export const DataTableRecipe: Story = {
 };
 
 const SortableRecipeHead = defineComponent({
-  components: { IconChevronDown, IconChevronUp, TableHead },
+  components: { PhCaretDown, PhCaretUp, TableHead },
   props: {
     label: { type: String, required: true },
     sortKey: { type: String as PropType<RecipeSortKey>, required: true },
@@ -1570,8 +1570,8 @@ const SortableRecipeHead = defineComponent({
     const isActive = computed(() => props.activeKey === props.sortKey);
     const sortIcon = computed(() =>
       isActive.value && props.direction === 'descending'
-        ? IconChevronDown
-        : IconChevronUp
+        ? PhCaretDown
+        : PhCaretUp
     );
     return { isActive, sortIcon };
   },
@@ -1843,14 +1843,14 @@ const DataTableLoadingRows = defineComponent({
 });
 
 const DataTableErrorRows = defineComponent({
-  components: { ...tableComponents, Button, IconAlertCircle },
+  components: { ...tableComponents, Button, PhWarningCircle },
   setup: () => ({ retried: ref(false) }),
   template: `
     <TableBody>
       <TableRow>
         <TableCell :colspan="3" class="nx:py-8 nx:text-center nx:text-muted-foreground">
           <div class="nx:flex nx:flex-col nx:items-center nx:gap-3">
-            <IconAlertCircle aria-hidden="true" class="nx:size-5" />
+            <PhWarningCircle aria-hidden="true" class="nx:size-5" />
             <span>{{ retried ? 'Retry queued.' : 'Could not load invoices.' }}</span>
             <Button size="sm" variant="secondary" aria-label="Retry loading invoices" @click="retried = true">Retry</Button>
           </div>

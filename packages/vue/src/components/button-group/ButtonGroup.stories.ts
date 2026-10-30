@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import {
-  IconBold,
-  IconChevronDown,
-  IconItalic,
-  IconLink,
-  IconUnderline,
-} from '@tabler/icons-vue';
+  PhCaretDown,
+  PhLink,
+  PhTextB,
+  PhTextItalic,
+  PhTextUnderline,
+} from '@phosphor-icons/vue';
+import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
 
 import { Button } from '../button';
@@ -173,22 +173,22 @@ export const WithSeparator: Story = {
       Button,
       ButtonGroup,
       ButtonGroupSeparator,
-      IconBold,
-      IconItalic,
-      IconLink,
-      IconUnderline,
+      PhTextB,
+      PhTextItalic,
+      PhLink,
+      PhTextUnderline,
     },
     template: `
       <ButtonGroup>
         <Button variant="ghost" icon-only>
-          <template #start-icon><IconBold /></template>Bold</Button>
+          <template #start-icon><PhTextB /></template>Bold</Button>
         <Button variant="ghost" icon-only>
-          <template #start-icon><IconItalic /></template>Italic</Button>
+          <template #start-icon><PhTextItalic /></template>Italic</Button>
         <Button variant="ghost" icon-only>
-          <template #start-icon><IconUnderline /></template>Underline</Button>
+          <template #start-icon><PhTextUnderline /></template>Underline</Button>
         <ButtonGroupSeparator />
         <Button variant="ghost" icon-only>
-          <template #start-icon><IconLink /></template>Add link</Button>
+          <template #start-icon><PhLink /></template>Add link</Button>
       </ButtonGroup>
     `,
   }),
@@ -209,12 +209,12 @@ export const WithSeparator: Story = {
 // The group's size reaches an icon-only member, which stays square.
 export const IconOnlyInSmallGroup: Story = {
   render: () => ({
-    components: { Button, ButtonGroup, IconChevronDown },
+    components: { Button, ButtonGroup, PhCaretDown },
     template: `
       <ButtonGroup size="sm">
         <Button variant="outline">Copy link</Button>
         <Button variant="outline" icon-only>
-          <template #start-icon><IconChevronDown /></template>More share options</Button>
+          <template #start-icon><PhCaretDown /></template>More share options</Button>
       </ButtonGroup>
     `,
   }),
@@ -336,7 +336,7 @@ export const SplitButton: Story = {
       DropdownMenuContent,
       DropdownMenuItem,
       DropdownMenuTrigger,
-      IconChevronDown,
+      PhCaretDown,
     },
     template: `
       <ButtonGroup size="sm">
@@ -345,7 +345,7 @@ export const SplitButton: Story = {
           <DropdownMenuTrigger as-child>
             <Button>
               Options
-              <template #end-icon><IconChevronDown /></template>
+              <template #end-icon><PhCaretDown /></template>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

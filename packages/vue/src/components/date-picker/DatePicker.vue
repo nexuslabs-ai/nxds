@@ -6,7 +6,6 @@ import {
   startOfYear,
   today as todayIn,
 } from '@internationalized/date';
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-vue';
 import { reactiveOmit } from '@vueuse/core';
 import {
   CalendarGrid,
@@ -31,6 +30,7 @@ import {
 } from 'reka-ui';
 import { computed, type HTMLAttributes, provide, toRef, type VNode } from 'vue';
 
+import { IconChevronLeft, IconChevronRight } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 import { type ButtonVariants, buttonVariants } from '../button';
 

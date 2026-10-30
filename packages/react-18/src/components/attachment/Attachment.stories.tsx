@@ -1,17 +1,17 @@
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconAlertTriangle,
-  IconCircleCheckFilled,
-  IconDownload,
-  IconFile,
-  IconFileTypeDocx,
-  IconFileTypePdf,
-  IconFileTypeTxt,
-  IconFileTypeZip,
-  IconRefresh,
-  IconUpload,
-  IconX,
-} from '@tabler/icons-react';
+  ArrowClockwiseIcon,
+  CheckCircleIcon,
+  DownloadSimpleIcon,
+  FileDocIcon,
+  FileIcon,
+  FilePdfIcon,
+  FileTxtIcon,
+  FileZipIcon,
+  UploadSimpleIcon,
+  WarningIcon,
+  XIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -62,14 +62,14 @@ export const Default: Story = {
   render: () => (
     <Attachment className="nx:w-80">
       <AttachmentMedia variant="icon">
-        <IconFileTypePdf />
+        <FilePdfIcon />
       </AttachmentMedia>
       <AttachmentContent>
         <AttachmentTitle>report.pdf</AttachmentTitle>
         <AttachmentDescription>2.4 MB</AttachmentDescription>
       </AttachmentContent>
       <AttachmentActions>
-        <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+        <Button variant="ghost" size="sm" iconOnly startIcon={<XIcon />}>
           Remove report.pdf
         </Button>
       </AttachmentActions>
@@ -91,21 +91,21 @@ export const States: Story = {
     <div className="nx:flex nx:w-80 nx:flex-col nx:gap-3">
       <Attachment state="idle">
         <AttachmentMedia variant="icon">
-          <IconUpload />
+          <UploadSimpleIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>Drop a file here</AttachmentTitle>
           <AttachmentDescription>PDF or PNG, up to 10 MB</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
-          <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+          <Button variant="ghost" size="sm" iconOnly startIcon={<XIcon />}>
             Dismiss
           </Button>
         </AttachmentActions>
       </Attachment>
       <Attachment state="uploading">
         <AttachmentMedia variant="icon">
-          <IconFileTypePdf />
+          <FilePdfIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>report.pdf</AttachmentTitle>
@@ -113,7 +113,7 @@ export const States: Story = {
           <AttachmentProgress value={62} aria-label="Uploading report.pdf" />
         </AttachmentContent>
         <AttachmentActions>
-          <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+          <Button variant="ghost" size="sm" iconOnly startIcon={<XIcon />}>
             Cancel upload of report.pdf
           </Button>
         </AttachmentActions>
@@ -127,14 +127,14 @@ export const States: Story = {
           <AttachmentDescription>Processing…</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
-          <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+          <Button variant="ghost" size="sm" iconOnly startIcon={<XIcon />}>
             Cancel processing of scan.png
           </Button>
         </AttachmentActions>
       </Attachment>
       <Attachment state="error">
         <AttachmentMedia variant="icon">
-          <IconAlertTriangle />
+          <WarningIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>archive.zip</AttachmentTitle>
@@ -147,23 +147,26 @@ export const States: Story = {
             variant="ghost"
             size="sm"
             iconOnly
-            startIcon={<IconRefresh />}
+            startIcon={<ArrowClockwiseIcon />}
           >
             Retry upload of archive.zip
           </Button>
-          <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+          <Button variant="ghost" size="sm" iconOnly startIcon={<XIcon />}>
             Dismiss archive.zip
           </Button>
         </AttachmentActions>
       </Attachment>
       <Attachment state="done">
         <AttachmentMedia variant="icon">
-          <IconFileTypeTxt />
+          <FileTxtIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle
             trailing={
-              <IconCircleCheckFilled className="nx:size-4 nx:text-success-subtle-foreground" />
+              <CheckCircleIcon
+                weight="fill"
+                className="nx:size-4 nx:text-success-subtle-foreground"
+              />
             }
           >
             notes.txt
@@ -177,11 +180,11 @@ export const States: Story = {
             variant="ghost"
             size="sm"
             iconOnly
-            startIcon={<IconDownload />}
+            startIcon={<DownloadSimpleIcon />}
           >
             Download notes.txt
           </Button>
-          <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+          <Button variant="ghost" size="sm" iconOnly startIcon={<XIcon />}>
             Remove notes.txt
           </Button>
         </AttachmentActions>
@@ -204,28 +207,28 @@ export const Sizes: Story = {
     <div className="nx:flex nx:w-80 nx:flex-col nx:gap-3">
       <Attachment size="default">
         <AttachmentMedia variant="icon">
-          <IconFileTypePdf />
+          <FilePdfIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>report.pdf</AttachmentTitle>
           <AttachmentDescription>2.4 MB</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
-          <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+          <Button variant="ghost" size="sm" iconOnly startIcon={<XIcon />}>
             Remove report.pdf
           </Button>
         </AttachmentActions>
       </Attachment>
       <Attachment size="sm">
         <AttachmentMedia variant="icon">
-          <IconFileTypeTxt />
+          <FileTxtIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>notes.txt</AttachmentTitle>
           <AttachmentDescription>8 KB</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
-          <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+          <Button variant="ghost" size="sm" iconOnly startIcon={<XIcon />}>
             Remove notes.txt
           </Button>
         </AttachmentActions>
@@ -252,10 +255,10 @@ export const Grouped: Story = {
           size: '412 KB',
           media: <img src={THUMB} alt="" />,
         },
-        { name: 'report.pdf', size: '2.4 MB', media: <IconFileTypePdf /> },
-        { name: 'notes.txt', size: '8 KB', media: <IconFileTypeTxt /> },
-        { name: 'archive.zip', size: '18 MB', media: <IconFileTypeZip /> },
-        { name: 'brief.docx', size: '96 KB', media: <IconFileTypeDocx /> },
+        { name: 'report.pdf', size: '2.4 MB', media: <FilePdfIcon /> },
+        { name: 'notes.txt', size: '8 KB', media: <FileTxtIcon /> },
+        { name: 'archive.zip', size: '18 MB', media: <FileZipIcon /> },
+        { name: 'brief.docx', size: '96 KB', media: <FileDocIcon /> },
       ].map((file) => (
         <Attachment key={file.name} orientation="vertical">
           <AttachmentMedia
@@ -281,7 +284,7 @@ export const GroupKeyboardInteraction: Story = {
       {['cover.png', 'report.pdf', 'notes.txt', 'archive.zip'].map((name) => (
         <Attachment key={name} orientation="vertical">
           <AttachmentMedia variant="icon">
-            <IconFile />
+            <FileIcon />
           </AttachmentMedia>
           <AttachmentContent>
             <AttachmentTitle>{name}</AttachmentTitle>
@@ -320,7 +323,7 @@ export const LongFileName: Story = {
           <TooltipContent>{LONG_NAME}</TooltipContent>
         </Tooltip>
         <AttachmentMedia variant="icon">
-          <IconFileTypePdf />
+          <FilePdfIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>{LONG_NAME}</AttachmentTitle>
@@ -331,7 +334,7 @@ export const LongFileName: Story = {
             variant="ghost"
             size="sm"
             iconOnly
-            startIcon={<IconX />}
+            startIcon={<XIcon />}
           >{`Remove ${LONG_NAME}`}</Button>
         </AttachmentActions>
       </Attachment>
@@ -356,7 +359,7 @@ export const ClickInteraction: StoryObj<
         <span className="nx:sr-only">Open report.pdf</span>
       </AttachmentTrigger>
       <AttachmentMedia variant="icon">
-        <IconFileTypePdf />
+        <FilePdfIcon />
       </AttachmentMedia>
       <AttachmentContent>
         <AttachmentTitle>report.pdf</AttachmentTitle>
@@ -367,7 +370,7 @@ export const ClickInteraction: StoryObj<
           variant="ghost"
           size="sm"
           iconOnly
-          startIcon={<IconX />}
+          startIcon={<XIcon />}
           onClick={args.onRemove}
         >
           Remove report.pdf
@@ -430,7 +433,7 @@ export const Disabled: StoryObj<AttachmentProps & { onRemove: () => void }> = {
           variant="ghost"
           size="sm"
           iconOnly
-          startIcon={<IconX />}
+          startIcon={<XIcon />}
           disabled
           onClick={args.onRemove}
         >
@@ -461,14 +464,14 @@ export const WithDataAttributes: Story = {
         </a>
       </AttachmentTrigger>
       <AttachmentMedia variant="icon">
-        <IconFileTypePdf />
+        <FilePdfIcon />
       </AttachmentMedia>
       <AttachmentContent>
         <AttachmentTitle>report.pdf</AttachmentTitle>
         <AttachmentDescription>2.4 MB</AttachmentDescription>
       </AttachmentContent>
       <AttachmentActions>
-        <Button variant="ghost" size="sm" iconOnly startIcon={<IconX />}>
+        <Button variant="ghost" size="sm" iconOnly startIcon={<XIcon />}>
           Remove report.pdf
         </Button>
       </AttachmentActions>
@@ -526,7 +529,7 @@ export const AllVariants: Story = {
           (state) => (
             <Attachment key={state} state={state}>
               <AttachmentMedia variant="icon">
-                <IconFile />
+                <FileIcon />
               </AttachmentMedia>
               <AttachmentContent>
                 <AttachmentTitle>{state}</AttachmentTitle>

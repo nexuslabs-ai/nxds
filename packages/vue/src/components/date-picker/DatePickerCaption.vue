@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { type DateValue, getLocalTimeZone } from '@internationalized/date';
-import { IconChevronDown } from '@tabler/icons-vue';
 import {
   injectCalendarRootContext,
   injectRangeCalendarRootContext,
 } from 'reka-ui';
 import { computed } from 'vue';
 
+import { IconChevronDown } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 import { injectDatePicker } from '.';

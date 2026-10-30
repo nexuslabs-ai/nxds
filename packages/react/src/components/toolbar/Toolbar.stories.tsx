@@ -1,13 +1,13 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
 import {
-  IconArchive,
-  IconArrowBackUp,
-  IconBold,
-  IconItalic,
-  IconUnderline,
-} from '@tabler/icons-react';
+  ArchiveIcon,
+  ArrowUUpLeftIcon,
+  TextBIcon,
+  TextItalicIcon,
+  TextUnderlineIcon,
+} from '@phosphor-icons/react/ssr';
+import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -82,7 +82,7 @@ function EditorToolbar() {
                 iconOnly
                 onClick={() => setFormatting([])}
                 className="nx:text-muted-foreground"
-                startIcon={<IconArrowBackUp />}
+                startIcon={<ArrowUUpLeftIcon />}
               >
                 Undo formatting
               </ToolbarButton>
@@ -103,7 +103,7 @@ function EditorToolbar() {
                 <ToolbarToggleItem
                   value="bold"
                   iconOnly
-                  startIcon={<IconBold />}
+                  startIcon={<TextBIcon />}
                 >
                   Bold
                 </ToolbarToggleItem>
@@ -117,7 +117,7 @@ function EditorToolbar() {
                 <ToolbarToggleItem
                   value="italic"
                   iconOnly
-                  startIcon={<IconItalic />}
+                  startIcon={<TextItalicIcon />}
                 >
                   Italic
                 </ToolbarToggleItem>
@@ -131,7 +131,7 @@ function EditorToolbar() {
                 <ToolbarToggleItem
                   value="underline"
                   iconOnly
-                  startIcon={<IconUnderline />}
+                  startIcon={<TextUnderlineIcon />}
                 >
                   Underline
                 </ToolbarToggleItem>
@@ -444,7 +444,7 @@ export const InsideTooltipProvider: Story = {
       <Toolbar aria-label="Text formatting">
         <Tooltip>
           <TooltipTrigger asChild>
-            <ToolbarButton iconOnly startIcon={<IconBold />}>
+            <ToolbarButton iconOnly startIcon={<TextBIcon />}>
               Bold
             </ToolbarButton>
           </TooltipTrigger>
@@ -501,11 +501,11 @@ export const Sizes: Story = {
 export const IconOnly: Story = {
   render: () => (
     <Toolbar aria-label="Text formatting">
-      <ToolbarButton iconOnly startIcon={<IconArrowBackUp />}>
+      <ToolbarButton iconOnly startIcon={<ArrowUUpLeftIcon />}>
         Undo formatting
       </ToolbarButton>
       <ToolbarToggleGroup type="multiple" aria-label="Formatting">
-        <ToolbarToggleItem value="bold" iconOnly startIcon={<IconBold />}>
+        <ToolbarToggleItem value="bold" iconOnly startIcon={<TextBIcon />}>
           Bold
         </ToolbarToggleItem>
       </ToolbarToggleGroup>
@@ -818,7 +818,7 @@ function SelectionExample() {
             </span>
             <ToolbarSeparator className="nx:self-stretch nx:data-[orientation=vertical]:h-auto" />
             <ToolbarButton onClick={archiveSelection}>
-              <IconArchive aria-hidden="true" />
+              <ArchiveIcon aria-hidden="true" />
               Archive
             </ToolbarButton>
           </Toolbar>

@@ -73,7 +73,7 @@ Author `{Name}.stories.tsx` per `testing-react.md`: Default, one per variant + s
 ### Step 5 — Wire
 
 - Add the dep to `packages/react/package.json` (alphabetical) → `pnpm install`.
-- Add any new icon to `packages/react/src/lib/icons.ts` (Tabler re-export).
+- Add any new internal icon to `packages/react/src/lib/icons.ts` (Phosphor) and to each set in `lib/icon-libraries/`, in React and Vue. `ICON_SETS` fails typecheck until every set has it.
 - `export * from './components/{name}/{name}'` in `packages/react/src/index.ts`.
 - Import another component by its file (`'../button/button'`), never its folder.
 

@@ -107,10 +107,11 @@ function date(value: string): Converted {
   return parsed ? { value: parsed } : fail("isn't a date such as 2026-10-28");
 }
 
-// `IconPlus` or `Plus` for `plus`.
+// `PlusIcon`, `IconPlus` or `Plus` for `plus`.
 function iconName(value: string) {
   return value
     .replace(/^Icon(?=[A-Z])/, '')
+    .replace(/(?<=[a-z0-9])Icon$/, '')
     .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
     .replace(/([a-zA-Z])(\d)/g, '$1-$2')
     .toLowerCase();
