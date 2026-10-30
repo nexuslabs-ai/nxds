@@ -195,27 +195,6 @@ function leavesIconUnstroked(scope) {
   return classes.some((token) => sizesSvg(token, ANY_SIZE));
 }
 
-// Class lists handed to a part that already strokes its icons: AttachmentMedia
-// renders ItemMedia, and the two recipes style a Button.
-const STROKED_BY_INNER_PART = new Set([
-  'AttachmentMedia',
-  'inputGroupButtonVariants',
-  'messageScrollerButtonVariants',
-]);
-
-/** The name of the function or variable a class list is written in. */
-function ownerName(node) {
-  for (let current = node.parent; current; current = current.parent) {
-    if (
-      current.type === 'FunctionDeclaration' ||
-      current.type === 'VariableDeclarator'
-    ) {
-      return current.id?.name;
-    }
-  }
-  return undefined;
-}
-
 function isStoryFile(filename) {
   return /\.stories\.[jt]sx?$/.test(filename);
 }
@@ -412,11 +391,7 @@ export default {
       if (!isDocsSpecimenPage(filename) && fadesItsFocusRing(scope)) {
         context.report({ node, messageId: 'ringFadingTransition' });
       }
-      if (
-        !isExampleFile(filename) &&
-        !STROKED_BY_INNER_PART.has(ownerName(node)) &&
-        leavesIconUnstroked(scope)
-      ) {
+      if (!isExampleFile(filename) && leavesIconUnstroked(scope)) {
         context.report({ node, messageId: 'unstrokedIcon' });
       }
     }
