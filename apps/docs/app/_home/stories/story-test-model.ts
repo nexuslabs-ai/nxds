@@ -218,6 +218,13 @@ export function storyLabels(story: Story) {
   return [...story.checks, ...(story.manualChecks ?? [])];
 }
 
+/** The position of a check in a story's checks. */
+export function checkIndex(story: Story, label: string) {
+  const index = story.checks.indexOf(label);
+  if (index === -1) throw new Error(`${story.name} has no check "${label}".`);
+  return index;
+}
+
 export type CheckStatus = 'pending' | 'running' | 'pass' | 'fail' | 'manual';
 
 export type Check = { status: CheckStatus; detail: string };

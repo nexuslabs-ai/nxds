@@ -56,6 +56,7 @@ import {
   type accessibilityStory,
   type callbackStory,
   type Check,
+  checkIndex,
   type CheckStatus,
   type CheckStep,
   type CheckSteps,
@@ -265,17 +266,17 @@ export function StoryTestIterations({
     frame.current = requestAnimationFrame(() => {
       const element = example.current;
       const next = keyboardChecks.current;
-      const labels = spacePressChecks[spacePresses.current];
-      if (run !== sequence.current || !element || !next || !labels) return;
+      const pressLabels = spacePressChecks[spacePresses.current];
+      if (run !== sequence.current || !element || !next || !pressLabels) return;
       const steps = keyboardSteps(element);
-      for (const label of labels)
-        next[story.checks.indexOf(label)] = steps[label]();
+      for (const label of pressLabels)
+        next[checkIndex(story, label)] = steps[label]();
       spacePresses.current += 1;
       spacePressed.current = false;
       setChecks([...next]);
       const following = spacePressChecks[spacePresses.current];
       if (following) {
-        setActiveLine(code?.lines[story.checks.indexOf(following[0])] ?? -1);
+        setActiveLine(code?.lines[checkIndex(story, following[0])] ?? -1);
         setStatus('Press Space again');
         return;
       }
@@ -440,14 +441,12 @@ export function StoryTestIterations({
   function armKeyboard(element: HTMLButtonElement) {
     element.focus({ preventScroll: true });
     const next = initialChecks(story);
-    next[story.checks.indexOf('Receives focus')] =
+    next[checkIndex(story, 'Receives focus')] =
       keyboardSteps(element)['Receives focus']();
     keyboardChecks.current = next;
     spacePresses.current = 0;
     setChecks([...next]);
-    setActiveLine(
-      code?.lines[story.checks.indexOf(spacePressChecks[0][0])] ?? -1
-    );
+    setActiveLine(code?.lines[checkIndex(story, spacePressChecks[0][0])] ?? -1);
     setStatus('Press Space to test the switch');
   }
 
@@ -459,14 +458,17 @@ export function StoryTestIterations({
       armKeyboard(element);
       return;
     }
+    const stepsByLabel = checkSteps[mode.id](element);
+    const steps = story.checks.map((label) => {
+      const step = stepsByLabel[label];
+      if (!step) throw new Error(`${story.name} has no step for "${label}".`);
+      return step;
+    });
     const run = sequence.current;
     const next = initialChecks(story);
     setRunning(true);
     setStatus('Running local checks…');
-    const steps = checkSteps[mode.id](element);
-    for (const [index, label] of story.checks.entries()) {
-      const step = steps[label];
-      if (!step) throw new Error(`${story.name} has no step for "${label}".`);
+    for (const [index, step] of steps.entries()) {
       if (run !== sequence.current) return;
       next[index] = { status: 'running', detail: 'Checking…' };
       setChecks([...next]);
