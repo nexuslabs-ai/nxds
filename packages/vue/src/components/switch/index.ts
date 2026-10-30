@@ -4,7 +4,8 @@ export { default as Switch, type SwitchProps } from './Switch.vue';
 
 export const switchVariants = cva(
   [
-    'nx:peer nx:inline-flex nx:shrink-0 nx:cursor-pointer nx:items-center nx:p-0',
+    'nx:peer nx:relative nx:inline-flex nx:shrink-0 nx:cursor-pointer nx:items-center nx:p-0',
+    'nx:before:absolute nx:before:inset-x-0 nx:before:top-1/2 nx:before:h-[24px] nx:before:-translate-y-1/2',
     'nx:rounded-full nx:border-thick nx:border-border-default',
     'nx:transition-control',
     'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
