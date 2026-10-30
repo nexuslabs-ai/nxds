@@ -59,6 +59,10 @@ export const TABLE_HEAD: Omit<Probe, 'property'> = {
   },
   target: '[data-slot="table-head"]',
 };
+export const BREADCRUMB_PAGE: Omit<Probe, 'property'> = {
+  tree: { part: 'BreadcrumbPage', children: ['Invoices'] },
+  target: '[data-slot="breadcrumb-page"]',
+};
 export const TEXT_STYLE: Omit<Probe, 'property'> = {
   tree: {
     part: 'p',

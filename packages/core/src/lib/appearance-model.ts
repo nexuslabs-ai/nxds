@@ -1,8 +1,9 @@
 import {
-  scaledTextPx,
+  scaleText,
   TEXT_SIZES,
-  textSelector,
-  type UI_SCALES,
+  type TextSize,
+  textSizeSelector,
+  type UiScale,
 } from '../token-source/ui-scale';
 
 import { normalizeContrast } from './contrast';
@@ -16,9 +17,9 @@ export { textSizePx } from '../token-source/ui-scale';
 type ModeSeeds = Pick<ThemeSeeds, 'background' | 'foreground'>;
 
 export type NxdsAppearanceMode = 'light' | 'dark' | 'system';
-export type NxdsUiScale = keyof typeof UI_SCALES;
+export type NxdsUiScale = UiScale;
 /** The label text size, in px at the Default UI scale. */
-export type NxdsTextSize = (typeof TEXT_SIZES)[number];
+export type NxdsTextSize = TextSize;
 export type NxdsDensity =
   | 'tight'
   | 'compact'
@@ -64,6 +65,7 @@ export interface NxdsAppearanceState {
 /** An appearance field that picks one of a token family's preset modes. */
 export type NxdsPresetField =
   | 'uiScale'
+  | 'textSize'
   | 'density'
   | 'corners'
   | 'elevation'
@@ -232,15 +234,12 @@ const clampFontSize = (value: unknown, fallback: number): number =>
     ? Math.min(FONT_SIZE_PX_MAX, Math.max(FONT_SIZE_PX_MIN, value))
     : fallback;
 
-function formatPx(value: number): string {
-  return `${Number(value.toFixed(4))}px`;
-}
-
 // Retired public-mode codename -> friendly, applied to persisted state on read
 // (see normalizeAppearanceModeIds). Internal; correctness is covered behaviorally
 // by the sanitize codename->friendly tests, so it is not part of the public API.
-const PUBLIC_MODE_RENAME: Partial<
-  Record<NxdsPresetField, Record<string, string>>
+const PUBLIC_MODE_RENAME: Record<
+  Exclude<NxdsPresetField, 'uiScale' | 'textSize'>,
+  Record<string, string>
 > = {
   density: {
     nova: 'compact',
@@ -335,9 +334,9 @@ export function createNxdsThemeContract(
 function scaledCodeSizes(codePx: number): string {
   return UI_SCALE_OPTIONS.flatMap(({ value: scale }) =>
     TEXT_SIZE_OPTIONS.flatMap((textSize) => {
-      const selector = textSelector(scale, textSize);
+      const selector = textSizeSelector(scale, textSize);
       if (selector === null) return [];
-      const px = scaledTextPx(codePx, textSize, scale);
+      const px = scaleText(codePx, scale, textSize);
       return [`${selector} {\n  --nx-typography-code-size: ${px}px;\n}`];
     })
   ).join('\n');
@@ -355,7 +354,7 @@ export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
   --nx-typography-family-font-sans: ${prefs.uiFont};
   --nx-typography-family-font-heading: ${prefs.headingFont ?? 'var(--nx-typography-family-font-sans)'};
   --nx-typography-family-font-mono: ${prefs.codeFont};
-  --nx-typography-code-size: ${formatPx(codePx)};
+  --nx-typography-code-size: ${scaleText(codePx, 'default')}px;
 }
 ${scaledCodeSizes(codePx)}`),
   ];

@@ -29,10 +29,8 @@ import {
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = 'var(--nx-container-3xs)';
-const SIDEBAR_WIDTH_NARROW = 'var(--nx-container-2xs)';
-const SIDEBAR_WIDTH_ICON =
-  'calc(var(--nx-spacing-8) + var(--nx-spacing-2) * 2)';
+const SIDEBAR_WIDTH = 'calc(16rem*var(--nx-ui-scale))';
+const SIDEBAR_WIDTH_NARROW = 'calc(18rem*var(--nx-ui-scale))';
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
 
 /** Whether the event target is a text-entry element (input, textarea, or contenteditable). */
@@ -170,7 +168,6 @@ function SidebarProvider({
           style={
             {
               '--sidebar-width': SIDEBAR_WIDTH,
-              '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
               ...style,
             } as React.CSSProperties
           }
@@ -306,8 +303,8 @@ function Sidebar({
           'nx:group-data-[collapsible=offcanvas]:w-0',
           'nx:group-data-[side=right]:rotate-180',
           variant === 'floating' || variant === 'inset'
-            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+var(--nx-spacing-2)*2)]'
-            : 'nx:group-data-[collapsible=icon]:w-(--sidebar-width-icon)'
+            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*4)]'
+            : 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*2)]'
         )}
       />
       <div
@@ -321,8 +318,8 @@ function Sidebar({
           // icon-collapse width below adds this padding and the panel border.
           (variant === 'floating' || variant === 'inset') && 'nx:p-2',
           variant === 'floating' || variant === 'inset'
-            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+var(--nx-spacing-2)*2+var(--nx-borderwidth-default)*2)]'
-            : 'nx:group-data-[collapsible=icon]:w-(--sidebar-width-icon) nx:group-data-[side=left]:border-r-default nx:group-data-[side=right]:border-l-default nx:border-nav-border',
+            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*4+var(--nx-borderwidth-default)*2)]'
+            : 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*2)] nx:group-data-[side=left]:border-r-default nx:group-data-[side=right]:border-l-default nx:border-nav-border',
           className
         )}
         style={style}

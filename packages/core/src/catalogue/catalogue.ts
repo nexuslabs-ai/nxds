@@ -6,6 +6,7 @@ import {
 import { deriveThemeMode } from '../lib/derive-theme';
 import type { Mode } from '../lib/palette';
 import { SEMANTIC_TOKEN_REGISTRY } from '../lib/token-registry';
+import { PAGE_WIDTHS_REM } from '../lib/token-scales.generated';
 import {
   formatShadowStyle,
   formatTokenValue,
@@ -24,6 +25,7 @@ import {
   pathToCssVarPrefixed,
   tokenReferences,
 } from '../token-source/tokens';
+import { type ScaleToken, widthTokens } from '../token-source/ui-scale';
 import {
   borderColorAliasName,
   borderWidthAliasUtilities,
@@ -72,43 +74,52 @@ const TYPOGRAPHY_STYLES_FILE: TokenFile = 'styles/typography.json';
 const SHADOW_STYLES_FILE: TokenFile = 'styles/shadows.json';
 const SINGLE_SOURCE = { mode: null, preset: null } as const;
 
-/** The preset field that picks each moded family's values. */
-const PRESET_CONTROLS: Partial<Record<CatalogueFamily, CatalogueControl>> = {
-  spacing: { kind: 'preset', field: 'density' },
-  radius: { kind: 'preset', field: 'corners' },
-  borderwidth: { kind: 'preset', field: 'stroke' },
-  shadow: { kind: 'preset', field: 'elevation' },
+/** The `[data-ui-scale]` mode, which scales every token it writes. */
+const UI_SCALE: CatalogueControl = { kind: 'preset', field: 'uiScale' };
+
+/** The `[data-text-size]` mode, which scales the type sizes and code size. */
+const TEXT_SIZE: CatalogueControl = { kind: 'preset', field: 'textSize' };
+
+/** The appearance fields that write each moded family's values. */
+const FAMILY_CONTROLS: Partial<
+  Record<CatalogueFamily, readonly CatalogueControl[]>
+> = {
+  spacing: [{ kind: 'preset', field: 'density' }, UI_SCALE],
+  radius: [{ kind: 'preset', field: 'corners' }, UI_SCALE],
+  borderwidth: [{ kind: 'preset', field: 'stroke' }],
+  shadow: [{ kind: 'preset', field: 'elevation' }],
 };
 
-/** The `[data-ui-scale]` mode that sizes text and icons. */
-const UI_SCALE_CONTROL: CatalogueControl = { kind: 'preset', field: 'uiScale' };
-
-/** The appearance field that sets each typography primitive. */
-function typographyControl(path: readonly string[]): CatalogueControl | null {
+/** The appearance fields that write each typography primitive. */
+function typographyControls(
+  path: readonly string[]
+): readonly CatalogueControl[] {
   const [group, key] = path;
   if (group === 'code' && key === 'size') {
-    return { kind: 'pref', field: 'codeFontSize' };
+    return [{ kind: 'pref', field: 'codeFontSize' }, UI_SCALE, TEXT_SIZE];
   }
-  if (group === 'size' || group === 'line-height') return UI_SCALE_CONTROL;
-  if (group !== 'family') return null;
-  if (key === 'font-sans') return { kind: 'pref', field: 'uiFont' };
-  if (key === 'font-heading') return { kind: 'pref', field: 'headingFont' };
-  if (key === 'font-mono') return { kind: 'pref', field: 'codeFont' };
-  return null;
+  if (group === 'size' || group === 'line-height') {
+    return [UI_SCALE, TEXT_SIZE];
+  }
+  if (group !== 'family') return [];
+  if (key === 'font-sans') return [{ kind: 'pref', field: 'uiFont' }];
+  if (key === 'font-heading') return [{ kind: 'pref', field: 'headingFont' }];
+  if (key === 'font-mono') return [{ kind: 'pref', field: 'codeFont' }];
+  return [];
 }
 
-function leafControl({
+function leafControls({
   family,
   file,
   preset,
   leaf,
-}: AuthoredLeaf): CatalogueControl | null {
+}: AuthoredLeaf): readonly CatalogueControl[] {
   if (family === 'typography' && file.startsWith('primitives/')) {
-    return typographyControl(leaf.path);
+    return typographyControls(leaf.path);
   }
-  if (family === 'icon') return UI_SCALE_CONTROL;
-  if (preset === null) return null;
-  return PRESET_CONTROLS[family] ?? null;
+  if (family === 'icon') return [UI_SCALE];
+  if (preset === null) return [];
+  return FAMILY_CONTROLS[family] ?? [];
 }
 
 /** A `PrimitiveLookup` that also carries each target's canonical name. */
@@ -288,7 +299,7 @@ function authoredTokens(
       type: leaf.type,
       description: leaf.description ?? null,
       aliases,
-      control: leafControl(authored),
+      controls: leafControls(authored),
       variants: [],
     };
     token.variants.push({
@@ -457,7 +468,7 @@ function shadowStyleTokens(
       type: leaf.type,
       description: leaf.description ?? null,
       aliases: [cssVariable(`--${key}`)],
-      control: PRESET_CONTROLS.shadow ?? null,
+      controls: FAMILY_CONTROLS.shadow ?? [],
       variants: sets.map(({ preset, mode, values }) => ({
         mode,
         preset,
@@ -515,7 +526,7 @@ function runtimeColorTokens(): CatalogueToken[] {
       type: 'color',
       description: RUNTIME_COLOR_DESCRIPTIONS[name] ?? null,
       aliases: runtimeColorAliases(name),
-      control: null,
+      controls: [],
       variants: themes.map(({ mode, appearance, values }) => {
         const value = values[property];
         if (value === undefined) {
@@ -535,9 +546,53 @@ function runtimeColorTokens(): CatalogueToken[] {
   });
 }
 
+/** A token the UI scale writes and no token file authors. */
+function uiScaleToken(
+  { cssName, value }: ScaleToken,
+  fields: Pick<CatalogueToken, 'group' | 'type' | 'description'>
+): CatalogueToken {
+  const name: CatalogueTokenName = `--nx-${cssName}`;
+  return {
+    name,
+    family: 'ui-scale',
+    ...fields,
+    aliases: [],
+    controls: [UI_SCALE],
+    variants: [
+      {
+        mode: null,
+        preset: null,
+        source: null,
+        appearance: null,
+        authoredValue: null,
+        declarations: [{ property: name, value }],
+        references: [],
+      },
+    ],
+  };
+}
+
+function uiScaleEntry(token: ScaleToken): CatalogueToken {
+  if (token.cssName === 'ui-scale') {
+    return uiScaleToken(token, {
+      group: 'factor',
+      type: 'number',
+      description:
+        'The UI scale as a factor of the Default scale. Multiply a fixed size by it, such as `calc(16rem*var(--nx-ui-scale))`, so the size follows the UI scale.',
+    });
+  }
+  const width = token.cssName.replace('container-', '');
+  return uiScaleToken(token, {
+    group: 'width',
+    type: 'dimension',
+    description: `The \`nx:max-w-${width}\` and \`nx:w-${width}\` width. It follows the UI scale.`,
+  });
+}
+
 /**
  * Every nxds token, identified by its `--nx-*` name: primitives, runtime
- * colours, spacing, z-index, breakpoints, and typography and shadow styles.
+ * colours, spacing, z-index, breakpoints, typography and shadow styles, and
+ * the UI scale factor and page widths at the Default scale.
  * Shadow layer primitives only compose the shadow styles.
  * Runtime colours are computed from `DEFAULT_NXDS_APPEARANCE` in explicit
  * light and dark modes; each variant records the appearance it used.
@@ -570,5 +625,6 @@ export function createTokenCatalogue(): readonly CatalogueToken[] {
       typographyStyleEntry(lookup)
     ),
     ...shadowStyleTokens(shadowLayers, lookup),
+    ...widthTokens(PAGE_WIDTHS_REM, 'default').map(uiScaleEntry),
   ];
 }

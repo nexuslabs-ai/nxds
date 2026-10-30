@@ -7,6 +7,7 @@ import type {
   NxdsAppearanceState,
   TokenMap,
 } from '@nxds/core';
+import type { CatalogueControl } from '@nxds/core/catalogue';
 import {
   Accordion,
   AccordionContent,
@@ -31,6 +32,7 @@ const FAMILIES: Record<ScaleFamily, string> = {
   icon: 'Icon size',
   'z-index': 'Z-index',
   breakpoint: 'Breakpoints',
+  'ui-scale': 'UI scale',
 };
 
 const PREF_LABELS: Record<keyof NxdsAppearancePrefs, string> = {
@@ -81,8 +83,14 @@ function isSigned({ family, group }: ScaleToken): boolean {
   return family === 'typography' && group === 'letterspacing';
 }
 
+/** The UI scale factor is a fraction, which `z-index` rejects. */
+function isFraction({ family, type }: ScaleToken): boolean {
+  return family === 'ui-scale' && type === 'number';
+}
+
 function validationProperty(token: ScaleToken): string {
   if (token.type === 'dimension' && isSigned(token)) return 'outline-offset';
+  if (isFraction(token)) return 'flex-grow';
   const property = VALIDATION_PROPERTIES[token.type];
   if (property === undefined) {
     throw new Error(
@@ -126,14 +134,18 @@ export function ScaleLedger({
   );
   const values = useRootValues(runtimeNames, overrides);
 
-  function sourceLabel({ family, fixedValue, control }: ScaleToken): string {
-    if (family === 'breakpoint') return 'build time';
-    if (fixedValue !== null) return 'composed';
-    if (control === null) return 'fixed';
+  function controlLabel(control: CatalogueControl): string {
     if (control.kind === 'preset') {
       return `${control.field}: ${appearance[control.field]}`;
     }
     return prefLabel(control.field, appearance.prefs);
+  }
+
+  function sourceLabel({ family, fixedValue, controls }: ScaleToken): string {
+    if (family === 'breakpoint') return 'build time';
+    if (fixedValue !== null) return 'composed';
+    if (controls.length === 0) return 'fixed';
+    return controls.map(controlLabel).join(', ');
   }
 
   return (

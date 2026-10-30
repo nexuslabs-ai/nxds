@@ -12,6 +12,7 @@ Add `textSize` to the appearance: `12`, `13`, `14`, `15` or `16`, the label text
 - `textSizePx(textSize, uiScale)` returns that label size, and `TEXT_SIZE_OPTIONS` lists the sizes.
 - The provider and the first-paint script set `data-text-size` on `<html>`, next to `data-ui-scale`. The default, `14`, writes no CSS.
 - Code text grows with the text size too. `prefs.codeFontSize` is its size at the Default scale and text size.
+- The token catalogue names `textSize` as a control of the type sizes, the line heights and the code size.
 - Button, ButtonGroup text, Input, Select, Toggle and the `sm` InputGroup button take a min-height in place of a fixed height, so larger text cannot overflow them. Their default heights do not change. To set a smaller height on one of them, use `min-h-*`, not `h-*`.
 - The settings screen has a Text size picker. Each option shows the label size at the current UI scale, under the note "Sizes include the current UI scale.", with a preview line.
 - The CLI takes `--text-size`. The Storybook toolbars and Claude Design (`data-text-size`) offer the new setting.

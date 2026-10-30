@@ -14,3 +14,8 @@
   width: var(--nx-icon-glyph-default);
   height: var(--nx-icon-glyph-default);
 }
+
+@utility size-icon-glyph-lg {
+  width: var(--nx-icon-glyph-lg);
+  height: var(--nx-icon-glyph-lg);
+}

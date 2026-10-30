@@ -1,26 +1,54 @@
 /**
- * The sizes of each UI scale. `spacing` multiplies every density and radius
- * step, `text` is the 14px label size at that scale, and `icon` is the
- * default icon glyph.
+ * Each UI scale, as factors of the Default scale. `spacing` multiplies every
+ * density and radius step and the page widths, `text` every type size, and
+ * `icon` every icon glyph. `text: 12 / 14` turns 14px label text into 12px.
  */
 export const UI_SCALES = {
-  small: { spacing: 0.9, text: 12, icon: 14 },
-  default: { spacing: 1, text: 14, icon: 16 },
-  large: { spacing: 1.1, text: 16, icon: 18 },
-  larger: { spacing: 1.25, text: 18, icon: 20 },
+  small: { spacing: 0.9, text: 12 / 14, icon: 14 / 16 },
+  default: { spacing: 1, text: 1, icon: 1 },
+  large: { spacing: 1.1, text: 16 / 14, icon: 18 / 16 },
+  larger: { spacing: 1.25, text: 18 / 14, icon: 20 / 16 },
 } as const;
 
-type UiScale = keyof typeof UI_SCALES;
+export type UiScale = keyof typeof UI_SCALES;
+
+/** Every scale but Default, which writes no block of its own. */
+export const NON_DEFAULT_UI_SCALES = (
+  Object.keys(UI_SCALES) as UiScale[]
+).filter((scale) => scale !== 'default');
+
+/** The selector that matches the root of a UI scale. */
+export const uiScaleSelector = (scale: UiScale) => `[data-ui-scale='${scale}']`;
 
 /**
- * The label text sizes a person can pick, in px at the Default scale. The
- * Default size, 14, is the label size at that scale.
+ * The label text sizes a person can pick, in px at the Default scale. 14 is
+ * the Default label size, and writes no block of its own.
  */
 export const TEXT_SIZES = [12, 13, 14, 15, 16] as const;
 
-type TextSize = (typeof TEXT_SIZES)[number];
+export type TextSize = (typeof TEXT_SIZES)[number];
 
-const DEFAULT_TEXT = UI_SCALES.default.text;
+const DEFAULT_TEXT_SIZE = 14;
+
+/** The root with a text size other than 14 at `scale`. */
+function textSizeAttr(scale: UiScale, textSize: TextSize) {
+  const sizeAttr = `[data-text-size='${textSize}']`;
+  return scale === 'default'
+    ? sizeAttr
+    : `${uiScaleSelector(scale)}${sizeAttr}`;
+}
+
+/**
+ * The selector that matches the root of a scale and text size, or null at
+ * the Default scale and text size, which write no CSS.
+ */
+export function textSizeSelector(
+  scale: UiScale,
+  textSize: TextSize
+): string | null {
+  if (textSize !== DEFAULT_TEXT_SIZE) return textSizeAttr(scale, textSize);
+  return scale === 'default' ? null : uiScaleSelector(scale);
+}
 
 export interface ScaleToken {
   cssName: string;
@@ -32,15 +60,9 @@ export interface ScaleBlock {
   tokens: ScaleToken[];
 }
 
-/** The Default text sizes and line heights, in px, by token name. */
-interface TypeBase {
-  sizes: Readonly<Record<string, number>>;
-  lineHeights: Readonly<Record<string, number>>;
-}
-
 const FULL_RADIUS = '9999px';
 
-/** No text gets smaller than this, at any scale. */
+/** No text that starts at this size or larger scales below it. */
 const MIN_TEXT_PX = 10;
 
 const px = (value: string) => Number.parseFloat(value);
@@ -49,6 +71,43 @@ const px = (value: string) => Number.parseFloat(value);
 export function scaleLength(value: number, factor: number): number {
   const scaled = value * factor;
   return scaled >= 16 ? 2 * Math.round(scaled / 2) : Math.round(scaled);
+}
+
+/** How much a scale and a text size multiply every Default type size. */
+const textFactor = (scale: UiScale, textSize: TextSize) =>
+  UI_SCALES[scale].text * (textSize / DEFAULT_TEXT_SIZE);
+
+/**
+ * A text size at a scale and text size, in whole px. It stops at 10px, or at
+ * its own Default size when that is smaller, so a small size never grows at
+ * Small.
+ */
+export function scaleText(
+  size: number,
+  scale: UiScale,
+  textSize: TextSize = DEFAULT_TEXT_SIZE
+): number {
+  const floor = Math.min(Math.round(size), MIN_TEXT_PX);
+  return Math.max(floor, Math.round(size * textFactor(scale, textSize)));
+}
+
+/**
+ * A line height at a scale and text size, in even px. It stops where
+ * `scaleText` stops, so a line box never gets shorter than its text.
+ */
+function scaleLineHeight(
+  lineHeight: number,
+  scale: UiScale,
+  textSize: TextSize
+): number {
+  const floor = Math.min(Math.round(lineHeight), MIN_TEXT_PX);
+  const scaled = (lineHeight * textFactor(scale, textSize)) / 2;
+  return Math.max(floor, 2 * Math.round(scaled));
+}
+
+/** The label text size, in px, that `textSize` shows at `scale`. */
+export function textSizePx(textSize: TextSize, scale: UiScale): number {
+  return scaleText(DEFAULT_TEXT_SIZE, scale, textSize);
 }
 
 /** The smallest length the rule allows that is larger than `previous`. */
@@ -76,79 +135,17 @@ function scaleMode(
   const steps = scaled
     .filter(({ cssName }) => /^spacing-\d/.test(cssName))
     .sort((a, b) => stepOf(a.cssName) - stepOf(b.cssName));
+  const bumped = new Map<string, string>();
   let previous = -1;
-  for (const step of steps) {
-    const value = px(step.value) > previous ? px(step.value) : above(previous);
-    step.value = `${value}px`;
-    previous = value;
+  for (const { cssName, value } of steps) {
+    const length = px(value) > previous ? px(value) : above(previous);
+    if (length !== px(value)) bumped.set(cssName, `${length}px`);
+    previous = length;
   }
-  return scaled;
-}
-
-const scaleAttr = (scale: UiScale) => `[data-ui-scale='${scale}']`;
-
-/**
- * How much `textSize` at `scale` multiplies the Default type scale: the text
- * size over 14, times the scale's label size over 14.
- */
-function textFactor(textSize: TextSize, scale: UiScale): number {
-  return (textSize * UI_SCALES[scale].text) / (DEFAULT_TEXT * DEFAULT_TEXT);
-}
-
-/** A text size at a factor: whole px, and 10px or more. */
-const textPx = (value: number, factor: number) =>
-  Math.max(MIN_TEXT_PX, Math.round(value * factor));
-
-/** A Default text size, in px, at `textSize` and `scale`. */
-export function scaledTextPx(
-  value: number,
-  textSize: TextSize,
-  scale: UiScale
-): number {
-  return textPx(value, textFactor(textSize, scale));
-}
-
-/** The label text size, in px, that `textSize` shows at `scale`. */
-export function textSizePx(textSize: TextSize, scale: UiScale): number {
-  return scaledTextPx(DEFAULT_TEXT, textSize, scale);
-}
-
-/** The root with a text size other than 14 at `scale`. */
-function textSizeAttr(scale: UiScale, textSize: TextSize) {
-  const sizeAttr = `[data-text-size='${textSize}']`;
-  return scale === 'default' ? sizeAttr : `${scaleAttr(scale)}${sizeAttr}`;
-}
-
-/**
- * The selector of the root that has `textSize` at `scale`, or null at the
- * Default scale and size, which write no CSS.
- */
-export function textSelector(
-  scale: UiScale,
-  textSize: TextSize
-): string | null {
-  if (textSize !== DEFAULT_TEXT) return textSizeAttr(scale, textSize);
-  return scale === 'default' ? null : scaleAttr(scale);
-}
-
-/**
- * The text sizes (whole px, 10px or more) and line heights (even px, so a box
- * that grows with its text stays even, and 10px or more) at a factor.
- */
-function typeTokens(
-  { sizes, lineHeights }: TypeBase,
-  factor: number
-): ScaleToken[] {
-  return [
-    ...Object.entries(sizes).map(([name, value]) => ({
-      cssName: `typography-size-${name}`,
-      value: `${textPx(value, factor)}px`,
-    })),
-    ...Object.entries(lineHeights).map(([name, value]) => ({
-      cssName: `typography-line-height-${name}`,
-      value: `${Math.max(MIN_TEXT_PX, 2 * Math.round((value * factor) / 2))}px`,
-    })),
-  ];
+  return scaled.map(({ cssName, value }) => ({
+    cssName,
+    value: bumped.get(cssName) ?? value,
+  }));
 }
 
 /**
@@ -167,14 +164,14 @@ export function scaledModeBlocks(
       .filter(([mode]) => mode !== defaultMode)
       .sort(([a], [b]) => a.localeCompare(b)),
   ];
-  return nonDefaultScales().flatMap((scale) =>
+  return NON_DEFAULT_UI_SCALES.flatMap((scale) =>
     modes.map(([mode, tokens]) => {
-      const modeAttr = `[${attrName}="${mode}"]`;
+      const modeAttr = `[${attrName}='${mode}']`;
       const selectors = [
-        `${scaleAttr(scale)}${modeAttr}`,
-        `${scaleAttr(scale)} ${modeAttr}`,
+        `${uiScaleSelector(scale)}${modeAttr}`,
+        `${uiScaleSelector(scale)} ${modeAttr}`,
       ];
-      if (mode === defaultMode) selectors.unshift(scaleAttr(scale));
+      if (mode === defaultMode) selectors.unshift(uiScaleSelector(scale));
       return {
         selectors,
         tokens: scaleMode(tokens, UI_SCALES[scale].spacing),
@@ -183,68 +180,96 @@ export function scaledModeBlocks(
   );
 }
 
-/** A `rem` width at a factor. A maximum width needs no rounding. */
-const remAt = (rem: number, factor: number) =>
-  `${Number((rem * factor).toFixed(4))}rem`;
-
-/** The scale factor and the page widths (`max-w-*`, `w-*`) at that factor. */
-function widthTokens(widths: Readonly<Record<string, number>>, factor: number) {
+/** The scale factor and the page widths (`max-w-*`, `w-*`) at a scale. */
+export function widthTokens(
+  widths: Readonly<Record<string, number>>,
+  scale: UiScale
+): ScaleToken[] {
+  const factor = UI_SCALES[scale].spacing;
   return [
     { cssName: 'ui-scale', value: String(factor) },
     ...Object.entries(widths).map(([name, rem]) => ({
       cssName: `container-${name}`,
-      value: remAt(rem, factor),
+      value: `${Number((rem * factor).toFixed(4))}rem`,
     })),
+  ];
+}
+
+/** The Default sizes the UI scale multiplies. */
+export interface UiScaleBase {
+  /** Type sizes in px, by name. */
+  sizes: Readonly<Record<string, number>>;
+  /** Line heights in px, by name. */
+  lineHeights: Readonly<Record<string, number>>;
+  /** The code text size in px. */
+  codeSize: number;
+  /** Icon glyphs in px, by name. */
+  glyphs: Readonly<Record<string, number>>;
+  /** Page widths in rem, by name. */
+  widths: Readonly<Record<string, number>>;
+}
+
+/**
+ * The type sizes and the code size (`scaleText`) and the line heights
+ * (`scaleLineHeight`) at a scale and text size.
+ */
+function typeTokens(
+  { sizes, lineHeights, codeSize }: UiScaleBase,
+  scale: UiScale,
+  textSize: TextSize
+): ScaleToken[] {
+  return [
+    ...Object.entries(sizes).map(([name, size]) => ({
+      cssName: `typography-size-${name}`,
+      value: `${scaleText(size, scale, textSize)}px`,
+    })),
+    ...Object.entries(lineHeights).map(([name, lineHeight]) => ({
+      cssName: `typography-line-height-${name}`,
+      value: `${scaleLineHeight(lineHeight, scale, textSize)}px`,
+    })),
+    {
+      cssName: 'typography-code-size',
+      value: `${scaleText(codeSize, scale, textSize)}px`,
+    },
   ];
 }
 
 /**
  * The `:root` block with the default factor and page widths, then one block
- * per scale with the type scale, the icon glyphs, the page widths and the
- * factor. `sizes` leaves out the code size, which the code font size setting
- * owns.
+ * per scale with the type tokens, the icon glyphs (`scaleLength`), the page
+ * widths and the factor.
  */
-export function scaleBlocks({
-  widths,
-  ...type
-}: TypeBase & { widths: Readonly<Record<string, number>> }): ScaleBlock[] {
-  const root = {
-    selectors: [':root'],
-    tokens: widthTokens(widths, UI_SCALES.default.spacing),
-  };
+export function scaleBlocks(base: UiScaleBase): ScaleBlock[] {
+  const { glyphs, widths } = base;
+  const root = { selectors: [':root'], tokens: widthTokens(widths, 'default') };
   return [
     root,
-    ...nonDefaultScales().map((scale) => {
-      const { spacing, icon } = UI_SCALES[scale];
+    ...NON_DEFAULT_UI_SCALES.map((scale) => {
+      const { icon } = UI_SCALES[scale];
       const tokens = [
-        ...typeTokens(type, textFactor(DEFAULT_TEXT, scale)),
-        { cssName: 'icon-glyph-xs', value: `${icon - 4}px` },
-        { cssName: 'icon-glyph-sm', value: `${icon - 2}px` },
-        { cssName: 'icon-glyph-default', value: `${icon}px` },
-        ...widthTokens(widths, spacing),
+        ...typeTokens(base, scale, DEFAULT_TEXT_SIZE),
+        ...Object.entries(glyphs).map(([name, glyph]) => ({
+          cssName: `icon-glyph-${name}`,
+          value: `${scaleLength(glyph, icon)}px`,
+        })),
+        ...widthTokens(widths, scale),
       ];
-      return { selectors: [scaleAttr(scale)], tokens };
+      return { selectors: [uiScaleSelector(scale)], tokens };
     }),
   ];
 }
 
 /**
  * One block per text size other than 14 at each scale, with only the type
- * scale. Icons, spacing and widths keep the scale's values.
+ * tokens. Icons, spacing and widths keep the scale's values.
  */
-export function textSizeBlocks(type: TypeBase): ScaleBlock[] {
+export function textSizeBlocks(base: UiScaleBase): ScaleBlock[] {
   return (Object.keys(UI_SCALES) as UiScale[]).flatMap((scale) =>
-    TEXT_SIZES.filter((textSize) => textSize !== DEFAULT_TEXT).map(
+    TEXT_SIZES.filter((textSize) => textSize !== DEFAULT_TEXT_SIZE).map(
       (textSize) => ({
         selectors: [textSizeAttr(scale, textSize)],
-        tokens: typeTokens(type, textFactor(textSize, scale)),
+        tokens: typeTokens(base, scale, textSize),
       })
     )
-  );
-}
-
-function nonDefaultScales() {
-  return (Object.keys(UI_SCALES) as UiScale[]).filter(
-    (scale) => scale !== 'default'
   );
 }

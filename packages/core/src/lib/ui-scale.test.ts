@@ -3,6 +3,8 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+  appearancePrefsToCss,
+  DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
   TEXT_SIZE_OPTIONS,
   textSizePx,
@@ -114,7 +116,7 @@ describe('UI scale CSS', () => {
     ]);
     for (const block of type) {
       for (const [name, px] of block) {
-        if (name.startsWith('typography-size-')) {
+        if (/^typography-(size-|code-size)/.test(name)) {
           expect(Number.isInteger(px), name).toBe(true);
           expect(px, name).toBeGreaterThanOrEqual(10);
         }
@@ -122,8 +124,43 @@ describe('UI scale CSS', () => {
           expect(px % 2, name).toBe(0);
         }
       }
-      expect(block.has('typography-code-size')).toBe(false);
     }
+  });
+
+  it('scales the default 12px code text to 10, 14 and 15px', () => {
+    expect(
+      SCALES.map((scale) =>
+        blocks.get(`[data-ui-scale='${scale}']`)!.get('typography-code-size')
+      )
+    ).toEqual([10, 14, 15]);
+  });
+
+  it('sets the same code size as the provider at the default setting', () => {
+    const provider = appearancePrefsToCss(DEFAULT_NXDS_APPEARANCE.prefs);
+    for (const scale of SCALES) {
+      const px = blocks
+        .get(`[data-ui-scale='${scale}']`)!
+        .get('typography-code-size');
+      expect(provider).toContain(
+        `[data-ui-scale='${scale}'] {\n  --nx-typography-code-size: ${px}px;\n}`
+      );
+    }
+  });
+
+  it('scales every icon glyph by the length rule', () => {
+    const glyphs = SCALES.map((scale) =>
+      [...blocks.get(`[data-ui-scale='${scale}']`)!].filter(([name]) =>
+        name.startsWith('icon-glyph-')
+      )
+    );
+    expect(
+      glyphs.map((block) => new Map(block).get('icon-glyph-default'))
+    ).toEqual([14, 18, 20]);
+    for (const [name, px] of glyphs.flat()) {
+      expect(Number.isInteger(px), name).toBe(true);
+      if (px >= 16) expect(px % 2, name).toBe(0);
+    }
+    expect(glyphs.flat().map(([name]) => name)).toContain('icon-glyph-lg');
   });
 });
 
@@ -151,14 +188,16 @@ describe('Text size CSS', () => {
     expect(nxdsCss).not.toContain("[data-text-size='14']");
   });
 
-  it('sets only the type scale at every text size and scale, whole px and even line heights', () => {
+  it('sets only type and code at every text size and scale, whole px and even line heights', () => {
     for (const scale of ALL_SCALES) {
       for (const textSize of TEXT_SIZES) {
         const label = `${scale} × ${textSize}`;
         const block = textSizeBlock(scale, textSize);
-        expect(block.size, label).toBe(28);
+        expect(block.size, label).toBe(29);
         for (const [name, px] of block) {
-          expect(name, label).toMatch(/^typography-(size|line-height)-/);
+          expect(name, label).toMatch(
+            /^typography-(size-|line-height-|code-size$)/
+          );
           expect(Number.isInteger(px), `${label}: ${name}`).toBe(true);
           expect(px, `${label}: ${name}`).toBeGreaterThanOrEqual(10);
           if (name.startsWith('typography-line-height-')) {
@@ -190,6 +229,22 @@ describe('Text size CSS', () => {
         labelPx(scale, textSize)
       );
       expect(new Set(sizes).size, scale).toBe(sizes.length);
+    }
+  });
+
+  it('sets the same code size as the provider at every text size', () => {
+    const provider = appearancePrefsToCss(DEFAULT_NXDS_APPEARANCE.prefs);
+    for (const scale of ALL_SCALES) {
+      for (const textSize of TEXT_SIZES) {
+        const px = textSizeBlock(scale, textSize).get('typography-code-size');
+        const selector =
+          scale === 'default'
+            ? `[data-text-size='${textSize}']`
+            : `[data-ui-scale='${scale}'][data-text-size='${textSize}']`;
+        expect(provider).toContain(
+          `${selector} {\n  --nx-typography-code-size: ${px}px;\n}`
+        );
+      }
     }
   });
 

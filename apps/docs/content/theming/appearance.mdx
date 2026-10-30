@@ -69,7 +69,11 @@ Icons and spacing keep their UI scale size at every text size. A control grows
 taller only when its text needs more room. To label a text size picker with
 the size a user sees, call `textSizePx(textSize, uiScale)` from `@nxds/core`.
 
-Page widths such as `max-w-lg` grow with the UI scale. Breakpoints do not. Code text grows with the label text: `prefs.codeFontSize` is its size at the Default scale and text size. No text gets smaller than 10px.
+Page widths such as `max-w-lg` grow with the UI scale. Breakpoints do not.
+
+Code text grows with the label text. `prefs.codeFontSize` is its size at the
+Default scale and text size. The UI scale and the text size never shrink text
+below 10px, and code set smaller keeps its size.
 
 The provider puts `data-ui-scale` and `data-text-size` on `<html>`. If you set
 the attributes yourself, put both on the root only, so density and corners

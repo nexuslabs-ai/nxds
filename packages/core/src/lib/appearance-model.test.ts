@@ -454,17 +454,36 @@ describe('appearancePrefsToCss', () => {
     expect(css).toContain('--nx-typography-code-size: 32px;');
   });
 
-  it('grows the code size with the label text at each UI scale', () => {
-    const css = appearancePrefsToCss({ ...prefs, codeFontSize: 12 });
-    const sizes = Object.fromEntries(
+  /** The code size the prefs CSS writes for each other UI scale. */
+  function scaledCodeSizes(codeFontSize: number) {
+    const css = appearancePrefsToCss({ ...prefs, codeFontSize });
+    return Object.fromEntries(
       [
         ...css.matchAll(
-          /\[data-ui-scale='([a-z]+)'\] \{\s*--nx-typography-code-size: (\d+)px;/g
+          /\[data-ui-scale='([a-z]+)'\] \{\s*--nx-typography-code-size: ([\d.]+)px;/g
         ),
       ].map(([, scale, px]) => [scale, Number(px)])
     );
+  }
+
+  it('grows the code size with the label text at each UI scale', () => {
     // 12px at the Default scale, times 12/14, 16/14 and 18/14, rounded.
-    expect(sizes).toEqual({ small: 10, large: 14, larger: 15 });
+    expect(scaledCodeSizes(12)).toEqual({ small: 10, large: 14, larger: 15 });
+  });
+
+  it('never shrinks code below 10px, and keeps smaller code from growing at Small', () => {
+    expect(scaledCodeSizes(11)).toMatchObject({ small: 10 });
+    expect(scaledCodeSizes(9)).toMatchObject({ small: 9 });
+  });
+
+  it('writes the code size in whole px at every scale', () => {
+    const css = appearancePrefsToCss({ ...prefs, codeFontSize: 12.5 });
+    expect(css.match(codeSizePattern)?.[0]).toBe(
+      '--nx-typography-code-size: 13px;'
+    );
+    for (const [scale, px] of Object.entries(scaledCodeSizes(12.5))) {
+      expect(Number.isInteger(px), scale).toBe(true);
+    }
   });
 
   it('grows the code size with the text size at each UI scale', () => {

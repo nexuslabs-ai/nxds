@@ -1,4 +1,4 @@
-// Generated from packages/core/tokens by scripts/generate-token-scales.js.
+// Generated from packages/core/tokens and Tailwind's theme by scripts/generate-token-scales.js.
 // Run `pnpm --filter @nxds/core generate:scales` after editing the tokens.
 
 /** The spacing scale. Each step has its own `--nx-spacing-*` variable. */
@@ -37,3 +37,20 @@ export const PRIMITIVE_PALETTE_NAMES = [
 ] as const;
 
 export type PrimitivePaletteName = (typeof PRIMITIVE_PALETTE_NAMES)[number];
+
+/** Tailwind's page widths in rem, by name. The UI scale multiplies them. */
+export const PAGE_WIDTHS_REM = {
+  '3xs': 16,
+  '2xs': 18,
+  xs: 20,
+  sm: 24,
+  md: 28,
+  lg: 32,
+  xl: 36,
+  '2xl': 42,
+  '3xl': 48,
+  '4xl': 56,
+  '5xl': 64,
+  '6xl': 72,
+  '7xl': 80,
+} as const;

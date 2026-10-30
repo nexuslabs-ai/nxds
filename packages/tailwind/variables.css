@@ -346,6 +346,7 @@
     --nx-icon-glyph-xs: 12px;
     --nx-icon-glyph-sm: 14px;
     --nx-icon-glyph-default: 16px;
+    --nx-icon-glyph-lg: 24px;
 
     /* motion (snappy) */
     --nx-motion-duration-0: 0ms;

@@ -19,8 +19,8 @@ export interface ScaleToken {
   family: ScaleFamily;
   group: string;
   type: string;
-  /** The appearance setting that writes it, or `null` when nothing does. */
-  control: CatalogueControl | null;
+  /** The appearance settings that write it. Empty when nothing does. */
+  controls: readonly CatalogueControl[];
   /**
    * The catalogue value for a token the page can't override: a typography
    * style composed from other tokens, or a breakpoint compiled into media
@@ -75,7 +75,7 @@ export function labData(): LabData {
               family: token.family,
               group: token.group,
               type: token.type,
-              control: token.control,
+              controls: token.controls,
               fixedValue: fixedValue(token),
             },
           ]

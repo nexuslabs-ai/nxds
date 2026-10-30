@@ -184,26 +184,6 @@ function contrastField(
   };
 }
 
-function fontSizeField(
-  flag: string,
-  key: 'codeFontSize',
-  description: string
-): NxdsThemeField {
-  return {
-    kind: 'integer',
-    flag,
-    key: `prefs.${key}`,
-    description,
-    min: FONT_SIZE_PX_MIN,
-    max: FONT_SIZE_PX_MAX,
-    read: (theme) => String(theme.appearance.prefs[key]),
-    write: (theme, value) =>
-      withPrefs(theme, {
-        [key]: integer(flag, value, FONT_SIZE_PX_MIN, FONT_SIZE_PX_MAX),
-      }),
-  };
-}
-
 /**
  * A font pref, by its curated font's value. `fallback` names the value the
  * pref takes when it isn't a curated font: the system stack, or for headings,
@@ -353,7 +333,24 @@ export const NXDS_THEME_FIELDS: readonly NxdsThemeField[] = [
     value: 'system',
     family: DEFAULT_PREFS.codeFont,
   }),
-  fontSizeField('code-font-size', 'codeFontSize', 'code text size in px'),
+  {
+    kind: 'integer',
+    flag: 'code-font-size',
+    key: 'prefs.codeFontSize',
+    description: 'code text size in px',
+    min: FONT_SIZE_PX_MIN,
+    max: FONT_SIZE_PX_MAX,
+    read: (theme) => String(theme.appearance.prefs.codeFontSize),
+    write: (theme, value) =>
+      withPrefs(theme, {
+        codeFontSize: integer(
+          'code-font-size',
+          value,
+          FONT_SIZE_PX_MIN,
+          FONT_SIZE_PX_MAX
+        ),
+      }),
+  },
   {
     kind: 'choice',
     flag: 'icons',
