@@ -1,3 +1,4 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { ref, useId } from 'vue';
@@ -343,14 +344,7 @@ export const WithDataAttributes: Story = {
   },
 };
 
-const DENSITIES = [
-  'tight',
-  'compact',
-  'default',
-  'comfortable',
-  'relaxed',
-  'spacious',
-] as const;
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
 
 export const SizeAtEveryDensity: Story = {
   render: () => ({

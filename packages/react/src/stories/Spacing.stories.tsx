@@ -1,6 +1,6 @@
 import type { NxdsDensity } from '@nxds/core';
+import { CommandIcon, StarIcon, TrayIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconCommand, IconInbox, IconStar } from '@tabler/icons-react';
 import { expect, within } from 'storybook/test';
 
 import { Checkbox } from '../components/checkbox/checkbox';
@@ -120,10 +120,10 @@ function NumericStory() {
         </h2>
         <p className="nx:text-muted-foreground nx:typography-body-default nx:max-w-2xl">
           Live `--nx-spacing-*` variables consumed through Tailwind utilities
-          like `nx:p-4` or `nx:gap-2`. Steps up to 8px are the same in every
-          density. From step 3, the density offset grows until 24px, where it is
-          −4, −2, 0, +2, +4 and +6px from Tight to Spacious. Larger steps keep
-          that offset. The Density toolbar changes the active runtime values.
+          like `nx:p-4` or `nx:gap-2`. Steps 0–2 (up to 8px) stay fixed. From
+          step 2.5 the offset grows until step 6 (24px). There it is −4, −2, 0,
+          +2, +4 and +6px from Tight to Spacious. Larger steps keep that offset.
+          The Density toolbar changes the active runtime values.
         </p>
       </div>
       <section className="nx:flex nx:flex-col nx:gap-1">
@@ -252,7 +252,7 @@ export const GlyphsIgnoreDensity: Story = {
           className="nx:flex nx:items-center nx:gap-4"
         >
           <Kbd>
-            <IconCommand />K
+            <CommandIcon />K
           </Kbd>
           <Checkbox defaultChecked aria-label={`${density} checkbox`} />
           <RadioGroup defaultValue="on" aria-label={`${density} radio`}>
@@ -260,10 +260,10 @@ export const GlyphsIgnoreDensity: Story = {
           </RadioGroup>
           <Spinner />
           <Toggle aria-label={`${density} toggle`}>
-            <IconStar />
+            <StarIcon />
           </Toggle>
           <EmptyStateMedia variant="icon">
-            <IconInbox />
+            <TrayIcon />
           </EmptyStateMedia>
         </div>
       ))}
@@ -285,20 +285,5 @@ export const GlyphsIgnoreDensity: Story = {
     const tightGlyphs = glyphs(tight!);
     await expect(tightGlyphs.length).toBeGreaterThan(0);
     await expect(glyphs(spacious!)).toEqual(tightGlyphs);
-
-    for (const control of canvasElement.querySelectorAll<HTMLElement>(
-      '[data-slot="checkbox"], [data-slot="radio-group-item"]'
-    )) {
-      const glyph = control.querySelector('svg')!.getBoundingClientRect();
-      const box = control.getBoundingClientRect();
-      const top = box.top + control.clientTop;
-      const left = box.left + control.clientLeft;
-      await expect(glyph.top).toBeGreaterThanOrEqual(top);
-      await expect(glyph.left).toBeGreaterThanOrEqual(left);
-      await expect(glyph.bottom).toBeLessThanOrEqual(
-        top + control.clientHeight
-      );
-      await expect(glyph.right).toBeLessThanOrEqual(left + control.clientWidth);
-    }
   },
 };

@@ -14,7 +14,7 @@
         "unit": "px"
       },
       "$type": "dimension",
-      "$description": "Small icon or mark, such as a Badge icon, a menu check or a Checkbox check. The same at every density."
+      "$description": "Small icon or mark, such as a Badge icon or a Checkbox check. The same at every density."
     },
     "default": {
       "$value": {

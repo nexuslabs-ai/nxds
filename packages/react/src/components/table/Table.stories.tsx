@@ -930,7 +930,7 @@ function SortableHeaderDemo() {
               className="nx:ml-auto nx:inline-flex nx:items-center nx:gap-1 nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default"
             >
               Amount
-              <Icon className="nx:size-4" aria-hidden />
+              <Icon className="nx:size-icon-glyph-default" aria-hidden />
             </button>
           </TableHead>
         </TableRow>
@@ -1237,7 +1237,10 @@ function DataTableRecipeDemo() {
                   className="nx:ml-auto nx:inline-flex nx:items-center nx:gap-1 nx:typography-label-default nx:text-inherit nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default"
                 >
                   Amount
-                  <SortIcon className="nx:size-4" aria-hidden />
+                  <SortIcon
+                    className="nx:size-icon-glyph-default"
+                    aria-hidden
+                  />
                 </button>
               </TableHead>
             </TableRow>
@@ -1374,7 +1377,11 @@ function SortableRecipeHead({
       >
         {label}
         <SortIcon
-          className={isActive ? 'nx:size-4' : 'nx:size-4 nx:opacity-40'}
+          className={
+            isActive
+              ? 'nx:size-icon-glyph-default'
+              : 'nx:size-icon-glyph-default nx:opacity-40'
+          }
           aria-hidden
         />
       </button>
@@ -1668,7 +1675,7 @@ function DataTableErrorRows() {
           className="nx:py-8 nx:text-center nx:text-muted-foreground"
         >
           <div className="nx:flex nx:flex-col nx:items-center nx:gap-3">
-            <WarningCircleIcon aria-hidden className="nx:size-5" />
+            <WarningCircleIcon aria-hidden className="nx:size-[20px]" />
             <span>
               {retried ? 'Retry queued.' : 'Could not load invoices.'}
             </span>

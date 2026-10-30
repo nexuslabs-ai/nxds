@@ -14,7 +14,11 @@ RuleTester.describe = describe;
 RuleTester.it = it;
 
 const ruleTester = new RuleTester({
-  languageOptions: { ecmaVersion: 2022, sourceType: 'module' },
+  languageOptions: {
+    ecmaVersion: 2022,
+    sourceType: 'module',
+    parserOptions: { ecmaFeatures: { jsx: true } },
+  },
 });
 
 const rule = plugin.rules['nx-class-conventions'];
@@ -26,6 +30,18 @@ ruleTester.run('nx-class-conventions', rule, {
     "const c = 'nx:[&>svg]:size-icon-glyph-sm nx:text-muted-foreground';",
     "const c = 'nx:[&_svg]:size-[24px]';",
     "const c = 'nx:size-8 nx:rounded-sm';",
+    // A `:has()` selector sizes the box around the icon, not the icon.
+    "const c = 'nx:has-[>svg]:size-8';",
+    "const c = 'nx:[&:has(svg)]:size-9';",
+    "const x = <IconX className='nx:size-icon-glyph-xs nx:shrink-0' />;",
+    "const x = <CheckIcon className={cn('nx:size-[24px]', className)} />;",
+    // Only an `Icon*` or `*Icon` element is an icon.
+    "const x = <Badge className='nx:size-4' />;",
+    // Stories and docs are specimens, like the other runtime-only checks.
+    {
+      code: "const x = <IconX className='nx:size-4' />;",
+      filename: '/repo/packages/react/src/components/kbd/Kbd.stories.tsx',
+    },
     // Correct prefix order + complete semantic paths.
     "const c = 'nx:hover:bg-primary-background';",
     "const c = 'nx:bg-primary-background nx:text-foreground';",
@@ -113,6 +129,26 @@ ruleTester.run('nx-class-conventions', rule, {
     },
     {
       code: "const c = `nx:[&_svg:not([class*='size-'])]:size-4`;",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&>svg]:h-3 nx:[&>svg]:w-3';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:*:[svg]:size-4';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:group-data-[orientation=vertical]/attachment:[&_svg]:size-8';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const x = <IconX className='nx:size-3 nx:text-muted-foreground' />;",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const x = <CheckIcon className={cn('nx:h-4 nx:w-4', className)} />;",
       errors: [{ messageId: 'densityIconSize' }],
     },
     {
