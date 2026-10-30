@@ -1,7 +1,7 @@
 // Writes dist/: the system's files under dist/project/, files.json listing
 // them with their hashes for nxds-cli, the package manifest npm publishes
-// from dist/, the canvas prop coverage report and SETUP.md. Fails when the
-// output breaks the Design System format.
+// from dist/, the canvas prop coverage report, SETUP.md and the sampler
+// artboard. Fails when the output breaks the Design System format.
 import {
   componentLabel,
   exportedComponentSlugs,
@@ -34,7 +34,13 @@ import {
   renderIndexDts,
 } from '../src/props.ts';
 import { componentReads, variablesRead } from '../src/reads.ts';
-import { samplerProblems, setupGuide } from '../src/setup.ts';
+import {
+  SAMPLER_FILE,
+  samplerFile,
+  samplerFileProblems,
+  samplerProblems,
+  setupGuide,
+} from '../src/setup.ts';
 import { buildStyles } from '../src/styles.ts';
 import { buildSystemIndex } from '../src/system-index.ts';
 import { buildTokens, typeStyleRules } from '../src/tokens.ts';
@@ -157,8 +163,14 @@ async function main() {
   );
 
   const parts = flatComponents();
-  const sampler = readFileSync(path.join(contentDir, 'sampler.html'), 'utf8');
-  const samplerErrors = samplerProblems(sampler, parts);
+  const sampler = readFileSync(path.join(contentDir, SAMPLER_FILE), 'utf8');
+  const samplerErrors = [
+    ...samplerFileProblems(sampler, {
+      readme,
+      stylesheets: tokensCss + styles,
+    }),
+    ...samplerProblems(samplerFile(sampler).markup, parts),
+  ];
   if (samplerErrors.length > 0) throw new Error(samplerErrors.join('\n'));
   const { code } = await buildBundle(folders, parts);
   const indexDts = renderIndexDts(parts);
@@ -226,6 +238,10 @@ async function main() {
       version,
       files,
     })
+  );
+  copyFileSync(
+    path.join(contentDir, SAMPLER_FILE),
+    path.join(distDir, SAMPLER_FILE)
   );
   copyFileSync(
     path.join(contentDir, 'package-readme.md'),

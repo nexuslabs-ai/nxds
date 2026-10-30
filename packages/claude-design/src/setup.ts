@@ -1,7 +1,9 @@
 // SETUP.md: the guide the export writes beside project/, which walks Claude
 // in a chat through publishing the system, installing it on a canvas and
-// checking it with the sampler artboard. The sampler mounts every attribute
-// form a canvas writes, so it doubles as the install test.
+// checking it with the sampler artboard. The sampler is a static dashboard
+// the export ships as an artboard file, which Claude puts on the canvas
+// unchanged. It mounts every attribute form a canvas writes, so it doubles
+// as the install test.
 import type { Attribute } from './attribute.ts';
 import { ICON_NAMES } from './icons.ts';
 import { type FlatComponent, isRequired } from './props.ts';
@@ -14,6 +16,19 @@ import { TEXT_PLAIN_FILES } from './validate.ts';
 
 /** The folder a canvas installs the system into, under `ds/`. */
 const CANVAS_FOLDER = 'nxds';
+
+/** The sampler artboard's file name. A canvas shows a file as an artboard only when its name ends `.dc.html`. */
+export const SAMPLER_FILE = 'nxds-sampler.dc.html';
+
+/** The width the sampler is laid out at, as a page. */
+const SAMPLER_WIDTH = 1440;
+
+/** The sampler's whole script: it passes the `mode` tweak to the root's `data-theme`, and does nothing else. */
+const MODE_SCRIPT = `class Component extends DCLogic {
+  renderVals() {
+    return { mode: this.props.mode ?? 'light' };
+  }
+}`;
 
 /** The attribute forms the sampler has to write at least once. */
 export const SAMPLER_FORMS = [
@@ -76,23 +91,167 @@ export function canvasLinks(readme: string) {
   return html.trim().split('\n');
 }
 
-/** What SETUP.md tells Claude to paste: the README's link lines for `<head>`, and the sampler for inside `<x-dc>`. */
-export function samplerArtboard(readme: string, sampler: string) {
-  const links = canvasLinks(readme).map((line) =>
+/** The README's link lines with the canvas's `ds/nxds/` paths. */
+function canvasRootLinks(readme: string) {
+  return canvasLinks(readme).map((line) =>
     line.replaceAll('ds/<folder>/', `ds/${CANVAS_FOLDER}/`)
   );
-  return { links: links.join('\n'), sampler: sampler.trim() };
+}
+
+const decodeAttribute = (value: string) =>
+  value.replaceAll('&quot;', '"').replaceAll('&amp;', '&');
+
+/** The pieces of the sampler file: its head lines, the markup inside `<x-dc>` after its `<helmet>`, its tweaks and its script. */
+export function samplerFile(file: string) {
+  const head = /<head>\n([\s\S]*?)\n<\/head>/.exec(file)?.[1];
+  const dc =
+    /<x-dc>\n(?:<helmet>[\s\S]*?<\/helmet>\n)?([\s\S]*?)\n<\/x-dc>/.exec(
+      file
+    )?.[1];
+  const script =
+    /<script type="text\/x-dc" data-dc-script data-props="([^"]*)">\n([\s\S]*?)\n<\/script>/.exec(
+      file
+    );
+  if (head === undefined || dc === undefined || !script) {
+    throw new Error(
+      `${SAMPLER_FILE}: no <head>, <x-dc> or data-dc-script block where a canvas artboard has one.`
+    );
+  }
+  return {
+    title: /<title>([^<]*)<\/title>/.exec(head)?.[1],
+    head: head.split('\n'),
+    markup: dc,
+    props: JSON.parse(decodeAttribute(script[1] ?? '')) as Record<
+      string,
+      unknown
+    >,
+    script: script[2] ?? '',
+  };
+}
+
+/** The sampler's height at its width, as its `$preview` gives it. */
+export function samplerHeight(file: string) {
+  const preview = samplerFile(file).props['$preview'] as
+    | { height?: unknown }
+    | undefined;
+  return typeof preview?.height === 'number' ? preview.height : undefined;
+}
+
+/** The `boards` entry SETUP.md tells Claude to add to the canvas's `canvas.json`. */
+export function boardEntry(file: string) {
+  return JSON.stringify({
+    path: SAMPLER_FILE,
+    title: samplerFile(file).title,
+    expand: 'fill',
+    w: SAMPLER_WIDTH,
+    h: samplerHeight(file),
+  });
+}
+
+const CLASS_ATTRIBUTE = /\sclass(?:-name)?="([^"]*)"/g;
+
+// Whether `css` has a rule for `.name`, escaped the way Tailwind writes it.
+function definesClass(css: string, name: string) {
+  const selector = `.${name.replace(/[^\w-]/g, '\\$&')}`;
+  for (
+    let at = css.indexOf(selector);
+    at !== -1;
+    at = css.indexOf(selector, at + 1)
+  ) {
+    if (!/[\w\\-]/.test(css[at + selector.length] ?? '')) return true;
+  }
+  return false;
+}
+
+/** Why the sampler file wouldn't show or check on a canvas: a name the canvas skips, a head that doesn't link the system, state beyond the `mode` tweak, or a class no stylesheet defines. */
+export function samplerFileProblems(
+  file: string,
+  { readme, stylesheets }: { readme: string; stylesheets: string }
+) {
+  const problems: string[] = [];
+  if (!SAMPLER_FILE.endsWith('.dc.html') || /\s/.test(SAMPLER_FILE)) {
+    problems.push(
+      `${SAMPLER_FILE}: a canvas shows a file as an artboard only when its name ends .dc.html and has no spaces.`
+    );
+  }
+  const { head, markup, props, script } = samplerFile(file);
+  const links = canvasRootLinks(readme);
+  const support = head.indexOf('<script src="./support.js"></script>');
+  if (
+    support === -1 ||
+    links.some((line, index) => head[support + 1 + index] !== line)
+  ) {
+    problems.push(
+      `${SAMPLER_FILE}: <head> must have the support.js line, then the README's link lines in order.`
+    );
+  }
+  const bindings = file.match(/\{\{[^}]*\}\}/g) ?? [];
+  if (
+    bindings.length !== 1 ||
+    !markup.startsWith('<div data-theme="{{mode}}"')
+  ) {
+    problems.push(
+      `${SAMPLER_FILE}: the only binding is the root's data-theme="{{mode}}". Found ${bindings.join(', ') || 'none'}.`
+    );
+  }
+  for (const [pattern, what] of [
+    [/<sc-(?:for|if)\b/, 'sc-for or sc-if'],
+    [/\sdc-props=/, 'dc-props'],
+    [/\son-[a-z-]+=/, 'an on-* handler'],
+  ] as const) {
+    if (pattern.test(markup)) {
+      problems.push(
+        `${SAMPLER_FILE} uses ${what}. Write every row out, and set state with attributes.`
+      );
+    }
+  }
+  const mode = props['mode'] as Record<string, unknown> | undefined;
+  const preview = props['$preview'] as Record<string, unknown> | undefined;
+  if (
+    Object.keys(props).join() !== 'mode,$preview' ||
+    mode?.['editor'] !== 'enum' ||
+    JSON.stringify(mode['options']) !== '["light","dark"]' ||
+    mode['default'] !== 'light'
+  ) {
+    problems.push(
+      `${SAMPLER_FILE}: data-props holds only mode, an enum of light and dark that defaults to light, and $preview.`
+    );
+  }
+  if (
+    preview?.['width'] !== SAMPLER_WIDTH ||
+    !Number.isInteger(preview['height'])
+  ) {
+    problems.push(
+      `${SAMPLER_FILE}: $preview is ${SAMPLER_WIDTH} wide, with its height at that width in whole px.`
+    );
+  }
+  if (script !== MODE_SCRIPT) {
+    problems.push(
+      `${SAMPLER_FILE}: the data-dc-script block only returns mode:\n${MODE_SCRIPT}`
+    );
+  }
+  const classes = new Set(
+    [...markup.matchAll(CLASS_ATTRIBUTE)].flatMap(([, value = '']) =>
+      value.split(/\s+/).filter(Boolean)
+    )
+  );
+  for (const name of classes) {
+    if (!definesClass(stylesheets, name)) {
+      problems.push(
+        `${SAMPLER_FILE}: no stylesheet the canvas links defines the class ${name}.`
+      );
+    }
+  }
+  return problems;
 }
 
 /** Why a guide built from these inputs would send Claude wrong: a publish step that leaves out a `text/plain` file, a file the install leaves out, a block in the wrong place. */
 function guideProblems({
   template,
   readme,
-  sampler,
 }: {
   template: string;
   readme: string;
-  sampler: string;
 }) {
   const problems: string[] = [];
   const publish = markdownSection(template, '1. Publish the system');
@@ -131,11 +290,6 @@ function guideProblems({
       'README.md: the "On a Design canvas" html block holds a line that isn\'t a <link> or <script>. Those lines go in <head>.'
     );
   }
-  if (/<(?:link|script)\b/.test(sampler)) {
-    problems.push(
-      'sampler.html links or runs a file. It goes inside <x-dc>, and the link lines go in <head>.'
-    );
-  }
   return problems;
 }
 
@@ -152,9 +306,8 @@ export function setupGuide({
   version: string;
   files: readonly string[];
 }) {
-  const problems = guideProblems({ template, readme, sampler });
+  const problems = guideProblems({ template, readme });
   if (problems.length > 0) throw new Error(problems.join('\n'));
-  const artboard = samplerArtboard(readme, sampler);
   const canvasFiles = CANVAS_FILES.map(
     (file) => `- \`ds/${CANVAS_FOLDER}/${file}\``
   ).join('\n');
@@ -166,8 +319,7 @@ export function setupGuide({
     .replaceAll('{{files}}', String(files.length))
     .replaceAll('{{textPlainFiles}}', () => textPlainFiles)
     .replace('{{canvasFiles}}', () => canvasFiles)
-    .replace('{{links}}', () => artboard.links)
-    .replace('{{sampler}}', () => artboard.sampler);
+    .replace('{{boardEntry}}', () => boardEntry(sampler));
   const left = /\{\{\w+\}\}/.exec(guide);
   if (left) throw new Error(`SETUP.md: ${left[0]} has no value.`);
   return guide;
@@ -256,14 +408,14 @@ export function samplerProblems(sampler: string, parts: FlatComponent[]) {
   const openings = sampler.match(X_IMPORT_OPENING)?.length ?? 0;
   if (openings !== tags.length) {
     problems.push(
-      `sampler.html has ${openings - tags.length} x-import tags the build can't read. Write attributes in lowercase, with quoted values.`
+      `${SAMPLER_FILE} has ${openings - tags.length} x-import tags the build can't read. Write attributes in lowercase, with quoted values.`
     );
   }
   for (const { part: name, attributes, props } of tags) {
     const part = name === undefined ? undefined : byName.get(name);
     if (!part) {
       problems.push(
-        `sampler.html mounts ${name ?? 'an x-import with no part'}, which the bundle doesn't export.`
+        `${SAMPLER_FILE} mounts ${name ?? 'an x-import with no part'}, which the bundle doesn't export.`
       );
       continue;
     }
@@ -275,7 +427,7 @@ export function samplerProblems(sampler: string, parts: FlatComponent[]) {
         : null;
       if (!form) {
         problems.push(
-          `sampler.html: ${part.name} ${attribute}${value === undefined ? '' : `="${value}"`} isn't a prop it takes in a form the bundle reads.`
+          `${SAMPLER_FILE}: ${part.name} ${attribute}${value === undefined ? '' : `="${value}"`} isn't a prop it takes in a form the bundle reads.`
         );
         continue;
       }
@@ -284,7 +436,7 @@ export function samplerProblems(sampler: string, parts: FlatComponent[]) {
   }
   for (const form of SAMPLER_FORMS) {
     if (!written.has(form))
-      problems.push(`sampler.html writes no prop as ${form}.`);
+      problems.push(`${SAMPLER_FILE} writes no prop as ${form}.`);
   }
   return problems;
 }
