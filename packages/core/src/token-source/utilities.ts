@@ -4,6 +4,11 @@ import type { CssDeclaration } from './format.ts';
 export interface UtilityRule {
   /** The utility name without the `nx:` prefix. */
   name: string;
+  /**
+   * Nested selectors the declarations apply to, such as `& svg`. Without
+   * them, the declarations apply to the element the class sits on.
+   */
+  selectors?: readonly string[];
   /** The rule body, in order. */
   declarations: CssDeclaration[];
 }
@@ -55,9 +60,22 @@ export function durationUtility(key: string): UtilityRule {
   };
 }
 
-/** The `size-icon-*` utility an icon size `key` (e.g. `glyph-default`) emits. */
-export function iconSizeUtility(key: string): UtilityRule {
+/**
+ * The utility an icon token emits. A glyph size (e.g. `glyph.default`) emits
+ * `size-icon-glyph-default`. The stroke emits `icon-stroke`, which sets the
+ * line width on an `<svg>` the class sits on or contains, and on each shape
+ * inside it, because HugeIcons sets `stroke-width` on every path.
+ */
+export function iconUtility(path: readonly string[]): UtilityRule {
+  const key = path.join('-');
   const value = `var(--nx-icon-${key})`;
+  if (key === 'stroke') {
+    return {
+      name: 'icon-stroke',
+      selectors: ['&:is(svg)', '&:is(svg) *', '& svg', '& svg *'],
+      declarations: [{ property: 'stroke-width', value }],
+    };
+  }
   return {
     name: `size-icon-${key}`,
     declarations: [

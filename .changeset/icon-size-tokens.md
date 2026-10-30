@@ -1,5 +1,6 @@
 ---
 '@nxds/core': minor
+'@nxds/tailwind': minor
 ---
 
-Adds the `--nx-icon-glyph-default` icon size token (16px) and the `size-icon-glyph-default` utility. It sets an icon's width and height, and stays the same at every density.
+Add the `--nx-icon-glyph-default` token (16px) and its `size-icon-glyph-default` utility. The utility sets an icon's width and height. The token is the same at every density.

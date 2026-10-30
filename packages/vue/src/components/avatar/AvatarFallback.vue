@@ -24,6 +24,7 @@ const delegated = reactiveOmit(props, 'class');
     :class="
       cn(
         'nx:flex nx:size-full nx:items-center nx:justify-center nx:rounded-[inherit] nx:bg-muted nx:text-foreground nx:font-medium nx:leading-none',
+        'nx:icon-stroke',
         props.class
       )
     "
