@@ -351,11 +351,18 @@ describe('nxds-cli export claude-design', () => {
     expect(existsSync(path.join(cwd, 'nxds-design-system'))).toBe(false);
   });
 
-  it('refuses a root file that climbs out of the release', async () => {
+  it.each([
+    ['..', '..'],
+    ['', 'an empty path'],
+    ['guides/SETUP.md', 'guides/SETUP.md'],
+    ['project', 'project'],
+    ['removed.json', 'removed.json'],
+    ['files.json', 'files.json'],
+  ])('refuses %j as a root file', async (name, shown) => {
     const { source, cwd } = setup({
       'files.json': JSON.stringify({
         project: manifestEntries(PROJECT),
-        root: [...manifestEntries(ROOT), { path: '..', sha256: '' }],
+        root: [...manifestEntries(ROOT), { path: name, sha256: '' }],
       }),
     });
 
@@ -366,8 +373,39 @@ describe('nxds-cli export claude-design', () => {
 
     expect(exitCode).toBe(EXIT_CODES.error);
     expect(body.error).toBe(
-      "files.json lists .. as a root file, but it isn't a file beside project/."
+      `files.json lists ${shown} as a root file. A root file is one name beside project/, other than project, files.json and removed.json.`
     );
+  });
+
+  it('removes a root file the last export wrote and this release drops', async () => {
+    const { source, cwd } = setup();
+    await cli(['export', 'claude-design', '--source', source], cwd);
+    writeFileSync(
+      path.join(cwd, 'nxds-design-system', 'notes.md'),
+      '# Canvas notes\n'
+    );
+    const kept = Object.fromEntries(
+      Object.entries(ROOT).filter(([name]) => name !== 'coverage.md')
+    );
+    writeFiles(source, {
+      'files.json': JSON.stringify({
+        project: manifestEntries(PROJECT),
+        root: manifestEntries(kept),
+      }),
+    });
+
+    const { exitCode } = await cliJson(
+      ['export', 'claude-design', '--source', source, '--overwrite'],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(readdirSync(path.join(cwd, 'nxds-design-system')).sort()).toEqual(
+      [...Object.keys(kept), 'files.json', 'notes.md', 'project'].sort()
+    );
+    expect(JSON.parse(readOut(cwd, 'files.json'))).toMatchObject({
+      root: manifestEntries(kept),
+    });
   });
 
   it('keeps your files beside project/ when it exports again', async () => {
@@ -385,7 +423,7 @@ describe('nxds-cli export claude-design', () => {
 
     expect(exitCode).toBe(EXIT_CODES.ok);
     expect(readdirSync(path.join(cwd, 'nxds-design-system')).sort()).toEqual(
-      [...Object.keys(ROOT), 'notes.md', 'project'].sort()
+      [...Object.keys(ROOT), 'files.json', 'notes.md', 'project'].sort()
     );
   });
 

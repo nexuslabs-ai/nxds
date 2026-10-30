@@ -222,6 +222,21 @@ function stalePaths(existing: string[], exported: Set<string>) {
     .sort();
 }
 
+// The names the export writes beside project/ itself.
+const EXPORT_NAMES = new Set(['project', 'files.json', 'removed.json']);
+
+// A root file is one name beside project/ that the export doesn't write
+// itself.
+const isRootName = (name: string) =>
+  name !== '' &&
+  name !== '.' &&
+  name !== '..' &&
+  path.basename(name) === name &&
+  !EXPORT_NAMES.has(name);
+
+const sha256 = (bytes: Buffer) =>
+  createHash('sha256').update(bytes).digest('hex');
+
 const isEntryList = (value: unknown): value is ManifestEntry[] =>
   Array.isArray(value) &&
   value.every(
@@ -257,7 +272,7 @@ function readEntries(dir: string, entries: ManifestEntry[], prefix: string) {
       );
     }
     const bytes = readFileSync(file);
-    if (createHash('sha256').update(bytes).digest('hex') !== entry.sha256) {
+    if (sha256(bytes) !== entry.sha256) {
       throw new CliError(
         `${prefix}${entry.path} doesn't match the release's files.json, so nothing was written.`
       );
@@ -279,9 +294,9 @@ function readRelease(root: string) {
     }
   }
   for (const { path: file } of manifest.root) {
-    if (path.basename(file) !== file || file === '.' || file === '..') {
+    if (!isRootName(file)) {
       throw new CliError(
-        `files.json lists ${file || 'an empty path'} as a root file, but it isn't a file beside project/.`
+        `files.json lists ${file || 'an empty path'} as a root file. A root file is one name beside project/, other than project, files.json and removed.json.`
       );
     }
   }
@@ -296,8 +311,43 @@ function readRelease(root: string) {
   };
 }
 
-function writeRootFiles(out: string, files: Map<string, Buffer>) {
-  for (const [name, bytes] of files) writeFileSync(path.join(out, name), bytes);
+// The root files the last export into `out` listed in its files.json and
+// this release doesn't ship.
+function droppedRootFiles(out: string, rootFiles: Map<string, Buffer>) {
+  const file = path.join(out, 'files.json');
+  if (!existsSync(file)) return [];
+  const value = readJson(file) as Partial<Manifest> | null;
+  if (!isEntryList(value?.root)) {
+    throw new UsageError(
+      `${file} must hold root, a JSON array of { path, sha256 } entries. Delete it, then run the command again.`
+    );
+  }
+  return value.root
+    .map((entry) => entry.path)
+    .filter((name) => isRootName(name) && !rootFiles.has(name));
+}
+
+const entriesOf = (files: Map<string, Buffer>) =>
+  [...files].map(([file, bytes]) => ({ path: file, sha256: sha256(bytes) }));
+
+// Lists what the export wrote in files.json, so the next export can remove a
+// root file its release drops.
+function writeRootFiles(
+  out: string,
+  files: Map<string, Buffer>,
+  rootFiles: Map<string, Buffer>
+) {
+  for (const [name, bytes] of rootFiles) {
+    writeFileSync(path.join(out, name), bytes);
+  }
+  const manifest: Manifest = {
+    project: entriesOf(files),
+    root: entriesOf(rootFiles),
+  };
+  writeFileSync(
+    path.join(out, 'files.json'),
+    `${JSON.stringify(manifest, null, 2)}\n`
+  );
 }
 
 function mergeIndex(files: Map<string, Buffer>, currentFile: string) {
@@ -397,8 +447,10 @@ export async function exportClaudeDesign(
     const removed = options.existing
       ? stalePaths(readPaths(path.resolve(cwd, options.existing)), exported)
       : [];
+    const dropped = droppedRootFiles(out, rootFiles);
     writeProject(out, files);
-    writeRootFiles(out, rootFiles);
+    for (const name of dropped) rmSync(path.join(out, name), { force: true });
+    writeRootFiles(out, files, rootFiles);
     const removedFile = path.join(out, 'removed.json');
     if (options.existing) {
       writeFileSync(removedFile, `${JSON.stringify(removed, null, 2)}\n`);

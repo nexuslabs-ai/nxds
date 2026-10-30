@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import type { Page } from 'playwright';
 
 import {
   boardEntry,
@@ -102,6 +103,19 @@ const SURFACES =
 
 async function mountSampler(markup: string, size: Size, mode: Mode) {
   const { page, problems } = await openPage('Button', LIGHT);
+  try {
+    return { ...(await measureSampler(page, markup, size, mode)), problems };
+  } finally {
+    await page.close();
+  }
+}
+
+async function measureSampler(
+  page: Page,
+  markup: string,
+  size: Size,
+  mode: Mode
+) {
   await page.setViewportSize(size);
   const board = await page.evaluate(
     async ({ markup, height }) => {
@@ -181,24 +195,20 @@ async function mountSampler(markup: string, size: Size, mode: Mode) {
     },
     { markup: markup.replaceAll('{{mode}}', mode), height: size.height }
   );
-  if (board.error !== undefined) {
-    await page.close();
-    return { error: board.error, problems };
-  }
+  if (board.error !== undefined) return { error: board.error };
 
   const trigger = page.getByRole('button', {
     name: 'This quarter',
     exact: true,
   });
   const popover = page.locator('[data-slot="popover-content"]');
-  let opens = false;
-  if ((await trigger.count()) === 1) {
-    await trigger.click();
-    opens = await popover
-      .waitFor({ timeout: 2000 })
+  const opens =
+    (await trigger.count()) === 1 &&
+    (await trigger
+      .click({ timeout: 2000 })
+      .then(() => popover.waitFor({ timeout: 2000 }))
       .then(() => true)
-      .catch(() => false);
-  }
+      .catch(() => false));
   const open = await page.evaluate(async (surfaces) => {
     const { __nxdsSettle } = window as unknown as PageGlobals;
     await __nxdsSettle(document.body);
@@ -223,8 +233,7 @@ async function mountSampler(markup: string, size: Size, mode: Mode) {
       .then(() => true)
       .catch(() => false);
   }
-  await page.close();
-  return { board: { ...board, ...open, opens, closes }, problems };
+  return { board: { ...board, ...open, opens, closes } };
 }
 
 // The sampler the export ships, mounted the way a canvas does in each mode

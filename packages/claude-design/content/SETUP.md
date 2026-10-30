@@ -11,6 +11,7 @@ The export wrote `nxds-design-system/`:
 | `coverage.md`          | The props a canvas can't set, and why          | No                         |
 | `nxds-sampler.dc.html` | The sampler artboard, for step 4               | To the canvas, in step 4   |
 | `removed.json`         | Files an update drops. Only with `--existing`. | No                         |
+| `files.json`           | Each file the export wrote, with its hash      | No                         |
 
 If the person gave you a link to an nxds system they already have, go to [Update to a new release](#update-to-a-new-release).
 
