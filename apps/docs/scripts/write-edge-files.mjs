@@ -22,7 +22,7 @@ const jiti = createJiti(
 const { SECURITY_HEADERS } = await jiti.import(
   path.join(docsRoot, 'security-headers.ts')
 );
-const { PAGE_MANIFEST } = await jiti.import(
+const { PAGE_MANIFEST, sectionHomeRoute } = await jiti.import(
   path.join(docsRoot, 'app', '_lib', 'manifest.ts')
 );
 
@@ -56,9 +56,10 @@ if (overlong) {
 
 // A static export renders `redirect()` in app/(docs)/[section]/page.tsx as a
 // client-side redirect only; these give each section a real HTTP redirect.
-const redirectLines = PAGE_MANIFEST.filter(
-  (section) => section.pages.length > 0
-).map((section) => `/${section.slug} ${section.pages[0].route} 307`);
+const redirectLines = PAGE_MANIFEST.flatMap((section) => {
+  const home = sectionHomeRoute(section);
+  return home ? [`/${section.slug} ${home} 307`] : [];
+});
 
 writeFileSync(path.join(outDir, '_headers'), `${headersLines.join('\n')}\n`);
 writeFileSync(path.join(outDir, '_redirects'), `${redirectLines.join('\n')}\n`);

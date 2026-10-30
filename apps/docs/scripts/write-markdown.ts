@@ -9,7 +9,7 @@ import { unified } from 'unified';
 import type { VFile } from 'vfile';
 
 import { frameworkLabel, isFramework } from '../app/_lib/frameworks.ts';
-import { PAGE_MANIFEST } from '../app/_lib/manifest.ts';
+import { PAGE_MANIFEST, sectionHomeRoute } from '../app/_lib/manifest.ts';
 import { SITE_URL } from '../app/_lib/site.ts';
 import { DOCS_ARTICLE_ID } from '../app/_lib/table-of-contents.ts';
 
@@ -88,14 +88,14 @@ function prune(node: Element) {
 }
 
 /** Each docs page, and each section's redirect, mapped to its Markdown. */
-const markdownRoutes = new Map(
-  PAGE_MANIFEST.flatMap((section) => [
-    ...section.pages.map((page) => [page.route, `${page.route}.md`] as const),
-    ...section.pages
-      .slice(0, 1)
-      .map((page) => [`/${section.slug}`, `${page.route}.md`] as const),
-  ])
-);
+const markdownRoutes = new Map<string, string>();
+for (const section of PAGE_MANIFEST) {
+  for (const page of section.pages) {
+    markdownRoutes.set(page.route, `${page.route}.md`);
+  }
+  const home = sectionHomeRoute(section);
+  if (home) markdownRoutes.set(`/${section.slug}`, `${home}.md`);
+}
 
 /**
  * Points internal links at nxds.dev, and docs pages and sections at their
