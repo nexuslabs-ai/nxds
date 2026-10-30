@@ -1,5 +1,6 @@
 // The page a Design canvas loads, and the helpers every check renders and
-// reads it with. A check records each problem with `fail`.
+// reads it with. `openCanvas` points them at an exported folder before any
+// check runs. A check records each problem with `fail`.
 import type * as ReactModule from 'react';
 import type * as ReactDOMModule from 'react-dom';
 import type * as ReactDOMClient from 'react-dom/client';
@@ -8,6 +9,8 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import {
+  type Browser,
+  type BrowserContext,
   type BrowserContextOptions,
   chromium,
   type Page,
@@ -16,10 +19,7 @@ import {
 
 import { canvasLinks } from '../../src/setup.ts';
 
-import { exportDir } from './release.ts';
-
 const packageRoot = path.join(import.meta.dirname, '..', '..');
-export const projectDir = path.join(exportDir, 'project');
 const require = createRequire(path.join(packageRoot, 'package.json'));
 const ORIGIN = 'https://system.test';
 
@@ -43,11 +43,12 @@ function canvasLines() {
   );
 }
 
-const PRELOAD = [
-  '<script src="/lib/react.js"></script>',
-  '<script src="/lib/react-dom.js"></script>',
-  ...canvasLines(),
-].join('\n');
+/** The folder `nxds-cli export claude-design` wrote: `project/`, SETUP.md and the rest. */
+export let exportDir = '';
+export let projectDir = '';
+let preload = '';
+export let browser: Browser;
+let context: BrowserContext;
 
 export type Theme = { attribute: string | null; darkClass: boolean };
 export const LIGHT: Theme = { attribute: 'light', darkClass: false };
@@ -77,7 +78,7 @@ function frame(previewHtml: string, theme: Theme) {
   ].join(' ');
   return previewHtml
     .replace(/<html([^>]*)>/, `<html$1 ${attributes}>`)
-    .replace('<head>', `<head>\n${PRELOAD}`);
+    .replace('<head>', `<head>\n${preload}`);
 }
 
 export function cards() {
@@ -113,8 +114,6 @@ export async function openPage(card: string, theme: Theme, on = context) {
   await page.waitForLoadState('load');
   return { page, problems };
 }
-
-export const browser = await chromium.launch();
 
 // `window.__nxdsElement(tree)` renders a `Part` tree as plain React: each
 // prop holds its real value, as nxds's own stories pass it.
@@ -349,7 +348,18 @@ export async function canvasContext(options: BrowserContextOptions = {}) {
   return created;
 }
 
-const context = await canvasContext();
+/** Loads the export in `folder` the way a canvas does, for every check after it. */
+export async function openCanvas(folder: string) {
+  exportDir = folder;
+  projectDir = path.join(folder, 'project');
+  preload = [
+    '<script src="/lib/react.js"></script>',
+    '<script src="/lib/react-dom.js"></script>',
+    ...canvasLines(),
+  ].join('\n');
+  browser = await chromium.launch();
+  context = await canvasContext();
+}
 
 export async function rendered(page: Page) {
   return page.evaluate(() => {

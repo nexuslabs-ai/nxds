@@ -365,6 +365,21 @@ describe('nxds-cli export claude-design', () => {
     ]);
   });
 
+  it("refuses a release whose SETUP.md isn't a regular file", async () => {
+    const { source, cwd } = setup();
+    rmSync(path.join(source, 'SETUP.md'));
+    mkdirSync(path.join(source, 'SETUP.md'));
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toBe("The release's SETUP.md isn't a regular file.");
+    expect(existsSync(path.join(cwd, 'nxds-design-system'))).toBe(false);
+  });
+
   it('downloads the release from the npm registry and checks its integrity', async () => {
     const { root, source, cwd } = setup();
     const registry = await npmRegistry(root, source);

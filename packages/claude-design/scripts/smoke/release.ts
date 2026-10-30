@@ -3,7 +3,7 @@
 // with the command the setup page gives. The checks load what it writes.
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -62,21 +62,27 @@ async function registry(version: string, bytes: Buffer) {
   return { url: `http://127.0.0.1:${port}`, server };
 }
 
-async function exportRelease() {
+/** Exports the release and returns the folder it wrote: `project/`, SETUP.md and the rest. */
+export async function exportRelease() {
   if (!existsSync(cli)) {
     throw new Error(
       `${cli} is missing. Run pnpm --filter nxds-cli build first.`
     );
   }
   const cwd = mkdtempSync(path.join(tmpdir(), 'nxds-claude-design-smoke-'));
+  process.on('exit', () => rmSync(cwd, { recursive: true, force: true }));
   const { version, bytes } = await pack(cwd);
   const { url, server } = await registry(version, bytes);
   try {
     const { stdout } = await run('node', [cli, 'export', 'claude-design'], {
       cwd,
       env: { ...process.env, npm_config_registry: url },
-    }).catch((error: { stderr?: string }) => {
-      throw new Error(`nxds-cli export claude-design failed: ${error.stderr}`);
+    }).catch((error: unknown) => {
+      if (!(error instanceof Error)) throw error;
+      const { stderr } = error as Error & { stderr?: string };
+      throw new Error(
+        `nxds-cli export claude-design failed: ${stderr || error.message}`
+      );
     });
     const next = `Read ${path.join(EXPORT_DIR, 'SETUP.md')} and follow it.`;
     if (!stdout.includes(next)) {
@@ -87,6 +93,3 @@ async function exportRelease() {
   }
   return path.join(cwd, EXPORT_DIR);
 }
-
-/** The folder `nxds-cli export claude-design` wrote: `project/`, SETUP.md and the rest. */
-export const exportDir = await exportRelease();

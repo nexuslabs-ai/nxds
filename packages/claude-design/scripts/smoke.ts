@@ -13,12 +13,13 @@ import { BAD_INPUT_CASES, checkBadInput } from './smoke/bad-input.ts';
 import { checkCards } from './smoke/cards.ts';
 import { checkExamples } from './smoke/examples.ts';
 import { checkExports } from './smoke/exports.ts';
-import { browser, failures } from './smoke/harness.ts';
+import { browser, failures, openCanvas } from './smoke/harness.ts';
 import { checkIcons } from './smoke/icons.ts';
 import { checkOverlays, OVERLAYS } from './smoke/overlays.ts';
 import { checkPresets, PRESET_CASES } from './smoke/presets.ts';
 import { checkRecharts, RECHARTS_CASES } from './smoke/recharts.ts';
 import { checkRefs } from './smoke/refs.ts';
+import { exportRelease } from './smoke/release.ts';
 import { checkRuntimeLayer } from './smoke/runtime-layer.ts';
 import { checkSampler } from './smoke/sampler.ts';
 import { checkThemes } from './smoke/themes.ts';
@@ -31,6 +32,7 @@ import {
   WRAPPED_OVERLAYS,
 } from './smoke/wrapped-overlays.ts';
 
+await openCanvas(await exportRelease());
 const cardCount = await checkCards();
 await checkThemes();
 await checkOverlays();

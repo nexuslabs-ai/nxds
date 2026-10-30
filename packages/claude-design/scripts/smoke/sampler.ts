@@ -5,6 +5,7 @@ import { samplerArtboard, samplerTags } from '../../src/setup.ts';
 
 import {
   DARK,
+  exportDir,
   fail,
   failOnProblems,
   LIGHT,
@@ -13,7 +14,6 @@ import {
   projectDir,
   type Theme,
 } from './harness.ts';
-import { exportDir } from './release.ts';
 
 /** The artboard markup SETUP.md tells Claude to paste, read from the exported guide. */
 function shippedArtboard() {

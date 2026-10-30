@@ -276,7 +276,11 @@ function readRootFiles(root: string) {
   const files = new Map<string, Buffer>();
   for (const name of ROOT_FILES) {
     const file = path.join(root, name);
-    if (existsSync(file)) files.set(name, readFileSync(file));
+    if (!existsSync(file)) continue;
+    if (!lstatSync(file).isFile()) {
+      throw new CliError(`The release's ${name} isn't a regular file.`);
+    }
+    files.set(name, readFileSync(file));
   }
   return files;
 }
