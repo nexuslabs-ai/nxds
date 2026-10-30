@@ -434,7 +434,7 @@ const SIZES = ['sm', 'default', 'lg'] as const;
 
 export const HeightAtEveryDensity: Story = {
   render: () => ({
-    components: { IconItalic, Toggle },
+    components: { PhTextItalic, Toggle },
     setup: () => ({ densities: DENSITIES, sizes: SIZES }),
     template: `
       <div class="nx:flex nx:flex-col nx:gap-3">
@@ -447,7 +447,7 @@ export const HeightAtEveryDensity: Story = {
         >
           <Toggle v-for="size in sizes" :key="size" :size="size">Bold</Toggle>
           <Toggle aria-label="Italic">
-            <IconItalic />
+            <PhTextItalic />
           </Toggle>
           <Toggle variant="outline">Bold</Toggle>
         </div>

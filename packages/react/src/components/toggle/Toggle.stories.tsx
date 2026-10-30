@@ -425,7 +425,7 @@ export const HeightAtEveryDensity: Story = {
             </Toggle>
           ))}
           <Toggle aria-label="Italic">
-            <IconItalic />
+            <TextItalicIcon />
           </Toggle>
           <Toggle variant="outline">Bold</Toggle>
         </div>
