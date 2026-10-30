@@ -70,6 +70,7 @@ Motion answers input and then gets out of the way. Popovers, menus and routine s
 
 - nxds uses Phosphor icons, regular weight, at 16px beside text. Place one with `Nxds.Icon` and its phosphoricons.com name: `name="plus"`. Add `-fill` for the filled icon: `name="check-circle-fill"`.
 - Name an icon on an icon prop the same way: Button `start-icon="plus"`, Badge `left-icon="check-circle"`. `components/Icon/README.md` lists every name the system ships.
+- The props panel shows an icon prop as a text field. Type the name.
 - An icon takes the colour of its text. Don't tint icons on their own.
 - An icon-only button needs an `aria-label`.
 - No emoji as icons.
