@@ -18,6 +18,7 @@ import {
   SPACING_MODE_FILE_PATTERN,
   spacingRoleUtility,
   spacingTokenKind,
+  spacingValue,
 } from '../token-source/spacing';
 import {
   type ExtractedToken,
@@ -31,7 +32,7 @@ import {
   borderWidthAliasUtilities,
   DEFAULT_TRANSITION,
   durationUtility,
-  iconSizeUtility,
+  iconUtility,
 } from '../token-source/utilities';
 
 import { RUNTIME_COLOR_DESCRIPTIONS } from './descriptions';
@@ -75,10 +76,10 @@ const SHADOW_STYLES_FILE: TokenFile = 'styles/shadows.json';
 const SINGLE_SOURCE = { mode: null, preset: null } as const;
 
 /** The `[data-ui-scale]` mode, which scales every token it writes. */
-const UI_SCALE: CatalogueControl = { kind: 'preset', field: 'uiScale' };
+const UI_SCALE: CatalogueControl = { kind: 'scale', field: 'uiScale' };
 
 /** The `[data-text-size]` mode, which scales the type sizes and code size. */
-const TEXT_SIZE: CatalogueControl = { kind: 'preset', field: 'textSize' };
+const TEXT_SIZE: CatalogueControl = { kind: 'scale', field: 'textSize' };
 
 /** The appearance fields that write each moded family's values. */
 const FAMILY_CONTROLS: Partial<
@@ -117,7 +118,7 @@ function leafControls({
   if (family === 'typography' && file.startsWith('primitives/')) {
     return typographyControls(leaf.path);
   }
-  if (family === 'icon') return [UI_SCALE];
+  if (family === 'icon') return leaf.path[0] === 'glyph' ? [UI_SCALE] : [];
   if (preset === null) return [];
   return FAMILY_CONTROLS[family] ?? [];
 }
@@ -322,7 +323,7 @@ function primitiveAliases(
   path: readonly string[]
 ): CatalogueAlias[] {
   const key = path.join('-');
-  if (family === 'icon') return [utility(iconSizeUtility(key).name)];
+  if (family === 'icon') return [utility(iconUtility(path).name)];
   if (family === 'radius') return [cssVariable(`--radius-${key}`)];
   if (family === 'borderwidth') {
     return [
@@ -371,21 +372,37 @@ function primitiveEntry(lookup: ReferenceLookup) {
   };
 }
 
-function spacingEntry({ leaf }: AuthoredLeaf): LeafEntry {
-  const key = leaf.path.join('-');
-  const name: CatalogueTokenName = `--nx-${key}`;
+function spacingName(path: readonly string[]): CatalogueTokenName {
+  return `--nx-${path.join('-')}`;
+}
+
+/** The spacing steps a role token can reference, such as `spacing.6`. */
+function spacingStepLookup(leaves: readonly AuthoredLeaf[]): ReferenceLookup {
+  return new Map(
+    leaves
+      .filter(({ leaf }) => spacingTokenKind(leaf.path) === 'numeric')
+      .map(({ leaf }) => {
+        const name = spacingName(leaf.path);
+        return [
+          leaf.path.join('.'),
+          { cssName: name.slice('--'.length), name },
+        ];
+      })
+  );
+}
+
+function spacingEntry({ file, leaf }: AuthoredLeaf): LeafEntry {
+  const name = spacingName(leaf.path);
   const alias =
     spacingTokenKind(leaf.path) === 'role'
       ? utility(spacingRoleUtility(leaf.path).name)
-      : cssVariable(`--${key}`);
+      : cssVariable(`--${leaf.path.join('-')}`);
+  const value = spacingValue(leaf, extractTokens(TOKEN_FILES[file]));
   return {
     name,
     aliases: [alias],
     declarations: [
-      {
-        property: name,
-        value: formatTokenValue(leaf.value, leaf.type, leaf.path),
-      },
+      { property: name, value: formatTokenValue(value, leaf.type, leaf.path) },
     ],
   };
 }
@@ -549,13 +566,19 @@ function runtimeColorTokens(): CatalogueToken[] {
 /** A token the UI scale writes and no token file authors. */
 function uiScaleToken(
   { cssName, value }: ScaleToken,
-  fields: Pick<CatalogueToken, 'group' | 'type' | 'description'>
+  {
+    family,
+    type,
+    description,
+  }: Pick<CatalogueToken, 'family' | 'type' | 'description'>
 ): CatalogueToken {
   const name: CatalogueTokenName = `--nx-${cssName}`;
   return {
     name,
-    family: 'ui-scale',
-    ...fields,
+    family,
+    group: family,
+    type,
+    description,
     aliases: [],
     controls: [UI_SCALE],
     variants: [
@@ -575,7 +598,7 @@ function uiScaleToken(
 function uiScaleEntry(token: ScaleToken): CatalogueToken {
   if (token.cssName === 'ui-scale') {
     return uiScaleToken(token, {
-      group: 'factor',
+      family: 'ui-scale',
       type: 'number',
       description:
         'The UI scale as a factor of the Default scale. Multiply a fixed size by it, such as `calc(16rem*var(--nx-ui-scale))`, so the size follows the UI scale.',
@@ -583,7 +606,7 @@ function uiScaleEntry(token: ScaleToken): CatalogueToken {
   }
   const width = token.cssName.replace('container-', '');
   return uiScaleToken(token, {
-    group: 'width',
+    family: 'width',
     type: 'dimension',
     description: `The \`nx:max-w-${width}\` and \`nx:w-${width}\` width. It follows the UI scale.`,
   });
@@ -601,6 +624,7 @@ export function createTokenCatalogue(): readonly CatalogueToken[] {
   const primitives = PRIMITIVE_FAMILIES.flatMap(primitiveLeaves);
   const lookup = primitiveLookup(primitives);
   const shadowLayers = primitives.filter(({ family }) => family === 'shadow');
+  const spacing = spacingLeaves();
   return [
     ...authoredTokens(
       primitives.filter((leaf) => leaf.family !== 'shadow'),
@@ -608,7 +632,7 @@ export function createTokenCatalogue(): readonly CatalogueToken[] {
       primitiveEntry(lookup)
     ),
     ...runtimeColorTokens(),
-    ...authoredTokens(spacingLeaves(), lookup, spacingEntry),
+    ...authoredTokens(spacing, spacingStepLookup(spacing), spacingEntry),
     ...authoredTokens(
       fileLeaves('z-index', Z_INDEX_FILE, SINGLE_SOURCE),
       lookup,

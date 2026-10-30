@@ -368,6 +368,15 @@ async function expectButtonsCentered(rail: HTMLElement) {
   }
 }
 
+/** Checks that the space the Sidebar keeps beside the page is as wide as its rail. */
+async function expectGapMatchesRail(canvasElement: HTMLElement) {
+  const width = (slot: string) =>
+    canvasElement
+      .querySelector(`[data-slot="${slot}"]`)!
+      .getBoundingClientRect().width;
+  await expect(width('sidebar-gap')).toBe(width('sidebar-container'));
+}
+
 export const CollapsedRailAtLargerScale: Story = {
   // The largest scale with the smallest density gives the rail the most to
   // hold. The density is set on the Sidebar, not on the page.
@@ -387,6 +396,7 @@ export const CollapsedRailAtLargerScale: Story = {
         '[data-slot="sidebar-container"]'
       )!
     );
+    await expectGapMatchesRail(canvasElement);
   },
 };
 
@@ -406,6 +416,7 @@ export const FloatingRailAtStrongStroke: Story = {
     await expectButtonsCentered(
       canvasElement.querySelector<HTMLElement>('[data-slot="sidebar-inner"]')!
     );
+    await expectGapMatchesRail(canvasElement);
   },
 };
 

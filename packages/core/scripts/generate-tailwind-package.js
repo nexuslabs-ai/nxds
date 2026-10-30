@@ -590,7 +590,7 @@ async function generateTailwindPackage(overrides, engine) {
     primitiveTokens.filter((t) => t.category === 'icon')
   );
   writeDistFile('icon-utilities.css', iconUtilities.css);
-  log.success(`Generated ${iconUtilities.count} icon size utilities`);
+  log.success(`Generated ${iconUtilities.count} icon utilities`);
 
   // `spacingDefault` controls which mode lands under `:root, [data-density="X"]`.
   const { spacingDefault } = config;

@@ -118,7 +118,7 @@ export const sidebarMenuButtonVariants = cva(
     'nx:disabled:pointer-events-none nx:disabled:text-disabled-foreground nx:aria-disabled:pointer-events-none nx:aria-disabled:text-disabled-foreground',
     'nx:data-[active=true]:bg-nav-item-active nx:data-[active=true]:text-nav-foreground',
     'nx:data-[state=open]:hover:bg-nav-item-hover',
-    'nx:[&>span:last-child]:truncate nx:[&>svg]:size-icon-glyph-default nx:[&>svg]:shrink-0'
+    'nx:[&>span:last-child]:truncate nx:[&>svg]:size-icon-glyph-default nx:[&>svg]:shrink-0 nx:icon-stroke'
   ),
   {
     variants: {

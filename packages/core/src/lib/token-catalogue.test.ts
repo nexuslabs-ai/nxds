@@ -14,6 +14,7 @@ import {
   DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
   type NxdsAppearancePrefs,
+  UI_SCALE_OPTIONS,
 } from './appearance-model';
 import type { Mode } from './palette';
 
@@ -200,12 +201,6 @@ function familyTokens(family: CatalogueFamily): CatalogueToken[] {
   return authored.filter((token) => token.family === family);
 }
 
-function presetFieldsOf(token: CatalogueToken): string[] {
-  return token.controls.flatMap((control) =>
-    control.kind === 'preset' ? [control.field] : []
-  );
-}
-
 /** The variant `:root` carries: the root preset, in light for shadows. */
 function rootVariant(token: CatalogueToken): VariantKey {
   const attribute = MODE_ATTRIBUTES[token.family];
@@ -254,8 +249,12 @@ describe('token catalogue', () => {
     const rootTokens = [
       ...familyTokens('z-index'),
       ...familyTokens('ui-scale'),
+      ...familyTokens('width'),
     ];
-    expect(familyTokens('ui-scale').map((token) => token.name)).toContain(
+    expect(familyTokens('ui-scale').map((token) => token.name)).toEqual([
+      '--nx-ui-scale',
+    ]);
+    expect(familyTokens('width').map((token) => token.name)).toContain(
       '--nx-container-lg'
     );
     for (const token of rootTokens) {
@@ -418,20 +417,24 @@ describe('token catalogue', () => {
     }
   });
 
-  it('names the preset fields for every token a mode attribute swaps', () => {
+  it('names the preset field for every token a mode attribute swaps', () => {
     const presetFields = Object.fromEntries(
       Object.keys(MODE_ATTRIBUTES).map((family) => [
         family,
         new Set(
           familyTokens(family as CatalogueFamily)
             .filter((token) => token.variants.some((v) => v.preset !== null))
-            .flatMap((token) => presetFieldsOf(token))
+            .flatMap((token) =>
+              token.controls.flatMap((control) =>
+                control.kind === 'preset' ? [control.field] : []
+              )
+            )
         ),
       ])
     );
     expect(presetFields).toEqual({
-      spacing: new Set(['density', 'uiScale']),
-      radius: new Set(['corners', 'uiScale']),
+      spacing: new Set(['density']),
+      radius: new Set(['corners']),
       borderwidth: new Set(['stroke']),
       shadow: new Set(['elevation']),
     });
@@ -447,7 +450,11 @@ describe('token catalogue', () => {
     );
     const controlled = new Set(
       catalogue
-        .filter((token) => presetFieldsOf(token).includes('uiScale'))
+        .filter((token) =>
+          token.controls.some(
+            (control) => control.kind === 'scale' && control.field === 'uiScale'
+          )
+        )
         .map((token) => token.name)
     );
     expect(controlled).toEqual(scaled);
@@ -463,7 +470,12 @@ describe('token catalogue', () => {
     );
     const controlled = new Set(
       catalogue
-        .filter((token) => presetFieldsOf(token).includes('textSize'))
+        .filter((token) =>
+          token.controls.some(
+            (control) =>
+              control.kind === 'scale' && control.field === 'textSize'
+          )
+        )
         .map((token) => token.name)
     );
     expect(sized.size).toBeGreaterThan(0);
@@ -521,14 +533,17 @@ describe('token catalogue', () => {
 describe('density spacing order', () => {
   const densities = DENSITY_OPTIONS.map((option) => option.value);
   const spacing = catalogue.filter((token) => token.family === 'spacing');
-  const px = (token: CatalogueToken, density: string) => {
+  const variantOf = (token: CatalogueToken, density: string) => {
     const variant = token.variants.find((value) => value.preset === density);
     expect(variant, `${token.name} ${density}`).toBeDefined();
-    return Number.parseFloat(variant!.declarations[0]!.value);
+    return variant!;
   };
+  const px = (token: CatalogueToken, density: string) =>
+    Number.parseFloat(variantOf(token, density).declarations[0]!.value);
   const step = (n: number) => byName.get(`--nx-spacing-${n}`)!;
   // Steps 0–2 are density-invariant. The density offset ramps in from step 2.5
-  // and reaches its full size at step 6.
+  // and reaches its full size at step 6. Step 2.5 moves only 1px across the
+  // densities, so neighbours can't stay apart there, and RAMP starts at step 3.
   const RAMP = [3, 4, 5, 6];
 
   it('never reduces spacing when moving to a more spacious density', () => {
@@ -576,12 +591,34 @@ describe('density spacing order', () => {
     }
   });
 
-  it('keeps neighbouring densities apart at each ramp step and role token', () => {
+  it('gives each role token the value of the step it references, at every density and UI scale', () => {
     const roles = spacing.filter(
       (token) => !token.name.startsWith('--nx-spacing-')
     );
+    const scales = UI_SCALE_OPTIONS.map(({ value }) => value).filter(
+      (scale) => scale !== 'default'
+    );
     expect(roles.length).toBeGreaterThan(0);
-    for (const token of [...RAMP.map(step), ...roles]) {
+    for (const token of roles) {
+      for (const density of densities) {
+        const { target } = only(variantOf(token, density).references);
+        expect(px(token, density), `${token.name} ${density}`).toBe(
+          px(byName.get(target)!, density)
+        );
+        for (const scale of scales) {
+          const block = modeBlock(
+            `[data-ui-scale='${scale}'][data-density='${density}']`
+          );
+          const label = `${token.name} ${scale} × ${density}`;
+          expect(block.get(token.name), label).toBeDefined();
+          expect(block.get(token.name), label).toBe(block.get(target));
+        }
+      }
+    }
+  });
+
+  it('keeps neighbouring densities apart at each ramp step', () => {
+    for (const token of RAMP.map(step)) {
       const values = densities.map((density) => px(token, density));
       // Step 3 carries only 3px of ramp across six densities, so a pair may
       // share a value there, but never three in a row.

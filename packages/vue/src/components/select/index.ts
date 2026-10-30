@@ -38,7 +38,7 @@ export {
 
 export const selectTriggerVariants = cva(
   [
-    'nx:group/select-trigger nx:flex nx:box-border nx:w-full nx:items-center nx:justify-between nx:gap-2',
+    'nx:group/select-trigger nx:flex nx:box-border nx:w-full nx:items-center nx:justify-between nx:gap-2 nx:icon-stroke',
     'nx:rounded-md nx:border-default nx:transition-field',
     'nx:whitespace-nowrap nx:text-inherit',
     'nx:data-[placeholder]:text-muted-foreground',
@@ -65,7 +65,3 @@ export const selectTriggerVariants = cva(
 );
 
 export type SelectTriggerVariants = VariantProps<typeof selectTriggerVariants>;
-
-/** Starts item text after the check column: 8px, the check, then 8px. */
-export const selectItemInsetClassName =
-  'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]';

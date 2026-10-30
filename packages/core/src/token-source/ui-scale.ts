@@ -60,6 +60,12 @@ export interface ScaleBlock {
   tokens: ScaleToken[];
 }
 
+/** A token of a density or radius mode, before the UI scale. */
+export interface ModeToken extends ScaleToken {
+  /** The spacing step a role token takes its value from, such as `spacing-6`. */
+  step?: string;
+}
+
 const FULL_RADIUS = '9999px';
 
 /** No text that starts at this size or larger scales below it. */
@@ -67,10 +73,12 @@ const MIN_TEXT_PX = 8;
 
 const px = (value: string) => Number.parseFloat(value);
 
+const evenPx = (value: number) => 2 * Math.round(value / 2);
+
 /** A length at a scale: whole px below 16px, even px from 16px. */
 export function scaleLength(value: number, factor: number): number {
   const scaled = value * factor;
-  return scaled >= 16 ? 2 * Math.round(scaled / 2) : Math.round(scaled);
+  return scaled >= 16 ? evenPx(scaled) : Math.round(scaled);
 }
 
 /** How much a scale and a text size multiply every Default type size. */
@@ -101,8 +109,7 @@ function scaleLineHeight(
   textSize: TextSize
 ): number {
   const floor = Math.min(Math.round(lineHeight), MIN_TEXT_PX);
-  const scaled = (lineHeight * textFactor(scale, textSize)) / 2;
-  return Math.max(floor, 2 * Math.round(scaled));
+  return Math.max(floor, evenPx(lineHeight * textFactor(scale, textSize)));
 }
 
 /** The label text size, in px, that `textSize` shows at `scale`. */
@@ -122,30 +129,35 @@ const stepOf = (cssName: string) =>
 /**
  * Scales one density or radius mode. Numeric spacing steps stay in order: a
  * step that rounds onto the one before it moves up to the next allowed length.
+ * A role token takes the scaled value of the step it references.
  */
-function scaleMode(
-  tokens: readonly ScaleToken[],
-  factor: number
-): ScaleToken[] {
-  const scaled = tokens.map(({ cssName, value }) => ({
-    cssName,
-    value:
-      value === FULL_RADIUS ? value : `${scaleLength(px(value), factor)}px`,
-  }));
-  const steps = scaled
-    .filter(({ cssName }) => /^spacing-\d/.test(cssName))
-    .sort((a, b) => stepOf(a.cssName) - stepOf(b.cssName));
-  const bumped = new Map<string, string>();
+function scaleMode(tokens: readonly ModeToken[], factor: number): ScaleToken[] {
+  const scaled = new Map(
+    tokens
+      .filter(({ step }) => !step)
+      .map(({ cssName, value }) => [
+        cssName,
+        value === FULL_RADIUS ? value : `${scaleLength(px(value), factor)}px`,
+      ])
+  );
+  const steps = [...scaled]
+    .filter(([cssName]) => /^spacing-\d/.test(cssName))
+    .sort(([a], [b]) => stepOf(a) - stepOf(b));
   let previous = -1;
-  for (const { cssName, value } of steps) {
+  for (const [cssName, value] of steps) {
     const length = px(value) > previous ? px(value) : above(previous);
-    if (length !== px(value)) bumped.set(cssName, `${length}px`);
+    scaled.set(cssName, `${length}px`);
     previous = length;
   }
-  return scaled.map(({ cssName, value }) => ({
-    cssName,
-    value: bumped.get(cssName) ?? value,
-  }));
+  return tokens.map(({ cssName, step }) => {
+    const value = scaled.get(step ?? cssName);
+    if (value === undefined) {
+      throw new Error(
+        `scaleMode: ${cssName} references ${step}, which its mode lacks`
+      );
+    }
+    return { cssName, value };
+  });
 }
 
 /**
@@ -154,7 +166,7 @@ function scaleMode(
  * too. Modes nest under the scale, which sits on the root.
  */
 export function scaledModeBlocks(
-  modesByName: Readonly<Record<string, readonly ScaleToken[]>>,
+  modesByName: Readonly<Record<string, readonly ModeToken[]>>,
   { attrName, defaultMode }: { attrName: string; defaultMode: string }
 ): ScaleBlock[] {
   const entries = Object.entries(modesByName);
@@ -236,8 +248,8 @@ function typeTokens(
 
 /**
  * The `:root` block with the default factor and page widths, then one block
- * per scale with the type tokens, the icon glyphs (`scaleLength`), the page
- * widths and the factor.
+ * per scale with the type tokens, the icon glyphs (even px), the page widths
+ * and the factor.
  */
 export function scaleBlocks(base: UiScaleBase): ScaleBlock[] {
   const { glyphs, widths } = base;
@@ -250,7 +262,7 @@ export function scaleBlocks(base: UiScaleBase): ScaleBlock[] {
         ...typeTokens(base, scale, DEFAULT_TEXT_SIZE),
         ...Object.entries(glyphs).map(([name, glyph]) => ({
           cssName: `icon-glyph-${name}`,
-          value: `${scaleLength(glyph, icon)}px`,
+          value: `${evenPx(glyph * icon)}px`,
         })),
         ...widthTokens(widths, scale),
       ];

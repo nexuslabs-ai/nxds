@@ -671,6 +671,10 @@ export const copies: [react: string, vue: string][] = [
     'packages/vue/src/stories/support/avatar-fixtures.ts',
   ],
   [
+    'packages/react/src/stories/support/menu-item-inset-test-utils.ts',
+    'packages/vue/src/stories/support/menu-item-inset-test-utils.ts',
+  ],
+  [
     'packages/react/src/stories/support/motion-test-utils.ts',
     'packages/vue/src/stories/support/motion-test-utils.ts',
   ],

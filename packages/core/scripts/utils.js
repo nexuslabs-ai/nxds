@@ -10,6 +10,7 @@ import {
   inlineVariables,
 } from '../src/token-source/format.ts';
 import {
+  referencedStep,
   SPACING_MODE_FILE_PATTERN,
   spacingRoleUtility,
 } from '../src/token-source/spacing.ts';
@@ -28,7 +29,7 @@ import {
   borderWidthAliasUtilities,
   DEFAULT_TRANSITION,
   durationUtility,
-  iconSizeUtility,
+  iconUtility,
 } from '../src/token-source/utilities.ts';
 
 /**
@@ -132,10 +133,10 @@ export function discoverPrimitives(primitivesDir) {
 }
 
 /**
- * Find the per-mode spacing files in `semantic/`. Their values are direct px
- * (no `{N}` refs) and emit per-mode `[data-density="X"]` blocks via
- * `collectSpacingTokens`. Every other semantic file is read by a collector
- * that names it directly.
+ * Find the per-mode spacing files in `semantic/`. Steps are direct px, role
+ * tokens reference a step in the same file, and both emit per-mode
+ * `[data-density="X"]` blocks via `collectSpacingTokens`. Every other
+ * semantic file is read by a collector that names it directly.
  *
  * @param {string} semanticDir - Path to semantic directory
  * @returns {Record<string, string>} Mode name keyed to its `spacing-{mode}.json` filename
@@ -388,12 +389,19 @@ export function generateTypographyUtilitiesCSS(tokensDir, primitiveMap) {
  * @param {import('../src/token-source/utilities.ts').UtilityRule} rule
  * @returns {string}
  */
-function formatUtilityRule({ name, declarations }) {
-  let css = `@utility ${name} {\n`;
-  for (const { property, value } of declarations) {
-    css += `  ${property}: ${value};\n`;
-  }
-  return `${css}}\n\n`;
+function formatUtilityRule({ name, selectors, declarations }) {
+  const declarationLines = declarations
+    .map(({ property, value }) => `${property}: ${value};`)
+    .join('\n');
+  const body = selectors
+    ? `${selectors.join(',\n')} {\n${indentLines(declarationLines)}\n}`
+    : declarationLines;
+  return `@utility ${name} {\n${indentLines(body)}\n}\n\n`;
+}
+
+/** `text` with every line indented by two spaces. */
+function indentLines(text) {
+  return text.replace(/^/gm, '  ');
 }
 
 /**
@@ -420,20 +428,18 @@ export function generateBorderWidthUtilitiesCSS(tokens) {
 }
 
 /**
- * Generate the `size-icon-{name}` utilities for every icon token. They read
- * the fixed `--nx-icon-*` variables, so icons keep their size at every
- * density.
+ * Generate the utility for every icon token: `size-icon-{name}` for each
+ * glyph size and `icon-stroke` for the line width. They read the fixed
+ * `--nx-icon-*` variables, so icons keep their size and line at every density.
  *
- * @param {object[]} tokens - Array of icon tokens with cssName property (e.g., "nx-icon-glyph-default")
+ * @param {object[]} tokens - Array of icon tokens with a dotted path property (e.g., "glyph.default")
  * @returns {{ css: string, count: number }} Generated CSS and utility count
  */
 export function generateIconUtilitiesCSS(tokens) {
-  const rules = tokens.map((token) =>
-    iconSizeUtility(token.cssName.replace('nx-icon-', ''))
-  );
+  const rules = tokens.map((token) => iconUtility(token.path.split('.')));
 
   return {
-    css: `/* Icon Size Utilities */\n\n${rules.map(formatUtilityRule).join('')}`,
+    css: `/* Icon Utilities */\n\n${rules.map(formatUtilityRule).join('')}`,
     count: rules.length,
   };
 }
@@ -505,13 +511,17 @@ export const CANONICAL_SPACING_DEFAULT_MODE = 'default';
  *  - `@utility` role declarations reference the prefixed form
  *    (`var(--nx-container-p)`). See `generateSpacingRoleUtilitiesCSS`.
  *
+ * A role token's `{spacing.N}` reference resolves to step N's value in the
+ * same mode (`referencedStep`), and the token keeps that step's cssName as
+ * `step`, so the UI scale gives the role its step's scaled value.
+ *
  * Throws on cssName collisions across paths within a single mode — two paths
  * flattening to the same name (e.g. `layout.section-gap` and
  * `layout.section.gap` both → `layout-section-gap`) would silently lose
  * one declaration.
  *
  * @param {string} semanticDir - Path to semantic directory
- * @returns {Record<string, {cssName: string, path: string[], value: string}[]>}
+ * @returns {Record<string, {cssName: string, path: string[], value: string, step?: string}[]>}
  *   Modes keyed by name (e.g. `vega`, `lyra`, `maia`, `mira`, `nova`, `luma`, `sera`).
  *   Each token carries the original JSON `path` so downstream emitters
  *   (`generateSpacingRoleUtilitiesCSS`) can derive structure without
@@ -544,11 +554,14 @@ export function collectSpacingTokens(semanticDir) {
         );
       }
       seen.add(cssName);
-      tokens.push({
+      const step = referencedStep(token, extracted);
+      const entry = {
         cssName,
         path: token.path,
-        value: formatTokenValue(token.value, token.type, token.path),
-      });
+        value: formatTokenValue((step ?? token).value, token.type, token.path),
+      };
+      if (step) entry.step = step.path.join('-');
+      tokens.push(entry);
     }
 
     result[mode] = tokens;
@@ -656,7 +669,7 @@ export function generateSpacingModesCSS(modesByName, opts = {}) {
  * have no block, so the per-mode blocks above apply as they are.
  *
  * @param {object} input
- * @param {Record<string, {cssName: string, value: string}[]>} input.spacingModes
+ * @param {Record<string, {cssName: string, value: string, step?: string}[]>} input.spacingModes
  * @param {string} input.spacingDefault
  * @param {Record<string, {cssName: string, value: string}[]>} input.radiusModes
  * @param {string} input.radiusDefault

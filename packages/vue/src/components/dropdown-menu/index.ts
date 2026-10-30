@@ -52,7 +52,7 @@ export {
 } from 'reka-ui';
 
 export const dropdownMenuItemVariants = cva(
-  'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2 nx:rounded-sm nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none nx:transition-colors nx:focus:bg-popover-hover nx:focus:text-popover-foreground nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0',
+  'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2 nx:rounded-sm nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none nx:transition-colors nx:focus:bg-popover-hover nx:focus:text-popover-foreground nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
   {
     variants: {
       variant: {
@@ -70,7 +70,3 @@ export const dropdownMenuItemVariants = cva(
 export type DropdownMenuItemVariants = VariantProps<
   typeof dropdownMenuItemVariants
 >;
-
-/** Starts item text after the check column: 8px, the check, then 8px. */
-export const dropdownMenuInsetClassName =
-  'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]';

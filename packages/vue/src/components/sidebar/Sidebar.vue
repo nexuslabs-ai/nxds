@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue';
+import { computed, type HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
 import {
@@ -55,6 +55,18 @@ function restoreFocus(event: Event) {
   event.preventDefault();
   returnFocus.focus();
 }
+
+// Floating and inset variants gain padding around the panel. The collapsed
+// rail adds this padding and the panel border to the menu button and its
+// group padding.
+const padded = computed(
+  () => props.variant === 'floating' || props.variant === 'inset'
+);
+const railWidth = computed(() =>
+  padded.value
+    ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*4+var(--nx-borderwidth-default)*2)]'
+    : 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*2)]'
+);
 </script>
 
 <template>
@@ -107,6 +119,7 @@ function restoreFocus(event: Event) {
     :data-variant="variant"
     :data-side="side"
     data-slot="sidebar"
+    v-bind="$attrs"
   >
     <div
       data-slot="sidebar-gap"
@@ -115,9 +128,7 @@ function restoreFocus(event: Event) {
           'nx:relative nx:w-(--sidebar-width) nx:bg-transparent nx:transition-[width] nx:duration-default nx:ease-linear',
           'nx:group-data-[collapsible=offcanvas]:w-0',
           'nx:group-data-[side=right]:rotate-180',
-          variant === 'floating' || variant === 'inset'
-            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*4)]'
-            : 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*2)]'
+          railWidth
         )
       "
     />
@@ -129,14 +140,13 @@ function restoreFocus(event: Event) {
           side === 'left'
             ? 'nx:left-0 nx:group-data-[collapsible=offcanvas]:-left-(--sidebar-width)'
             : 'nx:right-0 nx:group-data-[collapsible=offcanvas]:-right-(--sidebar-width)',
-          (variant === 'floating' || variant === 'inset') && 'nx:p-2',
-          variant === 'floating' || variant === 'inset'
-            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*4+var(--nx-borderwidth-default)*2)]'
-            : 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*2)] nx:group-data-[side=left]:border-r-default nx:group-data-[side=right]:border-l-default nx:border-nav-border',
+          padded
+            ? 'nx:p-2'
+            : 'nx:group-data-[side=left]:border-r-default nx:group-data-[side=right]:border-l-default nx:border-nav-border',
+          railWidth,
           props.class
         )
       "
-      v-bind="$attrs"
     >
       <div
         data-slot="sidebar-inner"

@@ -182,7 +182,7 @@ const MultiSelectTrigger = React.forwardRef<
         aria-expanded={open}
         data-slot="multi-select-trigger"
         className={cn(
-          'nx:group/multi-select nx:flex nx:h-auto nx:min-h-10 nx:w-full nx:items-center nx:justify-between nx:gap-2 nx:rounded-md nx:border-default nx:border-border-default nx:bg-container nx:text-inherit nx:px-3 nx:py-1.5 nx:typography-body-default nx:whitespace-nowrap nx:transition-field',
+          'nx:group/multi-select nx:flex nx:h-auto nx:min-h-10 nx:w-full nx:items-center nx:justify-between nx:gap-2 nx:rounded-md nx:border-default nx:border-border-default nx:bg-container nx:text-inherit nx:px-3 nx:py-1.5 nx:typography-body-default nx:whitespace-nowrap nx:transition-field nx:icon-stroke',
           'nx:enabled:hover:bg-container-hover',
           'nx:focus-visible:outline-default nx:focus-visible:outline-focus-default nx:focus-visible:border-focus-default',
           'nx:aria-invalid:border-error-border nx:aria-invalid:focus-visible:outline-focus-error nx:aria-invalid:focus-visible:border-focus-error',
@@ -491,7 +491,7 @@ const MultiSelectItem = React.forwardRef<
         aria-hidden="true"
         data-slot="multi-select-indicator"
         className={cn(
-          'nx:flex nx:size-[16px] nx:shrink-0 nx:items-center nx:justify-center nx:rounded-sm nx:border-default nx:transition-colors',
+          'nx:flex nx:size-icon-glyph-default nx:shrink-0 nx:items-center nx:justify-center nx:rounded-sm nx:border-default nx:transition-colors',
           selected
             ? 'nx:border-transparent nx:bg-primary-background nx:text-primary-foreground'
             : 'nx:border-border-default nx:bg-background'

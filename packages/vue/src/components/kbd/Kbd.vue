@@ -15,7 +15,7 @@ const props = defineProps<KbdProps>();
     data-slot="kbd"
     :class="
       cn(
-        'nx:pointer-events-none nx:inline-flex nx:min-h-5 nx:w-fit nx:min-w-5 nx:items-center nx:justify-center nx:gap-1 nx:rounded-sm nx:bg-muted nx:px-1 nx:typography-label-small nx:text-muted-foreground nx:select-none nx:[&_svg]:size-icon-glyph-xs',
+        'nx:pointer-events-none nx:inline-flex nx:min-h-5 nx:w-fit nx:min-w-5 nx:items-center nx:justify-center nx:gap-1 nx:rounded-sm nx:bg-muted nx:px-1 nx:typography-label-small nx:text-muted-foreground nx:select-none nx:[&_svg]:size-icon-glyph-xs nx:icon-stroke',
         props.class
       )
     "

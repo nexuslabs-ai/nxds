@@ -29,6 +29,7 @@ const LIST_FAMILY_KEYS = [
   'motion',
   'icon',
   'uiScale',
+  'width',
   'typeScale',
 ] as const;
 
