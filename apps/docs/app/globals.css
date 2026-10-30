@@ -6,6 +6,18 @@
 @import '@nxds/tailwind';
 /* Animations used by Dialog / Dropdown / Select / Tooltip */
 @import 'tw-animate-css';
+/* The fonts the playground offers (FONT_OPTIONS in @nxds/core), self-hosted.
+   A browser downloads a font only when the page uses it. */
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/figtree';
+@import '@fontsource-variable/dm-sans';
+@import '@fontsource-variable/manrope';
+@import '@fontsource-variable/ibm-plex-sans';
+@import '@fontsource-variable/lora';
+@import '@fontsource-variable/playfair-display';
+@import '@fontsource-variable/geist-mono';
+@import '@fontsource-variable/jetbrains-mono';
 
 /* Generate the nx: utilities used in MDX content and in the shipped
    @nxds/react components by scanning their source directly. We deliberately do

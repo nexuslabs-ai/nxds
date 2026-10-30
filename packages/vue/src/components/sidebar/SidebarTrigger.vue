@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { IconLayoutSidebar } from '@tabler/icons-vue';
 import { reactiveOmit } from '@vueuse/core';
 import type { HTMLAttributes, VNode } from 'vue';
 
+import { IconLayoutSidebar } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 import { Button, type ButtonProps } from '../button';
 

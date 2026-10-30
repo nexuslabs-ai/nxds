@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { IconChevronDown } from '@tabler/icons-vue';
 import { reactiveOmit } from '@vueuse/core';
 import {
   AccordionHeader,
@@ -10,6 +9,7 @@ import {
 } from 'reka-ui';
 import { computed, type HTMLAttributes } from 'vue';
 
+import { IconChevronDown } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 defineOptions({ inheritAttrs: false });

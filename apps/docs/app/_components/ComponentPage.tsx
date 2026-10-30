@@ -6,6 +6,7 @@ import {
   getComponentDocs,
 } from '../../__generated__/demo-index';
 import { vueComponentDocs } from '../../generated/vue/docs';
+import { withoutListed } from '../_lib/icon-library-variants';
 import type { ManifestPage } from '../_lib/manifest';
 
 import { CodeSample } from './CodeSample';
@@ -129,7 +130,7 @@ function Example({ id, previewId }: { id: DemoId; previewId: DemoId }) {
         slugs={alsoInstall.filter(
           (also) => !preview.alsoInstall.includes(also)
         )}
-        packages={packages.filter((spec) => !preview.packages.includes(spec))}
+        packages={withoutListed(packages, preview.packages)}
       />
     </section>
   );

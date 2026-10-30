@@ -1,5 +1,5 @@
-// Nxds.Icon: a Tabler icon by its tabler.io name, such as `plus`, so a
-// canvas can place any icon in src/icons.ts without writing a component name.
+// Nxds.Icon: a Phosphor icon by its phosphoricons.com name, such as `plus`, so
+// a canvas can place any icon in src/icons.ts without writing a component name.
 import * as React from 'react';
 
 import { ICON_COMPONENTS } from 'nxds:icon-names';
@@ -9,7 +9,7 @@ import { useCanvasProps } from './attributes.ts';
 export interface IconProps {
   name: string;
   size?: number;
-  stroke?: number;
+  weight?: 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone';
   className?: string;
   'aria-label'?: string;
   [attribute: `data-${string}`]: string | undefined;
@@ -19,7 +19,7 @@ export function Icon(raw: IconProps) {
   const {
     name,
     size = 16,
-    stroke = 2,
+    weight,
     className,
     'aria-label': label,
     ...rest
@@ -30,10 +30,11 @@ export function Icon(raw: IconProps) {
   const naming = label
     ? { role: 'img', 'aria-label': label }
     : { 'aria-hidden': true };
+  // A `-fill` name sets its own weight, so pass one only when it is set.
   return React.createElement(Component, {
     ...rest,
     size,
-    stroke,
+    ...(weight ? { weight } : {}),
     className,
     ...naming,
   });

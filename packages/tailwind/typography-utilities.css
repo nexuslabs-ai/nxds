@@ -1,5 +1,32 @@
 /* Typography Utilities */
 
+@utility typography-display-large {
+  font-family: var(--nx-typography-family-font-heading);
+  font-size: var(--nx-typography-size-5xl);
+  font-weight: var(--nx-typography-weight-semibold);
+  line-height: var(--nx-typography-line-height-5xl);
+  letter-spacing: var(--nx-typography-letterspacing-tighter);
+  text-wrap: balance;
+}
+
+@utility typography-display-medium {
+  font-family: var(--nx-typography-family-font-heading);
+  font-size: var(--nx-typography-size-4xl);
+  font-weight: var(--nx-typography-weight-semibold);
+  line-height: var(--nx-typography-line-height-4xl);
+  letter-spacing: var(--nx-typography-letterspacing-tighter);
+  text-wrap: balance;
+}
+
+@utility typography-display-small {
+  font-family: var(--nx-typography-family-font-heading);
+  font-size: var(--nx-typography-size-3xl);
+  font-weight: var(--nx-typography-weight-semibold);
+  line-height: var(--nx-typography-line-height-3xl);
+  letter-spacing: var(--nx-typography-letterspacing-tighter);
+  text-wrap: balance;
+}
+
 @utility typography-heading-large {
   font-family: var(--nx-typography-family-font-heading);
   font-size: var(--nx-typography-size-3xl);

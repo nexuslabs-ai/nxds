@@ -1,6 +1,6 @@
 {
   "name": "@nxds/react-18",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "private": true,
   "description": "nxds React components for React 18, generated from @nxds/react",
   "type": "module",
@@ -42,8 +42,11 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@hugeicons/core-free-icons": "^4.3.5",
+    "@hugeicons/react": "^1.1.10",
     "@nxds/core": "workspace:*",
     "@nxds/tailwind": "workspace:*",
+    "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-aspect-ratio": "^1.1.8",
@@ -72,11 +75,13 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-toolbar": "1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@remixicon/react": "^4.9.0",
     "@tabler/icons-react": "^3.36.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "input-otp": "^1.4.2",
+    "lucide-react": "^1.61.0",
     "tailwind-merge": "^3.4.0"
   },
   "peerDependencies": {

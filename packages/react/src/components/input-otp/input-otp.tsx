@@ -4,7 +4,7 @@ import * as React from 'react';
 
 import { OTPInput, OTPInputContext } from 'input-otp';
 
-import { IconPointFilled } from '../../lib/icons';
+import { IconCircleFilled } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 
 /**
@@ -124,7 +124,7 @@ function InputOTPSeparator({ className, ...props }: InputOTPSeparatorProps) {
       className={cn('nx:flex nx:items-center', className)}
       {...props}
     >
-      <IconPointFilled className="nx:size-2.5 nx:text-muted-foreground" />
+      <IconCircleFilled className="nx:size-1 nx:text-muted-foreground" />
     </div>
   );
 }

@@ -1,5 +1,5 @@
+import { PhMagnifyingGlass } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { IconSearch } from '@tabler/icons-vue';
 import { expect, within } from 'storybook/test';
 
 import { Kbd, KbdGroup } from '.';
@@ -95,9 +95,9 @@ export const WithIcon: Story = {
     },
   },
   render: () => ({
-    components: { IconSearch, Kbd },
+    components: { PhMagnifyingGlass, Kbd },
     template: `
-      <Kbd><IconSearch aria-hidden="true" />K</Kbd>
+      <Kbd><PhMagnifyingGlass aria-hidden="true" />K</Kbd>
     `,
   }),
 };

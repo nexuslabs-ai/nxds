@@ -50,8 +50,10 @@ function collectExportEntries(value, keyPath = 'exports', out = []) {
   return out;
 }
 
+// What npm consumers get. `exports` also has `./source/*`, for the monorepo.
 for (const { keyPath, file: exportFile } of collectExportEntries(
-  packageJson.exports
+  packageJson.publishConfig.exports,
+  'publishConfig.exports'
 )) {
   if (!exportFile.startsWith('./dist/runtime/')) {
     throw new Error(

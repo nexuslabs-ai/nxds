@@ -1,5 +1,10 @@
+import {
+  EnvelopeIcon,
+  EyeIcon,
+  MagnifyingGlassIcon,
+  XIcon,
+} from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { IconEye, IconMail, IconSearch, IconX } from '@tabler/icons-react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
@@ -36,7 +41,7 @@ export const Default: Story = {
   render: () => (
     <InputGroup className="nx:w-80">
       <InputGroupAddon>
-        <IconSearch aria-hidden />
+        <MagnifyingGlassIcon aria-hidden />
       </InputGroupAddon>
       <InputGroupInput aria-label="Search" placeholder="Search…" />
     </InputGroup>
@@ -98,7 +103,7 @@ export const Alignments: Story = {
     <div className="nx:flex nx:w-80 nx:flex-col nx:gap-3">
       <InputGroup>
         <InputGroupAddon align="inline-start">
-          <IconMail aria-hidden />
+          <EnvelopeIcon aria-hidden />
         </InputGroupAddon>
         <InputGroupInput aria-label="Email" placeholder="you@example.com" />
       </InputGroup>
@@ -106,7 +111,7 @@ export const Alignments: Story = {
         <InputGroupInput aria-label="Search" placeholder="Search projects" />
         <InputGroupAddon align="inline-end">
           <InputGroupButton size="icon-xs" aria-label="Clear">
-            <IconX aria-hidden />
+            <XIcon aria-hidden />
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
@@ -144,10 +149,10 @@ export const ButtonSizes: Story = {
         <InputGroupInput aria-label="Icon buttons" placeholder="icon sizes" />
         <InputGroupAddon align="inline-end">
           <InputGroupButton size="icon-xs" aria-label="Show">
-            <IconEye aria-hidden />
+            <EyeIcon aria-hidden />
           </InputGroupButton>
           <InputGroupButton size="icon-sm" aria-label="Clear">
-            <IconX aria-hidden />
+            <XIcon aria-hidden />
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
@@ -256,7 +261,7 @@ export const KeyboardInteraction: Story = {
   render: () => (
     <InputGroup className="nx:w-80">
       <InputGroupAddon>
-        <IconSearch aria-hidden />
+        <MagnifyingGlassIcon aria-hidden />
       </InputGroupAddon>
       <InputGroupInput aria-label="Search" placeholder="Search…" />
     </InputGroup>
@@ -311,7 +316,7 @@ export const BorderlessStates: Story = {
     <div className="nx:flex nx:w-80 nx:flex-col nx:gap-3">
       <InputGroup data-testid="ig-borderless-empty" variant="borderless">
         <InputGroupAddon>
-          <IconSearch aria-hidden />
+          <MagnifyingGlassIcon aria-hidden />
         </InputGroupAddon>
         <InputGroupInput aria-label="Borderless search" placeholder="Search…" />
       </InputGroup>
@@ -557,7 +562,7 @@ export const Sizes: Story = {
     <div className="nx:flex nx:w-80 nx:flex-col nx:gap-3">
       <InputGroup>
         <InputGroupAddon>
-          <IconSearch aria-hidden />
+          <MagnifyingGlassIcon aria-hidden />
         </InputGroupAddon>
         <InputGroupInput
           size="sm"
@@ -567,13 +572,13 @@ export const Sizes: Story = {
       </InputGroup>
       <InputGroup>
         <InputGroupAddon>
-          <IconSearch aria-hidden />
+          <MagnifyingGlassIcon aria-hidden />
         </InputGroupAddon>
         <InputGroupInput aria-label="Search, default" placeholder="Search" />
       </InputGroup>
       <InputGroup>
         <InputGroupAddon>
-          <IconSearch aria-hidden />
+          <MagnifyingGlassIcon aria-hidden />
         </InputGroupAddon>
         <InputGroupInput
           size="lg"
@@ -680,7 +685,7 @@ export const AllVariants: Story = {
     <div className="nx:flex nx:w-80 nx:flex-col nx:gap-3">
       <InputGroup>
         <InputGroupAddon>
-          <IconSearch aria-hidden />
+          <MagnifyingGlassIcon aria-hidden />
         </InputGroupAddon>
         <InputGroupInput aria-label="Search" placeholder="Search…" />
       </InputGroup>
@@ -691,7 +696,7 @@ export const AllVariants: Story = {
         <InputGroupInput aria-label="URL" placeholder="nxds.dev" />
         <InputGroupAddon align="inline-end">
           <InputGroupButton size="icon-xs" aria-label="Clear">
-            <IconX aria-hidden />
+            <XIcon aria-hidden />
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
@@ -703,7 +708,7 @@ export const AllVariants: Story = {
       </InputGroup>
       <InputGroup variant="borderless">
         <InputGroupAddon>
-          <IconSearch aria-hidden />
+          <MagnifyingGlassIcon aria-hidden />
         </InputGroupAddon>
         <InputGroupInput
           aria-label="Borderless search"
