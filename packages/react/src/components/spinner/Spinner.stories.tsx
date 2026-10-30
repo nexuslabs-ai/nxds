@@ -39,7 +39,7 @@ export const Sizes: Story = {
   },
   render: () => (
     <div className="nx:flex nx:items-center nx:gap-4 nx:text-foreground">
-      <Spinner className="nx:size-4" />
+      <Spinner />
       <Spinner className="nx:size-icon-[calc(var(--nx-icon-glyph-default)*1.5)]" />
       <Spinner className="nx:size-icon-[calc(var(--nx-icon-glyph-default)*2)] nx:text-primary-subtle-foreground" />
     </div>
@@ -58,7 +58,7 @@ export const WithText: Story = {
   },
   render: () => (
     <div className="nx:flex nx:items-center nx:gap-2 nx:typography-body-default nx:text-muted-foreground">
-      <Spinner className="nx:size-4" />
+      <Spinner />
       Loading results…
     </div>
   ),
@@ -85,12 +85,12 @@ export const AllVariants: Story = {
   render: () => (
     <div className="nx:flex nx:flex-col nx:gap-4 nx:text-foreground">
       <div className="nx:flex nx:items-center nx:gap-4">
-        <Spinner className="nx:size-4" />
+        <Spinner />
         <Spinner className="nx:size-icon-[calc(var(--nx-icon-glyph-default)*1.5)]" />
         <Spinner className="nx:size-icon-[calc(var(--nx-icon-glyph-default)*2)]" />
       </div>
       <div className="nx:flex nx:items-center nx:gap-2 nx:typography-label-default nx:text-muted-foreground">
-        <Spinner className="nx:size-4" />
+        <Spinner />
         <span>Loading more…</span>
       </div>
     </div>

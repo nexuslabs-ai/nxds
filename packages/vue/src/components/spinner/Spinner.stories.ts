@@ -45,7 +45,7 @@ export const Sizes: Story = {
     components: { Spinner },
     template: `
       <div class="nx:flex nx:items-center nx:gap-4 nx:text-foreground">
-        <Spinner class="nx:size-4" />
+        <Spinner />
         <Spinner class="nx:size-icon-[calc(var(--nx-icon-glyph-default)*1.5)]" />
         <Spinner class="nx:size-icon-[calc(var(--nx-icon-glyph-default)*2)] nx:text-primary-subtle-foreground" />
       </div>
@@ -66,7 +66,7 @@ export const WithText: Story = {
     components: { Spinner },
     template: `
       <div class="nx:flex nx:items-center nx:gap-2 nx:typography-body-default nx:text-muted-foreground">
-        <Spinner class="nx:size-4" />
+        <Spinner />
         Loading results…
       </div>
     `,
