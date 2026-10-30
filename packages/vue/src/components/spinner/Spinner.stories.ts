@@ -37,7 +37,7 @@ export const Sizes: Story = {
     docs: {
       description: {
         story:
-          'Size the spinner with `nx:size-*`. Set `--nx-icon-size` to the same size, so its line grows with it. Tint it with `nx:text-*`.',
+          'Size the spinner with `nx:size-icon-[…]`, so its line grows with it. Tint it with `nx:text-*`.',
       },
     },
   },
