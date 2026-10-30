@@ -245,25 +245,21 @@ function readManifest(root: string): Manifest {
   return { project: value.project, root: value.root };
 }
 
-// The bytes of each entry under `dir`, checked against its hash. `shown` is
-// how an error names the entry's path.
-function readEntries(
-  dir: string,
-  entries: ManifestEntry[],
-  shown: (entry: string) => string
-) {
+// The bytes of each entry under `dir`, checked against its hash. An error
+// names the entry by `prefix` and its path.
+function readEntries(dir: string, entries: ManifestEntry[], prefix: string) {
   const files = new Map<string, Buffer>();
   for (const entry of entries) {
     const file = path.join(dir, entry.path);
     if (!existsSync(file) || !lstatSync(file).isFile()) {
       throw new CliError(
-        `${shown(entry.path)} is missing from the release, or isn't a regular file.`
+        `${prefix}${entry.path} is missing from the release, or isn't a regular file.`
       );
     }
     const bytes = readFileSync(file);
     if (createHash('sha256').update(bytes).digest('hex') !== entry.sha256) {
       throw new CliError(
-        `${shown(entry.path)} doesn't match the release's files.json, so nothing was written.`
+        `${prefix}${entry.path} doesn't match the release's files.json, so nothing was written.`
       );
     }
     files.set(entry.path, bytes);
@@ -283,19 +279,20 @@ function readRelease(root: string) {
     }
   }
   for (const { path: file } of manifest.root) {
-    if (path.basename(file) !== file) {
+    if (path.basename(file) !== file || file === '.' || file === '..') {
       throw new CliError(
-        `files.json lists ${file} as a root file, but it isn't a file beside project/.`
+        `files.json lists ${file || 'an empty path'} as a root file, but it isn't a file beside project/.`
       );
     }
   }
+  if (!manifest.root.some((entry) => entry.path === 'SETUP.md')) {
+    throw new CliError(
+      "The release's files.json lists no SETUP.md, so there's no guide to follow."
+    );
+  }
   return {
-    files: readEntries(
-      projectDir,
-      manifest.project,
-      (file) => `project/${file}`
-    ),
-    rootFiles: readEntries(root, manifest.root, (file) => file),
+    files: readEntries(projectDir, manifest.project, 'project/'),
+    rootFiles: readEntries(root, manifest.root, ''),
   };
 }
 
@@ -424,9 +421,7 @@ export async function exportClaudeDesign(
       );
     }
     lines.push(
-      rootFiles.has('SETUP.md')
-        ? `Read ${path.join(relative, 'SETUP.md')} and follow it. It publishes the system, installs it on a canvas and checks it.`
-        : `Publish ${relative} as a Design System artifact in Claude, with ${relative} as the root.`
+      `Read ${path.join(relative, 'SETUP.md')} and follow it. It publishes the system, installs it on a canvas and checks it.`
     );
     return {
       ok: true,

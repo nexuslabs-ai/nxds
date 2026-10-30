@@ -331,31 +331,42 @@ describe('nxds-cli export claude-design', () => {
     expect(lines.at(-1)).toMatch(/^Read nxds-design-system\/SETUP\.md/);
   });
 
-  it('tells you to publish when the release ships no guide', async () => {
+  it('refuses a release whose files.json lists no SETUP.md', async () => {
     const { source, cwd } = setup({
       'files.json': JSON.stringify({
         project: manifestEntries(PROJECT),
-        root: [],
+        root: manifestEntries({ 'coverage.md': ROOT['coverage.md'] ?? '' }),
       }),
     });
-    for (const name of Object.keys(ROOT)) rmSync(path.join(source, name));
 
     const { exitCode, body } = await cliJson(
       ['export', 'claude-design', '--source', source],
       cwd
     );
-    const { stdout } = await cli(
-      ['export', 'claude-design', '--source', source, '--overwrite'],
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toBe(
+      "The release's files.json lists no SETUP.md, so there's no guide to follow."
+    );
+    expect(existsSync(path.join(cwd, 'nxds-design-system'))).toBe(false);
+  });
+
+  it('refuses a root file that climbs out of the release', async () => {
+    const { source, cwd } = setup({
+      'files.json': JSON.stringify({
+        project: manifestEntries(PROJECT),
+        root: [...manifestEntries(ROOT), { path: '..', sha256: '' }],
+      }),
+    });
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
       cwd
     );
 
-    expect(exitCode).toBe(EXIT_CODES.ok);
-    expect(body.data.root).toEqual([]);
-    expect(readdirSync(path.join(cwd, 'nxds-design-system'))).toEqual([
-      'project',
-    ]);
-    expect(lastLine(stdout)).toBe(
-      'Publish nxds-design-system as a Design System artifact in Claude, with nxds-design-system as the root.'
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toBe(
+      "files.json lists .. as a root file, but it isn't a file beside project/."
     );
   });
 

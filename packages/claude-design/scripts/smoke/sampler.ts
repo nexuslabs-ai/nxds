@@ -186,12 +186,18 @@ async function mountSampler(markup: string, size: Size, mode: Mode) {
     return { error: board.error, problems };
   }
 
-  const trigger = page.getByRole('button', { name: 'This quarter' });
+  const trigger = page.getByRole('button', {
+    name: 'This quarter',
+    exact: true,
+  });
   const popover = page.locator('[data-slot="popover-content"]');
-  const opens = (await trigger.count()) === 1;
-  if (opens) {
+  let opens = false;
+  if ((await trigger.count()) === 1) {
     await trigger.click();
-    await popover.waitFor();
+    opens = await popover
+      .waitFor({ timeout: 2000 })
+      .then(() => true)
+      .catch(() => false);
   }
   const open = await page.evaluate(async (surfaces) => {
     const { __nxdsSettle } = window as unknown as PageGlobals;
@@ -291,7 +297,7 @@ export async function checkSampler() {
       );
     }
     if (!board.opens) {
-      fail(`${name}: no This quarter button to open the calendar from.`);
+      fail(`${name}: no This quarter button opens its calendar.`);
       continue;
     }
     if (board.selectedDays !== days) {

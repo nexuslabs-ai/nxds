@@ -1,7 +1,8 @@
-// Writes dist/: the system's files under dist/project/, files.json listing
-// them and the files beside project/ with their hashes for nxds-cli, the package manifest npm publishes
-// from dist/, the canvas prop coverage report, SETUP.md and the sampler
-// artboard. Fails when the output breaks the Design System format.
+// Writes dist/: the system's files under dist/project/, the files beside it
+// (the canvas prop coverage report, SETUP.md and the sampler artboard), the
+// package manifest npm publishes from dist/, and files.json, which lists the
+// project and root files with their hashes for nxds-cli. Fails when the
+// output breaks the Design System format.
 import {
   componentLabel,
   exportedComponentSlugs,

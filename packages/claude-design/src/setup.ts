@@ -141,6 +141,8 @@ export function samplerFile(file: string) {
   };
 }
 
+type SamplerFile = ReturnType<typeof samplerFile>;
+
 /** The `boards` entry SETUP.md tells Claude to add to the canvas's `canvas.json`. */
 export function boardEntry(file: string) {
   const { title, width, height } = samplerFile(file);
@@ -171,10 +173,10 @@ function definesClass(css: string, name: string) {
 /** Why the sampler file wouldn't show or check on a canvas: a head that doesn't link the system, state beyond the `mode` tweak, or a class no stylesheet defines. */
 function fileProblems(
   file: string,
+  { head, markup, props, script, width, height }: SamplerFile,
   { readme, stylesheets }: { readme: string; stylesheets: string }
 ) {
   const problems: string[] = [];
-  const { head, markup, props, script, width, height } = samplerFile(file);
   const links = canvasRootLinks(readme);
   const support = head.indexOf('<script src="./support.js"></script>');
   if (
@@ -444,8 +446,9 @@ export function samplerProblems(
   file: string,
   context: { readme: string; stylesheets: string; parts: FlatComponent[] }
 ) {
+  const sampler = samplerFile(file);
   return [
-    ...fileProblems(file, context),
-    ...attributeProblems(samplerFile(file).markup, context.parts),
+    ...fileProblems(file, sampler, context),
+    ...attributeProblems(sampler.markup, context.parts),
   ];
 }
