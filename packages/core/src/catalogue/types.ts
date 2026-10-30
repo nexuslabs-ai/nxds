@@ -25,6 +25,7 @@ export type CatalogueFamily =
   | 'spacing'
   | 'typography'
   | 'ui-scale'
+  | 'width'
   | 'z-index';
 
 /**
@@ -100,11 +101,12 @@ export interface CatalogueVariant {
 
 /**
  * An appearance setting that writes a token at runtime: a preset field that
- * picks one of its moded values or scales it, or a preference the provider
- * computes it from.
+ * picks one of its moded values, the UI scale that scales its value, or a
+ * preference the provider computes it from.
  */
 export type CatalogueControl =
   | { readonly kind: 'preset'; readonly field: NxdsPresetField }
+  | { readonly kind: 'scale'; readonly field: 'uiScale' }
   | { readonly kind: 'pref'; readonly field: keyof NxdsAppearancePrefs };
 
 export interface CatalogueToken {
@@ -112,7 +114,8 @@ export interface CatalogueToken {
   readonly family: CatalogueFamily;
   /**
    * The registry category for a derived colour, the first path key for a
-   * nested leaf (`green`, `size`, `container`), or the family for a flat file.
+   * nested leaf (`green`, `size`, `container`), or the family for a flat file
+   * and for a token no file authors.
    */
   readonly group: string;
   /** The DTCG `$type`. */

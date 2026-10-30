@@ -200,12 +200,6 @@ function familyTokens(family: CatalogueFamily): CatalogueToken[] {
   return authored.filter((token) => token.family === family);
 }
 
-function presetFieldsOf(token: CatalogueToken): string[] {
-  return token.controls.flatMap((control) =>
-    control.kind === 'preset' ? [control.field] : []
-  );
-}
-
 /** The variant `:root` carries: the root preset, in light for shadows. */
 function rootVariant(token: CatalogueToken): VariantKey {
   const attribute = MODE_ATTRIBUTES[token.family];
@@ -254,8 +248,12 @@ describe('token catalogue', () => {
     const rootTokens = [
       ...familyTokens('z-index'),
       ...familyTokens('ui-scale'),
+      ...familyTokens('width'),
     ];
-    expect(familyTokens('ui-scale').map((token) => token.name)).toContain(
+    expect(familyTokens('ui-scale').map((token) => token.name)).toEqual([
+      '--nx-ui-scale',
+    ]);
+    expect(familyTokens('width').map((token) => token.name)).toContain(
       '--nx-container-lg'
     );
     for (const token of rootTokens) {
@@ -418,20 +416,24 @@ describe('token catalogue', () => {
     }
   });
 
-  it('names the preset fields for every token a mode attribute swaps', () => {
+  it('names the preset field for every token a mode attribute swaps', () => {
     const presetFields = Object.fromEntries(
       Object.keys(MODE_ATTRIBUTES).map((family) => [
         family,
         new Set(
           familyTokens(family as CatalogueFamily)
             .filter((token) => token.variants.some((v) => v.preset !== null))
-            .flatMap((token) => presetFieldsOf(token))
+            .flatMap((token) =>
+              token.controls.flatMap((control) =>
+                control.kind === 'preset' ? [control.field] : []
+              )
+            )
         ),
       ])
     );
     expect(presetFields).toEqual({
-      spacing: new Set(['density', 'uiScale']),
-      radius: new Set(['corners', 'uiScale']),
+      spacing: new Set(['density']),
+      radius: new Set(['corners']),
       borderwidth: new Set(['stroke']),
       shadow: new Set(['elevation']),
     });
@@ -447,7 +449,9 @@ describe('token catalogue', () => {
     );
     const controlled = new Set(
       catalogue
-        .filter((token) => presetFieldsOf(token).includes('uiScale'))
+        .filter((token) =>
+          token.controls.some((control) => control.kind === 'scale')
+        )
         .map((token) => token.name)
     );
     expect(controlled).toEqual(scaled);

@@ -33,6 +33,7 @@ const FAMILIES: Record<ScaleFamily, string> = {
   'z-index': 'Z-index',
   breakpoint: 'Breakpoints',
   'ui-scale': 'UI scale',
+  width: 'Width',
 };
 
 const PREF_LABELS: Record<keyof NxdsAppearancePrefs, string> = {
@@ -84,8 +85,8 @@ function isSigned({ family, group }: ScaleToken): boolean {
 }
 
 /** The UI scale factor is a fraction, which `z-index` rejects. */
-function isFraction({ family, type }: ScaleToken): boolean {
-  return family === 'ui-scale' && type === 'number';
+function isFraction({ family }: ScaleToken): boolean {
+  return family === 'ui-scale';
 }
 
 /** The icon stroke is a number, and it need not be a whole one. */
@@ -141,10 +142,10 @@ export function ScaleLedger({
   const values = useRootValues(runtimeNames, overrides);
 
   function controlLabel(control: CatalogueControl): string {
-    if (control.kind === 'preset') {
-      return `${control.field}: ${appearance[control.field]}`;
+    if (control.kind === 'pref') {
+      return prefLabel(control.field, appearance.prefs);
     }
-    return prefLabel(control.field, appearance.prefs);
+    return `${control.field}: ${appearance[control.field]}`;
   }
 
   function sourceLabel({ family, fixedValue, controls }: ScaleToken): string {

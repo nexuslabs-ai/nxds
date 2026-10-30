@@ -205,7 +205,9 @@ interface SidebarProps extends React.ComponentProps<'div'> {
 
 /**
  * The sidebar panel. Below `md` it opens as a Sheet. From `md` up it docks to
- * `side` and collapses as `collapsible` sets.
+ * `side` and collapses as `collapsible` sets. The docked panel takes
+ * `className`. Other props, such as `data-density`, go on its root, so the
+ * panel and the space it keeps beside the page both follow them.
  */
 function Sidebar({
   side = 'left',
@@ -286,6 +288,14 @@ function Sidebar({
     );
   }
 
+  // Floating and inset variants gain padding around the panel. The collapsed
+  // rail adds this padding and the panel border to the menu button and its
+  // group padding.
+  const padded = variant === 'floating' || variant === 'inset';
+  const railWidth = padded
+    ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*4+var(--nx-borderwidth-default)*2)]'
+    : 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*2)]';
+
   return (
     <div
       className="nx:group nx:peer nx:hidden nx:text-nav-foreground nx:md:block"
@@ -294,6 +304,8 @@ function Sidebar({
       data-variant={variant}
       data-side={side}
       data-slot="sidebar"
+      style={style}
+      {...props}
     >
       {/* Handles the sidebar gap on desktop. */}
       <div
@@ -302,9 +314,7 @@ function Sidebar({
           'nx:relative nx:w-(--sidebar-width) nx:bg-transparent nx:transition-[width] nx:duration-default nx:ease-linear',
           'nx:group-data-[collapsible=offcanvas]:w-0',
           'nx:group-data-[side=right]:rotate-180',
-          variant === 'floating' || variant === 'inset'
-            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*4)]'
-            : 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*2)]'
+          railWidth
         )}
       />
       <div
@@ -314,16 +324,12 @@ function Sidebar({
           side === 'left'
             ? 'nx:left-0 nx:group-data-[collapsible=offcanvas]:-left-(--sidebar-width)'
             : 'nx:right-0 nx:group-data-[collapsible=offcanvas]:-right-(--sidebar-width)',
-          // Floating and inset variants gain padding around the panel. The
-          // icon-collapse width below adds this padding and the panel border.
-          (variant === 'floating' || variant === 'inset') && 'nx:p-2',
-          variant === 'floating' || variant === 'inset'
-            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*4+var(--nx-borderwidth-default)*2)]'
-            : 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*2)] nx:group-data-[side=left]:border-r-default nx:group-data-[side=right]:border-l-default nx:border-nav-border',
+          padded
+            ? 'nx:p-2'
+            : 'nx:group-data-[side=left]:border-r-default nx:group-data-[side=right]:border-l-default nx:border-nav-border',
+          railWidth,
           className
         )}
-        style={style}
-        {...props}
       >
         <div
           data-slot="sidebar-inner"

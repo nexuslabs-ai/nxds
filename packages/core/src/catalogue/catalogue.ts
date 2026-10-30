@@ -75,7 +75,7 @@ const SHADOW_STYLES_FILE: TokenFile = 'styles/shadows.json';
 const SINGLE_SOURCE = { mode: null, preset: null } as const;
 
 /** The `[data-ui-scale]` mode, which scales every token it writes. */
-const UI_SCALE: CatalogueControl = { kind: 'preset', field: 'uiScale' };
+const UI_SCALE: CatalogueControl = { kind: 'scale', field: 'uiScale' };
 
 /** The appearance fields that write each moded family's values. */
 const FAMILY_CONTROLS: Partial<
@@ -544,13 +544,19 @@ function runtimeColorTokens(): CatalogueToken[] {
 /** A token the UI scale writes and no token file authors. */
 function uiScaleToken(
   { cssName, value }: ScaleToken,
-  fields: Pick<CatalogueToken, 'group' | 'type' | 'description'>
+  {
+    family,
+    type,
+    description,
+  }: Pick<CatalogueToken, 'family' | 'type' | 'description'>
 ): CatalogueToken {
   const name: CatalogueTokenName = `--nx-${cssName}`;
   return {
     name,
-    family: 'ui-scale',
-    ...fields,
+    family,
+    group: family,
+    type,
+    description,
     aliases: [],
     controls: [UI_SCALE],
     variants: [
@@ -570,7 +576,7 @@ function uiScaleToken(
 function uiScaleEntry(token: ScaleToken): CatalogueToken {
   if (token.cssName === 'ui-scale') {
     return uiScaleToken(token, {
-      group: 'factor',
+      family: 'ui-scale',
       type: 'number',
       description:
         'The UI scale as a factor of the Default scale. Multiply a fixed size by it, such as `calc(16rem*var(--nx-ui-scale))`, so the size follows the UI scale.',
@@ -578,7 +584,7 @@ function uiScaleEntry(token: ScaleToken): CatalogueToken {
   }
   const width = token.cssName.replace('container-', '');
   return uiScaleToken(token, {
-    group: 'width',
+    family: 'width',
     type: 'dimension',
     description: `The \`nx:max-w-${width}\` and \`nx:w-${width}\` width. It follows the UI scale.`,
   });

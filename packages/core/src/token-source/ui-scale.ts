@@ -37,10 +37,12 @@ const MIN_TEXT_PX = 10;
 
 const px = (value: string) => Number.parseFloat(value);
 
+const evenPx = (value: number) => 2 * Math.round(value / 2);
+
 /** A length at a scale: whole px below 16px, even px from 16px. */
 export function scaleLength(value: number, factor: number): number {
   const scaled = value * factor;
-  return scaled >= 16 ? 2 * Math.round(scaled / 2) : Math.round(scaled);
+  return scaled >= 16 ? evenPx(scaled) : Math.round(scaled);
 }
 
 /**
@@ -154,8 +156,7 @@ export interface UiScaleBase {
 /**
  * The `:root` block with the default factor and page widths, then one block
  * per scale with the type sizes and the code size (`scaleText`), the line
- * heights (even px), the icon glyphs (`scaleLength`), the page widths and the
- * factor.
+ * heights and the icon glyphs (even px), the page widths and the factor.
  */
 export function scaleBlocks({
   sizes,
@@ -176,7 +177,7 @@ export function scaleBlocks({
         })),
         ...Object.entries(lineHeights).map(([name, lineHeight]) => ({
           cssName: `typography-line-height-${name}`,
-          value: `${2 * Math.round((lineHeight * text) / 2)}px`,
+          value: `${evenPx(lineHeight * text)}px`,
         })),
         {
           cssName: 'typography-code-size',
@@ -184,7 +185,7 @@ export function scaleBlocks({
         },
         ...Object.entries(glyphs).map(([name, glyph]) => ({
           cssName: `icon-glyph-${name}`,
-          value: `${scaleLength(glyph, icon)}px`,
+          value: `${evenPx(glyph * icon)}px`,
         })),
         ...widthTokens(widths, scale),
       ];

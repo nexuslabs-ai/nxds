@@ -4,6 +4,7 @@ import {
   BUTTON,
   CARD,
   CARD_CONTENT,
+  EMPTY_STATE_HEADER,
   ICON_BUTTON,
   INPUT,
   measure,
@@ -80,6 +81,13 @@ export const TOKEN_CASES: (Probe & {
     name: '--nx-ui-scale',
     value: '2',
     ...BREADCRUMB_PAGE,
+    property: 'max-width',
+  },
+  {
+    family: 'width',
+    name: '--nx-container-sm',
+    value: '11rem',
+    ...EMPTY_STATE_HEADER,
     property: 'max-width',
   },
   {

@@ -142,19 +142,19 @@ describe('UI scale CSS', () => {
     }
   });
 
-  it('scales every icon glyph by the length rule', () => {
-    const glyphs = SCALES.map((scale) =>
-      [...blocks.get(`[data-ui-scale='${scale}']`)!].filter(([name]) =>
-        name.startsWith('icon-glyph-')
-      )
-    );
-    expect(
-      glyphs.map((block) => new Map(block).get('icon-glyph-default'))
-    ).toEqual([14, 18, 20]);
-    for (const [name, px] of glyphs.flat()) {
-      expect(Number.isInteger(px), name).toBe(true);
-      if (px >= 16) expect(px % 2, name).toBe(0);
+  it('scales every icon glyph to even px, so it centers in an even box', () => {
+    const glyph = (name: string) =>
+      SCALES.map((scale) =>
+        blocks.get(`[data-ui-scale='${scale}']`)!.get(`icon-glyph-${name}`)
+      );
+    expect(glyph('xs')).toEqual([10, 14, 16]);
+    expect(glyph('sm')).toEqual([12, 16, 18]);
+    expect(glyph('default')).toEqual([14, 18, 20]);
+    expect(glyph('lg')).toEqual([22, 28, 30]);
+    for (const scale of SCALES) {
+      for (const [name, px] of blocks.get(`[data-ui-scale='${scale}']`)!) {
+        if (name.startsWith('icon-glyph-')) expect(px % 2, name).toBe(0);
+      }
     }
-    expect(glyphs.flat().map(([name]) => name)).toContain('icon-glyph-lg');
   });
 });
