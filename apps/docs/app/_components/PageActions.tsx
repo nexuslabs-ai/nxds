@@ -20,24 +20,31 @@ import {
 
 const COPY_RESET_MS = 2000;
 
-const COPY_ICONS = { idle: IconCopy, copied: IconCheck, failed: IconX };
-
-const COPY_LABELS = { idle: 'Copy page', copied: 'Copied', failed: 'Failed' };
-
-const COPY_MESSAGES = {
-  idle: '',
-  copied: 'Page copied as Markdown',
-  failed: 'Could not copy page',
+const COPY_STATES = {
+  idle: { icon: IconCopy, label: 'Copy page', message: '' },
+  copied: {
+    icon: IconCheck,
+    label: 'Copied',
+    message: 'Page copied as Markdown',
+  },
+  failed: { icon: IconX, label: 'Failed', message: 'Could not copy page' },
 };
 
-type CopyState = keyof typeof COPY_ICONS;
+type CopyState = keyof typeof COPY_STATES;
+
+type Fetched =
+  | { status: 'loading' }
+  | { status: 'ready'; text: string }
+  | { status: 'error' };
 
 /**
  * Copies the page's Markdown twin, with a menu to open it. Clipboard writes
  * must happen in the click itself, so the Markdown is fetched ahead of it.
  */
 export function PageActions({ markdownHref }: { markdownHref: string }) {
-  const [markdown, setMarkdown] = React.useState<string>();
+  const [markdown, setMarkdown] = React.useState<Fetched>({
+    status: 'loading',
+  });
   // `seq` remounts the message, so a second copy announces again.
   const [copy, setCopy] = React.useState<{ state: CopyState; seq: number }>({
     state: 'idle',
@@ -48,11 +55,16 @@ export function PageActions({ markdownHref }: { markdownHref: string }) {
   React.useEffect(() => {
     let ignore = false;
     fetch(markdownHref)
-      .then((response) => (response.ok ? response.text() : undefined))
-      .then((text) => {
-        if (!ignore) setMarkdown(text);
+      .then((response) => {
+        if (!response.ok) throw new Error(`${response.status}`);
+        return response.text();
       })
-      .catch(() => {});
+      .then((text) => {
+        if (!ignore) setMarkdown({ status: 'ready', text });
+      })
+      .catch(() => {
+        if (!ignore) setMarkdown({ status: 'error' });
+      });
     return () => {
       ignore = true;
     };
@@ -70,20 +82,21 @@ export function PageActions({ markdownHref }: { markdownHref: string }) {
   };
 
   const handleCopy = async () => {
-    if (markdown === undefined) {
+    if (markdown.status === 'loading') return;
+    if (markdown.status === 'error') {
       settle('failed');
       return;
     }
 
     try {
-      await navigator.clipboard.writeText(markdown);
+      await navigator.clipboard.writeText(markdown.text);
       settle('copied');
     } catch {
       settle('failed');
     }
   };
 
-  const Icon = COPY_ICONS[copy.state];
+  const { icon: Icon, label, message } = COPY_STATES[copy.state];
 
   return (
     <div data-md-skip>
@@ -91,11 +104,12 @@ export function PageActions({ markdownHref }: { markdownHref: string }) {
         <Button
           variant="outline"
           data-state={copy.state}
+          aria-disabled={markdown.status === 'loading' || undefined}
           startIcon={<Icon />}
           className="nx:data-[state=copied]:text-success-subtle-foreground nx:data-[state=failed]:text-error-subtle-foreground"
           onClick={handleCopy}
         >
-          {COPY_LABELS[copy.state]}
+          {label}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -111,7 +125,7 @@ export function PageActions({ markdownHref }: { markdownHref: string }) {
         </DropdownMenu>
       </ButtonGroup>
       <span role="status" className="nx:sr-only">
-        <span key={copy.seq}>{COPY_MESSAGES[copy.state]}</span>
+        <span key={copy.seq}>{message}</span>
       </span>
     </div>
   );

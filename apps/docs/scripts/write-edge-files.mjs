@@ -36,6 +36,8 @@ const headersLines = [
   // write-markdown.ts output, served as UTF-8 so `›` and `—` survive.
   '/*.md',
   '  Content-Type: text/markdown; charset=utf-8',
+  // Every docs page prefetches its `.md` for the Copy page button.
+  '  Cache-Control: public, max-age=300, stale-while-revalidate=86400',
   '/llms.txt',
   '  Content-Type: text/plain; charset=utf-8',
   '/llms-full.txt',

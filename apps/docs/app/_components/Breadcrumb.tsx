@@ -1,14 +1,14 @@
-import Link from 'next/link';
+import type { ReactNode } from 'react';
 
-import { PageActions } from './PageActions';
+import Link from 'next/link';
 
 export function Breadcrumb({
   items,
-  markdownHref,
+  children,
 }: {
   items: { label: string; href?: string }[];
-  /** The page's Markdown twin, written by `scripts/write-markdown.ts` at build time. */
-  markdownHref?: string;
+  /** Page actions, shown at the end of the breadcrumb row. */
+  children?: ReactNode;
 }) {
   return (
     <div className="nx:flex nx:flex-wrap nx:items-center nx:gap-x-4 nx:gap-y-2 nx:typography-label-small nx:text-muted-foreground-subtle nx:mb-3">
@@ -17,7 +17,7 @@ export function Breadcrumb({
           <Crumb key={i} item={item} last={i === items.length - 1} />
         ))}
       </nav>
-      {markdownHref && <PageActions markdownHref={markdownHref} />}
+      {children}
     </div>
   );
 }

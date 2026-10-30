@@ -17,7 +17,9 @@ import { docsRoot } from './docs-root.mjs';
 
 declare module 'vfile' {
   interface DataMap {
-    /** The page's internal links, collected by `articleOnly`. */
+    /** The page's route, passed in so same-page `#id` links can be resolved. */
+    route: string;
+    /** The page's internal links as root-relative paths, collected by `articleOnly`. */
     links: string[];
   }
 }
@@ -85,35 +87,33 @@ function prune(node: Element) {
   }
 }
 
-/** Every root-relative or same-page `#id` `href` under `node`. */
-function internalLinks(node: ElementContent): string[] {
-  if (node.type !== 'element') return [];
-  const href = String(node.properties.href);
-  const own =
-    node.tagName === 'a' && (href.startsWith('/') || href.startsWith('#'))
-      ? [href]
-      : [];
-  return [...own, ...node.children.flatMap(internalLinks)];
-}
-
-const pageRoutes = new Set(
-  PAGE_MANIFEST.flatMap((section) => section.pages.map((page) => page.route))
+/** Each docs page, and each section's redirect, mapped to its Markdown. */
+const markdownRoutes = new Map(
+  PAGE_MANIFEST.flatMap((section) => [
+    ...section.pages.map((page) => [page.route, `${page.route}.md`] as const),
+    ...section.pages
+      .slice(0, 1)
+      .map((page) => [`/${section.slug}`, `${page.route}.md`] as const),
+  ])
 );
 
 /**
- * Points root-relative links at nxds.dev, and docs pages at their Markdown,
- * so the links still work once the Markdown is pasted elsewhere.
+ * Points internal links at nxds.dev, and docs pages and sections at their
+ * Markdown, so the links still work once the Markdown is pasted elsewhere.
+ * Returns each link's root-relative form for the broken-link check.
  */
-function absoluteLinks(node: ElementContent) {
-  if (node.type !== 'element') return;
-  const href = String(node.properties.href);
-  if (node.tagName === 'a' && href.startsWith('/')) {
-    const [location = '', id] = href.split('#');
-    const route = location.replace(/\/$/, '');
-    const target = pageRoutes.has(route) ? `${route}.md` : location;
-    node.properties.href = `${SITE_URL}${target}${id ? `#${id}` : ''}`;
+function absoluteLinks(node: ElementContent, route: string): string[] {
+  if (node.type !== 'element') return [];
+  const links = node.children.flatMap((child) => absoluteLinks(child, route));
+  const raw = String(node.properties.href);
+  if (node.tagName !== 'a' || !(raw.startsWith('/') || raw.startsWith('#'))) {
+    return links;
   }
-  for (const child of node.children) absoluteLinks(child);
+  const href = raw.startsWith('#') ? `${route}${raw}` : raw;
+  const [location = '', id] = href.split('#');
+  const target = markdownRoutes.get(location.replace(/\/$/, '')) ?? location;
+  node.properties.href = `${SITE_URL}${target}${id ? `#${id}` : ''}`;
+  return [href, ...links];
 }
 
 /** Keeps only the page's article, minus anything that only works on screen. */
@@ -125,9 +125,10 @@ function articleOnly() {
         `No #${DOCS_ARTICLE_ID} in ${path.relative(docsRoot, file.path)}.`
       );
     }
+    const route = file.data.route;
+    if (!route) throw new Error(`No route passed for ${file.path}.`);
     prune(article);
-    file.data.links = internalLinks(article);
-    absoluteLinks(article);
+    file.data.links = absoluteLinks(article, route);
     tree.children = [article];
   };
 }
@@ -199,18 +200,14 @@ for (const section of PAGE_MANIFEST) {
     const processed = await processor.process({
       path: htmlFile,
       value: readFileSync(htmlFile, 'utf8'),
+      data: { route: page.route },
     });
     const markdown = String(processed);
     const links = processed.data.links;
     if (!links) {
       throw new Error(`No links collected for ${page.route}.`);
     }
-    linksByRoute.set(
-      page.route,
-      links.map((href) =>
-        href.startsWith('#') ? `${page.route}${href}` : href
-      )
-    );
+    linksByRoute.set(page.route, links);
     writeFileSync(path.join(outDir, `${page.route}.md`), markdown);
     markdownByRoute.set(page.route, markdown);
     fullPages.push(`<!-- ${page.route} -->\n\n${markdown}`);
@@ -230,7 +227,9 @@ for (const section of PAGE_MANIFEST) {
       );
     }
     const description = descriptionMeta.properties.content;
-    lines.push(`- [${page.label}](${page.route}.md): ${description}`);
+    lines.push(
+      `- [${page.label}](${SITE_URL}${page.route}.md): ${description}`
+    );
   }
   if (lines.length > 0) {
     llmsSections.push(`## ${section.title}\n\n${lines.join('\n')}`);
@@ -246,9 +245,9 @@ ${LLMS_BLURB}
 
 Install nxds with the \`nxds\` CLI: run \`npx nxds-cli@latest init\`, then \`npx nxds-cli@latest add <item>\`. Every command takes \`--json\` and \`--dry-run\`.
 
-To set nxds up on a Claude Design canvas, follow [${CLAUDE_DESIGN_ROUTE}.md](${CLAUDE_DESIGN_ROUTE}.md).
+To set nxds up on a Claude Design canvas, follow [${CLAUDE_DESIGN_ROUTE}.md](${SITE_URL}${CLAUDE_DESIGN_ROUTE}.md).
 
-Each link below is the Markdown version of a docs page. Add \`.md\` to the URL of any page listed here to get its Markdown. [/llms-full.txt](/llms-full.txt) has every page in one file. If anything here conflicts with what you know about nxds, trust these docs.
+Each link below is the Markdown version of a docs page. Add \`.md\` to the URL of any page listed here to get its Markdown. [/llms-full.txt](${SITE_URL}/llms-full.txt) has every page in one file. If anything here conflicts with what you know about nxds, trust these docs.
 
 ${llmsSections.join('\n\n')}
 `;
