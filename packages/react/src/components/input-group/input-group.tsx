@@ -19,9 +19,10 @@ const inputGroupVariants = cva(
     'nx:not-has-[>[data-align^=block]]:has-[[data-slot=input-group-control][data-size=default]]:h-10',
     'nx:not-has-[>[data-align^=block]]:has-[[data-slot=input-group-control][data-size=lg]]:h-12',
     // The control fills the fixed-height frame without adding height (the
-    // compound :has() selector outranks Input's own h-* by specificity).
+    // compound :has() selector outranks Input's own h-* and min-h-* by
+    // specificity).
     // Released in the stacked case, where the control keeps its own height.
-    'nx:not-has-[>[data-align^=block]]:[&>input]:h-full',
+    'nx:not-has-[>[data-align^=block]]:[&>input]:h-full nx:not-has-[>[data-align^=block]]:[&>input]:min-h-0',
     // Alignment: addons push the control's padding to make room.
     'nx:has-[>[data-align=inline-start]]:[&>input]:pl-2',
     'nx:has-[>[data-align=inline-end]]:[&>input]:pr-2',
@@ -126,9 +127,10 @@ const inputGroupButtonVariants = cva(
     variants: {
       size: {
         xs: 'nx:min-h-6 nx:gap-1 nx:rounded-sm nx:px-2 nx:has-[>svg]:px-2 nx:[&>svg]:size-icon-glyph-sm',
-        sm: 'nx:h-8 nx:gap-1.5 nx:rounded-md nx:px-2.5 nx:has-[>svg]:px-2.5',
-        'icon-xs': 'nx:size-6 nx:rounded-sm nx:p-0 nx:has-[>svg]:p-0',
-        'icon-sm': 'nx:size-8 nx:p-0 nx:has-[>svg]:p-0',
+        sm: 'nx:h-fit nx:min-h-8 nx:gap-1.5 nx:rounded-md nx:px-2.5 nx:has-[>svg]:px-2.5',
+        'icon-xs':
+          'nx:size-6 nx:min-h-0 nx:rounded-sm nx:p-0 nx:has-[>svg]:p-0',
+        'icon-sm': 'nx:size-8 nx:min-h-0 nx:p-0 nx:has-[>svg]:p-0',
       },
     },
     defaultVariants: {
