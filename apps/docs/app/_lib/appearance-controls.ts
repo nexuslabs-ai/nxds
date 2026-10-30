@@ -17,13 +17,8 @@ if (!dmSans) throw new Error('FONT_OPTIONS no longer offers DM Sans.');
 export const DOCS_APPEARANCE_DEFAULT_STATE = {
   ...DEFAULT_NXDS_APPEARANCE,
   mode: 'system',
-  surfaceTone: 'neutral',
   corners: 'smooth',
-  prefs: {
-    ...DEFAULT_NXDS_APPEARANCE.prefs,
-    uiFont: dmSans.family,
-    uiFontSize: 16,
-  },
+  prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs, uiFont: dmSans.family },
 } satisfies NxdsAppearanceState;
 
 /** The contrast the Playground and the homepage Customize panel both allow. */
