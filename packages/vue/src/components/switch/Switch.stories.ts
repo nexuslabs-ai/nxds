@@ -1,3 +1,4 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import { PhCheck } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
@@ -316,14 +317,7 @@ export const WithDataAttributes: Story = {
   },
 };
 
-const DENSITIES = [
-  'tight',
-  'compact',
-  'default',
-  'comfortable',
-  'relaxed',
-  'spacious',
-] as const;
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
 const STROKES = ['fine', 'normal', 'strong'] as const;
 
 export const SizesAtEveryDensity: Story = {
@@ -347,16 +341,21 @@ export const SizesAtEveryDensity: Story = {
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const size = (element: Element) => {
+      const { width, height } = element.getBoundingClientRect();
+      return { width, height };
+    };
+    const reference = within(canvas.getByTestId('row-default'))
+      .getAllByRole('switch')
+      .map(size);
     for (const density of DENSITIES) {
-      const [standard, small] = within(
+      const controls = within(
         canvas.getByTestId(`row-${density}`)
       ).getAllByRole('switch');
-      // The small switch stays smaller at every density.
-      await expect(small!.getBoundingClientRect().height).toBeLessThan(
-        standard!.getBoundingClientRect().height
-      );
+      // Each switch keeps its Default size at every density.
+      await expect(controls.map(size)).toEqual(reference);
       // The thumb stays inside the track's border at every density.
-      for (const control of [standard!, small!]) {
+      for (const control of controls) {
         await expectInsideBorder(
           control.querySelector('[data-slot="switch-thumb"]')!,
           control
