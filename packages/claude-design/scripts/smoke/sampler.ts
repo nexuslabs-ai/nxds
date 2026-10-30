@@ -15,12 +15,18 @@ import {
   type Theme,
 } from './harness.ts';
 
-/** The artboard markup SETUP.md tells Claude to paste, read from the exported guide. */
+/** The two blocks SETUP.md tells Claude to paste, read from the exported guide: the link lines, then the sampler. */
 function shippedArtboard() {
   const guide = readFileSync(path.join(exportDir, 'SETUP.md'), 'utf8');
-  const markup = /```html\n([\s\S]*?)\n```/.exec(guide)?.[1];
-  if (!markup) throw new Error('SETUP.md: no html block for the sampler.');
-  return markup;
+  const [links, sampler, ...rest] = [
+    ...guide.matchAll(/```html\n([\s\S]*?)\n```/g),
+  ].map(([, block = '']) => block);
+  if (links === undefined || sampler === undefined || rest.length > 0) {
+    throw new Error(
+      'SETUP.md: not exactly two html blocks, the link lines and the sampler.'
+    );
+  }
+  return { links, sampler };
 }
 
 /** The value `attribute` takes on the markup's `Nxds.<part>` tag. */
@@ -75,31 +81,60 @@ async function mountSampler(theme: Theme, markup: string) {
         ReactDOM.createRoot(host).render(__nxdsMarkup(markup, true))
       );
     } catch (error) {
-      return { error: error instanceof Error ? error.message : String(error) };
+      const message = error instanceof Error ? error.message : String(error);
+      return { error: `rendering threw ${message}` };
     }
     await __nxdsSettle(host);
-    const background = (selector: string) => {
-      const element = host.querySelector(selector);
-      return element ? getComputedStyle(element).backgroundColor : null;
+    // A part that spills past the sampler's content box, by how far, such as
+    // a full-width part that adds its padding and border to 100%. A part
+    // inside an ancestor that clips it, such as Progress's indicator, can't.
+    const sampler = host.querySelector(':scope > div');
+    if (!sampler) return { error: 'no root <div> to measure the edges of.' };
+    const dark = host.querySelector('[data-theme="dark"]');
+    const overflows: string[] = [];
+    const clipped = (element: Element) => {
+      for (
+        let parent = element.parentElement;
+        parent && parent !== sampler;
+        parent = parent.parentElement
+      ) {
+        if (getComputedStyle(parent).overflowX !== 'visible') return true;
+      }
+      return false;
     };
+    const box = sampler.getBoundingClientRect();
+    const style = getComputedStyle(sampler);
+    const left = box.left + parseFloat(style.paddingLeft);
+    const right = box.right - parseFloat(style.paddingRight);
+    for (const element of sampler.querySelectorAll('[data-slot]')) {
+      if (clipped(element)) continue;
+      const rect = element.getBoundingClientRect();
+      const past = Math.max(rect.right - right, left - rect.left);
+      if (past > 0.5) {
+        overflows.push(
+          `${element.getAttribute('data-slot')} by ${Math.round(past)}px`
+        );
+      }
+    }
     return {
+      overflows,
       slots: [...host.querySelectorAll('[data-slot]')].map((element) =>
         element.getAttribute('data-slot')
       ),
       bars: host.querySelectorAll('.recharts-bar-rectangle').length,
       selectedDays: host.querySelectorAll('[aria-selected="true"]').length,
-      page: background(':scope > div'),
-      dark: background('[data-theme="dark"]'),
+      page: getComputedStyle(sampler).backgroundColor,
+      dark: dark && getComputedStyle(dark).backgroundColor,
     };
   }, markup);
   await page.close();
   return { result, problems };
 }
 
-// The sampler SETUP.md ships, pasted after the README's link lines and
-// mounted the way a canvas does, renders every part with no console problem
-// in both themes. The sampler has no table, so the canvas wrapper's own
-// nesting warning doesn't apply either.
+// The sampler SETUP.md ships, pasted inside <x-dc> with the link lines in
+// <head>, mounted the way a canvas does, renders every part with no console
+// problem and stays inside its edges in both themes. The sampler has no
+// table, so the canvas wrapper's own nesting warning doesn't apply either.
 export async function checkSampler() {
   const artboard = shippedArtboard();
   const readme = readFileSync(path.join(projectDir, 'README.md'), 'utf8');
@@ -107,8 +142,12 @@ export async function checkSampler() {
     path.join(import.meta.dirname, '..', '..', 'content', 'sampler.html'),
     'utf8'
   );
-  if (artboard !== samplerArtboard(readme, sampler)) {
-    fail("SETUP.md's sampler isn't the README's link lines and sampler.html.");
+  const expected = samplerArtboard(readme, sampler);
+  if (
+    artboard.links !== expected.links ||
+    artboard.sampler !== expected.sampler
+  ) {
+    fail("SETUP.md's blocks aren't the README's link lines and sampler.html.");
   }
   // The frame already loads the system the way the link lines do.
   const markup = sampler.trim();
@@ -124,11 +163,14 @@ export async function checkSampler() {
     const { result, problems } = await mountSampler(theme, markup);
     failOnProblems(name, problems, false);
     if ('error' in result) {
-      fail(`${name} throws ${result.error}`);
+      fail(`${name}: ${result.error}`);
       continue;
     }
     for (const slot of slots) {
       if (!result.slots.includes(slot)) fail(`${name}: no ${slot} renders.`);
+    }
+    for (const overflow of result.overflows) {
+      fail(`${name}: ${overflow} spills past the sampler's edge.`);
     }
     if (result.bars !== bars) {
       fail(`${name}: the bar chart draws ${result.bars} bars, not ${bars}.`);

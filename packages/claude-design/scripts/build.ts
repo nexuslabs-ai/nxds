@@ -224,7 +224,7 @@ async function main() {
       readme,
       sampler,
       version,
-      files: files.length,
+      files,
     })
   );
   copyFileSync(

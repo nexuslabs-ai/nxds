@@ -70,6 +70,7 @@ Motion answers input and then gets out of the way. Popovers, menus and routine s
 
 - nxds uses Phosphor icons, regular weight, at 16px beside text. Place one with `Nxds.Icon` and its phosphoricons.com name: `name="plus"`. Add `-fill` for the filled icon: `name="check-circle-fill"`.
 - Name an icon on an icon prop the same way: Button `start-icon="plus"`, Badge `left-icon="check-circle"`. `components/Icon/README.md` lists every name the system ships.
+- The props panel shows an icon prop as a text field. Type the name.
 - An icon takes the colour of its text. Don't tint icons on their own.
 - An icon-only button needs an `aria-label`.
 - No emoji as icons.
@@ -100,11 +101,14 @@ Brand colour, surface tone and contrast are app-wide settings in nxds apps. They
 
 ## On a Design canvas
 
-Install these files with the system under `project/ds/<folder>/`. Link them in each artboard right after the `support.js` line, in this order:
+Install these files with the system under `project/ds/<folder>/`:
 
 1. `tokens.css`: every token value, both themes and the text style classes. The components read their variables from it.
 2. `components/bundle.css`: the component styles and the appearance presets. It sets a token only inside a preset attribute.
 3. `components/bundle.js`: the components, as `window.Nxds`. The artboard supplies React 18, so skip `react` and `react-dom`.
+4. `components/index.d.ts`: every prop's type. Don't link it. The props panel reads it to give each prop a control.
+
+Link the first three in each artboard's `<head>`, right after the `support.js` line, in this order. Put the artboard's markup inside its `<x-dc>` element.
 
 ```html
 <link rel="stylesheet" href="ds/<folder>/tokens.css" />
