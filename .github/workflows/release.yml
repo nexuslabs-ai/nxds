@@ -33,29 +33,13 @@ name: Release
 #     the required `CI Status` check would never run on the version PR and it
 #     couldn't merge without an admin override.
 # The default GITHUB_TOKEN then only needs id-token: write for the OIDC exchange.
-#
-# Snapshots: a push to `snapshot/<name>` publishes that branch's pending
-# changesets as `0.0.0-<name>-<timestamp>` versions under the
-# `snapshot-<name>` dist-tag, so a change can be tried from npm before it
-# releases, such as
-# `npx nxds-cli@snapshot-<name> export claude-design --release snapshot-<name>`.
-# The prefix keeps a branch from moving `latest`. `<name>` is one path
-# segment, as the `npm` environment allows. It pushes
-# nothing back and opens no PR. It runs from this file because npm's trusted
-# publishers name it.
-#
-# Trust boundary: npm checks only this file's name and the `npm` environment,
-# and a pusher can edit this file on their branch. Both jobs run in the `npm`
-# environment, whose deployment branches are `main` and `snapshot/*`, and a
-# ruleset lets only repo admins push `snapshot/**`. Those settings, not this file,
-# decide who can publish. See CONTRIBUTING.md § Releasing.
 
 on:
   push:
-    branches: [main, 'snapshot/*']
+    branches: [main]
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release
   cancel-in-progress: false
 
 permissions:
@@ -65,7 +49,6 @@ permissions:
 jobs:
   release:
     name: Release
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: npm
     steps:
@@ -109,44 +92,3 @@ jobs:
           # "Release auth" note at the top of this file. Using GITHUB_TOKEN here
           # would leave the version PR unable to clear branch protection.
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-
-  snapshot:
-    name: Snapshot
-    if: startsWith(github.ref, 'refs/heads/snapshot/')
-    runs-on: ubuntu-latest
-    environment: npm
-    env:
-      SNAPSHOT_BRANCH: ${{ github.ref_name }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'pnpm'
-
-      - name: Upgrade npm for trusted publishing
-        run: npm install -g npm@11.5.1
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
-
-      # snapshot/claude-design-setup publishes under `snapshot-claude-design-setup`.
-      - name: Name the snapshot after the branch
-        run: echo "SNAPSHOT=${SNAPSHOT_BRANCH#snapshot/}" >> "$GITHUB_ENV"
-
-      - name: Version the pending changesets as a snapshot
-        run: pnpm changeset version --snapshot "$SNAPSHOT"
-
-      - name: Build
-        run: pnpm turbo build
-
-      - name: Publish under the branch's dist-tag
-        run: pnpm changeset publish --tag "snapshot-$SNAPSHOT" --no-git-tag
