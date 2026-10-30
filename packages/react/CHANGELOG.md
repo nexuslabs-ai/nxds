@@ -1,5 +1,20 @@
 # @nxds/react
 
+## 0.13.0
+
+### Minor Changes
+
+- a333b42: Toolbar gets tools that open panels, and a floating variant.
+  - `ToolbarToolGroup`, `ToolbarTool` and `ToolbarToolPanel` add a set of tools. Selecting a tool opens its panel, and selecting it again closes it. Each tool tells assistive technology whether its panel is open.
+  - `<Toolbar variant="floating">` is a bar for canvas tools, with more padding, space and shadow.
+  - Groups inside a toolbar use the same gap as the toolbar.
+  - A vertical separator grows with the height of the row.
+  - In `@nxds/vue`, PopoverContent emits `closeAutoFocus`, `interactOutside` and `pointerDownOutside` once per event, as React does. Combobox and MultiSelect pass these events on once too.
+
+### Patch Changes
+
+- a333b42: `Show` and `Hide` pass their parent's `gap` to children that inherit it. A toolbar group inside them keeps the toolbar's gap.
+
 ## 0.12.0
 
 ### Minor Changes
