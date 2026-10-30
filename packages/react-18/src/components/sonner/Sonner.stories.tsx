@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { Star } from 'lucide-react';
 import { toast as hostToast, Toaster as HostToaster } from 'sonner';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
@@ -115,6 +116,55 @@ export const WithDataAttributes: Story = {
     const toaster = canvasElement.querySelector('[data-slot="toaster"]');
     await expect(toaster).toBeInTheDocument();
     await expect(toaster).toHaveAttribute('data-slot', 'toaster');
+  },
+};
+
+/** The first icon in the toast that shows `text`. */
+function toastIcon(text: HTMLElement) {
+  const icon = text.closest('[data-sonner-toast]')?.querySelector('svg');
+  if (!icon) throw new Error('The toast has no icon');
+  return icon;
+}
+
+function strokeOf(icon: SVGSVGElement) {
+  return parseFloat(getComputedStyle(icon).strokeWidth);
+}
+
+// A toast's icon slot draws a stroked icon at `--nx-icon-stroke`. An icon in
+// your own toast content keeps the line its library draws.
+export const IconStroke: Story = {
+  render: () => {
+    const showToasts = () => {
+      toast('Project starred', { icon: <Star /> });
+      toast.custom(() => (
+        <div className="nx:flex nx:items-center nx:gap-2">
+          <Star />
+          Pinned to the top
+        </div>
+      ));
+    };
+    return (
+      <>
+        <Button onClick={showToasts}>Show toasts</Button>
+        <Toaster />
+      </>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+    await userEvent.click(canvas.getByRole('button', { name: 'Show toasts' }));
+
+    const slotIcon = toastIcon(await body.findByText('Project starred'));
+    const contentIcon = toastIcon(await body.findByText('Pinned to the top'));
+    const iconStroke = parseFloat(
+      getComputedStyle(canvasElement).getPropertyValue('--nx-icon-stroke')
+    );
+    await expect(strokeOf(slotIcon)).toBe(iconStroke);
+    await expect(strokeOf(contentIcon)).toBe(
+      Number(contentIcon.getAttribute('stroke-width'))
+    );
+    toast.dismiss();
   },
 };
 

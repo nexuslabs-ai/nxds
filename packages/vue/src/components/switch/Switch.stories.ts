@@ -455,7 +455,7 @@ export const ThumbSlot: Story = {
             <PhCheck
               v-if="checked"
               aria-hidden="true"
-              class="nx:size-4 nx:p-0.5 nx:text-primary-background"
+              class="nx:size-icon-glyph-default nx:p-0.5 nx:text-primary-background"
             />
           </template>
         </Switch>

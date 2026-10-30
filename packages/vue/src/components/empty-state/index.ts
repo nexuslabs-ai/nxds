@@ -23,12 +23,12 @@ export {
 } from './EmptyStateTitle.vue';
 
 export const emptyStateMediaVariants = cva(
-  'nx:mb-2 nx:flex nx:shrink-0 nx:items-center nx:justify-center nx:[&_svg]:pointer-events-none nx:[&_svg]:shrink-0 nx:icon-stroke',
+  'nx:mb-2 nx:flex nx:shrink-0 nx:items-center nx:justify-center nx:[&_svg]:pointer-events-none nx:[&_svg]:shrink-0',
   {
     variants: {
       variant: {
         default: '',
-        icon: 'nx:size-10 nx:rounded-lg nx:bg-muted nx:text-foreground nx:[&_svg]:size-[24px]',
+        icon: 'nx:size-10 nx:rounded-lg nx:bg-muted nx:text-foreground nx:[&_svg]:size-[24px] nx:icon-stroke',
       },
     },
     defaultVariants: {

@@ -17,6 +17,7 @@ import {
   SPACING_MODE_FILE_PATTERN,
   spacingRoleUtility,
   spacingTokenKind,
+  spacingValue,
 } from '../token-source/spacing';
 import {
   type ExtractedToken,
@@ -358,21 +359,37 @@ function primitiveEntry(lookup: ReferenceLookup) {
   };
 }
 
-function spacingEntry({ leaf }: AuthoredLeaf): LeafEntry {
-  const key = leaf.path.join('-');
-  const name: CatalogueTokenName = `--nx-${key}`;
+function spacingName(path: readonly string[]): CatalogueTokenName {
+  return `--nx-${path.join('-')}`;
+}
+
+/** The spacing steps a role token can reference, such as `spacing.6`. */
+function spacingStepLookup(leaves: readonly AuthoredLeaf[]): ReferenceLookup {
+  return new Map(
+    leaves
+      .filter(({ leaf }) => spacingTokenKind(leaf.path) === 'numeric')
+      .map(({ leaf }) => {
+        const name = spacingName(leaf.path);
+        return [
+          leaf.path.join('.'),
+          { cssName: name.slice('--'.length), name },
+        ];
+      })
+  );
+}
+
+function spacingEntry({ file, leaf }: AuthoredLeaf): LeafEntry {
+  const name = spacingName(leaf.path);
   const alias =
     spacingTokenKind(leaf.path) === 'role'
       ? utility(spacingRoleUtility(leaf.path).name)
-      : cssVariable(`--${key}`);
+      : cssVariable(`--${leaf.path.join('-')}`);
+  const value = spacingValue(leaf, extractTokens(TOKEN_FILES[file]));
   return {
     name,
     aliases: [alias],
     declarations: [
-      {
-        property: name,
-        value: formatTokenValue(leaf.value, leaf.type, leaf.path),
-      },
+      { property: name, value: formatTokenValue(value, leaf.type, leaf.path) },
     ],
   };
 }
@@ -544,6 +561,7 @@ export function createTokenCatalogue(): readonly CatalogueToken[] {
   const primitives = PRIMITIVE_FAMILIES.flatMap(primitiveLeaves);
   const lookup = primitiveLookup(primitives);
   const shadowLayers = primitives.filter(({ family }) => family === 'shadow');
+  const spacing = spacingLeaves();
   return [
     ...authoredTokens(
       primitives.filter((leaf) => leaf.family !== 'shadow'),
@@ -551,7 +569,7 @@ export function createTokenCatalogue(): readonly CatalogueToken[] {
       primitiveEntry(lookup)
     ),
     ...runtimeColorTokens(),
-    ...authoredTokens(spacingLeaves(), lookup, spacingEntry),
+    ...authoredTokens(spacing, spacingStepLookup(spacing), spacingEntry),
     ...authoredTokens(
       fileLeaves('z-index', Z_INDEX_FILE, SINGLE_SOURCE),
       lookup,
