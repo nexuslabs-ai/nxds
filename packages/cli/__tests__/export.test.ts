@@ -408,6 +408,49 @@ describe('nxds-cli export claude-design', () => {
     });
   });
 
+  it('keeps a root file this release drops when you edited it', async () => {
+    const { source, cwd } = setup();
+    await cli(['export', 'claude-design', '--source', source], cwd);
+    const coverage = path.join(cwd, 'nxds-design-system', 'coverage.md');
+    writeFileSync(coverage, '# Coverage, with my notes\n');
+    writeFiles(source, {
+      'files.json': JSON.stringify({
+        project: manifestEntries(PROJECT),
+        root: manifestEntries(
+          Object.fromEntries(
+            Object.entries(ROOT).filter(([name]) => name !== 'coverage.md')
+          )
+        ),
+      }),
+    });
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source, '--overwrite'],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(readFileSync(coverage, 'utf8')).toBe('# Coverage, with my notes\n');
+    expect(body.data.kept).toEqual([coverage]);
+  });
+
+  it("refuses an earlier export's files.json that lists no root files", async () => {
+    const { source, cwd } = setup();
+    await cli(['export', 'claude-design', '--source', source], cwd);
+    const manifest = path.join(cwd, 'nxds-design-system', 'files.json');
+    writeFileSync(manifest, JSON.stringify({ project: [] }));
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source, '--overwrite'],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.usage);
+    expect(body.error).toBe(
+      `${manifest} must hold root, a JSON array of { path, sha256 } entries. Delete it, then run the command again.`
+    );
+  });
+
   it('keeps your files beside project/ when it exports again', async () => {
     const { source, cwd } = setup();
     await cli(['export', 'claude-design', '--source', source], cwd);

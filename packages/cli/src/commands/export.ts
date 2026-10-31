@@ -322,9 +322,30 @@ function droppedRootFiles(out: string, rootFiles: Map<string, Buffer>) {
       `${file} must hold root, a JSON array of { path, sha256 } entries. Delete it, then run the command again.`
     );
   }
-  return value.root
-    .map((entry) => entry.path)
-    .filter((name) => isRootName(name) && !rootFiles.has(name));
+  return value.root.filter(
+    (entry) => isRootName(entry.path) && !rootFiles.has(entry.path)
+  );
+}
+
+// Removes each dropped root file the last export wrote, and returns the names
+// of the ones that were edited since, which stay.
+function removeDroppedRootFiles(out: string, dropped: ManifestEntry[]) {
+  const edited: string[] = [];
+  for (const entry of dropped) {
+    const file = path.join(out, entry.path);
+    if (!existsSync(file)) continue;
+    const unchanged =
+      lstatSync(file).isFile() && sha256(readFileSync(file)) === entry.sha256;
+    if (unchanged) rmSync(file);
+    else edited.push(entry.path);
+  }
+  return edited;
+}
+
+function writeRootFiles(out: string, rootFiles: Map<string, Buffer>) {
+  for (const [name, bytes] of rootFiles) {
+    writeFileSync(path.join(out, name), bytes);
+  }
 }
 
 const entriesOf = (files: Map<string, Buffer>) =>
@@ -332,14 +353,11 @@ const entriesOf = (files: Map<string, Buffer>) =>
 
 // Lists what the export wrote in files.json, so the next export can remove a
 // root file its release drops.
-function writeRootFiles(
+function writeManifest(
   out: string,
   files: Map<string, Buffer>,
   rootFiles: Map<string, Buffer>
 ) {
-  for (const [name, bytes] of rootFiles) {
-    writeFileSync(path.join(out, name), bytes);
-  }
   const manifest: Manifest = {
     project: entriesOf(files),
     root: entriesOf(rootFiles),
@@ -449,8 +467,9 @@ export async function exportClaudeDesign(
       : [];
     const dropped = droppedRootFiles(out, rootFiles);
     writeProject(out, files);
-    for (const name of dropped) rmSync(path.join(out, name), { force: true });
-    writeRootFiles(out, files, rootFiles);
+    const kept = removeDroppedRootFiles(out, dropped);
+    writeRootFiles(out, rootFiles);
+    writeManifest(out, files, rootFiles);
     const removedFile = path.join(out, 'removed.json');
     if (options.existing) {
       writeFileSync(removedFile, `${JSON.stringify(removed, null, 2)}\n`);
@@ -465,6 +484,11 @@ export async function exportClaudeDesign(
     if (rootFiles.has('coverage.md')) {
       lines.push(
         `The props the canvas can't set are in ${path.join(relative, 'coverage.md')}.`
+      );
+    }
+    for (const name of kept) {
+      lines.push(
+        `Kept ${path.join(relative, name)}: this release doesn't ship it, and you edited it.`
       );
     }
     if (removed.length > 0) {
@@ -483,6 +507,7 @@ export async function exportClaudeDesign(
         out,
         files: files.size,
         removed,
+        kept: kept.map((name) => path.join(out, name)),
         root: [...rootFiles.keys()].map((name) => path.join(out, name)),
       },
     };
