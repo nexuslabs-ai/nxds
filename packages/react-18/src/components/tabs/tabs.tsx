@@ -191,6 +191,7 @@ const tabsTriggerVariants = cva(
     'nx:transition-control',
     'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
     'nx:disabled:pointer-events-none nx:disabled:text-disabled-foreground',
+    "nx:[&_svg:not([class*='size-'])]:size-icon-glyph-default nx:icon-stroke",
   ],
   {
     variants: {

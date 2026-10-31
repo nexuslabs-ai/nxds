@@ -3,6 +3,7 @@ import {
   BUTTON,
   CARD,
   CARD_CONTENT,
+  ICON_BUTTON,
   INPUT,
   measure,
   type Probe,
@@ -65,6 +66,13 @@ export const TOKEN_CASES: (Probe & {
     value: 'linear',
     ...BUTTON,
     property: 'transition-timing-function',
+  },
+  {
+    family: 'icon',
+    name: '--nx-icon-glyph-default',
+    value: '23px',
+    ...ICON_BUTTON,
+    property: 'width',
   },
   {
     family: 'typeScale',

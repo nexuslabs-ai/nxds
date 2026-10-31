@@ -4,6 +4,11 @@ import type { CssDeclaration } from './format.ts';
 export interface UtilityRule {
   /** The utility name without the `nx:` prefix. */
   name: string;
+  /**
+   * Nested selectors the declarations apply to, such as `& svg`. Without
+   * them, the declarations apply to the element the class sits on.
+   */
+  selectors?: readonly string[];
   /** The rule body, in order. */
   declarations: CssDeclaration[];
 }
@@ -53,6 +58,63 @@ export function durationUtility(key: string): UtilityRule {
       { property: 'transition-duration', value },
     ],
   };
+}
+
+/**
+ * An icon's width and height, and `--nx-icon-size`, the size `icon-stroke`
+ * draws the line for.
+ */
+function iconSizeDeclarations(value: string): CssDeclaration[] {
+  return [
+    { property: 'width', value },
+    { property: 'height', value },
+    { property: '--nx-icon-size', value },
+  ];
+}
+
+/** The `size-icon-*` utility a glyph size `key` (e.g. `glyph-default`) emits. */
+export function iconSizeUtility(key: string): UtilityRule {
+  return {
+    name: `size-icon-${key}`,
+    declarations: iconSizeDeclarations(`var(--nx-icon-${key})`),
+  };
+}
+
+/**
+ * `size-icon-[…]`, which sizes an icon no glyph size fits from one value,
+ * such as `size-icon-[24px]` or `size-icon-(--x)`. Like `size-[…]`, it takes
+ * any value.
+ */
+export const ARBITRARY_ICON_SIZE_UTILITY: UtilityRule = {
+  name: 'size-icon-*',
+  declarations: iconSizeDeclarations('--value([*])'),
+};
+
+/**
+ * `icon-stroke` sets the line on an `<svg>` the class sits on or contains,
+ * and on each shape inside it, because HugeIcons sets `stroke-width` on every
+ * path. The line is the stroke base plus `--nx-icon-size` times the stroke
+ * ratio, and an icon without `--nx-icon-size` draws the default glyph's line.
+ * `non-scaling-stroke` draws it in screen pixels, whatever the icon's
+ * `viewBox`.
+ */
+export const ICON_STROKE_UTILITY: UtilityRule = {
+  name: 'icon-stroke',
+  selectors: ['&:is(svg)', '&:is(svg) *', '& svg', '& svg *'],
+  declarations: [
+    {
+      property: 'stroke-width',
+      value:
+        'calc(var(--nx-icon-stroke-base) + var(--nx-icon-size, var(--nx-icon-glyph-default)) * var(--nx-icon-stroke-ratio))',
+    },
+    { property: 'vector-effect', value: 'non-scaling-stroke' },
+  ],
+};
+
+/** The utility an icon token feeds: a glyph size's `size-icon-*`, or `icon-stroke`. */
+export function iconUtility(path: readonly string[]): UtilityRule {
+  if (path[0] === 'stroke') return ICON_STROKE_UTILITY;
+  return iconSizeUtility(path.join('-'));
 }
 
 /**

@@ -20,6 +20,8 @@ One check reads a whole class-string scope rather than a single literal: `nx:tra
 
 Two things fall outside a scope and pass: an array that is never joined, whose elements are per-item class strings; and a string that only meets the rest at a call site — a shared `const`, an argument handed to another function, or a callback body the enclosing call takes with it. The four composer names must be written plainly, and `join` is the one member expression the walk reads, on an array literal receiver — so an aliased or chained composer (`twMerge`, `utils.cn`, a renamed import, `[…].filter(Boolean).join(' ')`) is invisible to it. Specimen surfaces are exempt from this check: the docs pages under `apps/docs/app/_pages`, where a pairing is the subject of the prose. Stories and the rest of the docs app are checked.
 
+A second scope check covers icon line width. A class list that sizes `svg` children, such as `[&_svg]:size-…` or `[&>svg]:h-…`, must also include `nx:icon-stroke`, so every stroked icon draws the line for its size, from `--nx-icon-stroke-base` and `--nx-icon-stroke-ratio`. Stories and the docs app are not checked.
+
 ### `@nxds/no-render-prop-types`
 
 Enforces `.claude/rules/composition-over-render-props.md`: component props must not be typed as render callbacks (`(...) => ReactNode`) or component references (`ComponentType` / `FC` / `ElementType`). Event-handler-named props (`on*`) are exempt. Use `children` / named `ReactNode` slots or per-mode components instead. Third-party-mandated shapes (e.g. recharts) opt out with a scoped `eslint-disable` + reason.

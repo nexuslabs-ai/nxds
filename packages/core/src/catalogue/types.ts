@@ -18,6 +18,7 @@ export type CatalogueFamily =
   | 'borderwidth'
   | 'breakpoint'
   | 'color'
+  | 'icon'
   | 'motion'
   | 'radius'
   | 'shadow'

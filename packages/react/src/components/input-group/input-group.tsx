@@ -76,7 +76,7 @@ function InputGroup({ className, variant, ...props }: InputGroupProps) {
 }
 
 const inputGroupAddonVariants = cva(
-  'nx:flex nx:h-auto nx:cursor-text nx:items-center nx:justify-start nx:gap-2 nx:py-1.5 nx:typography-label-default nx:text-muted-foreground nx:select-none nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:[&>kbd]:rounded-sm nx:[&>svg]:size-4',
+  'nx:flex nx:h-auto nx:cursor-text nx:items-center nx:justify-start nx:gap-2 nx:py-1.5 nx:typography-label-default nx:text-muted-foreground nx:select-none nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:[&>kbd]:rounded-sm nx:[&>svg]:size-4 nx:icon-stroke',
   {
     variants: {
       align: {
@@ -121,11 +121,11 @@ function InputGroupAddon({
 }
 
 const inputGroupButtonVariants = cva(
-  'nx:flex nx:items-center nx:py-0 nx:typography-label-default nx:shadow-none nx:group-data-[disabled=true]/input-group:text-disabled-foreground',
+  'nx:flex nx:items-center nx:py-0 nx:typography-label-default nx:shadow-none nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:icon-stroke',
   {
     variants: {
       size: {
-        xs: 'nx:h-6 nx:gap-1 nx:rounded-sm nx:px-2 nx:has-[>svg]:px-2 nx:[&>svg]:size-3.5',
+        xs: 'nx:h-6 nx:gap-1 nx:rounded-sm nx:px-2 nx:has-[>svg]:px-2 nx:[&>svg]:size-icon-[var(--nx-spacing-3_5)]',
         sm: 'nx:h-8 nx:gap-1.5 nx:rounded-md nx:px-2.5 nx:has-[>svg]:px-2.5',
         'icon-xs': 'nx:size-6 nx:rounded-sm nx:p-0 nx:has-[>svg]:p-0',
         'icon-sm': 'nx:size-8 nx:p-0 nx:has-[>svg]:p-0',
@@ -179,7 +179,7 @@ function InputGroupText({ className, ...props }: InputGroupTextProps) {
     <span
       data-slot="input-group-text"
       className={cn(
-        'nx:flex nx:items-center nx:gap-2 nx:typography-body-default nx:text-muted-foreground nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-4',
+        'nx:flex nx:items-center nx:gap-2 nx:typography-body-default nx:text-muted-foreground nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-4 nx:icon-stroke',
         className
       )}
       {...props}

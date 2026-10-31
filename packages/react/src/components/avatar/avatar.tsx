@@ -148,6 +148,7 @@ function AvatarFallback({ className, ...props }: AvatarFallbackProps) {
       data-slot="avatar-fallback"
       className={cn(
         'nx:flex nx:size-full nx:items-center nx:justify-center nx:rounded-[inherit] nx:bg-muted nx:text-foreground nx:font-medium nx:leading-none',
+        'nx:icon-stroke',
         className
       )}
       {...props}

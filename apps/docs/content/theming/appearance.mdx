@@ -256,6 +256,49 @@ a competing icon set.
 Icons you pass to a component, such as a Button's icon, come from any library
 you like.
 
+### Line width
+
+Stroked icons draw a line that grows with the icon, whatever their
+`strokeWidth`. Filled icons keep the line their library draws.
+
+| Library      | Draws         | Line in a component |
+| ------------ | ------------- | ------------------- |
+| Lucide       | Strokes       | Grows with the icon |
+| Tabler Icons | Strokes       | Grows with the icon |
+| HugeIcons    | Strokes       | Grows with the icon |
+| Phosphor     | Filled shapes | Its own             |
+| Remix Icon   | Filled shapes | Its own             |
+
+The line is `--nx-icon-stroke-base` plus the icon size times
+`--nx-icon-stroke-ratio`. The line is in screen pixels, so a small icon keeps
+a line you can see.
+
+| Icon size | Line    |
+| --------- | ------- |
+| 12px      | 1.25px  |
+| 14px      | 1.375px |
+| 16px      | 1.5px   |
+| 24px      | 2px     |
+| 48px      | 3.5px   |
+
+To change the line, set the two tokens:
+
+```css
+/* app/nxds.css, after the imports */
+:root {
+  --nx-icon-stroke-base: 0.75px;
+  --nx-icon-stroke-ratio: 0.05;
+}
+```
+
+To change the line in one component, set the tokens in its class, such as
+`nx:[--nx-icon-stroke-base:1px]`. A `stroke-*` class doesn't change the line.
+
+To size an icon yourself, use `nx:size-icon-[24px]` or
+`nx:size-icon-[var(--nx-spacing-6)]`. It sets the icon's width, height and line
+from one value. An icon sized another way, such as with `nx:size-[24px]`, draws
+the 16px line.
+
 ## Shuffle
 
 `shuffleNxdsAppearance` returns a random theme built from the curated options.
