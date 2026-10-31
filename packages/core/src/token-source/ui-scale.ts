@@ -70,7 +70,7 @@ export interface ModeToken extends ScaleToken {
 const FULL_RADIUS = '9999px';
 
 /** No text scales below this size. */
-const MIN_TEXT_PX = 8;
+export const MIN_TEXT_PX = 8;
 
 const px = (value: string) => Number.parseFloat(value);
 
