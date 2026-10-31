@@ -215,12 +215,14 @@ const onPointerDownOutside = fn();
 const onInteractOutside = fn();
 const onCloseAutoFocus = fn();
 
+function clearOutsideSpies() {
+  onPointerDownOutside.mockClear();
+  onInteractOutside.mockClear();
+  onCloseAutoFocus.mockClear();
+}
+
 export const OutsideClickInteraction: Story = {
-  beforeEach: () => {
-    onPointerDownOutside.mockClear();
-    onInteractOutside.mockClear();
-    onCloseAutoFocus.mockClear();
-  },
+  beforeEach: clearOutsideSpies,
   render: () => ({
     components: { Button, Popover, PopoverContent, PopoverTrigger },
     setup: () => ({
@@ -261,11 +263,7 @@ export const OutsideClickInteraction: Story = {
 };
 
 export const ModalOutsideClickInteraction: Story = {
-  beforeEach: () => {
-    onPointerDownOutside.mockClear();
-    onInteractOutside.mockClear();
-    onCloseAutoFocus.mockClear();
-  },
+  beforeEach: clearOutsideSpies,
   render: () => ({
     components: { Button, Popover, PopoverContent, PopoverTrigger },
     setup: () => ({
@@ -297,10 +295,9 @@ export const ModalOutsideClickInteraction: Story = {
 
     await userEvent.click(canvas.getByRole('button', { name: 'Open popover' }));
     await page.findByText('Popover content');
-    // A modal popover sets pointer-events: none on the page behind it.
-    await userEvent.click(canvas.getByText('Outside the popover'), {
-      pointerEventsCheck: 0,
-    });
+    const outside = canvas.getByText('Outside the popover');
+    await waitFor(() => expect(outside).toHaveStyle({ pointerEvents: 'none' }));
+    await userEvent.click(outside, { pointerEventsCheck: 0 });
 
     await waitFor(() => expect(onCloseAutoFocus).toHaveBeenCalledTimes(1));
     await expect(onPointerDownOutside).toHaveBeenCalledTimes(1);
