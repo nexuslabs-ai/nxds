@@ -2,7 +2,7 @@ import type { NextMDXOptions } from '@next/mdx';
 import { codeBlockTheme } from '@nxds/react/code-block-theme';
 import type { Options } from 'rehype-pretty-code';
 
-const SHIKI_OPTIONS = {
+export const SHIKI_OPTIONS = {
   theme: codeBlockTheme,
   keepBackground: false,
   grid: false,

@@ -22,7 +22,7 @@ import { VueDemo } from './app/_components/VueComponentPanel';
  * the @nxds/react components so MDX authors can drop a live <Button> etc.
  * into prose with no import.
  */
-export function useMDXComponents(components: MDXComponents): MDXComponents {
+export function useMDXComponents(components?: MDXComponents): MDXComponents {
   return {
     // children rendered explicitly so jsx-a11y can see the element has content.
     h1: ({ children, className, ...props }) => (

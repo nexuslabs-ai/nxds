@@ -82,6 +82,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/package.json",
+        "$TURBO_ROOT$/packages/*/CHANGELOG.md",
         "$TURBO_ROOT$/packages/catalog/releases/**",
         "$TURBO_ROOT$/packages/catalog/scripts/registry.mjs",
         "$TURBO_ROOT$/packages/catalog/scripts/roots.mjs",
