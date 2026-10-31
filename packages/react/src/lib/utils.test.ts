@@ -103,7 +103,6 @@ const TYPOGRAPHY_PROPERTY_GROUPS = {
   'font-weight': 'font-weight',
   'line-height': 'leading',
   'letter-spacing': 'tracking',
-  'text-wrap': 'text-wrap',
 };
 
 function emittedThemeTokens(cssKey: string) {
@@ -253,13 +252,45 @@ describe('cn', () => {
     ['font-weight', 'nx:font-bold'],
     ['leading', 'nx:leading-none'],
     ['tracking', 'nx:tracking-wide'],
-    ['text-wrap', 'nx:text-nowrap'],
   ])('lets a typography composite displace the %s atomic', (_group, atomic) => {
     expect(cn(atomic, 'nx:typography-heading-large')).toBe(
       'nx:typography-heading-large'
     );
   });
   /* eslint-enable @nxds/nx-class-conventions -- end of the raw-atomics block */
+
+  it('keeps a text-wrap atomic beside a typography composite', () => {
+    expect(cn('nx:text-balance', 'nx:typography-heading-large')).toBe(
+      'nx:text-balance nx:typography-heading-large'
+    );
+  });
+
+  it('lets truncate displace a title text-balance', () => {
+    expect(
+      cn('nx:typography-heading-small nx:text-balance', 'nx:truncate')
+    ).toBe('nx:typography-heading-small nx:truncate');
+  });
+
+  it.each([
+    ['overflow', 'nx:overflow-visible'],
+    ['overflow-x', 'nx:overflow-x-auto'],
+    ['overflow-y', 'nx:overflow-y-auto'],
+    ['text-overflow', 'nx:text-clip'],
+    ['whitespace', 'nx:whitespace-normal'],
+    ['text-wrap', 'nx:text-wrap'],
+  ])('lets truncate displace the %s atomic', (_group, atomic) => {
+    expect(cn(atomic, 'nx:truncate')).toBe('nx:truncate');
+  });
+
+  it('keeps truncate beside a later text-overflow atomic', () => {
+    expect(cn('nx:truncate', 'nx:text-clip')).toBe('nx:truncate nx:text-clip');
+  });
+
+  it('keeps a text-wrap atomic beside text-ellipsis', () => {
+    expect(cn('nx:text-nowrap', 'nx:text-ellipsis')).toBe(
+      'nx:text-nowrap nx:text-ellipsis'
+    );
+  });
 
   it('conflicts with exactly the groups the typography composites declare', () => {
     const declared = new Set(
