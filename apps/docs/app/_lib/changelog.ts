@@ -13,6 +13,11 @@ export const CHANGELOG_PACKAGES = [
   },
   { slug: 'vue', summary: 'The Vue components.' },
   { slug: 'core', summary: 'The theme engine that makes every token.' },
+  {
+    slug: 'tailwind',
+    summary:
+      'The Tailwind theme, nxds.css, that nxds-cli copies into your app.',
+  },
   { slug: 'cli', summary: 'The CLI that installs nxds in your app.' },
   { slug: 'eslint-plugin', summary: 'The lint rules for nxds conventions.' },
   {
