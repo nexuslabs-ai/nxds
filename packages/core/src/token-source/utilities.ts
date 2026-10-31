@@ -81,12 +81,13 @@ export function iconSizeUtility(key: string): UtilityRule {
 }
 
 /**
- * `size-icon-[…]`, which sizes an icon no glyph size fits from one length,
- * such as `size-icon-[24px]`. A `var()` needs the `length:` hint.
+ * `size-icon-[…]`, which sizes an icon no glyph size fits from one value,
+ * such as `size-icon-[24px]` or `size-icon-(--x)`. Like `size-[…]`, it takes
+ * any value.
  */
 export const ARBITRARY_ICON_SIZE_UTILITY: UtilityRule = {
   name: 'size-icon-*',
-  declarations: iconSizeDeclarations('--value([length])'),
+  declarations: iconSizeDeclarations('--value([*])'),
 };
 
 /**
