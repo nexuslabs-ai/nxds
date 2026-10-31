@@ -102,7 +102,7 @@ describe('UI scale CSS', () => {
     }
   });
 
-  it('scales text to 12, 16 and 18px, never under 10px, with even line heights', () => {
+  it('scales text to 12, 16 and 18px, never under 8px, with even line heights', () => {
     const type = SCALES.map(
       (scale) => blocks.get(`[data-ui-scale='${scale}']`)!
     );
@@ -113,12 +113,25 @@ describe('UI scale CSS', () => {
       for (const [name, px] of block) {
         if (/^typography-(size-|code-size)/.test(name)) {
           expect(Number.isInteger(px), name).toBe(true);
-          expect(px, name).toBeGreaterThanOrEqual(10);
+          expect(px, name).toBeGreaterThanOrEqual(8);
         }
         if (name.startsWith('typography-line-height-')) {
           expect(px % 2, name).toBe(0);
         }
       }
+    }
+  });
+
+  it('keeps every type size larger than the one below it', () => {
+    for (const scale of SCALES) {
+      const sizes = [...blocks.get(`[data-ui-scale='${scale}']`)!]
+        .filter(([name]) => name.startsWith('typography-size-'))
+        .map(([, px]) => px);
+      sizes.slice(1).forEach((px, index) => {
+        expect(px, `${scale}: ${sizes.join(', ')}`).toBeGreaterThan(
+          sizes[index]!
+        );
+      });
     }
   });
 

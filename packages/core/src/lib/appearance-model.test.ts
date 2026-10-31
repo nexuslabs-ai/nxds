@@ -457,9 +457,9 @@ describe('appearancePrefsToCss', () => {
     expect(scaledCodeSizes(12)).toEqual({ small: 10, large: 14, larger: 15 });
   });
 
-  it('never shrinks code below 10px, and keeps smaller code from growing at Small', () => {
-    expect(scaledCodeSizes(11)).toMatchObject({ small: 10 });
-    expect(scaledCodeSizes(9)).toMatchObject({ small: 9 });
+  it('never shrinks code below 8px at Small', () => {
+    expect(scaledCodeSizes(9)).toMatchObject({ small: 8 });
+    expect(scaledCodeSizes(8)).toMatchObject({ small: 8 });
   });
 
   it('writes the code size in whole px at every scale', () => {
