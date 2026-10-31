@@ -500,7 +500,7 @@ export async function exportClaudeDesign(
       `Read ${path.join(relative, 'SETUP.md')} and follow it. It publishes the system, installs it on a canvas and checks it.`
     );
     return {
-      ok: true,
+      ok: kept.length === 0,
       lines,
       data: {
         version: pkg.version,

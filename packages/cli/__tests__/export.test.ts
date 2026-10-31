@@ -429,7 +429,7 @@ describe('nxds-cli export claude-design', () => {
       cwd
     );
 
-    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(exitCode).toBe(EXIT_CODES.attention);
     expect(readFileSync(coverage, 'utf8')).toBe('# Coverage, with my notes\n');
     expect(body.data.kept).toEqual([coverage]);
   });
