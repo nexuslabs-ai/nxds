@@ -471,7 +471,7 @@ describe('appearancePrefsToCss', () => {
     expect(scaledCodeSizes(12)).toEqual({ small: 10, large: 14, larger: 15 });
   });
 
-  it('never shrinks code below 8px, and keeps smaller code from growing at Small', () => {
+  it('never shrinks code below 8px at Small', () => {
     expect(scaledCodeSizes(9)).toMatchObject({ small: 8 });
     expect(scaledCodeSizes(8)).toMatchObject({ small: 8 });
   });
