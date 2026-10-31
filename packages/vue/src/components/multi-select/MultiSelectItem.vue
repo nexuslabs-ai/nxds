@@ -72,14 +72,17 @@ function searchKeywords() {
       data-slot="multi-select-indicator"
       :class="
         cn(
-          'nx:flex nx:size-4 nx:shrink-0 nx:items-center nx:justify-center nx:rounded-sm nx:border-default nx:transition-colors',
+          'nx:flex nx:size-[16px] nx:shrink-0 nx:items-center nx:justify-center nx:rounded-sm nx:border-default nx:transition-colors',
           selectedValues.has(value)
             ? 'nx:border-transparent nx:bg-primary-background nx:text-primary-foreground'
             : 'nx:border-border-default nx:bg-background'
         )
       "
     >
-      <IconCheck v-if="selectedValues.has(value)" class="nx:size-3" />
+      <IconCheck
+        v-if="selectedValues.has(value)"
+        class="nx:size-icon-glyph-xs"
+      />
     </span>
     <span class="nx:min-w-0 nx:flex-1"><slot /></span>
   </CommandItem>

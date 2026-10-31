@@ -28,7 +28,7 @@ const forwarded = useForwardProps(delegated);
     data-slot="radio-group-item"
     :class="
       cn(
-        'nx:group nx:size-4 nx:shrink-0 nx:cursor-pointer nx:rounded-full nx:p-0 nx:border-default nx:border-border-default nx:bg-container nx:icon-stroke',
+        'nx:group nx:size-[16px] nx:shrink-0 nx:cursor-pointer nx:rounded-full nx:p-0 nx:border-default nx:border-border-default nx:bg-container nx:icon-stroke',
         'nx:transition-control',
         'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
         'nx:aria-invalid:border-error-border nx:aria-invalid:focus-visible:outline-focus-error',
@@ -49,7 +49,7 @@ const forwarded = useForwardProps(delegated);
         aria-hidden="true"
         :class="
           cn(
-            'nx:size-icon-[var(--nx-spacing-2_5)] nx:text-current',
+            'nx:size-icon-[10px] nx:text-current',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )

@@ -33,7 +33,9 @@ function updateSearch(value: string) {
     data-slot="command-input-wrapper"
     class="nx:flex nx:items-center nx:border-b-default nx:border-border-default nx:px-3 nx:focus-within:border-border-focus nx:icon-stroke"
   >
-    <IconSearch class="nx:mr-2 nx:size-4 nx:shrink-0 nx:opacity-50" />
+    <IconSearch
+      class="nx:mr-2 nx:size-icon-glyph-default nx:shrink-0 nx:opacity-50"
+    />
     <ListboxFilter
       v-bind="{ 'data-slot': 'command-input', ...$attrs }"
       :id="command.inputId"

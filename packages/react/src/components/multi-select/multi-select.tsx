@@ -186,7 +186,7 @@ function MultiSelectTrigger({
         {children}
         <IconChevronDown
           aria-hidden="true"
-          className="nx:size-4 nx:shrink-0 nx:text-muted-foreground nx:group-disabled/multi-select:text-disabled-foreground"
+          className="nx:size-icon-glyph-default nx:shrink-0 nx:text-muted-foreground nx:group-disabled/multi-select:text-disabled-foreground"
         />
       </button>
     </PopoverTrigger>
@@ -334,7 +334,7 @@ function MultiSelectValue({
           {clickToRemove && (
             <IconX
               aria-hidden="true"
-              className="nx:size-icon-[var(--nx-spacing-3)] nx:text-muted-foreground nx:transition-colors nx:group-hover/chip:text-error-subtle-foreground"
+              className="nx:size-icon-glyph-xs nx:text-muted-foreground nx:transition-colors nx:group-hover/chip:text-error-subtle-foreground"
             />
           )}
         </Badge>
@@ -457,13 +457,13 @@ function MultiSelectItem({
         aria-hidden="true"
         data-slot="multi-select-indicator"
         className={cn(
-          'nx:flex nx:size-4 nx:shrink-0 nx:items-center nx:justify-center nx:rounded-sm nx:border-default nx:transition-colors',
+          'nx:flex nx:size-[16px] nx:shrink-0 nx:items-center nx:justify-center nx:rounded-sm nx:border-default nx:transition-colors',
           selected
             ? 'nx:border-transparent nx:bg-primary-background nx:text-primary-foreground'
             : 'nx:border-border-default nx:bg-background'
         )}
       >
-        {selected && <IconCheck className="nx:size-3" />}
+        {selected && <IconCheck className="nx:size-icon-glyph-xs" />}
       </span>
       <span className="nx:min-w-0 nx:flex-1">{children}</span>
     </CommandItem>

@@ -19,6 +19,7 @@ import { EmptyStateMedia } from '../components/empty-state/empty-state';
 import {
   InputGroup,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupInput,
 } from '../components/input-group/input-group';
 import { Kbd } from '../components/kbd/kbd';
@@ -63,6 +64,7 @@ type Story = StoryObj<typeof meta>;
 const STROKED_PARTS = {
   kbd: 12,
   badge: 14,
+  'input-group-button': 14,
   button: 16,
   toggle: 16,
   'dropdown-menu-item': 16,
@@ -170,6 +172,12 @@ export const EveryComponent: Story = {
           <StrokedIcons />
         </InputGroupAddon>
         <InputGroupInput aria-label="Search starred" placeholder="Search" />
+        <InputGroupAddon align="inline-end">
+          <InputGroupButton>
+            <StrokedIcons />
+            Star
+          </InputGroupButton>
+        </InputGroupAddon>
       </InputGroup>
       <Badge
         leftIcon={<Star data-testid="lucide" aria-hidden="true" />}

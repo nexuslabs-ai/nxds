@@ -1,5 +1,17 @@
 /* Icon Utilities */
 
+@utility size-icon-glyph-xs {
+  width: var(--nx-icon-glyph-xs);
+  height: var(--nx-icon-glyph-xs);
+  --nx-icon-size: var(--nx-icon-glyph-xs);
+}
+
+@utility size-icon-glyph-sm {
+  width: var(--nx-icon-glyph-sm);
+  height: var(--nx-icon-glyph-sm);
+  --nx-icon-size: var(--nx-icon-glyph-sm);
+}
+
 @utility size-icon-glyph-default {
   width: var(--nx-icon-glyph-default);
   height: var(--nx-icon-glyph-default);

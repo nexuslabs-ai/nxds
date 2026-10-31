@@ -1,4 +1,17 @@
+import type { NxdsDensity } from '@nxds/core';
+import { CommandIcon, StarIcon, TrayIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
+import { expect, within } from 'storybook/test';
+
+import { Checkbox } from '../components/checkbox/checkbox';
+import { EmptyStateMedia } from '../components/empty-state/empty-state';
+import { Kbd } from '../components/kbd/kbd';
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from '../components/radio-group/radio-group';
+import { Spinner } from '../components/spinner/spinner';
+import { Toggle } from '../components/toggle/toggle';
 
 import {
   tokenValue,
@@ -107,8 +120,10 @@ function NumericStory() {
         </h2>
         <p className="nx:text-muted-foreground nx:typography-body-default nx:max-w-2xl">
           Live `--nx-spacing-*` variables consumed through Tailwind utilities
-          like `nx:p-4` or `nx:gap-2`. The Density toolbar changes the active
-          runtime values.
+          like `nx:p-4` or `nx:gap-2`. Steps 0–2 (up to 8px) stay fixed. From
+          step 2.5 the offset grows until step 6 (24px). There it is −4, −2, 0,
+          +2, +4 and +6px from Tight to Spacious. Larger steps keep that offset.
+          The Density toolbar changes the active runtime values.
         </p>
       </div>
       <section className="nx:flex nx:flex-col nx:gap-1">
@@ -136,8 +151,9 @@ function RolesStory() {
         </h2>
         <p className="nx:text-muted-foreground nx:typography-body-default nx:max-w-2xl">
           Role tokens express semantic rhythm for cards, dialogs, sections, and
-          stacks. They are the density-sensitive spacing controls most UI
-          components consume.
+          stacks. Each has one step&rsquo;s value at every density:
+          `container-p` is step 6, `container-gap` step 4, `layout-section-gap`
+          step 8 and `layout-stack-gap` step 2, which stays 8px.
         </p>
       </div>
       <section className="nx:flex nx:flex-col nx:gap-1">
@@ -167,7 +183,7 @@ export const ActiveMode: Story = {
     docs: {
       description: {
         story:
-          'Live render of role-named utilities under the active Density toolbar. Switching density resizes the boxes below through provider-emitted CSS variables.',
+          'Live render of role-named utilities under the active Density toolbar. Switching density resizes the container padding, container gap and section gap through provider-emitted CSS variables. The stack gap stays 8px at every density.',
       },
     },
   },
@@ -179,7 +195,8 @@ export const ActiveMode: Story = {
         </h2>
         <p className="nx:text-muted-foreground nx:typography-body-default nx:max-w-2xl">
           Switch the Density toolbar. These examples use role utilities, so they
-          resize through the same runtime variables consumers receive.
+          resize through the same runtime variables consumers receive. The stack
+          gap stays 8px at every density.
         </p>
       </div>
 
@@ -210,4 +227,65 @@ export const ActiveMode: Story = {
       </section>
     </div>
   ),
+};
+
+const GLYPH_DENSITIES = [
+  'tight',
+  'spacious',
+] as const satisfies readonly NxdsDensity[];
+
+export const GlyphsIgnoreDensity: Story = {
+  tags: ['!autodocs'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Icons keep their glyph size while the spacing around them follows density. Each icon renders the same in Tight and Spacious.',
+      },
+    },
+  },
+  render: () => (
+    <div className="nx:flex nx:flex-col nx:gap-6 nx:p-10 nx:bg-background">
+      {GLYPH_DENSITIES.map((density) => (
+        <div
+          key={density}
+          data-density={density}
+          data-testid={`glyphs-${density}`}
+          className="nx:flex nx:items-center nx:gap-4"
+        >
+          <Kbd>
+            <CommandIcon />K
+          </Kbd>
+          <Checkbox defaultChecked aria-label={`${density} checkbox`} />
+          <RadioGroup defaultValue="on" aria-label={`${density} radio`}>
+            <RadioGroupItem value="on" aria-label={`${density} radio item`} />
+          </RadioGroup>
+          <Spinner />
+          <Toggle aria-label={`${density} toggle`}>
+            <StarIcon />
+          </Toggle>
+          <EmptyStateMedia variant="icon">
+            <TrayIcon />
+          </EmptyStateMedia>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const [tight, spacious] = GLYPH_DENSITIES.map((density) =>
+      within(canvasElement).getByTestId(`glyphs-${density}`)
+    );
+    const spacing = (root: HTMLElement) =>
+      parseFloat(getComputedStyle(root).getPropertyValue('--nx-spacing-4'));
+    await expect(spacing(spacious!)).toBeGreaterThan(spacing(tight!));
+
+    const glyphs = (root: HTMLElement) =>
+      [...root.querySelectorAll('svg')].map((svg) => {
+        const { width, height } = svg.getBoundingClientRect();
+        return { width, height };
+      });
+    const tightGlyphs = glyphs(tight!);
+    await expect(tightGlyphs.length).toBeGreaterThan(0);
+    await expect(glyphs(spacious!)).toEqual(tightGlyphs);
+  },
 };

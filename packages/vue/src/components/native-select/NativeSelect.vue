@@ -69,7 +69,7 @@ watch(
     <IconChevronDown
       aria-hidden="true"
       data-slot="native-select-icon"
-      class="nx:pointer-events-none nx:absolute nx:top-1/2 nx:right-3.5 nx:size-4 nx:-translate-y-1/2 nx:text-muted-foreground nx:select-none nx:group-has-[select:disabled]/native-select:text-disabled-foreground"
+      class="nx:pointer-events-none nx:absolute nx:top-1/2 nx:right-3.5 nx:size-icon-glyph-default nx:-translate-y-1/2 nx:text-muted-foreground nx:select-none nx:group-has-[select:disabled]/native-select:text-disabled-foreground"
     />
   </div>
 </template>

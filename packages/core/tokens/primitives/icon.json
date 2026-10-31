@@ -1,5 +1,21 @@
 {
   "glyph": {
+    "xs": {
+      "$value": {
+        "value": 12,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$description": "Icon beside 12px text, such as in Kbd. The same at every density."
+    },
+    "sm": {
+      "$value": {
+        "value": 14,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$description": "Small icon or mark, such as a Badge icon or a Checkbox check. The same at every density."
+    },
     "default": {
       "$value": {
         "value": 16,

@@ -176,7 +176,7 @@ export const States: Story = {
             trailing={
               <CheckCircleIcon
                 weight="fill"
-                className="nx:size-4 nx:text-success-subtle-foreground"
+                className="nx:size-icon-glyph-default nx:text-success-subtle-foreground"
               />
             }
           >

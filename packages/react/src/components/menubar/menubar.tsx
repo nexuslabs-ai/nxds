@@ -113,14 +113,14 @@ function MenubarSubTrigger({
         'nx:rounded-sm nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-[state=open]:bg-popover-hover nx:data-[state=open]:text-popover-foreground',
-        'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-4 nx:[&_svg]:shrink-0 nx:icon-stroke',
+        'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
         inset && 'nx:pl-8',
         className
       )}
       {...props}
     >
       {children}
-      <IconChevronRight className="nx:ml-auto nx:size-4" />
+      <IconChevronRight className="nx:ml-auto nx:size-icon-glyph-default" />
     </MenubarPrimitive.SubTrigger>
   );
 }
@@ -189,7 +189,7 @@ function MenubarContent({
 }
 
 const menubarItemVariants = cva(
-  'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2 nx:rounded-sm nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none nx:transition-colors nx:focus:bg-popover-hover nx:focus:text-popover-foreground nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-4 nx:[&_svg]:shrink-0 nx:icon-stroke',
+  'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2 nx:rounded-sm nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none nx:transition-colors nx:focus:bg-popover-hover nx:focus:text-popover-foreground nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
   {
     variants: {
       variant: {
@@ -271,7 +271,7 @@ function MenubarCheckboxItem({
       checked={checked}
       {...props}
     >
-      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-3.5 nx:items-center nx:justify-center">
+      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-icon-glyph-default nx:items-center nx:justify-center">
         <MenubarPrimitive.ItemIndicator
           forceMount
           data-slot="menubar-checkbox-indicator"
@@ -280,7 +280,7 @@ function MenubarCheckboxItem({
             data-slot="menubar-checkbox-indicator-icon"
             aria-hidden="true"
             className={cn(
-              'nx:size-4',
+              'nx:size-icon-glyph-default',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100',
               'nx:group-data-[state=indeterminate]:scale-100 nx:group-data-[state=indeterminate]:opacity-100'
@@ -321,7 +321,7 @@ function MenubarRadioItem({
       )}
       {...props}
     >
-      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-3.5 nx:items-center nx:justify-center">
+      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-icon-glyph-default nx:items-center nx:justify-center">
         <MenubarPrimitive.ItemIndicator
           forceMount
           data-slot="menubar-radio-indicator"
@@ -330,7 +330,7 @@ function MenubarRadioItem({
             data-slot="menubar-radio-indicator-icon"
             aria-hidden="true"
             className={cn(
-              'nx:size-icon-[var(--nx-spacing-2)]',
+              'nx:size-icon-[8px]',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
             )}

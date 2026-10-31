@@ -42,25 +42,25 @@ const fieldIcons: Record<FilterField['type'], React.ReactNode> = {
   text: (
     <IconLetterCase
       aria-hidden="true"
-      className="nx:size-icon-[var(--nx-spacing-3_5)] nx:shrink-0 nx:text-muted-foreground"
+      className="nx:size-icon-glyph-sm nx:shrink-0 nx:text-muted-foreground"
     />
   ),
   number: (
     <IconHash
       aria-hidden="true"
-      className="nx:size-icon-[var(--nx-spacing-3_5)] nx:shrink-0 nx:text-muted-foreground"
+      className="nx:size-icon-glyph-sm nx:shrink-0 nx:text-muted-foreground"
     />
   ),
   date: (
     <IconCalendar
       aria-hidden="true"
-      className="nx:size-icon-[var(--nx-spacing-3_5)] nx:shrink-0 nx:text-muted-foreground"
+      className="nx:size-icon-glyph-sm nx:shrink-0 nx:text-muted-foreground"
     />
   ),
   choice: (
     <IconList
       aria-hidden="true"
-      className="nx:size-icon-[var(--nx-spacing-3_5)] nx:shrink-0 nx:text-muted-foreground"
+      className="nx:size-icon-glyph-sm nx:shrink-0 nx:text-muted-foreground"
     />
   ),
 };

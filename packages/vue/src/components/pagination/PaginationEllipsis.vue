@@ -22,7 +22,7 @@ const props = defineProps<PaginationEllipsisProps>();
       )
     "
   >
-    <IconDots class="nx:size-4" />
+    <IconDots class="nx:size-icon-glyph-default" />
     <span class="nx:sr-only">More pages</span>
   </span>
 </template>

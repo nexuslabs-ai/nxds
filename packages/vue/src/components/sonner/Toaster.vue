@@ -123,12 +123,20 @@ const forwarded = computed(
       :theme="props.theme ?? documentTheme"
       :style="style"
     >
-      <template #success-icon><IconCircleCheck class="nx:size-4" /></template>
-      <template #info-icon><IconInfoCircle class="nx:size-4" /></template>
-      <template #warning-icon><IconAlertTriangle class="nx:size-4" /></template>
-      <template #error-icon><IconAlertCircle class="nx:size-4" /></template>
+      <template #success-icon
+        ><IconCircleCheck class="nx:size-icon-glyph-default"
+      /></template>
+      <template #info-icon
+        ><IconInfoCircle class="nx:size-icon-glyph-default"
+      /></template>
+      <template #warning-icon
+        ><IconAlertTriangle class="nx:size-icon-glyph-default"
+      /></template>
+      <template #error-icon
+        ><IconAlertCircle class="nx:size-icon-glyph-default"
+      /></template>
       <template #loading-icon
-        ><IconLoader2 class="nx:size-4 nx:animate-spin"
+        ><IconLoader2 class="nx:size-icon-glyph-default nx:animate-spin"
       /></template>
     </Sonner>
   </div>

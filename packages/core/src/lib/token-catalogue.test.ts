@@ -12,6 +12,7 @@ import type {
 import {
   appearancePrefsToCss,
   DEFAULT_NXDS_APPEARANCE,
+  DENSITY_OPTIONS,
   type NxdsAppearancePrefs,
 } from './appearance-model';
 import type { Mode } from './palette';
@@ -470,6 +471,109 @@ describe('token catalogue', () => {
         ),
         utility
       ).toEqual(utilities.get(utility));
+    }
+  });
+});
+
+describe('density spacing order', () => {
+  const densities = DENSITY_OPTIONS.map((option) => option.value);
+  const spacing = catalogue.filter((token) => token.family === 'spacing');
+  const roles = spacing.filter(
+    (token) => !token.name.startsWith('--nx-spacing-')
+  );
+  const variantOf = (token: CatalogueToken, density: string) => {
+    const variant = token.variants.find((value) => value.preset === density);
+    expect(variant, `${token.name} ${density}`).toBeDefined();
+    return variant!;
+  };
+  const px = (token: CatalogueToken, density: string) =>
+    Number.parseFloat(variantOf(token, density).declarations[0]!.value);
+  const step = (n: number) => byName.get(`--nx-spacing-${n}`)!;
+  // Steps 0–2 are density-invariant. The density offset ramps in from step 2.5
+  // and reaches its full size at step 6. Step 2.5 moves only 1px across the
+  // densities, so neighbours can't stay apart there, and RAMP starts at step 3.
+  const RAMP = [3, 4, 5, 6];
+
+  it('never reduces spacing when moving to a more spacious density', () => {
+    for (const token of spacing) {
+      let previous = 0;
+      for (const density of densities) {
+        const value = px(token, density);
+        expect(value, `${token.name} ${density}`).toBeGreaterThanOrEqual(
+          previous
+        );
+        previous = value;
+      }
+    }
+  });
+
+  it('keeps numeric spacing steps strictly increasing within each density', () => {
+    const numeric = spacing
+      .filter((token) => /^--nx-spacing-[0-9_]+$/.test(token.name))
+      .sort(
+        (a, b) =>
+          Number(a.name.replace('--nx-spacing-', '').replace('_', '.')) -
+          Number(b.name.replace('--nx-spacing-', '').replace('_', '.'))
+      );
+    for (const density of densities) {
+      let previous = -1;
+      for (const token of numeric) {
+        const value = px(token, density);
+        expect(value, `${token.name} ${density}`).toBeGreaterThan(previous);
+        previous = value;
+      }
+    }
+  });
+
+  it('changes step-to-step gaps by at most 1px through the density ramp', () => {
+    for (const density of densities) {
+      const gaps = [2, ...RAMP].map(
+        (n) => px(step(n + 1), density) - px(step(n), density)
+      );
+      for (let i = 1; i < gaps.length; i++) {
+        expect(
+          Math.abs(gaps[i]! - gaps[i - 1]!),
+          `${density} gaps ${gaps.join(',')}`
+        ).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  it('gives each role token the value of the step it references, at every density', () => {
+    expect(roles.length).toBeGreaterThan(0);
+    for (const token of roles) {
+      for (const density of densities) {
+        const { target } = only(variantOf(token, density).references);
+        expect(px(token, density), `${token.name} ${density}`).toBe(
+          px(byName.get(target)!, density)
+        );
+      }
+    }
+  });
+
+  it('references the same step from each role token at every density', () => {
+    for (const token of roles) {
+      const targets = new Set(
+        densities.map(
+          (density) => only(variantOf(token, density).references).target
+        )
+      );
+      expect([...targets], token.name).toHaveLength(1);
+    }
+  });
+
+  it('keeps neighbouring densities apart at each ramp step', () => {
+    for (const token of RAMP.map(step)) {
+      const values = densities.map((density) => px(token, density));
+      // Step 3 carries only 3px of ramp across six densities, so a pair may
+      // share a value there, but never three in a row.
+      const reach = token === step(3) ? 2 : 1;
+      for (let i = 0; i + reach < values.length; i++) {
+        expect(
+          values[i + reach],
+          `${token.name} ${densities[i]}→${densities[i + reach]}`
+        ).toBeGreaterThan(values[i]!);
+      }
     }
   });
 });

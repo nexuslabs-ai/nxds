@@ -25,6 +25,8 @@ export const NXDS_THEME_SCALES = {
  */
 export const NXDS_CLASS_GROUPS = {
   size: [
+    'size-icon-glyph-xs',
+    'size-icon-glyph-sm',
     'size-icon-glyph-default',
     {
       'size-icon': [

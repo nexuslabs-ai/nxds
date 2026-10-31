@@ -256,7 +256,7 @@ function DatePicker({
             caption_label: cn(
               'nx:typography-label-default nx:select-none',
               captionLayout !== 'label' &&
-                'nx:flex nx:h-8 nx:items-center nx:gap-1 nx:rounded-md nx:pr-1 nx:pl-2 nx:[&>svg]:size-icon-[var(--nx-spacing-3_5)] nx:[&>svg]:text-muted-foreground nx:icon-stroke',
+                'nx:flex nx:h-8 nx:items-center nx:gap-1 nx:rounded-md nx:pr-1 nx:pl-2 nx:[&>svg]:size-icon-glyph-sm nx:[&>svg]:text-muted-foreground nx:icon-stroke',
               defaultClassNames.caption_label
             ),
             day: cn(
@@ -291,7 +291,10 @@ function DatePickerChevron({
   if (orientation === 'left') {
     return (
       <IconChevronLeft
-        className={cn('nx:size-4 nx:text-muted-foreground', className)}
+        className={cn(
+          'nx:size-icon-glyph-default nx:text-muted-foreground',
+          className
+        )}
         {...props}
       />
     );
@@ -300,13 +303,21 @@ function DatePickerChevron({
   if (orientation === 'right') {
     return (
       <IconChevronRight
-        className={cn('nx:size-4 nx:text-muted-foreground', className)}
+        className={cn(
+          'nx:size-icon-glyph-default nx:text-muted-foreground',
+          className
+        )}
         {...props}
       />
     );
   }
 
-  return <IconChevronDown className={cn('nx:size-4', className)} {...props} />;
+  return (
+    <IconChevronDown
+      className={cn('nx:size-icon-glyph-default', className)}
+      {...props}
+    />
+  );
 }
 
 // react-day-picker passes `scope="row"` / `role="rowheader"`, valid only on a

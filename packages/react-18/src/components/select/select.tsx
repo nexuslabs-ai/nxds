@@ -91,7 +91,7 @@ const SelectTrigger = React.forwardRef<
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <IconChevronDown className="nx:size-4 nx:text-muted-foreground nx:group-disabled/select-trigger:text-disabled-foreground" />
+        <IconChevronDown className="nx:size-icon-glyph-default nx:text-muted-foreground nx:group-disabled/select-trigger:text-disabled-foreground" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -124,7 +124,7 @@ const SelectScrollUpButton = React.forwardRef<
       )}
       {...props}
     >
-      <IconChevronUp className="nx:size-4" />
+      <IconChevronUp className="nx:size-icon-glyph-default" />
     </SelectPrimitive.ScrollUpButton>
   );
 });
@@ -156,7 +156,7 @@ const SelectScrollDownButton = React.forwardRef<
       )}
       {...props}
     >
-      <IconChevronDown className="nx:size-4" />
+      <IconChevronDown className="nx:size-icon-glyph-default" />
     </SelectPrimitive.ScrollDownButton>
   );
 });
@@ -281,14 +281,14 @@ const SelectItem = React.forwardRef<
       )}
       {...props}
     >
-      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-3.5 nx:items-center nx:justify-center">
+      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-icon-glyph-default nx:items-center nx:justify-center">
         {/* SelectPrimitive.ItemIndicator does not support forceMount and unmounts
             when unchecked, so this icon mirrors item state for the cross-fade. */}
         <IconCheck
           data-slot="select-item-indicator-icon"
           aria-hidden="true"
           className={cn(
-            'nx:size-4',
+            'nx:size-icon-glyph-default',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )}

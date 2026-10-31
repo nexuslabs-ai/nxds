@@ -205,14 +205,18 @@ const navButtonClass = computed(() =>
           aria-label="Go to the Previous Month"
           :class="navButtonClass"
         >
-          <IconChevronLeft class="nx:size-4 nx:text-muted-foreground" />
+          <IconChevronLeft
+            class="nx:size-icon-glyph-default nx:text-muted-foreground"
+          />
         </component>
         <component
           :is="parts.Next"
           aria-label="Go to the Next Month"
           :class="navButtonClass"
         >
-          <IconChevronRight class="nx:size-4 nx:text-muted-foreground" />
+          <IconChevronRight
+            class="nx:size-icon-glyph-default nx:text-muted-foreground"
+          />
         </component>
       </nav>
       <div

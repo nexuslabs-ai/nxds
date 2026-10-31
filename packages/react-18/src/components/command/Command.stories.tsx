@@ -237,7 +237,7 @@ export const AsyncLoading: Story = {
         <Spinner
           aria-hidden="true"
           role="presentation"
-          className="nx:size-icon-[var(--nx-spacing-3_5)]"
+          className="nx:size-icon-glyph-sm"
         />
         Loading commands...
       </CommandLoading>

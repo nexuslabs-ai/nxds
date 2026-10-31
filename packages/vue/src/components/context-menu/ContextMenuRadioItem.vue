@@ -40,7 +40,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     "
   >
     <span
-      class="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-3.5 nx:items-center nx:justify-center"
+      class="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-icon-glyph-default nx:items-center nx:justify-center"
     >
       <ContextMenuItemIndicator
         force-mount
@@ -51,7 +51,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
           aria-hidden="true"
           :class="
             cn(
-              'nx:size-icon-[var(--nx-spacing-2)]',
+              'nx:size-icon-[8px]',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
             )
