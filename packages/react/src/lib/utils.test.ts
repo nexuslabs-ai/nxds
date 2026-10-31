@@ -265,23 +265,31 @@ describe('cn', () => {
     );
   });
 
-  it('lets truncate displace a text-wrap atomic', () => {
+  it('lets truncate displace a title text-balance', () => {
     expect(
       cn('nx:typography-heading-small nx:text-balance', 'nx:truncate')
     ).toBe('nx:typography-heading-small nx:truncate');
+  });
+
+  it.each([
+    ['overflow', 'nx:overflow-visible'],
+    ['overflow-x', 'nx:overflow-x-auto'],
+    ['overflow-y', 'nx:overflow-y-auto'],
+    ['text-overflow', 'nx:text-clip'],
+    ['whitespace', 'nx:whitespace-normal'],
+    ['text-wrap', 'nx:text-wrap'],
+  ])('lets truncate displace the %s atomic', (_group, atomic) => {
+    expect(cn(atomic, 'nx:truncate')).toBe('nx:truncate');
+  });
+
+  it('keeps truncate beside a later text-overflow atomic', () => {
+    expect(cn('nx:truncate', 'nx:text-clip')).toBe('nx:truncate nx:text-clip');
   });
 
   it('keeps a text-wrap atomic beside text-ellipsis', () => {
     expect(cn('nx:text-nowrap', 'nx:text-ellipsis')).toBe(
       'nx:text-nowrap nx:text-ellipsis'
     );
-  });
-
-  it.each([
-    ['nx:truncate', 'nx:text-ellipsis'],
-    ['nx:text-clip', 'nx:truncate'],
-  ])('lets %s and %s resolve last-wins', (first, last) => {
-    expect(cn(first, last)).toBe(last);
   });
 
   it('conflicts with exactly the groups the typography composites declare', () => {
