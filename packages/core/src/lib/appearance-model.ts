@@ -113,10 +113,10 @@ export const UI_SCALE_OPTIONS = [
 ] as const satisfies readonly { value: NxdsUiScale; label: string }[];
 
 /** The text sizes, each labelled with its label size at the Default UI scale. */
-export const TEXT_SIZE_OPTIONS = TEXT_SIZES.map((value) => ({
-  value,
-  label: `${value}px`,
-})) satisfies readonly { value: NxdsTextSize; label: string }[];
+export const TEXT_SIZE_OPTIONS: readonly {
+  value: NxdsTextSize;
+  label: string;
+}[] = TEXT_SIZES.map((value) => ({ value, label: `${value}px` }));
 
 export const DENSITY_OPTIONS = [
   { value: 'tight', label: 'Tight' },
