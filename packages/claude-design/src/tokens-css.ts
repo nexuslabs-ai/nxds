@@ -28,6 +28,8 @@ const LIST_FAMILY_KEYS = [
   'zIndex',
   'motion',
   'icon',
+  'uiScale',
+  'width',
   'typeScale',
 ] as const;
 

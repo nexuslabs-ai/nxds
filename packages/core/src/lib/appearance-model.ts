@@ -1,4 +1,10 @@
-import typographyTokens from '../../tokens/primitives/typography/typography-default.json';
+import {
+  MIN_TEXT_PX,
+  NON_DEFAULT_UI_SCALES,
+  scaleText,
+  type UiScale,
+  uiScaleSelector,
+} from '../token-source/ui-scale';
 
 import { normalizeContrast } from './contrast';
 import type { ThemeDerivationInput, ThemeSeeds } from './derive-theme';
@@ -9,6 +15,7 @@ import { inRuntimeLayer } from './runtime-layer';
 type ModeSeeds = Pick<ThemeSeeds, 'background' | 'foreground'>;
 
 export type NxdsAppearanceMode = 'light' | 'dark' | 'system';
+export type NxdsUiScale = UiScale;
 export type NxdsDensity =
   | 'tight'
   | 'compact'
@@ -30,7 +37,6 @@ export interface NxdsAppearancePrefs {
   /** The heading `font-family` stack. `null` follows `uiFont`. */
   headingFont: string | null;
   codeFont: string;
-  uiFontSize: number;
   codeFontSize: number;
   reduceMotion: boolean;
   pointerCursors: boolean;
@@ -43,6 +49,7 @@ export interface NxdsAppearanceState {
   surfaceTone: NxdsSurfaceTone;
   lightContrast: number;
   darkContrast: number;
+  uiScale: NxdsUiScale;
   density: NxdsDensity;
   corners: NxdsCorners;
   elevation: NxdsElevation;
@@ -93,6 +100,13 @@ export const BASE_TONE_SEEDS: Record<
   },
 };
 
+export const UI_SCALE_OPTIONS = [
+  { value: 'small', label: 'Small' },
+  { value: 'default', label: 'Default' },
+  { value: 'large', label: 'Large' },
+  { value: 'larger', label: 'Larger' },
+] as const satisfies readonly { value: NxdsUiScale; label: string }[];
+
 export const DENSITY_OPTIONS = [
   { value: 'tight', label: 'Tight' },
   { value: 'compact', label: 'Compact' },
@@ -130,6 +144,7 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
   surfaceTone: 'zinc',
   lightContrast: 50,
   darkContrast: 50,
+  uiScale: 'default',
   density: 'default',
   corners: 'subtle',
   elevation: 'quiet',
@@ -138,7 +153,6 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
     uiFont: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     headingFont: null,
     codeFont: 'ui-monospace, "SF Mono", Menlo, monospace',
-    uiFontSize: 14,
     codeFontSize: 12,
     reduceMotion: false,
     pointerCursors: false,
@@ -147,7 +161,7 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
 };
 
 /** The font sizes, in px, the appearance prefs take. */
-export const FONT_SIZE_PX_MIN = 8;
+export const FONT_SIZE_PX_MIN = MIN_TEXT_PX;
 export const FONT_SIZE_PX_MAX = 32;
 
 const APPEARANCE_MODES = new Set<NxdsAppearanceMode>([
@@ -157,6 +171,9 @@ const APPEARANCE_MODES = new Set<NxdsAppearanceMode>([
 ]);
 const SURFACE_TONES = new Set<NxdsSurfaceTone>(
   BASE_TONE_OPTIONS.map((option) => option.value)
+);
+const SCALES = new Set<NxdsUiScale>(
+  UI_SCALE_OPTIONS.map((option) => option.value)
 );
 const DENSITIES = new Set<NxdsDensity>(
   DENSITY_OPTIONS.map((option) => option.value)
@@ -201,24 +218,6 @@ const clampFontSize = (value: unknown, fallback: number): number =>
   typeof value === 'number' && Number.isFinite(value) && value > 0
     ? Math.min(FONT_SIZE_PX_MAX, Math.max(FONT_SIZE_PX_MIN, value))
     : fallback;
-
-function formatPx(value: number): string {
-  return `${Number(value.toFixed(4))}px`;
-}
-
-function typographyScaleVariables(uiPx: number): string {
-  const scale = uiPx / DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize;
-  const sizeVars = Object.entries(typographyTokens.size).map(
-    ([name, token]) =>
-      `  --nx-typography-size-${name}: ${formatPx(token.$value.value * scale)};`
-  );
-  const lineHeightVars = Object.entries(typographyTokens['line-height']).map(
-    ([name, token]) =>
-      `  --nx-typography-line-height-${name}: ${formatPx(token.$value.value * scale)};`
-  );
-
-  return [...sizeVars, ...lineHeightVars].join('\n');
-}
 
 // Retired public-mode codename -> friendly, applied to persisted state on read
 // (see normalizeAppearanceModeIds). Internal; correctness is covered behaviorally
@@ -267,7 +266,6 @@ export function sanitizeNxdsAppearancePrefs(raw: unknown): NxdsAppearancePrefs {
     uiFont: fontFamilyOr(o.uiFont, d.uiFont),
     headingFont: fontFamilyOr(o.headingFont, d.headingFont),
     codeFont: fontFamilyOr(o.codeFont, d.codeFont),
-    uiFontSize: clampFontSize(o.uiFontSize, d.uiFontSize),
     codeFontSize: clampFontSize(o.codeFontSize, d.codeFontSize),
     reduceMotion: boolOr(o.reduceMotion, d.reduceMotion),
     pointerCursors: boolOr(o.pointerCursors, d.pointerCursors),
@@ -288,6 +286,7 @@ export function sanitizeNxdsAppearance(rawInput: unknown): NxdsAppearanceState {
     surfaceTone: enumOr(raw.surfaceTone, SURFACE_TONES, d.surfaceTone),
     lightContrast: normalizeContrast(raw.lightContrast, d.lightContrast),
     darkContrast: normalizeContrast(raw.darkContrast, d.darkContrast),
+    uiScale: enumOr(raw.uiScale, SCALES, d.uiScale),
     density: enumOr(raw.density, DENSITIES, d.density),
     corners: enumOr(raw.corners, CORNERS, d.corners),
     elevation: enumOr(raw.elevation, ELEVATIONS, d.elevation),
@@ -308,25 +307,32 @@ export function createNxdsThemeContract(
   };
 }
 
+/**
+ * The code size at each other UI scale. `codeFontSize` is the size at the
+ * Default scale, and code text grows with the label text.
+ */
+function scaledCodeSizes(codePx: number): string {
+  return NON_DEFAULT_UI_SCALES.map(
+    (scale) =>
+      `${uiScaleSelector(scale)} {\n  --nx-typography-code-size: ${scaleText(codePx, scale)}px;\n}`
+  ).join('\n');
+}
+
 export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
-  const uiPx = clampFontSize(
-    prefs.uiFontSize,
-    DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize
-  );
   const codePx = clampFontSize(
     prefs.codeFontSize,
     DEFAULT_NXDS_APPEARANCE.prefs.codeFontSize
   );
-  // Font and type size reach only nxds. The toggles below apply to the whole
+  // Fonts and code size reach only nxds. The toggles below apply to the whole
   // page, host included, when the user turns them on.
   const blocks: string[] = [
     inRuntimeLayer(`:root {
   --nx-typography-family-font-sans: ${prefs.uiFont};
   --nx-typography-family-font-heading: ${prefs.headingFont ?? 'var(--nx-typography-family-font-sans)'};
   --nx-typography-family-font-mono: ${prefs.codeFont};
-  --nx-typography-code-size: ${formatPx(codePx)};
-${typographyScaleVariables(uiPx)}
-}`),
+  --nx-typography-code-size: ${scaleText(codePx, 'default')}px;
+}
+${scaledCodeSizes(codePx)}`),
   ];
   if (prefs.fontSmoothing) {
     blocks.push(

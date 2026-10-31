@@ -62,11 +62,12 @@ const toasterIcons = {
 };
 
 /**
- * Sonner reads these custom properties off the toaster container to colour each
- * toast; map every one to its nxds semantic token. The `-bg`/`-text`/`-border`
+ * Sonner reads these custom properties off the toaster container to size and
+ * colour each toast; map every one to its nxds token. The `-bg`/`-text`/`-border`
  * triples for success/error/warning/info apply when `richColors` is enabled.
  */
 const toasterThemeVars = {
+  '--width': 'calc(356px*var(--nx-ui-scale))',
   '--normal-bg': 'var(--nx-color-container)',
   '--normal-text': 'var(--nx-color-foreground)',
   '--normal-border': 'var(--nx-color-border-default)',

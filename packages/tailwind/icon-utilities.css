@@ -18,6 +18,12 @@
   --nx-icon-size: var(--nx-icon-glyph-default);
 }
 
+@utility size-icon-glyph-lg {
+  width: var(--nx-icon-glyph-lg);
+  height: var(--nx-icon-glyph-lg);
+  --nx-icon-size: var(--nx-icon-glyph-lg);
+}
+
 @utility size-icon-* {
   width: --value([*]);
   height: --value([*]);

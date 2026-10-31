@@ -7,6 +7,7 @@ import {
   DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
   ELEVATION_OPTIONS,
+  UI_SCALE_OPTIONS,
 } from '@nxds/core';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
@@ -236,6 +237,11 @@ export const LayoutModeOptions: Story = {
   play: async ({ canvasElement }) => {
     await expectSelectOptions(
       canvasElement,
+      'UI scale',
+      UI_SCALE_OPTIONS.map((option) => option.label)
+    );
+    await expectSelectOptions(
+      canvasElement,
       'Density',
       DENSITY_OPTIONS.map((option) => option.label)
     );
@@ -248,6 +254,32 @@ export const LayoutModeOptions: Story = {
       canvasElement,
       'Elevation',
       ELEVATION_OPTIONS.map((option) => option.label)
+    );
+  },
+};
+
+async function pickUiScale(canvasElement: HTMLElement, label: string) {
+  await userEvent.click(
+    within(canvasElement).getByRole('combobox', { name: 'UI scale' })
+  );
+  await userEvent.click(
+    await within(document.body).findByRole('option', { name: label })
+  );
+}
+
+export const UiScaleSelection: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const root = canvasElement.ownerDocument.documentElement;
+
+    await pickUiScale(canvasElement, 'Large');
+    await expect(canvas.getByText('uiScale: "large",')).toBeInTheDocument();
+    await waitFor(() => expect(root).toHaveAttribute('data-ui-scale', 'large'));
+
+    // Put the page back at the Default scale for the next story.
+    await pickUiScale(canvasElement, 'Default');
+    await waitFor(() =>
+      expect(root).toHaveAttribute('data-ui-scale', 'default')
     );
   },
 };

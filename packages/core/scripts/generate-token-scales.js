@@ -1,7 +1,9 @@
 // Writes src/lib/token-scales.generated.ts: the spacing steps and palette
-// names the runtime types are built from, read from the token JSON. `--check`
-// fails instead of writing when the committed file is stale.
+// names the runtime types are built from, read from the token JSON, and
+// Tailwind's page widths, which the UI scale multiplies. `--check` fails
+// instead of writing when the committed file is stale.
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as prettier from 'prettier';
@@ -40,8 +42,21 @@ function paletteNames() {
     .map(([name]) => name);
 }
 
+// The `--container-*` widths `max-w-*` and `w-*` read, in rem.
+function pageWidths() {
+  const theme = fs.readFileSync(
+    createRequire(import.meta.url).resolve('tailwindcss/theme.css'),
+    'utf8'
+  );
+  return Object.fromEntries(
+    [...theme.matchAll(/--container-([\w-]+):\s*([\d.]+)rem;/g)].map(
+      ([, name, rem]) => [name, Number(rem)]
+    )
+  );
+}
+
 async function render() {
-  const source = `// Generated from packages/core/tokens by scripts/generate-token-scales.js.
+  const source = `// Generated from packages/core/tokens and Tailwind's theme by scripts/generate-token-scales.js.
 // Run \`pnpm --filter @nxds/core generate:scales\` after editing the tokens.
 
 /** The spacing scale. Each step has its own \`--nx-spacing-*\` variable. */
@@ -54,6 +69,9 @@ export type SpacingStep = (typeof SPACING_STEPS)[number];
 export const PRIMITIVE_PALETTE_NAMES = ${JSON.stringify(paletteNames())} as const;
 
 export type PrimitivePaletteName = (typeof PRIMITIVE_PALETTE_NAMES)[number];
+
+/** Tailwind's page widths in rem, by name. The UI scale multiplies them. */
+export const PAGE_WIDTHS_REM = ${JSON.stringify(pageWidths())} as const;
 `;
   const config = await prettier.resolveConfig(OUTPUT);
   return prettier.format(source, { ...config, filepath: OUTPUT });

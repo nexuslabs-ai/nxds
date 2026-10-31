@@ -30,15 +30,15 @@ export function spacingTokenKind(
 }
 
 /**
- * The value a spacing token has in its density file: its own, or for a
- * `{spacing.N}` reference, step N's value in the same file. Throws if the
- * reference names anything but a step with a value of its own.
+ * The step a `{spacing.N}` token references in its density file, or
+ * `undefined` for a token with a value of its own. Throws if the reference
+ * names anything but a step with a value of its own.
  */
-export function spacingValue(
+export function referencedStep(
   token: ExtractedToken,
   fileTokens: readonly ExtractedToken[]
-): TokenValue {
-  if (!isReference(token.value)) return token.value;
+): ExtractedToken | undefined {
+  if (!isReference(token.value)) return undefined;
   const reference = extractRefPath(token.value);
   const step = fileTokens.find(
     ({ path }) =>
@@ -46,10 +46,21 @@ export function spacingValue(
   );
   if (!step || isReference(step.value)) {
     throw new Error(
-      `spacingValue: ${token.path.join('.')} references {${reference}}, which is not a spacing step with a value`
+      `referencedStep: ${token.path.join('.')} references {${reference}}, which is not a spacing step with a value`
     );
   }
-  return step.value;
+  return step;
+}
+
+/**
+ * The value a spacing token has in its density file: its own, or the value
+ * of the step it references.
+ */
+export function spacingValue(
+  token: ExtractedToken,
+  fileTokens: readonly ExtractedToken[]
+): TokenValue {
+  return (referencedStep(token, fileTokens) ?? token).value;
 }
 
 export function splitSpacingTokens<T extends { path: readonly string[] }>(

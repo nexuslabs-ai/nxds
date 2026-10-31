@@ -28,6 +28,7 @@ export const NXDS_CLASS_GROUPS = {
     'size-icon-glyph-xs',
     'size-icon-glyph-sm',
     'size-icon-glyph-default',
+    'size-icon-glyph-lg',
     {
       'size-icon': [
         validators.isArbitraryValue,

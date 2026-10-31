@@ -150,7 +150,7 @@ export const overlayFooterVariants = cva(
 );
 
 export const overlayCloseButtonClassName = [
-  'nx:absolute nx:right-6 nx:top-6 nx:rounded-sm nx:border-0 nx:bg-transparent nx:p-1 nx:text-muted-foreground-subtle',
+  'nx:absolute nx:target-24 nx:right-6 nx:top-6 nx:rounded-sm nx:border-0 nx:bg-transparent nx:p-1 nx:text-muted-foreground-subtle',
   'nx:transition-control',
   'nx:hover:bg-container-hover nx:hover:text-foreground',
   'nx:focus-visible:bg-container-hover nx:focus-visible:text-foreground',

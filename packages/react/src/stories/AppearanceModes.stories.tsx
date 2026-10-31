@@ -1,4 +1,4 @@
-import { DEFAULT_NXDS_APPEARANCE } from '@nxds/core';
+import type { NxdsUiScale } from '@nxds/core';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, waitFor, within } from 'storybook/test';
 
@@ -18,7 +18,13 @@ const SIZES = [
   { size: 'lg', height: '--nx-spacing-12' },
 ] as const;
 
-const LABEL_CAPS_LINE_HEIGHT_PX = 12;
+// 12px at the Default scale, times 12/14, 16/14 or 18/14, rounded to even px.
+const LABEL_CAPS_LINE_HEIGHT: Record<NxdsUiScale, string> = {
+  small: '10px',
+  default: '12px',
+  large: '14px',
+  larger: '16px',
+};
 
 function Controls() {
   return (
@@ -65,6 +71,7 @@ const meta = {
     const root = canvasElement.ownerDocument.documentElement;
 
     await waitFor(() => {
+      expect(root).toHaveAttribute('data-ui-scale', globals.uiScale);
       expect(root).toHaveAttribute('data-density', globals.density);
       expect(root).toHaveAttribute('data-radius', globals.corners);
     });
@@ -94,12 +101,11 @@ const meta = {
       token(root, '--nx-radius-md')
     );
 
-    // The caps line box scales with uiFontSize.
+    // The caps line box follows the UI scale.
     const caps = canvas.getByTestId('label-caps');
-    const scale = globals.uiFontSize / DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize;
     await waitFor(() =>
       expect(getComputedStyle(caps).lineHeight).toBe(
-        `${LABEL_CAPS_LINE_HEIGHT_PX * scale}px`
+        LABEL_CAPS_LINE_HEIGHT[globals.uiScale as NxdsUiScale]
       )
     );
   },
@@ -118,8 +124,12 @@ export const SpaciousExtraRound: Story = {
   globals: { density: 'spacious', corners: 'extra-round' },
 };
 
-export const CompactSmoothLargeText: Story = {
-  globals: { density: 'compact', corners: 'smooth', uiFontSize: 28 },
+export const CompactSmoothLarger: Story = {
+  globals: { density: 'compact', corners: 'smooth', uiScale: 'larger' },
+};
+
+export const TightSmall: Story = {
+  globals: { density: 'tight', uiScale: 'small' },
 };
 
 export const RelaxedRound: Story = {

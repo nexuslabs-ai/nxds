@@ -41,7 +41,7 @@ function RadioGroupItem({ className, ...props }: RadioGroupItemProps) {
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"
       className={cn(
-        'nx:group nx:relative nx:target-24 nx:size-[16px] nx:shrink-0 nx:cursor-pointer nx:rounded-full nx:p-0 nx:border-default nx:border-border-default nx:bg-container nx:icon-stroke',
+        'nx:group nx:relative nx:target-24 nx:size-icon-glyph-default nx:shrink-0 nx:cursor-pointer nx:rounded-full nx:p-0 nx:border-default nx:border-border-default nx:bg-container nx:icon-stroke',
         'nx:transition-control',
         'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
         'nx:aria-invalid:border-error-border nx:aria-invalid:focus-visible:outline-focus-error',
@@ -61,7 +61,7 @@ function RadioGroupItem({ className, ...props }: RadioGroupItemProps) {
           data-slot="radio-group-dot"
           aria-hidden="true"
           className={cn(
-            'nx:size-icon-[10px] nx:text-current',
+            'nx:size-icon-[calc(var(--nx-icon-glyph-default)_-_6px)] nx:text-current',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )}

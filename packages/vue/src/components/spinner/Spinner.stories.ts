@@ -37,7 +37,7 @@ export const Sizes: Story = {
     docs: {
       description: {
         story:
-          'Size the spinner with a `size-icon` class, such as `nx:size-icon-[calc(var(--nx-icon-glyph-default)*2)]`, so its line grows with it. Tint it with `nx:text-*`.',
+          'Size the spinner with a `size-icon` class, such as `nx:size-icon-glyph-lg` or `nx:size-icon-[calc(var(--nx-icon-glyph-default)*2)]`, so its line grows with it. Tint it with `nx:text-*`.',
       },
     },
   },
@@ -46,7 +46,7 @@ export const Sizes: Story = {
     template: `
       <div class="nx:flex nx:items-center nx:gap-4 nx:text-foreground">
         <Spinner />
-        <Spinner class="nx:size-icon-[calc(var(--nx-icon-glyph-default)*1.5)]" />
+        <Spinner class="nx:size-icon-glyph-lg" />
         <Spinner class="nx:size-icon-[calc(var(--nx-icon-glyph-default)*2)] nx:text-primary-subtle-foreground" />
       </div>
     `,

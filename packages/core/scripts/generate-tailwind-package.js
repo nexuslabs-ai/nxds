@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
+import { PAGE_WIDTHS_REM } from '../src/lib/token-scales.generated.ts';
 import { formatTokenValue, resolveValue } from '../src/token-source/format.ts';
 import {
   SPACING_MODE_FILE_PATTERN,
@@ -42,6 +43,7 @@ import {
   generateThemeCSS,
   generateThemedModesCSS,
   generateTypographyUtilitiesCSS,
+  generateUiScaleCSS,
   getGoogleFontsImportFromTokens,
   log,
   parseArgs,
@@ -349,15 +351,23 @@ function generateVariablesCSS(primitiveTokens, usedModes) {
 }
 
 /**
- * Generate nxds.css using shared generateThemeCSS function.
- *
- * `spacingDefault` controls which mode lands under `:root, [data-density="X"]`
- * (i.e. which mode applies when no `data-density` attribute is set). All six
- * modes still ship in the bundle either way — the other five emit as plain
- * `[data-density="X"]` blocks. The @theme numeric subset always comes from the
- * canonical default baseline because @theme drives Tailwind's utility codegen
- * (build-time); the cascade flip happens at runtime via the per-mode blocks.
+ * The Default sizes the UI scale multiplies: the px type sizes, line heights,
+ * code size and icon glyphs, and Tailwind's rem page widths.
  */
+function uiScaleBase(typography, icon) {
+  const values = (group) =>
+    Object.fromEntries(
+      Object.entries(group).map(([name, token]) => [name, token.$value.value])
+    );
+  return {
+    sizes: values(typography.size),
+    lineHeights: values(typography['line-height']),
+    codeSize: typography.code.size.$value.value,
+    glyphs: values(icon.glyph),
+    widths: PAGE_WIDTHS_REM,
+  };
+}
+
 function generateNxdsCSS(
   primitiveMap,
   lightSemanticTokens,
@@ -468,6 +478,16 @@ function generateNxdsCSS(
     attrName: 'data-borderwidth',
     commentLabel: 'BORDER WIDTH',
     duplicateValuePrefix: null,
+  });
+  css += generateUiScaleCSS({
+    spacingModes,
+    spacingDefault,
+    radiusModes: runtimeModes.radiusModes,
+    radiusDefault: usedModes.radius,
+    base: uiScaleBase(
+      readTokenFile(typographyFilePath),
+      readTokenFile(path.join(PRIMITIVES_DIR, 'icon.json'))
+    ),
   });
   css += `}\n`;
 

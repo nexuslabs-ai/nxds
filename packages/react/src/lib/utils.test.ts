@@ -187,6 +187,11 @@ describe('cn', () => {
       'nx:size-icon-glyph-sm',
     ],
     [
+      'icon size lg',
+      'nx:size-6 nx:size-icon-glyph-lg',
+      'nx:size-icon-glyph-lg',
+    ],
+    [
       'arbitrary icon size',
       'nx:size-4 nx:size-icon-[10px]',
       'nx:size-icon-[10px]',

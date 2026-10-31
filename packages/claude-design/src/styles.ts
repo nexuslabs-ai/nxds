@@ -29,8 +29,16 @@ const ENTRY = [
 const DARK_CLASS = /(?<![\w\\-])\.dark(?![\w-])/g;
 const DARK_SCOPE = ':is(.dark, [data-theme="dark"])';
 const NXDS_CLASS = /\.nx\\:/;
-/** The selectors that hold a token's default value, before the `.dark` rewrite. */
-const DEFAULT_SELECTORS: ReadonlySet<string> = new Set([':root', '.dark']);
+/**
+ * The selectors that hold a token's default value, before the `.dark` rewrite.
+ * Tailwind writes its theme variables, such as the page widths, to
+ * `:root, :host`.
+ */
+const DEFAULT_SELECTORS: ReadonlySet<string> = new Set([
+  ':root',
+  ':host',
+  '.dark',
+]);
 
 /** The `nx:` classes `source` names. */
 export function classCandidates(source: string) {

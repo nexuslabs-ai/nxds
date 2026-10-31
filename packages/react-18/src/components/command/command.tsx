@@ -171,7 +171,7 @@ const CommandList = React.forwardRef<
     <CommandPrimitive.List
       data-slot="command-list"
       className={cn(
-        'nx:max-h-[300px] nx:overflow-y-auto nx:overflow-x-hidden nx:scroll-py-2',
+        'nx:max-h-[calc(300px*var(--nx-ui-scale))] nx:overflow-y-auto nx:overflow-x-hidden nx:scroll-py-2',
         className
       )}
       {...props}

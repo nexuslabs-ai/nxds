@@ -39,6 +39,7 @@ export default function RootLayout({
     <html
       lang="en"
       className="nx:scroll-pt-(--docs-scroll-offset) nx:scroll-pb-(--docs-panel-offset)"
+      data-ui-scale={DOCS_APPEARANCE_DEFAULT_STATE.uiScale}
       data-density={DOCS_APPEARANCE_DEFAULT_STATE.density}
       data-radius={DOCS_APPEARANCE_DEFAULT_STATE.corners}
       data-shadow={DOCS_APPEARANCE_DEFAULT_STATE.elevation}

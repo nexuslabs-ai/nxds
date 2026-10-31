@@ -45,6 +45,8 @@ export interface TokensFile {
   zIndex?: { tokens: ListToken[] };
   motion?: { tokens: ListToken[] };
   icon?: { tokens: ListToken[] };
+  uiScale?: { tokens: ListToken[] };
+  width?: { tokens: ListToken[] };
   typeScale?: { tokens: ListToken[] };
 }
 
@@ -62,6 +64,8 @@ const LIST_FAMILIES = {
   'z-index': 'zIndex',
   motion: 'motion',
   icon: 'icon',
+  'ui-scale': 'uiScale',
+  width: 'width',
 } as const;
 
 /** A tokens.json list family key, such as `borderWidth`. */
@@ -98,8 +102,8 @@ function bareName(name: string) {
 
 /** The variants the default appearance puts on the page, for one theme mode. */
 function defaultVariant(token: CatalogueToken, mode: ThemeId) {
-  const field = token.control?.kind === 'preset' ? token.control.field : null;
-  const preset = field ? DEFAULT_NXDS_APPEARANCE[field] : null;
+  const control = token.controls.find((each) => each.kind === 'preset');
+  const preset = control ? DEFAULT_NXDS_APPEARANCE[control.field] : null;
   const inPreset = token.variants.filter(
     (variant) => variant.preset === null || variant.preset === preset
   );

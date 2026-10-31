@@ -30,7 +30,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     data-slot="checkbox"
     :class="
       cn(
-        'nx:group nx:peer nx:relative nx:target-24 nx:inline-flex nx:size-[16px] nx:shrink-0 nx:items-center nx:justify-center nx:p-0 nx:icon-stroke',
+        'nx:group nx:peer nx:relative nx:target-24 nx:inline-flex nx:size-icon-glyph-default nx:shrink-0 nx:items-center nx:justify-center nx:p-0 nx:icon-stroke',
         'nx:rounded-sm nx:border-default nx:border-border-default nx:bg-container',
         'nx:transition-control',
         'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
@@ -65,7 +65,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
         aria-hidden="true"
         :class="
           cn(
-            'nx:absolute nx:size-full nx:[--nx-icon-size:calc(16px_-_2*var(--nx-borderwidth-default))]',
+            'nx:absolute nx:size-full nx:[--nx-icon-size:calc(var(--nx-icon-glyph-default)_-_2*var(--nx-borderwidth-default))]',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )
@@ -76,7 +76,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
         aria-hidden="true"
         :class="
           cn(
-            'nx:absolute nx:size-full nx:[--nx-icon-size:calc(16px_-_2*var(--nx-borderwidth-default))]',
+            'nx:absolute nx:size-full nx:[--nx-icon-size:calc(var(--nx-icon-glyph-default)_-_2*var(--nx-borderwidth-default))]',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=indeterminate]:scale-100 nx:group-data-[state=indeterminate]:opacity-100'
           )

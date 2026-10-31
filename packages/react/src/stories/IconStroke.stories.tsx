@@ -297,3 +297,25 @@ export const LineOverride: Story = {
     }
   },
 };
+
+/**
+ * The UI scale grows the icon, and the line grows with it. The stroke tokens
+ * stay the same at every scale.
+ */
+export const AtLargerScale: Story = {
+  globals: { uiScale: 'larger' },
+  render: () => (
+    <Button>
+      <StrokedIcons />
+      Starred
+    </Button>
+  ),
+  play: async ({ canvasElement }) => {
+    // A default icon is 20px at Larger, so its line is 0.5 + 20 × 0.0625.
+    const line = { size: 20, line: 1.75, vectorEffect: 'non-scaling-stroke' };
+    await expect(drawnLines(canvasElement)).toEqual({
+      lucide: line,
+      hugeicons: line,
+    });
+  },
+};

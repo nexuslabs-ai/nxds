@@ -203,17 +203,17 @@ export const defaultAppearance = {
 } satisfies NxdsAppearanceState;
 ```
 
-| Bootstrap                        | Appearance field   | How to match                                                                                                            |
-| -------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `$primary`, `--bs-primary`       | `brandColor`       | Pass it as is. Bootstrap's default is `#0d6efd`                                                                         |
-| `$gray-100` to `$gray-900`       | `surfaceTone`      | `gray` is closest to Bootstrap's grays                                                                                  |
-| `$border-radius`                 | `corners`          | `0` is `square`, `.25rem` is `subtle`, `.375rem` and `.5rem` are `smooth`, `.75rem` is `round`, `1rem` is `extra-round` |
-| `$spacer`                        | `density`          | Compare in the [Playground](/playground)                                                                                |
-| `$enable-shadows`, `$box-shadow` | `elevation`        | Bootstrap turns shadows off by default, so `flat` matches                                                               |
-| `$border-width`                  | `stroke`           | `1px` is `normal`, `2px` is `strong`                                                                                    |
-| `$font-family-sans-serif`        | `prefs.uiFont`     | Pass the same font stack                                                                                                |
-| `$font-size-base`                | `prefs.uiFontSize` | Bootstrap's default is 16 and nxds's is 14. Set `16` to match Bootstrap's text                                          |
-| `data-bs-theme`                  | `mode`             | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                                          |
+| Bootstrap                        | Appearance field | How to match                                                                                                            |
+| -------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `$primary`, `--bs-primary`       | `brandColor`     | Pass it as is. Bootstrap's default is `#0d6efd`                                                                         |
+| `$gray-100` to `$gray-900`       | `surfaceTone`    | `gray` is closest to Bootstrap's grays                                                                                  |
+| `$border-radius`                 | `corners`        | `0` is `square`, `.25rem` is `subtle`, `.375rem` and `.5rem` are `smooth`, `.75rem` is `round`, `1rem` is `extra-round` |
+| `$spacer`                        | `density`        | Compare in the [Playground](/playground)                                                                                |
+| `$enable-shadows`, `$box-shadow` | `elevation`      | Bootstrap turns shadows off by default, so `flat` matches                                                               |
+| `$border-width`                  | `stroke`         | `1px` is `normal`, `2px` is `strong`                                                                                    |
+| `$font-family-sans-serif`        | `prefs.uiFont`   | Pass the same font stack                                                                                                |
+| `$font-size-base`                | `uiScale`        | Bootstrap's default is 16px and nxds's is 14px. Set `'large'` for 16px text. Icons and spacing grow with it             |
+| `data-bs-theme`                  | `mode`           | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                                          |
 
 ## Where nxds fits
 

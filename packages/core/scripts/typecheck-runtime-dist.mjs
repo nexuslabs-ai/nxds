@@ -156,7 +156,7 @@ if (catalogued) {
   catalogued.variants.push(catalogued.variants[0]);
   if (variant?.appearance) {
     // @ts-expect-error a variant's appearance is immutable.
-    variant.appearance.prefs.uiFontSize = 16;
+    variant.appearance.prefs.codeFontSize = 16;
   }
   void name;
   void themeMode;
