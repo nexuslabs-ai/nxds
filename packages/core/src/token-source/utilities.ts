@@ -61,20 +61,34 @@ export function durationUtility(key: string): UtilityRule {
 }
 
 /**
- * The `size-icon-*` utility a glyph size `key` (e.g. `glyph-default`) emits.
- * It also sets `--nx-icon-size`, the size `icon-stroke` draws the line for.
+ * An icon's width and height, and `--nx-icon-size`, the size `icon-stroke`
+ * draws the line for.
  */
+function iconSizeDeclarations(value: string): CssDeclaration[] {
+  return [
+    { property: 'width', value },
+    { property: 'height', value },
+    { property: '--nx-icon-size', value },
+  ];
+}
+
+/** The `size-icon-*` utility a glyph size `key` (e.g. `glyph-default`) emits. */
 export function iconSizeUtility(key: string): UtilityRule {
-  const value = `var(--nx-icon-${key})`;
   return {
     name: `size-icon-${key}`,
-    declarations: [
-      { property: 'width', value },
-      { property: 'height', value },
-      { property: '--nx-icon-size', value },
-    ],
+    declarations: iconSizeDeclarations(`var(--nx-icon-${key})`),
   };
 }
+
+/**
+ * `size-icon-[…]`, which sizes an icon no glyph size fits from one value,
+ * such as `size-icon-[24px]` or `size-icon-(--x)`. Like `size-[…]`, it takes
+ * any value.
+ */
+export const ARBITRARY_ICON_SIZE_UTILITY: UtilityRule = {
+  name: 'size-icon-*',
+  declarations: iconSizeDeclarations('--value([*])'),
+};
 
 /**
  * `icon-stroke` sets the line on an `<svg>` the class sits on or contains,

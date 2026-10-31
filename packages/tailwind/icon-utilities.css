@@ -18,6 +18,12 @@
   --nx-icon-size: var(--nx-icon-glyph-default);
 }
 
+@utility size-icon-* {
+  width: --value([*]);
+  height: --value([*]);
+  --nx-icon-size: --value([*]);
+}
+
 @utility icon-stroke {
   &:is(svg),
   &:is(svg) *,

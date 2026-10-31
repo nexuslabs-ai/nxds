@@ -61,7 +61,7 @@ function RadioGroupItem({ className, ...props }: RadioGroupItemProps) {
           data-slot="radio-group-dot"
           aria-hidden="true"
           className={cn(
-            'nx:size-[10px] nx:[--nx-icon-size:10px] nx:text-current',
+            'nx:size-icon-[10px] nx:text-current',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )}

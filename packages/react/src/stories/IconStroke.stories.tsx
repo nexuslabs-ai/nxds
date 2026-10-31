@@ -71,14 +71,9 @@ const STROKED_PARTS = {
   'input-group-addon': 16,
   'alert-icon': 16,
   'sidebar-menu-button': 16,
+  'tabs-trigger': 16,
   'empty-state-media': 24,
 };
-
-/**
- * Tabs doesn't size the icons you pass. They draw at the library's 24px, with
- * the line for a 16px icon.
- */
-const UNSIZED_PART = 'tabs-trigger';
 
 /** Internal icons and their size: Select's chevron, and Spinner's own `<svg>`. */
 const INTERNAL_ICONS = {
@@ -263,10 +258,6 @@ export const EveryComponent: Story = {
         })
       )
     );
-    const unsized = { ...expectedLine(canvasElement, 16), size: 24 };
-    await expect(
-      drawnLines(page.querySelector(`[data-slot="${UNSIZED_PART}"]`))
-    ).toEqual({ lucide: unsized, hugeicons: unsized });
     await expect(
       internal.map(([selector]) => internalLine(page, selector))
     ).toEqual(internal.map(([, size]) => expectedLine(canvasElement, size)));
