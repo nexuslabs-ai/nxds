@@ -442,6 +442,7 @@ describe('token catalogue', () => {
       ['headingFont', 'serif'],
       ['codeFont', 'monospace'],
       ['uiFontSize', prefs.uiFontSize + 2],
+      ['codeFontSize', prefs.codeFontSize + 2],
     ] as const) {
       for (const [name, after] of rootVariables({ [field]: value })) {
         if (after !== before.get(name)) changedBy.set(name, field);

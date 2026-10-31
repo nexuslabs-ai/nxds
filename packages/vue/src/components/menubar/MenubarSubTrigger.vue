@@ -9,6 +9,7 @@ import type { HTMLAttributes } from 'vue';
 
 import { IconChevronRight } from '../../lib/icons';
 import { cn } from '../../lib/utils';
+import { menuItemInsetClassName } from '../overlay-layout/overlay-layout';
 
 export interface MenubarSubTriggerProps extends RekaMenubarSubTriggerProps {
   /**
@@ -36,7 +37,7 @@ const forwarded = useForwardProps(delegated);
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-[state=open]:bg-popover-hover nx:data-[state=open]:text-popover-foreground',
         'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
-        inset && 'nx:pl-8',
+        inset && menuItemInsetClassName,
         props.class
       )
     "

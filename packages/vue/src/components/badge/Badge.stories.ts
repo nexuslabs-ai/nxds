@@ -1,3 +1,4 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import {
   PhCheck,
   PhCheckCircle,
@@ -9,6 +10,7 @@ import {
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
 
+import { expectTextFits } from '../../stories/support/story-height-test-utils';
 import { Spinner } from '../spinner';
 
 import { Badge } from '.';
@@ -23,9 +25,9 @@ const VARIANTS = [
 ] as const;
 const FILLS = ['solid', 'light', 'outline'] as const;
 
-// `nx:h-6` / `nx:w-6` at `density: default`.
+// `nx:min-h-6` / `nx:w-6` at `density: default`.
 const BADGE_SIZE_PX = 24;
-// `nx:size-3.5` icon slot.
+// `nx:size-icon-glyph-sm` icon slot.
 const BADGE_ICON_SIZE_PX = 14;
 
 const meta = {
@@ -173,6 +175,41 @@ export const StatusWithIcons: Story = {
       </div>
     `,
   }),
+};
+
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
+
+export const TextFitsAtEveryDensity: Story = {
+  // At 16px UI text, the text line is taller than the Tight minimum height.
+  globals: { uiFontSize: 16 },
+  render: () => ({
+    components: { Badge },
+    setup: () => ({ densities: DENSITIES }),
+    template: `
+      <div class="nx:flex nx:flex-col nx:items-start nx:gap-3">
+        <div
+          v-for="density in densities"
+          :key="density"
+          :data-density="density"
+          :data-testid="'row-' + density"
+          class="nx:flex nx:gap-2"
+        >
+          <Badge>Beta</Badge>
+          <Badge :is-caps="false">New</Badge>
+        </div>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const density of DENSITIES) {
+      const row = within(canvas.getByTestId(`row-${density}`));
+      // Caps and sentence-case text fit inside the border at every density.
+      for (const element of [row.getByText('Beta'), row.getByText('New')]) {
+        await expectTextFits(element);
+      }
+    }
+  },
 };
 
 export const AllVariants: Story = {

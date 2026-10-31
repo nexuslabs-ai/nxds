@@ -4,7 +4,7 @@ export { default as Switch, type SwitchProps } from './Switch.vue';
 
 export const switchVariants = cva(
   [
-    'nx:peer nx:inline-flex nx:shrink-0 nx:cursor-pointer nx:items-center nx:p-0',
+    'nx:peer nx:relative nx:target-24 nx:inline-flex nx:shrink-0 nx:cursor-pointer nx:items-center nx:p-0',
     'nx:rounded-full nx:border-thick nx:border-border-default',
     'nx:transition-control',
     'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
@@ -29,7 +29,7 @@ export const switchVariants = cva(
 
 export const switchThumbVariants = cva(
   [
-    'nx:pointer-events-none nx:block nx:rounded-full',
+    'nx:pointer-events-none nx:block nx:aspect-square nx:h-full nx:rounded-full',
     'nx:bg-control-thumb nx:transition-[background-color,transform]',
     'nx:data-[state=checked]:bg-primary-foreground',
     'nx:data-[state=unchecked]:translate-x-0',
@@ -37,8 +37,8 @@ export const switchThumbVariants = cva(
   {
     variants: {
       size: {
-        default: 'nx:size-[16px] nx:data-[state=checked]:translate-x-[16px]',
-        sm: 'nx:size-[14px] nx:data-[state=checked]:translate-x-[14px]',
+        default: 'nx:data-[state=checked]:translate-x-[16px]',
+        sm: 'nx:data-[state=checked]:translate-x-[14px]',
       },
     },
     defaultVariants: {

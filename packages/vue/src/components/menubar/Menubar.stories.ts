@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { ref } from 'vue';
 
+import { expectMenuItemInsetAtEveryDensity } from '../../stories/support/menu-item-inset-test-utils';
 import {
   expectExitBeforeUnmount,
   expectInterruptibleOverlayMotion,
@@ -354,6 +355,50 @@ export const WithInsetItems: Story = {
       </Menubar>
     `,
   }),
+};
+
+export const CheckInsetAtEveryDensity: Story = {
+  render: () => ({
+    components: {
+      Menubar,
+      MenubarCheckboxItem,
+      MenubarContent,
+      MenubarItem,
+      MenubarLabel,
+      MenubarMenu,
+      MenubarTrigger,
+    },
+    template: `
+      <Menubar>
+        <MenubarMenu>
+          <MenubarTrigger>View</MenubarTrigger>
+          <MenubarContent class="nx:w-56">
+            <MenubarLabel inset>Appearance</MenubarLabel>
+            <MenubarCheckboxItem :model-value="true">Status bar</MenubarCheckboxItem>
+            <MenubarItem inset>Reset view</MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+      </Menubar>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('menuitem', { name: 'View' }));
+    const menu = await within(document.body).findByRole('menu');
+    const item = within(menu).getByRole('menuitemcheckbox', {
+      name: 'Status bar',
+    });
+    const check = item.querySelector<HTMLElement>(
+      '[data-slot="menubar-checkbox-indicator"]'
+    )!.parentElement!;
+    await expectMenuItemInsetAtEveryDensity(menu, item, check, [
+      within(menu).getByRole('menuitem', { name: 'Reset view' }),
+      within(menu).getByText('Appearance'),
+    ]);
+
+    await userEvent.keyboard('{Escape}');
+    await expectExitBeforeUnmount(menu);
+  },
 };
 
 export const OpenCloseInteraction: Story = {

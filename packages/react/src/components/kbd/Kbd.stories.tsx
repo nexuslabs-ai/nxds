@@ -1,6 +1,9 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect } from 'storybook/test';
+import { expect, within } from 'storybook/test';
+
+import { expectTextFits } from '../../stories/support/story-height-test-utils';
 
 import { Kbd, KbdGroup } from './kbd';
 
@@ -125,6 +128,36 @@ export const WithDataAttributes: Story = {
     await expect(letterKey?.textContent).toBe('K');
     await expect(letterKey).not.toHaveAttribute('role');
     await expect(letterKey).not.toHaveAttribute('tabindex');
+  },
+};
+
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
+
+export const TextFitsAtEveryDensity: Story = {
+  // At 16px UI text, the text line is taller than the Tight minimum height.
+  globals: { uiFontSize: 16 },
+  render: () => (
+    <div className="nx:flex nx:flex-col nx:items-start nx:gap-3">
+      {DENSITIES.map((density) => (
+        <div
+          key={density}
+          data-density={density}
+          data-testid={`row-${density}`}
+        >
+          <Kbd>Ctrl</Kbd>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const density of DENSITIES) {
+      const element = within(canvas.getByTestId(`row-${density}`)).getByText(
+        'Ctrl'
+      );
+      // The key label fits inside the border at every density.
+      await expectTextFits(element);
+    }
   },
 };
 

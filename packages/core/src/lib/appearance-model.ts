@@ -324,9 +324,9 @@ export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
   --nx-typography-family-font-sans: ${prefs.uiFont};
   --nx-typography-family-font-heading: ${prefs.headingFont ?? 'var(--nx-typography-family-font-sans)'};
   --nx-typography-family-font-mono: ${prefs.codeFont};
+  --nx-typography-code-size: ${formatPx(codePx)};
 ${typographyScaleVariables(uiPx)}
 }`),
-    `.nx\\:font-mono, .nx\\:typography-code-block, .nx\\:typography-code-inline { font-size: ${codePx}px; }`,
   ];
   if (prefs.fontSmoothing) {
     blocks.push(

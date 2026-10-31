@@ -427,5 +427,6 @@
     --nx-typography-letterspacing-wide: 0.4px;
     --nx-typography-letterspacing-wider: 0.8px;
     --nx-typography-letterspacing-widest: 1.6px;
+    --nx-typography-code-size: 12px;
   }
 }

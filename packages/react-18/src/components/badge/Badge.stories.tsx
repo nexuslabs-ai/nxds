@@ -1,3 +1,4 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import {
   CheckCircleIcon,
   CheckIcon,
@@ -9,6 +10,7 @@ import {
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within } from 'storybook/test';
 
+import { expectTextFits } from '../../stories/support/story-height-test-utils';
 import { Spinner } from '../spinner/spinner';
 
 import { Badge } from './badge';
@@ -64,9 +66,9 @@ const meta: Meta<typeof Badge> = {
 export default meta;
 type Story = StoryObj<typeof Badge>;
 
-// `nx:h-6` / `nx:w-6` at `density: default`.
+// `nx:min-h-6` / `nx:w-6` at `density: default`.
 const BADGE_SIZE_PX = 24;
-// `nx:size-3.5` icon slot.
+// `nx:size-icon-glyph-sm` icon slot.
 const BADGE_ICON_SIZE_PX = 14;
 
 // ============================================
@@ -399,6 +401,38 @@ export const LongContent: Story = {
     const badge = canvas.getByText('This is a very long badge text');
 
     await expect(badge).toBeInTheDocument();
+  },
+};
+
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
+
+export const TextFitsAtEveryDensity: Story = {
+  // At 16px UI text, the text line is taller than the Tight minimum height.
+  globals: { uiFontSize: 16 },
+  render: () => (
+    <div className="nx:flex nx:flex-col nx:items-start nx:gap-3">
+      {DENSITIES.map((density) => (
+        <div
+          key={density}
+          data-density={density}
+          data-testid={`row-${density}`}
+          className="nx:flex nx:gap-2"
+        >
+          <Badge>Beta</Badge>
+          <Badge isCaps={false}>New</Badge>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const density of DENSITIES) {
+      const row = within(canvas.getByTestId(`row-${density}`));
+      // Caps and sentence-case text fit inside the border at every density.
+      for (const element of [row.getByText('Beta'), row.getByText('New')]) {
+        await expectTextFits(element);
+      }
+    }
   },
 };
 
