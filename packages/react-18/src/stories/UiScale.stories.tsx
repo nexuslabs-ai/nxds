@@ -1,4 +1,9 @@
-import { DENSITY_OPTIONS, UI_SCALE_OPTIONS } from '@nxds/core';
+import {
+  DENSITY_OPTIONS,
+  TEXT_SIZE_OPTIONS,
+  textSizePx,
+  UI_SCALE_OPTIONS,
+} from '@nxds/core';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, within } from 'storybook/test';
@@ -22,6 +27,7 @@ import {
 
 const SCALES = UI_SCALE_OPTIONS.map(({ value }) => value);
 const DENSITIES = DENSITY_OPTIONS.map(({ value }) => value);
+const TEXT_SIZES = TEXT_SIZE_OPTIONS.map(({ value }) => value);
 
 /** How far a ratio may move from its Default-scale value. */
 const PROPORTION_TOLERANCE = 0.15;
@@ -52,6 +58,60 @@ function Row({ scale, density }: { scale: string; density: string }) {
         <RadioGroupItem value="team" aria-label={`Team, ${name}`} />
       </RadioGroup>
       <Switch defaultChecked aria-label={`Alerts, ${name}`} />
+    </div>
+  );
+}
+
+function TextSizeRow({
+  scale,
+  textSize,
+  density,
+}: {
+  scale: string;
+  textSize: number;
+  density: string;
+}) {
+  return (
+    <div
+      data-ui-scale={scale}
+      data-text-size={textSize}
+      data-density={density}
+      data-testid={`text-${scale}-${textSize}-${density}`}
+      className="nx:flex nx:flex-wrap nx:items-center nx:gap-3 nx:bg-background nx:py-2 nx:text-foreground"
+    >
+      <span className="nx:w-44 nx:typography-label-small nx:text-muted-foreground">
+        {scale} · {textSize} · {density}
+      </span>
+      <Button variant="outline">
+        <MagnifyingGlassIcon aria-hidden />
+        Search
+      </Button>
+      <Input
+        aria-label={`Name, ${scale}, ${textSize}, ${density}`}
+        className="nx:w-full nx:max-w-3xs"
+      />
+      <Toggle variant="outline">Bold</Toggle>
+      <Badge isCaps={false}>New</Badge>
+      <Kbd>Ctrl</Kbd>
+    </div>
+  );
+}
+
+function TextSizeMatrix() {
+  return (
+    <div className="nx:flex nx:flex-col nx:p-6">
+      {SCALES.flatMap((scale) =>
+        TEXT_SIZES.flatMap((textSize) =>
+          DENSITIES.map((density) => (
+            <TextSizeRow
+              key={`${scale}-${textSize}-${density}`}
+              scale={scale}
+              textSize={textSize}
+              density={density}
+            />
+          ))
+        )
+      )}
     </div>
   );
 }
@@ -91,6 +151,26 @@ function rowParts(canvasElement: HTMLElement, scale: string, density: string) {
   };
 }
 
+function textSizeParts(
+  canvasElement: HTMLElement,
+  scale: string,
+  textSize: number,
+  density: string
+) {
+  const row = within(
+    within(canvasElement).getByTestId(`text-${scale}-${textSize}-${density}`)
+  );
+  const button = row.getByRole('button', { name: 'Search' });
+  return {
+    button,
+    icon: button.querySelector('svg')!,
+    input: row.getByRole('textbox'),
+    toggle: row.getByRole('button', { name: 'Bold' }),
+    badge: row.getByText('New'),
+    kbd: row.getByText('Ctrl'),
+  };
+}
+
 /** The ratios a UI scale must keep: control, icon, box, code and width to text. */
 function ratios(parts: ReturnType<typeof rowParts>) {
   const text = lineHeight(parts.button);
@@ -113,13 +193,13 @@ const meta = {
   title: 'Tokens/UI Scale',
   component: Matrix,
   tags: ['!autodocs'],
-  // The rows set their own scale, so the page stays at Default.
-  globals: { uiScale: 'default' },
+  // The rows set their own scale and text size, so the page stays at Default.
+  globals: { uiScale: 'default', textSize: '14' },
   parameters: {
     docs: {
       description: {
         component:
-          'Every part at every UI scale and density. The UI scale grows text, icons, spacing and corners together. Density changes only spacing.',
+          'Every part at every UI scale and density, and at every text size. The UI scale grows text, icons, spacing and corners together. The text size changes only text. Density changes only spacing.',
       },
     },
   },
@@ -146,7 +226,7 @@ export const ProportionAtEveryScaleAndDensity: Story = {
           parts.badge,
           parts.kbd,
         ]) {
-          await expectTextFits(element);
+          await expectTextFits(element, label);
         }
 
         // Each mark stays inside its control.
@@ -190,5 +270,41 @@ export const CustomCodeSizeAtLargeScale: Story = {
     const code = within(canvasElement).getByText('npm install');
     // 16px code at the Default scale is 18px at Large: 16 × 16/14, rounded.
     await expect(getComputedStyle(code).fontSize).toBe('18px');
+  },
+};
+
+export const TextFitsAtEveryTextSize: Story = {
+  render: () => <TextSizeMatrix />,
+  play: async ({ canvasElement }) => {
+    await canvasElement.ownerDocument.fonts.ready;
+    for (const scale of SCALES) {
+      for (const density of DENSITIES) {
+        const icon = box(textSizeParts(canvasElement, scale, 14, density).icon);
+        for (const textSize of TEXT_SIZES) {
+          const parts = textSizeParts(canvasElement, scale, textSize, density);
+          const label = `${scale} × ${textSize} × ${density}`;
+
+          // The label text is the size the text size picker shows.
+          await expect(parseFloat(style(parts.button).fontSize), label).toBe(
+            textSizePx(textSize, scale)
+          );
+
+          // Each text line fits inside its control.
+          for (const element of [
+            parts.button,
+            parts.input,
+            parts.toggle,
+            parts.badge,
+            parts.kbd,
+          ]) {
+            await expectTextFits(element, label);
+          }
+
+          // Icons keep the size of the UI scale.
+          await expect(box(parts.icon).width, label).toBe(icon.width);
+          await expectInsideBorder(parts.icon, parts.button);
+        }
+      }
+    }
   },
 };

@@ -18,7 +18,11 @@ import {
   extractTokens,
   pathToCssVarPrefixed,
 } from '../src/token-source/tokens.ts';
-import { scaleBlocks, scaledModeBlocks } from '../src/token-source/ui-scale.ts';
+import {
+  scaleBlocks,
+  scaledModeBlocks,
+  textSizeBlocks,
+} from '../src/token-source/ui-scale.ts';
 import {
   ARBITRARY_ICON_SIZE_UTILITY,
   BORDER_COLOR_ALIAS_NAMES,
@@ -669,9 +673,10 @@ export function generateSpacingModesCSS(modesByName, opts = {}) {
 
 /**
  * Emit the UI scale: the default factor and page widths on `:root`, one
- * `[data-ui-scale="X"]` block per scale for type, code, icons and widths, and every
- * density and radius mode at each scale. The default scale has no block, so
- * the per-mode blocks above apply as they are.
+ * `[data-ui-scale="X"]` block per scale for type, code, icons and widths, one
+ * `[data-text-size="N"]` block per text size and scale for type and code, and
+ * every density and radius mode at each scale. The default scale and text size
+ * have no block, so the per-mode blocks above apply as they are.
  *
  * @param {object} input
  * @param {Record<string, {cssName: string, value: string, step?: string}[]>} input.spacingModes
@@ -691,6 +696,7 @@ export function generateUiScaleCSS({
 }) {
   const blocks = [
     ...scaleBlocks(base),
+    ...textSizeBlocks(base),
     ...scaledModeBlocks(spacingModes, {
       attrName: 'data-density',
       defaultMode: spacingDefault,
@@ -700,7 +706,7 @@ export function generateUiScaleCSS({
       defaultMode: radiusDefault,
     }),
   ];
-  let css = `\n/* ===== UI SCALE ([data-ui-scale="X"] on the root, modes nest under it) ===== */\n`;
+  let css = `\n/* ===== UI SCALE ([data-ui-scale="X"] and [data-text-size="N"] on the root, modes nest under it) ===== */\n`;
   for (const { selectors, tokens } of blocks) {
     css += `\n${selectors.join(',\n')} {\n`;
     for (const token of tokens) {

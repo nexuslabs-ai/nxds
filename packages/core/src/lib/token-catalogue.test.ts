@@ -452,11 +452,35 @@ describe('token catalogue', () => {
     const controlled = new Set(
       catalogue
         .filter((token) =>
-          token.controls.some((control) => control.kind === 'scale')
+          token.controls.some(
+            (control) => control.kind === 'scale' && control.field === 'uiScale'
+          )
         )
         .map((token) => token.name)
     );
     expect(controlled).toEqual(scaled);
+  });
+
+  it('names textSize for exactly the tokens the [data-text-size] blocks set', () => {
+    const sized = new Set(
+      nxdsBlocks
+        .filter(({ selectors }) =>
+          selectors.some((selector) => selector.includes('[data-text-size='))
+        )
+        .flatMap(({ declarations }) => [...declarations.keys()])
+    );
+    const controlled = new Set(
+      catalogue
+        .filter((token) =>
+          token.controls.some(
+            (control) =>
+              control.kind === 'scale' && control.field === 'textSize'
+          )
+        )
+        .map((token) => token.name)
+    );
+    expect(sized.size).toBeGreaterThan(0);
+    expect(controlled).toEqual(sized);
   });
 
   it('names exactly the preference that changes each runtime typography variable', () => {

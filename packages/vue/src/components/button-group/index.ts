@@ -36,9 +36,9 @@ export const buttonGroupTextVariants = cva(
   {
     variants: {
       size: {
-        sm: 'nx:h-8 nx:px-2.5 nx:typography-label-default',
-        default: 'nx:h-10 nx:px-3 nx:typography-label-default',
-        lg: 'nx:h-12 nx:px-3.5 nx:typography-label-default',
+        sm: 'nx:h-fit nx:min-h-8 nx:px-2.5 nx:typography-label-default',
+        default: 'nx:h-fit nx:min-h-10 nx:px-3 nx:typography-label-default',
+        lg: 'nx:h-fit nx:min-h-12 nx:px-3.5 nx:typography-label-default',
       },
     },
     defaultVariants: {

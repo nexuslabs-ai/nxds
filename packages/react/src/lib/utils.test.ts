@@ -116,6 +116,25 @@ function emittedThemeTokens(cssKey: string) {
 }
 
 describe('cn', () => {
+  it('lets a later height or size replace a control min-height', () => {
+    expect(cn('nx:h-fit nx:min-h-10', 'nx:h-8')).toBe('nx:h-8');
+    expect(cn('nx:h-fit nx:min-h-10', 'nx:size-8')).toBe('nx:size-8');
+    expect(cn('nx:h-8', 'nx:min-h-0')).toBe('nx:h-8 nx:min-h-0');
+  });
+
+  it('keeps min-h-0 under a later height or size', () => {
+    expect(cn('nx:min-h-0', 'nx:h-full')).toBe('nx:min-h-0 nx:h-full');
+    expect(cn('nx:min-h-0', 'nx:size-8')).toBe('nx:min-h-0 nx:size-8');
+    expect(cn('nx:h-fit nx:min-h-10', 'nx:min-h-0')).toBe(
+      'nx:h-fit nx:min-h-0'
+    );
+    expect(cn('nx:min-h-0', 'nx:min-h-10')).toBe('nx:min-h-10');
+    expect(cn('nx:min-h-[0px]', 'nx:h-8')).toBe('nx:min-h-[0px] nx:h-8');
+    expect(cn('nx:h-fit nx:min-h-10', 'nx:min-h-[0px]')).toBe(
+      'nx:h-fit nx:min-h-[0px]'
+    );
+  });
+
   it.each(['primary', 'error', 'information', 'success', 'warning'])(
     'keeps border widths while merging renamed %s colors and aliases',
     (family) => {

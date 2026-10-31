@@ -8,7 +8,9 @@ import {
   FONT_SIZE_PX_MIN,
   type NxdsAppearancePrefs,
   type NxdsAppearanceState,
+  type NxdsTextSize,
   STROKE_OPTIONS,
+  TEXT_SIZE_OPTIONS,
   UI_SCALE_OPTIONS,
 } from './appearance-model';
 import { CONTRAST_MAX, CONTRAST_MIN } from './contrast';
@@ -227,6 +229,10 @@ function fontField(
   };
 }
 
+const TEXT_SIZES = TEXT_SIZE_OPTIONS.map((option) => option.value);
+const TEXT_SIZE_MIN = Math.min(...TEXT_SIZES);
+const TEXT_SIZE_MAX = Math.max(...TEXT_SIZES);
+
 const DEFAULT_PREFS = DEFAULT_NXDS_APPEARANCE.prefs;
 const TEXT_FONTS = ['sans', 'serif'] as const;
 
@@ -259,6 +265,25 @@ export const NXDS_THEME_FIELDS: readonly NxdsThemeField[] = [
     'size of text, icons and spacing together',
     UI_SCALE_OPTIONS.map((option) => option.value)
   ),
+  {
+    kind: 'integer',
+    flag: 'text-size',
+    key: 'textSize',
+    description: `label text size in px at the default UI scale, ${TEXT_SIZE_MIN} to ${TEXT_SIZE_MAX}`,
+    min: TEXT_SIZE_MIN,
+    max: TEXT_SIZE_MAX,
+    read: (theme) => String(theme.appearance.textSize),
+    write: (theme, value) =>
+      withAppearance(theme, {
+        // Every whole number from the minimum to the maximum is a text size.
+        textSize: integer(
+          'text-size',
+          value,
+          TEXT_SIZE_MIN,
+          TEXT_SIZE_MAX
+        ) as NxdsTextSize,
+      }),
+  },
   enumField(
     'density',
     'density',

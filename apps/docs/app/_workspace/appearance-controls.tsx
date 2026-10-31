@@ -16,6 +16,7 @@ import {
   type NxdsIconLibrary,
   type NxdsResolvedAppearanceMode,
   STROKE_OPTIONS,
+  TEXT_SIZE_OPTIONS,
   UI_SCALE_OPTIONS,
 } from '@nxds/core';
 import {
@@ -295,6 +296,14 @@ export function AppearanceControls({
     onChange({ prefs: { ...state.prefs, ...patch } });
   }
 
+  function setTextSize(value: string) {
+    const option = TEXT_SIZE_OPTIONS.find(
+      (each) => String(each.value) === value
+    );
+    if (option === undefined) return;
+    onChange({ textSize: option.value });
+  }
+
   return (
     <div data-slot="appearance-controls" className="nx:space-y-8">
       <ControlGroup title="Color">
@@ -327,6 +336,15 @@ export function AppearanceControls({
           value={state.uiScale}
           options={UI_SCALE_OPTIONS}
           onChange={(uiScale) => onChange({ uiScale })}
+        />
+        <SelectField
+          label="Text size"
+          value={String(state.textSize)}
+          options={TEXT_SIZE_OPTIONS.map(({ value, label }) => ({
+            value: String(value),
+            label,
+          }))}
+          onChange={setTextSize}
         />
         <SelectField
           label="Density"

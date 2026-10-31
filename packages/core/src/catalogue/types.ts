@@ -106,7 +106,7 @@ export interface CatalogueVariant {
  */
 export type CatalogueControl =
   | { readonly kind: 'preset'; readonly field: NxdsPresetField }
-  | { readonly kind: 'scale'; readonly field: 'uiScale' }
+  | { readonly kind: 'scale'; readonly field: 'uiScale' | 'textSize' }
   | { readonly kind: 'pref'; readonly field: keyof NxdsAppearancePrefs };
 
 export interface CatalogueToken {

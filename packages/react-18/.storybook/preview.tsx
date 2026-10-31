@@ -10,6 +10,7 @@ import {
   type NxdsAppearanceState,
   sanitizeNxdsAppearance,
   STROKE_OPTIONS,
+  TEXT_SIZE_OPTIONS,
   UI_SCALE_OPTIONS,
 } from '@nxds/core';
 import type { Decorator, Preview } from '@storybook/react-vite';
@@ -30,6 +31,7 @@ type AppearanceGlobalKey =
   | 'lightContrast'
   | 'darkContrast'
   | 'uiScale'
+  | 'textSize'
   | 'density'
   | 'corners'
   | 'elevation'
@@ -49,6 +51,7 @@ const APPEARANCE_GLOBAL_KEYS: AppearanceGlobalKey[] = [
   'lightContrast',
   'darkContrast',
   'uiScale',
+  'textSize',
   'density',
   'corners',
   'elevation',
@@ -110,6 +113,10 @@ function appearanceStateFromGlobals(
         ? globals.darkContrast
         : defaults.darkContrast,
     uiScale: pickOption(globals.uiScale, UI_SCALE_OPTIONS, defaults.uiScale),
+    textSize:
+      typeof globals.textSize === 'string'
+        ? Number(globals.textSize)
+        : defaults.textSize,
     density: pickOption(globals.density, DENSITY_OPTIONS, defaults.density),
     corners: pickOption(globals.corners, CORNER_OPTIONS, defaults.corners),
     elevation: pickOption(
@@ -159,6 +166,7 @@ function globalsFromAppearanceState(
     lightContrast: state.lightContrast,
     darkContrast: state.darkContrast,
     uiScale: state.uiScale,
+    textSize: String(state.textSize),
     density: state.density,
     corners: state.corners,
     elevation: state.elevation,
@@ -181,6 +189,14 @@ function appearanceStatesEqual(
   const bGlobals = globalsFromAppearanceState(b);
 
   return APPEARANCE_GLOBAL_KEYS.every((key) => aGlobals[key] === bGlobals[key]);
+}
+
+/** Toolbar values are strings, so each text size is its number as text. */
+function textSizeToolbarItems() {
+  return TEXT_SIZE_OPTIONS.map(({ value, label }) => ({
+    value: String(value),
+    title: label,
+  }));
 }
 
 function toolbarItems<
@@ -319,6 +335,7 @@ const preview: Preview = {
     lightContrast: DEFAULT_NXDS_APPEARANCE.lightContrast,
     darkContrast: DEFAULT_NXDS_APPEARANCE.darkContrast,
     uiScale: DEFAULT_NXDS_APPEARANCE.uiScale,
+    textSize: String(DEFAULT_NXDS_APPEARANCE.textSize),
     density: DEFAULT_NXDS_APPEARANCE.density,
     corners: DEFAULT_NXDS_APPEARANCE.corners,
     elevation: DEFAULT_NXDS_APPEARANCE.elevation,
@@ -360,6 +377,15 @@ const preview: Preview = {
       toolbar: {
         icon: 'zoom',
         items: toolbarItems(UI_SCALE_OPTIONS),
+        dynamicTitle: true,
+      },
+    },
+    textSize: {
+      name: 'Text size',
+      description: 'Label text size in px at the Default UI scale',
+      toolbar: {
+        icon: 'paragraph',
+        items: textSizeToolbarItems(),
         dynamicTitle: true,
       },
     },

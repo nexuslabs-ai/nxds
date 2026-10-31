@@ -7,6 +7,7 @@ import {
   type NxdsAppearanceState,
   sanitizeNxdsAppearance,
   STROKE_OPTIONS,
+  TEXT_SIZE_OPTIONS,
   UI_SCALE_OPTIONS,
 } from '@nxds/core';
 import { type Decorator, type Preview, setup } from '@storybook/vue3-vite';
@@ -32,10 +33,19 @@ function toolbarItems(options: readonly { value: string; label: string }[]) {
   return options.map(({ value, label }) => ({ value, title: label }));
 }
 
+/** Toolbar values are strings, so each text size is its number as text. */
+function textSizeToolbarItems() {
+  return TEXT_SIZE_OPTIONS.map(({ value, label }) => ({
+    value: String(value),
+    title: label,
+  }));
+}
+
 const PREF_KEYS = Object.keys(DEFAULT_NXDS_APPEARANCE.prefs);
 
 // The globals are sanitized by core, so an unknown value falls back to the
-// default. Preference globals such as `reduceMotion` land in `prefs`.
+// default. Preference globals such as `reduceMotion` land in `prefs`, and the
+// text size toolbar value is a string.
 function appearanceStateFromGlobals(
   globals: Record<string, unknown>
 ): NxdsAppearanceState {
@@ -45,6 +55,7 @@ function appearanceStateFromGlobals(
   return sanitizeNxdsAppearance({
     ...DEFAULT_NXDS_APPEARANCE,
     ...globals,
+    textSize: Number(globals.textSize),
     prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs, ...prefs },
   });
 }
@@ -122,6 +133,7 @@ const preview: Preview = {
     lightContrast: DEFAULT_NXDS_APPEARANCE.lightContrast,
     darkContrast: DEFAULT_NXDS_APPEARANCE.darkContrast,
     uiScale: DEFAULT_NXDS_APPEARANCE.uiScale,
+    textSize: String(DEFAULT_NXDS_APPEARANCE.textSize),
     density: DEFAULT_NXDS_APPEARANCE.density,
     corners: DEFAULT_NXDS_APPEARANCE.corners,
     elevation: DEFAULT_NXDS_APPEARANCE.elevation,
@@ -156,6 +168,14 @@ const preview: Preview = {
       toolbar: {
         icon: 'zoom',
         items: toolbarItems(UI_SCALE_OPTIONS),
+        dynamicTitle: true,
+      },
+    },
+    textSize: {
+      name: 'Text size',
+      toolbar: {
+        icon: 'paragraph',
+        items: textSizeToolbarItems(),
         dynamicTitle: true,
       },
     },

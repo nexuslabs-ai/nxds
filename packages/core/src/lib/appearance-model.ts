@@ -1,9 +1,10 @@
 import {
   MIN_TEXT_PX,
-  NON_DEFAULT_UI_SCALES,
   scaleText,
+  TEXT_SIZES,
+  type TextSize,
+  textSizeSelector,
   type UiScale,
-  uiScaleSelector,
 } from '../token-source/ui-scale';
 
 import { normalizeContrast } from './contrast';
@@ -12,10 +13,14 @@ import type { NxdsSurfaceTone } from './palette';
 import { isColor } from './perceptual-ramp';
 import { inRuntimeLayer } from './runtime-layer';
 
+export { textSizePx } from '../token-source/ui-scale';
+
 type ModeSeeds = Pick<ThemeSeeds, 'background' | 'foreground'>;
 
 export type NxdsAppearanceMode = 'light' | 'dark' | 'system';
 export type NxdsUiScale = UiScale;
+/** The label text size, in px at the Default UI scale. */
+export type NxdsTextSize = TextSize;
 export type NxdsDensity =
   | 'tight'
   | 'compact'
@@ -50,6 +55,7 @@ export interface NxdsAppearanceState {
   lightContrast: number;
   darkContrast: number;
   uiScale: NxdsUiScale;
+  textSize: NxdsTextSize;
   density: NxdsDensity;
   corners: NxdsCorners;
   elevation: NxdsElevation;
@@ -107,6 +113,12 @@ export const UI_SCALE_OPTIONS = [
   { value: 'larger', label: 'Larger' },
 ] as const satisfies readonly { value: NxdsUiScale; label: string }[];
 
+/** The text sizes, each labelled with its label size at the Default UI scale. */
+export const TEXT_SIZE_OPTIONS: readonly {
+  readonly value: NxdsTextSize;
+  readonly label: string;
+}[] = TEXT_SIZES.map((value) => ({ value, label: `${value}px` }));
+
 export const DENSITY_OPTIONS = [
   { value: 'tight', label: 'Tight' },
   { value: 'compact', label: 'Compact' },
@@ -145,6 +157,7 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
   lightContrast: 50,
   darkContrast: 50,
   uiScale: 'default',
+  textSize: 14,
   density: 'default',
   corners: 'subtle',
   elevation: 'quiet',
@@ -175,6 +188,7 @@ const SURFACE_TONES = new Set<NxdsSurfaceTone>(
 const SCALES = new Set<NxdsUiScale>(
   UI_SCALE_OPTIONS.map((option) => option.value)
 );
+const TEXT_SIZE_VALUES = new Set<NxdsTextSize>(TEXT_SIZES);
 const DENSITIES = new Set<NxdsDensity>(
   DENSITY_OPTIONS.map((option) => option.value)
 );
@@ -207,12 +221,11 @@ const fontFamilyOr = <T extends string | null>(
 const boolOr = (value: unknown, fallback: boolean): boolean =>
   typeof value === 'boolean' ? value : fallback;
 
-const enumOr = <T extends string>(
+const enumOr = <T extends string | number>(
   value: unknown,
   values: ReadonlySet<T>,
   fallback: T
-): T =>
-  typeof value === 'string' && values.has(value as T) ? (value as T) : fallback;
+): T => (values.has(value as T) ? (value as T) : fallback);
 
 const clampFontSize = (value: unknown, fallback: number): number =>
   typeof value === 'number' && Number.isFinite(value) && value > 0
@@ -287,6 +300,7 @@ export function sanitizeNxdsAppearance(rawInput: unknown): NxdsAppearanceState {
     lightContrast: normalizeContrast(raw.lightContrast, d.lightContrast),
     darkContrast: normalizeContrast(raw.darkContrast, d.darkContrast),
     uiScale: enumOr(raw.uiScale, SCALES, d.uiScale),
+    textSize: enumOr(raw.textSize, TEXT_SIZE_VALUES, d.textSize),
     density: enumOr(raw.density, DENSITIES, d.density),
     corners: enumOr(raw.corners, CORNERS, d.corners),
     elevation: enumOr(raw.elevation, ELEVATIONS, d.elevation),
@@ -308,13 +322,18 @@ export function createNxdsThemeContract(
 }
 
 /**
- * The code size at each other UI scale. `codeFontSize` is the size at the
- * Default scale, and code text grows with the label text.
+ * The code size at each other UI scale and text size. `codeFontSize` is the
+ * size at the Default scale and text size, and code text grows with the label
+ * text.
  */
 function scaledCodeSizes(codePx: number): string {
-  return NON_DEFAULT_UI_SCALES.map(
-    (scale) =>
-      `${uiScaleSelector(scale)} {\n  --nx-typography-code-size: ${scaleText(codePx, scale)}px;\n}`
+  return UI_SCALE_OPTIONS.flatMap(({ value: scale }) =>
+    TEXT_SIZES.flatMap((textSize) => {
+      const selector = textSizeSelector(scale, textSize);
+      if (selector === null) return [];
+      const px = scaleText(codePx, scale, textSize);
+      return [`${selector} {\n  --nx-typography-code-size: ${px}px;\n}`];
+    })
   ).join('\n');
 }
 

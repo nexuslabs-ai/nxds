@@ -44,7 +44,7 @@ function select(next: unknown) {
       :aria-describedby="describedBy"
       :class="
         cn(
-          'nx:h-(--nx-spacing-8) nx:w-auto nx:min-w-0 nx:max-w-full nx:px-2.5 nx:[&>span]:flex-1 nx:[&>span]:text-start',
+          'nx:min-h-(--nx-spacing-8) nx:w-auto nx:min-w-0 nx:max-w-full nx:px-2.5 nx:[&>span]:flex-1 nx:[&>span]:text-start',
           props.class
         )
       "

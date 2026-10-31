@@ -78,6 +78,9 @@ const SINGLE_SOURCE = { mode: null, preset: null } as const;
 /** The `[data-ui-scale]` mode, which scales every token it writes. */
 const UI_SCALE: CatalogueControl = { kind: 'scale', field: 'uiScale' };
 
+/** The `[data-text-size]` mode, which scales the type sizes and code size. */
+const TEXT_SIZE: CatalogueControl = { kind: 'scale', field: 'textSize' };
+
 /** The appearance fields that write each moded family's values. */
 const FAMILY_CONTROLS: Partial<
   Record<CatalogueFamily, readonly CatalogueControl[]>
@@ -94,9 +97,11 @@ function typographyControls(
 ): readonly CatalogueControl[] {
   const [group, key] = path;
   if (group === 'code' && key === 'size') {
-    return [{ kind: 'pref', field: 'codeFontSize' }, UI_SCALE];
+    return [{ kind: 'pref', field: 'codeFontSize' }, UI_SCALE, TEXT_SIZE];
   }
-  if (group === 'size' || group === 'line-height') return [UI_SCALE];
+  if (group === 'size' || group === 'line-height') {
+    return [UI_SCALE, TEXT_SIZE];
+  }
   if (group !== 'family') return [];
   if (key === 'font-sans') return [{ kind: 'pref', field: 'uiFont' }];
   if (key === 'font-heading') return [{ kind: 'pref', field: 'headingFont' }];

@@ -38,6 +38,8 @@ export const NXDS_CLASS_GROUPS = {
   ],
   // Strokes the icons inside, so the element's own `stroke-*` must not drop it.
   'icon-stroke': ['icon-stroke'],
+  // Lets a flex or scroll child shrink, so a later `h-*` or `size-*` keeps it.
+  'min-h-0': ['min-h-0', 'min-h-[0px]'],
   animate: ['animate-overlay-presence-exit'],
   duration: [
     'duration-0',
@@ -198,6 +200,7 @@ export const NXDS_CLASS_GROUPS = {
     | DefaultClassGroupIds
     | 'typography'
     | 'icon-stroke'
+    | 'min-h-0'
     | 'autofill-bg'
     | 'autofill-text'
     | 'surface'
@@ -229,6 +232,12 @@ const twMerge = extendTailwindMerge<NxdsClassGroupId>({
     classGroups: NXDS_CLASS_GROUPS,
     conflictingClassGroups: {
       typography: TYPOGRAPHY_CONFLICTS,
+      // A control sets `h-fit min-h-N`, so a caller's `h-*` or `size-*` must
+      // drop the min-height too, or the control stays N tall.
+      h: ['min-h'],
+      size: ['min-h'],
+      'min-h': ['min-h-0'],
+      'min-h-0': ['min-h'],
     },
   },
 });

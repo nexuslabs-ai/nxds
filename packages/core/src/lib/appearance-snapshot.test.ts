@@ -42,8 +42,8 @@ function mockSystemPrefersDark(matches: boolean): void {
 }
 
 describe('NxdsAppearanceSnapshot', () => {
-  it('invalidates cached CSS from before the UI scale', () => {
-    expect(SNAPSHOT_VERSION).toBe(11);
+  it('invalidates cached CSS from before the text size', () => {
+    expect(SNAPSHOT_VERSION).toBe(12);
   });
 
   it('stores pre-derived CSS verbatim', () => {
@@ -97,7 +97,7 @@ describe('NxdsAppearanceSnapshot', () => {
     expect(snapshot.state).toEqual(state);
   });
 
-  it.each([1, 5, 6, 9, 10])(
+  it.each([1, 5, 6, 9, 10, 11])(
     'refreshes a v%s snapshot without resetting the stored state',
     (version) => {
       const state = {
@@ -233,6 +233,7 @@ describe('resolveFirstPaint', () => {
     expect(result.className).toBe('dark');
     expect(result.dataAttrs).toEqual({
       'data-ui-scale': 'default',
+      'data-text-size': '14',
       'data-density': 'default',
       'data-radius': 'subtle',
       'data-shadow': 'quiet',
@@ -288,7 +289,12 @@ describe('createNxdsAppearanceBootstrapScript', () => {
 
   it('applies a stored dark snapshot to the document', () => {
     const dark = createNxdsAppearanceSnapshot(
-      { ...DEFAULT_NXDS_APPEARANCE, mode: 'dark', uiScale: 'large' },
+      {
+        ...DEFAULT_NXDS_APPEARANCE,
+        mode: 'dark',
+        uiScale: 'large',
+        textSize: 16,
+      },
       ':root { --test-theme: dark; }',
       ':root { --test-prefs: dark; }'
     );
@@ -300,6 +306,7 @@ describe('createNxdsAppearanceBootstrapScript', () => {
     expect(document.documentElement.getAttribute('data-ui-scale')).toBe(
       'large'
     );
+    expect(document.documentElement.getAttribute('data-text-size')).toBe('16');
     expect(document.documentElement.getAttribute('data-radius')).toBe('subtle');
     // The host page's own color-scheme is left alone; `.dark` CSS covers it.
     expect(document.documentElement.style.colorScheme).toBe('');
@@ -379,6 +386,7 @@ describe('createNxdsAppearanceBootstrapScript', () => {
     expect(document.documentElement.getAttribute('data-density')).toBe(
       'default'
     );
+    expect(document.documentElement.getAttribute('data-text-size')).toBe('14');
     expect(document.documentElement.classList.contains('dark')).toBe(false);
     expect(
       document.querySelectorAll('style[data-nxds-appearance-theme]')
