@@ -33,7 +33,7 @@ export const NXDS_CLASS_GROUPS = {
   // Strokes the icons inside, so the element's own `stroke-*` must not drop it.
   'icon-stroke': ['icon-stroke'],
   // Lets a flex or scroll child shrink, so a later `h-*` or `size-*` keeps it.
-  'min-h-0': ['min-h-0'],
+  'min-h-0': ['min-h-0', 'min-h-[0px]'],
   animate: ['animate-overlay-presence-exit'],
   duration: [
     'duration-0',

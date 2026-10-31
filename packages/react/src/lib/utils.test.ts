@@ -128,6 +128,10 @@ describe('cn', () => {
       'nx:h-fit nx:min-h-0'
     );
     expect(cn('nx:min-h-0', 'nx:min-h-10')).toBe('nx:min-h-10');
+    expect(cn('nx:min-h-[0px]', 'nx:h-8')).toBe('nx:min-h-[0px] nx:h-8');
+    expect(cn('nx:h-fit nx:min-h-10', 'nx:min-h-[0px]')).toBe(
+      'nx:h-fit nx:min-h-[0px]'
+    );
   });
 
   it.each(['primary', 'error', 'information', 'success', 'warning'])(
