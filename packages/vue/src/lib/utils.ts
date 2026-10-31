@@ -227,3 +227,11 @@ const twMerge = extendTailwindMerge<NxdsClassGroupId>({
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/**
+ * Omits keys from each member of a union, so a prop such as Button's
+ * `iconOnly` still picks which member applies.
+ */
+export type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;

@@ -96,7 +96,11 @@ interface FilterConditionRemoveProps extends Omit<
   React.ComponentProps<'button'>,
   'children' | 'type'
 > {
-  'aria-label': string;
+  /**
+   * The button's name, such as "Remove status filter". Screen readers read
+   * it, and it stays visually hidden.
+   */
+  children: string;
 }
 
 const FilterConditionRemove = React.forwardRef<
@@ -105,6 +109,7 @@ const FilterConditionRemove = React.forwardRef<
 >(function FilterConditionRemove(propsWithoutRef, forwardedRef) {
   const {
     className,
+    children,
     ...props
   }: React.PropsWithoutRef<FilterConditionRemoveProps> & {
     ref?: React.ForwardedRef<HTMLButtonElement>;
@@ -124,6 +129,7 @@ const FilterConditionRemove = React.forwardRef<
       )}
     >
       <IconX aria-hidden="true" />
+      <span className="nx:sr-only">{children}</span>
     </button>
   );
 });

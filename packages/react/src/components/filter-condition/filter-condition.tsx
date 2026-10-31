@@ -66,11 +66,16 @@ interface FilterConditionRemoveProps extends Omit<
   React.ComponentProps<'button'>,
   'children' | 'type'
 > {
-  'aria-label': string;
+  /**
+   * The button's name, such as "Remove status filter". Screen readers read
+   * it, and it stays visually hidden.
+   */
+  children: string;
 }
 
 function FilterConditionRemove({
   className,
+  children,
   ...props
 }: FilterConditionRemoveProps) {
   return (
@@ -85,6 +90,7 @@ function FilterConditionRemove({
       )}
     >
       <IconX aria-hidden="true" />
+      <span className="nx:sr-only">{children}</span>
     </button>
   );
 }

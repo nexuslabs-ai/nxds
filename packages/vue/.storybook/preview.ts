@@ -57,23 +57,23 @@ const AppearanceDecorator: Decorator = (story, context) => ({
     '<div class="nx:flex nx:min-h-svh nx:items-center nx:justify-center nx:bg-background nx:text-foreground nx:typography-body-default"><story /></div>',
 });
 
-// Vue can't require slot text, and an icon-only button's text is its name.
-// A story that renders one without that text fails.
-function iconOnlyButtonsWithoutText(root: HTMLElement) {
+// Vue can't require slot content. An icon-only button needs its text, which
+// is its name, and a start icon. A story that renders one without either fails.
+function brokenIconOnlyButtons(root: HTMLElement) {
   return [...root.querySelectorAll(':is(button, a)[data-icon-only]')].filter(
-    (button) => !button.querySelector('.nx\\:sr-only')?.textContent?.trim()
+    (button) =>
+      !button.querySelector('.nx\\:sr-only')?.textContent?.trim() ||
+      !button.querySelector('[aria-hidden="true"] > *')
   );
 }
 
 const preview: Preview = {
   tags: ['autodocs'],
   afterEach: ({ canvasElement }) => {
-    const unnamed = iconOnlyButtonsWithoutText(
-      canvasElement.ownerDocument.body
-    );
-    if (unnamed.length === 0) return;
+    const broken = brokenIconOnlyButtons(canvasElement.ownerDocument.body);
+    if (broken.length === 0) return;
     throw new Error(
-      `An icon-only button has no slot text, so it has no name:\n${unnamed.map((button) => button.outerHTML).join('\n')}`
+      `An icon-only button needs slot text as its name and a start icon:\n${broken.map((button) => button.outerHTML).join('\n')}`
     );
   },
   parameters: {

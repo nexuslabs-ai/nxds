@@ -168,7 +168,7 @@ provide(DatePickerKey, {
 const navButtonClass = computed(() =>
   cn(
     buttonVariants({ variant: props.buttonVariant, iconOnly: true }),
-    'nx:size-(--cell-size) nx:p-0 nx:select-none nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground'
+    'nx:size-(--cell-size) nx:select-none nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground'
   )
 );
 </script>

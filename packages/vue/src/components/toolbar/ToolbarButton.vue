@@ -4,7 +4,7 @@ import {
   ToolbarButton,
   type ToolbarButtonProps as RekaToolbarButtonProps,
 } from 'reka-ui';
-import type { HTMLAttributes, VNode } from 'vue';
+import { computed, type HTMLAttributes, type VNode } from 'vue';
 
 import { cn } from '../../lib/utils';
 import { type ButtonVariants, buttonVariants } from '../button';
@@ -27,10 +27,13 @@ const props = withDefaults(defineProps<ToolbarButtonProps>(), {
   iconOnly: false,
 });
 
-defineSlots<{
+const slots = defineSlots<{
   default?: () => VNode[];
   'start-icon'?: () => VNode[];
 }>();
+
+// `iconOnly` keeps the native button, as Button does.
+const rendersAsChild = computed(() => props.asChild && !props.iconOnly);
 
 const delegated = reactiveOmit(props, 'class', 'variant', 'size', 'iconOnly');
 </script>
@@ -43,13 +46,19 @@ const delegated = reactiveOmit(props, 'class', 'variant', 'size', 'iconOnly');
     :data-size="size"
     :data-icon-only="iconOnly || undefined"
     :class="cn(buttonVariants({ variant, size, iconOnly }), props.class)"
+    :as-child="rendersAsChild"
   >
-    <template v-if="iconOnly">
-      <span aria-hidden="true" class="nx:inline-flex nx:shrink-0">
+    <slot v-if="rendersAsChild" />
+    <template v-else>
+      <span
+        v-if="slots['start-icon']"
+        aria-hidden="true"
+        class="nx:inline-flex nx:shrink-0"
+      >
         <slot name="start-icon" />
       </span>
-      <span class="nx:sr-only"><slot /></span>
+      <span v-if="iconOnly" class="nx:sr-only"><slot /></span>
+      <slot v-else />
     </template>
-    <slot v-else />
   </ToolbarButton>
 </template>

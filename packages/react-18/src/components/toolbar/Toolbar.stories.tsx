@@ -56,7 +56,7 @@ const meta: Meta<typeof Toolbar> = {
           '- Label the toolbar with `aria-label` or `aria-labelledby`.',
           '- Build it from ToolbarButton, ToolbarLink, ToolbarToggleGroup and ToolbarToggleItem so every control joins the arrow-key order.',
           '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading`.',
-          '- ToolbarButton and ToolbarToggleItem take `iconOnly`. It shows only `startIcon`, and the text stays as the hidden name.',
+          '- ToolbarButton and ToolbarToggleItem take `startIcon` and `iconOnly`. `iconOnly` shows only the icon, and the text stays as the hidden name.',
           '- Use `asChild` to make a toolbar control a menu trigger.',
           '- Keep text fields outside the toolbar, because arrow keys would conflict with typing.',
           '- In narrow containers, controls wrap in DOM order and arrow keys still reach every row.',
@@ -523,6 +523,53 @@ export const IconOnly: Story = {
     }
   },
 };
+
+export const StartIcon: Story = {
+  render: () => (
+    <Toolbar aria-label="Text formatting">
+      <ToolbarButton startIcon={<ArrowUUpLeftIcon />}>
+        Undo formatting
+      </ToolbarButton>
+      <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+        <ToolbarToggleItem value="bold" startIcon={<TextBIcon />}>
+          Bold
+        </ToolbarToggleItem>
+      </ToolbarToggleGroup>
+    </Toolbar>
+  ),
+  play: async ({ canvasElement }) => {
+    const toolbar = within(canvasElement).getByRole('toolbar', {
+      name: 'Text formatting',
+    });
+    for (const name of ['Undo formatting', 'Bold']) {
+      const button = within(toolbar).getByRole('button', { name });
+      await expect(
+        button.querySelector('[aria-hidden="true"] svg')
+      ).not.toBeNull();
+      await expect(button.querySelector('.nx\\:sr-only')).toBeNull();
+    }
+  },
+};
+
+// A screen-size switch is one boolean prop.
+function _ResponsiveFormatting({ isNarrow }: { isNarrow: boolean }) {
+  return (
+    <Toolbar aria-label="Text formatting">
+      <ToolbarButton iconOnly={isNarrow} startIcon={<ArrowUUpLeftIcon />}>
+        Undo formatting
+      </ToolbarButton>
+      <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+        <ToolbarToggleItem
+          value="bold"
+          iconOnly={isNarrow}
+          startIcon={<TextBIcon />}
+        >
+          Bold
+        </ToolbarToggleItem>
+      </ToolbarToggleGroup>
+    </Toolbar>
+  );
+}
 
 export const AllVariants: Story = {
   render: () => (

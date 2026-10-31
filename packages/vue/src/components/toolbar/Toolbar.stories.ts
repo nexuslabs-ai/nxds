@@ -53,7 +53,7 @@ const meta = {
           '- Label the toolbar with `aria-label` or `aria-labelledby`.',
           '- Build it from ToolbarButton, ToolbarLink, ToolbarToggleGroup and ToolbarToggleItem so every control joins the arrow-key order.',
           '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading`.',
-          '- ToolbarButton and ToolbarToggleItem take `iconOnly`. It shows only `startIcon`, and the text stays as the hidden name.',
+          '- ToolbarButton and ToolbarToggleItem take `#start-icon` and `icon-only`. `icon-only` shows only the icon, and the text stays as the hidden name.',
           '- Use `as-child` to make a toolbar control a menu trigger.',
           '- Keep text fields outside the toolbar, because arrow keys would conflict with typing.',
           '- In narrow containers, controls wrap in DOM order and arrow keys still reach every row.',
@@ -542,6 +542,41 @@ export const IconOnly: Story = {
   },
 };
 
+export const StartIcon: Story = {
+  render: () => ({
+    components: {
+      PhArrowUUpLeft,
+      PhTextB,
+      Toolbar,
+      ToolbarButton,
+      ToolbarToggleGroup,
+      ToolbarToggleItem,
+    },
+    template: `
+      <Toolbar aria-label="Text formatting">
+        <ToolbarButton>
+          <template #start-icon><PhArrowUUpLeft /></template>Undo formatting</ToolbarButton>
+        <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+          <ToolbarToggleItem value="bold">
+            <template #start-icon><PhTextB /></template>Bold</ToolbarToggleItem>
+        </ToolbarToggleGroup>
+      </Toolbar>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const toolbar = within(canvasElement).getByRole('toolbar', {
+      name: 'Text formatting',
+    });
+    for (const name of ['Undo formatting', 'Bold']) {
+      const button = within(toolbar).getByRole('button', { name });
+      await expect(
+        button.querySelector('[aria-hidden="true"] svg')
+      ).not.toBeNull();
+      await expect(button.querySelector('.nx\\:sr-only')).toBeNull();
+    }
+  },
+};
+
 export const DisabledToggles: Story = {
   tags: ['docs'],
   parameters: {
@@ -858,7 +893,6 @@ const SelectionExample = defineComponent({
             <TooltipTrigger as-child>
               <ToolbarButton
                 icon-only
-               
                 class="nx:text-muted-foreground"
                 @click="clearSelection"
               >

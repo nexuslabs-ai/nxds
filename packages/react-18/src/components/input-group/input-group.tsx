@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import { cva, type VariantProps } from 'class-variance-authority';
 
-import { cn } from '../../lib/utils';
+import { cn, type DistributiveOmit } from '../../lib/utils';
 import { Button } from '../button/button';
 import { Input } from '../input/input';
 import { Textarea } from '../textarea/textarea';
@@ -179,16 +179,11 @@ const inputGroupButtonVariants = cva(
 /**
  * Props for the InputGroupButton component.
  */
-type InputGroupButtonProps = WithoutButtonSize<
-  React.ComponentProps<typeof Button>
+type InputGroupButtonProps = DistributiveOmit<
+  React.ComponentProps<typeof Button>,
+  'size'
 > &
   Pick<VariantProps<typeof inputGroupButtonVariants>, 'size'>;
-
-// Drops `size` from each of Button's prop shapes, so `iconOnly` still picks
-// which one applies.
-type WithoutButtonSize<Props> = Props extends unknown
-  ? Omit<Props, 'size'>
-  : never;
 
 /**
  * Compact button sized to fit inside an `InputGroupAddon`. Uses the `ghost`

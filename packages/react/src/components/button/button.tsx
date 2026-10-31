@@ -261,4 +261,4 @@ function Button({
   );
 }
 
-export { Button, type ButtonProps, buttonVariants, type ButtonWithTextProps };
+export { Button, type ButtonProps, buttonVariants };

@@ -30,7 +30,8 @@ In Vue, pass the icon in the `#start-icon` slot:
 - An `iconOnly` button in a `ButtonGroup` now takes the group's `size`. Before, it kept text padding or ignored the group.
 - A screen-size switch is one prop: `iconOnly={isNarrow}`.
 - `buttonVariants` takes `iconOnly` as a boolean variant.
-- ToolbarButton and ToolbarToggleItem take `iconOnly` with the same rules.
+- ToolbarButton and ToolbarToggleItem take `startIcon` and `iconOnly` with the same rules.
 - InputGroupButton drops its `icon-xs` and `icon-sm` sizes for `iconOnly` at `xs` or `sm`.
 - PaginationLink takes `size` for its height and stays square.
-- DatePicker day buttons render a native `<button>` with Button's styles, without `data-size` or `data-icon-only`.
+- DatePicker day buttons render a native `<button>` with Button's styles and `data-slot="date-picker-day-button"`.
+- FilterConditionRemove takes its name as `children` text, visually hidden, in place of `aria-label`.

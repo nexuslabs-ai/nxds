@@ -269,4 +269,4 @@ const Button = React.forwardRef<
   );
 });
 
-export { Button, type ButtonProps, buttonVariants, type ButtonWithTextProps };
+export { Button, type ButtonProps, buttonVariants };

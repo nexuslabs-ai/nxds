@@ -509,6 +509,8 @@ export const renderedDifferences: Record<string, string> = {
     'Radix mounts the <img> only once it loads; Reka mounts it at once as role="img", hidden until it loads',
   'date-picker':
     "react-day-picker adds its rdp-* classes to the root; Reka names the root and adds a hidden live label, 'Event Date, January 2025'",
+  'date-picker-day-button':
+    'react-day-picker and Reka each put their own day-state data attributes on the day button, such as data-outside-view, which only Reka sets',
   'input-otp':
     "input-otp puts data-slot on its hidden <input>; Vue's root is Reka's PinInputRoot <div>",
   'input-otp-slot':

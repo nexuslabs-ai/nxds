@@ -19,6 +19,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<ComboboxTriggerProps>(), {
   as: 'button',
   variant: 'outline',
+  loading: false,
   type: 'button',
 });
 

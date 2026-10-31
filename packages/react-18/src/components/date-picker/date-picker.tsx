@@ -20,7 +20,7 @@ import {
   IconChevronLeft,
   IconChevronRight,
 } from '../../lib/icons';
-import { cn } from '../../lib/utils';
+import { cn, type DistributiveOmit } from '../../lib/utils';
 import { type ButtonProps, buttonVariants } from '../button/button';
 
 type DatePickerCellSize = 'default' | 'large' | 'xlarge';
@@ -135,11 +135,6 @@ const staticDayPickerClassNames = {
   hidden: cn('nx:invisible', defaultClassNames.hidden),
 } satisfies NonNullable<React.ComponentProps<typeof DayPicker>['classNames']>;
 
-// Omits from each mode's props, so `mode` still narrows the rest.
-type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
-  ? Omit<T, K>
-  : never;
-
 /**
  * DatePickerProps
  *
@@ -245,12 +240,12 @@ function DatePicker({
             ...staticDayPickerClassNames,
             button_previous: cn(
               buttonVariants({ variant: buttonVariant, iconOnly: true }),
-              'nx:size-(--cell-size) nx:p-0 nx:select-none nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
+              'nx:size-(--cell-size) nx:select-none nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
               defaultClassNames.button_previous
             ),
             button_next: cn(
               buttonVariants({ variant: buttonVariant, iconOnly: true }),
-              'nx:size-(--cell-size) nx:p-0 nx:select-none nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
+              'nx:size-(--cell-size) nx:select-none nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
               defaultClassNames.button_next
             ),
             caption_label: cn(
@@ -439,8 +434,7 @@ function DatePickerDayButton({
     <button
       ref={ref}
       type="button"
-      data-slot="button"
-      data-variant="ghost"
+      data-slot="date-picker-day-button"
       data-day={day.isoDate}
       data-selected-single={
         modifiers.selected &&

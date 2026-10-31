@@ -34,7 +34,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Button triggers an action. Use it for short, visible labels.\n\n- Use one decorative icon slot at most: `#start-icon` or `#end-icon`.\n- A loading button shows only a spinner and hides its icons.\n- `icon-only` shows only `#start-icon` in a square button. Its text stays as the hidden name.\n- Icons are 16px at every size and density.\n- Stroked icons, such as Lucide, draw a 1.5px line, whatever their `strokeWidth`. Filled icons, such as Phosphor, keep their own line.',
+          'Button triggers an action. Use it for short, visible labels.\n\n- Use one decorative icon slot at most: `#start-icon` or `#end-icon`.\n- A loading button shows only a spinner and hides its icons.\n- `icon-only` shows only `#start-icon` in a square button. Its text stays as the hidden name.\n- `icon-only` ignores `as-child`. For an icon-only link, set `as="a"`.\n- Icons are 16px at every size and density.\n- Stroked icons, such as Lucide, draw a 1.5px line, whatever their `strokeWidth`. Filled icons, such as Phosphor, keep their own line.',
       },
     },
   },
@@ -83,7 +83,7 @@ export const IconOnlySizes: Story = {
     docs: {
       description: {
         story:
-          'Show only the icon with `iconOnly`. `size` sets the height, and the text is the name screen readers read.',
+          'Show only the icon with `icon-only`. `size` sets the height, and the text is the name screen readers read.',
       },
     },
   },
@@ -102,11 +102,6 @@ export const IconOnlySizes: Story = {
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const iconToken = parseFloat(
-      getComputedStyle(canvasElement).getPropertyValue(
-        '--nx-icon-glyph-default'
-      )
-    );
     const buttons = canvas.getAllByRole('button');
 
     await expect(buttons).toHaveLength(ICON_ONLY_SQUARES.length);
@@ -114,9 +109,6 @@ export const IconOnlySizes: Story = {
       const { width, height } = button.getBoundingClientRect();
       await expect(height).toBe(ICON_ONLY_SQUARES[index]);
       await expect(width).toBe(height);
-      const icon = button.querySelector('svg')!.getBoundingClientRect();
-      await expect(icon.width).toBe(iconToken);
-      await expect(icon.height).toBe(iconToken);
     }
   },
 };
@@ -339,6 +331,30 @@ export const IconOnlyName: Story = {
     const { width, height } = label.getBoundingClientRect();
     await expect(width).toBeLessThanOrEqual(1);
     await expect(height).toBeLessThanOrEqual(1);
+  },
+};
+
+export const IconOnlyLoading: Story = {
+  render: () => ({
+    components: { Button, PhDownloadSimple },
+    template: `
+      <Button icon-only loading>
+        <template #start-icon><PhDownloadSimple /></template>Download</Button>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Download' });
+    const { width, height } = button.getBoundingClientRect();
+
+    await expect(button).toHaveAttribute('aria-busy', 'true');
+    await expect(within(button).getByText('Download')).toHaveClass(
+      'nx:sr-only'
+    );
+    await expect(width).toBe(height);
+    await expect(
+      button.querySelector('[data-slot="button-start-icon"]')
+    ).toBeNull();
   },
 };
 

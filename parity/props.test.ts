@@ -145,7 +145,7 @@ interface VueName {
  */
 function vueNames(react: ComponentEntry) {
   return react.props.map((prop): VueName => {
-    if (prop.name === 'children' && REACT_NODE.test(prop.type)) {
+    if (prop.name === 'children') {
       return { prop, kind: 'defaultSlot', vueName: 'default' };
     }
     if (REACT_NODE.test(prop.type)) {

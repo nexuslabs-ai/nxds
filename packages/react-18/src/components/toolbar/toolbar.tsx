@@ -47,8 +47,9 @@ const Toolbar = React.forwardRef<
 });
 
 /**
- * Adds `iconOnly` to a toolbar part's props. With `iconOnly`, `children` must
- * be a string and `startIcon` must be set, and `asChild` is not allowed.
+ * Adds `startIcon` and `iconOnly` to a toolbar part's props. With `iconOnly`,
+ * `children` must be a string and `startIcon` must be set, and `asChild` is
+ * not allowed.
  */
 type WithIconOnly<Props> =
   | (Props & {
@@ -57,7 +58,10 @@ type WithIconOnly<Props> =
        * screen readers read, visually hidden.
        */
       iconOnly?: false;
-      startIcon?: never;
+      /**
+       * Decorative icon before the label. `asChild` doesn't render it.
+       */
+      startIcon?: React.ReactNode;
     })
   | (Omit<Props, 'children' | 'asChild'> & {
       /**
@@ -70,26 +74,31 @@ type WithIconOnly<Props> =
        */
       children: string;
       /**
-       * Decorative icon that `iconOnly` shows.
+       * Decorative icon before the label. `asChild` doesn't render it.
        */
       startIcon: React.ReactNode;
       asChild?: false;
     });
 
-/** The icon `iconOnly` shows, with the text as the hidden name. */
-function ToolbarIconLabel({
+/** The start icon and the label. With `iconOnly`, the label is the hidden name. */
+function ToolbarControlContent({
+  iconOnly,
   icon,
   children,
 }: {
+  iconOnly: boolean;
   icon: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const hasIcon = icon !== undefined && icon !== null && icon !== false;
   return (
     <>
-      <span aria-hidden="true" className="nx:inline-flex nx:shrink-0">
-        {icon}
-      </span>
-      <span className="nx:sr-only">{children}</span>
+      {hasIcon && (
+        <span aria-hidden="true" className="nx:inline-flex nx:shrink-0">
+          {icon}
+        </span>
+      )}
+      {iconOnly ? <span className="nx:sr-only">{children}</span> : children}
     </>
   );
 }
@@ -109,6 +118,7 @@ const ToolbarButton = React.forwardRef<
     size = 'sm',
     iconOnly = false,
     startIcon,
+    asChild = false,
     children,
     ...props
   }: React.PropsWithoutRef<ToolbarButtonProps> & {
@@ -123,12 +133,15 @@ const ToolbarButton = React.forwardRef<
       data-size={size}
       data-icon-only={iconOnly || undefined}
       className={cn(buttonVariants({ variant, size, iconOnly }), className)}
+      asChild={asChild}
       {...props}
     >
-      {iconOnly ? (
-        <ToolbarIconLabel icon={startIcon}>{children}</ToolbarIconLabel>
-      ) : (
+      {asChild ? (
         children
+      ) : (
+        <ToolbarControlContent iconOnly={iconOnly} icon={startIcon}>
+          {children}
+        </ToolbarControlContent>
       )}
     </ToolbarPrimitive.Button>
   );
@@ -232,6 +245,7 @@ const ToolbarToggleItem = React.forwardRef<
     size = 'sm',
     iconOnly = false,
     startIcon,
+    asChild = false,
     children,
     ...props
   }: React.PropsWithoutRef<ToolbarToggleItemProps> & {
@@ -249,12 +263,15 @@ const ToolbarToggleItem = React.forwardRef<
         'nx:data-[state=on]:bg-primary-subtle nx:data-[state=on]:text-primary-subtle-foreground nx:data-[state=on]:hover:bg-primary-subtle-hover nx:data-[state=on]:active:bg-primary-subtle-active',
         className
       )}
+      asChild={asChild}
       {...props}
     >
-      {iconOnly ? (
-        <ToolbarIconLabel icon={startIcon}>{children}</ToolbarIconLabel>
-      ) : (
+      {asChild ? (
         children
+      ) : (
+        <ToolbarControlContent iconOnly={iconOnly} icon={startIcon}>
+          {children}
+        </ToolbarControlContent>
       )}
     </ToolbarPrimitive.ToggleItem>
   );

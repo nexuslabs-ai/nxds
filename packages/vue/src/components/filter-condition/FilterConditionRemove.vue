@@ -6,8 +6,6 @@ import { cn } from '../../lib/utils';
 import { buttonVariants } from '../button';
 
 export interface FilterConditionRemoveProps {
-  /** Defines a string value that labels the current element. */
-  ariaLabel: string;
   class?: HTMLAttributes['class'];
 }
 
@@ -21,7 +19,6 @@ const props = defineProps<FilterConditionRemoveProps>();
     v-bind="$attrs"
     type="button"
     data-slot="filter-condition-remove"
-    :aria-label="ariaLabel"
     :class="
       cn(
         buttonVariants({ variant: 'outline', size: 'sm', iconOnly: true }),
@@ -31,5 +28,6 @@ const props = defineProps<FilterConditionRemoveProps>();
     "
   >
     <IconX aria-hidden="true" />
+    <span class="nx:sr-only"><slot /></span>
   </button>
 </template>

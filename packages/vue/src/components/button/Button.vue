@@ -62,8 +62,7 @@ const sharedAttrs = computed(() => ({
 }));
 
 // `asChild` clones onto a single child element; any other child keeps the
-// native `<button>`, as React's Slot does. `iconOnly` keeps it too, as
-// React's types allow no `asChild` with `iconOnly`.
+// native `<button>`, as React's Slot does. `iconOnly` also keeps it.
 function rendersAsChild() {
   if (!props.asChild || props.iconOnly) return false;
   const nodes = renderedNodes(slots.default?.());

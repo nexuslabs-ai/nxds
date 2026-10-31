@@ -202,10 +202,6 @@ export const WithSeparator: Story = {
   },
 };
 
-// The group is a role=group region that advertises its orientation. The first
-// group sets no `orientation` or `size`, a regression guard for the default
-// emits. In the second, an explicit `size` beats the group's, and a Button
-// nested in a wrapper still inherits it.
 // The group's size reaches an icon-only member, which stays square.
 export const IconOnlyInSmallGroup: Story = {
   render: () => ({
@@ -232,6 +228,10 @@ export const IconOnlyInSmallGroup: Story = {
   },
 };
 
+// The group is a role=group region that advertises its orientation. The first
+// group sets no `orientation` or `size`, a regression guard for the default
+// emits. In the second, an explicit `size` beats the group's, and a Button
+// nested in a wrapper still inherits it.
 export const WithDataAttributes: Story = {
   render: () => ({
     components: { Button, ButtonGroup },

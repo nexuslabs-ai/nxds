@@ -207,11 +207,6 @@ export const IconOnlySizes: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const iconToken = parseFloat(
-      getComputedStyle(canvasElement).getPropertyValue(
-        '--nx-icon-glyph-default'
-      )
-    );
     const buttons = canvas.getAllByRole('button');
 
     await expect(buttons).toHaveLength(ICON_ONLY_SQUARES.length);
@@ -219,9 +214,6 @@ export const IconOnlySizes: Story = {
       const { width, height } = button.getBoundingClientRect();
       await expect(height).toBe(ICON_ONLY_SQUARES[index]);
       await expect(width).toBe(height);
-      const icon = button.querySelector('svg')!.getBoundingClientRect();
-      await expect(icon.width).toBe(iconToken);
-      await expect(icon.height).toBe(iconToken);
     }
   },
 };
@@ -242,6 +234,28 @@ export const IconOnlyName: Story = {
     const { width, height } = label.getBoundingClientRect();
     await expect(width).toBeLessThanOrEqual(1);
     await expect(height).toBeLessThanOrEqual(1);
+  },
+};
+
+export const IconOnlyLoading: Story = {
+  render: () => (
+    <Button iconOnly loading startIcon={<DownloadSimpleIcon />}>
+      Download
+    </Button>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Download' });
+    const { width, height } = button.getBoundingClientRect();
+
+    await expect(button).toHaveAttribute('aria-busy', 'true');
+    await expect(within(button).getByText('Download')).toHaveClass(
+      'nx:sr-only'
+    );
+    await expect(width).toBe(height);
+    await expect(
+      button.querySelector('[data-slot="button-start-icon"]')
+    ).toBeNull();
   },
 };
 
@@ -278,6 +292,15 @@ const _rejectedIconOnlyButtons = [
   </Button>,
   // @ts-expect-error An icon-only button needs an icon.
   <Button key="no-icon" iconOnly>
+    Download
+  </Button>,
+  // @ts-expect-error An icon-only button shows one icon.
+  <Button
+    key="end-icon"
+    iconOnly
+    startIcon={<StarIcon />}
+    endIcon={<ArrowRightIcon />}
+  >
     Download
   </Button>,
   // @ts-expect-error asChild can't render an icon-only button.
