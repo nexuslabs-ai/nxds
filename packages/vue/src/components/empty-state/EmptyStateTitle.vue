@@ -16,9 +16,7 @@ const props = withDefaults(defineProps<EmptyStateTitleProps>(), { as: 'div' });
     data-slot="empty-state-title"
     :as="as"
     :as-child="asChild"
-    :class="
-      cn('nx:m-0 nx:typography-heading-xxsmall nx:text-balance', props.class)
-    "
+    :class="cn('nx:m-0 nx:typography-heading-xxsmall', props.class)"
   >
     <slot />
   </Primitive>

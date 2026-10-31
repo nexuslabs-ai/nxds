@@ -369,6 +369,7 @@ export const TruncateWithEveryStyle: Story = {
       const line = within(canvasElement).getByTestId(cls);
       // `truncate` keeps one line, cut with an ellipsis, under every type style.
       await expect(getComputedStyle(line).whiteSpace, cls).toBe('nowrap');
+      await expect(getComputedStyle(line).textOverflow, cls).toBe('ellipsis');
       await expect(line.scrollWidth, cls).toBeGreaterThan(line.clientWidth);
     }
   },

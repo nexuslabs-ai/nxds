@@ -204,12 +204,19 @@ export const TYPOGRAPHY_CONFLICTS = [
 ] satisfies DefaultClassGroupIds[];
 
 /** Tailwind-merge configured with `nx:` prefix and nxds custom utility groups. */
-const twMerge = extendTailwindMerge<NxdsClassGroupId>({
+const twMerge = extendTailwindMerge<NxdsClassGroupId | 'truncate'>({
   prefix: 'nx',
+  // `truncate` leaves `text-overflow` for a group of its own, so it can drop a
+  // `text-wrap` class (which turns wrapping back on) and `text-ellipsis` can't.
+  override: {
+    classGroups: { 'text-overflow': ['text-ellipsis', 'text-clip'] },
+  },
   extend: {
     theme: NXDS_THEME_SCALES,
-    classGroups: NXDS_CLASS_GROUPS,
+    classGroups: { ...NXDS_CLASS_GROUPS, truncate: ['truncate'] },
     conflictingClassGroups: {
+      truncate: ['text-overflow', 'text-wrap'],
+      'text-overflow': ['truncate'],
       typography: TYPOGRAPHY_CONFLICTS,
     },
   },

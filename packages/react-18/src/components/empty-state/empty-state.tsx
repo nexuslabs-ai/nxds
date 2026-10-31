@@ -169,10 +169,7 @@ const EmptyStateTitle = React.forwardRef<
   return (
     <Comp
       data-slot="empty-state-title"
-      className={cn(
-        'nx:m-0 nx:typography-heading-xxsmall nx:text-balance',
-        className
-      )}
+      className={cn('nx:m-0 nx:typography-heading-xxsmall', className)}
       {...props}
     />
   );

@@ -257,13 +257,32 @@ describe('cn', () => {
       'nx:typography-heading-large'
     );
   });
+  /* eslint-enable @nxds/nx-class-conventions -- end of the raw-atomics block */
 
   it('keeps a text-wrap atomic beside a typography composite', () => {
     expect(cn('nx:text-balance', 'nx:typography-heading-large')).toBe(
       'nx:text-balance nx:typography-heading-large'
     );
   });
-  /* eslint-enable @nxds/nx-class-conventions -- end of the raw-atomics block */
+
+  it('lets truncate displace a text-wrap atomic', () => {
+    expect(
+      cn('nx:typography-heading-small nx:text-balance', 'nx:truncate')
+    ).toBe('nx:typography-heading-small nx:truncate');
+  });
+
+  it('keeps a text-wrap atomic beside text-ellipsis', () => {
+    expect(cn('nx:text-nowrap', 'nx:text-ellipsis')).toBe(
+      'nx:text-nowrap nx:text-ellipsis'
+    );
+  });
+
+  it.each([
+    ['nx:truncate', 'nx:text-ellipsis'],
+    ['nx:text-clip', 'nx:truncate'],
+  ])('lets %s and %s resolve last-wins', (first, last) => {
+    expect(cn(first, last)).toBe(last);
+  });
 
   it('conflicts with exactly the groups the typography composites declare', () => {
     const declared = new Set(

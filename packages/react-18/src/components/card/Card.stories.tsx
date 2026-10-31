@@ -384,6 +384,7 @@ export const TruncatedTitle: Story = {
     );
     // A long title stays on one line and ends with an ellipsis.
     await expect(getComputedStyle(title).whiteSpace).toBe('nowrap');
+    await expect(getComputedStyle(title).textOverflow).toBe('ellipsis');
     await expect(title.scrollWidth).toBeGreaterThan(title.clientWidth);
   },
 };
