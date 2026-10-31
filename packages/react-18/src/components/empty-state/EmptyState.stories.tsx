@@ -263,7 +263,7 @@ export const AllVariants: Story = {
           <EmptyStateMedia variant="default">
             <UsersIcon
               aria-hidden
-              className="nx:size-[calc(var(--nx-icon-glyph-default)*3)] nx:text-muted-foreground"
+              className="nx:size-icon-[calc(var(--nx-icon-glyph-default)*3)] nx:text-muted-foreground"
             />
           </EmptyStateMedia>
           <EmptyStateTitle>No results</EmptyStateTitle>

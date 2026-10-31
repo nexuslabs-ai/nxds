@@ -25,8 +25,6 @@ export const Default: Story = {
   render: () => <Spinner />,
 };
 
-// Sized with nx:size-* utilities; the glyph inherits currentColor, so it tints
-// with nx:text-*.
 export const Sizes: Story = {
   tags: ['docs'],
   parameters: {

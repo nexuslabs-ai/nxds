@@ -215,7 +215,7 @@ export const AllVariants: Story = {
         <EmptyState>
           <EmptyStateHeader>
             <EmptyStateMedia variant="default">
-              <PhUsers aria-hidden="true" class="nx:size-[calc(var(--nx-icon-glyph-default)*3)] nx:text-muted-foreground" />
+              <PhUsers aria-hidden="true" class="nx:size-icon-[calc(var(--nx-icon-glyph-default)*3)] nx:text-muted-foreground" />
             </EmptyStateMedia>
             <EmptyStateTitle>No results</EmptyStateTitle>
             <EmptyStateDescription>Try adjusting your filters.</EmptyStateDescription>
