@@ -38,7 +38,7 @@ export interface ModeToken extends ScaleToken {
 
 const FULL_RADIUS = '9999px';
 
-/** No text that starts at this size or larger scales below it. */
+/** No text scales below this size. */
 const MIN_TEXT_PX = 8;
 
 const px = (value: string) => Number.parseFloat(value);
@@ -51,13 +51,9 @@ export function scaleLength(value: number, factor: number): number {
   return scaled >= 16 ? evenPx(scaled) : Math.round(scaled);
 }
 
-/**
- * A text size at a scale, in whole px. It stops at 8px, or at its own
- * Default size when that is smaller, so a small size never grows at Small.
- */
+/** A text size at a scale, in whole px. It stops at 8px. */
 export function scaleText(size: number, scale: UiScale): number {
-  const floor = Math.min(Math.round(size), MIN_TEXT_PX);
-  return Math.max(floor, Math.round(size * UI_SCALES[scale].text));
+  return Math.max(MIN_TEXT_PX, Math.round(size * UI_SCALES[scale].text));
 }
 
 /** The smallest length the rule allows that is larger than `previous`. */
