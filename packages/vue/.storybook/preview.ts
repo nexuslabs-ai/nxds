@@ -58,7 +58,7 @@ const AppearanceDecorator: Decorator = (story, context) => ({
 });
 
 // Vue can't require slot content. An icon-only button needs its text, which
-// is its name, and a start icon. A story that renders one without either fails.
+// is its name, and a start icon. A story fails if one lacks its text or its icon.
 function brokenIconOnlyButtons(root: HTMLElement) {
   return [...root.querySelectorAll(':is(button, a)[data-icon-only]')].filter(
     (button) =>

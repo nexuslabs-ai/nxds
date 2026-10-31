@@ -53,7 +53,7 @@ const meta = {
           '- Label the toolbar with `aria-label` or `aria-labelledby`.',
           '- Build it from ToolbarButton, ToolbarLink, ToolbarToggleGroup and ToolbarToggleItem so every control joins the arrow-key order.',
           '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading`.',
-          '- ToolbarButton and ToolbarToggleItem take `#start-icon` and `icon-only`. `icon-only` shows only the icon, and the text stays as the hidden name.',
+          '- ToolbarButton and ToolbarToggleItem take `#start-icon` and `icon-only`. `icon-only` shows only the icon, and the text stays as the hidden name. `icon-only` ignores `as-child`.',
           '- Use `as-child` to make a toolbar control a menu trigger.',
           '- Keep text fields outside the toolbar, because arrow keys would conflict with typing.',
           '- In narrow containers, controls wrap in DOM order and arrow keys still reach every row.',

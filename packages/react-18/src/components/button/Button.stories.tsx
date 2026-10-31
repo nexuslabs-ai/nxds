@@ -282,7 +282,7 @@ export const IconOnlyInteraction: Story = {
 };
 
 // Each line must fail to compile: `iconOnly` needs a text name and a
-// `startIcon`, and refuses `asChild`.
+// `startIcon`, and refuses `endIcon` and `asChild`.
 const _rejectedIconOnlyButtons = [
   // @ts-expect-error An icon-only button needs a name.
   <Button key="no-name" iconOnly startIcon={<StarIcon />} />,
