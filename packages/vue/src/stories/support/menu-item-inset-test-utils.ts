@@ -1,8 +1,12 @@
-import { DENSITY_OPTIONS } from '@nxds/core';
+import { DENSITY_OPTIONS, UI_SCALE_OPTIONS } from '@nxds/core';
 import { expect } from 'storybook/test';
 
 function textInset(element: Element) {
   return parseFloat(getComputedStyle(element).paddingLeft);
+}
+
+function width(element: Element) {
+  return parseFloat(getComputedStyle(element).width);
 }
 
 /**
@@ -25,5 +29,20 @@ export async function expectMenuItemInsetAtEveryDensity(
     for (const element of aligned) {
       await expect(textInset(element)).toBe(textInset(item));
     }
+  }
+}
+
+/**
+ * Checks, at every UI scale set on `menu`, that a radio `dot` keeps 4px on
+ * each side inside `indicator`, the box the default icon fills.
+ */
+export async function expectRadioDotInsetAtEveryUiScale(
+  menu: HTMLElement,
+  indicator: HTMLElement,
+  dot: Element
+): Promise<void> {
+  for (const { value } of UI_SCALE_OPTIONS) {
+    menu.setAttribute('data-ui-scale', value);
+    await expect(width(indicator) - width(dot)).toBe(8);
   }
 }
