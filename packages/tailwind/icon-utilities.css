@@ -7,9 +7,9 @@
 }
 
 @utility size-icon-* {
-  width: --value([length]);
-  height: --value([length]);
-  --nx-icon-size: --value([length]);
+  width: --value([*]);
+  height: --value([*]);
+  --nx-icon-size: --value([*]);
 }
 
 @utility icon-stroke {

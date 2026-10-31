@@ -22,7 +22,7 @@ const props = withDefaults(defineProps<AttachmentMediaProps>(), {
     :class="
       cn(
         'nx:group-data-[orientation=vertical]/attachment:size-auto nx:group-data-[orientation=vertical]/attachment:aspect-square nx:group-data-[orientation=vertical]/attachment:w-full nx:group-data-[orientation=vertical]/attachment:translate-y-0 nx:group-data-[orientation=vertical]/attachment:self-auto',
-        'nx:group-data-[orientation=vertical]/attachment:[&_svg]:size-icon-[length:var(--nx-spacing-8)] nx:icon-stroke',
+        'nx:group-data-[orientation=vertical]/attachment:[&_svg]:size-icon-[var(--nx-spacing-8)] nx:icon-stroke',
         'nx:group-data-[state=error]/attachment:border-error-border nx:group-data-[state=error]/attachment:bg-error-subtle nx:group-data-[state=error]/attachment:text-error-subtle-foreground',
         props.class
       )

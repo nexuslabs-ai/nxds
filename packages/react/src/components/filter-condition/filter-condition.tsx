@@ -27,7 +27,7 @@ function FilterConditionField({
       {...props}
       data-slot="filter-condition-field"
       className={cn(
-        'nx:inline-flex nx:h-(--nx-spacing-8) nx:shrink-0 nx:items-center nx:gap-2 nx:[&_svg]:size-icon-[length:var(--nx-spacing-3_5)] nx:[&_svg]:shrink-0 nx:icon-stroke nx:rounded-s-base nx:border-default nx:border-border-default nx:bg-container nx:px-2.5 nx:typography-label-default nx:text-muted-foreground',
+        'nx:inline-flex nx:h-(--nx-spacing-8) nx:shrink-0 nx:items-center nx:gap-2 nx:[&_svg]:size-icon-[var(--nx-spacing-3_5)] nx:[&_svg]:shrink-0 nx:icon-stroke nx:rounded-s-base nx:border-default nx:border-border-default nx:bg-container nx:px-2.5 nx:typography-label-default nx:text-muted-foreground',
         className
       )}
     >

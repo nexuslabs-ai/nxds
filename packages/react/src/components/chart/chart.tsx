@@ -139,7 +139,7 @@ interface ChartTooltipContentProps extends Pick<
 /** Shared class for one tooltip row (formatter row and default row alike). */
 const tooltipRowClassName = (indicator: ChartIndicator) =>
   cn(
-    'nx:[&>svg]:text-muted-foreground nx:flex nx:w-full nx:flex-wrap nx:items-stretch nx:gap-2 nx:[&>svg]:size-icon-[length:var(--nx-spacing-2_5)] nx:icon-stroke',
+    'nx:[&>svg]:text-muted-foreground nx:flex nx:w-full nx:flex-wrap nx:items-stretch nx:gap-2 nx:[&>svg]:size-icon-[var(--nx-spacing-2_5)] nx:icon-stroke',
     indicator === 'dot' && 'nx:items-center'
   );
 
@@ -387,7 +387,7 @@ function ChartLegendContent({
         return (
           <div
             key={`${item.value}`}
-            className="nx:[&>svg]:text-muted-foreground nx:flex nx:items-center nx:gap-1.5 nx:[&>svg]:size-icon-[length:var(--nx-spacing-3)] nx:icon-stroke"
+            className="nx:[&>svg]:text-muted-foreground nx:flex nx:items-center nx:gap-1.5 nx:[&>svg]:size-icon-[var(--nx-spacing-3)] nx:icon-stroke"
           >
             {itemConfig?.icon && !hideIcon ? (
               <itemConfig.icon />

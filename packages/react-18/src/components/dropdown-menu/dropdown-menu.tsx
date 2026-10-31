@@ -352,7 +352,7 @@ const DropdownMenuRadioItem = React.forwardRef<
             data-slot="dropdown-menu-radio-indicator-icon"
             aria-hidden="true"
             className={cn(
-              'nx:size-icon-[length:var(--nx-spacing-2)]',
+              'nx:size-icon-[var(--nx-spacing-2)]',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
             )}
