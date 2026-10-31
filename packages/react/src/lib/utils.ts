@@ -30,8 +30,8 @@ export const NXDS_CLASS_GROUPS = {
     'size-icon-glyph-default',
     {
       'size-icon': [
-        validators.isArbitraryLength,
-        validators.isArbitraryVariableLength,
+        validators.isArbitraryValue,
+        validators.isArbitraryVariable,
       ],
     },
   ],
