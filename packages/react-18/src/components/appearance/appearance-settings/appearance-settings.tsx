@@ -162,14 +162,16 @@ export function NxdsAppearanceSettings() {
   };
 
   const setTextSize = (value: string) => {
-    const textSize = TEXT_SIZE_OPTIONS.find((size) => String(size) === value);
-    if (textSize === undefined) return;
-    setState((current) => ({ ...current, textSize }));
+    const option = TEXT_SIZE_OPTIONS.find(
+      (each) => String(each.value) === value
+    );
+    if (option === undefined) return;
+    setState((current) => ({ ...current, textSize: option.value }));
   };
 
-  const textSizeOptions = TEXT_SIZE_OPTIONS.map((size) => ({
-    value: String(size),
-    label: `${size}px`,
+  const textSizeOptions = TEXT_SIZE_OPTIONS.map(({ value, label }) => ({
+    value: String(value),
+    label,
   }));
 
   const contrastKey =

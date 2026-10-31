@@ -27,6 +27,7 @@ import {
 
 const SCALES = UI_SCALE_OPTIONS.map(({ value }) => value);
 const DENSITIES = DENSITY_OPTIONS.map(({ value }) => value);
+const TEXT_SIZES = TEXT_SIZE_OPTIONS.map(({ value }) => value);
 
 /** How far a ratio may move from its Default-scale value. */
 const PROPORTION_TOLERANCE = 0.15;
@@ -100,7 +101,7 @@ function TextSizeMatrix() {
   return (
     <div className="nx:flex nx:flex-col nx:p-6">
       {SCALES.flatMap((scale) =>
-        TEXT_SIZE_OPTIONS.flatMap((textSize) =>
+        TEXT_SIZES.flatMap((textSize) =>
           DENSITIES.map((density) => (
             <TextSizeRow
               key={`${scale}-${textSize}-${density}`}
@@ -279,7 +280,7 @@ export const TextFitsAtEveryTextSize: Story = {
     for (const scale of SCALES) {
       for (const density of DENSITIES) {
         const icon = box(textSizeParts(canvasElement, scale, 14, density).icon);
-        for (const textSize of TEXT_SIZE_OPTIONS) {
+        for (const textSize of TEXT_SIZES) {
           const parts = textSizeParts(canvasElement, scale, textSize, density);
           const label = `${scale} × ${textSize} × ${density}`;
 

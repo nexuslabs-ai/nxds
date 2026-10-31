@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import typographyTokens from '../../tokens/primitives/typography/typography-default.json';
+
 import {
   appearancePrefsToCss,
   DEFAULT_NXDS_APPEARANCE,
@@ -37,7 +39,13 @@ for (const [, selectors, body] of nxdsCss.matchAll(
 
 const ALL_SCALES = UI_SCALE_OPTIONS.map(({ value }) => value);
 const SCALES = ALL_SCALES.filter((scale) => scale !== 'default');
-const TEXT_SIZES = TEXT_SIZE_OPTIONS.filter((textSize) => textSize !== 14);
+const ALL_TEXT_SIZES = TEXT_SIZE_OPTIONS.map(({ value }) => value);
+/** Every type size and line height, and the code size. */
+const TYPE_TOKEN_COUNT =
+  Object.keys(typographyTokens.size).length +
+  Object.keys(typographyTokens['line-height']).length +
+  1;
+const TEXT_SIZES = ALL_TEXT_SIZES.filter((textSize) => textSize !== 14);
 
 function spacingBlock(scale: string, density: string) {
   const block = blocks.get(
@@ -193,7 +201,7 @@ describe('Text size CSS', () => {
       for (const textSize of TEXT_SIZES) {
         const label = `${scale} × ${textSize}`;
         const block = textSizeBlock(scale, textSize);
-        expect(block.size, label).toBe(29);
+        expect(block.size, label).toBe(TYPE_TOKEN_COUNT);
         for (const [name, px] of block) {
           expect(name, label).toMatch(
             /^typography-(size-|line-height-|code-size$)/
@@ -212,7 +220,7 @@ describe('Text size CSS', () => {
     const table = Object.fromEntries(
       ALL_SCALES.map((scale) => [
         scale,
-        TEXT_SIZE_OPTIONS.map((textSize) => labelPx(scale, textSize)),
+        ALL_TEXT_SIZES.map((textSize) => labelPx(scale, textSize)),
       ])
     );
     expect(table).toEqual({
@@ -225,7 +233,7 @@ describe('Text size CSS', () => {
 
   it('keeps every type size larger than the one below it', () => {
     for (const scale of ALL_SCALES) {
-      for (const textSize of TEXT_SIZE_OPTIONS) {
+      for (const textSize of ALL_TEXT_SIZES) {
         // The Default scale and text size use the base tokens.
         if (scale === 'default' && textSize === 14) continue;
         const label = `${scale} × ${textSize}`;
@@ -247,9 +255,7 @@ describe('Text size CSS', () => {
 
   it('gives each text size its own label size at every scale', () => {
     for (const scale of ALL_SCALES) {
-      const sizes = TEXT_SIZE_OPTIONS.map((textSize) =>
-        labelPx(scale, textSize)
-      );
+      const sizes = ALL_TEXT_SIZES.map((textSize) => labelPx(scale, textSize));
       expect(new Set(sizes).size, scale).toBe(sizes.length);
     }
   });
@@ -272,7 +278,7 @@ describe('Text size CSS', () => {
 
   it('labels each picker option with the size the CSS sets', () => {
     for (const scale of ALL_SCALES) {
-      for (const textSize of TEXT_SIZE_OPTIONS) {
+      for (const textSize of ALL_TEXT_SIZES) {
         expect(textSizePx(textSize, scale), `${scale} × ${textSize}`).toBe(
           labelPx(scale, textSize)
         );

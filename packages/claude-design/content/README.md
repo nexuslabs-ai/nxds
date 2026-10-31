@@ -92,7 +92,7 @@ The system has a Light and a Dark theme. Set `data-theme="dark"` on `<html>` to 
 
 This system shows the default nxds appearance: a near-black brand colour on zinc surfaces, the default UI scale, text size and density, subtle corners, quiet shadows and normal strokes.
 
-Set an attribute on any element to change density, corners, elevation or stroke for everything inside it. Set `data-ui-scale` and `data-text-size` on the artboard's outer element, so the density and corners inside it follow its scale. `data-text-size` is the label text size in px at the default UI scale:
+Set an attribute on any element to change density, corners, elevation or stroke for everything inside it. Set `data-ui-scale` and `data-text-size` together on the artboard's outer element. A UI scale and a text size on two different elements do not combine. The density and corners inside the artboard follow its scale. `data-text-size` is the label text size in px at the default UI scale:
 
 <!-- appearance-presets -->
 

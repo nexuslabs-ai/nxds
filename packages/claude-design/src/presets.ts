@@ -27,7 +27,7 @@ export const PRESETS: Record<NxdsAppearanceDataAttr, Preset> = {
     family: 'spacing',
   },
   'data-text-size': {
-    options: TEXT_SIZE_OPTIONS.map((size) => ({ value: String(size) })),
+    options: TEXT_SIZE_OPTIONS.map(({ value }) => ({ value: String(value) })),
     initial: String(DEFAULT_NXDS_APPEARANCE.textSize),
     family: 'typeScale',
   },

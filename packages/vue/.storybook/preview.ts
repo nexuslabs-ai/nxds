@@ -35,9 +35,9 @@ function toolbarItems(options: readonly { value: string; label: string }[]) {
 
 /** Toolbar values are strings, so each text size is its number as text. */
 function textSizeToolbarItems() {
-  return TEXT_SIZE_OPTIONS.map((size) => ({
-    value: String(size),
-    title: `Text ${size}`,
+  return TEXT_SIZE_OPTIONS.map(({ value, label }) => ({
+    value: String(value),
+    title: label,
   }));
 }
 

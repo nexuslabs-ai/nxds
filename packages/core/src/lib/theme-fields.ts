@@ -229,8 +229,9 @@ function fontField(
   };
 }
 
-const TEXT_SIZE_MIN = Math.min(...TEXT_SIZE_OPTIONS);
-const TEXT_SIZE_MAX = Math.max(...TEXT_SIZE_OPTIONS);
+const TEXT_SIZES = TEXT_SIZE_OPTIONS.map((option) => option.value);
+const TEXT_SIZE_MIN = Math.min(...TEXT_SIZES);
+const TEXT_SIZE_MAX = Math.max(...TEXT_SIZES);
 
 const DEFAULT_PREFS = DEFAULT_NXDS_APPEARANCE.prefs;
 const TEXT_FONTS = ['sans', 'serif'] as const;

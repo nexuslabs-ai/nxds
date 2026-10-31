@@ -144,7 +144,7 @@ describe('sanitizeNxdsAppearance', () => {
       );
     }
 
-    for (const textSize of TEXT_SIZE_OPTIONS) {
+    for (const { value: textSize } of TEXT_SIZE_OPTIONS) {
       expect(sanitizeNxdsAppearance({ textSize }).textSize).toBe(textSize);
     }
 

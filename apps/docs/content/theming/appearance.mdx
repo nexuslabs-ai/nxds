@@ -77,8 +77,9 @@ Default scale and text size. The UI scale and the text size never shrink text
 below 8px, and code set smaller keeps its size.
 
 The provider puts `data-ui-scale` and `data-text-size` on `<html>`. If you set
-the attributes yourself, put both on the root only, so density and corners
-inside it follow its scale.
+the attributes yourself, put both on the same root element. A UI scale and a
+text size on two different elements do not combine. Density and corners inside
+the root follow its scale.
 
 ## Change the theme at runtime
 

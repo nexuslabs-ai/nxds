@@ -40,7 +40,8 @@ function textSizeAttr(scale: UiScale, textSize: TextSize) {
 
 /**
  * The selector that matches the root of a scale and text size, or null at
- * the Default scale and text size, which write no CSS.
+ * the Default scale and text size, which write no CSS. The selector is
+ * compound, so `data-ui-scale` and `data-text-size` sit on the same element.
  */
 export function textSizeSelector(
   scale: UiScale,

@@ -112,8 +112,11 @@ export const UI_SCALE_OPTIONS = [
   { value: 'larger', label: 'Larger' },
 ] as const satisfies readonly { value: NxdsUiScale; label: string }[];
 
-/** The text sizes, by their label size in px at the Default UI scale. */
-export const TEXT_SIZE_OPTIONS = TEXT_SIZES;
+/** The text sizes, each labelled with its label size at the Default UI scale. */
+export const TEXT_SIZE_OPTIONS = TEXT_SIZES.map((value) => ({
+  value,
+  label: `${value}px`,
+})) satisfies readonly { value: NxdsTextSize; label: string }[];
 
 export const DENSITY_OPTIONS = [
   { value: 'tight', label: 'Tight' },
@@ -184,7 +187,7 @@ const SURFACE_TONES = new Set<NxdsSurfaceTone>(
 const SCALES = new Set<NxdsUiScale>(
   UI_SCALE_OPTIONS.map((option) => option.value)
 );
-const TEXT_SIZE_VALUES = new Set<NxdsTextSize>(TEXT_SIZE_OPTIONS);
+const TEXT_SIZE_VALUES = new Set<NxdsTextSize>(TEXT_SIZES);
 const DENSITIES = new Set<NxdsDensity>(
   DENSITY_OPTIONS.map((option) => option.value)
 );
@@ -324,7 +327,7 @@ export function createNxdsThemeContract(
  */
 function scaledCodeSizes(codePx: number): string {
   return UI_SCALE_OPTIONS.flatMap(({ value: scale }) =>
-    TEXT_SIZE_OPTIONS.flatMap((textSize) => {
+    TEXT_SIZES.flatMap((textSize) => {
       const selector = textSizeSelector(scale, textSize);
       if (selector === null) return [];
       const px = scaleText(codePx, scale, textSize);
