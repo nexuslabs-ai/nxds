@@ -96,8 +96,8 @@ export function scaleText(
 }
 
 /**
- * A line height at a scale and text size, in even px. It stops at 8px, where
- * `scaleText` stops, so a line box never gets shorter than its text.
+ * A line height at a scale and text size, in even px. It stops at 8px, as
+ * `scaleText` does.
  */
 function scaleLineHeight(
   lineHeight: number,
