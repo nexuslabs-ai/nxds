@@ -18,6 +18,7 @@ The command writes a `nxds-design-system/` folder. Its `SETUP.md` walks Claude t
 | `project/components/index.d.ts`             | One `<Name>Props` interface per component part                               |
 | `project/components/<Name>/`                | A preview card and a README per component                                    |
 | `coverage.md`                               | The props the canvas can't set, and why                                      |
-| `SETUP.md`                                  | The setup guide for this release, with the sampler artboard                  |
+| `SETUP.md`                                  | The setup guide for this release                                             |
+| `nxds-sampler.dc.html`                      | The sampler artboard, a sales dashboard that checks the install              |
 
 Docs: <https://nxds.dev>

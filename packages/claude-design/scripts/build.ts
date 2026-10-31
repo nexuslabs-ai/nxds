@@ -1,6 +1,7 @@
-// Writes dist/: the system's files under dist/project/, files.json listing
-// them with their hashes for nxds-cli, the package manifest npm publishes
-// from dist/, the canvas prop coverage report and SETUP.md. Fails when the
+// Writes dist/: the system's files under dist/project/, the files beside it
+// (the canvas prop coverage report, SETUP.md and the sampler artboard), the
+// package manifest npm publishes from dist/, and files.json, which lists the
+// project and root files with their hashes for nxds-cli. Fails when the
 // output breaks the Design System format.
 import {
   componentLabel,
@@ -34,7 +35,7 @@ import {
   renderIndexDts,
 } from '../src/props.ts';
 import { componentReads, variablesRead } from '../src/reads.ts';
-import { samplerProblems, setupGuide } from '../src/setup.ts';
+import { SAMPLER_FILE, samplerProblems, setupGuide } from '../src/setup.ts';
 import { buildStyles } from '../src/styles.ts';
 import { buildSystemIndex } from '../src/system-index.ts';
 import { buildTokens, typeStyleRules } from '../src/tokens.ts';
@@ -121,11 +122,14 @@ function publishedManifest() {
   };
 }
 
-function fileList(files: readonly string[]) {
+/** The files `nxds-cli` copies beside project/. */
+const ROOT_FILES = ['coverage.md', 'SETUP.md', SAMPLER_FILE];
+
+function fileList(dir: string, files: readonly string[]) {
   return files.map((file) => ({
     path: file,
     sha256: createHash('sha256')
-      .update(readFileSync(path.join(projectDir, file)))
+      .update(readFileSync(path.join(dir, file)))
       .digest('hex'),
   }));
 }
@@ -157,8 +161,12 @@ async function main() {
   );
 
   const parts = flatComponents();
-  const sampler = readFileSync(path.join(contentDir, 'sampler.html'), 'utf8');
-  const samplerErrors = samplerProblems(sampler, parts);
+  const sampler = readFileSync(path.join(contentDir, SAMPLER_FILE), 'utf8');
+  const samplerErrors = samplerProblems(sampler, {
+    readme,
+    stylesheets: tokensCss + styles,
+    parts,
+  });
   if (samplerErrors.length > 0) throw new Error(samplerErrors.join('\n'));
   const { code } = await buildBundle(folders, parts);
   const indexDts = renderIndexDts(parts);
@@ -210,10 +218,6 @@ async function main() {
   }
 
   writeFileSync(
-    path.join(distDir, 'files.json'),
-    `${JSON.stringify(fileList(files), null, 2)}\n`
-  );
-  writeFileSync(
     path.join(distDir, 'package.json'),
     `${JSON.stringify(publishedManifest(), null, 2)}\n`
   );
@@ -228,12 +232,24 @@ async function main() {
     })
   );
   copyFileSync(
+    path.join(contentDir, SAMPLER_FILE),
+    path.join(distDir, SAMPLER_FILE)
+  );
+  copyFileSync(
     path.join(contentDir, 'package-readme.md'),
     path.join(distDir, 'README.md')
   );
   copyFileSync(
     path.join(packageRoot, '..', '..', 'LICENSE'),
     path.join(distDir, 'LICENSE')
+  );
+  const released = {
+    project: fileList(projectDir, files),
+    root: fileList(distDir, ROOT_FILES),
+  };
+  writeFileSync(
+    path.join(distDir, 'files.json'),
+    `${JSON.stringify(released, null, 2)}\n`
   );
 
   const kb = (text: string) => Math.round(Buffer.byteLength(text) / 1024);
