@@ -131,14 +131,15 @@ function changeOperator(operator: FilterOperator) {
       </div>
       <Button
         variant="ghost"
-        size="icon-sm"
+        size="sm"
+        icon-only
         class="nx:size-(--nx-spacing-8) nx:shrink-0 nx:text-muted-foreground"
-        :aria-label="`Remove ${field?.label ?? 'unavailable'} condition`"
         :disabled="disabled"
         @click="emit('remove')"
       >
-        <IconX aria-hidden="true" />
-      </Button>
+        <template #start-icon><IconX /></template
+        >{{ `Remove ${field?.label ?? 'unavailable'} condition` }}</Button
+      >
     </div>
     <p
       v-if="error"

@@ -1507,22 +1507,20 @@ const DataTableRecipeDemo = defineComponent({
           <span class="nx:text-muted-foreground nx:typography-label-default">Page {{ safePage + 1 }} of {{ pageCount }}</span>
           <Button
             variant="outline"
-            size="icon-sm"
+            size="sm"
+            icon-only
             :disabled="safePage === 0"
-            aria-label="Previous page"
             @click="page = Math.max(0, page - 1)"
           >
-            <PhCaretLeft />
-          </Button>
+            <template #start-icon><PhCaretLeft /></template>Previous page</Button>
           <Button
             variant="outline"
-            size="icon-sm"
+            size="sm"
+            icon-only
             :disabled="safePage >= pageCount - 1"
-            aria-label="Next page"
             @click="page = Math.min(pageCount - 1, page + 1)"
           >
-            <PhCaretRight />
-          </Button>
+            <template #start-icon><PhCaretRight /></template>Next page</Button>
         </div>
       </div>
     </div>

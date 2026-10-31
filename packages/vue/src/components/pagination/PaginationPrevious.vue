@@ -2,7 +2,8 @@
 import { IconChevronLeft } from '../../lib/icons';
 import type { ButtonVariants } from '../button';
 
-import PaginationLink, { type PaginationLinkProps } from './PaginationLink.vue';
+import PaginationAnchor from './PaginationAnchor.vue';
+import type { PaginationLinkProps } from './PaginationLink.vue';
 
 export interface PaginationPreviousProps extends Omit<
   PaginationLinkProps,
@@ -13,16 +14,19 @@ export interface PaginationPreviousProps extends Omit<
 
 const props = withDefaults(defineProps<PaginationPreviousProps>(), {
   as: 'a',
-  size: 'default',
   isActive: undefined,
 });
 </script>
 
 <template>
-  <PaginationLink aria-label="Go to previous page" v-bind="props">
+  <PaginationAnchor
+    :square="false"
+    aria-label="Go to previous page"
+    v-bind="props"
+  >
     <slot>
       <IconChevronLeft />
       <span>Previous</span>
     </slot>
-  </PaginationLink>
+  </PaginationAnchor>
 </template>

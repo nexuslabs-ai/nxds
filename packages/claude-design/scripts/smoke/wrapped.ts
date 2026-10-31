@@ -54,8 +54,8 @@ export const WRAPPED_CASES: { name: string; markup: string; reads: Read[] }[] =
             'as-child',
             x(
               'Button',
-              'variant="outline" size="icon" aria-label="More options"',
-              x('Icons.CaretDownIcon')
+              'variant="outline" icon-only start-icon="caret-down"',
+              'More options'
             )
           )
         )

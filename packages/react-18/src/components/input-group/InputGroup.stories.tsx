@@ -110,8 +110,8 @@ export const Alignments: Story = {
       <InputGroup>
         <InputGroupInput aria-label="Search" placeholder="Search projects" />
         <InputGroupAddon align="inline-end">
-          <InputGroupButton size="icon-xs" aria-label="Clear">
-            <XIcon aria-hidden />
+          <InputGroupButton iconOnly startIcon={<XIcon />}>
+            Clear
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
@@ -148,11 +148,11 @@ export const ButtonSizes: Story = {
       <InputGroup>
         <InputGroupInput aria-label="Icon buttons" placeholder="icon sizes" />
         <InputGroupAddon align="inline-end">
-          <InputGroupButton size="icon-xs" aria-label="Show">
-            <EyeIcon aria-hidden />
+          <InputGroupButton iconOnly startIcon={<EyeIcon />}>
+            Show
           </InputGroupButton>
-          <InputGroupButton size="icon-sm" aria-label="Clear">
-            <XIcon aria-hidden />
+          <InputGroupButton size="sm" iconOnly startIcon={<XIcon />}>
+            Clear
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
@@ -630,8 +630,8 @@ export const AllVariants: Story = {
         </InputGroupAddon>
         <InputGroupInput aria-label="URL" placeholder="nxds.dev" />
         <InputGroupAddon align="inline-end">
-          <InputGroupButton size="icon-xs" aria-label="Clear">
-            <XIcon aria-hidden />
+          <InputGroupButton iconOnly startIcon={<XIcon />}>
+            Clear
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>

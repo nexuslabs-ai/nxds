@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
-import type { HTMLAttributes, VNode } from 'vue';
+import type { HTMLAttributes } from 'vue';
 
 import { IconLayoutSidebar } from '../../lib/icons';
 import { cn } from '../../lib/utils';
@@ -8,22 +8,19 @@ import { Button, type ButtonProps } from '../button';
 
 import { useSidebar } from '.';
 
-export interface SidebarTriggerProps extends Omit<ButtonProps, 'class'> {
+export interface SidebarTriggerProps extends Omit<
+  ButtonProps,
+  'class' | 'iconOnly' | 'asChild'
+> {
   class?: HTMLAttributes['class'];
 }
 
 const props = withDefaults(defineProps<SidebarTriggerProps>(), {
   as: 'button',
   variant: 'ghost',
-  size: 'icon',
   loading: false,
   type: 'button',
 });
-
-const slots = defineSlots<{
-  'start-icon'?: () => VNode[];
-  'end-icon'?: () => VNode[];
-}>();
 
 const delegated = reactiveOmit(props, 'class');
 
@@ -33,17 +30,11 @@ const { toggleSidebar } = useSidebar();
 <template>
   <Button
     v-bind="delegated"
+    icon-only
     data-slot="sidebar-trigger"
     :class="cn('nx:size-7', props.class)"
     @click="toggleSidebar"
   >
-    <template v-if="slots['start-icon']" #start-icon>
-      <slot name="start-icon" />
-    </template>
-    <IconLayoutSidebar />
-    <span class="nx:sr-only">Toggle Sidebar</span>
-    <template v-if="slots['end-icon']" #end-icon>
-      <slot name="end-icon" />
-    </template>
-  </Button>
+    <template #start-icon><IconLayoutSidebar /></template>Toggle Sidebar</Button
+  >
 </template>

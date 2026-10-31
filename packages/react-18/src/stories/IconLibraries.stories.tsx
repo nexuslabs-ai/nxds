@@ -97,14 +97,19 @@ export const IconOnlyButtons: Story = {
             aria-label={library.label}
             className="nx:flex nx:items-center nx:gap-2"
           >
-            <Button size="icon-sm" variant="outline" aria-label="Search">
-              <IconSearch aria-hidden="true" />
+            <Button
+              size="sm"
+              variant="outline"
+              iconOnly
+              startIcon={<IconSearch />}
+            >
+              Search
             </Button>
-            <Button size="icon" variant="outline" aria-label="Add">
-              <IconPlus aria-hidden="true" />
+            <Button variant="outline" iconOnly startIcon={<IconPlus />}>
+              Add
             </Button>
-            <Button size="icon-lg" variant="outline" aria-label="Close">
-              <IconX aria-hidden="true" />
+            <Button size="lg" variant="outline" iconOnly startIcon={<IconX />}>
+              Close
             </Button>
             <Button variant="outline">
               <IconPlus aria-hidden="true" />

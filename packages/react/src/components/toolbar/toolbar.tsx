@@ -34,13 +34,76 @@ function Toolbar({ className, ...props }: ToolbarProps) {
   return <TooltipProvider>{root}</TooltipProvider>;
 }
 
-type ToolbarButtonProps = React.ComponentProps<typeof ToolbarPrimitive.Button> &
-  VariantProps<typeof buttonVariants>;
+/**
+ * Adds `startIcon` and `iconOnly` to a toolbar part's props. With `iconOnly`,
+ * `children` must be a string and `startIcon` must be set, and `asChild` is
+ * not allowed.
+ */
+type WithIconOnly<Props> =
+  | (Props & {
+      /**
+       * Shows only `startIcon` in a square button. The text stays as the name
+       * screen readers read, visually hidden.
+       */
+      iconOnly?: false;
+      /**
+       * Decorative icon before the label. `asChild` doesn't render it.
+       */
+      startIcon?: React.ReactNode;
+    })
+  | (Omit<Props, 'children' | 'asChild'> & {
+      /**
+       * Shows only `startIcon` in a square button. The text stays as the name
+       * screen readers read, visually hidden.
+       */
+      iconOnly: true;
+      /**
+       * The button's name. Screen readers read it, and it stays visually hidden.
+       */
+      children: string;
+      /**
+       * Decorative icon before the label. `asChild` doesn't render it.
+       */
+      startIcon: React.ReactNode;
+      asChild?: false;
+    });
+
+/** The start icon and the label. With `iconOnly`, the label is the hidden name. */
+function ToolbarControlContent({
+  iconOnly,
+  icon,
+  children,
+}: {
+  iconOnly: boolean;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const hasIcon = icon !== undefined && icon !== null && icon !== false;
+  return (
+    <>
+      {hasIcon && (
+        <span aria-hidden="true" className="nx:inline-flex nx:shrink-0">
+          {icon}
+        </span>
+      )}
+      {iconOnly ? <span className="nx:sr-only">{children}</span> : children}
+    </>
+  );
+}
+
+type ToolbarButtonProps = WithIconOnly<
+  React.ComponentProps<typeof ToolbarPrimitive.Button> &
+    Pick<VariantProps<typeof buttonVariants>, 'variant' | 'size'>
+>;
 
 function ToolbarButton({
   className,
   variant = 'ghost',
   size = 'sm',
+  iconOnly = false,
+  startIcon,
+  asChild = false,
+  children,
   ...props
 }: ToolbarButtonProps) {
   return (
@@ -48,14 +111,24 @@ function ToolbarButton({
       data-slot="toolbar-button"
       data-variant={variant}
       data-size={size}
-      className={cn(buttonVariants({ variant, size }), className)}
+      data-icon-only={iconOnly || undefined}
+      className={cn(buttonVariants({ variant, size, iconOnly }), className)}
+      asChild={asChild}
       {...props}
-    />
+    >
+      {asChild ? (
+        children
+      ) : (
+        <ToolbarControlContent iconOnly={iconOnly} icon={startIcon}>
+          {children}
+        </ToolbarControlContent>
+      )}
+    </ToolbarPrimitive.Button>
   );
 }
 
 type ToolbarLinkProps = React.ComponentProps<typeof ToolbarPrimitive.Link> &
-  VariantProps<typeof buttonVariants>;
+  Pick<VariantProps<typeof buttonVariants>, 'variant' | 'size'>;
 
 function ToolbarLink({
   className,
@@ -106,27 +179,41 @@ function ToolbarToggleGroup({ className, ...props }: ToolbarToggleGroupProps) {
   );
 }
 
-type ToolbarToggleItemProps = React.ComponentProps<
-  typeof ToolbarPrimitive.ToggleItem
-> &
-  Pick<VariantProps<typeof buttonVariants>, 'size'>;
+type ToolbarToggleItemProps = WithIconOnly<
+  React.ComponentProps<typeof ToolbarPrimitive.ToggleItem> &
+    Pick<VariantProps<typeof buttonVariants>, 'size'>
+>;
 
 function ToolbarToggleItem({
   className,
   size = 'sm',
+  iconOnly = false,
+  startIcon,
+  asChild = false,
+  children,
   ...props
 }: ToolbarToggleItemProps) {
   return (
     <ToolbarPrimitive.ToggleItem
       data-slot="toolbar-toggle-item"
       data-size={size}
+      data-icon-only={iconOnly || undefined}
       className={cn(
-        buttonVariants({ variant: 'ghost', size }),
+        buttonVariants({ variant: 'ghost', size, iconOnly }),
         'nx:data-[state=on]:bg-primary-subtle nx:data-[state=on]:text-primary-subtle-foreground nx:data-[state=on]:hover:bg-primary-subtle-hover nx:data-[state=on]:active:bg-primary-subtle-active',
         className
       )}
+      asChild={asChild}
       {...props}
-    />
+    >
+      {asChild ? (
+        children
+      ) : (
+        <ToolbarControlContent iconOnly={iconOnly} icon={startIcon}>
+          {children}
+        </ToolbarControlContent>
+      )}
+    </ToolbarPrimitive.ToggleItem>
   );
 }
 

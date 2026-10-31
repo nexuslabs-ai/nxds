@@ -24,24 +24,28 @@ export const buttonVariants = cva(
         link: 'nx:border-0 nx:text-primary-subtle-foreground nx:underline-offset-4 nx:hover:underline nx:active:scale-100 nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
       },
       size: {
-        sm: 'nx:h-8 nx:px-2.5 nx:gap-2 nx:typography-label-default',
-        default: 'nx:h-10 nx:px-3 nx:gap-2 nx:typography-label-default',
-        lg: 'nx:h-12 nx:px-3.5 nx:gap-2 nx:typography-label-default',
-        'icon-sm': 'nx:size-8 nx:gap-0 nx:p-0',
-        icon: 'nx:size-10 nx:gap-0 nx:p-0',
-        'icon-lg': 'nx:size-12 nx:gap-0 nx:p-0',
+        sm: 'nx:h-8',
+        default: 'nx:h-10',
+        lg: 'nx:h-12',
+      },
+      iconOnly: {
+        false: 'nx:gap-2 nx:typography-label-default',
+        true: 'nx:px-0',
       },
     },
     compoundVariants: [
-      {
-        variant: 'link',
-        size: ['sm', 'default', 'lg'],
-        className: 'nx:h-auto nx:p-0!',
-      },
+      { iconOnly: false, size: 'sm', className: 'nx:px-2.5' },
+      { iconOnly: false, size: 'default', className: 'nx:px-3' },
+      { iconOnly: false, size: 'lg', className: 'nx:px-3.5' },
+      { iconOnly: true, size: 'sm', className: 'nx:w-8' },
+      { iconOnly: true, size: 'default', className: 'nx:w-10' },
+      { iconOnly: true, size: 'lg', className: 'nx:w-12' },
+      { variant: 'link', iconOnly: false, className: 'nx:h-auto nx:p-0!' },
     ],
     defaultVariants: {
       variant: 'default',
       size: 'default',
+      iconOnly: false,
     },
   }
 );

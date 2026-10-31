@@ -5,6 +5,7 @@ import {
   DownloadSimpleIcon,
   PaperPlaneRightIcon,
   StarIcon,
+  UploadSimpleIcon,
 } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
@@ -24,7 +25,7 @@ Button triggers an action. Use it for short, visible labels.
 
 - Use one decorative icon slot at most: \`startIcon\` or \`endIcon\`.
 - A loading button shows only a spinner and hides its icons.
-- Icon-only buttons need \`aria-label\` or \`aria-labelledby\`.
+- \`iconOnly\` shows only \`startIcon\` in a square button. Its text stays as the hidden name.
 - Icons are 16px at every size and density.
 - Stroked icons, such as Lucide, draw a 1.5px line, whatever their \`strokeWidth\`. Filled icons, such as Phosphor, keep their own line.
         `,
@@ -51,8 +52,12 @@ Button triggers an action. Use it for short, visible labels.
     },
     size: {
       control: 'select',
-      options: ['default', 'sm', 'lg', 'icon-sm', 'icon', 'icon-lg'],
-      description: 'Height, or a square icon-only size.',
+      options: ['default', 'sm', 'lg'],
+      description: 'Height.',
+    },
+    iconOnly: {
+      control: 'boolean',
+      description: 'Shows only the start icon, with the text as its name.',
     },
     startIcon: {
       control: false,
@@ -174,42 +179,144 @@ export const Large: Story = {
   },
 };
 
+// The square each `size` gives an `iconOnly` button, in px.
+const ICON_ONLY_SQUARES = [32, 40, 48];
+
 export const IconOnlySizes: Story = {
   tags: ['docs'],
   parameters: {
     docs: {
       description: {
-        story: 'Show the three icon-only sizes, each named with `aria-label`.',
+        story:
+          'Show only the icon with `iconOnly`. `size` sets the height, and the text is the name screen readers read.',
       },
     },
   },
   render: () => (
     <div className="nx:flex nx:items-center nx:gap-2">
-      <Button size="icon-sm" aria-label="Small icon">
-        <StarIcon />
+      <Button size="sm" iconOnly startIcon={<StarIcon />}>
+        Add to favorites
       </Button>
-      <Button size="icon" aria-label="Default icon">
-        <StarIcon />
+      <Button iconOnly startIcon={<DownloadSimpleIcon />}>
+        Download
       </Button>
-      <Button size="icon-lg" aria-label="Large icon">
-        <StarIcon />
+      <Button size="lg" iconOnly startIcon={<UploadSimpleIcon />}>
+        Upload
       </Button>
     </div>
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const buttons = canvas.getAllByRole('button');
 
-    await expect(
-      canvas.getByRole('button', { name: 'Small icon' })
-    ).toHaveClass('nx:size-8');
-    await expect(
-      canvas.getByRole('button', { name: 'Default icon' })
-    ).toHaveClass('nx:size-10');
-    await expect(
-      canvas.getByRole('button', { name: 'Large icon' })
-    ).toHaveClass('nx:size-12');
+    await expect(buttons).toHaveLength(ICON_ONLY_SQUARES.length);
+    for (const [index, button] of buttons.entries()) {
+      const { width, height } = button.getBoundingClientRect();
+      await expect(height).toBe(ICON_ONLY_SQUARES[index]);
+      await expect(width).toBe(height);
+    }
   },
 };
+
+export const IconOnlyName: Story = {
+  render: () => (
+    <Button iconOnly startIcon={<DownloadSimpleIcon />}>
+      Download
+    </Button>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Download' });
+    const label = within(button).getByText('Download');
+
+    await expect(button).toHaveAttribute('data-icon-only', 'true');
+    await expect(label).toHaveClass('nx:sr-only');
+    const { width, height } = label.getBoundingClientRect();
+    await expect(width).toBeLessThanOrEqual(1);
+    await expect(height).toBeLessThanOrEqual(1);
+  },
+};
+
+export const IconOnlyLoading: Story = {
+  render: () => (
+    <Button iconOnly loading startIcon={<DownloadSimpleIcon />}>
+      Download
+    </Button>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Download' });
+    const { width, height } = button.getBoundingClientRect();
+
+    await expect(button).toHaveAttribute('aria-busy', 'true');
+    await expect(within(button).getByText('Download')).toHaveClass(
+      'nx:sr-only'
+    );
+    await expect(width).toBe(height);
+    await expect(
+      button.querySelector('[data-slot="button-start-icon"]')
+    ).toBeNull();
+  },
+};
+
+export const IconOnlyInteraction: Story = {
+  render: (args) => (
+    <Button onClick={args.onClick} iconOnly startIcon={<DownloadSimpleIcon />}>
+      Download
+    </Button>
+  ),
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Download' });
+
+    await userEvent.tab();
+    await expect(button).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onClick).toHaveBeenCalledTimes(1);
+    await userEvent.keyboard(' ');
+    await expect(args.onClick).toHaveBeenCalledTimes(2);
+
+    await userEvent.click(button);
+    await expect(args.onClick).toHaveBeenCalledTimes(3);
+  },
+};
+
+// Each line must fail to compile: `iconOnly` needs a text name and a
+// `startIcon`, and refuses `endIcon` and `asChild`.
+const _rejectedIconOnlyButtons = [
+  // @ts-expect-error An icon-only button needs a name.
+  <Button key="no-name" iconOnly startIcon={<StarIcon />} />,
+  // @ts-expect-error The name must be text.
+  <Button key="node-name" iconOnly startIcon={<StarIcon />}>
+    <span>Download</span>
+  </Button>,
+  // @ts-expect-error An icon-only button needs an icon.
+  <Button key="no-icon" iconOnly>
+    Download
+  </Button>,
+  // @ts-expect-error An icon-only button shows one icon.
+  <Button
+    key="end-icon"
+    iconOnly
+    startIcon={<StarIcon />}
+    endIcon={<ArrowRightIcon />}
+  >
+    Download
+  </Button>,
+  // @ts-expect-error asChild can't render an icon-only button.
+  <Button key="as-child" iconOnly asChild startIcon={<StarIcon />}>
+    Download
+  </Button>,
+];
+
+// A screen-size switch is one boolean prop.
+function _ResponsiveDownload({ isNarrow }: { isNarrow: boolean }) {
+  return (
+    <Button iconOnly={isNarrow} startIcon={<DownloadSimpleIcon />}>
+      Download
+    </Button>
+  );
+}
 
 export const IconSize: Story = {
   render: () => (
@@ -218,28 +325,28 @@ export const IconSize: Story = {
         <Button size="sm" startIcon={<DownloadSimpleIcon />}>
           Download
         </Button>
-        <Button size="icon-sm" aria-label="Small icon">
-          <StarIcon />
+        <Button size="sm" iconOnly startIcon={<StarIcon />}>
+          Add to favorites
         </Button>
       </div>
       <div className="nx:flex nx:items-center nx:gap-2">
         <Button startIcon={<DownloadSimpleIcon />}>Download</Button>
-        <Button size="icon" aria-label="Default icon">
-          <StarIcon />
+        <Button iconOnly startIcon={<StarIcon />}>
+          Add to favorites
         </Button>
       </div>
       <div className="nx:flex nx:items-center nx:gap-2">
         <Button size="lg" startIcon={<DownloadSimpleIcon />}>
           Download
         </Button>
-        <Button size="icon-lg" aria-label="Large icon">
-          <StarIcon />
+        <Button size="lg" iconOnly startIcon={<StarIcon />}>
+          Add to favorites
         </Button>
       </div>
       <div data-density="compact" className="nx:flex nx:items-center nx:gap-2">
         <Button startIcon={<DownloadSimpleIcon />}>Download</Button>
-        <Button size="icon" aria-label="Compact icon">
-          <StarIcon />
+        <Button iconOnly startIcon={<StarIcon />}>
+          Add to favorites
         </Button>
       </div>
     </div>
@@ -456,8 +563,8 @@ export const RefForwarding: Story = {
 // ============================================
 
 export const AsLink: Story = {
-  render: (args) => (
-    <Button {...args} asChild>
+  render: ({ onClick }) => (
+    <Button onClick={onClick} asChild>
       <a href="https://example.com">Visit Website</a>
     </Button>
   ),
@@ -475,8 +582,8 @@ export const DisabledAsLink: Story = {
     disabled: true,
     children: 'Disabled link',
   },
-  render: ({ children, ...args }) => (
-    <Button {...args} asChild>
+  render: ({ children, disabled }) => (
+    <Button disabled={disabled} asChild>
       <a href="#disabled-as-link">{children}</a>
     </Button>
   ),
@@ -590,14 +697,14 @@ export const AllVariants: Story = {
           <Button size="sm">Small</Button>
           <Button size="default">Default</Button>
           <Button size="lg">Large</Button>
-          <Button size="icon-sm" aria-label="Small icon">
-            <StarIcon />
+          <Button size="sm" iconOnly startIcon={<StarIcon />}>
+            Add to favorites
           </Button>
-          <Button size="icon" aria-label="Icon">
-            <StarIcon />
+          <Button iconOnly startIcon={<StarIcon />}>
+            Add to favorites
           </Button>
-          <Button size="icon-lg" aria-label="Large icon">
-            <StarIcon />
+          <Button size="lg" iconOnly startIcon={<StarIcon />}>
+            Add to favorites
           </Button>
         </div>
       </div>

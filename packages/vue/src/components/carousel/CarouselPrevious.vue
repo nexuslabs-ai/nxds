@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
-import type { VNode } from 'vue';
 
 import { IconArrowLeft } from '../../lib/icons';
 import { cn } from '../../lib/utils';
@@ -10,25 +9,18 @@ import { carouselControlClasses, injectCarousel } from '.';
 
 export interface CarouselPreviousProps extends Omit<
   ButtonProps,
-  'variant' | 'size'
+  'variant' | 'iconOnly' | 'asChild'
 > {
   variant?: ButtonVariants['variant'];
-  size?: ButtonVariants['size'];
 }
 
 const props = withDefaults(defineProps<CarouselPreviousProps>(), {
   as: 'button',
   variant: 'outline',
-  size: 'icon',
   loading: false,
   disabled: undefined,
   type: 'button',
 });
-
-const slots = defineSlots<{
-  'start-icon'?: () => VNode[];
-  'end-icon'?: () => VNode[];
-}>();
 
 const delegated = reactiveOmit(props, 'class', 'disabled');
 
@@ -38,6 +30,7 @@ const { orientation, scrollPrev, canScrollPrev } = injectCarousel();
 <template>
   <Button
     v-bind="delegated"
+    icon-only
     data-slot="carousel-previous"
     :disabled="disabled ?? !canScrollPrev"
     :class="
@@ -51,13 +44,6 @@ const { orientation, scrollPrev, canScrollPrev } = injectCarousel();
     "
     @click="scrollPrev"
   >
-    <template v-if="slots['start-icon']" #start-icon>
-      <slot name="start-icon" />
-    </template>
-    <IconArrowLeft />
-    <span class="nx:sr-only">Previous slide</span>
-    <template v-if="slots['end-icon']" #end-icon>
-      <slot name="end-icon" />
-    </template>
-  </Button>
+    <template #start-icon><IconArrowLeft /></template>Previous slide</Button
+  >
 </template>

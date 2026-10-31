@@ -437,13 +437,14 @@ function FilterRuleEditor({
         </div>
         <Button
           variant="ghost"
-          size="icon-sm"
+          size="sm"
+          iconOnly
+          startIcon={<IconX />}
           className="nx:size-(--nx-spacing-8) nx:shrink-0 nx:text-muted-foreground"
-          aria-label={`Remove ${field?.label ?? 'unavailable'} condition`}
           disabled={disabled}
           onClick={onRemove}
         >
-          <IconX aria-hidden="true" />
+          {`Remove ${field?.label ?? 'unavailable'} condition`}
         </Button>
       </div>
       {error && (
@@ -572,12 +573,13 @@ function GroupEditor({
           <Button
             className="nx:size-(--nx-spacing-8) nx:shrink-0 nx:text-muted-foreground"
             variant="ghost"
-            size="icon-sm"
-            aria-label={`Remove ${label}`}
+            size="sm"
+            iconOnly
+            startIcon={<IconX />}
             onClick={onRemove}
             disabled={disabled}
           >
-            <IconX aria-hidden="true" />
+            {`Remove ${label}`}
           </Button>
         )}
       </div>

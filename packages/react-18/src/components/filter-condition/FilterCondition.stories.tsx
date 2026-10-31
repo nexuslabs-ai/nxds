@@ -16,7 +16,7 @@ const anatomySource = `import { FilterCondition, FilterConditionField, FilterCon
   <FilterConditionField>Status</FilterConditionField>
   <FilterConditionSegment aria-label="Edit status operator" onClick={openOperator}>is</FilterConditionSegment>
   <FilterConditionSegment aria-label="Edit status value" onClick={openValue}>Paid</FilterConditionSegment>
-  <FilterConditionRemove aria-label="Remove status filter" onClick={removeCondition} />
+  <FilterConditionRemove onClick={removeCondition}>Remove status filter</FilterConditionRemove>
 </FilterCondition>`;
 
 function ConditionExample({
@@ -55,11 +55,9 @@ function ConditionExample({
       >
         {value}
       </FilterConditionSegment>
-      <FilterConditionRemove
-        aria-label={`Remove ${field} filter`}
-        disabled={disabled}
-        onClick={onRemove}
-      />
+      <FilterConditionRemove disabled={disabled} onClick={onRemove}>
+        {`Remove ${field} filter`}
+      </FilterConditionRemove>
     </FilterCondition>
   );
 }

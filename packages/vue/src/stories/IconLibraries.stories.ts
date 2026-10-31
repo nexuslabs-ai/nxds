@@ -100,15 +100,12 @@ export const IconOnlyButtons: Story = {
           :aria-label="library.label"
           class="nx:flex nx:items-center nx:gap-2"
         >
-          <Button size="icon-sm" variant="outline" aria-label="Search">
-            <component :is="sets[library.value].IconSearch" aria-hidden="true" />
-          </Button>
-          <Button size="icon" variant="outline" aria-label="Add">
-            <component :is="sets[library.value].IconPlus" aria-hidden="true" />
-          </Button>
-          <Button size="icon-lg" variant="outline" aria-label="Close">
-            <component :is="sets[library.value].IconX" aria-hidden="true" />
-          </Button>
+          <Button size="sm" variant="outline" icon-only>
+            <template #start-icon><component :is="sets[library.value].IconSearch" /></template>Search</Button>
+          <Button variant="outline" icon-only>
+            <template #start-icon><component :is="sets[library.value].IconPlus" /></template>Add</Button>
+          <Button size="lg" variant="outline" icon-only>
+            <template #start-icon><component :is="sets[library.value].IconX" /></template>Close</Button>
           <Button variant="outline">
             <component :is="sets[library.value].IconPlus" aria-hidden="true" />
             New item

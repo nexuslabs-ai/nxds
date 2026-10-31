@@ -57,8 +57,25 @@ const AppearanceDecorator: Decorator = (story, context) => ({
     '<div class="nx:flex nx:min-h-svh nx:items-center nx:justify-center nx:bg-background nx:text-foreground nx:typography-body-default"><story /></div>',
 });
 
+// Vue can't require slot content. An icon-only button needs its text, which
+// is its name, and a start icon. A story fails if one lacks its text or its icon.
+function brokenIconOnlyButtons(root: HTMLElement) {
+  return [...root.querySelectorAll(':is(button, a)[data-icon-only]')].filter(
+    (button) =>
+      !button.querySelector('.nx\\:sr-only')?.textContent?.trim() ||
+      !button.querySelector('[aria-hidden="true"] > *')
+  );
+}
+
 const preview: Preview = {
   tags: ['autodocs'],
+  afterEach: ({ canvasElement }) => {
+    const broken = brokenIconOnlyButtons(canvasElement.ownerDocument.body);
+    if (broken.length === 0) return;
+    throw new Error(
+      `An icon-only button needs slot text as its name and a start icon:\n${broken.map((button) => button.outerHTML).join('\n')}`
+    );
+  },
   parameters: {
     options: {
       storySort: {

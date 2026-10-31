@@ -507,7 +507,7 @@ export const WithActions: Story = {
     docs: {
       description: {
         story:
-          "Put copy and retry icon buttons, each with an `aria-label` and a tooltip, in a turn's footer.",
+          "Put icon-only copy and retry buttons, each with a tooltip, in a turn's footer.",
       },
     },
   },
@@ -540,13 +540,13 @@ export const WithActions: Story = {
               </Bubble>
               <MessageFooter>09:18<Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="icon-sm" variant="ghost" aria-label="Copy reply"><PhCopy /></Button>
+                    <Button size="sm" icon-only variant="ghost"><template #start-icon><PhCopy /></template>Copy reply</Button>
                   </TooltipTrigger>
                   <TooltipContent>Copy</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="icon-sm" variant="ghost" aria-label="Regenerate reply"><PhArrowClockwise /></Button>
+                    <Button size="sm" icon-only variant="ghost"><template #start-icon><PhArrowClockwise /></template>Regenerate reply</Button>
                   </TooltipTrigger>
                   <TooltipContent>Regenerate</TooltipContent>
                 </Tooltip>
@@ -562,13 +562,13 @@ export const WithActions: Story = {
               <MessageFooter>09:20 &middot; <span class="nx:text-error-subtle-foreground">Failed to send</span>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="icon-sm" variant="ghost" aria-label="Copy message"><PhCopy /></Button>
+                    <Button size="sm" icon-only variant="ghost"><template #start-icon><PhCopy /></template>Copy message</Button>
                   </TooltipTrigger>
                   <TooltipContent>Copy</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="icon-sm" variant="ghost" aria-label="Retry sending"><PhArrowClockwise /></Button>
+                    <Button size="sm" icon-only variant="ghost"><template #start-icon><PhArrowClockwise /></template>Retry sending</Button>
                   </TooltipTrigger>
                   <TooltipContent>Retry</TooltipContent>
                 </Tooltip>

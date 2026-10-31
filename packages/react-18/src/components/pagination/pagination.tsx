@@ -111,21 +111,19 @@ interface PaginationLinkProps
   asChild?: boolean;
 }
 
-/**
- * Page number link styled as a `ghost` button, or `outline` for the current
- * page. Uses the square `icon` size unless you set `size`.
- */
-const PaginationLink = React.forwardRef<
+/** The link every pagination part renders. Page numbers are square. */
+const PaginationAnchor = React.forwardRef<
   HTMLAnchorElement,
-  React.PropsWithoutRef<PaginationLinkProps>
->(function PaginationLink(propsWithoutRef, forwardedRef) {
+  React.PropsWithoutRef<PaginationLinkProps & { square: boolean }>
+>(function PaginationAnchor(propsWithoutRef, forwardedRef) {
   const {
     className,
     isActive,
-    size = 'icon',
+    size,
+    square,
     asChild = false,
     ...props
-  }: React.PropsWithoutRef<PaginationLinkProps> & {
+  }: React.PropsWithoutRef<PaginationLinkProps & { square: boolean }> & {
     ref?: React.ForwardedRef<HTMLAnchorElement>;
   } = forwardedRef === null
     ? propsWithoutRef
@@ -138,13 +136,34 @@ const PaginationLink = React.forwardRef<
       data-slot="pagination-link"
       data-active={isActive}
       className={cn(
-        buttonVariants({ variant: isActive ? 'outline' : 'ghost', size }),
+        buttonVariants({
+          variant: isActive ? 'outline' : 'ghost',
+          size,
+          iconOnly: square,
+        }),
         'nx:typography-label-default',
         className
       )}
       {...props}
     />
   );
+});
+
+/**
+ * Square page number link styled as a `ghost` button, or `outline` for the
+ * current page. `size` sets its height.
+ */
+const PaginationLink = React.forwardRef<
+  HTMLAnchorElement,
+  React.PropsWithoutRef<PaginationLinkProps>
+>(function PaginationLink(propsWithoutRef, forwardedRef) {
+  const props: React.PropsWithoutRef<PaginationLinkProps> & {
+    ref?: React.ForwardedRef<HTMLAnchorElement>;
+  } =
+    forwardedRef === null
+      ? propsWithoutRef
+      : { ...propsWithoutRef, ref: forwardedRef };
+  return <PaginationAnchor square {...props} />;
 });
 
 /**
@@ -170,14 +189,18 @@ const PaginationPrevious = React.forwardRef<
       ? propsWithoutRef
       : { ...propsWithoutRef, ref: forwardedRef };
   return (
-    <PaginationLink aria-label="Go to previous page" size="default" {...props}>
+    <PaginationAnchor
+      square={false}
+      aria-label="Go to previous page"
+      {...props}
+    >
       {children ?? (
         <>
           <IconChevronLeft />
           <span>Previous</span>
         </>
       )}
-    </PaginationLink>
+    </PaginationAnchor>
   );
 });
 
@@ -204,14 +227,14 @@ const PaginationNext = React.forwardRef<
       ? propsWithoutRef
       : { ...propsWithoutRef, ref: forwardedRef };
   return (
-    <PaginationLink aria-label="Go to next page" size="default" {...props}>
+    <PaginationAnchor square={false} aria-label="Go to next page" {...props}>
       {children ?? (
         <>
           <span>Next</span>
           <IconChevronRight />
         </>
       )}
-    </PaginationLink>
+    </PaginationAnchor>
   );
 });
 

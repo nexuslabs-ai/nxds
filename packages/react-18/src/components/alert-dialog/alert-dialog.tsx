@@ -326,7 +326,7 @@ const AlertDialogDescription = React.forwardRef<
 type AlertDialogActionProps = React.ComponentProps<
   typeof AlertDialogPrimitive.Action
 > &
-  VariantProps<typeof buttonVariants>;
+  Pick<VariantProps<typeof buttonVariants>, 'variant' | 'size'>;
 
 /**
  * Confirm button. Closes the dialog on click.
@@ -365,7 +365,7 @@ const AlertDialogAction = React.forwardRef<
 type AlertDialogCancelProps = React.ComponentProps<
   typeof AlertDialogPrimitive.Cancel
 > &
-  VariantProps<typeof buttonVariants>;
+  Pick<VariantProps<typeof buttonVariants>, 'variant' | 'size'>;
 
 /**
  * Cancel button, styled as an `outline` Button. Closes the dialog on click.

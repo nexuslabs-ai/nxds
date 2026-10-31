@@ -52,7 +52,8 @@ const meta = {
           '',
           '- Label the toolbar with `aria-label` or `aria-labelledby`.',
           '- Build it from ToolbarButton, ToolbarLink, ToolbarToggleGroup and ToolbarToggleItem so every control joins the arrow-key order.',
-          '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading` or icon slots.',
+          '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading`.',
+          '- ToolbarButton and ToolbarToggleItem take `#start-icon` and `icon-only`. `icon-only` shows only the icon, and the text stays as the hidden name. `icon-only` ignores `as-child`.',
           '- Use `as-child` to make a toolbar control a menu trigger.',
           '- Keep text fields outside the toolbar, because arrow keys would conflict with typing.',
           '- In narrow containers, controls wrap in DOM order and arrow keys still reach every row.',
@@ -90,9 +91,8 @@ export const Default: Story = {
           <Tooltip>
             <TooltipTrigger as-child>
               <span class="nx:inline-flex">
-                <ToolbarButton size="icon-sm" aria-label="Undo formatting" class="nx:text-muted-foreground" @click="formatting = []">
-                  <PhArrowUUpLeft aria-hidden="true" />
-                </ToolbarButton>
+                <ToolbarButton icon-only class="nx:text-muted-foreground" @click="formatting = []">
+                  <template #start-icon><PhArrowUUpLeft /></template>Undo formatting</ToolbarButton>
               </span>
             </TooltipTrigger>
             <TooltipContent>Reset formatting</TooltipContent>
@@ -102,9 +102,8 @@ export const Default: Story = {
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="bold" aria-label="Bold" size="icon-sm">
-                    <PhTextB aria-hidden="true" />
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="bold" icon-only>
+                    <template #start-icon><PhTextB /></template>Bold</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Bold</TooltipContent>
@@ -112,9 +111,8 @@ export const Default: Story = {
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="italic" aria-label="Italic" size="icon-sm">
-                    <PhTextItalic aria-hidden="true" />
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="italic" icon-only>
+                    <template #start-icon><PhTextItalic /></template>Italic</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Italic</TooltipContent>
@@ -122,9 +120,8 @@ export const Default: Story = {
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="underline" aria-label="Underline" size="icon-sm">
-                    <PhTextUnderline aria-hidden="true" />
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="underline" icon-only>
+                    <template #start-icon><PhTextUnderline /></template>Underline</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Underline</TooltipContent>
@@ -197,9 +194,8 @@ export const FileActions: Story = {
         <ToolbarSeparator />
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <ToolbarButton size="icon-sm" aria-label="More file actions">
-              <PhDotsThree />
-            </ToolbarButton>
+            <ToolbarButton icon-only>
+              <template #start-icon><PhDotsThree /></template>More file actions</ToolbarButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem>Rename</DropdownMenuItem>
@@ -249,13 +245,11 @@ export const Calendar: Story = {
     template: `
       <Toolbar aria-label="Calendar controls">
         <ToolbarGroup aria-label="Date navigation">
-          <ToolbarButton size="icon-sm" aria-label="Previous period">
-            <PhCaretLeft />
-          </ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhCaretLeft /></template>Previous period</ToolbarButton>
           <ToolbarButton>Today</ToolbarButton>
-          <ToolbarButton size="icon-sm" aria-label="Next period">
-            <PhCaretRight />
-          </ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhCaretRight /></template>Next period</ToolbarButton>
         </ToolbarGroup>
         <ToolbarToggleGroup
           class="nx:ms-auto"
@@ -455,9 +449,8 @@ export const InsideTooltipProvider: Story = {
         <Toolbar aria-label="Text formatting">
           <Tooltip>
             <TooltipTrigger as-child>
-              <ToolbarButton size="icon-sm" aria-label="Bold">
-                <PhTextB aria-hidden="true" />
-              </ToolbarButton>
+              <ToolbarButton icon-only>
+                <template #start-icon><PhTextB /></template>Bold</ToolbarButton>
             </TooltipTrigger>
             <TooltipContent>Bold</TooltipContent>
           </Tooltip>
@@ -511,6 +504,75 @@ export const Sizes: Story = {
       await expect(getComputedStyle(toggle).fontSize).toBe(
         getComputedStyle(button).fontSize
       );
+    }
+  },
+};
+
+export const IconOnly: Story = {
+  render: () => ({
+    components: {
+      PhArrowUUpLeft,
+      PhTextB,
+      Toolbar,
+      ToolbarButton,
+      ToolbarToggleGroup,
+      ToolbarToggleItem,
+    },
+    template: `
+      <Toolbar aria-label="Text formatting">
+        <ToolbarButton icon-only>
+          <template #start-icon><PhArrowUUpLeft /></template>Undo formatting</ToolbarButton>
+        <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+          <ToolbarToggleItem value="bold" icon-only>
+            <template #start-icon><PhTextB /></template>Bold</ToolbarToggleItem>
+        </ToolbarToggleGroup>
+      </Toolbar>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const toolbar = within(canvasElement).getByRole('toolbar', {
+      name: 'Text formatting',
+    });
+    for (const name of ['Undo formatting', 'Bold']) {
+      const button = within(toolbar).getByRole('button', { name });
+      const { width, height } = button.getBoundingClientRect();
+      await expect(width).toBe(height);
+      await expect(within(button).getByText(name)).toHaveClass('nx:sr-only');
+    }
+  },
+};
+
+export const StartIcon: Story = {
+  render: () => ({
+    components: {
+      PhArrowUUpLeft,
+      PhTextB,
+      Toolbar,
+      ToolbarButton,
+      ToolbarToggleGroup,
+      ToolbarToggleItem,
+    },
+    template: `
+      <Toolbar aria-label="Text formatting">
+        <ToolbarButton>
+          <template #start-icon><PhArrowUUpLeft /></template>Undo formatting</ToolbarButton>
+        <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+          <ToolbarToggleItem value="bold">
+            <template #start-icon><PhTextB /></template>Bold</ToolbarToggleItem>
+        </ToolbarToggleGroup>
+      </Toolbar>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const toolbar = within(canvasElement).getByRole('toolbar', {
+      name: 'Text formatting',
+    });
+    for (const name of ['Undo formatting', 'Bold']) {
+      const button = within(toolbar).getByRole('button', { name });
+      await expect(
+        button.querySelector('[aria-hidden="true"] svg')
+      ).not.toBeNull();
+      await expect(button.querySelector('.nx\\:sr-only')).toBeNull();
     }
   },
 };
@@ -658,9 +720,8 @@ const AttachedExample = defineComponent({
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="bold" size="icon-sm" aria-label="Bold note">
-                    <span class="nx:font-bold">B</span>
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="bold" icon-only>
+                    <template #start-icon><span class="nx:font-bold">B</span></template>Bold note</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Bold</TooltipContent>
@@ -668,9 +729,8 @@ const AttachedExample = defineComponent({
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="italic" size="icon-sm" aria-label="Italic note">
-                    <span class="nx:italic">I</span>
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="italic" icon-only>
+                    <template #start-icon><span class="nx:italic">I</span></template>Italic note</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Italic</TooltipContent>
@@ -678,9 +738,8 @@ const AttachedExample = defineComponent({
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="underline" size="icon-sm" aria-label="Underline note">
-                    <span class="nx:underline">U</span>
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="underline" icon-only>
+                    <template #start-icon><span class="nx:underline">U</span></template>Underline note</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Underline</TooltipContent>
@@ -833,13 +892,11 @@ const SelectionExample = defineComponent({
           <Tooltip>
             <TooltipTrigger as-child>
               <ToolbarButton
-                size="icon-sm"
-                aria-label="Clear selection"
+                icon-only
                 class="nx:text-muted-foreground"
                 @click="clearSelection"
               >
-                <PhX aria-hidden="true" />
-              </ToolbarButton>
+                <template #start-icon><PhX /></template>Clear selection</ToolbarButton>
             </TooltipTrigger>
             <TooltipContent>Clear selection</TooltipContent>
           </Tooltip>
