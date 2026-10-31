@@ -30,7 +30,9 @@ ruleTester.run('nx-class-conventions', rule, {
     "const c = 'nx:[&>svg]:size-icon-glyph-sm nx:text-muted-foreground nx:icon-stroke';",
     "const c = 'nx:[&_svg]:size-[calc(var(--nx-icon-glyph-default)*2)] nx:icon-stroke';",
     "const c = 'nx:[&_svg]:size-[24px] nx:icon-stroke';",
+    "const c = 'nx:[&_svg]:size-icon-[calc(var(--nx-icon-glyph-default)*2)] nx:icon-stroke';",
     "const c = 'nx:size-8 nx:rounded-sm';",
+    "const c = 'nx:h-(--nx-spacing-8) nx:[&_svg]:size-icon-glyph-sm nx:icon-stroke';",
     // A `:has()` selector sizes the box around the icon, not the icon.
     "const c = 'nx:has-[>svg]:size-8';",
     "const c = 'nx:[&:has(>svg)]:size-9';",
@@ -179,6 +181,27 @@ ruleTester.run('nx-class-conventions', rule, {
     },
     {
       code: "const c = 'nx:[&_svg]:!size-4 nx:icon-stroke';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    // A value that reads a spacing variable follows density too.
+    {
+      code: "const c = 'nx:[&_svg]:size-icon-[var(--nx-spacing-8)] nx:icon-stroke';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&_svg]:size-icon-[length:var(--nx-spacing-8)] nx:icon-stroke';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&>svg]:size-(--nx-spacing-8) nx:icon-stroke';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const x = <IconX className='nx:size-[var(--nx-spacing-8)]' />;",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const x = <IconX className='nx:size-icon-(--nx-spacing-2_5)' />;",
       errors: [{ messageId: 'densityIconSize' }],
     },
     // The docs pages copy a story's code into apps.
