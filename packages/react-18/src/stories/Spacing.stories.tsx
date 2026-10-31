@@ -183,7 +183,7 @@ export const ActiveMode: Story = {
     docs: {
       description: {
         story:
-          'Live render of role-named utilities under the active Density toolbar. Switching density resizes the boxes below through provider-emitted CSS variables.',
+          'Live render of role-named utilities under the active Density toolbar. Switching density resizes the container padding, container gap and section gap through provider-emitted CSS variables. The stack gap stays 8px at every density.',
       },
     },
   },
@@ -195,7 +195,8 @@ export const ActiveMode: Story = {
         </h2>
         <p className="nx:text-muted-foreground nx:typography-body-default nx:max-w-2xl">
           Switch the Density toolbar. These examples use role utilities, so they
-          resize through the same runtime variables consumers receive.
+          resize through the same runtime variables consumers receive. The stack
+          gap stays 8px at every density.
         </p>
       </div>
 

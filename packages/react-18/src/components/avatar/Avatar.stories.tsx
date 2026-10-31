@@ -136,10 +136,7 @@ export const WithIcon: Story = {
   render: (_args) => (
     <Avatar role="img" aria-label="Unknown user">
       <AvatarFallback aria-hidden="true">
-        <UserIcon
-          aria-hidden="true"
-          className="nx:size-[calc(var(--nx-icon-glyph-default)*1.25)]"
-        />
+        <UserIcon aria-hidden="true" className="nx:size-icon-glyph-default" />
       </AvatarFallback>
     </Avatar>
   ),
@@ -504,7 +501,7 @@ export const AllSizes: Story = {
               <AvatarFallback aria-hidden="true">
                 <UserIcon
                   aria-hidden="true"
-                  className="nx:size-[calc(var(--nx-icon-glyph-default)*1.5)]"
+                  className="nx:size-icon-glyph-lg"
                 />
               </AvatarFallback>
             </Avatar>

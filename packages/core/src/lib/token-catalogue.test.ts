@@ -383,7 +383,8 @@ describe('token catalogue', () => {
     const aliased = catalogue.flatMap((token) =>
       aliasesOf(token, 'utility').map((alias) => ({ alias, token }))
     );
-    expect(aliased.map(({ alias }) => alias).sort()).toEqual(
+    // A utility can read several tokens, as icon-stroke reads both stroke tokens.
+    expect([...new Set(aliased.map(({ alias }) => alias))].sort()).toEqual(
       [...utilities.keys()]
         .filter((name) => !STATIC_UTILITIES.includes(name))
         .sort()
@@ -533,6 +534,9 @@ describe('token catalogue', () => {
 describe('density spacing order', () => {
   const densities = DENSITY_OPTIONS.map((option) => option.value);
   const spacing = catalogue.filter((token) => token.family === 'spacing');
+  const roles = spacing.filter(
+    (token) => !token.name.startsWith('--nx-spacing-')
+  );
   const variantOf = (token: CatalogueToken, density: string) => {
     const variant = token.variants.find((value) => value.preset === density);
     expect(variant, `${token.name} ${density}`).toBeDefined();
@@ -592,9 +596,6 @@ describe('density spacing order', () => {
   });
 
   it('gives each role token the value of the step it references, at every density and UI scale', () => {
-    const roles = spacing.filter(
-      (token) => !token.name.startsWith('--nx-spacing-')
-    );
     const scales = UI_SCALE_OPTIONS.map(({ value }) => value).filter(
       (scale) => scale !== 'default'
     );
@@ -614,6 +615,17 @@ describe('density spacing order', () => {
           expect(block.get(token.name), label).toBe(block.get(target));
         }
       }
+    }
+  });
+
+  it('references the same step from each role token at every density', () => {
+    for (const token of roles) {
+      const targets = new Set(
+        densities.map(
+          (density) => only(variantOf(token, density).references).target
+        )
+      );
+      expect([...targets], token.name).toHaveLength(1);
     }
   });
 

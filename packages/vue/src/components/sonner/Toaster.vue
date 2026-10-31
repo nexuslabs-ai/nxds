@@ -116,7 +116,7 @@ const forwarded = computed(
 <template>
   <div
     data-slot="toaster"
-    class="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke"
+    class="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke nx:[&_[data-close-button]_svg]:[--nx-icon-size:12px]"
   >
     <Sonner
       v-bind="forwarded"

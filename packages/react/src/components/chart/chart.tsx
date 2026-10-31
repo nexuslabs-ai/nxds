@@ -139,7 +139,7 @@ interface ChartTooltipContentProps extends Pick<
 /** Shared class for one tooltip row (formatter row and default row alike). */
 const tooltipRowClassName = (indicator: ChartIndicator) =>
   cn(
-    'nx:[&>svg]:text-muted-foreground nx:flex nx:w-full nx:flex-wrap nx:items-stretch nx:gap-2 nx:[&>svg]:size-[10px] nx:icon-stroke',
+    'nx:[&>svg]:text-muted-foreground nx:flex nx:w-full nx:flex-wrap nx:items-stretch nx:gap-2 nx:[&>svg]:size-icon-[10px] nx:icon-stroke',
     indicator === 'dot' && 'nx:items-center'
   );
 

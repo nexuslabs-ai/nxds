@@ -29,6 +29,12 @@ export const NXDS_CLASS_GROUPS = {
     'size-icon-glyph-sm',
     'size-icon-glyph-default',
     'size-icon-glyph-lg',
+    {
+      'size-icon': [
+        validators.isArbitraryValue,
+        validators.isArbitraryVariable,
+      ],
+    },
   ],
   // Strokes the icons inside, so the element's own `stroke-*` must not drop it.
   'icon-stroke': ['icon-stroke'],

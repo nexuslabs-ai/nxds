@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import type { ClassValidator } from 'tailwind-merge';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -210,6 +211,26 @@ describe('cn', () => {
       'nx:size-icon-glyph-lg',
     ],
     [
+      'arbitrary icon size',
+      'nx:size-4 nx:size-icon-[10px]',
+      'nx:size-icon-[10px]',
+    ],
+    [
+      'arbitrary icon size over a glyph size',
+      'nx:size-icon-glyph-default nx:size-icon-[var(--nx-spacing-3)]',
+      'nx:size-icon-[var(--nx-spacing-3)]',
+    ],
+    [
+      'icon size from a variable over a glyph size',
+      'nx:size-icon-glyph-default nx:size-icon-(--nx-spacing-3)',
+      'nx:size-icon-(--nx-spacing-3)',
+    ],
+    [
+      'size over an arbitrary icon size',
+      'nx:size-icon-[calc(var(--nx-icon-glyph-default)*2)] nx:size-5',
+      'nx:size-5',
+    ],
+    [
       'spacing role',
       'nx:gap-container nx:gap-layout-stack',
       'nx:gap-layout-stack',
@@ -334,15 +355,25 @@ describe('cn', () => {
         .map(([, utility]) => utility)
         .filter((utility): utility is string => utility !== undefined)
     );
-    // A `{ prefix: [validator] }` entry registers `prefix-*` and every static
-    // `prefix-<value>` utility beside it.
+    // A `{ prefix: [validator] }` entry registers `prefix-*` and each static
+    // `prefix-<value>` utility whose value one of its validators accepts.
     const registeredUtilities = Object.values(NXDS_CLASS_GROUPS).flat();
+    const isCoveredByPrefix = (
+      utility: string,
+      prefix: string,
+      prefixValidators: readonly ClassValidator[]
+    ) => {
+      if (utility === `${prefix}-*`) return true;
+      if (!utility.startsWith(`${prefix}-`)) return false;
+      const value = utility.slice(prefix.length + 1);
+      return prefixValidators.some((validator) => validator(value));
+    };
     const isRegistered = (utility: string) =>
       registeredUtilities.some((entry) =>
         typeof entry === 'string'
           ? entry === utility
-          : Object.keys(entry).some((prefix) =>
-              utility.startsWith(`${prefix}-`)
+          : Object.entries(entry).some(([prefix, prefixValidators]) =>
+              isCoveredByPrefix(utility, prefix, prefixValidators)
             )
       );
 

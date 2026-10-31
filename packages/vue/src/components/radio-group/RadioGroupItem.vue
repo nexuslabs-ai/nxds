@@ -49,7 +49,7 @@ const forwarded = useForwardProps(delegated);
         aria-hidden="true"
         :class="
           cn(
-            'nx:size-[calc(var(--nx-icon-glyph-default)_-_6px)] nx:text-current',
+            'nx:size-icon-[calc(var(--nx-icon-glyph-default)_-_6px)] nx:text-current',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )

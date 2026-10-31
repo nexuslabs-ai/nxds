@@ -35,10 +35,12 @@ export const RAW_LETTER_SPACINGS = [
   'widest',
 ];
 
-// A numeric spacing step sizes an icon from spacing, so the icon follows
-// density. Glyph tokens (`size-icon-glyph-sm`) and arbitrary values
-// (`size-[24px]`) do not. A leading `!` is Tailwind's important modifier.
-const SPACING_STEP_SIZE = /^!?(?:size|h|w)-\d/;
+// A size from spacing follows density: a numeric spacing step (`size-4`), or an
+// arbitrary value that reads a spacing variable
+// (`size-icon-[var(--nx-spacing-8)]`, `size-(--nx-spacing-8)`). Glyph tokens
+// (`size-icon-glyph-sm`) and other arbitrary values (`size-[24px]`) do not.
+// A leading `!` is Tailwind's important modifier.
+const SPACING_SIZE = /^!?(?:size|h|w)-(?:\d|(?:icon-)?[[(].*--nx-spacing-)/;
 
 // Any size utility: a spacing step, a glyph token or an arbitrary value.
 const ANY_SIZE = /^!?(?:size|h|w)-/;
@@ -98,12 +100,12 @@ function sizesSvg(token, size) {
 }
 
 function sizesSvgFromSpacing(raw) {
-  return nxClasses(raw).some((token) => sizesSvg(token, SPACING_STEP_SIZE));
+  return nxClasses(raw).some((token) => sizesSvg(token, SPACING_SIZE));
 }
 
 function sizesFromSpacing(raw) {
   return nxClasses(raw).some((token) =>
-    SPACING_STEP_SIZE.test(splitVariants(token).at(-1))
+    SPACING_SIZE.test(splitVariants(token).at(-1))
   );
 }
 
@@ -195,27 +197,6 @@ function leavesIconUnstroked(scope) {
   return classes.some((token) => sizesSvg(token, ANY_SIZE));
 }
 
-// Class lists handed to a part that already strokes its icons: AttachmentMedia
-// renders ItemMedia, and the two recipes style a Button.
-const STROKED_BY_INNER_PART = new Set([
-  'AttachmentMedia',
-  'inputGroupButtonVariants',
-  'messageScrollerButtonVariants',
-]);
-
-/** The name of the function or variable a class list is written in. */
-function ownerName(node) {
-  for (let current = node.parent; current; current = current.parent) {
-    if (
-      current.type === 'FunctionDeclaration' ||
-      current.type === 'VariableDeclarator'
-    ) {
-      return current.id?.name;
-    }
-  }
-  return undefined;
-}
-
 function isStoryFile(filename) {
   return /\.stories\.[jt]sx?$/.test(filename);
 }
@@ -224,9 +205,9 @@ function isDocsFile(filename) {
   return /(?:^|[/\\])apps[/\\]docs[/\\]/.test(filename);
 }
 
-// What the raw typography checks skip: stories and the docs app quote
-// utilities as specimens and prose, and the docs app styles its own chrome
-// off-system.
+// What the raw typography and stroke checks skip: stories and the docs app
+// quote utilities as specimens and prose, and the docs app styles its own
+// chrome off-system.
 function isExampleFile(filename) {
   return isStoryFile(filename) || isDocsFile(filename);
 }
@@ -364,7 +345,7 @@ export default {
     type: 'problem',
     docs: {
       description:
-        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, no icon sized from a spacing step, no ring-fading `transition-colors` on a focus-ring surface, and no sized `svg` children without `nx:icon-stroke`.',
+        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, no icon sized from spacing, no ring-fading `transition-colors` on a focus-ring surface, and no sized `svg` children without `nx:icon-stroke`.',
     },
     schema: [],
     messages: {
@@ -385,11 +366,11 @@ export default {
       rawLetterSpacing:
         'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
       densityIconSize:
-        'Icon size from a spacing step — a numeric `size-*`, `h-*` or `w-*` on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm`, `-default` or `-lg` (12, 14, 16 or 24px at the Default UI scale). For another size, multiply the default icon, such as `size-[calc(var(--nx-icon-glyph-default)*2)]`, so it follows the UI scale.',
+        'Icon size from spacing — a numeric `size-*`, `h-*` or `w-*`, or one that reads a `--nx-spacing-*` variable, on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm`, `-default` or `-lg` (12, 14, 16 or 24px at the Default UI scale). For another size, use a whole multiple of the default icon in `size-icon-[…]`, such as `size-icon-[calc(var(--nx-icon-glyph-default)*2)]`. It follows the UI scale and sets the line for that size too.',
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
       unstrokedIcon:
-        'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-4`), so add `nx:icon-stroke` to draw stroked icons at `--nx-icon-stroke`.',
+        'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-4`), so add `nx:icon-stroke` to draw stroked icons at the icon line width.',
     },
   },
   create(context) {
@@ -412,11 +393,7 @@ export default {
       if (!isDocsSpecimenPage(filename) && fadesItsFocusRing(scope)) {
         context.report({ node, messageId: 'ringFadingTransition' });
       }
-      if (
-        !isExampleFile(filename) &&
-        !STROKED_BY_INNER_PART.has(ownerName(node)) &&
-        leavesIconUnstroked(scope)
-      ) {
+      if (!isExampleFile(filename) && leavesIconUnstroked(scope)) {
         context.report({ node, messageId: 'unstrokedIcon' });
       }
     }
