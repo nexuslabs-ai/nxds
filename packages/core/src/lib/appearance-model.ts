@@ -1,4 +1,5 @@
 import {
+  MIN_TEXT_PX,
   NON_DEFAULT_UI_SCALES,
   scaleText,
   type UiScale,
@@ -160,7 +161,7 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
 };
 
 /** The font sizes, in px, the appearance prefs take. */
-export const FONT_SIZE_PX_MIN = 8;
+export const FONT_SIZE_PX_MIN = MIN_TEXT_PX;
 export const FONT_SIZE_PX_MAX = 32;
 
 const APPEARANCE_MODES = new Set<NxdsAppearanceMode>([
