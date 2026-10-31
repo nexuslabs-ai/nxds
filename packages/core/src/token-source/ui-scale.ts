@@ -96,7 +96,7 @@ export function scaleText(
 }
 
 /**
- * A line height at a scale and text size, in even px. It stops where
+ * A line height at a scale and text size, in even px. It stops at 8px, where
  * `scaleText` stops, so a line box never gets shorter than its text.
  */
 function scaleLineHeight(
@@ -104,8 +104,10 @@ function scaleLineHeight(
   scale: UiScale,
   textSize: TextSize
 ): number {
-  const floor = Math.min(Math.round(lineHeight), MIN_TEXT_PX);
-  return Math.max(floor, evenPx(lineHeight * textFactor(scale, textSize)));
+  return Math.max(
+    MIN_TEXT_PX,
+    evenPx(lineHeight * textFactor(scale, textSize))
+  );
 }
 
 /** The label text size, in px, that `textSize` shows at `scale`. */
