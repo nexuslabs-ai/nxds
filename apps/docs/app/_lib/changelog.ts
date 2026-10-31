@@ -17,8 +17,7 @@ export const CHANGELOG_PACKAGES = [
   { slug: 'eslint-plugin', summary: 'The lint rules for nxds conventions.' },
   {
     slug: 'claude-design',
-    summary:
-      'nxds as a Claude Design System. It releases with the React components.',
+    summary: 'nxds as a Claude Design System. Its version matches @nxds/react.',
   },
 ] as const;
 
@@ -31,7 +30,8 @@ export function findChangelogPackage(slug: string) {
 /**
  * Reads the CHANGELOG.md that changesets writes: a `# name` title, then one
  * `## version` section per release, newest first. `releases` drops the title
- * and the commit hash changesets puts before each entry.
+ * and every commit hash: the one before each entry, and the one on each
+ * `Updated dependencies` line, whose repeats it folds into one line.
  */
 export const readChangelog = cache(async (slug: ChangelogPackage['slug']) => {
   const filePath = path.join(
@@ -53,6 +53,10 @@ export const readChangelog = cache(async (slug: ChangelogPackage['slug']) => {
 
   const releases = source
     .replace(/^# .+$/m, '')
-    .replace(/^- [0-9a-f]{7,40}: /gm, '- ');
+    .replace(/^- [0-9a-f]{7,40}: /gm, '- ')
+    .replace(
+      /^(?:- Updated dependencies(?: \[[0-9a-f]{7,40}\])?\n)+/gm,
+      '- Updated dependencies\n'
+    );
   return { name, latest, releases };
 });

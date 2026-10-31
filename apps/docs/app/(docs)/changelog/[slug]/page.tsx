@@ -8,7 +8,7 @@ import rehypeSlug from 'rehype-slug';
 import remarkGfm from 'remark-gfm';
 
 import { useMDXComponents } from '../../../../mdx-components';
-import { SHIKI_OPTIONS } from '../../../../mdx-options';
+import { MDX_OPTIONS, SHIKI_OPTIONS } from '../../../../mdx-options';
 import { Breadcrumb } from '../../../_components/Breadcrumb';
 import { PAGE_HEADING_CLASS } from '../../../_components/Heading';
 import {
@@ -50,6 +50,7 @@ export default async function PackageChangelog(props: PageProps) {
     format: 'md',
     remarkPlugins: [remarkGfm],
     rehypePlugins: [rehypeSlug, [rehypePrettyCode, SHIKI_OPTIONS]],
+    remarkRehypeOptions: MDX_OPTIONS.remarkRehypeOptions,
     useMDXComponents,
   });
 
