@@ -78,6 +78,8 @@ When every check passes, tell the person nxds is ready, and give them the system
    npx nxds-cli@latest export claude-design --overwrite --index current-index.json --existing current-files.json
    ```
 
+   If the output has a `Kept …` line, the command exits 3. Carry on. Tell the person which file was kept: they edited it, and the new release doesn't ship it.
+
 3. Read the new `nxds-design-system/SETUP.md`. It belongs to the new release.
 4. Publish `nxds-design-system/project/` to the same artifact link, every file. Send {{textPlainFiles}} with the content type `text/plain`, as in step 1. Remove each path that `nxds-design-system/removed.json` lists.
 5. Check: the artifact has the new release's file count under `project/`, none of the removed paths, and `project/tokens.json` has `meta.version` {{version}}.
