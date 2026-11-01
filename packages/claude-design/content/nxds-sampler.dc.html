@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>nxds sampler</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/nxds/tokens.css" />
+<link rel="stylesheet" href="ds/nxds/components/bundle.css" />
+<script src="ds/nxds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div data-theme="{{mode}}" class="typography-body-default" style="background: var(--nx-color-background); color: var(--nx-color-foreground);">
+  <x-import component-from-global-scope="Nxds.SidebarProvider">
+    <x-import component-from-global-scope="Nxds.Sidebar">
+      <x-import component-from-global-scope="Nxds.SidebarHeader">
+        <x-import component-from-global-scope="Nxds.SidebarMenu">
+          <x-import component-from-global-scope="Nxds.SidebarMenuItem">
+            <x-import component-from-global-scope="Nxds.SidebarMenuButton" size="lg">
+              <span aria-hidden="true" style="display: flex; align-items: center; justify-content: center; width: var(--nx-spacing-8); height: var(--nx-spacing-8); flex-shrink: 0; border-radius: var(--nx-radius-lg); background: var(--nx-color-primary-background); color: var(--nx-color-primary-foreground);" class="typography-label-default">A</span>
+              <span style="display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0;">
+                <span class="typography-label-default" style="color: var(--nx-color-nav-foreground);">Acme Inc.</span>
+                <span class="typography-body-small">Sales workspace</span>
+              </span>
+              <x-import component-from-global-scope="Nxds.Icon" name="caret-up-down"></x-import>
+            </x-import>
+          </x-import>
+        </x-import>
+      </x-import>
+      <x-import component-from-global-scope="Nxds.SidebarContent">
+        <x-import component-from-global-scope="Nxds.SidebarGroup">
+          <x-import component-from-global-scope="Nxds.SidebarMenu">
+            <x-import component-from-global-scope="Nxds.SidebarMenuItem">
+              <x-import component-from-global-scope="Nxds.SidebarMenuButton" is-active>
+                <x-import component-from-global-scope="Nxds.Icon" name="squares-four"></x-import>
+                <span>Dashboard</span>
+              </x-import>
+            </x-import>
+            <x-import component-from-global-scope="Nxds.SidebarMenuItem">
+              <x-import component-from-global-scope="Nxds.SidebarMenuButton">
+                <x-import component-from-global-scope="Nxds.Icon" name="tray"></x-import>
+                <span>Inbox</span>
+              </x-import>
+              <x-import component-from-global-scope="Nxds.SidebarMenuBadge" aria-label="3 unread">3</x-import>
+            </x-import>
+            <x-import component-from-global-scope="Nxds.SidebarMenuItem">
+              <x-import component-from-global-scope="Nxds.SidebarMenuButton">
+                <x-import component-from-global-scope="Nxds.Icon" name="list-checks"></x-import>
+                <span>Tasks</span>
+              </x-import>
+              <x-import component-from-global-scope="Nxds.SidebarMenuBadge" aria-label="3 open tasks">3</x-import>
+            </x-import>
+          </x-import>
+        </x-import>
+        <x-import component-from-global-scope="Nxds.SidebarGroup">
+          <x-import component-from-global-scope="Nxds.SidebarGroupLabel">CRM</x-import>
+          <x-import component-from-global-scope="Nxds.SidebarMenu">
+            <x-import component-from-global-scope="Nxds.SidebarMenuItem">
+              <x-import component-from-global-scope="Nxds.SidebarMenuButton">
+                <x-import component-from-global-scope="Nxds.Icon" name="users"></x-import>
+                <span>Contacts</span>
+              </x-import>
+            </x-import>
+            <x-import component-from-global-scope="Nxds.SidebarMenuItem">
+              <x-import component-from-global-scope="Nxds.SidebarMenuButton">
+                <x-import component-from-global-scope="Nxds.Icon" name="building"></x-import>
+                <span>Companies</span>
+              </x-import>
+            </x-import>
+            <x-import component-from-global-scope="Nxds.SidebarMenuItem">
+              <x-import component-from-global-scope="Nxds.SidebarMenuButton">
+                <x-import component-from-global-scope="Nxds.Icon" name="briefcase"></x-import>
+                <span>Deals</span>
+              </x-import>
+            </x-import>
+            <x-import component-from-global-scope="Nxds.SidebarMenuItem">
+              <x-import component-from-global-scope="Nxds.SidebarMenuButton">
+                <x-import component-from-global-scope="Nxds.Icon" name="chart-bar"></x-import>
+                <span>Reports</span>
+              </x-import>
+            </x-import>
+          </x-import>
+        </x-import>
+      </x-import>
+      <x-import component-from-global-scope="Nxds.SidebarFooter">
+        <x-import component-from-global-scope="Nxds.SidebarMenu">
+          <x-import component-from-global-scope="Nxds.SidebarMenuItem">
+            <x-import component-from-global-scope="Nxds.SidebarMenuButton">
+              <x-import component-from-global-scope="Nxds.Icon" name="gear"></x-import>
+              <span>Settings</span>
+            </x-import>
+          </x-import>
+        </x-import>
+        <div style="display: flex; align-items: center; gap: var(--nx-spacing-2); padding: var(--nx-spacing-2);">
+          <x-import component-from-global-scope="Nxds.Avatar" size="sm">
+            <x-import component-from-global-scope="Nxds.AvatarFallback">PS</x-import>
+          </x-import>
+          <span style="display: flex; flex-direction: column; min-width: 0;">
+            <span class="typography-label-default" style="color: var(--nx-color-nav-foreground);">Priya Shah</span>
+            <span class="typography-body-small" style="color: var(--nx-color-nav-muted-foreground);">Account executive</span>
+          </span>
+        </div>
+      </x-import>
+    </x-import>
+    <x-import component-from-global-scope="Nxds.SidebarInset">
+      <header style="display: flex; align-items: center; gap: var(--nx-spacing-3); padding: var(--nx-spacing-3) var(--nx-spacing-6); border-bottom: var(--nx-borderwidth-default) solid var(--nx-color-border-default);">
+        <x-import component-from-global-scope="Nxds.SidebarTrigger"></x-import>
+        <div style="flex: 0 1 var(--nx-spacing-96); min-width: 0;">
+          <x-import component-from-global-scope="Nxds.InputGroup" variant="borderless">
+            <x-import component-from-global-scope="Nxds.InputGroupAddon">
+              <x-import component-from-global-scope="Nxds.Icon" name="magnifying-glass"></x-import>
+            </x-import>
+            <x-import component-from-global-scope="Nxds.InputGroupInput" aria-label="Search" placeholder="Search deals, contacts, companies"></x-import>
+            <x-import component-from-global-scope="Nxds.InputGroupAddon" align="inline-end">
+              <x-import component-from-global-scope="Nxds.Kbd">⌘K</x-import>
+            </x-import>
+          </x-import>
+        </div>
+        <div style="display: flex; align-items: center; gap: var(--nx-spacing-2); margin-left: auto;">
+          <x-import component-from-global-scope="Nxds.Button" variant="ghost" size="icon" aria-label="Notifications">
+            <x-import component-from-global-scope="Nxds.Icon" name="bell"></x-import>
+          </x-import>
+          <x-import component-from-global-scope="Nxds.Button" start-icon="plus">New deal</x-import>
+        </div>
+      </header>
+      <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-8); padding: var(--nx-spacing-8);">
+        <x-import component-from-global-scope="Nxds.PageHeader">
+          <x-import component-from-global-scope="Nxds.PageHeaderContent">
+            <x-import component-from-global-scope="Nxds.PageHeaderMeta">Q4 2026 · Day 24 of 92</x-import>
+            <x-import component-from-global-scope="Nxds.PageHeaderTitleRow">
+              <x-import component-from-global-scope="Nxds.PageHeaderTitle">Sales overview</x-import>
+            </x-import>
+            <x-import component-from-global-scope="Nxds.PageHeaderDescription">Pipeline, closed revenue and today's follow-ups for the Sales team.</x-import>
+          </x-import>
+          <x-import component-from-global-scope="Nxds.PageHeaderActions">
+            <x-import component-from-global-scope="Nxds.Popover">
+              <x-import component-from-global-scope="Nxds.PopoverTrigger" as-child>
+                <x-import component-from-global-scope="Nxds.Button" variant="outline" start-icon="calendar-dots" end-icon="caret-down">This quarter</x-import>
+              </x-import>
+              <x-import component-from-global-scope="Nxds.PopoverContent" data-theme="{{mode}}" align="end" class-name="nx:w-auto">
+                <x-import component-from-global-scope="Nxds.DatePicker" mode="range" number-of-months="3" default-month="2026-10" today="2026-10-24" selected="2026-10-01,2026-12-31"></x-import>
+              </x-import>
+            </x-import>
+            <x-import component-from-global-scope="Nxds.Button" variant="outline" start-icon="download">Export</x-import>
+          </x-import>
+        </x-import>
+        <section aria-label="Key metrics" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--nx-spacing-4);">
+          <x-import component-from-global-scope="Nxds.Card">
+            <x-import component-from-global-scope="Nxds.CardHeader">
+              <x-import component-from-global-scope="Nxds.CardDescription">Open pipeline</x-import>
+              <p class="typography-heading-large" style="grid-column-start: 1; min-width: 0; margin: 0; color: var(--nx-color-foreground); font-variant-numeric: tabular-nums;">$1.84M</p>
+            </x-import>
+            <x-import component-from-global-scope="Nxds.CardContent">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--nx-spacing-2);">
+                <x-import component-from-global-scope="Nxds.Badge" variant="success" fill="outline" left-icon="arrow-up-right">12.4%</x-import>
+                <span class="typography-label-small" style="color: var(--nx-color-muted-foreground);">62 open deals, vs Q3</span>
+              </div>
+            </x-import>
+          </x-import>
+          <x-import component-from-global-scope="Nxds.Card">
+            <x-import component-from-global-scope="Nxds.CardHeader">
+              <x-import component-from-global-scope="Nxds.CardDescription">Won this quarter</x-import>
+              <p class="typography-heading-large" style="grid-column-start: 1; min-width: 0; margin: 0; color: var(--nx-color-foreground); font-variant-numeric: tabular-nums;">$186K</p>
+            </x-import>
+            <x-import component-from-global-scope="Nxds.CardContent">
+              <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-2);">
+                <span class="typography-label-small" style="color: var(--nx-color-muted-foreground);">29% of $650K quota</span>
+                <x-import component-from-global-scope="Nxds.Progress" value="29" aria-label="Quota attainment"></x-import>
+              </div>
+            </x-import>
+          </x-import>
+          <x-import component-from-global-scope="Nxds.Card">
+            <x-import component-from-global-scope="Nxds.CardHeader">
+              <x-import component-from-global-scope="Nxds.CardDescription">Win rate</x-import>
+              <p class="typography-heading-large" style="grid-column-start: 1; min-width: 0; margin: 0; color: var(--nx-color-foreground); font-variant-numeric: tabular-nums;">28.6%</p>
+            </x-import>
+            <x-import component-from-global-scope="Nxds.CardContent">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--nx-spacing-2);">
+                <x-import component-from-global-scope="Nxds.Badge" variant="success" fill="outline" is-caps="true" left-icon="arrow-up-right">2.1 pts</x-import>
+                <span class="typography-label-small" style="color: var(--nx-color-muted-foreground);">Last 90 days, vs Q3</span>
+              </div>
+            </x-import>
+          </x-import>
+          <x-import component-from-global-scope="Nxds.Card">
+            <x-import component-from-global-scope="Nxds.CardHeader">
+              <x-import component-from-global-scope="Nxds.CardDescription">Avg. sales cycle</x-import>
+              <p class="typography-heading-large" style="grid-column-start: 1; min-width: 0; margin: 0; color: var(--nx-color-foreground); font-variant-numeric: tabular-nums;">38 days</p>
+            </x-import>
+            <x-import component-from-global-scope="Nxds.CardContent">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--nx-spacing-2);">
+                <x-import component-from-global-scope="Nxds.Badge" variant="error" fill="outline" left-icon="arrow-up-right">4 days slower</x-import>
+                <span class="typography-label-small" style="color: var(--nx-color-muted-foreground);">vs Q3</span>
+              </div>
+            </x-import>
+          </x-import>
+        </section>
+        <div style="display: flex; gap: var(--nx-spacing-4);">
+          <div style="flex: 1 1 0; min-width: 0; display: grid;">
+            <x-import component-from-global-scope="Nxds.Card">
+              <x-import component-from-global-scope="Nxds.CardHeader">
+                <x-import component-from-global-scope="Nxds.CardTitle">Closed won</x-import>
+                <x-import component-from-global-scope="Nxds.CardDescription">By month, January to October 2026</x-import>
+                <x-import component-from-global-scope="Nxds.CardAction">
+                  <x-import component-from-global-scope="Nxds.Tabs" default-value="revenue">
+                    <x-import component-from-global-scope="Nxds.TabsList" aria-label="Chart metric">
+                      <x-import component-from-global-scope="Nxds.TabsTrigger" value="revenue">Revenue</x-import>
+                      <x-import component-from-global-scope="Nxds.TabsTrigger" value="deals">Deals</x-import>
+                    </x-import>
+                  </x-import>
+                </x-import>
+              </x-import>
+              <x-import component-from-global-scope="Nxds.CardContent">
+                <x-import component-from-global-scope="Nxds.BarChart" data='[{"month":"Jan","won":148,"toDate":null},{"month":"Feb","won":172,"toDate":null},{"month":"Mar","won":231,"toDate":null},{"month":"Apr","won":164,"toDate":null},{"month":"May","won":189,"toDate":null},{"month":"Jun","won":247,"toDate":null},{"month":"Jul","won":176,"toDate":null},{"month":"Aug","won":203,"toDate":null},{"month":"Sep","won":268,"toDate":null},{"month":"Oct","won":null,"toDate":186}]' x-key="month" series="won,toDate" config='{"won":{"label":"Won ($K)"},"toDate":{"label":"October to date ($K)"}}' stacked value-axis="true"></x-import>
+              </x-import>
+              <x-import component-from-global-scope="Nxds.CardFooter">
+                <span class="typography-label-small" style="color: var(--nx-color-muted-foreground);">October is month to date.</span>
+              </x-import>
+            </x-import>
+          </div>
+          <div style="flex: 0 0 var(--nx-spacing-72); min-width: 0; display: grid;">
+            <x-import component-from-global-scope="Nxds.Card">
+              <x-import component-from-global-scope="Nxds.CardHeader">
+                <x-import component-from-global-scope="Nxds.CardTitle">Pipeline by stage</x-import>
+                <x-import component-from-global-scope="Nxds.CardDescription">62 open deals worth $1.84M</x-import>
+              </x-import>
+              <x-import component-from-global-scope="Nxds.CardContent">
+                <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-5);">
+                  <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-2);">
+                    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--nx-spacing-2);">
+                      <span class="typography-label-default">Lead <span class="typography-body-default" style="color: var(--nx-color-muted-foreground);">· 24 deals</span></span>
+                      <span class="typography-label-default" style="font-variant-numeric: tabular-nums;">$612K</span>
+                    </div>
+                    <x-import component-from-global-scope="Nxds.Progress" value="100" aria-label="Lead: 24 deals, $612K"></x-import>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-2);">
+                    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--nx-spacing-2);">
+                      <span class="typography-label-default">Qualified <span class="typography-body-default" style="color: var(--nx-color-muted-foreground);">· 16 deals</span></span>
+                      <span class="typography-label-default" style="font-variant-numeric: tabular-nums;">$498K</span>
+                    </div>
+                    <x-import component-from-global-scope="Nxds.Progress" value="81" aria-label="Qualified: 16 deals, $498K"></x-import>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-2);">
+                    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--nx-spacing-2);">
+                      <span class="typography-label-default">Proposal <span class="typography-body-default" style="color: var(--nx-color-muted-foreground);">· 11 deals</span></span>
+                      <span class="typography-label-default" style="font-variant-numeric: tabular-nums;">$386K</span>
+                    </div>
+                    <x-import component-from-global-scope="Nxds.Progress" value="63" aria-label="Proposal: 11 deals, $386K"></x-import>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-2);">
+                    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--nx-spacing-2);">
+                      <span class="typography-label-default">Negotiation <span class="typography-body-default" style="color: var(--nx-color-muted-foreground);">· 7 deals</span></span>
+                      <span class="typography-label-default" style="font-variant-numeric: tabular-nums;">$262K</span>
+                    </div>
+                    <x-import component-from-global-scope="Nxds.Progress" value="43" aria-label="Negotiation: 7 deals, $262K"></x-import>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-2);">
+                    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--nx-spacing-2);">
+                      <span class="typography-label-default">Verbal commit <span class="typography-body-default" style="color: var(--nx-color-muted-foreground);">· 4 deals</span></span>
+                      <span class="typography-label-default" style="font-variant-numeric: tabular-nums;">$82K</span>
+                    </div>
+                    <x-import component-from-global-scope="Nxds.Progress" value="13" aria-label="Verbal commit: 4 deals, $82K"></x-import>
+                  </div>
+                </div>
+              </x-import>
+            </x-import>
+          </div>
+        </div>
+        <div style="display: flex; align-items: flex-start; gap: var(--nx-spacing-4);">
+          <div style="flex: 1 1 0; min-width: 0; display: grid;">
+            <x-import component-from-global-scope="Nxds.Card">
+              <x-import component-from-global-scope="Nxds.CardHeader">
+                <x-import component-from-global-scope="Nxds.CardTitle">Open deals</x-import>
+                <x-import component-from-global-scope="Nxds.CardDescription">Largest first</x-import>
+              </x-import>
+              <x-import component-from-global-scope="Nxds.CardContent">
+                <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-4);">
+                  <div>
+                    <x-import component-from-global-scope="Nxds.Tabs" default-value="all">
+                      <x-import component-from-global-scope="Nxds.TabsList" aria-label="Filter deals" variant="underline">
+                        <x-import component-from-global-scope="Nxds.TabsTrigger" value="all">All</x-import>
+                        <x-import component-from-global-scope="Nxds.TabsTrigger" value="mine">Mine</x-import>
+                        <x-import component-from-global-scope="Nxds.TabsTrigger" value="soon">Closing in 30 days</x-import>
+                      </x-import>
+                    </x-import>
+                  </div>
+                  <x-import component-from-global-scope="Nxds.Table" aria-label="Open deals">
+                    <x-import component-from-global-scope="Nxds.TableHeader">
+                      <x-import component-from-global-scope="Nxds.TableRow">
+                        <x-import component-from-global-scope="Nxds.TableHead">Deal</x-import>
+                        <x-import component-from-global-scope="Nxds.TableHead">Stage</x-import>
+                        <x-import component-from-global-scope="Nxds.TableHead">Owner</x-import>
+                        <x-import component-from-global-scope="Nxds.TableHead" class-name="nx:text-end">Value</x-import>
+                        <x-import component-from-global-scope="Nxds.TableHead">Close date</x-import>
+                        <x-import component-from-global-scope="Nxds.TableHead" class-name="nx:text-end">Probability</x-import>
+                      </x-import>
+                    </x-import>
+                    <x-import component-from-global-scope="Nxds.TableBody">
+                      <x-import component-from-global-scope="Nxds.TableRow">
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <div style="display: flex; flex-direction: column;">
+                            <span class="typography-label-default">Annual platform license</span>
+                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Northvale Logistics</span>
+                          </div>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <x-import component-from-global-scope="Nxds.Badge" variant="warning" fill="outline">Negotiation</x-import>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <div style="display: flex; align-items: center; gap: var(--nx-spacing-2);">
+                            <x-import component-from-global-scope="Nxds.Avatar" size="xs">
+                              <x-import component-from-global-scope="Nxds.AvatarFallback">PS</x-import>
+                            </x-import>
+                            <span>Priya Shah</span>
+                          </div>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">$86,000</x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:tabular-nums">Nov 14</x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">70%</x-import>
+                      </x-import>
+                      <x-import component-from-global-scope="Nxds.TableRow">
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <div style="display: flex; flex-direction: column;">
+                            <span class="typography-label-default">Renewal 2027</span>
+                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Atlas Biotech</span>
+                          </div>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <x-import component-from-global-scope="Nxds.Badge" variant="warning" fill="outline">Negotiation</x-import>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <div style="display: flex; align-items: center; gap: var(--nx-spacing-2);">
+                            <x-import component-from-global-scope="Nxds.Avatar" size="xs">
+                              <x-import component-from-global-scope="Nxds.AvatarFallback">DO</x-import>
+                            </x-import>
+                            <span>Daniel Okafor</span>
+                          </div>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">$63,000</x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:tabular-nums">Nov 20</x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">75%</x-import>
+                      </x-import>
+                      <x-import component-from-global-scope="Nxds.TableRow">
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <div style="display: flex; flex-direction: column;">
+                            <span class="typography-label-default">Fleet analytics rollout</span>
+                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Cobalt Health</span>
+                          </div>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <x-import component-from-global-scope="Nxds.Badge" variant="default" fill="outline">Proposal</x-import>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <div style="display: flex; align-items: center; gap: var(--nx-spacing-2);">
+                            <x-import component-from-global-scope="Nxds.Avatar" size="xs">
+                              <x-import component-from-global-scope="Nxds.AvatarFallback">DO</x-import>
+                            </x-import>
+                            <span>Daniel Okafor</span>
+                          </div>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">$54,500</x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:tabular-nums">Nov 28</x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">45%</x-import>
+                      </x-import>
+                      <x-import component-from-global-scope="Nxds.TableRow">
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <div style="display: flex; flex-direction: column;">
+                            <span class="typography-label-default">Data warehouse add-on</span>
+                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Kestrel Energy</span>
+                          </div>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <x-import component-from-global-scope="Nxds.Badge" variant="default" fill="outline">Proposal</x-import>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <div style="display: flex; align-items: center; gap: var(--nx-spacing-2);">
+                            <x-import component-from-global-scope="Nxds.Avatar" size="xs">
+                              <x-import component-from-global-scope="Nxds.AvatarFallback">PS</x-import>
+                            </x-import>
+                            <span>Priya Shah</span>
+                          </div>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">$41,200</x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:tabular-nums">Dec 5</x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">40%</x-import>
+                      </x-import>
+                      <x-import component-from-global-scope="Nxds.TableRow">
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <div style="display: flex; flex-direction: column;">
+                            <span class="typography-label-default">Seat expansion, 120 seats</span>
+                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Lumen Retail</span>
+                          </div>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <x-import component-from-global-scope="Nxds.Badge" variant="success" fill="outline">Verbal commit</x-import>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <div style="display: flex; align-items: center; gap: var(--nx-spacing-2);">
+                            <x-import component-from-global-scope="Nxds.Avatar" size="xs">
+                              <x-import component-from-global-scope="Nxds.AvatarFallback">AR</x-import>
+                            </x-import>
+                            <span>Ana Ruiz</span>
+                          </div>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">$38,400</x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:tabular-nums">Oct 31</x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">90%</x-import>
+                      </x-import>
+                      <x-import component-from-global-scope="Nxds.TableRow">
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <div style="display: flex; flex-direction: column;">
+                            <span class="typography-label-default">Pilot to production</span>
+                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Harbor &amp; Pine</span>
+                          </div>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <x-import component-from-global-scope="Nxds.Badge" variant="information" fill="outline">Qualified</x-import>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell">
+                          <div style="display: flex; align-items: center; gap: var(--nx-spacing-2);">
+                            <x-import component-from-global-scope="Nxds.Avatar" size="xs">
+                              <x-import component-from-global-scope="Nxds.AvatarFallback">WC</x-import>
+                            </x-import>
+                            <span>Wei Chen</span>
+                          </div>
+                        </x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">$27,000</x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:tabular-nums">Dec 12</x-import>
+                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">25%</x-import>
+                      </x-import>
+                    </x-import>
+                  </x-import>
+                </div>
+              </x-import>
+              <x-import component-from-global-scope="Nxds.CardFooter">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: var(--nx-spacing-2); width: 100%;">
+                  <span class="typography-label-small" style="color: var(--nx-color-muted-foreground); font-variant-numeric: tabular-nums;">Showing 6 of 62 deals</span>
+                  <x-import component-from-global-scope="Nxds.Button" variant="link" size="sm" end-icon="arrow-up-right">View all deals</x-import>
+                </div>
+              </x-import>
+            </x-import>
+          </div>
+          <div style="flex: 0 0 var(--nx-spacing-72); min-width: 0; display: grid;">
+            <x-import component-from-global-scope="Nxds.Card">
+              <x-import component-from-global-scope="Nxds.CardHeader">
+                <x-import component-from-global-scope="Nxds.CardTitle">Today</x-import>
+                <x-import component-from-global-scope="Nxds.CardDescription">3 open follow-ups</x-import>
+                <x-import component-from-global-scope="Nxds.CardAction">
+                  <x-import component-from-global-scope="Nxds.ToggleGroup" type="multiple" default-value="call,meeting,email" variant="outline" size="sm" aria-label="Task types">
+                    <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="call" aria-label="Calls">
+                      <x-import component-from-global-scope="Nxds.Icon" name="phone"></x-import>
+                    </x-import>
+                    <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="meeting" aria-label="Meetings">
+                      <x-import component-from-global-scope="Nxds.Icon" name="video"></x-import>
+                    </x-import>
+                    <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="email" aria-label="Emails">
+                      <x-import component-from-global-scope="Nxds.Icon" name="envelope"></x-import>
+                    </x-import>
+                  </x-import>
+                </x-import>
+              </x-import>
+              <x-import component-from-global-scope="Nxds.CardContent">
+                <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-4);">
+                  <div style="display: flex; align-items: flex-start; gap: var(--nx-spacing-3);">
+                    <x-import component-from-global-scope="Nxds.Checkbox" id="task-t1"></x-import>
+                    <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-1); min-width: 0;">
+                      <x-import component-from-global-scope="Nxds.Label" html-for="task-t1">Pricing follow-up with Cobalt Health</x-import>
+                      <span class="typography-body-small" style="display: inline-flex; align-items: center; gap: var(--nx-spacing-1); color: var(--nx-color-muted-foreground);">
+                        <x-import component-from-global-scope="Nxds.Icon" name="phone" size="14"></x-import>
+                        Call · 10:30 AM
+                      </span>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: flex-start; gap: var(--nx-spacing-3);">
+                    <x-import component-from-global-scope="Nxds.Checkbox" id="task-t2"></x-import>
+                    <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-1); min-width: 0;">
+                      <x-import component-from-global-scope="Nxds.Label" html-for="task-t2">Contract review with Northvale Logistics</x-import>
+                      <span class="typography-body-small" style="display: inline-flex; align-items: center; gap: var(--nx-spacing-1); color: var(--nx-color-muted-foreground);">
+                        <x-import component-from-global-scope="Nxds.Icon" name="video" size="14"></x-import>
+                        Meeting · 1:00 PM
+                      </span>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: flex-start; gap: var(--nx-spacing-3);">
+                    <x-import component-from-global-scope="Nxds.Checkbox" id="task-t3"></x-import>
+                    <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-1); min-width: 0;">
+                      <x-import component-from-global-scope="Nxds.Label" html-for="task-t3">Send renewal terms to Atlas Biotech</x-import>
+                      <span class="typography-body-small" style="display: inline-flex; align-items: center; gap: var(--nx-spacing-1); color: var(--nx-color-muted-foreground);">
+                        <x-import component-from-global-scope="Nxds.Icon" name="envelope" size="14"></x-import>
+                        Email · by 5:00 PM
+                      </span>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: flex-start; gap: var(--nx-spacing-3);">
+                    <x-import component-from-global-scope="Nxds.Checkbox" id="task-t4" default-checked></x-import>
+                    <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-1); min-width: 0;">
+                      <x-import component-from-global-scope="Nxds.Label" html-for="task-t4" class-name="nx:line-through nx:text-muted-foreground">Update Q4 forecast notes</x-import>
+                      <span class="typography-body-small" style="display: inline-flex; align-items: center; gap: var(--nx-spacing-1); color: var(--nx-color-muted-foreground);">
+                        <x-import component-from-global-scope="Nxds.Icon" name="list-checks" size="14"></x-import>
+                        To-do
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </x-import>
+              <x-import component-from-global-scope="Nxds.CardFooter">
+                <div style="display: grid; width: 100%;">
+                  <x-import component-from-global-scope="Nxds.Button" variant="dashed" start-icon="plus">Add task</x-import>
+                </div>
+              </x-import>
+            </x-import>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;section&quot;:&quot;nxds appearance&quot;},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1700}}">
+class Component extends DCLogic {
+  renderVals() {
+    return { mode: this.props.mode ?? 'light' };
+  }
+}
+</script>
+</body>
+</html>

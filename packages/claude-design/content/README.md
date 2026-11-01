@@ -121,6 +121,7 @@ Add one `../` in front of each path for each folder the artboard is in.
 The System page is read-only for this system. An edit there recompiles tokens.css without the theme layer, the font variables and the text style rules, so presets, fonts and text styles stop applying. Change the token in nxds and export again.
 
 - Switch to dark with `data-theme="dark"` or the `dark` class on the artboard's root.
+- An overlay's content renders outside the artboard's root. Give its content part, such as `Nxds.PopoverContent`, the same `data-theme`.
 - Set a `data-density`, `data-radius`, `data-borderwidth` or `data-shadow` attribute from Appearance on any element to change everything inside it.
 - Override a token by setting its variable on an element, such as `style="--nx-radius-md: 8px"`. Components inside that element follow.
 - Read `components/<Name>/README.md` before you mount a component. It lists the component's parts and props.

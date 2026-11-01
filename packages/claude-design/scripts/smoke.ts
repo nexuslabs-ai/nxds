@@ -6,8 +6,8 @@
 // preview that renders nothing or logs an error in either theme, a theme
 // switch that changes nothing, an overlay that doesn't open, close and return
 // focus, a token or preset that doesn't reach a component, a tree or overlay
-// that changes when each part sits in a canvas wrapper, a SETUP.md sampler
-// that logs a problem, or a request to the network. Each check lives in scripts/smoke/.
+// that changes when each part sits in a canvas wrapper, a sampler artboard
+// that logs a problem or doesn't fill its board, or a request to the network. Each check lives in scripts/smoke/.
 import { ATTRIBUTE_CASES, checkAttributes } from './smoke/attributes.ts';
 import { BAD_INPUT_CASES, checkBadInput } from './smoke/bad-input.ts';
 import { checkCards } from './smoke/cards.ts';
@@ -61,5 +61,5 @@ if (failures.length > 0) {
   process.exit(1);
 }
 console.log(
-  `Smoke test passed: ${cardCount} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${exampleCount} README examples against their stories, ${ATTRIBUTE_CASES.length} attribute conversions, ${BAD_INPUT_CASES.length} bad attributes, ${iconCount} icons, ${TOAST_CASES.length} toasts against toast(), ${RECHARTS_CASES.length} custom charts, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes, and the SETUP.md sampler in two themes.`
+  `Smoke test passed: ${cardCount} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${exampleCount} README examples against their stories, ${ATTRIBUTE_CASES.length} attribute conversions, ${BAD_INPUT_CASES.length} bad attributes, ${iconCount} icons, ${TOAST_CASES.length} toasts against toast(), ${RECHARTS_CASES.length} custom charts, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes, and the sampler artboard in both modes.`
 );
