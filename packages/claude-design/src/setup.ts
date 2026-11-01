@@ -14,6 +14,9 @@ import {
 } from './runtime/values.ts';
 import { TEXT_PLAIN_FILES } from './validate.ts';
 
+/** The folder a canvas keeps every file under: its `canvas.json`, its artboards and `ds/`. */
+const CANVAS_ROOT = 'project';
+
 /** The folder a canvas installs the system into, under `ds/`. */
 const CANVAS_FOLDER = 'nxds';
 
@@ -54,7 +57,7 @@ const X_IMPORT_OPENING = /<x-import\b/gi;
 const PART = 'component-from-global-scope';
 const ICONS = new Set<string>(ICON_NAMES);
 
-/** The files step 2 checks a canvas for, under `ds/<folder>/`. The canvas copies tokens.json itself, and README.md's "On a Design canvas" section names the rest. */
+/** The files step 2 checks a canvas for, under `project/ds/<folder>/`. The canvas copies tokens.json itself, and README.md's "On a Design canvas" section names the rest. */
 const CANVAS_FILES = [
   'tokens.json',
   'tokens.css',
@@ -143,16 +146,13 @@ export function samplerFile(file: string) {
 
 type SamplerFile = ReturnType<typeof samplerFile>;
 
-/** The `boards` entry SETUP.md tells Claude to add to the canvas's `canvas.json`. */
+/** The `boards` entry SETUP.md tells Claude to add to the canvas's `canvas.json`: the key, the artboard's file name relative to `project/`, and its value, without the braces around them. */
 export function boardEntry(file: string) {
   const { title, width, height } = samplerFile(file);
-  return JSON.stringify({
-    path: SAMPLER_FILE,
-    title,
-    expand: 'fill',
-    w: width,
-    h: height,
+  const entry = JSON.stringify({
+    [SAMPLER_FILE]: { x: 0, y: 0, w: width, h: height, title, expand: 'fill' },
   });
+  return entry.slice(1, -1);
 }
 
 const CLASS_ATTRIBUTE = /\sclass(?:-name)?=(?:"([^"]*)"|'([^']*)')/g;
@@ -245,6 +245,37 @@ function fileProblems(
   return problems;
 }
 
+/** The guide's sections that name files on a canvas. */
+const CANVAS_SECTIONS = [
+  '2. Create a canvas and install nxds',
+  '4. Add the sampler',
+  'Update to a new release',
+  'When something looks wrong',
+];
+
+/** A word naming a canvas file: `canvas.json`, an artboard, or a path into the installed system. */
+const CANVAS_FILE = /canvas\.json$|[\w-]\.dc\.html$|(?:^|\/)ds\//;
+
+/** A path that starts at the canvas's `project/`, at the export's folder, or is absolute into a canvas's `project/`. */
+const ROOTED = new RegExp(
+  `^${CANVAS_ROOT}/|/${CANVAS_ROOT}/|^nxds-design-system/`
+);
+
+/** Each path in a canvas section's code spans that names a canvas file but doesn't start at `project/`, where a canvas never shows it. A quoted name is a `canvas.json` key, not a path. */
+function canvasPathProblems(template: string) {
+  const spans = CANVAS_SECTIONS.flatMap((heading) => [
+    ...(markdownSection(template, heading) ?? '').matchAll(/`([^`\n]+)`/g),
+  ]).map(([, span = '']) => span);
+  return spans
+    .filter((span) => !span.startsWith('"'))
+    .flatMap((span) => span.split(/\s+/))
+    .filter((word) => CANVAS_FILE.test(word) && !ROOTED.test(word))
+    .map(
+      (word) =>
+        `SETUP.md: ${word} is a canvas path. Start it with ${CANVAS_ROOT}/, or the canvas never shows the file.`
+    );
+}
+
 /** Why a guide built from these inputs would send Claude wrong: a publish step that leaves out a `text/plain` file, a file the install leaves out, or a link line that isn't one. */
 function guideProblems({
   template,
@@ -277,6 +308,17 @@ function guideProblems({
       );
     }
   }
+  const sampler = markdownSection(template, '4. Add the sampler');
+  if (
+    !['{{boardEntry}}', '`order`', `\`${CANVAS_ROOT}/canvas.json\``].every(
+      (text) => sampler?.includes(text)
+    )
+  ) {
+    problems.push(
+      `SETUP.md: step 4 must add the sampler to boards and order in ${CANVAS_ROOT}/canvas.json.`
+    );
+  }
+  problems.push(...canvasPathProblems(template));
   const section = canvasSection(readme);
   for (const file of CANVAS_FILES.filter((file) => file !== 'tokens.json')) {
     if (!section.includes(`\`${file}\``)) {
@@ -309,7 +351,7 @@ export function setupGuide({
   const problems = guideProblems({ template, readme });
   if (problems.length > 0) throw new Error(problems.join('\n'));
   const canvasFiles = CANVAS_FILES.map(
-    (file) => `- \`ds/${CANVAS_FOLDER}/${file}\``
+    (file) => `- \`${CANVAS_ROOT}/ds/${CANVAS_FOLDER}/${file}\``
   ).join('\n');
   const textPlainFiles = TEXT_PLAIN_FILES.map(
     (file) => `\`project/${file}\``
