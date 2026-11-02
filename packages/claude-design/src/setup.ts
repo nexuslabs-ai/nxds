@@ -23,7 +23,7 @@ type CanvasBoard = {
   y: number;
   w: number;
   h: number;
-  title: string | undefined;
+  title: string;
   expand: 'fill';
 };
 
@@ -162,6 +162,11 @@ export function boardEntry(file: string): Record<string, CanvasBoard> {
   if (width === undefined || height === undefined) {
     throw new Error(`${SAMPLER_FILE}: $preview has no whole width and height.`);
   }
+  if (title === undefined) {
+    throw new Error(
+      `${SAMPLER_FILE}: <head> has no <title> to name the board.`
+    );
+  }
   return {
     [SAMPLER_FILE]: { x: 0, y: 0, w: width, h: height, title, expand: 'fill' },
   };
@@ -257,22 +262,32 @@ function fileProblems(
   return problems;
 }
 
+/** Where a file name ends: no more name follows, though punctuation may. */
+const NAME_END = String.raw`(?![\w-]|\.\w)`;
+
 /** A word naming a canvas file: `canvas.json`, an artboard, or a path into the installed system. */
-const CANVAS_FILE = /canvas\.json$|[\w-]\.dc\.html$|(?:^|\/)ds\//;
+const CANVAS_FILE = new RegExp(
+  String.raw`canvas\.json${NAME_END}|[\w-]\.dc\.html${NAME_END}|(?:^|/)ds/`
+);
 
 /** A path that starts at the canvas's `project/`, is absolute into a canvas's `project/`, or is the export's own copy of the system or of an artboard. */
 const ROOTED = new RegExp(
-  `^(?:${CANVAS_ROOT}/|/\\S*/${CANVAS_ROOT}/|nxds-design-system/(?:project/|[\\w-]+\\.dc\\.html$))`
+  String.raw`^(?:${CANVAS_ROOT}/|/\S*/${CANVAS_ROOT}/|nxds-design-system/(?:project/|[\w-]+\.dc\.html${NAME_END}))`
 );
 
-/** Each path in the guide's code spans that names a canvas file but doesn't start at `project/`, where a canvas never shows it. The opening is skipped: its table lists the export's own files. A quoted name is a `canvas.json` key, not a path, and a `<placeholder>` is one path segment. */
+/** Each path in the guide's code spans that names a canvas file but doesn't start at `project/`, where a canvas never shows it. The opening's table rows are skipped: they list the export's own files. A quoted name is a `canvas.json` key, not a path, and a `<placeholder>` is one path segment. */
 function canvasPathProblems(template: string) {
-  const steps = template.slice(Math.max(template.indexOf('\n## '), 0));
-  return [...steps.matchAll(/`([^`\n]+)`/g)]
+  const stepsAt = Math.max(template.indexOf('\n## '), 0);
+  const opening = template
+    .slice(0, stepsAt)
+    .split('\n')
+    .filter((line) => !line.startsWith('|'))
+    .join('\n');
+  const checked = opening + template.slice(stepsAt);
+  return [...checked.matchAll(/`([^`\n]+)`/g)]
     .map(([, span = '']) => span)
     .filter((span) => !span.startsWith('"'))
     .flatMap((span) => span.replace(/<[^>]*>/g, 'x').split(/\s+/))
-    .map((word) => word.replace(/[.,:;)]+$/, ''))
     .filter((word) => CANVAS_FILE.test(word) && !ROOTED.test(word))
     .map(
       (word) =>
