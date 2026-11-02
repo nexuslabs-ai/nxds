@@ -33,9 +33,9 @@ Check that the canvas has these files:
 
 {{canvasFiles}}
 
-Check that `ds/nxds/tokens.json` has `meta.version` {{version}}. Read the version there, not in `canvas.json`.
+Check that `project/ds/nxds/tokens.json` has `meta.version` {{version}}. Read the version there, not in `project/canvas.json`.
 
-If `index.d.ts` is missing, copy `project/components/index.d.ts` from the system to `ds/nxds/components/index.d.ts`, unchanged. Without it, no prop has a control.
+If `index.d.ts` is missing, copy `project/components/index.d.ts` from the system to `project/ds/nxds/components/index.d.ts`, unchanged. Without it, no prop has a control.
 
 ## 3. Read the canvas rules
 
@@ -45,16 +45,22 @@ Read `nxds-design-system/project/README.md`. Its "On a Design canvas" and "Canva
 
 The export wrote `nxds-design-system/nxds-sampler.dc.html`. It's a sales dashboard built from nxds, and it checks the install. Put it on the canvas exactly as it is. Don't retype, reformat or rename it, and don't add link lines or a script block to it. It has them.
 
-1. Publish the file to the canvas at the path `nxds-sampler.dc.html`, at the canvas root:
-   - If the Artifact tool takes `files` as a map, map `nxds-sampler.dc.html` to the local file `nxds-design-system/nxds-sampler.dc.html`.
-   - If it takes a list of absolute paths, copy the file unchanged into the canvas's own folder first: `cp nxds-design-system/nxds-sampler.dc.html /mnt/user-data/outputs/artifacts/<canvas id>/nxds-sampler.dc.html`. Then publish that path.
-2. Add this entry to `boards` in the canvas's `canvas.json`. If `boards` already has an entry whose `path` is `nxds-sampler.dc.html`, replace that entry. Keep every other entry and key as it is.
+A canvas keeps its files under `project/`. Its index is `project/canvas.json`, and each artboard is a `.dc.html` file in `project/`.
+
+1. Publish the file to the canvas at `project/nxds-sampler.dc.html`:
+   - If the Artifact tool takes `files` as a map, map `project/nxds-sampler.dc.html` to the local file `nxds-design-system/nxds-sampler.dc.html`.
+   - If it takes a list of absolute paths, copy the file unchanged into the canvas's `project/` folder first: `cp nxds-design-system/nxds-sampler.dc.html /mnt/user-data/outputs/artifacts/<canvas id>/project/nxds-sampler.dc.html`. Then publish that path.
+2. Merge this key into `boards` in `project/canvas.json`. `boards` is keyed by each artboard's file name, relative to `project/`. The `x` and `y` place the artboard on an empty canvas.
 
    ```json
    {{boardEntry}}
    ```
 
-Check: read `nxds-sampler.dc.html` back from the canvas. It matches the export's copy exactly. An artboard titled `nxds sampler` shows on the canvas.
+   If the canvas has other artboards, set `x` to 80 more than the largest `x` + `w` among them. If `boards` already has `"nxds-sampler.dc.html"`, keep its `x` and `y` and replace the rest of the entry.
+
+3. Add `"nxds-sampler.dc.html"` to the end of `order` in `project/canvas.json`, unless `order` already lists it. Keep every other entry and key as it is.
+
+Check: read `project/nxds-sampler.dc.html` back from the canvas. It matches the export's copy exactly. `project/canvas.json` has `"nxds-sampler.dc.html"` in `boards` and once in `order`. An artboard titled `nxds sampler` shows on the canvas.
 
 ## 5. Check the sampler
 
@@ -84,19 +90,19 @@ When every check passes, tell the person nxds is ready, and give them the system
 4. Publish `nxds-design-system/project/` to the same artifact link, every file. Send {{textPlainFiles}} with the content type `text/plain`, as in step 1. Remove each path that `nxds-design-system/removed.json` lists.
 5. Check: the artifact has the new release's file count under `project/`, none of the removed paths, and `project/tokens.json` has `meta.version` {{version}}.
 6. Install the system again on each canvas that uses nxds, then run the checks in step 2 on it. A canvas keeps its old copy until you do.
-7. On one canvas, put the new release's `nxds-sampler.dc.html` on it as step 4 says, replacing the old one. Then run the checks in step 5.
+7. On one canvas, put the new release's sampler at `project/nxds-sampler.dc.html` as step 4 says, replacing the old file. Keep its entry's `x` and `y`, and its place in `order`. Then run the checks in step 5.
 
 ## When something looks wrong
 
-| You see                                  | Do this                                                                                  |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------- |
-| No sampler artboard shows                | The file name doesn't end `.dc.html`, or `canvas.json` has no `boards` entry for it.     |
-| Components render unstyled               | Check the three link lines and their order.                                              |
-| Nothing renders and the console is empty | The file was changed. Publish the export's copy again, as step 4 says.                   |
-| `Nxds is not defined`                    | `bundle.js` isn't linked, or its path is wrong.                                          |
-| A `[nxds]` warning                       | The attribute doesn't fit its prop. Write it in the form the warning and README.md give. |
-| A prop has no control                    | `ds/nxds/components/index.d.ts` is missing. Copy it as step 2 says.                      |
-| A canvas shows an older version          | Install the system again on that canvas.                                                 |
-| The export can't reach npm               | Show the person the output and stop.                                                     |
+| You see                                  | Do this                                                                                                                                  |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| No sampler artboard shows                | The file isn't at `project/nxds-sampler.dc.html`, or `project/canvas.json` has no `"nxds-sampler.dc.html"` entry in `boards` or `order`. |
+| Components render unstyled               | Check the three link lines and their order. The artboard must be in `project/`, or the links miss `project/ds/nxds/`.                    |
+| Nothing renders and the console is empty | The file was changed. Publish the export's copy again, as step 4 says.                                                                   |
+| `Nxds is not defined`                    | `bundle.js` isn't linked, or its path is wrong. The artboard must be in `project/`.                                                      |
+| A `[nxds]` warning                       | The attribute doesn't fit its prop. Write it in the form the warning and README.md give.                                                 |
+| A prop has no control                    | `project/ds/nxds/components/index.d.ts` is missing. Copy it as step 2 says.                                                              |
+| A canvas shows an older version          | Install the system again on that canvas.                                                                                                 |
+| The export can't reach npm               | Show the person the output and stop.                                                                                                     |
 
-Never edit a file under `project/` or `ds/nxds/` to fix a problem, and never edit the System page. If a check still fails, tell the person which check, what you saw and the nxds version. They can report it at https://github.com/nexuslabs-ai/nxds/issues.
+Never edit a file in the system artifact or under `project/ds/nxds/` on a canvas to fix a problem, and never edit the System page. If a check still fails, tell the person which check, what you saw and the nxds version. They can report it at https://github.com/nexuslabs-ai/nxds/issues.

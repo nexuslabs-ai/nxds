@@ -252,8 +252,9 @@ export async function checkSampler() {
       `The export's ${SAMPLER_FILE} isn't content/${SAMPLER_FILE}, byte for byte.`
     );
   }
-  if (shippedBoardEntry() !== boardEntry(source)) {
-    fail(`SETUP.md's canvas.json entry isn't ${boardEntry(source)}.`);
+  const entry = JSON.stringify(boardEntry(source));
+  if (shippedBoardEntry() !== entry) {
+    fail(`SETUP.md's canvas.json entry isn't ${entry}.`);
   }
   const types = readFileSync(
     path.join(projectDir, 'components', 'index.d.ts'),

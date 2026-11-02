@@ -14,6 +14,19 @@ import {
 } from './runtime/values.ts';
 import { TEXT_PLAIN_FILES } from './validate.ts';
 
+/** The folder a canvas keeps every file under: its `canvas.json`, its artboards and `ds/`. */
+const CANVAS_ROOT = 'project';
+
+/** An entry in `boards` in a canvas's `canvas.json`, keyed by the artboard's file name relative to `project/`: where the artboard sits and how big it is, in px. */
+type CanvasBoard = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  title: string;
+  expand: 'fill';
+};
+
 /** The folder a canvas installs the system into, under `ds/`. */
 const CANVAS_FOLDER = 'nxds';
 
@@ -54,7 +67,7 @@ const X_IMPORT_OPENING = /<x-import\b/gi;
 const PART = 'component-from-global-scope';
 const ICONS = new Set<string>(ICON_NAMES);
 
-/** The files step 2 checks a canvas for, under `ds/<folder>/`. The canvas copies tokens.json itself, and README.md's "On a Design canvas" section names the rest. */
+/** The files step 2 checks a canvas for, under `project/ds/<folder>/`. The canvas copies tokens.json itself, and README.md's "On a Design canvas" section names the rest. */
 const CANVAS_FILES = [
   'tokens.json',
   'tokens.css',
@@ -131,7 +144,7 @@ export function samplerFile(file: string) {
   const props = tweaksOf(script[1] ?? '');
   const preview = props['$preview'] as Record<string, unknown> | undefined;
   return {
-    title: /<title>([^<]*)<\/title>/.exec(head)?.[1],
+    title: /<title>([^<]*)<\/title>/.exec(head)?.[1]?.trim() || undefined,
     head: head.split('\n'),
     markup: dc,
     props,
@@ -143,16 +156,20 @@ export function samplerFile(file: string) {
 
 type SamplerFile = ReturnType<typeof samplerFile>;
 
-/** The `boards` entry SETUP.md tells Claude to add to the canvas's `canvas.json`. */
-export function boardEntry(file: string) {
+/** The `boards` entry SETUP.md tells Claude to merge into the canvas's `canvas.json`, placed for an empty canvas. */
+export function boardEntry(file: string): Record<string, CanvasBoard> {
   const { title, width, height } = samplerFile(file);
-  return JSON.stringify({
-    path: SAMPLER_FILE,
-    title,
-    expand: 'fill',
-    w: width,
-    h: height,
-  });
+  if (width === undefined || height === undefined) {
+    throw new Error(`${SAMPLER_FILE}: $preview has no whole width and height.`);
+  }
+  if (title === undefined) {
+    throw new Error(
+      `${SAMPLER_FILE}: <head> has no <title> to name the board.`
+    );
+  }
+  return {
+    [SAMPLER_FILE]: { x: 0, y: 0, w: width, h: height, title, expand: 'fill' },
+  };
 }
 
 const CLASS_ATTRIBUTE = /\sclass(?:-name)?=(?:"([^"]*)"|'([^']*)')/g;
@@ -170,10 +187,10 @@ function definesClass(css: string, name: string) {
   return false;
 }
 
-/** Why the sampler file wouldn't show or check on a canvas: a head that doesn't link the system, state beyond the `mode` tweak, or a class no stylesheet defines. */
+/** Why the sampler file wouldn't show or check on a canvas: a head that doesn't link the system or has no title, state beyond the `mode` tweak, or a class no stylesheet defines. */
 function fileProblems(
   file: string,
-  { head, markup, props, script, width, height }: SamplerFile,
+  { title, head, markup, props, script, width, height }: SamplerFile,
   { readme, stylesheets }: { readme: string; stylesheets: string }
 ) {
   const problems: string[] = [];
@@ -220,6 +237,11 @@ function fileProblems(
       `${SAMPLER_FILE}: data-props holds only mode, an enum of light and dark that defaults to light, and $preview.`
     );
   }
+  if (title === undefined) {
+    problems.push(
+      `${SAMPLER_FILE}: <head> has a <title>, which names the board on the canvas.`
+    );
+  }
   if (width !== SAMPLER_WIDTH || height === undefined) {
     problems.push(
       `${SAMPLER_FILE}: $preview is ${SAMPLER_WIDTH} wide, with its height at that width in whole px.`
@@ -243,6 +265,39 @@ function fileProblems(
     }
   }
   return problems;
+}
+
+/** Where a file name ends: no more name follows, though punctuation may. */
+const NAME_END = String.raw`(?![\w-]|\.\w)`;
+
+/** A word naming a canvas file: `canvas.json`, an artboard, or a path into the installed system. */
+const CANVAS_FILE = new RegExp(
+  String.raw`canvas\.json${NAME_END}|[\w-]\.dc\.html${NAME_END}|(?:^|/)ds/`
+);
+
+/** A path that starts at the canvas's `project/`, is absolute into a canvas's `project/`, or is the export's own copy of the system or of an artboard. */
+const ROOTED = new RegExp(
+  String.raw`^(?:${CANVAS_ROOT}/|/\S*/${CANVAS_ROOT}/|nxds-design-system/(?:project/|[\w-]+\.dc\.html${NAME_END}))`
+);
+
+/** Each path in the guide's code spans that names a canvas file but doesn't start at `project/`, where a canvas never shows it. The opening's table rows are skipped: they list the export's own files. A quoted name is a `canvas.json` key, not a path, a `<placeholder>` is one path segment, and brackets, quotes and commas end a path. */
+function canvasPathProblems(template: string) {
+  const stepsAt = Math.max(template.indexOf('\n## '), 0);
+  const opening = template
+    .slice(0, stepsAt)
+    .split('\n')
+    .filter((line) => !line.startsWith('|'))
+    .join('\n');
+  const checked = opening + template.slice(stepsAt);
+  return [...checked.matchAll(/`([^`\n]+)`/g)]
+    .flatMap(([, span = '']) =>
+      span.replace(/<[^>]*>|"[^"]*"/g, 'x').split(/[\s"'()[\]{},]+/)
+    )
+    .filter((word) => CANVAS_FILE.test(word) && !ROOTED.test(word))
+    .map(
+      (word) =>
+        `SETUP.md: ${word} is a canvas path. Start it with ${CANVAS_ROOT}/, or the canvas never shows the file.`
+    );
 }
 
 /** Why a guide built from these inputs would send Claude wrong: a publish step that leaves out a `text/plain` file, a file the install leaves out, or a link line that isn't one. */
@@ -277,6 +332,17 @@ function guideProblems({
       );
     }
   }
+  const sampler = markdownSection(template, '4. Add the sampler');
+  if (
+    !['{{boardEntry}}', '`order`', `\`${CANVAS_ROOT}/canvas.json\``].every(
+      (text) => sampler?.includes(text)
+    )
+  ) {
+    problems.push(
+      `SETUP.md: step 4 must add the sampler to boards and order in ${CANVAS_ROOT}/canvas.json.`
+    );
+  }
+  problems.push(...canvasPathProblems(template));
   const section = canvasSection(readme);
   for (const file of CANVAS_FILES.filter((file) => file !== 'tokens.json')) {
     if (!section.includes(`\`${file}\``)) {
@@ -309,7 +375,7 @@ export function setupGuide({
   const problems = guideProblems({ template, readme });
   if (problems.length > 0) throw new Error(problems.join('\n'));
   const canvasFiles = CANVAS_FILES.map(
-    (file) => `- \`ds/${CANVAS_FOLDER}/${file}\``
+    (file) => `- \`${CANVAS_ROOT}/ds/${CANVAS_FOLDER}/${file}\``
   ).join('\n');
   const textPlainFiles = TEXT_PLAIN_FILES.map(
     (file) => `\`project/${file}\``
@@ -319,7 +385,7 @@ export function setupGuide({
     .replaceAll('{{files}}', String(files.length))
     .replaceAll('{{textPlainFiles}}', () => textPlainFiles)
     .replace('{{canvasFiles}}', () => canvasFiles)
-    .replace('{{boardEntry}}', () => boardEntry(sampler));
+    .replace('{{boardEntry}}', () => JSON.stringify(boardEntry(sampler)));
   const left = /\{\{\w+\}\}/.exec(guide);
   if (left) throw new Error(`SETUP.md: ${left[0]} has no value.`);
   return guide;
