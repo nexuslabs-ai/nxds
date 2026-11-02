@@ -17,6 +17,16 @@ import { TEXT_PLAIN_FILES } from './validate.ts';
 /** The folder a canvas keeps every file under: its `canvas.json`, its artboards and `ds/`. */
 const CANVAS_ROOT = 'project';
 
+/** An entry in `boards` in a canvas's `canvas.json`, keyed by the artboard's file name relative to `project/`: where the artboard sits and how big it is, in px. */
+type CanvasBoard = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  title: string | undefined;
+  expand: 'fill';
+};
+
 /** The folder a canvas installs the system into, under `ds/`. */
 const CANVAS_FOLDER = 'nxds';
 
@@ -146,13 +156,15 @@ export function samplerFile(file: string) {
 
 type SamplerFile = ReturnType<typeof samplerFile>;
 
-/** The `boards` entry SETUP.md tells Claude to add to the canvas's `canvas.json`: the key, the artboard's file name relative to `project/`, and its value, without the braces around them. */
-export function boardEntry(file: string) {
+/** The `boards` entry SETUP.md tells Claude to merge into the canvas's `canvas.json`, placed for an empty canvas. */
+export function boardEntry(file: string): Record<string, CanvasBoard> {
   const { title, width, height } = samplerFile(file);
-  const entry = JSON.stringify({
+  if (width === undefined || height === undefined) {
+    throw new Error(`${SAMPLER_FILE}: $preview has no whole width and height.`);
+  }
+  return {
     [SAMPLER_FILE]: { x: 0, y: 0, w: width, h: height, title, expand: 'fill' },
-  });
-  return entry.slice(1, -1);
+  };
 }
 
 const CLASS_ATTRIBUTE = /\sclass(?:-name)?=(?:"([^"]*)"|'([^']*)')/g;
@@ -245,30 +257,22 @@ function fileProblems(
   return problems;
 }
 
-/** The guide's sections that name files on a canvas. */
-const CANVAS_SECTIONS = [
-  '2. Create a canvas and install nxds',
-  '4. Add the sampler',
-  'Update to a new release',
-  'When something looks wrong',
-];
-
 /** A word naming a canvas file: `canvas.json`, an artboard, or a path into the installed system. */
 const CANVAS_FILE = /canvas\.json$|[\w-]\.dc\.html$|(?:^|\/)ds\//;
 
-/** A path that starts at the canvas's `project/`, at the export's folder, or is absolute into a canvas's `project/`. */
+/** A path that starts at the canvas's `project/`, is absolute into a canvas's `project/`, or is the export's own copy of the system or of an artboard. */
 const ROOTED = new RegExp(
-  `^${CANVAS_ROOT}/|/${CANVAS_ROOT}/|^nxds-design-system/`
+  `^(?:${CANVAS_ROOT}/|/\\S*/${CANVAS_ROOT}/|nxds-design-system/(?:project/|[\\w-]+\\.dc\\.html$))`
 );
 
-/** Each path in a canvas section's code spans that names a canvas file but doesn't start at `project/`, where a canvas never shows it. A quoted name is a `canvas.json` key, not a path. */
+/** Each path in the guide's code spans that names a canvas file but doesn't start at `project/`, where a canvas never shows it. The opening is skipped: its table lists the export's own files. A quoted name is a `canvas.json` key, not a path, and a `<placeholder>` is one path segment. */
 function canvasPathProblems(template: string) {
-  const spans = CANVAS_SECTIONS.flatMap((heading) => [
-    ...(markdownSection(template, heading) ?? '').matchAll(/`([^`\n]+)`/g),
-  ]).map(([, span = '']) => span);
-  return spans
+  const steps = template.slice(Math.max(template.indexOf('\n## '), 0));
+  return [...steps.matchAll(/`([^`\n]+)`/g)]
+    .map(([, span = '']) => span)
     .filter((span) => !span.startsWith('"'))
-    .flatMap((span) => span.split(/\s+/))
+    .flatMap((span) => span.replace(/<[^>]*>/g, 'x').split(/\s+/))
+    .map((word) => word.replace(/[.,:;)]+$/, ''))
     .filter((word) => CANVAS_FILE.test(word) && !ROOTED.test(word))
     .map(
       (word) =>
@@ -361,7 +365,7 @@ export function setupGuide({
     .replaceAll('{{files}}', String(files.length))
     .replaceAll('{{textPlainFiles}}', () => textPlainFiles)
     .replace('{{canvasFiles}}', () => canvasFiles)
-    .replace('{{boardEntry}}', () => boardEntry(sampler));
+    .replace('{{boardEntry}}', () => JSON.stringify(boardEntry(sampler)));
   const left = /\{\{\w+\}\}/.exec(guide);
   if (left) throw new Error(`SETUP.md: ${left[0]} has no value.`);
   return guide;

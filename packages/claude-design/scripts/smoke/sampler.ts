@@ -95,16 +95,6 @@ function shippedBoardEntry() {
   return blocks[0]?.[1]?.trim();
 }
 
-/** Whether `entry` is what a canvas reads in `boards`: one key, the artboard's file name relative to `project/`, with a whole x, y, w and h. */
-function isBoardsEntry(entry: string | undefined) {
-  const boards: unknown = JSON.parse(`{${entry}}`);
-  if (typeof boards !== 'object' || boards === null) return false;
-  const [key, ...rest] = Object.keys(boards);
-  if (key !== SAMPLER_FILE || rest.length > 0) return false;
-  const board = (boards as Record<string, Record<string, unknown>>)[key];
-  return ['x', 'y', 'w', 'h'].every((side) => Number.isInteger(board?.[side]));
-}
-
 type Size = { width: number; height: number };
 
 /** The background of each surface that has to switch with the mode, by its slot. */
@@ -262,14 +252,9 @@ export async function checkSampler() {
       `The export's ${SAMPLER_FILE} isn't content/${SAMPLER_FILE}, byte for byte.`
     );
   }
-  const shipped = shippedBoardEntry();
-  if (shipped !== boardEntry(source)) {
-    fail(`SETUP.md's canvas.json entry isn't ${boardEntry(source)}.`);
-  }
-  if (!isBoardsEntry(shipped)) {
-    fail(
-      `SETUP.md's canvas.json entry isn't one boards key, ${SAMPLER_FILE}, with a whole x, y, w and h.`
-    );
+  const entry = JSON.stringify(boardEntry(source));
+  if (shippedBoardEntry() !== entry) {
+    fail(`SETUP.md's canvas.json entry isn't ${entry}.`);
   }
   const types = readFileSync(
     path.join(projectDir, 'components', 'index.d.ts'),

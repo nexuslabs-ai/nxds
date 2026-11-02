@@ -50,7 +50,7 @@ A canvas keeps its files under `project/`. Its index is `project/canvas.json`, a
 1. Publish the file to the canvas at `project/nxds-sampler.dc.html`:
    - If the Artifact tool takes `files` as a map, map `project/nxds-sampler.dc.html` to the local file `nxds-design-system/nxds-sampler.dc.html`.
    - If it takes a list of absolute paths, copy the file unchanged into the canvas's `project/` folder first: `cp nxds-design-system/nxds-sampler.dc.html /mnt/user-data/outputs/artifacts/<canvas id>/project/nxds-sampler.dc.html`. Then publish that path.
-2. Add this entry to `boards` in `project/canvas.json`. `boards` is keyed by each artboard's file name, relative to `project/`.
+2. Merge this key into `boards` in `project/canvas.json`. `boards` is keyed by each artboard's file name, relative to `project/`. The `x` and `y` place the artboard on an empty canvas.
 
    ```json
    {{boardEntry}}
