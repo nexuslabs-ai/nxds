@@ -144,7 +144,7 @@ export function samplerFile(file: string) {
   const props = tweaksOf(script[1] ?? '');
   const preview = props['$preview'] as Record<string, unknown> | undefined;
   return {
-    title: /<title>([^<]*)<\/title>/.exec(head)?.[1],
+    title: /<title>([^<]*)<\/title>/.exec(head)?.[1]?.trim() || undefined,
     head: head.split('\n'),
     markup: dc,
     props,
@@ -290,9 +290,9 @@ function canvasPathProblems(template: string) {
     .join('\n');
   const checked = opening + template.slice(stepsAt);
   return [...checked.matchAll(/`([^`\n]+)`/g)]
-    .map(([, span = '']) => span)
-    .filter((span) => !span.startsWith('"'))
-    .flatMap((span) => span.replace(/<[^>]*>/g, 'x').split(/[\s"'()[\]{},]+/))
+    .flatMap(([, span = '']) =>
+      span.replace(/<[^>]*>|"[^"]*"/g, 'x').split(/[\s"'()[\]{},]+/)
+    )
     .filter((word) => CANVAS_FILE.test(word) && !ROOTED.test(word))
     .map(
       (word) =>
