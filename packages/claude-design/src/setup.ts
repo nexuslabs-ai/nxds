@@ -187,10 +187,10 @@ function definesClass(css: string, name: string) {
   return false;
 }
 
-/** Why the sampler file wouldn't show or check on a canvas: a head that doesn't link the system, state beyond the `mode` tweak, or a class no stylesheet defines. */
+/** Why the sampler file wouldn't show or check on a canvas: a head that doesn't link the system or has no title, state beyond the `mode` tweak, or a class no stylesheet defines. */
 function fileProblems(
   file: string,
-  { head, markup, props, script, width, height }: SamplerFile,
+  { title, head, markup, props, script, width, height }: SamplerFile,
   { readme, stylesheets }: { readme: string; stylesheets: string }
 ) {
   const problems: string[] = [];
@@ -237,6 +237,11 @@ function fileProblems(
       `${SAMPLER_FILE}: data-props holds only mode, an enum of light and dark that defaults to light, and $preview.`
     );
   }
+  if (title === undefined) {
+    problems.push(
+      `${SAMPLER_FILE}: <head> has a <title>, which names the board on the canvas.`
+    );
+  }
   if (width !== SAMPLER_WIDTH || height === undefined) {
     problems.push(
       `${SAMPLER_FILE}: $preview is ${SAMPLER_WIDTH} wide, with its height at that width in whole px.`
@@ -275,7 +280,7 @@ const ROOTED = new RegExp(
   String.raw`^(?:${CANVAS_ROOT}/|/\S*/${CANVAS_ROOT}/|nxds-design-system/(?:project/|[\w-]+\.dc\.html${NAME_END}))`
 );
 
-/** Each path in the guide's code spans that names a canvas file but doesn't start at `project/`, where a canvas never shows it. The opening's table rows are skipped: they list the export's own files. A quoted name is a `canvas.json` key, not a path, and a `<placeholder>` is one path segment. */
+/** Each path in the guide's code spans that names a canvas file but doesn't start at `project/`, where a canvas never shows it. The opening's table rows are skipped: they list the export's own files. A quoted name is a `canvas.json` key, not a path, a `<placeholder>` is one path segment, and brackets, quotes and commas end a path. */
 function canvasPathProblems(template: string) {
   const stepsAt = Math.max(template.indexOf('\n## '), 0);
   const opening = template
@@ -287,7 +292,7 @@ function canvasPathProblems(template: string) {
   return [...checked.matchAll(/`([^`\n]+)`/g)]
     .map(([, span = '']) => span)
     .filter((span) => !span.startsWith('"'))
-    .flatMap((span) => span.replace(/<[^>]*>/g, 'x').split(/\s+/))
+    .flatMap((span) => span.replace(/<[^>]*>/g, 'x').split(/[\s"'()[\]{},]+/))
     .filter((word) => CANVAS_FILE.test(word) && !ROOTED.test(word))
     .map(
       (word) =>
