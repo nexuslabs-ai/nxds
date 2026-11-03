@@ -44,9 +44,12 @@ import { componentReads } from '../src/reads.ts';
 import { guideTemplate, SAMPLER_FILE, samplerProblems } from '../src/setup.ts';
 import { buildStyles } from '../src/styles.ts';
 import { buildSystemIndex } from '../src/system-index.ts';
-import type { ThemeFlags, ThemeModule } from '../src/theme.ts';
+import {
+  EXPORT_THEME_FLAGS,
+  type ThemeFlags,
+  type ThemeModule,
+} from '../src/theme.ts';
 import { buildThemeModule } from '../src/theme-bundle.ts';
-import { EXPORT_THEME_FLAGS } from '../src/theme-fields.ts';
 import { variablesRead } from '../src/token-reads.ts';
 import type { TokensFile } from '../src/tokens.ts';
 import { tokensProblems, validateSystem } from '../src/validate.ts';

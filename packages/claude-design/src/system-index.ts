@@ -27,6 +27,8 @@ export interface SystemIndex {
   blobs: Record<string, unknown>;
   docs: { sections: unknown[] };
   lastChange: LastChange;
+  /** The theme flags the system was exported with, by name. A default system has none. */
+  theme?: Record<string, string>;
   [key: string]: unknown;
 }
 
@@ -64,19 +66,26 @@ export function buildSystemIndex({
 
 /**
  * The export's index laid over the one a system already has: the system keeps
- * its creation marker, title and anything a person added on the page.
+ * its creation marker and anything a person added on the page, and takes the
+ * export's theme. It keeps its title too, unless `retitle`, when the theme
+ * changed, gives it the export's.
  */
 export function mergeSystemIndex(
   current: Record<string, unknown>,
-  exported: SystemIndex
+  exported: SystemIndex,
+  { retitle }: { retitle: boolean }
 ): Record<string, unknown> {
-  return {
-    ...current,
+  const { theme: _theme, ...kept } = current;
+  const merged: Record<string, unknown> = {
+    ...kept,
     namespace: exported.namespace,
     editing: exported.editing,
     libraries: exported.libraries,
     lastChange: exported.lastChange,
   };
+  if (retitle) merged['title'] = exported.title;
+  if (exported.theme) merged['theme'] = exported.theme;
+  return merged;
 }
 
 /** `file` is relative to `project/`. The page generates it, so an export never writes it. */

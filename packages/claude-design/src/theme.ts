@@ -13,6 +13,7 @@ import {
   ELEVATION_OPTIONS,
   findBrandColorPreset,
   FONT_OPTIONS,
+  NXDS_THEME_FIELDS,
   type NxdsAppearanceState,
   STROKE_OPTIONS,
 } from '@nxds/core';
@@ -20,9 +21,9 @@ import { formatHex } from 'culori';
 
 import { fillTemplate } from './template.ts';
 import {
-  EXPORT_THEME_FLAGS,
   formatThemeFlags,
-  orderedThemeFlags,
+  isExportThemeFlag,
+  type ThemeFlag,
 } from './theme-fields.ts';
 import type { ComponentReads } from './token-reads.ts';
 import { buildTokens, type TokensFile, typeStyleRules } from './tokens.ts';
@@ -30,6 +31,19 @@ import { compileTokensCss } from './tokens-css.ts';
 
 /** A theme, as a system records it: each flag's value, by flag name. */
 export type ThemeFlags = Readonly<Record<string, string>>;
+
+/** The theme flags the export takes, in the order `init` lists them. */
+export const EXPORT_THEME_FLAGS: readonly string[] = NXDS_THEME_FIELDS.map(
+  (field) => field.flag
+).filter(isExportThemeFlag);
+
+/** `flags`, by name, in the order `init` lists its theme flags. */
+function orderedThemeFlags(flags: ThemeFlags): ThemeFlag[] {
+  return NXDS_THEME_FIELDS.flatMap(({ flag }) => {
+    const value = flags[flag];
+    return value === undefined ? [] : [{ flag, value }];
+  });
+}
 
 /** What the release's build hands the theme module. */
 export interface ThemeInput {

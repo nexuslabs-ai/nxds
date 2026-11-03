@@ -4,6 +4,12 @@ import {
   type SystemIndex,
   validateIndex,
 } from '@nxds/claude-design/system-index';
+import type {
+  RenderedTheme,
+  ThemeFlags,
+  ThemeModule,
+} from '@nxds/claude-design/theme';
+import { formatThemeFlags } from '@nxds/claude-design/theme-fields';
 import { createHash } from 'node:crypto';
 import {
   existsSync,
@@ -41,12 +47,18 @@ export type ExportOptions = {
   index?: string;
   existing?: string;
   overwrite: boolean;
+  /** The theme flags passed, by name. An empty value resets the system's. */
+  theme: Record<string, string>;
 };
 
 type ManifestEntry = { path: string; sha256: string };
 
-/** `files.json`: each file the release ships, as the package build wrote it. `project` paths are under `project/`, and `root` files sit beside it. */
-type Manifest = { project: ManifestEntry[]; root: ManifestEntry[] };
+/** `files.json`: each file the release ships, as the package build wrote it. `project` paths are under `project/`, and `root` files sit beside it. `theme` is the module that themes an export, beside them too. Releases from before themes have none. */
+type Manifest = {
+  project: ManifestEntry[];
+  root: ManifestEntry[];
+  theme?: ManifestEntry[];
+};
 
 type Packument = {
   'dist-tags'?: Record<string, string>;
@@ -252,12 +264,16 @@ function readManifest(root: string): Manifest {
     );
   }
   const value = readJson(file) as Partial<Manifest> | null;
-  if (!isEntryList(value?.project) || !isEntryList(value.root)) {
+  if (
+    !isEntryList(value?.project) ||
+    !isEntryList(value.root) ||
+    !(value.theme === undefined || isEntryList(value.theme))
+  ) {
     throw new CliError(
-      `${file} must hold project and root, each a JSON array of { path, sha256 } entries.`
+      `${file} must hold project and root, and may hold theme, each a JSON array of { path, sha256 } entries.`
     );
   }
-  return { project: value.project, root: value.root };
+  return { project: value.project, root: value.root, theme: value.theme };
 }
 
 // The bytes of each entry under `dir`, checked against its hash. An error
@@ -293,7 +309,8 @@ function readRelease(root: string) {
       throw new CliError(`files.json lists ${file}, outside project/.`);
     }
   }
-  for (const { path: file } of manifest.root) {
+  const themeEntries = manifest.theme ?? [];
+  for (const { path: file } of [...manifest.root, ...themeEntries]) {
     if (!isRootName(file)) {
       throw new CliError(
         `files.json lists ${file || 'an empty path'} as a root file. A root file is one name beside project/, other than project, files.json and removed.json.`
@@ -308,6 +325,7 @@ function readRelease(root: string) {
   return {
     files: readEntries(projectDir, manifest.project, 'project/'),
     rootFiles: readEntries(root, manifest.root, ''),
+    themeModule: [...readEntries(root, themeEntries, '').values()][0],
   };
 }
 
@@ -368,23 +386,187 @@ function writeManifest(
   );
 }
 
-function mergeIndex(files: Map<string, Buffer>, currentFile: string) {
+function readIndex(file: string) {
+  const index = readJson(file);
+  if (typeof index !== 'object' || index === null || Array.isArray(index)) {
+    throw new UsageError(`${file} must be a system's design-system.json.`);
+  }
+  return index as Record<string, unknown>;
+}
+
+/** The theme a system's index records. A system from before themes has none. */
+function storedTheme(index: Record<string, unknown>, file: string): ThemeFlags {
+  const theme = index['theme'];
+  if (theme === undefined) return {};
+  if (
+    typeof theme !== 'object' ||
+    theme === null ||
+    Array.isArray(theme) ||
+    !Object.values(theme).every((value) => typeof value === 'string')
+  ) {
+    throw new UsageError(
+      `${file}: "theme" must be an object of theme flag values, such as {"corners": "round"}. Fix it, or remove it to export the default theme.`
+    );
+  }
+  return theme as ThemeFlags;
+}
+
+/** `stored` with each `passed` flag over it. An empty passed flag removes its stored value. */
+function layeredTheme(stored: ThemeFlags, passed: ThemeFlags): ThemeFlags {
+  const flags: Record<string, string> = { ...stored, ...passed };
+  for (const [flag, value] of Object.entries(passed)) {
+    if (value === '') delete flags[flag];
+  }
+  return flags;
+}
+
+type ThemeSource = { passed: ThemeFlags; indexFile?: string; version: string };
+
+const noFlagError = (flag: string, version: string) =>
+  new UsageError(
+    `nxds ${version} has no --${flag}. Pass --release latest to export a release that has it.`
+  );
+
+/** The error for a theme on a release from before themes, which has no theme module. */
+function noThemeModuleError(
+  theme: ThemeFlags,
+  { passed, indexFile, version }: ThemeSource
+) {
+  const flag = Object.keys(theme).find((name) => name in passed);
+  if (flag !== undefined) return noFlagError(flag, version);
+  return new UsageError(
+    `${indexFile} has a theme, and nxds ${version} can't theme an export. Pass --release latest to keep the theme.`
+  );
+}
+
+/** Throws on a flag the release doesn't take, naming where it came from. */
+function assertThemeFlags(
+  flags: ThemeFlags,
+  taken: readonly string[],
+  { passed, indexFile, version }: ThemeSource
+) {
+  for (const flag of Object.keys(flags)) {
+    if (taken.includes(flag)) continue;
+    if (flag in passed) throw noFlagError(flag, version);
+    if (flag === 'mode' || flag === 'icons') {
+      throw new UsageError(
+        `${indexFile} theme: a system carries Light and Dark and one icon library, so it has no "${flag}". Remove it from "theme".`
+      );
+    }
+    throw new UsageError(
+      `${indexFile} theme: "${flag}" isn't a theme flag nxds ${version} takes. Remove it from "theme".`
+    );
+  }
+}
+
+const isThemeModule = (value: unknown): value is ThemeModule =>
+  typeof value === 'object' &&
+  value !== null &&
+  (value as ThemeModule).api === 1 &&
+  Array.isArray((value as ThemeModule).flags) &&
+  typeof (value as ThemeModule).render === 'function';
+
+/** The release's theme module, imported from the bytes files.json's hash checked. */
+async function importTheme(bytes: Buffer, version: string) {
+  let imported: { default?: unknown };
+  try {
+    imported = (await import(
+      `data:text/javascript;base64,${bytes.toString('base64')}`
+    )) as { default?: unknown };
+  } catch (error) {
+    throw new CliError(
+      `nxds ${version}'s theme.js failed to load (${(error as Error).message}). Report it at https://github.com/nexuslabs-ai/nxds/issues.`
+    );
+  }
+  if (!isThemeModule(imported.default)) {
+    throw new CliError(
+      `nxds ${version}'s theme.js is newer than this nxds-cli. Run \`npx nxds-cli@latest\` to get the newest one.`
+    );
+  }
+  return imported.default;
+}
+
+const isRendered = (value: unknown): value is RenderedTheme => {
+  const rendered = value as RenderedTheme | undefined;
+  return (
+    typeof rendered?.guide === 'function' &&
+    typeof rendered.index?.title === 'string' &&
+    typeof rendered.index.theme === 'object' &&
+    ['tokens.json', 'tokens.css', 'README.md'].every(
+      (file) =>
+        typeof rendered.project?.[file as keyof RenderedTheme['project']] ===
+        'string'
+    )
+  );
+};
+
+/** What `theme` renders for `flags`. A value it rejects is an error naming where the flag came from. */
+function renderTheme(
+  theme: ThemeModule,
+  flags: ThemeFlags,
+  { passed, indexFile, version }: ThemeSource
+) {
+  let rendered: unknown;
+  try {
+    rendered = theme.render(flags);
+  } catch (error) {
+    const { message } = error as Error;
+    const flag = /^--([\w-]+) /.exec(message)?.[1];
+    if (flag !== undefined && flag in passed) throw new UsageError(message);
+    if (flag !== undefined && indexFile !== undefined) {
+      throw new UsageError(
+        `${indexFile} theme: ${message} Pass --${flag} <value> to change it, or --${flag}= to reset it.`
+      );
+    }
+    throw new CliError(`nxds ${version}'s theme.js failed: ${message}`);
+  }
+  if (!isRendered(rendered)) {
+    throw new CliError(
+      `nxds ${version}'s theme.js rendered no token files, README or setup guide.`
+    );
+  }
+  return rendered;
+}
+
+function exportedIndex(files: Map<string, Buffer>) {
   const exported = files.get('design-system.json');
   if (!exported) throw new CliError('The release has no design-system.json.');
-  const merged = mergeSystemIndex(
-    readJson(currentFile) as Record<string, unknown>,
-    JSON.parse(exported.toString('utf8')) as SystemIndex
+  return JSON.parse(exported.toString('utf8')) as SystemIndex;
+}
+
+const jsonBytes = (value: unknown) =>
+  Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
+
+/** Puts `rendered`'s files and its title and theme in place of the release's defaults. */
+function applyTheme(
+  rendered: RenderedTheme,
+  files: Map<string, Buffer>,
+  rootFiles: Map<string, Buffer>
+) {
+  for (const [file, contents] of Object.entries(rendered.project)) {
+    files.set(file, Buffer.from(contents));
+  }
+  files.set(
+    'design-system.json',
+    jsonBytes({ ...exportedIndex(files), ...rendered.index })
   );
+  rootFiles.set('SETUP.md', Buffer.from(rendered.guide(files.size)));
+}
+
+function mergeIndex(
+  files: Map<string, Buffer>,
+  current: Record<string, unknown>,
+  currentFile: string,
+  retitle: boolean
+) {
+  const merged = mergeSystemIndex(current, exportedIndex(files), { retitle });
   const errors = validateIndex(merged);
   if (errors.length > 0) {
     throw new UsageError(
       `${currentFile} merges into an index the page can't read, so nothing was written:\n${errors.map((error) => `  ${error}`).join('\n')}`
     );
   }
-  files.set(
-    'design-system.json',
-    Buffer.from(`${JSON.stringify(merged, null, 2)}\n`)
-  );
+  files.set('design-system.json', jsonBytes(merged));
 }
 
 // Stages beside `out`, so the staging folder is never inside the published
@@ -457,8 +639,31 @@ export async function exportClaudeDesign(
       );
 
   try {
-    const { files, rootFiles } = readRelease(pkg.root);
-    if (options.index) mergeIndex(files, path.resolve(cwd, options.index));
+    const { files, rootFiles, themeModule } = readRelease(pkg.root);
+    const indexFile = options.index && path.resolve(cwd, options.index);
+    const current = indexFile ? readIndex(indexFile) : undefined;
+    const passed = options.theme;
+    const theme = layeredTheme(
+      current && indexFile ? storedTheme(current, indexFile) : {},
+      passed
+    );
+    const source: ThemeSource = {
+      passed,
+      indexFile: options.index,
+      version: pkg.version,
+    };
+    let themed: ThemeFlags = {};
+    if (Object.keys(theme).length > 0) {
+      if (!themeModule) throw noThemeModuleError(theme, source);
+      const module = await importTheme(themeModule, pkg.version);
+      assertThemeFlags(theme, module.flags, source);
+      const rendered = renderTheme(module, theme, source);
+      applyTheme(rendered, files, rootFiles);
+      themed = rendered.index.theme;
+    }
+    if (current && indexFile) {
+      mergeIndex(files, current, indexFile, Object.keys(passed).length > 0);
+    }
     const exported = new Set(
       [...files.keys()].map((file) => `project/${file}`)
     );
@@ -481,6 +686,11 @@ export async function exportClaudeDesign(
     const lines = [
       `Exported nxds ${pkg.version} as a Claude Design System: ${files.size} files in ${path.join(relative, 'project')}.`,
     ];
+    if (Object.keys(themed).length > 0) {
+      lines.push(
+        `Themed with ${formatThemeFlags(Object.entries(themed).map(([flag, value]) => ({ flag, value })))}.`
+      );
+    }
     if (rootFiles.has('coverage.md')) {
       lines.push(
         `The props the canvas can't set are in ${path.join(relative, 'coverage.md')}.`
@@ -504,6 +714,7 @@ export async function exportClaudeDesign(
       lines,
       data: {
         version: pkg.version,
+        theme: themed,
         out,
         files: files.size,
         removed,

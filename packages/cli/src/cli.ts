@@ -1,3 +1,4 @@
+import { isExportThemeFlag } from '@nxds/claude-design/theme-fields';
 import { NXDS_THEME_FIELDS } from '@nxds/core/source/lib/theme-fields.ts';
 import { Argument, Command, CommanderError, Option } from 'commander';
 import path from 'node:path';
@@ -201,10 +202,10 @@ function program(
       done(await diff(cwd, registry, items));
     });
 
-  cli
+  const exportCommand = cli
     .command('export')
     .description(
-      'export nxds as a Claude Design System folder, ready to publish'
+      "export nxds as a Claude Design System folder, ready to publish. Theme flags set the system's theme, as they do for init; with --index, one left out keeps the system's value, and an empty one, such as --density=, resets it"
     )
     .addArgument(
       new Argument('<target>', 'what to export').choices(['claude-design'])
@@ -213,7 +214,7 @@ function program(
     .option('--release <version>', 'nxds release to export (default: latest)')
     .option(
       '--index <path>',
-      "the system's current design-system.json, to keep its title and creation date"
+      "the system's current design-system.json, to keep its title, creation date and theme"
     )
     .option(
       '--existing <path>',
@@ -229,12 +230,30 @@ function program(
         '--npm-registry <url>',
         `npm registry to download from (default: ${DEFAULT_NPM_REGISTRY})`
       ).env('npm_config_registry')
-    )
-    .action(async (_target: string, _options, command: Command) => {
-      done(
-        await exportClaudeDesign(cwdOf(command), command.opts<ExportOptions>())
-      );
-    });
+    );
+  const exportThemeOptions = NXDS_THEME_FIELDS.filter((field) =>
+    isExportThemeFlag(field.flag)
+  ).map((field) => {
+    const option = new Option(`--${field.flag} <value>`, field.description);
+    exportCommand.addOption(option);
+    return { flag: field.flag, key: option.attributeName() };
+  });
+
+  exportCommand.action(async (_target: string, _options, command: Command) => {
+    const options = command.opts<Record<string, string | undefined>>();
+    const theme = Object.fromEntries(
+      exportThemeOptions.flatMap(({ flag, key }) => {
+        const value = options[key];
+        return value === undefined ? [] : [[flag, value]];
+      })
+    );
+    done(
+      await exportClaudeDesign(cwdOf(command), {
+        ...command.opts<Omit<ExportOptions, 'theme'>>(),
+        theme,
+      })
+    );
+  });
 
   cli
     .command('doctor')

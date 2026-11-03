@@ -1,12 +1,12 @@
 // theme.js, the module nxds-cli imports to theme an export. The build bundles
 // it with this release's inputs as THEME_INPUT, which esbuild defines.
 import {
+  EXPORT_THEME_FLAGS,
   renderTheme,
   type ThemeFlags,
   type ThemeInput,
   type ThemeModule,
 } from './theme.ts';
-import { EXPORT_THEME_FLAGS } from './theme-fields.ts';
 
 /** A `ThemeInput` as JSON: its maps and set as entry lists. */
 export interface BakedThemeInput extends Omit<
