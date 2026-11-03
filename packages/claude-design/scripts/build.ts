@@ -54,6 +54,8 @@ import { variablesRead } from '../src/token-reads.ts';
 import type { TokensFile } from '../src/tokens.ts';
 import { tokensProblems, validateSystem } from '../src/validate.ts';
 
+import { FULL_THEME } from './full-theme.ts';
+
 const packageRoot = path.join(import.meta.dirname, '..');
 const contentDir = path.join(packageRoot, 'content');
 const distDir = path.join(packageRoot, 'dist');
@@ -134,23 +136,6 @@ function publishedManifest() {
     type: 'module',
   };
 }
-
-/** A theme with every export flag away from its default. */
-const FULL_THEME: ThemeFlags = {
-  'brand-color': '#e11d48',
-  'surface-tone': 'stone',
-  'light-contrast': '70',
-  'dark-contrast': '30',
-  density: 'compact',
-  corners: 'round',
-  elevation: 'strong',
-  stroke: 'strong',
-  font: 'inter',
-  'heading-font': 'playfair-display',
-  'code-font': 'jetbrains-mono',
-  'font-size': '15',
-  'code-font-size': '13',
-};
 
 /**
  * One theme per value at the edge of each export flag: both ends of a

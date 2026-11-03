@@ -1,10 +1,18 @@
 // The page a Design canvas loads, and the helpers every check renders and
 // reads it with. `openCanvas` points them at an exported folder before any
-// check runs. A check records each problem with `fail`.
+// check runs. A check records each problem with `fail`. Google Fonts answers
+// from the Fontsource files in node_modules, so a themed export's fonts load
+// with no network.
 import type * as ReactModule from 'react';
 import type * as ReactDOMModule from 'react-dom';
 import type * as ReactDOMClient from 'react-dom/client';
 
+import {
+  applyNxdsThemeFlags,
+  DEFAULT_NXDS_THEME,
+  FONT_OPTIONS,
+  type NxdsAppearanceState,
+} from '@nxds/core';
 import { readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -22,6 +30,7 @@ import { canvasLinks } from '../../src/setup.ts';
 const packageRoot = path.join(import.meta.dirname, '..', '..');
 const require = createRequire(path.join(packageRoot, 'package.json'));
 const ORIGIN = 'https://system.test';
+const GOOGLE_FONTS = 'https://fonts.googleapis.com';
 
 // Development builds, so React's key, ref and nesting warnings surface.
 const REACT = {
@@ -47,7 +56,7 @@ function canvasLines() {
 export let exportDir = '';
 export let projectDir = '';
 let preload = '';
-export let browser: Browser;
+export let browser: Browser | undefined;
 let context: BrowserContext;
 
 export type Theme = { attribute: string | null; darkClass: boolean };
@@ -318,8 +327,67 @@ function pageHelpers() {
   });
 }
 
+/** The tokens.json the export wrote. */
+export function exportTokens() {
+  return JSON.parse(
+    readFileSync(path.join(projectDir, 'tokens.json'), 'utf8')
+  ) as {
+    meta: { theme: Record<string, string>; fonts?: string[] };
+    [family: string]: unknown;
+  };
+}
+
+/** The appearance the export's theme sets. */
+export function exportAppearance(): NxdsAppearanceState {
+  return applyNxdsThemeFlags(DEFAULT_NXDS_THEME, exportTokens().meta.theme)
+    .appearance;
+}
+
+/** A curated font's latin Fontsource file, by its Google Fonts family name. */
+function fontFile(family: string) {
+  const font = FONT_OPTIONS.find((option) => option.label === family);
+  if (!font) return undefined;
+  return path.join(
+    path.dirname(require.resolve(`${font.package}/package.json`)),
+    'files',
+    `${font.value}-latin-wght-normal.woff2`
+  );
+}
+
+/** What Google Fonts' css2 answers for `url`'s families: a face each, from this origin. */
+function googleFontsCss(url: URL) {
+  return url.searchParams
+    .getAll('family')
+    .map((entry) => entry.split(':')[0] ?? '')
+    .map(
+      (family) =>
+        `@font-face { font-family: '${family}'; font-weight: 100 900; src: url(${ORIGIN}/fonts/${encodeURIComponent(family)}.woff2) format('woff2'); }`
+    )
+    .join('\n');
+}
+
+function serveFont(route: Route, url: URL) {
+  const file = fontFile(
+    decodeURIComponent(url.pathname.slice('/fonts/'.length, -'.woff2'.length))
+  );
+  if (!file) {
+    fail(`request for ${url.pathname}, which no curated font serves`);
+    return route.abort();
+  }
+  return route.fulfill({ path: file, contentType: 'font/woff2' });
+}
+
 function serve(route: Route) {
   const url = new URL(route.request().url());
+  if (url.origin === GOOGLE_FONTS && url.pathname === '/css2') {
+    return route.fulfill({
+      body: googleFontsCss(url),
+      contentType: 'text/css',
+    });
+  }
+  if (url.origin === ORIGIN && url.pathname.startsWith('/fonts/')) {
+    return serveFont(route, url);
+  }
   if (url.origin !== ORIGIN) {
     fail(`network request to ${url.href}`);
     return route.abort();
@@ -339,6 +407,7 @@ function serve(route: Route) {
 
 /** A browser context that serves the system and has the page helpers. */
 export async function canvasContext(options: BrowserContextOptions = {}) {
+  if (!browser) throw new Error('openCanvas has not run.');
   const created = await browser.newContext({
     viewport: { width: 960, height: 720 },
     ...options,
@@ -348,8 +417,15 @@ export async function canvasContext(options: BrowserContextOptions = {}) {
   return created;
 }
 
+/** Closes the browser the last `openCanvas` opened. */
+export async function closeCanvas() {
+  await browser?.close();
+  browser = undefined;
+}
+
 /** Loads the export in `folder` the way a canvas does, for every check after it. */
 export async function openCanvas(folder: string) {
+  await closeCanvas();
   exportDir = folder;
   projectDir = path.join(folder, 'project');
   preload = [
