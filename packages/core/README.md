@@ -71,6 +71,15 @@ import { createTokenCatalogue } from '@nxds/core/catalogue';
 const tokens = createTokenCatalogue();
 ```
 
+Pass an appearance to read the tokens at that appearance. Colours and type sizes follow it.
+
+```ts
+const rose = createTokenCatalogue({
+  ...DEFAULT_NXDS_APPEARANCE,
+  brandColor: '#e11d48',
+});
+```
+
 ## Non-React Shell Example
 
 Use the engine directly when a host shell owns DOM or native styling.
