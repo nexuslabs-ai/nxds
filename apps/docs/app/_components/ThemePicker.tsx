@@ -36,6 +36,7 @@ import { useDocsTheme } from '../_lib/docs-theme';
 
 import { ThemeActions } from './ThemeActions';
 import { ThemeExport } from './ThemeExport';
+import { UseInClaudeDesign } from './UseInClaudeDesign';
 
 const { prefs: DEFAULT_PREFS } = DEFAULT_NXDS_APPEARANCE;
 
@@ -167,6 +168,7 @@ export function ThemePicker() {
           <div className="nx:flex nx:flex-col nx:gap-2 nx:pt-4">
             <ThemeActions size="sm" />
             <ThemeExport className="nx:w-full" />
+            <UseInClaudeDesign className="nx:w-full" />
           </div>
         </div>
       )}

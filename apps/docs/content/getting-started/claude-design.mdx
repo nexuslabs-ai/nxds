@@ -13,11 +13,10 @@ sampler artboard.
 Paste this prompt into a new Claude chat. Your chat needs code execution with
 access to npm.
 
-```text
-Set up the nxds design system on a Claude Design canvas for me.
-Fetch https://nxds.dev/getting-started/claude-design.md and follow its steps exactly, in order.
-When the sampler artboard passes every check, tell me and give me the system's link. Then wait for my design request.
-```
+<ClaudeDesignPrompt />
+
+To start from your own theme, set it in the [Playground](/playground) and
+select Use in Claude Design. The prompt it copies carries your theme.
 
 Claude publishes your own copy of nxds as a Design System and installs it on
 a new canvas. It then adds the sampler, a sales dashboard, and waits for your
@@ -53,7 +52,9 @@ Build every design in this project with nxds, the design system installed on the
 
 Do these steps in order.
 
-1. Run this command in your sandbox:
+1. Run this command in your sandbox. If the person's message has a
+   `Theme flags:` line, add those flags to the end of the command, exactly as
+   written.
 
    ```bash
    npx nxds-cli@latest export claude-design
