@@ -1,13 +1,17 @@
 // tokens.json for the Claude Design System format, from the @nxds/core token
-// catalogue at the default appearance. A token's name is the custom property
+// catalogue at the system's appearance. A token's name is the custom property
 // the components read, minus `--`. It holds only the tokens a component reads,
 // plus the scales AUTHOR_FAMILIES keeps for laying out artboards and any
 // token a class in bundle.css reads, so authors can use it.
-import { DEFAULT_NXDS_APPEARANCE } from '@nxds/core';
+import type { NxdsAppearanceState } from '@nxds/core';
 import type { CatalogueToken, CatalogueVariant } from '@nxds/core/catalogue';
 import { createTokenCatalogue } from '@nxds/core/catalogue';
 
-import { type ComponentReads, readersOf, variablesRead } from './reads.ts';
+import {
+  type ComponentReads,
+  readersOf,
+  variablesRead,
+} from './token-reads.ts';
 
 export type ThemeId = 'light' | 'dark';
 export type ThemedValue = string | Partial<Record<ThemeId, string>>;
@@ -31,7 +35,10 @@ export interface TypeStyle {
 export interface TokensFile {
   name: string;
   version: 1;
-  meta: Record<string, unknown>;
+  meta: Record<string, unknown> & {
+    /** The Google Fonts families tokens.css loads. */
+    fonts?: readonly string[];
+  };
   color: { themes: { id: ThemeId; name: string }[]; tokens: ListToken[] };
   type: {
     fonts: never[];
@@ -87,6 +94,9 @@ function familyKey(variable: string | undefined) {
 /** A whole `var(--nx-*)` with no fallback, as the catalogue writes it. */
 const VAR_REFERENCE = /var\((--nx-[\w-]+)\)/g;
 
+/** The export's own type scale token: the size code text is set at. */
+export const CODE_SIZE_TOKEN = 'nx-typography-code-size';
+
 type Catalogue = readonly CatalogueToken[];
 type Resolver = ReturnType<typeof createResolver>;
 
@@ -94,10 +104,14 @@ function bareName(name: string) {
   return name.slice(2);
 }
 
-/** The variants the default appearance puts on the page, for one theme mode. */
-function defaultVariant(token: CatalogueToken, mode: ThemeId) {
+/** The variant `appearance` puts on the page, for one theme mode. */
+function pageVariant(
+  token: CatalogueToken,
+  mode: ThemeId,
+  appearance: NxdsAppearanceState
+) {
   const field = token.control?.kind === 'preset' ? token.control.field : null;
-  const preset = field ? DEFAULT_NXDS_APPEARANCE[field] : null;
+  const preset = field ? appearance[field] : null;
   const inPreset = token.variants.filter(
     (variant) => variant.preset === null || variant.preset === preset
   );
@@ -111,33 +125,39 @@ function declaredValue(variant: CatalogueVariant | undefined) {
   return variant?.declarations[0]?.value;
 }
 
-function createResolver(catalogue: Catalogue) {
+function createResolver(catalogue: Catalogue, appearance: NxdsAppearanceState) {
   const byName = new Map(catalogue.map((token) => [token.name, token]));
 
+  /** `token`'s value in `mode`, as `appearance` puts it on the page. */
+  const declared = (token: CatalogueToken, mode: ThemeId) =>
+    declaredValue(pageVariant(token, mode, appearance));
+
   // Replaces each `var(--nx-*)` with that token's literal value in `mode`.
-  return function resolve(value: string, mode: ThemeId): string {
+  function resolve(value: string, mode: ThemeId): string {
     return value.replace(VAR_REFERENCE, (reference, name: string) => {
       const token = byName.get(name as `--nx-${string}`);
-      const resolved = token && declaredValue(defaultVariant(token, mode));
+      const resolved = token && declared(token, mode);
       if (resolved === undefined) {
-        throw new Error(`tokens.json: ${reference} has no default value.`);
+        throw new Error(`tokens.json: ${reference} has no value.`);
       }
       return resolve(resolved, mode);
     });
-  };
+  }
+
+  return { declared, resolve };
 }
 
 function themed(light: string, dark: string): ThemedValue {
   return light === dark ? light : { light, dark };
 }
 
-function tokenValue(token: CatalogueToken, resolve: Resolver): ThemedValue {
+function tokenValue(token: CatalogueToken, resolver: Resolver): ThemedValue {
   const [light, dark] = THEMES.map(({ id }) => {
-    const value = declaredValue(defaultVariant(token, id));
+    const value = resolver.declared(token, id);
     if (value === undefined) {
-      throw new Error(`tokens.json: ${token.name} has no default value.`);
+      throw new Error(`tokens.json: ${token.name} has no value.`);
     }
-    return resolve(value, id);
+    return resolver.resolve(value, id);
   }) as [string, string];
   return themed(light, dark);
 }
@@ -189,11 +209,11 @@ function authorUsage(role: string) {
 /** `unreadUsage` writes the usage when no component reads the token. */
 function listToken(
   token: CatalogueToken,
-  resolve: Resolver,
+  resolver: Resolver,
   readers: readonly string[],
   unreadUsage = authorUsage
 ): ListToken {
-  const value = tokenValue(token, resolve);
+  const value = tokenValue(token, resolver);
   const role = token.description ?? scaleUsage(token, value);
   return {
     name: bareName(token.name),
@@ -233,19 +253,23 @@ function isTypeScaleStep(token: CatalogueToken) {
 
 interface Context {
   catalogue: Catalogue;
-  resolve: Resolver;
+  resolver: Resolver;
   reads: ComponentReads;
   stylesheetReads: ReadonlySet<string>;
+  /** The size code text is set at, such as `12px`. */
+  codeSize: string;
+  /** Font stacks that replace the catalogue's, by `type.families` key. */
+  families: Readonly<Record<string, string>>;
 }
 
 function keptTokens(
   tokens: Catalogue,
-  { resolve, reads, stylesheetReads }: Context
+  { resolver, reads, stylesheetReads }: Context
 ) {
   return tokens.flatMap((token) => {
     const readers = readersOf(reads, token.name);
     return kept(token, readers, stylesheetReads)
-      ? [listToken(token, resolve, readers)]
+      ? [listToken(token, resolver, readers)]
       : [];
   });
 }
@@ -275,21 +299,37 @@ function typeScaleTokens(context: Context) {
       .flatMap((token) => token.variants[0]?.declarations ?? [])
       .flatMap(({ value }) => [...variablesRead(value)])
   );
-  return context.catalogue.filter(isTypeScaleStep).flatMap((token) => {
+  const steps = context.catalogue.filter(isTypeScaleStep).flatMap((token) => {
     const readers = readersOf(context.reads, token.name);
     if (readers.length === 0 && !styleReads.has(token.name)) return [];
-    return [listToken(token, context.resolve, readers, (role) => role)];
+    return [listToken(token, context.resolver, readers, (role) => role)];
   });
+  return [
+    ...steps,
+    {
+      name: CODE_SIZE_TOKEN,
+      value: context.codeSize,
+      usage:
+        'Code text size. `typography-code-block`, `typography-code-inline` and the `nx:font-mono` text in components read it.',
+    },
+  ];
 }
 
-// `-0.800000011920929px` is a float32 artefact of the source file.
+// `-0.800000011920929px` is a float32 artefact of the source file. Four
+// places match the type scale, so a scaled size reads the same here.
 function length(value: string) {
   const match = /^(-?[\d.]+)(px|rem|em|%)?$/.exec(value);
   if (!match) return undefined;
-  return `${Number(Number(match[1]).toPrecision(6))}${match[2] ?? ''}`;
+  return `${Number(Number(match[1]).toFixed(4))}${match[2] ?? ''}`;
 }
 
-function typeStyle(token: CatalogueToken, resolve: Resolver): TypeStyle {
+const isCodeStyle = (token: CatalogueToken) => token.group === 'code';
+
+function typeStyle(
+  token: CatalogueToken,
+  { resolver, codeSize }: Context
+): TypeStyle {
+  const resolve = resolver.resolve;
   const declarations = new Map(
     (token.variants[0]?.declarations ?? []).map((declaration) => [
       declaration.property,
@@ -301,7 +341,9 @@ function typeStyle(token: CatalogueToken, resolve: Resolver): TypeStyle {
     return value === undefined ? undefined : resolve(value, 'light');
   };
   const [familyVar] = variablesRead(declarations.get('font-family') ?? '');
-  const fontSize = length(read('font-size') ?? '');
+  const fontSize = isCodeStyle(token)
+    ? codeSize
+    : length(read('font-size') ?? '');
   if (!fontSize) {
     throw new Error(`tokens.json: ${token.name} has no literal font size.`);
   }
@@ -324,11 +366,12 @@ function typeStyle(token: CatalogueToken, resolve: Resolver): TypeStyle {
 }
 
 // The families a text style or a component uses.
-function typeFamily({ catalogue, resolve, reads }: Context) {
+function typeFamily(context: Context) {
+  const { catalogue, resolver, reads, families: stacks } = context;
   const groups: TokensFile['type']['groups'] = [];
   const used = new Set<string>();
   for (const token of catalogue.filter(isTypographyStyle)) {
-    const style = typeStyle(token, resolve);
+    const style = typeStyle(token, context);
     let group = groups.find((candidate) => candidate.name === token.group);
     if (!group) {
       group = { name: token.group, family: style.family ?? 'sans', styles: [] };
@@ -347,10 +390,13 @@ function typeFamily({ catalogue, resolve, reads }: Context) {
           used.has(familyKey(token.name) ?? '') ||
           readersOf(reads, token.name).length > 0
       )
-      .map((token) => [
-        familyKey(token.name),
-        resolve(`var(${token.name})`, 'light'),
-      ])
+      .map((token) => {
+        const key = familyKey(token.name) ?? '';
+        return [
+          key,
+          stacks[key] ?? resolver.resolve(`var(${token.name})`, 'light'),
+        ];
+      })
   );
 
   return { fonts: [] as never[], families, groups };
@@ -358,7 +404,8 @@ function typeFamily({ catalogue, resolve, reads }: Context) {
 
 /**
  * Each text style's class body in tokens.css, by style name: the
- * declarations of the `nx:typography-*` utility it mirrors.
+ * declarations of the `nx:typography-*` utility it mirrors. The code styles
+ * read the code size token instead of a type scale step.
  */
 export function typeStyleRules(): Map<string, string[]> {
   return new Map(
@@ -366,8 +413,10 @@ export function typeStyleRules(): Map<string, string[]> {
       .filter(isTypographyStyle)
       .map((token) => [
         bareName(token.name).replace(/^nx-/, ''),
-        (token.variants[0]?.declarations ?? []).map(
-          ({ property, value }) => `${property}: ${value};`
+        (token.variants[0]?.declarations ?? []).map(({ property, value }) =>
+          property === 'font-size' && isCodeStyle(token)
+            ? `${property}: var(--${CODE_SIZE_TOKEN});`
+            : `${property}: ${value};`
         ),
       ])
   );
@@ -381,29 +430,42 @@ export interface TokensMeta {
   stylesheetReads: ReadonlySet<string>;
 }
 
-export function buildTokens({
-  version,
-  ref,
-  reads,
-  stylesheetReads,
-}: TokensMeta): TokensFile {
-  const catalogue = createTokenCatalogue();
+/** What a system's theme sets in tokens.json. */
+export interface TokensTheme {
+  appearance: NxdsAppearanceState;
+  /** The theme flags, by name, as `meta.theme` records them. */
+  flags: Readonly<Record<string, string>>;
+  /** Font stacks that replace the catalogue's, by `type.families` key. */
+  families: Readonly<Record<string, string>>;
+  /** The Google Fonts families the stacks name, as `meta.fonts` lists them. */
+  fonts: readonly string[];
+}
+
+export function buildTokens(
+  { version, ref, reads, stylesheetReads }: TokensMeta,
+  { appearance, flags, families, fonts }: TokensTheme
+): TokensFile {
+  const catalogue = createTokenCatalogue(appearance);
   const context: Context = {
     catalogue,
-    resolve: createResolver(catalogue),
+    resolver: createResolver(catalogue, appearance),
     reads,
     stylesheetReads,
+    codeSize: `${appearance.prefs.codeFontSize}px`,
+    families,
   };
+  const meta: TokensFile['meta'] = {
+    source: 'nxds',
+    package: '@nxds/claude-design',
+    version,
+    ref,
+    theme: flags,
+  };
+  if (fonts.length > 0) meta.fonts = fonts;
   const tokens: TokensFile = {
     name: 'nxds',
     version: 1,
-    meta: {
-      source: 'nxds',
-      package: '@nxds/claude-design',
-      version,
-      ref,
-      appearance: 'default',
-    },
+    meta,
     color: { themes: THEMES, tokens: colorTokens(context) },
     type: typeFamily(context),
   };

@@ -1,8 +1,11 @@
 // Writes dist/: the system's files under dist/project/, the files beside it
-// (the canvas prop coverage report, SETUP.md and the sampler artboard), the
-// package manifest npm publishes from dist/, and files.json, which lists the
-// project and root files with their hashes for nxds-cli. Fails when the
-// output breaks the Design System format.
+// (the canvas prop coverage report, SETUP.md and the sampler artboard),
+// theme.js, which nxds-cli runs to theme an export, the package manifest npm
+// publishes from dist/, and files.json, which lists those files with their
+// hashes for nxds-cli. The default token files, README and SETUP.md come from
+// theme.js, as a themed export's do. Fails when the output, or a theme at the
+// edge of what a flag takes, breaks the Design System format.
+import { NXDS_THEME_FIELDS } from '@nxds/core';
 import {
   componentLabel,
   exportedComponentSlugs,
@@ -11,11 +14,14 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   copyFileSync,
+  cpSync,
   mkdirSync,
+  mkdtempSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { buildBundle } from '../src/bundle.ts';
@@ -34,13 +40,16 @@ import {
   renderCoverage,
   renderIndexDts,
 } from '../src/props.ts';
-import { componentReads, variablesRead } from '../src/reads.ts';
-import { SAMPLER_FILE, samplerProblems, setupGuide } from '../src/setup.ts';
+import { componentReads } from '../src/reads.ts';
+import { guideTemplate, SAMPLER_FILE, samplerProblems } from '../src/setup.ts';
 import { buildStyles } from '../src/styles.ts';
 import { buildSystemIndex } from '../src/system-index.ts';
-import { buildTokens, typeStyleRules } from '../src/tokens.ts';
-import { compileTokensCss } from '../src/tokens-css.ts';
-import { validateSystem } from '../src/validate.ts';
+import type { ThemeFlags, ThemeModule } from '../src/theme.ts';
+import { buildThemeModule } from '../src/theme-bundle.ts';
+import { EXPORT_THEME_FLAGS } from '../src/theme-fields.ts';
+import { variablesRead } from '../src/token-reads.ts';
+import type { TokensFile } from '../src/tokens.ts';
+import { tokensProblems, validateSystem } from '../src/validate.ts';
 
 const packageRoot = path.join(import.meta.dirname, '..');
 const contentDir = path.join(packageRoot, 'content');
@@ -61,6 +70,7 @@ function gitRef() {
 // nxds's own budgets, well under the Design System format's caps (src/validate.ts).
 const BUNDLE_BUDGET = 2.7 * 1024 * 1024;
 const TYPES_BUDGET = 1024 * 1024;
+const THEME_BUDGET = 2 * 1024 * 1024;
 
 function assertBudget(file: string, contents: string, budget: number) {
   const bytes = Buffer.byteLength(contents);
@@ -122,6 +132,85 @@ function publishedManifest() {
   };
 }
 
+/** A theme with every export flag away from its default. */
+const FULL_THEME: ThemeFlags = {
+  'brand-color': '#e11d48',
+  'surface-tone': 'stone',
+  'light-contrast': '70',
+  'dark-contrast': '30',
+  density: 'compact',
+  corners: 'round',
+  elevation: 'strong',
+  stroke: 'strong',
+  font: 'inter',
+  'heading-font': 'playfair-display',
+  'code-font': 'jetbrains-mono',
+  'font-size': '15',
+  'code-font-size': '13',
+};
+
+/**
+ * One theme per value at the edge of each export flag: both ends of a
+ * number, every option and font, and two colour forms.
+ */
+function edgeThemes(): ThemeFlags[] {
+  return NXDS_THEME_FIELDS.filter((field) =>
+    EXPORT_THEME_FLAGS.includes(field.flag)
+  ).flatMap((field) => {
+    switch (field.kind) {
+      case 'color':
+        return ['#4f46e5', 'oklch(0.7 0.25 20)'].map((value) => ({
+          [field.flag]: value,
+        }));
+      case 'integer':
+        return [field.min, field.max].map((value) => ({
+          [field.flag]: String(value),
+        }));
+      case 'choice':
+      case 'font':
+        return field.values.map((value) => ({ [field.flag]: value }));
+    }
+  });
+}
+
+/** Problems a theme's token files have, one line per theme and problem. */
+function themeProblems(theme: ThemeModule, flags: ThemeFlags) {
+  const { project } = theme.render(flags);
+  return tokensProblems(
+    JSON.parse(project['tokens.json']) as TokensFile,
+    project['tokens.css']
+  ).map((problem) => `${JSON.stringify(flags)}: ${problem}`);
+}
+
+/** Problems the full theme has as a whole system, in a copy of project/. */
+function fullThemeProblems(theme: ThemeModule) {
+  const copy = mkdtempSync(path.join(tmpdir(), 'nxds-theme-'));
+  try {
+    cpSync(projectDir, copy, { recursive: true });
+    const { project, index, guide } = theme.render(FULL_THEME);
+    guide(1);
+    for (const [file, contents] of Object.entries(project)) {
+      writeFileSync(path.join(copy, file), contents);
+    }
+    const indexFile = path.join(copy, 'design-system.json');
+    writeFileSync(
+      indexFile,
+      JSON.stringify({
+        ...JSON.parse(readFileSync(indexFile, 'utf8')),
+        ...index,
+      })
+    );
+    return validateSystem(copy).errors.map(
+      (error) => `the full theme: ${error}`
+    );
+  } finally {
+    rmSync(copy, { recursive: true, force: true });
+  }
+}
+
+/** The module nxds-cli imports to theme an export. It isn't copied out. */
+const THEME_FILE = 'theme.js';
+
 /** The files `nxds-cli` copies beside project/. */
 const ROOT_FILES = ['coverage.md', 'SETUP.md', SAMPLER_FILE];
 
@@ -142,29 +231,44 @@ async function main() {
   const folders = componentFolders();
   const reads = await componentReads(folders);
   const styles = await buildStyles();
-  const tokens = buildTokens({
-    version,
-    ref: gitRef(),
-    reads,
-    stylesheetReads: variablesRead(styles),
-  });
-  const tokensCss = compileTokensCss(tokens, typeStyleRules());
-  write('tokens.json', `${JSON.stringify(tokens, null, 2)}\n`);
-  write('tokens.css', tokensCss);
   const readme = withPresetTable(
     readFileSync(path.join(contentDir, 'README.md'), 'utf8')
   );
-  write('README.md', readme);
+  const sampler = readFileSync(path.join(contentDir, SAMPLER_FILE), 'utf8');
+  const { module: theme, bytes: themeBytes } = await buildThemeModule(
+    {
+      version,
+      ref: gitRef(),
+      reads,
+      stylesheetReads: variablesRead(styles),
+      readme,
+      guide: guideTemplate({
+        template: readFileSync(path.join(contentDir, 'SETUP.md'), 'utf8'),
+        readme,
+        sampler,
+        version,
+      }),
+    },
+    path.join(distDir, THEME_FILE)
+  );
+  if (themeBytes > THEME_BUDGET) {
+    throw new Error(
+      `${THEME_FILE}: ${Math.round(themeBytes / 1024)} KB, over its ${Math.round(THEME_BUDGET / 1024)} KB budget.`
+    );
+  }
+  const defaults = theme.render({});
+  for (const [file, contents] of Object.entries(defaults.project)) {
+    write(file, contents);
+  }
   write(
     'components/Cover/preview.html',
     readFileSync(path.join(contentDir, 'cover.html'), 'utf8')
   );
 
   const parts = flatComponents();
-  const sampler = readFileSync(path.join(contentDir, SAMPLER_FILE), 'utf8');
   const samplerErrors = samplerProblems(sampler, {
-    readme,
-    stylesheets: tokensCss + styles,
+    readme: defaults.project['README.md'],
+    stylesheets: defaults.project['tokens.css'] + styles,
     parts,
   });
   if (samplerErrors.length > 0) throw new Error(samplerErrors.join('\n'));
@@ -216,21 +320,21 @@ async function main() {
       `The export breaks the Design System format:\n${errors.map((error) => `  ${error}`).join('\n')}`
     );
   }
+  const themeErrors = [
+    ...edgeThemes().flatMap((flags) => themeProblems(theme, flags)),
+    ...fullThemeProblems(theme),
+  ];
+  if (themeErrors.length > 0) {
+    throw new Error(
+      `A themed export breaks the Design System format:\n${themeErrors.map((error) => `  ${error}`).join('\n')}`
+    );
+  }
 
   writeFileSync(
     path.join(distDir, 'package.json'),
     `${JSON.stringify(publishedManifest(), null, 2)}\n`
   );
-  writeFileSync(
-    path.join(distDir, 'SETUP.md'),
-    setupGuide({
-      template: readFileSync(path.join(contentDir, 'SETUP.md'), 'utf8'),
-      readme,
-      sampler,
-      version,
-      files,
-    })
-  );
+  writeFileSync(path.join(distDir, 'SETUP.md'), defaults.guide(files.length));
   copyFileSync(
     path.join(contentDir, SAMPLER_FILE),
     path.join(distDir, SAMPLER_FILE)
@@ -246,6 +350,7 @@ async function main() {
   const released = {
     project: fileList(projectDir, files),
     root: fileList(distDir, ROOT_FILES),
+    theme: fileList(distDir, [THEME_FILE]),
   };
   writeFileSync(
     path.join(distDir, 'files.json'),
@@ -254,7 +359,7 @@ async function main() {
 
   const kb = (text: string) => Math.round(Buffer.byteLength(text) / 1024);
   console.log(
-    `@nxds/claude-design ${version}: ${folders.length} components, ${parts.length} parts, bundle.js ${kb(code)} KB, index.d.ts ${kb(indexDts)} KB, ${report.props} props (${report.controls.dropdown} dropdowns, ${report.controls.toggle} toggles).`
+    `@nxds/claude-design ${version}: ${folders.length} components, ${parts.length} parts, bundle.js ${kb(code)} KB, index.d.ts ${kb(indexDts)} KB, theme.js ${Math.round(themeBytes / 1024)} KB, ${report.props} props (${report.controls.dropdown} dropdowns, ${report.controls.toggle} toggles).`
   );
 }
 

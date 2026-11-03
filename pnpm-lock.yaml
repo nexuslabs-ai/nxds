@@ -404,6 +404,9 @@ importers:
       '@tailwindcss/node':
         specifier: 4.3.0
         version: 4.3.0
+      '@types/culori':
+        specifier: ^4.0.1
+        version: 4.0.1
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
@@ -416,6 +419,9 @@ importers:
       acorn:
         specifier: ^8.16.0
         version: 8.16.0
+      culori:
+        specifier: ^4.0.2
+        version: 4.0.2
       esbuild:
         specifier: ^0.28.1
         version: 0.28.1

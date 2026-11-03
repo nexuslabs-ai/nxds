@@ -359,18 +359,31 @@ function guideProblems({
   return problems;
 }
 
-export function setupGuide({
+/** The placeholders SETUP.md leaves for the theme module to fill. */
+const THEME_PLACEHOLDERS = [
+  'files',
+  'title',
+  'description',
+  'themeJson',
+  'themeIntro',
+  'themeChecks',
+];
+
+/**
+ * SETUP.md with this release's values in: its version, the files a publish
+ * sends as text, the canvas files and the sampler's board. The theme's
+ * placeholders stay, for the theme module.
+ */
+export function guideTemplate({
   template,
   readme,
   sampler,
   version,
-  files,
 }: {
   template: string;
   readme: string;
   sampler: string;
   version: string;
-  files: readonly string[];
 }) {
   const problems = guideProblems({ template, readme });
   if (problems.length > 0) throw new Error(problems.join('\n'));
@@ -382,12 +395,14 @@ export function setupGuide({
   ).join(' and ');
   const guide = template
     .replaceAll('{{version}}', version)
-    .replaceAll('{{files}}', String(files.length))
     .replaceAll('{{textPlainFiles}}', () => textPlainFiles)
     .replace('{{canvasFiles}}', () => canvasFiles)
     .replace('{{boardEntry}}', () => JSON.stringify(boardEntry(sampler)));
-  const left = /\{\{\w+\}\}/.exec(guide);
-  if (left) throw new Error(`SETUP.md: ${left[0]} has no value.`);
+  for (const [, name = ''] of guide.matchAll(/\{\{(\w+)\}\}/g)) {
+    if (!THEME_PLACEHOLDERS.includes(name)) {
+      throw new Error(`SETUP.md: {{${name}}} has no value.`);
+    }
+  }
   return guide;
 }
 

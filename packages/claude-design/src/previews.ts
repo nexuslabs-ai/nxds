@@ -157,7 +157,7 @@ export function previewHtml({
     '<meta charset="utf-8">',
     `<title>${name}</title>`,
     '<style>',
-    '  body { margin: 0; background: var(--nx-color-background); color: var(--nx-color-foreground); font-family: var(--font-sans); }',
+    '  body { margin: 0; background: var(--nx-color-background); color: var(--nx-color-foreground); font-family: var(--nx-typography-family-font-sans); }',
     '  #root { padding: var(--nx-spacing-6); }',
     '</style>',
     '</head>',
