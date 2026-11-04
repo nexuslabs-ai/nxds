@@ -1,4 +1,3 @@
-import { codeFontSizeRule } from './code-font-size';
 import { normalizeContrast } from './contrast';
 import type { ThemeDerivationInput, ThemeSeeds } from './derive-theme';
 import type { NxdsSurfaceTone } from './palette';
@@ -202,8 +201,8 @@ const clampFontSize = (value: unknown, fallback: number): number =>
     ? Math.min(FONT_SIZE_PX_MAX, Math.max(FONT_SIZE_PX_MIN, value))
     : fallback;
 
-function typographyScaleVariables(uiPx: number): string {
-  return [...typographyScale(uiPx)]
+function typographyScaleVariables(uiPx: number, codePx: number): string {
+  return [...typographyScale(uiPx, codePx)]
     .map(([name, value]) => `  ${name}: ${value};`)
     .join('\n');
 }
@@ -284,8 +283,14 @@ export function sanitizeNxdsAppearance(rawInput: unknown): NxdsAppearanceState {
   };
 }
 
+/** The appearance fields runtime colours derive from. */
+export type NxdsColorAppearance = Pick<
+  NxdsAppearanceState,
+  'brandColor' | 'surfaceTone' | 'lightContrast' | 'darkContrast'
+>;
+
 export function createNxdsThemeContract(
-  state: NxdsAppearanceState
+  state: NxdsColorAppearance
 ): ThemeDerivationInput {
   const tone = BASE_TONE_SEEDS[state.surfaceTone];
   return {
@@ -312,9 +317,8 @@ export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
   --nx-typography-family-font-sans: ${prefs.uiFont};
   --nx-typography-family-font-heading: ${prefs.headingFont ?? 'var(--nx-typography-family-font-sans)'};
   --nx-typography-family-font-mono: ${prefs.codeFont};
-${typographyScaleVariables(uiPx)}
+${typographyScaleVariables(uiPx, codePx)}
 }`),
-    codeFontSizeRule(`${codePx}px`),
   ];
   if (prefs.fontSmoothing) {
     blocks.push(

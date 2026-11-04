@@ -31,7 +31,7 @@ function familyHeads() {
 
 export async function checkTheme() {
   const primary = listToken('color', 'nx-color-primary-background');
-  const codeSize = listToken('typeScale', 'nx-typography-code-size');
+  const codeSize = listToken('typeScale', 'nx-typography-size-code');
   const fonts = exportTokens().meta.fonts ?? [];
   for (const theme of [LIGHT, DARK]) {
     const mode = theme.attribute ?? 'light';
@@ -69,7 +69,6 @@ export async function checkTheme() {
           families,
           loaded,
           codeBlock: sample('typography-code-block').fontSize,
-          mono: sample('nx:font-mono').fontSize,
         };
       },
       {
@@ -93,15 +92,10 @@ export async function checkTheme() {
     for (const { font, faces } of result.loaded) {
       if (faces === 0) fail(`${name}: tokens.css loads no ${font} face.`);
     }
-    for (const [what, size] of [
-      ['.typography-code-block', result.codeBlock],
-      ['nx:font-mono text', result.mono],
-    ] as const) {
-      if (size !== codeSize) {
-        fail(
-          `${name}: ${what} is ${size}, not the code size ${String(codeSize)}.`
-        );
-      }
+    if (result.codeBlock !== codeSize) {
+      fail(
+        `${name}: .typography-code-block is ${result.codeBlock}, not the code size ${String(codeSize)}.`
+      );
     }
     await page.close();
   }

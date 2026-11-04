@@ -5,10 +5,8 @@
 // appearance presets stay, `.dark` rules also match the page's
 // `data-theme="dark"`, and structural selectors reach through the wrapper the
 // canvas puts around each component. A canvas has no Preflight, so the file
-// carries Preflight's box-sizing rule, the one part of it nxds needs. Code
-// text reads the code size token, as the provider's rule sets it in apps.
+// carries Preflight's box-sizing rule, the one part of it nxds needs.
 import { createTokenCatalogue } from '@nxds/core/catalogue';
-import { codeFontSizeRule } from '@nxds/core/source/lib/code-font-size.ts';
 import { react18Src } from '@nxds/source-model/roots.mjs';
 import { compile } from '@tailwindcss/node';
 import { readdirSync, readFileSync } from 'node:fs';
@@ -16,7 +14,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import postcss from 'postcss';
 
-import { CODE_SIZE_TOKEN } from './tokens.ts';
 import { tolerateCanvasWrappers } from './wrapper-css.ts';
 
 const TAILWIND_DIR = path.dirname(
@@ -125,7 +122,7 @@ export async function buildStyles() {
   const tokenNames = new Set<string>(
     createTokenCatalogue().map((token) => token.name)
   );
-  return `${tolerateCanvasWrappers(
+  return tolerateCanvasWrappers(
     moveValuesToTokens(compiler.build(candidates()), tokenNames) + BOX_SIZING
-  )}${codeFontSizeRule(`var(--${CODE_SIZE_TOKEN})`)}\n`;
+  );
 }

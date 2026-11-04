@@ -94,9 +94,6 @@ function familyKey(variable: string | undefined) {
 /** A whole `var(--nx-*)` with no fallback, as the catalogue writes it. */
 const VAR_REFERENCE = /var\((--nx-[\w-]+)\)/g;
 
-/** The export's own type scale token: the size code text is set at. */
-export const CODE_SIZE_TOKEN = 'nx-typography-code-size';
-
 type Catalogue = readonly CatalogueToken[];
 type Resolver = ReturnType<typeof createResolver>;
 
@@ -256,8 +253,6 @@ interface Context {
   resolver: Resolver;
   reads: ComponentReads;
   stylesheetReads: ReadonlySet<string>;
-  /** The size code text is set at, such as `12px`. */
-  codeSize: string;
   /** Font stacks that replace the catalogue's, by `type.families` key. */
   families: Readonly<Record<string, string>>;
 }
@@ -299,20 +294,11 @@ function typeScaleTokens(context: Context) {
       .flatMap((token) => token.variants[0]?.declarations ?? [])
       .flatMap(({ value }) => [...variablesRead(value)])
   );
-  const steps = context.catalogue.filter(isTypeScaleStep).flatMap((token) => {
+  return context.catalogue.filter(isTypeScaleStep).flatMap((token) => {
     const readers = readersOf(context.reads, token.name);
     if (readers.length === 0 && !styleReads.has(token.name)) return [];
     return [listToken(token, context.resolver, readers, (role) => role)];
   });
-  return [
-    ...steps,
-    {
-      name: CODE_SIZE_TOKEN,
-      value: context.codeSize,
-      usage:
-        'Code text size. `typography-code-block`, `typography-code-inline` and the `nx:font-mono` text in components read it.',
-    },
-  ];
 }
 
 // `-0.800000011920929px` is a float32 artefact of the source file. Four
@@ -323,13 +309,10 @@ function length(value: string) {
   return `${Number(Number(match[1]).toFixed(4))}${match[2] ?? ''}`;
 }
 
-const isCodeStyle = (token: CatalogueToken) => token.group === 'code';
-
 function typeStyle(
   token: CatalogueToken,
-  { resolver, codeSize }: Context
+  resolve: Resolver['resolve']
 ): TypeStyle {
-  const resolve = resolver.resolve;
   const declarations = new Map(
     (token.variants[0]?.declarations ?? []).map((declaration) => [
       declaration.property,
@@ -341,9 +324,7 @@ function typeStyle(
     return value === undefined ? undefined : resolve(value, 'light');
   };
   const [familyVar] = variablesRead(declarations.get('font-family') ?? '');
-  const fontSize = isCodeStyle(token)
-    ? codeSize
-    : length(read('font-size') ?? '');
+  const fontSize = length(read('font-size') ?? '');
   if (!fontSize) {
     throw new Error(`tokens.json: ${token.name} has no literal font size.`);
   }
@@ -371,7 +352,7 @@ function typeFamily(context: Context) {
   const groups: TokensFile['type']['groups'] = [];
   const used = new Set<string>();
   for (const token of catalogue.filter(isTypographyStyle)) {
-    const style = typeStyle(token, context);
+    const style = typeStyle(token, resolver.resolve);
     let group = groups.find((candidate) => candidate.name === token.group);
     if (!group) {
       group = { name: token.group, family: style.family ?? 'sans', styles: [] };
@@ -404,8 +385,7 @@ function typeFamily(context: Context) {
 
 /**
  * Each text style's class body in tokens.css, by style name: the
- * declarations of the `nx:typography-*` utility it mirrors. The code styles
- * read the code size token instead of a type scale step.
+ * declarations of the `nx:typography-*` utility it mirrors.
  */
 export function typeStyleRules(): Map<string, string[]> {
   return new Map(
@@ -413,10 +393,8 @@ export function typeStyleRules(): Map<string, string[]> {
       .filter(isTypographyStyle)
       .map((token) => [
         bareName(token.name).replace(/^nx-/, ''),
-        (token.variants[0]?.declarations ?? []).map(({ property, value }) =>
-          property === 'font-size' && isCodeStyle(token)
-            ? `${property}: var(--${CODE_SIZE_TOKEN});`
-            : `${property}: ${value};`
+        (token.variants[0]?.declarations ?? []).map(
+          ({ property, value }) => `${property}: ${value};`
         ),
       ])
   );
@@ -451,7 +429,6 @@ export function buildTokens(
     resolver: createResolver(catalogue, appearance),
     reads,
     stylesheetReads,
-    codeSize: `${appearance.prefs.codeFontSize}px`,
     families,
   };
   const meta: TokensFile['meta'] = {

@@ -432,9 +432,7 @@ describe('appearancePrefsToCss', () => {
     expect(css).toContain('--nx-typography-size-sm: 32px;');
     expect(css).toContain('--nx-typography-line-height-xxs: 27.4286px;');
     expect(css).toContain('--nx-typography-line-height-sm: 45.7143px;');
-    expect(css).toContain(
-      '.nx\\:font-mono, .nx\\:typography-code-block, .nx\\:typography-code-inline { font-size: 12px; }'
-    );
+    expect(css).toContain('--nx-typography-size-code: 12px;');
   });
 
   it('emits a chosen heading font in place of the UI font', () => {
