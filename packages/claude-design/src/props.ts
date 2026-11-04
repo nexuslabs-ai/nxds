@@ -522,11 +522,13 @@ function attributeType(attribute: Attribute, ownType: string) {
   }
 }
 
-/** The most options the props panel shows as a dropdown. A longer union gets a text field. */
+/**
+ * The most options the props panel shows as a dropdown. A longer union gets a
+ * text field, and an icon set past it fails the build.
+ */
 const DROPDOWN_LIMIT = 400;
 
 function optionCount(attribute: Attribute) {
-  if (attribute.kind === 'icon') return iconSet().length;
   if (attribute.kind !== 'scalar') return 0;
   return attribute.literals.length + (attribute.boolean ? 2 : 0);
 }
@@ -538,6 +540,7 @@ function controlOf(attribute: Attribute | null, type: string): Control | null {
   if (type === 'boolean') return 'toggle';
   if (type === 'number') return 'number';
   if (type === 'string') return 'text';
+  if (attribute.kind === 'icon') return 'dropdown';
   return optionCount(attribute) > DROPDOWN_LIMIT ? 'text' : 'dropdown';
 }
 
