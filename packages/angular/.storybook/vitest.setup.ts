@@ -1,15 +1,4 @@
-import * as a11yAddonAnnotations from '@storybook/addon-a11y/preview';
-import { setProjectAnnotations } from '@storybook/angular-vite';
-import { afterEach, beforeAll, beforeEach } from 'vitest';
-
-import * as projectAnnotations from './preview';
-
-const annotations = setProjectAnnotations([
-  a11yAddonAnnotations,
-  projectAnnotations,
-]);
-
-beforeAll(annotations.beforeAll);
+import { afterEach, beforeEach } from 'vitest';
 
 // Angular reports a template that binds an unknown element or input with
 // console.error and carries on rendering. Fail the story instead.

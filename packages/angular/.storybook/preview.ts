@@ -1,13 +1,32 @@
 import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  input,
+} from '@angular/core';
+import {
   BASE_TONE_OPTIONS,
   BRAND_COLOR_PRESETS,
   CORNER_OPTIONS,
   DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
   ELEVATION_OPTIONS,
+  type NxdsAppearanceState,
+  sanitizeNxdsAppearance,
   STROKE_OPTIONS,
 } from '@nxds/core';
-import type { Preview } from '@storybook/angular-vite';
+import {
+  applicationConfig,
+  componentWrapperDecorator,
+  moduleMetadata,
+  type Preview,
+} from '@storybook/angular-vite';
+
+import {
+  NxdsAppearance,
+  provideNxdsAppearance,
+} from '../src/components/appearance';
 
 import './preview.css';
 
@@ -48,6 +67,41 @@ const MODE_OPTIONS = [
 
 function toolbarItems(options: readonly { value: string; label: string }[]) {
   return options.map(({ value, label }) => ({ value, title: label }));
+}
+
+const PREF_KEYS = Object.keys(DEFAULT_NXDS_APPEARANCE.prefs);
+
+// The globals are sanitized by core, so an unknown value falls back to the
+// default. Preference globals such as `reduceMotion` land in `prefs`.
+function appearanceStateFromGlobals(
+  globals: Record<string, unknown>
+): NxdsAppearanceState {
+  const prefs = Object.fromEntries(
+    Object.entries(globals).filter(([key]) => PREF_KEYS.includes(key))
+  );
+  return sanitizeNxdsAppearance({
+    ...DEFAULT_NXDS_APPEARANCE,
+    ...globals,
+    prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs, ...prefs },
+  });
+}
+
+@Component({
+  selector: 'nx-story-appearance',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'nx:contents' },
+  template:
+    '<div class="nx:flex nx:min-h-svh nx:items-center nx:justify-center nx:bg-background nx:text-foreground nx:typography-body-default"><ng-content /></div>',
+})
+class StoryAppearance {
+  readonly globals = input.required<Record<string, unknown>>();
+
+  constructor() {
+    const appearance = inject(NxdsAppearance);
+    effect(() =>
+      appearance.setState(appearanceStateFromGlobals(this.globals()))
+    );
+  }
 }
 
 const preview: Preview = {
@@ -187,6 +241,13 @@ const preview: Preview = {
       },
     },
   },
+  decorators: [
+    applicationConfig({
+      providers: [provideNxdsAppearance({ storageKey: false })],
+    }),
+    moduleMetadata({ imports: [StoryAppearance] }),
+    componentWrapperDecorator(StoryAppearance, ({ globals }) => ({ globals })),
+  ],
 };
 
 export default preview;
