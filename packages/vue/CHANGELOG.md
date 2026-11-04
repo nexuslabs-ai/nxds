@@ -1,5 +1,13 @@
 # @nxds/vue
 
+## 0.11.1
+
+### Patch Changes
+
+- Updated dependencies [c004e3a]
+  - @nxds/core@0.13.0
+  - @nxds/tailwind@0.3.0
+
 ## 0.11.0
 
 ### Minor Changes
