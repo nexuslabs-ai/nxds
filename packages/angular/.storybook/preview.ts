@@ -26,7 +26,7 @@ import {
 import {
   NxdsAppearance,
   provideNxdsAppearance,
-} from '../src/components/appearance';
+} from '../src/components/appearance/appearance';
 
 import './preview.css';
 

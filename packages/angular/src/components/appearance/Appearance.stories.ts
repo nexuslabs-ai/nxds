@@ -15,7 +15,7 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { NxButton } from '../button/button';
 
-import { NxdsAppearance, provideNxdsAppearance } from '.';
+import { NxdsAppearance, provideNxdsAppearance } from './appearance';
 
 @Component({
   selector: 'nx-appearance-controls',
