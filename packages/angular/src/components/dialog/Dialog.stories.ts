@@ -568,3 +568,16 @@ export const OverlayClick: Story = {
     await expectClosed();
   },
 };
+
+export const LocksPageScroll: Story = {
+  play: async ({ canvasElement }) => {
+    const before = document.body.style.overflow;
+
+    await openDialog(canvasElement);
+    await expect(document.body.style.overflow).toBe('hidden');
+
+    await userEvent.keyboard('{Escape}');
+    await expectClosed();
+    await expect(document.body.style.overflow).toBe(before);
+  },
+};

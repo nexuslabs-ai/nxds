@@ -1,10 +1,11 @@
-import { NgTemplateOutlet } from '@angular/common';
+import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import {
   booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
   contentChild,
+  DestroyRef,
   Directive,
   effect,
   forwardRef,
@@ -61,6 +62,30 @@ export class NxDialogContent {
 }
 
 const NX_DIALOG = new InjectionToken<NxDialog>('NxDialog');
+
+let openPanels = 0;
+let unlockPageScroll = () => {};
+
+/**
+ * Stops the page scrolling behind an open dialog until the last one closes.
+ * The body takes the scrollbar's width as padding, so the page doesn't shift.
+ */
+function lockPageScroll() {
+  const { body, documentElement } = inject(DOCUMENT);
+  if (openPanels++ === 0) {
+    const { overflow, paddingRight } = body.style;
+    const scrollbar = window.innerWidth - documentElement.clientWidth;
+    body.style.overflow = 'hidden';
+    if (scrollbar > 0) body.style.paddingRight = `${scrollbar}px`;
+    unlockPageScroll = () => {
+      body.style.overflow = overflow;
+      body.style.paddingRight = paddingRight;
+    };
+  }
+  inject(DestroyRef).onDestroy(() => {
+    if (--openPanels === 0) unlockPageScroll();
+  });
+}
 
 /** Ids the panel names itself with, filled in by its title and descriptions. */
 class DialogLabels {
@@ -250,6 +275,10 @@ class NxDialogPanel {
   protected readonly classes = computed(() =>
     cn(overlayContentVariants(), this.dialog.content().userClass())
   );
+
+  constructor() {
+    lockPageScroll();
+  }
 }
 
 /**
