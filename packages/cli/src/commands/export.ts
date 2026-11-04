@@ -53,11 +53,14 @@ export type ExportOptions = {
 
 type ManifestEntry = { path: string; sha256: string };
 
-/** `files.json`: each file the release ships, as the package build wrote it. `project` paths are under `project/`, and `root` files sit beside it. `theme` is the module that themes an export, beside them too. Releases from before themes have none. */
+/** The module that themes an export, beside `project/`. */
+const THEME_FILE = 'theme.js';
+
+/** `files.json`: each file the release ships, as the package build wrote it. `project` paths are under `project/`, and `root` files sit beside it. `theme` is theme.js, beside them too. Releases from before themes have none. */
 type Manifest = {
   project: ManifestEntry[];
   root: ManifestEntry[];
-  theme?: ManifestEntry[];
+  theme?: ManifestEntry;
 };
 
 type Packument = {
@@ -249,12 +252,12 @@ const isRootName = (name: string) =>
 const sha256 = (bytes: Buffer) =>
   createHash('sha256').update(bytes).digest('hex');
 
+const isEntry = (value: unknown): value is ManifestEntry =>
+  typeof (value as ManifestEntry | undefined)?.path === 'string' &&
+  typeof (value as ManifestEntry).sha256 === 'string';
+
 const isEntryList = (value: unknown): value is ManifestEntry[] =>
-  Array.isArray(value) &&
-  value.every(
-    (entry) =>
-      typeof entry?.path === 'string' && typeof entry.sha256 === 'string'
-  );
+  Array.isArray(value) && value.every(isEntry);
 
 function readManifest(root: string): Manifest {
   const file = path.join(root, 'files.json');
@@ -267,10 +270,13 @@ function readManifest(root: string): Manifest {
   if (
     !isEntryList(value?.project) ||
     !isEntryList(value.root) ||
-    !(value.theme === undefined || isEntryList(value.theme))
+    !(
+      value.theme === undefined ||
+      (isEntry(value.theme) && value.theme.path === THEME_FILE)
+    )
   ) {
     throw new CliError(
-      `${file} must hold project and root, and may hold theme, each a JSON array of { path, sha256 } entries.`
+      `${file} must hold project and root, each a JSON array of { path, sha256 } entries, and may hold theme, the { path, sha256 } entry for ${THEME_FILE}.`
     );
   }
   return { project: value.project, root: value.root, theme: value.theme };
@@ -309,8 +315,7 @@ function readRelease(root: string) {
       throw new CliError(`files.json lists ${file}, outside project/.`);
     }
   }
-  const themeEntries = manifest.theme ?? [];
-  for (const { path: file } of [...manifest.root, ...themeEntries]) {
+  for (const { path: file } of manifest.root) {
     if (!isRootName(file)) {
       throw new CliError(
         `files.json lists ${file || 'an empty path'} as a root file. A root file is one name beside project/, other than project, files.json and removed.json.`
@@ -325,7 +330,9 @@ function readRelease(root: string) {
   return {
     files: readEntries(projectDir, manifest.project, 'project/'),
     rootFiles: readEntries(root, manifest.root, ''),
-    themeModule: [...readEntries(root, themeEntries, '').values()][0],
+    themeModule: manifest.theme
+      ? readEntries(root, [manifest.theme], '').get(THEME_FILE)
+      : undefined,
   };
 }
 
@@ -464,7 +471,8 @@ const isThemeModule = (value: unknown): value is ThemeModule =>
   value !== null &&
   (value as ThemeModule).api === 1 &&
   Array.isArray((value as ThemeModule).flags) &&
-  typeof (value as ThemeModule).render === 'function';
+  typeof (value as ThemeModule).render === 'function' &&
+  typeof (value as ThemeModule).title === 'function';
 
 /** The release's theme module, imported from the bytes files.json's hash checked. */
 async function importTheme(bytes: Buffer, version: string) {
@@ -500,25 +508,35 @@ const isRendered = (value: unknown): value is RenderedTheme => {
   );
 };
 
-/** What `theme` renders for `flags`. A value it rejects is an error naming where the flag came from. */
+/** `error`, thrown by theme.js, as the error to report. A flag it rejects names where the flag came from. */
+function themeError(
+  error: unknown,
+  { passed, indexFile, version }: ThemeSource
+) {
+  const { message, flag } = error as Error & { flag?: unknown };
+  if (typeof flag === 'string' && flag in passed) {
+    return new UsageError(message);
+  }
+  if (typeof flag === 'string' && indexFile !== undefined) {
+    return new UsageError(
+      `${indexFile} theme: ${message} Pass --${flag} <value> to change it, or --${flag}= to reset it.`
+    );
+  }
+  return new CliError(`nxds ${version}'s theme.js failed: ${message}`);
+}
+
+/** What `theme` renders for `flags`. */
 function renderTheme(
   theme: ThemeModule,
   flags: ThemeFlags,
-  { passed, indexFile, version }: ThemeSource
+  source: ThemeSource
 ) {
+  const { version } = source;
   let rendered: unknown;
   try {
     rendered = theme.render(flags);
   } catch (error) {
-    const { message } = error as Error;
-    const flag = /^--([\w-]+) /.exec(message)?.[1];
-    if (flag !== undefined && flag in passed) throw new UsageError(message);
-    if (flag !== undefined && indexFile !== undefined) {
-      throw new UsageError(
-        `${indexFile} theme: ${message} Pass --${flag} <value> to change it, or --${flag}= to reset it.`
-      );
-    }
-    throw new CliError(`nxds ${version}'s theme.js failed: ${message}`);
+    throw themeError(error, source);
   }
   if (!isRendered(rendered)) {
     throw new CliError(
@@ -526,6 +544,24 @@ function renderTheme(
     );
   }
   return rendered;
+}
+
+/**
+ * The title an export in theme `stored` gave the system, so a title that
+ * still matches it is one the person never renamed. Undefined when the
+ * release can't say.
+ */
+function storedThemeTitle(
+  stored: ThemeFlags,
+  module: ThemeModule | undefined,
+  defaultTitle: string
+) {
+  if (Object.keys(stored).length === 0) return defaultTitle;
+  try {
+    return module?.title(stored);
+  } catch {
+    return undefined;
+  }
 }
 
 function exportedIndex(files: Map<string, Buffer>) {
@@ -543,9 +579,10 @@ function applyTheme(
   files: Map<string, Buffer>,
   rootFiles: Map<string, Buffer>
 ) {
-  for (const [file, contents] of Object.entries(rendered.project)) {
-    files.set(file, Buffer.from(contents));
-  }
+  const { project } = rendered;
+  files.set('tokens.json', Buffer.from(project['tokens.json']));
+  files.set('tokens.css', Buffer.from(project['tokens.css']));
+  files.set('README.md', Buffer.from(project['README.md']));
   files.set(
     'design-system.json',
     jsonBytes({ ...exportedIndex(files), ...rendered.index })
@@ -643,26 +680,31 @@ export async function exportClaudeDesign(
     const indexFile = options.index && path.resolve(cwd, options.index);
     const current = indexFile ? readIndex(indexFile) : undefined;
     const passed = options.theme;
-    const theme = layeredTheme(
-      current && indexFile ? storedTheme(current, indexFile) : {},
-      passed
-    );
+    const stored = current && indexFile ? storedTheme(current, indexFile) : {};
+    const theme = layeredTheme(stored, passed);
     const source: ThemeSource = {
       passed,
       indexFile: options.index,
       version: pkg.version,
     };
+    const defaultTitle = exportedIndex(files).title;
+    const module =
+      themeModule &&
+      (Object.keys(theme).length > 0 || Object.keys(stored).length > 0)
+        ? await importTheme(themeModule, pkg.version)
+        : undefined;
     let themed: ThemeFlags = {};
     if (Object.keys(theme).length > 0) {
-      if (!themeModule) throw noThemeModuleError(theme, source);
-      const module = await importTheme(themeModule, pkg.version);
+      if (!module) throw noThemeModuleError(theme, source);
       assertThemeFlags(theme, module.flags, source);
       const rendered = renderTheme(module, theme, source);
       applyTheme(rendered, files, rootFiles);
       themed = rendered.index.theme;
     }
     if (current && indexFile) {
-      mergeIndex(files, current, indexFile, Object.keys(passed).length > 0);
+      const retitle =
+        current['title'] === storedThemeTitle(stored, module, defaultTitle);
+      mergeIndex(files, current, indexFile, retitle);
     }
     const exported = new Set(
       [...files.keys()].map((file) => `project/${file}`)

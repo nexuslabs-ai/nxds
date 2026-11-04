@@ -7,7 +7,7 @@
 export const THEME_FLAGS_LABEL = 'Theme flags:';
 
 /**
- * The setup prompt. With `flags`, such as `--brand-color "#e11d48"`, it adds
+ * The setup prompt. With `flags`, such as `--brand-color '#e11d48'`, it adds
  * a theme line for Claude to pass to the export command as written.
  */
 export function claudeDesignPrompt(flags = '') {

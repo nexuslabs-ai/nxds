@@ -12,12 +12,16 @@ export const isExportThemeFlag = (flag: string) =>
 
 export type ThemeFlag = { flag: string; value: string };
 
-/** A flag value as a shell reads it: quoted unless it's a plain word. */
+/**
+ * A flag value as a shell reads it: single-quoted unless it's a plain word,
+ * so no `$` or backtick in it expands.
+ */
 function shellValue(value: string) {
-  return /^[\w.-]+$/.test(value) ? value : `"${value}"`;
+  if (/^[\w.-]+$/.test(value)) return value;
+  return `'${value.replaceAll("'", `'\\''`)}'`;
 }
 
-/** `flags` as command-line flags, such as `--brand-color "#e11d48" --corners round`. */
+/** `flags` as command-line flags, such as `--brand-color '#e11d48' --corners round`. */
 export function formatThemeFlags(flags: readonly ThemeFlag[]) {
   return flags
     .map(({ flag, value }) => `--${flag} ${shellValue(value)}`)

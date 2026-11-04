@@ -67,8 +67,8 @@ export function buildSystemIndex({
 /**
  * The export's index laid over the one a system already has: the system keeps
  * its creation marker and anything a person added on the page, and takes the
- * export's theme. It keeps its title too, unless `retitle`, when the theme
- * changed, gives it the export's.
+ * export's theme. It keeps its title too, unless `retitle`, when the person
+ * never renamed the system, gives it the export's.
  */
 export function mergeSystemIndex(
   current: Record<string, unknown>,

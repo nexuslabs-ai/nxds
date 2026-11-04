@@ -63,7 +63,20 @@ export interface ThemeModule {
   api: 1;
   /** The theme flags this release takes. */
   flags: readonly string[];
+  /** Throws a `ThemeFlagError` on a flag or value the release doesn't take. */
   render(flags: ThemeFlags): RenderedTheme;
+  /** The title a system in theme `flags` gets. Throws as `render` does. */
+  title(flags: ThemeFlags): string;
+}
+
+/** A theme flag, or its value, that the export doesn't take. `flag` names it. */
+export class ThemeFlagError extends Error {
+  readonly flag: string;
+
+  constructor(flag: string, message: string) {
+    super(message);
+    this.flag = flag;
+  }
 }
 
 /** The files a theme rewrites under `project/`, what it sets in design-system.json, and its SETUP.md. */
@@ -86,16 +99,28 @@ const FONT_FLAGS: readonly [string, FamilyKey][] = [
 ];
 
 /**
- * The appearance `flags` set. Throws on a flag the export doesn't take, and,
- * with core's own message, on a value its field doesn't take.
+ * The appearance `flags` set. Throws a `ThemeFlagError` on a flag the export
+ * doesn't take, and, with core's own message, on a value its field doesn't
+ * take.
  */
 function appearanceOf(flags: ThemeFlags): NxdsAppearanceState {
   for (const flag of Object.keys(flags)) {
     if (!EXPORT_THEME_FLAGS.includes(flag)) {
-      throw new Error(`--${flag} isn't a theme flag the export takes.`);
+      throw new ThemeFlagError(
+        flag,
+        `--${flag} isn't a theme flag the export takes.`
+      );
     }
   }
-  return applyNxdsThemeFlags(DEFAULT_NXDS_THEME, flags).appearance;
+  let theme = DEFAULT_NXDS_THEME;
+  for (const { flag, value } of orderedThemeFlags(flags)) {
+    try {
+      theme = applyNxdsThemeFlags(theme, { [flag]: value });
+    } catch (error) {
+      throw new ThemeFlagError(flag, (error as Error).message);
+    }
+  }
+  return theme.appearance;
 }
 
 type Font = (typeof FONT_OPTIONS)[number];
@@ -144,8 +169,7 @@ function brandName(color: string) {
  * The system's title: `nxds`, then its brand and its surface tone when either
  * differs from nxds's, such as `nxds · Rose on stone`.
  */
-export function themeTitle(flags: ThemeFlags) {
-  const { brandColor, surfaceTone } = appearanceOf(flags);
+function themeTitle({ brandColor, surfaceTone }: NxdsAppearanceState) {
   const brand = brandName(brandColor);
   const tone = label(BASE_TONE_OPTIONS, surfaceTone);
   if (brand) return `${DEFAULT_TITLE} · ${brand} on ${tone}`;
@@ -155,16 +179,23 @@ export function themeTitle(flags: ThemeFlags) {
   return DEFAULT_TITLE;
 }
 
+/** The brand colour in a phrase: its preset's label and its hex, its hex alone, or `near-black` for the default brand. */
+function brandPhrase(color: string) {
+  const preset = findBrandColorPreset(color);
+  if (preset?.value === 'default') return 'near-black';
+  if (preset) return `${preset.label} (${hex(color)})`;
+  return hex(color);
+}
+
 /** The appearance as a phrase: "a near-black brand colour on zinc surfaces, …". */
 function appearancePhrase(appearance: NxdsAppearanceState) {
-  const brand = brandName(appearance.brandColor);
   const contrast =
     appearance.lightContrast === DEFAULT_NXDS_APPEARANCE.lightContrast &&
     appearance.darkContrast === DEFAULT_NXDS_APPEARANCE.darkContrast
       ? ''
       : `, at ${appearance.lightContrast} contrast in Light and ${appearance.darkContrast} in Dark`;
   return [
-    `a ${brand ? `${brand} (${hex(appearance.brandColor)})` : 'near-black'} brand colour`,
+    `a ${brandPhrase(appearance.brandColor)} brand colour`,
     ` on ${label(BASE_TONE_OPTIONS, appearance.surfaceTone)} surfaces`,
     `, ${label(DENSITY_OPTIONS, appearance.density)} density`,
     `, ${label(CORNER_OPTIONS, appearance.corners)} corners`,
@@ -194,13 +225,18 @@ function joinAnd(items: readonly string[]) {
   return `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`;
 }
 
-/** Each flag, validated, in the order `init` lists them. */
+/** Each flag, in the order `init` lists them, and the appearance they set. */
 function validFlags(flags: ThemeFlags) {
-  appearanceOf(flags);
-  return Object.fromEntries(
+  const appearance = appearanceOf(flags);
+  const ordered: ThemeFlags = Object.fromEntries(
     orderedThemeFlags(flags).map(({ flag, value }) => [flag, value])
   );
+  return { flags: ordered, appearance };
 }
+
+/** The title a system in theme `flags` gets. */
+export const renderTitle = (flags: ThemeFlags) =>
+  themeTitle(appearanceOf(flags));
 
 /** The `Sales overview` check: the faces the sampler's title and body text are set in. */
 function facesCheck(fonts: ReadonlyMap<FamilyKey, Font>) {
@@ -213,7 +249,7 @@ function facesCheck(fonts: ReadonlyMap<FamilyKey, Font>) {
       : sans
         ? `The \`Sales overview\` title is set in ${heading.label}, and body text in ${sans.label}.`
         : `The \`Sales overview\` title is set in ${heading.label}.`;
-  return `- ${faces} The console shows no failed request to fonts.googleapis.com.`;
+  return `${faces} The console shows no failed request to fonts.googleapis.com.`;
 }
 
 /** The light and dark primary fill, as hex, for the sampler check. */
@@ -225,10 +261,15 @@ function primaryFill(tokens: TokensFile) {
     throw new Error('tokens.json: no nx-color-primary-background.');
   }
   if (typeof value === 'string') return { light: hex(value), dark: hex(value) };
-  return { light: hex(value.light ?? ''), dark: hex(value.dark ?? '') };
+  if (value.light === undefined || value.dark === undefined) {
+    throw new Error(
+      'tokens.json: nx-color-primary-background has no light or no dark value.'
+    );
+  }
+  return { light: hex(value.light), dark: hex(value.dark) };
 }
 
-/** The sampler checks a theme adds to SETUP.md's step 5, one bullet a line. */
+/** The sampler checks a theme adds to SETUP.md's step 5, each a bullet on a new line. */
 function themeChecks(
   theme: ThemeFlags,
   tokens: TokensFile,
@@ -242,25 +283,25 @@ function themeChecks(
         ? ' It stays the same with `mode` set to `dark`.'
         : ` With \`mode\` set to \`dark\`, close to \`${fill.dark}\`.`;
     checks.push(
-      `- The \`New deal\` button and the \`A\` workspace mark are filled with the brand colour, close to \`${fill.light}\`.${dark}`
+      `The \`New deal\` button and the \`A\` workspace mark are filled with the brand colour, close to \`${fill.light}\`.${dark}`
     );
   }
   const faces = facesCheck(fonts);
   if (faces) checks.push(faces);
-  return checks.map((check) => `${check}\n`).join('');
+  return checks.map((check) => `\n- ${check}`).join('');
 }
 
 /**
  * The system `flags` theme: its token files, README, index fields and setup
- * guide. Throws on a flag the export doesn't take or a value it doesn't take.
+ * guide. Throws a `ThemeFlagError` on a flag or a value the export doesn't
+ * take.
  */
 export function renderTheme(
   input: ThemeInput,
   flags: ThemeFlags
 ): RenderedTheme {
-  const theme = validFlags(flags);
+  const { flags: theme, appearance } = validFlags(flags);
   const themed = Object.keys(theme).length > 0;
-  const appearance = appearanceOf(theme);
   const fonts = themeFonts(theme);
   const tokens = buildTokens(input, {
     appearance,
@@ -271,7 +312,7 @@ export function renderTheme(
     fonts: [...new Set([...fonts.values()].map((font) => font.label))],
   });
   const phrase = appearancePhrase(appearance);
-  const title = themeTitle(theme);
+  const title = themeTitle(appearance);
   return {
     project: {
       'tokens.json': `${JSON.stringify(tokens, null, 2)}\n`,

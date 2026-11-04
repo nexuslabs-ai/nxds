@@ -338,7 +338,7 @@ async function main() {
   const released = {
     project: fileList(projectDir, files),
     root: fileList(distDir, ROOT_FILES),
-    theme: fileList(distDir, [THEME_FILE]),
+    theme: fileList(distDir, [THEME_FILE])[0],
   };
   writeFileSync(
     path.join(distDir, 'files.json'),

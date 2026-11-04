@@ -11,7 +11,7 @@ npx nxds-cli@latest export claude-design
 Theme it with the `init` theme flags, except `--mode` and `--icons`:
 
 ```bash
-npx nxds-cli@latest export claude-design --brand-color "#e11d48" --corners round
+npx nxds-cli@latest export claude-design --brand-color '#e11d48' --corners round
 ```
 
 The command writes a `nxds-design-system/` folder. Its `SETUP.md` walks Claude through publishing `project/` as a Design System artifact, installing it on a canvas and checking it.

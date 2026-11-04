@@ -3,6 +3,7 @@
 import {
   EXPORT_THEME_FLAGS,
   renderTheme,
+  renderTitle,
   type ThemeFlags,
   type ThemeInput,
   type ThemeModule,
@@ -31,4 +32,5 @@ export default {
   api: 1,
   flags: EXPORT_THEME_FLAGS,
   render: (theme: ThemeFlags) => renderTheme(input, theme),
+  title: renderTitle,
 } satisfies ThemeModule;

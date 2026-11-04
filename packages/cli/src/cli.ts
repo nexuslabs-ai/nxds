@@ -247,9 +247,17 @@ function program(
         return value === undefined ? [] : [[flag, value]];
       })
     );
+    const { out, release, source, npmRegistry, index, existing, overwrite } =
+      command.opts<Omit<ExportOptions, 'theme'>>();
     done(
       await exportClaudeDesign(cwdOf(command), {
-        ...command.opts<Omit<ExportOptions, 'theme'>>(),
+        out,
+        release,
+        source,
+        npmRegistry,
+        index,
+        existing,
+        overwrite,
         theme,
       })
     );

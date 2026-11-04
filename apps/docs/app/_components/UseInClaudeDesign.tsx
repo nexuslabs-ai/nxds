@@ -1,5 +1,7 @@
 'use client';
 
+import * as React from 'react';
+
 import {
   formatThemeFlags,
   isExportThemeFlag,
@@ -17,7 +19,7 @@ import { useIconLibrary } from '../_lib/icon-library';
 import { IconCheck, IconCopy, IconX } from '../_lib/switchable-icons';
 import { useCopyFeedback } from '../_lib/use-copy-feedback';
 
-import { Button } from './nxds';
+import { Button, Textarea } from './nxds';
 
 const COPY_STATES = {
   idle: { icon: IconCopy, label: 'Use in Claude Design', message: '' },
@@ -29,7 +31,7 @@ const COPY_STATES = {
   failed: {
     icon: IconX,
     label: 'Failed',
-    message: 'Could not copy the prompt',
+    message: 'Could not copy the prompt. Select it below and copy it.',
   },
 };
 
@@ -55,6 +57,7 @@ export function UseInClaudeDesign({ className }: { className?: string }) {
   const { state } = useNxdsAppearance();
   const iconLibrary = useIconLibrary();
   const copy = useCopyFeedback();
+  const [copyFailed, setCopyFailed] = React.useState(false);
   const theme: NxdsTheme = { appearance: state, iconLibrary };
   const prompt = claudeDesignPrompt(
     formatThemeFlags(
@@ -69,6 +72,7 @@ export function UseInClaudeDesign({ className }: { className?: string }) {
       copy.settle('copied');
     } catch {
       copy.settle('failed');
+      setCopyFailed(true);
     }
   };
 
@@ -85,6 +89,15 @@ export function UseInClaudeDesign({ className }: { className?: string }) {
       >
         {label}
       </Button>
+      {copyFailed && (
+        <Textarea
+          readOnly
+          aria-label="Claude Design prompt"
+          rows={6}
+          value={prompt}
+          onFocus={(event) => event.currentTarget.select()}
+        />
+      )}
       {notes.length > 0 && (
         <p className="nx:m-0 nx:typography-body-small nx:text-muted-foreground">
           {notes.join(' ')}

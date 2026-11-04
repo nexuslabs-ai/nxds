@@ -4,7 +4,6 @@
 import { build } from 'esbuild';
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 import type { ThemeInput, ThemeModule } from './theme.ts';
 import type { BakedThemeInput } from './theme-entry.ts';
@@ -32,7 +31,10 @@ function baked({ reads, stylesheetReads, ...rest }: ThemeInput) {
   return input;
 }
 
-/** Writes `file` and imports it. Throws when it bundled a build-only package. */
+/**
+ * Writes `file` and imports its bytes from a `data:` URL, as nxds-cli does.
+ * Throws when it bundled a build-only package.
+ */
 export async function buildThemeModule(
   input: ThemeInput,
   file: string
@@ -59,7 +61,9 @@ export async function buildThemeModule(
   const output = result.outputFiles[0];
   if (!output) throw new Error('theme.js: esbuild wrote no output.');
   writeFileSync(file, output.text);
-  const imported = (await import(pathToFileURL(file).href)) as {
+  const imported = (await import(
+    `data:text/javascript;base64,${Buffer.from(output.text).toString('base64')}`
+  )) as {
     default: ThemeModule;
   };
   return { module: imported.default, bytes: Buffer.byteLength(output.text) };

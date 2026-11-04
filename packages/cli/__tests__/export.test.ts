@@ -517,7 +517,30 @@ describe('nxds-cli export claude-design', () => {
 
     expect(exitCode).toBe(EXIT_CODES.error);
     expect(body.error).toMatch(
-      /files\.json must hold project and root, and may hold theme, each a JSON array/
+      /files\.json must hold project and root, each a JSON array/
+    );
+  });
+
+  it.each([
+    ['a list', (entry: unknown) => [entry]],
+    ['another file', (entry: object) => ({ ...entry, path: 'theme.mjs' })],
+  ])('refuses a files.json whose theme is %s', async (_, theme) => {
+    const { source, cwd } = setup({
+      'files.json': JSON.stringify({
+        project: manifestEntries(PROJECT),
+        root: manifestEntries(ROOT),
+        theme: theme(manifestEntries({ 'theme.js': THEME_JS })[0] ?? {}),
+      }),
+    });
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toMatch(
+      /may hold theme, the \{ path, sha256 \} entry for theme\.js/
     );
   });
 
@@ -826,22 +849,33 @@ describe('nxds-cli export claude-design', () => {
  * the theme into each file it renders, so a test can read back what it got.
  */
 const THEME_JS = `const CORNERS = ['square', 'subtle', 'round'];
+function check(theme) {
+  const corners = theme.corners;
+  if (corners !== undefined && !CORNERS.includes(corners)) {
+    throw Object.assign(
+      new Error('--corners "' + corners + '" isn\\'t one of ' + CORNERS.join(', ') + '.'),
+      { flag: 'corners' }
+    );
+  }
+}
+const title = (theme) =>
+  theme['brand-color'] ? 'nxds · ' + theme['brand-color'] : 'nxds';
 export default {
   api: 1,
   flags: ${JSON.stringify(EXPORT_THEME_FLAGS)},
+  title(theme) {
+    check(theme);
+    return title(theme);
+  },
   render(theme) {
-    const corners = theme.corners;
-    if (corners !== undefined && !CORNERS.includes(corners)) {
-      throw new Error('--corners "' + corners + '" isn\\'t one of ' + CORNERS.join(', ') + '.');
-    }
-    const brand = theme['brand-color'];
+    check(theme);
     return {
       project: {
         'tokens.json': JSON.stringify({ meta: { theme } }),
         'tokens.css': '/* themed */\\n',
         'README.md': 'Themed with ' + JSON.stringify(theme) + '\\n',
       },
-      index: { title: brand ? 'nxds · ' + brand : 'nxds', theme },
+      index: { title: title(theme), theme },
       guide: (files) => '# Set up nxds, ' + files + ' files, ' + JSON.stringify(theme) + '\\n',
     };
   },
@@ -855,7 +889,7 @@ function themedSetup(themeJs = THEME_JS) {
     'files.json': JSON.stringify({
       project: manifestEntries(PROJECT),
       root: manifestEntries(ROOT),
-      theme: manifestEntries({ 'theme.js': themeJs }),
+      theme: manifestEntries({ 'theme.js': themeJs })[0],
     }),
   });
 }
@@ -939,7 +973,7 @@ describe('nxds-cli export claude-design with theme flags', () => {
     );
 
     expect(stdout).toContain(
-      'Themed with --brand-color "oklch(0.6 0.2 20)" --corners round.'
+      "Themed with --brand-color 'oklch(0.6 0.2 20)' --corners round."
     );
   });
 
@@ -1096,13 +1130,12 @@ describe('nxds-cli export claude-design with theme flags', () => {
     expect(readOut(cwd, 'project/tokens.json')).toBe(PROJECT['tokens.json']);
   });
 
-  it("keeps a system's title on an update, and retitles it when flags change the theme", async () => {
+  it('retitles a system the person never renamed, and keeps a title they set', async () => {
     const { source, cwd } = themedSetup();
     await cli(
       ['export', 'claude-design', '--source', source, '--brand-color=#e11d48'],
       cwd
     );
-    saveIndex(cwd, { title: 'Acme on nxds' });
     const args = [
       'export',
       'claude-design',
@@ -1113,12 +1146,17 @@ describe('nxds-cli export claude-design with theme flags', () => {
       'current.json',
     ];
 
+    saveIndex(cwd);
+    await cli([...args, '--brand-color=#4f46e5'], cwd);
+    expect(readIndex(cwd)['title']).toBe('nxds · #4f46e5');
+
+    saveIndex(cwd, { title: 'Acme on nxds' });
     await cli(args, cwd);
     expect(readIndex(cwd)['title']).toBe('Acme on nxds');
 
     saveIndex(cwd);
-    await cli([...args, '--brand-color=#4f46e5'], cwd);
-    expect(readIndex(cwd)['title']).toBe('nxds · #4f46e5');
+    await cli([...args, '--brand-color=#0891b2'], cwd);
+    expect(readIndex(cwd)['title']).toBe('Acme on nxds');
   });
 
   it('themes a system from before themes when flags are passed', async () => {
@@ -1230,7 +1268,7 @@ describe('nxds-cli export claude-design with theme flags', () => {
 
   it('leaves the existing export alone when theme.js fails', async () => {
     const { source, cwd } = themedSetup(
-      "export default { api: 1, flags: ['corners'], render() { throw new Error('out of memory'); } };\n"
+      "export default { api: 1, flags: ['corners'], title: () => 'nxds', render() { throw new Error('out of memory'); } };\n"
     );
     await cli(['export', 'claude-design', '--source', source], cwd);
     const { exitCode, body } = await cliJson(

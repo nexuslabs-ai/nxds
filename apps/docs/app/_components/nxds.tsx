@@ -54,3 +54,4 @@ export {
   TabsList,
   TabsTrigger,
 } from '@/components/tabs/tabs';
+export { Textarea } from '@/components/textarea/textarea';
