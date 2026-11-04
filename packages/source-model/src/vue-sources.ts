@@ -23,6 +23,7 @@ import {
   typeofArgument,
 } from './props-entries.ts';
 import {
+  componentFolderSlug,
   isUnder,
   toRepoPath,
   vueComponentsRoot,
@@ -324,9 +325,6 @@ export function readVueScript(file: string) {
     .join('\n');
 }
 
-// A Vue component is its whole folder, so any file in it links the component.
 export function linkedVueSlug(file: string, exported: Set<string>) {
-  if (!isUnder(file, vueComponentsRoot)) return null;
-  const [slug] = path.relative(vueComponentsRoot, file).split(path.sep);
-  return slug !== undefined && exported.has(slug) ? slug : null;
+  return componentFolderSlug(vueComponentsRoot, file, exported);
 }

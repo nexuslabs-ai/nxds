@@ -101,7 +101,9 @@ type SwitchSize = NonNullable<VariantProps<typeof switchVariants>['size']>;
   /></span>`,
 })
 export class NxSwitch implements FormCheckboxControl, ControlValueAccessor {
+  /** Whether the switch is on. Bind `[(checked)]` to follow it. */
   readonly checked = model(false);
+  /** Stops the switch from turning on or off. */
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly size = input<SwitchSize>('default');
   readonly userClass = input<ClassValue>('', { alias: 'class' });

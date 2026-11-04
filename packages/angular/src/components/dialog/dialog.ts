@@ -78,7 +78,7 @@ class DialogLabels {
     '(click)': 'ref.close()',
   },
 })
-export class NxDialogOverlay {
+class NxDialogOverlay {
   protected readonly ref = inject(BrnDialogRef);
   protected readonly classes = overlayScrimVariants();
 }
@@ -239,7 +239,7 @@ export class NxDialogDescription {
     }
   `,
 })
-export class NxDialogPanel {
+class NxDialogPanel {
   protected readonly dialog = inject(NX_DIALOG);
   protected readonly ref = inject(BrnDialogRef);
   protected readonly labels = inject(DialogLabels);

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Reads the components, props and stories @nxds/react and @nxds/vue export, for the docs generators, the install catalog and the parity tests.",
+  "description": "Reads the components, props and stories @nxds/react, @nxds/vue and @nxds/angular export, for the docs generators, the install catalog and the parity tests.",
   "exports": {
     "./*": "./src/*"
   },

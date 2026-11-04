@@ -1,4 +1,5 @@
 import { codeBlockTheme } from '@nxds/react/code-block-theme';
+import angularTs from '@shikijs/langs/angular-ts';
 import bash from '@shikijs/langs/bash';
 import css from '@shikijs/langs/css';
 import tsx from '@shikijs/langs/tsx';
@@ -8,7 +9,7 @@ import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
 
 import 'server-only';
 
-const LANGS = { bash, css, tsx, vue };
+const LANGS = { 'angular-ts': angularTs, bash, css, tsx, vue };
 
 // Shiki renders `text` unhighlighted without loading a grammar for it.
 export type CodeSampleLanguage = keyof typeof LANGS | 'text';

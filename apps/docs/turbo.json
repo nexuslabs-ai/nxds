@@ -48,6 +48,35 @@
       ],
       "outputs": ["public/vue-demos/**"]
     },
+    "generate:angular": {
+      "dependsOn": ["@nxds/core#build"],
+      "inputs": [
+        "scripts/generate-angular-docs.ts",
+        "$TURBO_ROOT$/packages/catalog/scripts/install-plans.ts",
+        "$TURBO_ROOT$/packages/catalog/scripts/dependency-plans.mjs",
+        "scripts/docs-root.mjs",
+        "$TURBO_ROOT$/packages/source-model/src/**",
+        "$TURBO_ROOT$/packages/source-model/package.json",
+        "$TURBO_ROOT$/packages/angular/src/**",
+        "$TURBO_ROOT$/packages/angular/package.json",
+        "$TURBO_ROOT$/packages/angular/tsconfig.json",
+        "$TURBO_ROOT$/.prettierrc"
+      ],
+      "outputs": ["generated/angular/**"]
+    },
+    "bundle:angular": {
+      "dependsOn": ["@nxds/core#build", "generate:angular"],
+      "inputs": [
+        "scripts/bundle-angular-demos.ts",
+        "scripts/docs-root.mjs",
+        "$TURBO_ROOT$/packages/source-model/src/**",
+        "$TURBO_ROOT$/packages/source-model/package.json",
+        "generated/angular/**",
+        "$TURBO_ROOT$/packages/angular/src/**",
+        "$TURBO_ROOT$/packages/angular/tsconfig.json"
+      ],
+      "outputs": ["public/angular-demos/**"]
+    },
     "generate:manifest": {
       "inputs": [
         "scripts/generate-page-manifest.mjs",
@@ -77,6 +106,8 @@
         "generate:demos",
         "generate:vue",
         "bundle:vue",
+        "generate:angular",
+        "bundle:angular",
         "@nxds/catalog#generate:catalog"
       ],
       "inputs": [
@@ -97,6 +128,8 @@
         "generate:demos",
         "generate:vue",
         "bundle:vue",
+        "generate:angular",
+        "bundle:angular",
         "@nxds/catalog#generate:catalog"
       ],
       "cache": false,
@@ -109,6 +142,7 @@
         "generate:manifest",
         "generate:demos",
         "generate:vue",
+        "generate:angular",
         "@nxds/catalog#generate:catalog"
       ]
     }

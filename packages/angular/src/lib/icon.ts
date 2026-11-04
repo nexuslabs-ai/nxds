@@ -42,6 +42,27 @@ export function drawIcon(markup: () => string): void {
   });
 }
 
+type IconSvgElement = readonly (readonly [
+  string,
+  Readonly<Record<string, string | number>>,
+])[];
+
+const kebab = (name: string) =>
+  name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+
+/** HugeIcons ships elements as data; this writes them as the SVG markup the other sets ship. */
+export function hugeicon(icon: IconSvgElement, { fill = 'none' } = {}) {
+  const children = icon
+    .map(([tag, attributes]) => {
+      const pairs = Object.entries(attributes)
+        .filter(([name]) => name !== 'key')
+        .map(([name, value]) => `${kebab(name)}="${value}"`);
+      return `<${tag} ${pairs.join(' ')}></${tag}>`;
+    })
+    .join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${fill}">${children}</svg>`;
+}
+
 /** Draws an internal icon: `<svg [nxIcon]="IconX"></svg>`. */
 @Directive({ selector: 'svg[nxIcon]' })
 export class NxIcon {

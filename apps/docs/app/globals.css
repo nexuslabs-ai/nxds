@@ -31,6 +31,7 @@
 @source '../content';
 @source '../../../packages/react/src';
 @source '../../../packages/vue/src';
+@source '../../../packages/angular/src';
 
 :root {
   --site-header-h: 4rem;

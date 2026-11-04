@@ -4,9 +4,10 @@
  * with each item's files, packages and the other items it needs.
  *
  * Items are framework-neutral; each carries one variant per framework that
- * has it. A Vue variant exists for setup and for each component @nxds/vue
- * exports.
+ * has it. A Vue or Angular variant exists for setup and for each component
+ * @nxds/vue or @nxds/angular exports.
  */
+import { exportedSlugs as angularSlugs } from '@nxds/source-model/angular-sources.ts';
 import {
   componentDescription,
   componentStoryFiles,
@@ -23,6 +24,7 @@ import {
   exportedComponentSlugs,
 } from '@nxds/source-model/react-sources.mjs';
 import {
+  angularSrc,
   react18Root,
   react18Src,
   reactRoot,
@@ -31,7 +33,7 @@ import {
   toRepoPath,
   vueSrc,
 } from '@nxds/source-model/roots.mjs';
-import { exportedSlugs } from '@nxds/source-model/vue-sources.ts';
+import { exportedSlugs as vueSlugs } from '@nxds/source-model/vue-sources.ts';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -48,10 +50,11 @@ import {
   issueLines,
 } from './catalog-schema.ts';
 import {
+  angular,
   dependencyEntries,
+  frameworkWalks,
   react,
   vue,
-  vueWalks,
 } from './dependency-plans.mjs';
 import { packageName } from './install-plans.ts';
 import { CATALOG_FILE } from './roots.mjs';
@@ -76,7 +79,7 @@ const ICONS_FILE = 'lib/icons.ts';
  * What each framework's setup copies and installs: the appearance provider and
  * `cn`, which every app needs before any component, and the packages the
  * framework's CSS entry imports.
- * @type {Record<'react' | 'vue', { roots: string[]; packages: string[]; steps: import('./catalog-schema').SetupStep[] }>}
+ * @type {Record<import('./catalog-schema').Framework, { roots: string[]; packages: string[]; steps: import('./catalog-schema').SetupStep[] }>}
  */
 const SETUP_SOURCES = {
   react: {
@@ -93,15 +96,21 @@ const SETUP_SOURCES = {
     packages: ['tw-animate-css'],
     steps: [],
   },
+  angular: {
+    roots: ['components/appearance/appearance.ts', 'lib/utils.ts'],
+    packages: ['tw-animate-css'],
+    steps: [],
+  },
 };
 
-/** Vue's appearance folder is its provider, which setup brings. */
-const VUE_SETUP_SLUG = 'appearance';
+/** Vue's and Angular's appearance folder is their provider, which setup brings. */
+const APPEARANCE_SLUG = 'appearance';
 
 /** Each framework's install planner and the source tree its paths are relative to. */
 const FRAMEWORKS = {
   react: { planner: react, src: reactSrc },
-  vue: { planner: vue, src: vueSrc },
+  vue: { planner: vue, src: vueSrc, slugs: vueSlugs },
+  angular: { planner: angular, src: angularSrc, slugs: angularSlugs },
 };
 
 /**
@@ -313,7 +322,7 @@ function setupVariant(framework) {
   };
 }
 
-/** @returns {SetupItem & { variants: { react: SetupVariant; vue: SetupVariant } }} */
+/** @returns {SetupItem & { variants: { react: SetupVariant; vue: SetupVariant; angular: SetupVariant } }} */
 function setupItem() {
   return {
     name: SETUP,
@@ -325,6 +334,7 @@ function setupItem() {
     variants: {
       react: withReact18(setupVariant('react')),
       vue: setupVariant('vue'),
+      angular: setupVariant('angular'),
     },
   };
 }
@@ -355,21 +365,23 @@ function planVariant(src, plan, setup) {
 }
 
 /**
- * Each Vue component's variant, by slug. Vue's appearance folder is left out:
- * it is the provider, which the Vue setup variant brings.
+ * Each Vue or Angular component's variant, by slug. The appearance folder is
+ * left out: it is the provider, which the framework's setup variant brings.
+ * @param {'vue' | 'angular'} framework
  * @param {SetupVariant} setup
  * @returns {Map<string, Variant>}
  */
-function vueVariants(setup) {
-  const slugs = exportedSlugs().filter((slug) => slug !== VUE_SETUP_SLUG);
-  const closures = vueWalks(slugs);
+function frameworkVariants(framework, setup) {
+  const { planner, src, slugs: exportedSlugs } = FRAMEWORKS[framework];
+  const slugs = exportedSlugs().filter((slug) => slug !== APPEARANCE_SLUG);
+  const closures = frameworkWalks(planner, slugs);
   const exported = new Set(slugs);
   return new Map(
     [...closures.values()].map((walked) => [
       walked.name,
       planVariant(
-        vueSrc,
-        vue.componentEntry(walked, closures, exported).plan,
+        src,
+        planner.componentEntry(walked, closures, exported).plan,
         setup
       ),
     ])
@@ -380,14 +392,22 @@ function vueVariants(setup) {
 export function buildCatalog() {
   const setup = setupItem();
   const entries = dependencyEntries();
-  const vueComponents = vueVariants(setup.variants.vue);
+  const others = /** @type {const} */ (['vue', 'angular']).map(
+    (framework) =>
+      /** @type {const} */ ([
+        framework,
+        frameworkVariants(framework, setup.variants[framework]),
+      ])
+  );
 
   const exported = exportedComponentSlugs();
-  for (const slug of vueComponents.keys()) {
-    if (!exported.has(slug)) {
-      throw new Error(
-        `catalog: @nxds/vue exports ${slug}, which @nxds/react doesn't, so it has no catalog item.`
-      );
+  for (const [framework, variants] of others) {
+    for (const slug of variants.keys()) {
+      if (!exported.has(slug)) {
+        throw new Error(
+          `catalog: @nxds/${framework} exports ${slug}, which @nxds/react doesn't, so it has no catalog item.`
+        );
+      }
     }
   }
 
@@ -395,7 +415,6 @@ export function buildCatalog() {
   const components = entries.components
     .filter(({ slug }) => exported.has(slug))
     .map(({ slug, plan }) => {
-      const vueVariant = vueComponents.get(slug);
       return {
         name: slug,
         kind: 'component',
@@ -407,7 +426,12 @@ export function buildCatalog() {
         docs: `${DOCS_URL}/components/${slug}`,
         variants: {
           react: withReact18(planVariant(reactSrc, plan, setup.variants.react)),
-          ...(vueVariant && { vue: vueVariant }),
+          ...Object.fromEntries(
+            others.flatMap(([framework, variants]) => {
+              const variant = variants.get(slug);
+              return variant ? [[framework, variant]] : [];
+            })
+          ),
         },
       };
     });

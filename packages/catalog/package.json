@@ -2,7 +2,7 @@
   "name": "@nxds/catalog",
   "version": "0.0.1",
   "private": true,
-  "description": "The install catalog the docs read and nxds-cli fetches, built from the React and Vue sources",
+  "description": "The install catalog the docs read and nxds-cli fetches, built from the React, Vue and Angular sources",
   "type": "module",
   "exports": {
     ".": "./scripts/catalog-schema.ts",

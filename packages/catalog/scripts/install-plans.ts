@@ -15,8 +15,8 @@ export interface ComponentSource {
   root: string;
   src: string;
   componentsRoot: string;
-  /** The framework's own package, which a plan never installs. */
-  framework: string;
+  /** The framework's own packages, which an app already has, so a plan never installs them. */
+  frameworkPackages: readonly string[];
   /** Files the walk reads imports from. */
   isModuleSource: (file: string) => boolean;
   /** A file's script, as TypeScript reads it. */
@@ -157,7 +157,7 @@ export function createInstallPlanner(source: ComponentSource) {
     return {
       name,
       packages: walked.packages
-        .filter((pkg) => pkg !== source.framework)
+        .filter((pkg) => !source.frameworkPackages.includes(pkg))
         .sort(),
       files: [...new Set([...walked.files, ...colocatedStyles(walked.files)])],
     };

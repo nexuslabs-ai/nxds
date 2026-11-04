@@ -159,6 +159,7 @@ jobs:
           pnpm --filter @nxds/catalog generate:catalog
           pnpm --filter @nxds/docs generate:manifest
           pnpm --filter @nxds/docs generate:vue
+          pnpm --filter @nxds/docs generate:angular
           mkdir "$RUNNER_TEMP/docs-generated-fresh"
           cp -r apps/docs/generated packages/catalog/generated apps/docs/app/_lib/*.generated.ts "$RUNNER_TEMP/docs-generated-fresh"
           if ! diff -r "$RUNNER_TEMP/docs-generated-build" "$RUNNER_TEMP/docs-generated-fresh"; then

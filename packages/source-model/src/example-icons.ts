@@ -14,7 +14,7 @@ export const ICON_LIBRARIES = [
 
 export type IconLibrary = (typeof ICON_LIBRARIES)[number];
 
-export type Framework = 'react' | 'vue';
+export type Framework = 'react' | 'vue' | 'angular';
 
 export type OtherLibrary = Exclude<IconLibrary, 'phosphor'>;
 
@@ -346,7 +346,8 @@ export const EXAMPLE_ICONS: Record<string, ExampleIcon> = {
 
 /**
  * Where each library's icons come from, and for HugeIcons, whose icons are
- * data, the component that draws them.
+ * data, the component or helper that draws them. Angular icons are SVG
+ * markup that `svg[nxIcon]` draws.
  */
 export const ICON_PACKAGES: Record<
   IconLibrary,
@@ -355,11 +356,17 @@ export const ICON_PACKAGES: Record<
   phosphor: {
     react: { icons: '@phosphor-icons/react/ssr' },
     vue: { icons: '@phosphor-icons/vue' },
+    angular: { icons: '@ng-icons/phosphor-icons/regular' },
   },
-  lucide: { react: { icons: 'lucide-react' }, vue: { icons: '@lucide/vue' } },
+  lucide: {
+    react: { icons: 'lucide-react' },
+    vue: { icons: '@lucide/vue' },
+    angular: { icons: '@ng-icons/lucide' },
+  },
   tabler: {
     react: { icons: '@tabler/icons-react' },
     vue: { icons: '@tabler/icons-vue' },
+    angular: { icons: '@ng-icons/tabler-icons' },
   },
   hugeicons: {
     react: {
@@ -367,23 +374,29 @@ export const ICON_PACKAGES: Record<
       component: '@hugeicons/react',
     },
     vue: { icons: '@hugeicons/core-free-icons', component: '@hugeicons/vue' },
+    angular: { icons: '@hugeicons/core-free-icons' },
   },
   remix: {
     react: { icons: '@remixicon/react' },
     vue: { icons: '@remixicon/vue' },
+    angular: { icons: '@ng-icons/remixicon' },
   },
 };
 
 /**
  * The name `library`'s package exports for its icon `name`: Phosphor `XIcon`
  * and `PhX`, Lucide `XIcon`, Tabler `IconX`, HugeIcons `XIcon` and Remix
- * `RiX`.
+ * `RiX`. Angular's `@ng-icons` sets prefix the library: `phosphorX`,
+ * `lucideX`, `tablerX` and `remixX`.
  */
 export function iconExport(
   library: IconLibrary,
   framework: Framework,
   name: string
 ) {
+  if (framework === 'angular' && library !== 'hugeicons') {
+    return `${library}${name}`;
+  }
   if (library === 'phosphor') {
     return framework === 'react' ? `${name}Icon` : `Ph${name}`;
   }

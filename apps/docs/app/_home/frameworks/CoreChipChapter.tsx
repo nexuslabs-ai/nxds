@@ -85,7 +85,7 @@ const frameworkStatus: Record<Framework, string> = {
   React: 'Components',
   Vue: 'Growing library',
   Svelte: 'Planned',
-  Angular: 'Planned',
+  Angular: 'First components',
   'React Native': 'Planned',
 };
 

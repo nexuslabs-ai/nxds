@@ -5,7 +5,7 @@ import {
   demos,
   getComponentDocs,
 } from '../../__generated__/demo-index';
-import { vueComponentDocs } from '../../generated/vue/docs';
+import { FRAMEWORK_DOCS, OTHER_FRAMEWORKS } from '../_lib/framework-demos';
 import { withoutListed } from '../_lib/icon-library-variants';
 import type { ManifestPage } from '../_lib/manifest';
 
@@ -13,6 +13,7 @@ import { CodeSample } from './CodeSample';
 import { ComponentDemo } from './ComponentDemo';
 import { ComponentInstallation } from './ComponentInstallation';
 import { DescriptionText } from './DescriptionText';
+import { FrameworkComponentPanel } from './FrameworkComponentPanel';
 import {
   FrameworkComingSoon,
   FrameworkPanel,
@@ -28,7 +29,6 @@ import {
 } from './Heading';
 import { ExampleInstall } from './InstallBlock';
 import { PropsTable } from './PropsTable';
-import { VueComponentPanel } from './VueComponentPanel';
 
 type ComponentManifestPage = Extract<ManifestPage, { kind: 'generated' }>;
 
@@ -38,22 +38,38 @@ type ComponentManifestPage = Extract<ManifestPage, { kind: 'generated' }>;
  * component shows "coming soon".
  */
 export function ComponentPage({ page }: { page: ComponentManifestPage }) {
-  const vueDocs = vueComponentDocs[page.slug];
+  const unavailable = OTHER_FRAMEWORKS.filter(
+    (framework) => !FRAMEWORK_DOCS[framework].docs[page.slug]
+  );
 
   return (
     <>
       <h1 className={PAGE_HEADING_CLASS}>{page.label}</h1>
-      <FrameworkTabs unavailable={vueDocs ? [] : ['vue']}>
+      <FrameworkTabs unavailable={unavailable}>
         <FrameworkPanel framework="react">
           <ReactComponentPanel page={page} />
         </FrameworkPanel>
-        {vueDocs ? (
-          <FrameworkPanel framework="vue">
-            <VueComponentPanel slug={page.slug} docs={vueDocs} />
-          </FrameworkPanel>
-        ) : (
-          <FrameworkComingSoon framework="vue" name={page.label} />
-        )}
+        {OTHER_FRAMEWORKS.map((framework) => {
+          const docs = FRAMEWORK_DOCS[framework].docs[page.slug];
+          if (!docs) {
+            return (
+              <FrameworkComingSoon
+                key={framework}
+                framework={framework}
+                name={page.label}
+              />
+            );
+          }
+          return (
+            <FrameworkPanel key={framework} framework={framework}>
+              <FrameworkComponentPanel
+                framework={framework}
+                slug={page.slug}
+                docs={docs}
+              />
+            </FrameworkPanel>
+          );
+        })}
       </FrameworkTabs>
     </>
   );
