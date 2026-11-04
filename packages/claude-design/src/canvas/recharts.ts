@@ -7,7 +7,7 @@
 
 const SERIES = ['dataKey:string', 'name:string', 'hide', 'isAnimationActive'];
 const STROKE = ['stroke', 'strokeWidth', 'strokeDasharray:string', 'opacity'];
-const FILL = ['fill', 'fillOpacity', ...STROKE];
+const FILL_AND_STROKE = ['fill', 'fillOpacity', ...STROKE];
 const CARTESIAN_CHART = [
   'data',
   'layout',
@@ -48,7 +48,7 @@ export const RECHARTS_PARTS: Readonly<Record<string, readonly string[]>> = {
   RadialBarChart: [...POLAR_CHART, 'barSize'],
   Bar: [
     ...SERIES,
-    ...FILL,
+    ...FILL_AND_STROKE,
     'stackId:string',
     'radius',
     'barSize',
@@ -58,7 +58,7 @@ export const RECHARTS_PARTS: Readonly<Record<string, readonly string[]>> = {
   Area: [
     ...SERIES,
     'type',
-    ...FILL,
+    ...FILL_AND_STROKE,
     'stackId:string',
     'dot:boolean',
     'connectNulls',
@@ -75,12 +75,17 @@ export const RECHARTS_PARTS: Readonly<Record<string, readonly string[]>> = {
     'endAngle',
     'label:boolean',
     'labelLine:boolean',
-    ...FILL,
+    ...FILL_AND_STROKE,
     'isAnimationActive',
   ],
-  Radar: [...SERIES, ...FILL, 'dot:boolean'],
-  RadialBar: [...SERIES, 'background:boolean', 'cornerRadius', ...FILL],
-  Cell: FILL,
+  Radar: [...SERIES, ...FILL_AND_STROKE, 'dot:boolean'],
+  RadialBar: [
+    ...SERIES,
+    'background:boolean',
+    'cornerRadius',
+    ...FILL_AND_STROKE,
+  ],
+  Cell: FILL_AND_STROKE,
   XAxis: AXIS,
   YAxis: [...AXIS, 'width'],
   CartesianGrid: ['vertical', 'horizontal', ...STROKE],
@@ -88,7 +93,13 @@ export const RECHARTS_PARTS: Readonly<Record<string, readonly string[]>> = {
   PolarAngleAxis: ['dataKey:string', 'tickLine', 'axisLine'],
   PolarRadiusAxis: ['angle', 'hide', 'tickLine', 'axisLine'],
   ReferenceLine: ['x:string', 'y:string', ...STROKE, 'label:string'],
-  ReferenceArea: ['x1:string', 'x2:string', 'y1:string', 'y2:string', ...FILL],
+  ReferenceArea: [
+    'x1:string',
+    'x2:string',
+    'y1:string',
+    'y2:string',
+    ...FILL_AND_STROKE,
+  ],
   LabelList: ['dataKey:string', 'position', 'offset', 'fill'],
   Label: ['value', 'position', 'offset'],
 };
