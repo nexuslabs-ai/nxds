@@ -1,5 +1,16 @@
 # @nxds/docs
 
+## 0.0.29
+
+### Patch Changes
+
+- Updated dependencies [c004e3a]
+  - @nxds/core@0.13.0
+  - @nxds/tailwind@0.3.0
+  - @nxds/claude-design@0.14.0
+  - @nxds/catalog@0.0.2
+  - @nxds/react@0.14.0
+
 ## 0.0.28
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @nxds/react-18
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies [c004e3a]
+  - @nxds/core@0.13.0
+  - @nxds/tailwind@0.3.0
+
 ## 0.0.5
 
 ### Patch Changes
