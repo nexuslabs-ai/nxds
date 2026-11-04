@@ -5,7 +5,8 @@
     "moduleResolution": "nodenext",
     "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": true,
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "types": ["node"]
   },
   "include": ["src/token-source/**/*"]
 }

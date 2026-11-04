@@ -1,4 +1,5 @@
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
+import { storybookAngularVitest } from '@storybook/angular-vite/vitest';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import vue from '@vitejs/plugin-vue';
@@ -138,6 +139,37 @@ export default defineConfig({
             headless: true,
             instances: [{ browser: 'chromium' }],
           },
+        },
+      },
+      // Angular story tests - the same play-function and axe checks for
+      // @nxds/angular. The Storybook preset compiles the components with Analog.
+      {
+        extends: true,
+        plugins: [
+          storybookAngularVitest({}),
+          storybookTest({
+            configDir: path.resolve(
+              import.meta.dirname,
+              'packages/angular/.storybook'
+            ),
+            storybookScript: 'pnpm --filter @nxds/angular storybook --no-open',
+          }),
+        ],
+        root: path.resolve(import.meta.dirname, 'packages/angular'),
+        test: {
+          name: 'storybook-angular',
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            headless: true,
+            instances: [{ browser: 'chromium' }],
+          },
+          setupFiles: [
+            path.resolve(
+              import.meta.dirname,
+              'packages/angular/.storybook/vitest.setup.ts'
+            ),
+          ],
         },
       },
       // Cross-framework parity of rendered DOM: each docs story mounted in

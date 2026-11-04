@@ -1,9 +1,8 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
-      "@nxds/react": ["packages/react/src"]
+      "@nxds/react": ["./packages/react/src"]
     }
   },
   "references": [{ "path": "./packages/react" }],

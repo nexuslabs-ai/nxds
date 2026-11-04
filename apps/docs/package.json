@@ -82,7 +82,7 @@
     "rehype-remark": "^10.0.1",
     "remark-stringify": "^11.0.0",
     "tailwindcss": "4.3.0",
-    "typescript": "^5.9.3",
+    "typescript": "~6.0.3",
     "unified": "^11.0.5",
     "vfile": "^6.0.3",
     "vite": "^8.3.5",

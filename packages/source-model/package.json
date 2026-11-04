@@ -13,7 +13,7 @@
   "dependencies": {
     "prettier": "^3.7.4",
     "react-docgen-typescript": "^2.4.0",
-    "typescript": "^5.9.3",
+    "typescript": "~6.0.3",
     "vue": "^3.5.44",
     "vue-component-meta": "3.3.13"
   },
