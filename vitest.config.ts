@@ -11,11 +11,14 @@ export default defineConfig({
     alias: [
       {
         find: /^@nxds\/core$/,
-        replacement: path.resolve(__dirname, './packages/core/src/index.ts'),
+        replacement: path.resolve(
+          import.meta.dirname,
+          './packages/core/src/index.ts'
+        ),
       },
       {
         find: /^@\//,
-        replacement: `${path.resolve(__dirname, './packages/react/src')}/`,
+        replacement: `${path.resolve(import.meta.dirname, './packages/react/src')}/`,
       },
     ],
   },
@@ -56,12 +59,15 @@ export default defineConfig({
         extends: true, // Inherit resolve.alias from root config
         plugins: [
           storybookTest({
-            configDir: path.resolve(__dirname, 'packages/react/.storybook'),
+            configDir: path.resolve(
+              import.meta.dirname,
+              'packages/react/.storybook'
+            ),
             // Auto-start Storybook in watch mode for debugging links
             storybookScript: 'pnpm storybook --no-open',
           }),
         ],
-        root: path.resolve(__dirname, 'packages/react'),
+        root: path.resolve(import.meta.dirname, 'packages/react'),
         test: {
           name: 'storybook',
           browser: {
@@ -72,7 +78,7 @@ export default defineConfig({
           },
           setupFiles: [
             path.resolve(
-              __dirname,
+              import.meta.dirname,
               'packages/react/.storybook/vitest.setup.ts'
             ),
           ],
@@ -85,11 +91,14 @@ export default defineConfig({
         extends: true,
         plugins: [
           storybookTest({
-            configDir: path.resolve(__dirname, 'packages/react-18/.storybook'),
+            configDir: path.resolve(
+              import.meta.dirname,
+              'packages/react-18/.storybook'
+            ),
             storybookScript: 'pnpm --filter @nxds/react-18 storybook --no-open',
           }),
         ],
-        root: path.resolve(__dirname, 'packages/react-18'),
+        root: path.resolve(import.meta.dirname, 'packages/react-18'),
         resolve: { dedupe: ['react', 'react-dom'] },
         test: {
           name: 'storybook-react18',
@@ -101,7 +110,7 @@ export default defineConfig({
           },
           setupFiles: [
             path.resolve(
-              __dirname,
+              import.meta.dirname,
               'packages/react-18/.storybook/vitest.setup.ts'
             ),
           ],
@@ -113,11 +122,14 @@ export default defineConfig({
         plugins: [
           vue(),
           storybookTest({
-            configDir: path.resolve(__dirname, 'packages/vue/.storybook'),
+            configDir: path.resolve(
+              import.meta.dirname,
+              'packages/vue/.storybook'
+            ),
             storybookScript: 'pnpm --filter @nxds/vue storybook --no-open',
           }),
         ],
-        root: path.resolve(__dirname, 'packages/vue'),
+        root: path.resolve(import.meta.dirname, 'packages/vue'),
         test: {
           name: 'storybook-vue',
           browser: {

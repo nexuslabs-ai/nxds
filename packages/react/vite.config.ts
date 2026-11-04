@@ -15,7 +15,7 @@ const entries = Object.fromEntries(
     'components/code-block/code-block-theme',
     clientEntry,
     'components/appearance/provider/server',
-  ].map((name) => [name, path.resolve(__dirname, `src/${name}.ts`)])
+  ].map((name) => [name, path.resolve(import.meta.dirname, `src/${name}.ts`)])
 );
 
 export default defineConfig({
