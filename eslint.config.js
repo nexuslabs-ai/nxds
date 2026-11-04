@@ -362,6 +362,7 @@ export default tseslint.config(
     files: [
       ...reactSources('src/**/*.{ts,tsx}'),
       'packages/vue/src/**/*.{ts,vue}',
+      'packages/angular/src/**/*.ts',
     ],
     rules: { '@nxds/no-jsdoc-data-tags': 'error' },
   },
@@ -388,6 +389,14 @@ export default tseslint.config(
   nxdsTailwindClassesConfig({
     files: ['packages/vue/src/**/*.{ts,vue}'],
     entryPoint: repoPath('packages/vue/.storybook/preview.css'),
+  }),
+  {
+    files: ['packages/angular/src/**/*.ts'],
+    ...nxdsComponentConfig(),
+  },
+  nxdsTailwindClassesConfig({
+    files: ['packages/angular/src/**/*.ts'],
+    entryPoint: repoPath('packages/angular/.storybook/preview.css'),
   }),
   nxdsTailwindClassesConfig({
     files: ['apps/docs/**/*.{ts,tsx}'],

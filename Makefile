@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help setup fresh clean dev dev-vue docs docs-preview dev-all build tokens \
+.PHONY: help setup fresh clean dev dev-vue dev-angular docs docs-preview dev-all build tokens \
         lint typecheck audit verify \
         up down serve publish
 
@@ -36,6 +36,9 @@ dev: ## Storybook — the primary component-dev surface (builds @nxds/core first
 
 dev-vue: ## Storybook for @nxds/vue, on port 6007
 	pnpm turbo storybook --filter=@nxds/vue
+
+dev-angular: ## Storybook for @nxds/angular, on port 6009
+	pnpm turbo storybook --filter=@nxds/angular
 
 docs: ## Docs site + live @nxds/react (turbo: docs + react watcher)
 	pnpm turbo dev --filter=@nxds/docs...

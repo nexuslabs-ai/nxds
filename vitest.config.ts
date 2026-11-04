@@ -156,6 +156,9 @@ export default defineConfig({
           }),
         ],
         root: path.resolve(import.meta.dirname, 'packages/angular'),
+        // Scan the stories for dependencies before the browser loads, so a
+        // newly seen dependency doesn't reload the page mid-run.
+        optimizeDeps: { entries: ['src/**/*.stories.ts'] },
         test: {
           name: 'storybook-angular',
           browser: {

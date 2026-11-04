@@ -356,7 +356,7 @@ jobs:
       fail-fast: false
       matrix:
         lane:
-          - name: React 19, Vue, parity
+          - name: React 19, Vue, Angular, parity
             script: react19
           - name: React 18
             script: react18
