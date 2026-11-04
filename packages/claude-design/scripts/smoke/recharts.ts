@@ -32,7 +32,7 @@ export const RECHARTS_CASES: {
         ),
         x(
           'Recharts.Bar',
-          'data-key="desktop" fill="var(--color-desktop)" radius="4"'
+          'data-key="desktop" fill="var(--color-desktop)" fill-opacity="0.35" stroke="var(--color-desktop)" stroke-width="2" radius="4"'
         ),
         x(
           'Recharts.Bar',
@@ -46,6 +46,8 @@ export const RECHARTS_CASES: {
     },
     attributes: [
       ['.recharts-bar-rectangle path', 'fill', 'var(--color-desktop)'],
+      ['.recharts-bar-rectangle path', 'fill-opacity', '0.35'],
+      ['.recharts-bar-rectangle path', 'stroke-width', '2'],
     ],
   },
   {

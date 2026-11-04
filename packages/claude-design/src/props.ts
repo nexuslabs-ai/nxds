@@ -837,9 +837,13 @@ function rechartsParts(
 }
 
 function iconNameUnion() {
-  return iconSet()
-    .map(({ name }) => JSON.stringify(name))
-    .join(' | ');
+  const icons = iconSet();
+  if (icons.length > DROPDOWN_LIMIT) {
+    throw new Error(
+      `icons: ${icons.length} icons, over the ${DROPDOWN_LIMIT} the props panel shows as a dropdown. Trim src/icons.ts.`
+    );
+  }
+  return icons.map(({ name }) => JSON.stringify(name)).join(' | ');
 }
 
 const NUMBER = {
