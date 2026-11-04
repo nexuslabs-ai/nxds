@@ -70,6 +70,7 @@ export function UseInClaudeDesign({ className }: { className?: string }) {
     try {
       await navigator.clipboard.writeText(prompt);
       copy.settle('copied');
+      setCopyFailed(false);
     } catch {
       copy.settle('failed');
       setCopyFailed(true);

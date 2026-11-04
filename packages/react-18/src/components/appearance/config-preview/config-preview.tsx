@@ -34,7 +34,7 @@ export function NxdsAppearanceConfigPreview({
 
   return (
     <pre
-      className="nx:m-0 nx:overflow-x-auto nx:rounded-lg nx:border-default nx:border-border-default nx:bg-muted nx:p-3 nx:font-mono nx:text-muted-foreground"
+      className="nx:m-0 nx:overflow-x-auto nx:rounded-lg nx:border-default nx:border-border-default nx:bg-muted nx:p-3 nx:typography-code-block nx:text-muted-foreground"
       style={{ lineHeight: '1.7' }}
     >
       <code>
