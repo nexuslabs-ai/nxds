@@ -8,6 +8,7 @@ import remarkStringify from 'remark-stringify';
 import { unified } from 'unified';
 import type { VFile } from 'vfile';
 
+import { THEME_FLAGS_LABEL } from '../app/_lib/claude-design-prompt.ts';
 import { frameworkLabel, isFramework } from '../app/_lib/frameworks.ts';
 import { PAGE_MANIFEST, sectionHomeRoute } from '../app/_lib/manifest.ts';
 import { SITE_URL } from '../app/_lib/site.ts';
@@ -267,6 +268,11 @@ function claudeDesignProblems(markdown: string | undefined) {
   }
   if (!markdown.includes('nxds-design-system/SETUP.md')) {
     problems.push('no nxds-design-system/SETUP.md step');
+  }
+  if (!markdown.includes(`\`${THEME_FLAGS_LABEL}\``)) {
+    problems.push(
+      `no step that passes the prompt's \`${THEME_FLAGS_LABEL}\` line to the command`
+    );
   }
   if (markdown.includes('Fetch https://nxds.dev')) {
     problems.push('the prompts left their data-md-skip wrapper');

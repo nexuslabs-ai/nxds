@@ -44,12 +44,13 @@ its props as controls and lists the nxds tokens.
 In a Claude chat, start from the [Claude Design](/getting-started/claude-design)
 prompt instead.
 
-| Option              | What it does                                                                     |
-| ------------------- | -------------------------------------------------------------------------------- |
-| `--release <v>`     | Export that nxds release instead of the latest                                   |
-| `--out <path>`      | Write the folder somewhere else                                                  |
-| `--index <path>`    | Keep the title and creation date from your system's current `design-system.json` |
-| `--existing <path>` | List, in `removed.json`, the files your system has that this release drops       |
+| Option                                               | What it does                                                                            |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `--release <v>`                                      | Export that nxds release instead of the latest                                          |
+| `--out <path>`                                       | Write the folder somewhere else                                                         |
+| `--index <path>`                                     | Keep the title, creation date and theme from your system's current `design-system.json` |
+| `--brand-color <c>` and the other `init` theme flags | Theme the system. `--mode` and `--icons` aren't taken                                   |
+| `--existing <path>`                                  | List, in `removed.json`, the files your system has that this release drops              |
 
 `SETUP.md`'s update steps use `--index` and `--existing` to republish over an
 existing system.

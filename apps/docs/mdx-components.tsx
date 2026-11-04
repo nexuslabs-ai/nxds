@@ -2,6 +2,7 @@ import type { MDXComponents } from 'mdx/types';
 
 import { cn } from '@/lib/utils';
 
+import { ClaudeDesignPrompt } from './app/_components/ClaudeDesignPrompt';
 import { MdxCodeBlock } from './app/_components/CodeBlock';
 import { ComponentDemo } from './app/_components/ComponentDemo';
 import { FrameworkPanel, FrameworkTabs } from './app/_components/FrameworkTabs';
@@ -134,6 +135,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         {...props}
       />
     ),
+    ClaudeDesignPrompt,
     ComponentDemo,
     FrameworkPanel,
     FrameworkTabs,

@@ -62,8 +62,8 @@ async function registry(version: string, bytes: Buffer) {
   return { url: `http://127.0.0.1:${port}`, server };
 }
 
-/** Exports the release and returns the folder it wrote: `project/`, SETUP.md and the rest. */
-export async function exportRelease() {
+/** Exports the release with `args`, such as theme flags, and returns the folder it wrote: `project/`, SETUP.md and the rest. */
+export async function exportRelease(args: readonly string[] = []) {
   if (!existsSync(cli)) {
     throw new Error(
       `${cli} is missing. Run pnpm --filter nxds-cli build first.`
@@ -74,10 +74,14 @@ export async function exportRelease() {
   const { version, bytes } = await pack(cwd);
   const { url, server } = await registry(version, bytes);
   try {
-    const { stdout } = await run('node', [cli, 'export', 'claude-design'], {
-      cwd,
-      env: { ...process.env, npm_config_registry: url },
-    }).catch((error: unknown) => {
+    const { stdout } = await run(
+      'node',
+      [cli, 'export', 'claude-design', ...args],
+      {
+        cwd,
+        env: { ...process.env, npm_config_registry: url },
+      }
+    ).catch((error: unknown) => {
       if (!(error instanceof Error)) throw error;
       const { stderr } = error as Error & { stderr?: string };
       throw new Error(

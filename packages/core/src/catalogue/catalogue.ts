@@ -1,11 +1,11 @@
 import {
   createNxdsThemeContract,
   DEFAULT_NXDS_APPEARANCE,
-  type NxdsAppearanceState,
 } from '../lib/appearance-model';
 import { deriveThemeMode } from '../lib/derive-theme';
 import type { Mode } from '../lib/palette';
 import { SEMANTIC_TOKEN_REGISTRY } from '../lib/token-registry';
+import { isCodeSize, typographyScale } from '../lib/typography-scale';
 import {
   formatShadowStyle,
   formatTokenValue,
@@ -35,6 +35,7 @@ import { RUNTIME_COLOR_DESCRIPTIONS } from './descriptions';
 import { TOKEN_FILES, type TokenFile } from './token-files';
 import type {
   CatalogueAlias,
+  CatalogueAppearance,
   CatalogueControl,
   CatalogueDeclaration,
   CatalogueFamily,
@@ -75,6 +76,7 @@ const PRESET_CONTROLS: Partial<Record<CatalogueFamily, CatalogueControl>> = {
 /** The preference `appearancePrefsToCss` writes each typography primitive from. */
 function typographyControl(path: readonly string[]): CatalogueControl | null {
   const [group, key] = path;
+  if (isCodeSize(path)) return { kind: 'pref', field: 'codeFontSize' };
   if (group === 'size' || group === 'line-height') {
     return { kind: 'pref', field: 'uiFontSize' };
   }
@@ -325,7 +327,11 @@ function primitiveAliases(
   return [];
 }
 
-function primitiveEntry(lookup: ReferenceLookup) {
+/** `scaled` holds the type sizes and line heights at the appearance's font sizes. */
+function primitiveEntry(
+  lookup: ReferenceLookup,
+  scaled: ReadonlyMap<string, string>
+) {
   return ({ family, leaf }: AuthoredLeaf): LeafEntry => {
     const name = primitiveName(family, leaf.path);
     const reference = leaf.path.join('.');
@@ -339,7 +345,9 @@ function primitiveEntry(lookup: ReferenceLookup) {
       declarations: [
         {
           property: name,
-          value: resolveValue(leaf.value, lookup, leaf.type, leaf.path),
+          value:
+            scaled.get(name) ??
+            resolveValue(leaf.value, lookup, leaf.type, leaf.path),
         },
       ],
     };
@@ -465,14 +473,6 @@ function styleLeaves(family: CatalogueFamily, file: TokenFile): AuthoredLeaf[] {
   );
 }
 
-function runtimeAppearance(mode: Mode): NxdsAppearanceState {
-  return {
-    ...DEFAULT_NXDS_APPEARANCE,
-    prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs },
-    mode,
-  };
-}
-
 function runtimeColorAliases(name: string): CatalogueAlias[] {
   const aliases = [cssVariable(`--color-${name}`)];
   const borderName = borderColorAliasName(name);
@@ -482,15 +482,14 @@ function runtimeColorAliases(name: string): CatalogueAlias[] {
   return aliases;
 }
 
-function runtimeColorTokens(): CatalogueToken[] {
-  const themes = RUNTIME_MODES.map((mode) => {
-    const appearance = runtimeAppearance(mode);
-    return {
-      mode,
-      appearance,
-      values: deriveThemeMode(createNxdsThemeContract(appearance), mode),
-    };
-  });
+function runtimeColorTokens(appearance: CatalogueAppearance): CatalogueToken[] {
+  const { brandColor, surfaceTone, lightContrast, darkContrast } = appearance;
+  const colors = { brandColor, surfaceTone, lightContrast, darkContrast };
+  const themes = RUNTIME_MODES.map((mode) => ({
+    mode,
+    appearance: { ...colors, mode },
+    values: deriveThemeMode(createNxdsThemeContract(colors), mode),
+  }));
 
   return SEMANTIC_TOKEN_REGISTRY.map(({ name, category }) => {
     const property: CatalogueTokenName = `--nx-color-${name}`;
@@ -525,10 +524,16 @@ function runtimeColorTokens(): CatalogueToken[] {
  * Every nxds token, identified by its `--nx-*` name: primitives, runtime
  * colours, spacing, z-index, breakpoints, and typography and shadow styles.
  * Shadow layer primitives only compose the shadow styles.
- * Runtime colours are computed from `DEFAULT_NXDS_APPEARANCE` in explicit
- * light and dark modes; each variant records the appearance it used.
+ * Runtime colours are computed from `appearance` in explicit light and dark
+ * modes; each variant records the colour fields and mode it used. Type sizes
+ * and line heights follow its UI font size, and the code size its code font
+ * size. Font families and the preset families keep
+ * their authored values: every preset's variants are listed, and the
+ * appearance only says which one is in use.
  */
-export function createTokenCatalogue(): readonly CatalogueToken[] {
+export function createTokenCatalogue(
+  appearance: CatalogueAppearance = DEFAULT_NXDS_APPEARANCE
+): readonly CatalogueToken[] {
   const primitives = PRIMITIVE_FAMILIES.flatMap(primitiveLeaves);
   const lookup = primitiveLookup(primitives);
   const shadowLayers = primitives.filter(({ family }) => family === 'shadow');
@@ -536,9 +541,15 @@ export function createTokenCatalogue(): readonly CatalogueToken[] {
     ...authoredTokens(
       primitives.filter((leaf) => leaf.family !== 'shadow'),
       lookup,
-      primitiveEntry(lookup)
+      primitiveEntry(
+        lookup,
+        typographyScale(
+          appearance.prefs.uiFontSize,
+          appearance.prefs.codeFontSize
+        )
+      )
     ),
-    ...runtimeColorTokens(),
+    ...runtimeColorTokens(appearance),
     ...authoredTokens(spacingLeaves(), lookup, spacingEntry),
     ...authoredTokens(
       fileLeaves('z-index', Z_INDEX_FILE, SINGLE_SOURCE),

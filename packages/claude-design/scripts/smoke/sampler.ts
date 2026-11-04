@@ -238,10 +238,12 @@ async function measureSampler(
 
 // The sampler the export ships, mounted the way a canvas does in each mode
 // of its tweak, renders every part with no console problem, fills its board
-// to the height its canvas.json entry gives and stays inside its cards. The
+// to the height its canvas.json entry gives and stays inside its cards. A
+// themed export's sampler only has to fit its board: its theme moves where
+// the page ends. The
 // table puts canvas wrappers where only rows and cells belong, so the
 // wrapper's own nesting warning is allowed.
-export async function checkSampler() {
+export async function checkSampler({ themed = false } = {}) {
   const file = readFileSync(path.join(exportDir, SAMPLER_FILE), 'utf8');
   const source = readFileSync(
     path.join(import.meta.dirname, '..', '..', 'content', SAMPLER_FILE),
@@ -296,7 +298,7 @@ export async function checkSampler() {
     if (board.bars !== bars) {
       fail(`${name}: the bar chart draws ${board.bars} bars, not ${bars}.`);
     }
-    if (Math.abs(board.bottom - height) > 1) {
+    if (!themed && Math.abs(board.bottom - height) > 1) {
       fail(
         `${name}: the page ends at ${board.bottom}px, but $preview and the canvas.json entry give ${height}px. Set $preview's height to ${board.bottom}.`
       );

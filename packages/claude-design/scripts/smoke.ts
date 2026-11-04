@@ -7,13 +7,17 @@
 // switch that changes nothing, an overlay that doesn't open, close and return
 // focus, a token or preset that doesn't reach a component, a tree or overlay
 // that changes when each part sits in a canvas wrapper, a sampler artboard
-// that logs a problem or doesn't fill its board, or a request to the network. Each check lives in scripts/smoke/.
+// that logs a problem or doesn't fill its board, or a request to the network.
+// Then it exports the release again with every theme flag set, and checks
+// that the theme reaches the components, the presets and the sampler. Each
+// check lives in scripts/smoke/.
+import { FULL_THEME } from './full-theme.ts';
 import { ATTRIBUTE_CASES, checkAttributes } from './smoke/attributes.ts';
 import { BAD_INPUT_CASES, checkBadInput } from './smoke/bad-input.ts';
 import { checkCards } from './smoke/cards.ts';
 import { checkExamples } from './smoke/examples.ts';
 import { checkExports } from './smoke/exports.ts';
-import { browser, failures, openCanvas } from './smoke/harness.ts';
+import { closeCanvas, failures, openCanvas } from './smoke/harness.ts';
 import { checkIcons } from './smoke/icons.ts';
 import { checkOverlays, OVERLAYS } from './smoke/overlays.ts';
 import { checkPresets, PRESET_CASES } from './smoke/presets.ts';
@@ -22,6 +26,7 @@ import { checkRefs } from './smoke/refs.ts';
 import { exportRelease } from './smoke/release.ts';
 import { checkRuntimeLayer } from './smoke/runtime-layer.ts';
 import { checkSampler } from './smoke/sampler.ts';
+import { checkTheme } from './smoke/theme.ts';
 import { checkThemes } from './smoke/themes.ts';
 import { checkTimeZone } from './smoke/time-zone.ts';
 import { checkToasts, checkToastStack, TOAST_CASES } from './smoke/toasts.ts';
@@ -52,7 +57,19 @@ await checkTokens();
 await checkPresets();
 await checkRuntimeLayer();
 await checkSampler();
-await browser.close();
+await checkTheme();
+
+await openCanvas(
+  await exportRelease(
+    Object.entries(FULL_THEME).map(([flag, value]) => `--${flag}=${value}`)
+  )
+);
+await checkThemes();
+await checkTokens();
+await checkPresets();
+await checkTheme();
+await checkSampler({ themed: true });
+await closeCanvas();
 
 if (failures.length > 0) {
   console.error(
@@ -61,5 +78,5 @@ if (failures.length > 0) {
   process.exit(1);
 }
 console.log(
-  `Smoke test passed: ${cardCount} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${exampleCount} README examples against their stories, ${ATTRIBUTE_CASES.length} attribute conversions, ${BAD_INPUT_CASES.length} bad attributes, ${iconCount} icons, ${TOAST_CASES.length} toasts against toast(), ${RECHARTS_CASES.length} custom charts, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes, and the sampler artboard in both modes.`
+  `Smoke test passed: ${cardCount} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${exampleCount} README examples against their stories, ${ATTRIBUTE_CASES.length} attribute conversions, ${BAD_INPUT_CASES.length} bad attributes, ${iconCount} icons, ${TOAST_CASES.length} toasts against toast(), ${RECHARTS_CASES.length} custom charts, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes, and the sampler artboard in both modes, then a themed export through the themes, tokens, presets, theme and sampler checks.`
 );

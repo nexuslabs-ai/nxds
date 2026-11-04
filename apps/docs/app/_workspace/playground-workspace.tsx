@@ -6,6 +6,7 @@ import { Button } from '@/components/button/button';
 
 import { ThemeActions } from '../_components/ThemeActions';
 import { ThemeExport } from '../_components/ThemeExport';
+import { UseInClaudeDesign } from '../_components/UseInClaudeDesign';
 import { useDocsTheme } from '../_lib/docs-theme';
 
 import { AppearanceControls } from './appearance-controls';
@@ -32,6 +33,7 @@ export function PlaygroundWorkspace() {
       <div className="nx:flex nx:flex-col nx:gap-2 nx:pt-4 nx:border-t-default nx:border-border-default">
         <ThemeActions />
         <ThemeExport />
+        <UseInClaudeDesign className="nx:w-full" />
       </div>
     </div>
   );

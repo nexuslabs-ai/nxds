@@ -7,8 +7,8 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import postcss from 'postcss';
 
-import { DYNAMIC_VARIABLE, variablesRead } from './reads.ts';
 import { IDENTIFIER, isPageGenerated, validateIndex } from './system-index.ts';
+import { DYNAMIC_VARIABLE, variablesRead } from './token-reads.ts';
 import { familyVariable, type TokensFile } from './tokens.ts';
 import { compileTokensCss, listFamilies } from './tokens-css.ts';
 
@@ -272,11 +272,58 @@ function checkType(type: TokensFile['type'] | undefined, errors: string[]) {
   }
 }
 
+const FONT_FAMILY_NAME = /^[A-Za-z0-9]+(?: [A-Za-z0-9]+)*$/;
+
+// tokens.css loads `meta.fonts` from Google Fonts, so each must be a plain
+// family name that a font stack in `type.families` starts with.
+function checkFonts(tokens: TokensFile, errors: string[]) {
+  const fonts = tokens.meta?.fonts;
+  if (fonts === undefined) return;
+  if (!Array.isArray(fonts) || fonts.length === 0) {
+    errors.push('tokens.json meta.fonts: must be a non-empty list of names.');
+    return;
+  }
+  const heads = new Set(
+    Object.values(tokens.type?.families ?? {}).map(
+      (stack) => /^"([^"]+)"/.exec(stack)?.[1]
+    )
+  );
+  for (const font of fonts) {
+    if (typeof font !== 'string' || !FONT_FAMILY_NAME.test(font)) {
+      errors.push(`tokens.json meta.fonts: "${font}" isn't a family name.`);
+    } else if (!heads.has(font)) {
+      errors.push(
+        `tokens.json meta.fonts: no type.families stack starts with "${font}".`
+      );
+    }
+  }
+  if (new Set(fonts).size !== fonts.length) {
+    errors.push('tokens.json meta.fonts: lists a family twice.');
+  }
+}
+
 function checkTokens(root: string, errors: string[]) {
   const tokens = readJson(root, 'tokens.json', errors) as
     | TokensFile
     | undefined;
   if (!tokens) return;
+  const cssPath = path.join(root, 'tokens.css');
+  const css = existsSync(cssPath) ? readFileSync(cssPath, 'utf8') : undefined;
+  return checkTokenFiles(tokens, css, errors);
+}
+
+/** What breaks the Design System format in a tokens.json and the tokens.css compiled from it. */
+export function tokensProblems(tokens: TokensFile, css: string) {
+  const errors: string[] = [];
+  checkTokenFiles(tokens, css, errors);
+  return errors;
+}
+
+function checkTokenFiles(
+  tokens: TokensFile,
+  css: string | undefined,
+  errors: string[]
+) {
   const themes = tokens.color?.themes ?? [];
   if (themes.length === 0 || themes.length > MAX_THEMES) {
     errors.push(`tokens.json: color needs 1 to ${MAX_THEMES} themes.`);
@@ -319,13 +366,13 @@ function checkTokens(root: string, errors: string[]) {
   }
   checkAliases(colors, errors);
   checkType(tokens.type, errors);
+  checkFonts(tokens, errors);
 
-  const cssPath = path.join(root, 'tokens.css');
-  if (!existsSync(cssPath)) {
+  if (css === undefined) {
     errors.push('tokens.css: missing.');
     return { tokens, allNames };
   }
-  checkTokensCss(tokens, readFileSync(cssPath, 'utf8'), errors);
+  checkTokensCss(tokens, css, errors);
   return { tokens, allNames };
 }
 

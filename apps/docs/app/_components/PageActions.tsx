@@ -8,6 +8,7 @@ import {
   IconCopy,
   IconX,
 } from '../_lib/switchable-icons';
+import { useCopyFeedback } from '../_lib/use-copy-feedback';
 
 import {
   Button,
@@ -18,8 +19,6 @@ import {
   DropdownMenuTrigger,
 } from './nxds';
 
-const COPY_RESET_MS = 2000;
-
 const COPY_STATES = {
   idle: { icon: IconCopy, label: 'Copy page', message: '' },
   copied: {
@@ -29,8 +28,6 @@ const COPY_STATES = {
   },
   failed: { icon: IconX, label: 'Failed', message: 'Could not copy page' },
 };
-
-type CopyState = keyof typeof COPY_STATES;
 
 type Fetched =
   | { status: 'loading' }
@@ -45,12 +42,7 @@ export function PageActions({ markdownHref }: { markdownHref: string }) {
   const [markdown, setMarkdown] = React.useState<Fetched>({
     status: 'loading',
   });
-  // `seq` remounts the message, so a second copy announces again.
-  const [copy, setCopy] = React.useState<{ state: CopyState; seq: number }>({
-    state: 'idle',
-    seq: 0,
-  });
-  const timerRef = React.useRef<number | undefined>(undefined);
+  const copy = useCopyFeedback();
 
   React.useEffect(() => {
     let ignore = false;
@@ -70,29 +62,18 @@ export function PageActions({ markdownHref }: { markdownHref: string }) {
     };
   }, [markdownHref]);
 
-  React.useEffect(() => () => window.clearTimeout(timerRef.current), []);
-
-  const settle = (state: Exclude<CopyState, 'idle'>) => {
-    setCopy(({ seq }) => ({ state, seq: seq + 1 }));
-    window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(
-      () => setCopy(({ seq }) => ({ state: 'idle', seq })),
-      COPY_RESET_MS
-    );
-  };
-
   const handleCopy = async () => {
     if (markdown.status === 'loading') return;
     if (markdown.status === 'error') {
-      settle('failed');
+      copy.settle('failed');
       return;
     }
 
     try {
       await navigator.clipboard.writeText(markdown.text);
-      settle('copied');
+      copy.settle('copied');
     } catch {
-      settle('failed');
+      copy.settle('failed');
     }
   };
 

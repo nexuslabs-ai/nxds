@@ -13,7 +13,9 @@ import {
   appearancePrefsToCss,
   DEFAULT_NXDS_APPEARANCE,
   type NxdsAppearancePrefs,
+  type NxdsAppearanceState,
 } from './appearance-model';
+import { createNxdsAppearanceSnapshotFromState } from './appearance-snapshot';
 import type { Mode } from './palette';
 
 const catalogue = createTokenCatalogue();
@@ -439,6 +441,7 @@ describe('token catalogue', () => {
       ['headingFont', 'serif'],
       ['codeFont', 'monospace'],
       ['uiFontSize', prefs.uiFontSize + 2],
+      ['codeFontSize', prefs.codeFontSize + 2],
     ] as const) {
       for (const [name, after] of rootVariables({ [field]: value })) {
         if (after !== before.get(name)) changedBy.set(name, field);
@@ -469,5 +472,102 @@ describe('token catalogue', () => {
         utility
       ).toEqual(utilities.get(utility));
     }
+  });
+});
+
+const APPEARANCES: [string, NxdsAppearanceState][] = [
+  [
+    'an oklch brand on stone',
+    {
+      ...DEFAULT_NXDS_APPEARANCE,
+      brandColor: 'oklch(0.7 0.25 20)',
+      surfaceTone: 'stone',
+    },
+  ],
+  [
+    'the lowest contrast',
+    {
+      ...DEFAULT_NXDS_APPEARANCE,
+      brandColor: '#e11d48',
+      lightContrast: 0,
+      darkContrast: 0,
+    },
+  ],
+  [
+    'the highest contrast',
+    {
+      ...DEFAULT_NXDS_APPEARANCE,
+      brandColor: '#4f46e5',
+      lightContrast: 100,
+      darkContrast: 100,
+    },
+  ],
+  [
+    'the smallest UI font',
+    {
+      ...DEFAULT_NXDS_APPEARANCE,
+      prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs, uiFontSize: 8 },
+    },
+  ],
+  [
+    'the largest UI and code fonts',
+    {
+      ...DEFAULT_NXDS_APPEARANCE,
+      prefs: {
+        ...DEFAULT_NXDS_APPEARANCE.prefs,
+        uiFontSize: 32,
+        codeFontSize: 32,
+      },
+    },
+  ],
+];
+
+/** The custom properties of the block `selector` opens in `css`. */
+function snapshotBlock(css: string, selector: string): Map<string, string> {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const body = new RegExp(`(?:^|\\n)${escaped} \\{\\n([^}]*)\\}`).exec(
+    css
+  )?.[1];
+  if (body === undefined) throw new Error(`no "${selector}" block`);
+  return customProperties(body);
+}
+
+describe.each(APPEARANCES)('token catalogue at %s', (_, appearance) => {
+  const themed = new Map(
+    createTokenCatalogue(appearance).map((token) => [token.name, token])
+  );
+  const { themeCss, prefsCss } =
+    createNxdsAppearanceSnapshotFromState(appearance);
+
+  function expectAgreement(
+    declared: Map<string, string>,
+    key: VariantKey
+  ): void {
+    expect(declared.size).toBeGreaterThan(0);
+    for (const [name, value] of declared) {
+      const token = themed.get(name as CatalogueToken['name']);
+      if (!token) throw new Error(`the catalogue has no ${name}`);
+      expect(variantValue(token, key), name).toBe(value);
+    }
+  }
+
+  it('derives the colours the provider applies, in each mode', () => {
+    expectAgreement(snapshotBlock(themeCss, ':root'), {
+      preset: null,
+      mode: 'light',
+    });
+    expectAgreement(snapshotBlock(themeCss, ':root.dark'), {
+      preset: null,
+      mode: 'dark',
+    });
+  });
+
+  it('scales the type sizes and line heights the provider applies', () => {
+    const scale = new Map(
+      [...snapshotBlock(prefsCss, ':root')].filter(([name]) =>
+        /^--nx-typography-(size|line-height)-/.test(name)
+      )
+    );
+    expectAgreement(scale, { preset: null, mode: null });
   });
 });
