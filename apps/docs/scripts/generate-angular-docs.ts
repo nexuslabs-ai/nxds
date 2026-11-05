@@ -73,7 +73,8 @@ interface DocsStory {
   className: string;
   /** Import names by the module a reader imports them from. */
   byModule: Map<string, string[]>;
-  fields: { name: string; value: string; constant: boolean }[];
+  /** `uses` names the imports a field's value reads; such a field is readonly. */
+  fields: { name: string; value: string; uses: string[] }[];
   template: string;
 }
 
@@ -156,6 +157,17 @@ function metadataImports(object: ts.ObjectLiteralExpression) {
   });
 }
 
+/** The imports `value` reads when it is a name, or a call such as `iconMarkup(phosphorX)`. */
+function importsRead(value: ts.Expression): string[] {
+  if (ts.isIdentifier(value)) return [value.text];
+  if (!ts.isCallExpression(value) || !ts.isIdentifier(value.expression)) {
+    return [];
+  }
+  const args = value.arguments.map(unwrap);
+  if (!args.every(ts.isIdentifier)) return [];
+  return [value.expression.text, ...args.map((arg) => arg.text)];
+}
+
 /**
  * A story's `props` as component fields. A const object, such as `icons`, or
  * a spread of one gives one field per property.
@@ -182,7 +194,7 @@ function storyFields(
       {
         name: prop.name.getText(),
         value: value.getText(),
-        constant: ts.isIdentifier(value),
+        uses: importsRead(value),
       },
     ];
   });
@@ -272,7 +284,7 @@ function readDocsStories(slug: string) {
           const selector = selectorOf(path.resolve(dir, specifier), name);
           return selector !== null && usesSelector(text, selector);
         }),
-        ...fields.filter(({ constant }) => constant).map(({ value }) => value),
+        ...fields.flatMap(({ uses }) => uses),
       ];
       const byModule = new Map<string, string[]>();
       for (const id of used) {
@@ -310,7 +322,7 @@ async function componentSource(story: DocsStory) {
       ([module]) => module.startsWith('@/') || module === '@angular/forms'
     )
     .flatMap(([, names]) => names)
-    .filter((name) => !story.fields.some(({ value }) => value === name))
+    .filter((name) => !story.fields.some(({ uses }) => uses.includes(name)))
     .sort();
   const selector = `app-${story.id.replace('/', '-')}`;
   const indented = story.template
@@ -318,8 +330,8 @@ async function componentSource(story: DocsStory) {
     .map((row) => (row ? `    ${row}` : row))
     .join('\n');
   const fields = story.fields.map(
-    ({ name, value, constant }) =>
-      `  protected ${constant ? 'readonly ' : ''}${name} = ${value};`
+    ({ name, value, uses }) =>
+      `  protected ${uses.length > 0 ? 'readonly ' : ''}${name} = ${value};`
   );
 
   return prettier.format(

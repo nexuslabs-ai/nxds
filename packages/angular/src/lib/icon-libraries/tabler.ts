@@ -41,46 +41,48 @@ import {
 } from '@ng-icons/tabler-icons';
 import { tablerCircleFill } from '@ng-icons/tabler-icons/fill';
 
+import { iconMarkup } from '../icon';
+
 // Loading states
-export const IconLoader2 = tablerLoader2;
+export const IconLoader2 = iconMarkup(tablerLoader2);
 
 // Navigation
-export const IconArrowDown = tablerArrowDown;
-export const IconArrowLeft = tablerArrowLeft;
-export const IconArrowRight = tablerArrowRight;
-export const IconArrowUp = tablerArrowUp;
-export const IconChevronDown = tablerChevronDown;
-export const IconChevronLeft = tablerChevronLeft;
-export const IconChevronRight = tablerChevronRight;
-export const IconChevronUp = tablerChevronUp;
-export const IconDots = tablerDots;
-export const IconLayoutSidebar = tablerLayoutSidebar;
-export const IconSelector = tablerSelector;
+export const IconArrowDown = iconMarkup(tablerArrowDown);
+export const IconArrowLeft = iconMarkup(tablerArrowLeft);
+export const IconArrowRight = iconMarkup(tablerArrowRight);
+export const IconArrowUp = iconMarkup(tablerArrowUp);
+export const IconChevronDown = iconMarkup(tablerChevronDown);
+export const IconChevronLeft = iconMarkup(tablerChevronLeft);
+export const IconChevronRight = iconMarkup(tablerChevronRight);
+export const IconChevronUp = iconMarkup(tablerChevronUp);
+export const IconDots = iconMarkup(tablerDots);
+export const IconLayoutSidebar = iconMarkup(tablerLayoutSidebar);
+export const IconSelector = iconMarkup(tablerSelector);
 
 // Actions
-export const IconCheck = tablerCheck;
-export const IconCopy = tablerCopy;
-export const IconMinus = tablerMinus;
-export const IconPencil = tablerPencil;
-export const IconPlus = tablerPlus;
-export const IconX = tablerX;
-export const IconCircleFilled = tablerCircleFill;
+export const IconCheck = iconMarkup(tablerCheck);
+export const IconCopy = iconMarkup(tablerCopy);
+export const IconMinus = iconMarkup(tablerMinus);
+export const IconPencil = iconMarkup(tablerPencil);
+export const IconPlus = iconMarkup(tablerPlus);
+export const IconX = iconMarkup(tablerX);
+export const IconCircleFilled = iconMarkup(tablerCircleFill);
 
 // Filter field types
-export const IconCalendar = tablerCalendar;
-export const IconHash = tablerHash;
-export const IconLetterCase = tablerLetterCase;
-export const IconList = tablerList;
+export const IconCalendar = iconMarkup(tablerCalendar);
+export const IconHash = iconMarkup(tablerHash);
+export const IconLetterCase = iconMarkup(tablerLetterCase);
+export const IconList = iconMarkup(tablerList);
 
 // Search / input
-export const IconSearch = tablerSearch;
+export const IconSearch = iconMarkup(tablerSearch);
 
 // Alerts/Status
-export const IconAlertCircle = tablerAlertCircle;
-export const IconAlertTriangle = tablerAlertTriangle;
-export const IconCircleCheck = tablerCircleCheck;
-export const IconInfoCircle = tablerInfoCircle;
+export const IconAlertCircle = iconMarkup(tablerAlertCircle);
+export const IconAlertTriangle = iconMarkup(tablerAlertTriangle);
+export const IconCircleCheck = iconMarkup(tablerCircleCheck);
+export const IconInfoCircle = iconMarkup(tablerInfoCircle);
 
 // Layout
-export const IconGripVertical = tablerGripVertical;
-export const IconPalette = tablerPalette;
+export const IconGripVertical = iconMarkup(tablerGripVertical);
+export const IconPalette = iconMarkup(tablerPalette);

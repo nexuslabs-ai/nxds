@@ -41,49 +41,50 @@ import {
   lucideX,
 } from '@ng-icons/lucide';
 
+import { iconMarkup } from '../icon';
+
 // Loading states
-export const IconLoader2 = lucideLoaderCircle;
+export const IconLoader2 = iconMarkup(lucideLoaderCircle);
 
 // Navigation
-export const IconArrowDown = lucideArrowDown;
-export const IconArrowLeft = lucideArrowLeft;
-export const IconArrowRight = lucideArrowRight;
-export const IconArrowUp = lucideArrowUp;
-export const IconChevronDown = lucideChevronDown;
-export const IconChevronLeft = lucideChevronLeft;
-export const IconChevronRight = lucideChevronRight;
-export const IconChevronUp = lucideChevronUp;
-export const IconDots = lucideEllipsis;
-export const IconLayoutSidebar = lucidePanelLeft;
-export const IconSelector = lucideChevronsUpDown;
+export const IconArrowDown = iconMarkup(lucideArrowDown);
+export const IconArrowLeft = iconMarkup(lucideArrowLeft);
+export const IconArrowRight = iconMarkup(lucideArrowRight);
+export const IconArrowUp = iconMarkup(lucideArrowUp);
+export const IconChevronDown = iconMarkup(lucideChevronDown);
+export const IconChevronLeft = iconMarkup(lucideChevronLeft);
+export const IconChevronRight = iconMarkup(lucideChevronRight);
+export const IconChevronUp = iconMarkup(lucideChevronUp);
+export const IconDots = iconMarkup(lucideEllipsis);
+export const IconLayoutSidebar = iconMarkup(lucidePanelLeft);
+export const IconSelector = iconMarkup(lucideChevronsUpDown);
 
 // Actions
-export const IconCheck = lucideCheck;
-export const IconCopy = lucideCopy;
-export const IconMinus = lucideMinus;
-export const IconPencil = lucidePencil;
-export const IconPlus = lucidePlus;
-export const IconX = lucideX;
-export const IconCircleFilled = lucideCircle.replace(
-  'fill="none"',
-  'fill="currentColor"'
+export const IconCheck = iconMarkup(lucideCheck);
+export const IconCopy = iconMarkup(lucideCopy);
+export const IconMinus = iconMarkup(lucideMinus);
+export const IconPencil = iconMarkup(lucidePencil);
+export const IconPlus = iconMarkup(lucidePlus);
+export const IconX = iconMarkup(lucideX);
+export const IconCircleFilled = iconMarkup(
+  lucideCircle.replace('fill="none"', 'fill="currentColor"')
 );
 
 // Filter field types
-export const IconCalendar = lucideCalendar;
-export const IconHash = lucideHash;
-export const IconLetterCase = lucideCaseSensitive;
-export const IconList = lucideList;
+export const IconCalendar = iconMarkup(lucideCalendar);
+export const IconHash = iconMarkup(lucideHash);
+export const IconLetterCase = iconMarkup(lucideCaseSensitive);
+export const IconList = iconMarkup(lucideList);
 
 // Search / input
-export const IconSearch = lucideSearch;
+export const IconSearch = iconMarkup(lucideSearch);
 
 // Alerts/Status
-export const IconAlertCircle = lucideCircleAlert;
-export const IconAlertTriangle = lucideTriangleAlert;
-export const IconCircleCheck = lucideCircleCheck;
-export const IconInfoCircle = lucideInfo;
+export const IconAlertCircle = iconMarkup(lucideCircleAlert);
+export const IconAlertTriangle = iconMarkup(lucideTriangleAlert);
+export const IconCircleCheck = iconMarkup(lucideCircleCheck);
+export const IconInfoCircle = iconMarkup(lucideInfo);
 
 // Layout
-export const IconGripVertical = lucideGripVertical;
-export const IconPalette = lucidePalette;
+export const IconGripVertical = iconMarkup(lucideGripVertical);
+export const IconPalette = iconMarkup(lucidePalette);

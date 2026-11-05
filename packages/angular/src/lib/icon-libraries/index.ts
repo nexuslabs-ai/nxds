@@ -1,5 +1,6 @@
 import type { NxdsIconLibrary } from '@nxds/core';
 
+import type { IconMarkup } from '../icon';
 import * as phosphor from '../icons';
 
 import * as hugeicons from './hugeicons';
@@ -16,4 +17,4 @@ export const ICON_SETS = {
   tabler,
   hugeicons,
   remix,
-} satisfies Record<NxdsIconLibrary, Record<IconName, string>>;
+} satisfies Record<NxdsIconLibrary, Record<IconName, IconMarkup>>;

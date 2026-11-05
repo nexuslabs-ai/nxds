@@ -366,6 +366,13 @@ export function angularExampleSource(
       exampleIconName(phosphorOf(name), library)
     );
     imported.add(icon);
+    // `hugeicon()` already returns `IconMarkup`, so it replaces the wrapper too.
+    if (huge) {
+      rewritten = rewritten.replace(
+        new RegExp(`\\biconMarkup\\(${name}\\)`, 'g'),
+        `hugeicon(${icon})`
+      );
+    }
     rewritten = rewritten.replace(
       new RegExp(`\\b${name}\\b`, 'g'),
       huge ? `hugeicon(${icon})` : icon
@@ -379,10 +386,11 @@ export function angularExampleSource(
   );
   if (huge) {
     const libIcon = rewritten.match(ANGULAR_LIB_ICON);
+    const stillMarked = /\biconMarkup\(/.test(rewritten);
     const helpers = [
       ...(libIcon?.[1] ?? '').split(',').map((name) => name.trim()),
       'hugeicon',
-    ].filter(Boolean);
+    ].filter((name) => name && (name !== 'iconMarkup' || stillMarked));
     rewritten = libIcon
       ? rewritten.replace(libIcon[0], importLine(helpers, '@/lib/icon'))
       : `${importLine(helpers, '@/lib/icon')}\n${rewritten}`;

@@ -11,7 +11,7 @@ import {
 } from '@storybook/angular-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { NxIcon } from '../../lib/icon';
+import { iconMarkup, NxIcon } from '../../lib/icon';
 import { NxButton } from '../button/button';
 
 import {
@@ -33,10 +33,10 @@ const VARIANTS = [
 ] as const;
 
 const icons = {
-  phCheckCircle: phosphorCheckCircle,
-  phInfo: phosphorInfo,
-  phWarning: phosphorWarning,
-  phWarningCircle: phosphorWarningCircle,
+  phCheckCircle: iconMarkup(phosphorCheckCircle),
+  phInfo: iconMarkup(phosphorInfo),
+  phWarning: iconMarkup(phosphorWarning),
+  phWarningCircle: iconMarkup(phosphorWarningCircle),
 };
 
 type AlertArgs = {

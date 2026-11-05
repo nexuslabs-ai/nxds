@@ -28,16 +28,28 @@ function declarations(style: string) {
   });
 }
 
+declare const trusted: unique symbol;
+
+/** SVG markup the app ships, marked by `iconMarkup`. `nxIcon` draws only this. */
+export type IconMarkup = string & { readonly [trusted]: true };
+
+/**
+ * Marks `svg` as icon markup the app ships, such as an `@ng-icons` export.
+ * Never pass user input: `nxIcon` writes the markup unsanitized.
+ */
+export function iconMarkup(svg: string): IconMarkup {
+  return svg as IconMarkup;
+}
+
 /**
  * Draws icon markup, such as an export of `lib/icons`, as the host `<svg>`
  * itself: its attributes land on the host and its shapes inside it. The icon
  * stays one bare `<svg>`, so `[&>svg]` and `[&_svg]` classes style it.
  *
- * The markup must be trusted icon markup, never user input: its shapes are
- * written unsanitized. Call it from the constructor of a directive on an
- * `<svg>`, and bind what it returns to the host's `[innerHTML]`.
+ * Call it in an injection context, such as a field initializer of a directive
+ * on an `<svg>`, and bind what it returns to the host's `[innerHTML]`.
  */
-export function drawIcon(markup: () => string): Signal<SafeHtml> {
+export function drawIcon(markup: () => IconMarkup): Signal<SafeHtml> {
   const element = inject<ElementRef<SVGSVGElement>>(ElementRef).nativeElement;
   const renderer = inject(Renderer2);
   const sanitizer = inject(DomSanitizer);
@@ -93,7 +105,9 @@ export function hugeicon(icon: IconSvgElement, { fill = 'none' } = {}) {
       return `<${tag} ${pairs.join(' ')}></${tag}>`;
     })
     .join('');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${fill}">${children}</svg>`;
+  return iconMarkup(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${fill}">${children}</svg>`
+  );
 }
 
 /** Draws an icon: `<svg [nxIcon]="IconX"></svg>`. */
@@ -102,8 +116,8 @@ export function hugeicon(icon: IconSvgElement, { fill = 'none' } = {}) {
   host: { '[innerHTML]': 'shapes()' },
 })
 export class NxIcon {
-  /** The icon's SVG markup. Pass trusted icon markup only, never user input. */
-  readonly nxIcon = input.required<string>();
+  /** The icon's SVG markup, marked by `iconMarkup`. */
+  readonly nxIcon = input.required<IconMarkup>();
 
   protected readonly shapes = drawIcon(this.nxIcon);
 }

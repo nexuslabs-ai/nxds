@@ -1,28 +1,46 @@
 import { DOCUMENT } from '@angular/common';
-import { DestroyRef, inject } from '@angular/core';
-
-let openPanels = 0;
-let unlockPageScroll = () => {};
+import { DestroyRef, inject, Injectable } from '@angular/core';
 
 /**
- * Stops the page scrolling behind an open overlay until the last one closes.
- * The body takes the scrollbar's width as padding, so the page doesn't shift.
- * Call it from the constructor of an overlay's panel.
+ * Stops the page scrolling while any overlay holds it. One per app root, so
+ * every overlay shares its count.
  */
-export function lockPageScroll(): void {
-  const { body, documentElement, defaultView } = inject(DOCUMENT);
-  if (openPanels++ === 0) {
+@Injectable({ providedIn: 'root' })
+export class PageScrollLock {
+  private readonly document = inject(DOCUMENT);
+  private holds = 0;
+  private restore = () => {};
+
+  /**
+   * Locks the page until every hold is released. The body takes the
+   * scrollbar's width as padding, so the page doesn't shift.
+   * @returns A function that releases this hold.
+   */
+  hold(): () => void {
+    if (this.holds++ === 0) this.lock();
+    return () => {
+      if (--this.holds === 0) this.restore();
+    };
+  }
+
+  private lock() {
+    const { body, documentElement, defaultView } = this.document;
     const { overflow, paddingRight } = body.style;
     const scrollbar =
       (defaultView?.innerWidth ?? 0) - documentElement.clientWidth;
     body.style.overflow = 'hidden';
     if (scrollbar > 0) body.style.paddingRight = `${scrollbar}px`;
-    unlockPageScroll = () => {
+    this.restore = () => {
       body.style.overflow = overflow;
       body.style.paddingRight = paddingRight;
     };
   }
-  inject(DestroyRef).onDestroy(() => {
-    if (--openPanels === 0) unlockPageScroll();
-  });
+}
+
+/**
+ * Holds the page scroll lock until the caller is destroyed. Call it in an
+ * injection context, such as the constructor of an overlay's panel.
+ */
+export function lockPageScroll(): void {
+  inject(DestroyRef).onDestroy(inject(PageScrollLock).hold());
 }

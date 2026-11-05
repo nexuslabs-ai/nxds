@@ -13,7 +13,7 @@ import {
 } from '@storybook/angular-vite';
 import { expect, within } from 'storybook/test';
 
-import { NxIcon } from '../../lib/icon';
+import { iconMarkup, NxIcon } from '../../lib/icon';
 import { NxSpinner } from '../spinner/spinner';
 
 import { NxBadge, NxBadgeLeftIcon, NxBadgeRightIcon } from './badge';
@@ -29,12 +29,12 @@ const VARIANTS = [
 const FILLS = ['solid', 'light', 'outline'] as const;
 
 const icons = {
-  phCheck: phosphorCheck,
-  phCheckCircle: phosphorCheckCircle,
-  phInfo: phosphorInfo,
-  phWarning: phosphorWarning,
-  phWarningCircle: phosphorWarningCircle,
-  phX: phosphorX,
+  phCheck: iconMarkup(phosphorCheck),
+  phCheckCircle: iconMarkup(phosphorCheckCircle),
+  phInfo: iconMarkup(phosphorInfo),
+  phWarning: iconMarkup(phosphorWarning),
+  phWarningCircle: iconMarkup(phosphorWarningCircle),
+  phX: iconMarkup(phosphorX),
 };
 
 // `nx:h-6` / `nx:w-6` at `density: default`.

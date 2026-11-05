@@ -41,46 +41,48 @@ import {
   remixSubtractLine,
 } from '@ng-icons/remixicon';
 
+import { iconMarkup } from '../icon';
+
 // Loading states
-export const IconLoader2 = remixLoader4Line;
+export const IconLoader2 = iconMarkup(remixLoader4Line);
 
 // Navigation
-export const IconArrowDown = remixArrowDownLine;
-export const IconArrowLeft = remixArrowLeftLine;
-export const IconArrowRight = remixArrowRightLine;
-export const IconArrowUp = remixArrowUpLine;
-export const IconChevronDown = remixArrowDownSLine;
-export const IconChevronLeft = remixArrowLeftSLine;
-export const IconChevronRight = remixArrowRightSLine;
-export const IconChevronUp = remixArrowUpSLine;
-export const IconDots = remixMoreLine;
-export const IconLayoutSidebar = remixSideBarLine;
-export const IconSelector = remixExpandUpDownLine;
+export const IconArrowDown = iconMarkup(remixArrowDownLine);
+export const IconArrowLeft = iconMarkup(remixArrowLeftLine);
+export const IconArrowRight = iconMarkup(remixArrowRightLine);
+export const IconArrowUp = iconMarkup(remixArrowUpLine);
+export const IconChevronDown = iconMarkup(remixArrowDownSLine);
+export const IconChevronLeft = iconMarkup(remixArrowLeftSLine);
+export const IconChevronRight = iconMarkup(remixArrowRightSLine);
+export const IconChevronUp = iconMarkup(remixArrowUpSLine);
+export const IconDots = iconMarkup(remixMoreLine);
+export const IconLayoutSidebar = iconMarkup(remixSideBarLine);
+export const IconSelector = iconMarkup(remixExpandUpDownLine);
 
 // Actions
-export const IconCheck = remixCheckLine;
-export const IconCopy = remixFileCopyLine;
-export const IconMinus = remixSubtractLine;
-export const IconPencil = remixPencilLine;
-export const IconPlus = remixAddLine;
-export const IconX = remixCloseLine;
-export const IconCircleFilled = remixCircleFill;
+export const IconCheck = iconMarkup(remixCheckLine);
+export const IconCopy = iconMarkup(remixFileCopyLine);
+export const IconMinus = iconMarkup(remixSubtractLine);
+export const IconPencil = iconMarkup(remixPencilLine);
+export const IconPlus = iconMarkup(remixAddLine);
+export const IconX = iconMarkup(remixCloseLine);
+export const IconCircleFilled = iconMarkup(remixCircleFill);
 
 // Filter field types
-export const IconCalendar = remixCalendarLine;
-export const IconHash = remixHashtag;
-export const IconLetterCase = remixFontSize;
-export const IconList = remixListUnordered;
+export const IconCalendar = iconMarkup(remixCalendarLine);
+export const IconHash = iconMarkup(remixHashtag);
+export const IconLetterCase = iconMarkup(remixFontSize);
+export const IconList = iconMarkup(remixListUnordered);
 
 // Search / input
-export const IconSearch = remixSearchLine;
+export const IconSearch = iconMarkup(remixSearchLine);
 
 // Alerts/Status
-export const IconAlertCircle = remixErrorWarningLine;
-export const IconAlertTriangle = remixAlertLine;
-export const IconCircleCheck = remixCheckboxCircleLine;
-export const IconInfoCircle = remixInformationLine;
+export const IconAlertCircle = iconMarkup(remixErrorWarningLine);
+export const IconAlertTriangle = iconMarkup(remixAlertLine);
+export const IconCircleCheck = iconMarkup(remixCheckboxCircleLine);
+export const IconInfoCircle = iconMarkup(remixInformationLine);
 
 // Layout
-export const IconGripVertical = remixDraggable;
-export const IconPalette = remixPaletteLine;
+export const IconGripVertical = iconMarkup(remixDraggable);
+export const IconPalette = iconMarkup(remixPaletteLine);
