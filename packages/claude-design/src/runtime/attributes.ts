@@ -25,6 +25,8 @@ export interface CanvasSchema {
   unwrap: string[];
   /** A `data-*` attribute a canvas keeps as written, by the prop it sets: `data-key` for Recharts' `dataKey`. */
   renames: Record<string, Record<string, string>>;
+  /** Each part's required function props, which get a function that does nothing when the markup binds none. */
+  handlers: Record<string, string[]>;
 }
 
 const MAX_CACHED_LENGTH = 4 * 1024 * 1024;
@@ -186,10 +188,26 @@ function renamed(part: string, props: Props): Props | null {
   return result;
 }
 
+const doNothing = () => undefined;
+
+// `props` with a function that does nothing for each required handler the
+// markup leaves out, so a static mockup doesn't throw when it's clicked.
+function withHandlers(part: string, props: Props): Props | null {
+  const missing = (CANVAS_SCHEMA.handlers[part] ?? []).filter(
+    (key) => typeof props[key] !== 'function'
+  );
+  if (missing.length === 0) return null;
+  return {
+    ...props,
+    ...Object.fromEntries(missing.map((key) => [key, doNothing])),
+  };
+}
+
 /** `props` with each attribute string converted to its prop's type. */
 export function useCanvasProps<P extends object>(part: string, props: P): P {
   const id = React.useId().replace(/:/g, '');
   let result: Props | null = renamed(part, props as Props);
+  result = withHandlers(part, result ?? (props as Props)) ?? result;
   // A canvas passes x-import content as an array, even for one child, and
   // keeps indentation. Button's `asChild` needs its one element, AvatarGroup's
   // `max` counts children, and a `["\n"]` child would replace a FieldError's

@@ -12,8 +12,9 @@ import { build, type Plugin } from 'esbuild';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { CANVAS_EXAMPLES } from './canvas-examples.ts';
 import { type CanvasExample, canvasExample } from './canvas-markup.ts';
-import { CANVAS_NOTES, ROOT_PARTS } from './groups.ts';
+import { ROOT_PARTS } from './groups.ts';
 import type { FlatComponent, FlatProp } from './props.ts';
 import { NAMESPACE } from './system-index.ts';
 
@@ -241,42 +242,44 @@ export function propsSection(parts: readonly FlatComponent[]) {
   return lines;
 }
 
-/** Throws when a CANVAS_NOTES key names no card, or a note names a part the bundle doesn't export. */
-export function checkCanvasNotes(
+/** Throws when a CANVAS_EXAMPLES key names no card, or an entry names a part the bundle doesn't export. */
+export function checkCanvasExamples(
   cards: readonly string[],
   exported: ReadonlySet<string>
 ) {
-  const problems = Object.entries(CANVAS_NOTES).flatMap(([card, note]) => {
-    if (!cards.includes(card)) return [`${card} is no card`];
-    return [...note.matchAll(new RegExp(`\\b${NAMESPACE}\\.(\\w+)`, 'g'))]
-      .map(([, part]) => part ?? '')
-      .filter((part) => !exported.has(part))
-      .map(
-        (part) =>
-          `${card} names ${NAMESPACE}.${part}, which the bundle doesn't export`
-      );
-  });
+  const problems = Object.entries(CANVAS_EXAMPLES).flatMap(
+    ([card, section]) => {
+      if (!cards.includes(card)) return [`${card} is no card`];
+      return [...section.matchAll(new RegExp(`\\b${NAMESPACE}\\.(\\w+)`, 'g'))]
+        .map(([, part]) => part ?? '')
+        .filter((part) => !exported.has(part))
+        .map(
+          (part) =>
+            `${card} names ${NAMESPACE}.${part}, which the bundle doesn't export`
+        );
+    }
+  );
   if (problems.length > 0) {
     throw new Error(
-      `README: fix these CANVAS_NOTES in src/groups.ts:\n  ${problems.join('\n  ')}`
+      `README: fix these CANVAS_EXAMPLES in src/canvas-examples.ts:\n  ${problems.join('\n  ')}`
     );
   }
 }
 
 // Used when no docs story's markup can be written as attributes: the card's
-// note, or its root part mounted alone.
+// written section, or its root part mounted alone.
 function canvasSection(
   folder: ComponentFolder,
   main: FlatComponent,
   example: CanvasExample | null
 ) {
-  const note = CANVAS_NOTES[folder.name];
-  if (note && example) {
+  const written = CANVAS_EXAMPLES[folder.name];
+  if (written && example) {
     throw new Error(
-      `README: ${folder.name} has a canvas example now; remove its entry from CANVAS_NOTES in src/groups.ts.`
+      `README: ${folder.name} has a canvas example now; remove its entry from CANVAS_EXAMPLES in src/canvas-examples.ts.`
     );
   }
-  if (note) return [note];
+  if (written) return [written];
   const markup =
     example?.markup ??
     `<x-import component-from-global-scope="${NAMESPACE}.${main.name}"></x-import>`;

@@ -48,6 +48,7 @@ export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
     required: {},
     unwrap: parts.filter((part) => part.unwraps).map((part) => part.name),
     renames: {},
+    handlers: {},
   };
   for (const part of parts) {
     const renames = part.props
@@ -55,6 +56,10 @@ export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
       .map((prop) => [kebab(prop.name), prop.name]);
     if (renames.length > 0)
       schema.renames[part.name] = Object.fromEntries(renames);
+    const handlers = part.props
+      .filter((prop) => isRequired(prop) && prop.attribute?.kind === 'none')
+      .map((prop) => prop.name);
+    if (handlers.length > 0) schema.handlers[part.name] = handlers;
     const attributes: Record<string, SchemaAttribute> = {};
     const required: string[] = [];
     for (const prop of part.props) {

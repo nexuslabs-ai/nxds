@@ -157,7 +157,7 @@ class Component extends DCLogic {
 - A prop with a doc comment such as "With `type="multiple"`, a comma list" reads its list form only beside that `type`. DatePicker's `selected` follows `mode` the same way: one date, a comma list of dates, or a range as its first and last date, `"2026-10-01,2026-10-07"`.
 - An attribute that doesn't fit its prop logs a `[nxds]` warning and leaves the prop at its default. Read the console when a component looks wrong.
 - `{{...}}` and `dc-props` pass their values through unchanged.
-- A prop that takes a function, a ref or a DOM node has no attribute. `coverage.md` in the export lists them, and why a canvas doesn't need them.
+- A prop that takes a function has no attribute of its own. Bind it to a handler the artboard's script returns: `on-value-change="{{setFilters}}"`. `{{filters}}` looks up a name that `renderVals()` returns. It is never an expression, so work out a computed value in `renderVals()` and return it by name. A ref or a DOM node can't be set. `coverage.md` in the export lists these props.
 - Show an overlay open with `default-open` on its root part, such as `Nxds.Dialog`. A modal overlay locks the rest of the artboard while it's open, as it does in an app. Set `modal="false"` on a `Nxds.DropdownMenu` that shouldn't.
 - Lay out artboards with the spacing tokens, not raw pixel values.
 - Mount each part as its own `x-import`, the way a component's README shows. The canvas puts each one in a wrapper, and the parts keep their layout, borders and icon sizes through it. An `as-child` trigger opens its overlay from the element inside the wrapper.

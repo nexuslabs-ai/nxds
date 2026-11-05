@@ -121,7 +121,8 @@ const NOT_NEEDED: Readonly<Record<string, string>> = {
   'Toaster.*': TOASTER,
 };
 
-const HANDLER = 'a function: an event handler, callback or ref';
+const HANDLER =
+  "a function or ref: bind a function to a handler from the artboard's script with `{{name}}`";
 
 export type Control = 'dropdown' | 'toggle' | 'number' | 'text' | 'content';
 
