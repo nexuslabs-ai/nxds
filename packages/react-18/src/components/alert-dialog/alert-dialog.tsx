@@ -275,7 +275,10 @@ const AlertDialogTitle = React.forwardRef<
   return (
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
-      className={cn('nx:m-0 nx:typography-heading-small', className)}
+      className={cn(
+        'nx:m-0 nx:typography-heading-small nx:text-balance',
+        className
+      )}
       {...props}
     />
   );

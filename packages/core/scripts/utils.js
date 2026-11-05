@@ -360,7 +360,6 @@ export function generateTypographyUtilitiesCSS(tokensDir, primitiveMap) {
     // text-* utilities (which are used for both color and font-size)
     css += `@utility ${pathToCssVarPrefixed(token.path, 'typography')} {\n`;
     for (const declaration of formatTypographyDeclarations(
-      token.path,
       token.value,
       primitiveMap
     )) {

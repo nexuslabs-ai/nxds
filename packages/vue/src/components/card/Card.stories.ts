@@ -371,3 +371,25 @@ export const LongTitleWithAction: Story = {
     await expect(titleRect.right).toBeLessThanOrEqual(actionRect.left + 0.5);
   },
 };
+
+export const TruncatedTitle: Story = {
+  render: () => ({
+    components: { Card, CardHeader, CardTitle },
+    template: `
+      <Card class="nx:w-64">
+        <CardHeader>
+          <CardTitle class="nx:truncate">Quarterly revenue operations review with customer expansion notes</CardTitle>
+        </CardHeader>
+      </Card>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const title = within(canvasElement).getByText(
+      'Quarterly revenue operations review with customer expansion notes'
+    );
+    // A long title stays on one line and ends with an ellipsis.
+    await expect(getComputedStyle(title).whiteSpace).toBe('nowrap');
+    await expect(getComputedStyle(title).textOverflow).toBe('ellipsis');
+    await expect(title.scrollWidth).toBeGreaterThan(title.clientWidth);
+  },
+};

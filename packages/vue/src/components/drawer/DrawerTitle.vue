@@ -23,7 +23,9 @@ const forwarded = useForwardProps(delegated);
   <DrawerTitle
     v-bind="forwarded"
     data-slot="drawer-title"
-    :class="cn('nx:m-0 nx:typography-heading-xsmall', props.class)"
+    :class="
+      cn('nx:m-0 nx:typography-heading-xsmall nx:text-balance', props.class)
+    "
   >
     <slot />
   </DrawerTitle>

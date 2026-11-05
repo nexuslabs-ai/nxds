@@ -4,7 +4,7 @@ import { SectionHeading, SubsectionHeading } from '../../_components/Heading';
 /**
  * Foundations → Typography. Server component — a live specimen of the type
  * scale (every `typography-*` tier rendered at size), the type families, and
- * the letter-spacing / text-wrap rules.
+ * the letter-spacing rules.
  *
  * The tier classes are stored as full literal strings so Tailwind's scanner
  * emits them; the composites also ship wholesale via @nxds/tailwind.
@@ -76,7 +76,7 @@ const SCALE: {
         cls: 'nx:typography-body-default',
         name: 'body-default',
         sample:
-          'Body-default is the workhorse reading size for documentation prose, with text-wrap: pretty to guard against orphans and widows.',
+          'Body-default is the workhorse reading size for documentation prose.',
       },
       {
         cls: 'nx:typography-body-small',

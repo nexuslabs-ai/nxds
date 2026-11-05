@@ -115,7 +115,7 @@ function PageHeaderTitle({
     <Comp
       data-slot="page-header-title"
       className={cn(
-        'nx:m-0 nx:wrap-anywhere nx:typography-heading-medium nx:text-foreground',
+        'nx:m-0 nx:wrap-anywhere nx:typography-heading-medium nx:text-balance nx:text-foreground',
         className
       )}
       {...props}

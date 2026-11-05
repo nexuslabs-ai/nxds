@@ -18,7 +18,7 @@ const props = withDefaults(defineProps<PageHeaderTitleProps>(), { as: 'h1' });
     :as-child="asChild"
     :class="
       cn(
-        'nx:m-0 nx:wrap-anywhere nx:typography-heading-medium nx:text-foreground',
+        'nx:m-0 nx:wrap-anywhere nx:typography-heading-medium nx:text-balance nx:text-foreground',
         props.class
       )
     "
