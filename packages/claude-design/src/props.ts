@@ -170,12 +170,22 @@ function renderedTags(symbol: ts.Symbol) {
   return tags;
 }
 
-// The parts that render an UNWRAPPING_TAGS primitive, directly or through
-// another such part, so `ComboboxList` counts because it renders `CommandList`.
-function unwrappingParts(parts: ReadonlyMap<string, ts.Symbol>) {
-  const tagsByPart = [...parts].map(
-    ([name, symbol]) => [name, renderedTags(symbol)] as const
-  );
+function takesChildren(checker: ts.TypeChecker, symbol: ts.Symbol) {
+  const resolved = propsType(checker, symbol);
+  if (!resolved) return false;
+  return propSymbols(checker, resolved.type).byName.has('children');
+}
+
+// The parts that take children and render an UNWRAPPING_TAGS primitive,
+// directly or through another such part, so `ComboboxList` counts because it
+// renders `CommandList`, and `BarChart` doesn't because it takes no children.
+function unwrappingParts(
+  checker: ts.TypeChecker,
+  parts: ReadonlyMap<string, ts.Symbol>
+) {
+  const tagsByPart = [...parts]
+    .filter(([, symbol]) => takesChildren(checker, symbol))
+    .map(([name, symbol]) => [name, renderedTags(symbol)] as const);
   const unwrapping = new Set(UNWRAPPING_TAGS);
   let grew = true;
   while (grew) {
@@ -775,7 +785,7 @@ function flatComponent(
 export function flatComponents(): FlatComponent[] {
   const { checker, exported } = reactProgram();
   const parts = publicComponents(checker, exported, componentsRoot);
-  const unwrapping = unwrappingParts(parts);
+  const unwrapping = unwrappingParts(checker, parts);
   return [
     ...[...parts]
       .map(([name, symbol]) => ({
