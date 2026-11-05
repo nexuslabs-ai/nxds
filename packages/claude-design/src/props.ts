@@ -121,7 +121,7 @@ const NOT_NEEDED: Readonly<Record<string, string>> = {
   'Toaster.*': TOASTER,
 };
 
-const HANDLER =
+export const HANDLER =
   "a function or ref: bind a function to a handler from the artboard's script with `{{name}}`";
 
 export type Control = 'dropdown' | 'toggle' | 'number' | 'text' | 'content';
@@ -470,15 +470,13 @@ function attributeOf(
   const values = members.filter(
     (member) => !isFunction(checker, member) && !isRef(member)
   );
-  if (values.length === 0) {
-    return { kind: 'none', reason: HANDLER, handler: true };
-  }
+  if (values.length === 0) return { kind: 'handler' };
 
   const scalar = scalarOf(values);
   if (scalar) return scalar;
 
   const reason = notNeeded(part, name);
-  if (reason) return { kind: 'none', reason, handler: false };
+  if (reason) return { kind: 'none', reason };
   if (JSON_PROPS[part]?.includes(name)) return jsonOf(checker, type, values);
 
   if (values.every(isDate)) return { kind: 'date', selection: null };
@@ -592,7 +590,7 @@ function optionCount(attribute: Attribute) {
 function controlOf(attribute: Attribute | null, type: string): Control | null {
   if (!attribute) return null;
   if (attribute.kind === 'content') return 'content';
-  if (attribute.kind === 'none') return null;
+  if (attribute.kind === 'handler' || attribute.kind === 'none') return null;
   if (type === 'boolean') return 'toggle';
   if (type === 'number') return 'number';
   if (type === 'string') return 'text';
@@ -879,7 +877,12 @@ function rechartsParts(
         `${name}.${prop}`,
         to
       );
-      if (!found || !attribute || attribute.kind === 'none') {
+      if (
+        !found ||
+        !attribute ||
+        attribute.kind === 'handler' ||
+        attribute.kind === 'none'
+      ) {
         problems.push(
           `${name}.${prop}${found ? `: ${found.type}` : ' (no such prop)'}`
         );
@@ -1095,6 +1098,8 @@ export function coverage(components: readonly FlatComponent[]): Coverage {
       const { attribute } = prop;
       if (!attribute) {
         report.missing.push({ name: qualified, type: prop.type });
+      } else if (attribute.kind === 'handler') {
+        add(report.notNeeded, HANDLER, qualified);
       } else if (attribute.kind === 'none') {
         add(report.notNeeded, attribute.reason, qualified);
       }

@@ -450,7 +450,13 @@ function formOf(
   props: Props,
   required: boolean
 ): Form {
-  if (attribute.kind === 'content' || attribute.kind === 'none') return null;
+  if (
+    attribute.kind === 'content' ||
+    attribute.kind === 'handler' ||
+    attribute.kind === 'none'
+  ) {
+    return null;
+  }
   if (attribute.kind === 'icon') {
     return ICONS.has(raw) ? 'an icon name' : null;
   }

@@ -15,7 +15,7 @@ import path from 'node:path';
 import { CANVAS_EXAMPLES, canvasSectionMarkdown } from './canvas-examples.ts';
 import { type CanvasExample, canvasExample } from './canvas-markup.ts';
 import { ROOT_PARTS } from './groups.ts';
-import type { FlatComponent, FlatProp } from './props.ts';
+import { type FlatComponent, type FlatProp, HANDLER } from './props.ts';
 import { NAMESPACE } from './system-index.ts';
 
 const DEFAULT_HEIGHT = 120;
@@ -209,9 +209,9 @@ function firstSentence(text: string) {
 
 function controlCell(prop: FlatProp) {
   if (prop.control) return prop.control;
-  return prop.attribute?.kind === 'none'
-    ? `none: ${prop.attribute.reason}`
-    : 'none';
+  if (prop.attribute?.kind === 'handler') return `none: ${HANDLER}`;
+  if (prop.attribute?.kind === 'none') return `none: ${prop.attribute.reason}`;
+  return 'none';
 }
 
 function propRow(prop: FlatProp) {

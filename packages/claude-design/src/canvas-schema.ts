@@ -33,7 +33,12 @@ function converted(
   attribute: Attribute | null,
   required: boolean
 ): SchemaAttribute | null {
-  if (!attribute || attribute.kind === 'content' || attribute.kind === 'none') {
+  if (
+    !attribute ||
+    attribute.kind === 'content' ||
+    attribute.kind === 'handler' ||
+    attribute.kind === 'none'
+  ) {
     return null;
   }
   if (attribute.kind !== 'scalar' || required) return forRuntime(attribute);
@@ -57,12 +62,7 @@ export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
     if (renames.length > 0)
       schema.renames[part.name] = Object.fromEntries(renames);
     const handlers = part.props
-      .filter(
-        (prop) =>
-          isRequired(prop) &&
-          prop.attribute?.kind === 'none' &&
-          prop.attribute.handler
-      )
+      .filter((prop) => isRequired(prop) && prop.attribute?.kind === 'handler')
       .map((prop) => prop.name);
     if (handlers.length > 0) schema.handlers[part.name] = handlers;
     const attributes: Record<string, SchemaAttribute> = {};

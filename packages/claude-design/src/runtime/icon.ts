@@ -30,7 +30,7 @@ export function Icon(raw: IconProps) {
       'Icon',
       'weight',
       String(weight),
-      "isn't in the bundle. Use a `-fill` name for a filled icon",
+      'does nothing: Icon has no weight prop, and a filled icon uses a `-fill` name',
       'regular'
     );
   }

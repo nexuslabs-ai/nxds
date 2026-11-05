@@ -55,12 +55,15 @@ export interface ContentAttribute {
   kind: 'content';
 }
 
+/** A prop that takes only a function or a ref, which the artboard's script binds. */
+export interface HandlerAttribute {
+  kind: 'handler';
+}
+
 /** A prop a canvas doesn't set, and why. */
 export interface NoAttribute {
   kind: 'none';
   reason: string;
-  /** The prop takes only a function or a ref. */
-  handler: boolean;
 }
 
 /** An attribute bundle.js converts from its string. */
@@ -71,7 +74,11 @@ export type CanvasAttribute =
   | JsonAttribute
   | IconAttribute;
 
-export type Attribute = CanvasAttribute | ContentAttribute | NoAttribute;
+export type Attribute =
+  | CanvasAttribute
+  | ContentAttribute
+  | HandlerAttribute
+  | NoAttribute;
 
 /** A scalar as nxds:canvas-schema ships it, without the panel-only `suggested`. */
 export type SchemaScalar = Omit<ScalarAttribute, 'suggested'>;

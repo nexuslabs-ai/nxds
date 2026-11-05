@@ -194,7 +194,7 @@ const doNothing = () => undefined;
 // markup leaves out, so a static mockup doesn't throw when it's clicked.
 function withHandlers(part: string, props: Props): Props | null {
   const missing = (CANVAS_SCHEMA.handlers[part] ?? []).filter(
-    (key) => typeof props[key] !== 'function'
+    (key) => props[key] === undefined
   );
   if (missing.length === 0) return null;
   return {
