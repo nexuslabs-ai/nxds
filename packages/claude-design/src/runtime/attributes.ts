@@ -136,7 +136,7 @@ function fallback(attribute: SchemaAttribute, prop: string, id: string) {
 
 const warned = new Set<string>();
 
-function warnOnce(
+export function warnOnce(
   part: string,
   prop: string,
   value: string,

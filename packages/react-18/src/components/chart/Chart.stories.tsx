@@ -476,8 +476,11 @@ export const SeriesOrder: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
-    const legend = canvasElement.querySelector('.recharts-legend-wrapper');
-    await waitFor(() => expect(legend).toHaveTextContent('MobileDesktop'));
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('.recharts-legend-wrapper')
+      ).toHaveTextContent('MobileDesktop')
+    );
     await userEvent.tab();
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() =>

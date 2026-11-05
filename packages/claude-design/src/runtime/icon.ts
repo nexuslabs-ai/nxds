@@ -4,7 +4,7 @@ import * as React from 'react';
 
 import { ICON_COMPONENTS } from 'nxds:icon-names';
 
-import { useCanvasProps } from './attributes.ts';
+import { useCanvasProps, warnOnce } from './attributes.ts';
 
 export interface IconProps {
   name: string;
@@ -20,10 +20,20 @@ export function Icon(raw: IconProps) {
     size = 16,
     className,
     'aria-label': label,
+    weight,
     ...rest
-  } = useCanvasProps('Icon', raw);
+  }: IconProps & { weight?: unknown } = useCanvasProps('Icon', raw);
   const Component = ICON_COMPONENTS[name];
   if (!Component) return null;
+  if (weight !== undefined) {
+    warnOnce(
+      'Icon',
+      'weight',
+      String(weight),
+      "isn't in the bundle. Use a `-fill` name for a filled icon",
+      'regular'
+    );
+  }
   // An empty label names nothing, so the icon stays hidden from screen readers.
   const naming = label
     ? { role: 'img', 'aria-label': label }

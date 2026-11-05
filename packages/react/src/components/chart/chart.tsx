@@ -502,8 +502,8 @@ type ChartFrameProps = Pick<
   horizontal?: boolean;
 };
 
-// Recharts sorts legend and tooltip items alphabetically. A data chart lists
-// them in its own order.
+// Recharts sorts legend items alphabetically. A data chart lists them in its
+// own order.
 function byOrder(
   keys: readonly string[],
   key: (item: ChartPayloadItem) => unknown
@@ -549,10 +549,7 @@ function ChartFrame({
         tickMargin={8}
       />
       {tooltip && (
-        <ChartTooltip
-          content={<ChartTooltipContent indicator={indicator} />}
-          itemSorter={inSeriesOrder}
-        />
+        <ChartTooltip content={<ChartTooltipContent indicator={indicator} />} />
       )}
       {legend && (
         <ChartLegend

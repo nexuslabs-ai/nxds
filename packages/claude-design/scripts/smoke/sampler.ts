@@ -194,11 +194,13 @@ async function measureSampler(
       }
       // Card titles and descriptions sit on one line, and each card's content
       // fills its card, with nothing left empty under it.
-      const lines = (element: Element) =>
-        Math.round(
-          element.getBoundingClientRect().height /
-            parseFloat(getComputedStyle(element).lineHeight)
-        );
+      const lines = (element: Element) => {
+        const { lineHeight } = getComputedStyle(element);
+        const line = parseFloat(lineHeight);
+        // `normal` has no px value, so the count would be NaN and pass.
+        if (!Number.isFinite(line)) return Infinity;
+        return Math.round(element.getBoundingClientRect().height / line);
+      };
       const wrapped = [
         ...root.querySelectorAll(
           '[data-slot="card-title"], [data-slot="card-description"]'
@@ -359,7 +361,7 @@ export async function checkSampler({ themed = false } = {}) {
     // background under it, up to 80px with compact density.
     if (themed && (board.bottom > height || height - board.bottom > 80)) {
       fail(
-        `${name}: at ${uiFontSize}px text the page ends at ${board.bottom}px, but the canvas.json entry gives ${height}px. Set SAMPLER_PX_PER_TEXT_PX in src/theme.ts from the page's height at ${uiFontSize}px and at the default.`
+        `${name}: at ${uiFontSize}px text the page ends at ${board.bottom}px, but the canvas.json entry gives ${height}px. Set the SAMPLER_PX_PER_*_TEXT_PX rates in src/theme.ts from the page's height at ${uiFontSize}px and at the default.`
       );
     }
     if (board.legend.join(', ') !== legend.join(', ')) {
@@ -368,7 +370,9 @@ export async function checkSampler({ themed = false } = {}) {
       );
     }
     for (const text of board.wrapped) {
-      fail(`${name}: the card text "${text}" wraps onto two lines.`);
+      fail(
+        `${name}: the card text "${text}" wraps onto two lines, or its line height has no px value.`
+      );
     }
     for (const empty of board.empty)
       fail(`${name}: ${empty} under its content.`);

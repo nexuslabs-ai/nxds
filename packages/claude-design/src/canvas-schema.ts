@@ -57,7 +57,12 @@ export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
     if (renames.length > 0)
       schema.renames[part.name] = Object.fromEntries(renames);
     const handlers = part.props
-      .filter((prop) => isRequired(prop) && prop.attribute?.kind === 'none')
+      .filter(
+        (prop) =>
+          isRequired(prop) &&
+          prop.attribute?.kind === 'none' &&
+          prop.attribute.handler
+      )
       .map((prop) => prop.name);
     if (handlers.length > 0) schema.handlers[part.name] = handlers;
     const attributes: Record<string, SchemaAttribute> = {};

@@ -72,7 +72,12 @@ export interface PageGlobals {
   ReactDOM: typeof ReactDOMClient & Pick<typeof ReactDOMModule, 'flushSync'>;
   Nxds: Record<string, unknown>;
   __nxdsElement: (tree: Part | string) => ReactModule.ReactNode;
-  __nxdsMarkup: (markup: string, wrapped: boolean) => ReactModule.ReactNode;
+  __nxdsMarkup: (
+    markup: string,
+    wrapped: boolean,
+    values?: Record<string, unknown>
+  ) => ReactModule.ReactNode;
+  __nxdsArtboard: (markup: string, script: string) => ReactModule.ReactNode;
   __nxdsSettle: (host: Element) => Promise<string[]>;
 }
 
@@ -133,7 +138,13 @@ export async function openPage(card: string, theme: Theme, on = context) {
 // a canvas does: every element gets `data-dc-tpl` and its children as an
 // array, indentation kept as strings, and every x-import sits inside its own
 // `<div class="sc-host-x" style="display: contents">`. Without, it leaves out
-// the wrappers and the indentation.
+// the wrappers and the indentation. An attribute that is exactly `{{name}}`
+// takes `values[name]`, as an artboard's `renderVals()` binds it.
+//
+// `window.__nxdsArtboard(markup, script)` renders markup the way an artboard
+// with that `<script type="text/x-dc">` does: the script's `Component` runs
+// on a stand-in DCLogic, its `renderVals()` fills the `{{name}}` bindings,
+// and each `setState` renders again.
 //
 // `window.__nxdsSettle(host)` waits until what a viewer and a screen reader
 // get from each element stops changing, up to four seconds, and returns it:
@@ -235,13 +246,18 @@ function pageHelpers() {
   const markupNode = (
     node: ChildNode,
     wrapped: boolean,
+    values: Record<string, unknown>,
     key: number
   ): ReactModule.ReactNode => {
+    const bound = (value: string) => {
+      const name = /^\{\{(\w+)\}\}$/.exec(value)?.[1];
+      return name !== undefined && name in values ? values[name] : value;
+    };
     const { React } = globals();
     if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
     if (!(node instanceof Element)) return null;
     const children = [...node.childNodes]
-      .map((child, index) => markupNode(child, wrapped, index))
+      .map((child, index) => markupNode(child, wrapped, values, index))
       .filter((child) => child !== null);
     const content = wrapped ? children : compact(children);
     const tag = node.tagName.toLowerCase();
@@ -250,7 +266,7 @@ function pageHelpers() {
       const props: Record<string, unknown> = {};
       for (const attribute of node.attributes) {
         if (attribute.name === 'component-from-global-scope') continue;
-        props[camel(attribute.name)] = attribute.value;
+        props[camel(attribute.name)] = bound(attribute.value);
       }
       const type = part(name) ?? name;
       if (!wrapped) {
@@ -274,7 +290,9 @@ function pageHelpers() {
     for (const attribute of node.attributes) {
       const name = NAMES[attribute.name] ?? attribute.name;
       props[name] =
-        name === 'style' ? styleObject(attribute.value) : attribute.value;
+        name === 'style'
+          ? styleObject(attribute.value)
+          : bound(attribute.value);
     }
     if (wrapped) {
       mounted += 1;
@@ -285,14 +303,46 @@ function pageHelpers() {
       ? React.createElement(tag, { ...props, children: content })
       : React.createElement(tag, props);
   };
-  const markup = (text: string, wrapped: boolean): ReactModule.ReactNode => {
+  const markup = (
+    text: string,
+    wrapped: boolean,
+    values: Record<string, unknown> = {}
+  ): ReactModule.ReactNode => {
     const { React } = globals();
     const template = document.createElement('template');
     template.innerHTML = text.trim();
     const nodes = [...template.content.childNodes]
-      .map((node, index) => markupNode(node, wrapped, index))
+      .map((node, index) => markupNode(node, wrapped, values, index))
       .filter((node) => node !== null);
     return React.createElement(React.Fragment, null, ...compact(nodes));
+  };
+  const artboard = (text: string, script: string): ReactModule.ReactNode => {
+    const { React } = globals();
+    const template = document.createElement('template');
+    template.innerHTML = script;
+    const body = template.content.querySelector('script')?.textContent ?? '';
+    function Artboard() {
+      const [, render] = React.useReducer((count: number) => count + 1, 0);
+      const [logic] = React.useState(() => {
+        class DCLogic {
+          props: Record<string, unknown>;
+          state: Record<string, unknown> = {};
+          constructor(props: Record<string, unknown>) {
+            this.props = props;
+          }
+          setState(next: Record<string, unknown>) {
+            this.state = { ...this.state, ...next };
+            render();
+          }
+        }
+        const Component = new Function('DCLogic', `${body}\nreturn Component;`)(
+          DCLogic
+        ) as new (props: object) => { renderVals(): Record<string, unknown> };
+        return new Component({});
+      });
+      return markup(text, true, logic.renderVals());
+    }
+    return React.createElement(Artboard);
   };
   const signature = (host: Element) =>
     [...host.querySelectorAll('*')]
@@ -323,6 +373,7 @@ function pageHelpers() {
   Object.assign(window, {
     __nxdsElement: element,
     __nxdsMarkup: markup,
+    __nxdsArtboard: artboard,
     __nxdsSettle: settle,
   });
 }

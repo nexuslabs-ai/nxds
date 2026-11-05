@@ -470,13 +470,15 @@ function attributeOf(
   const values = members.filter(
     (member) => !isFunction(checker, member) && !isRef(member)
   );
-  if (values.length === 0) return { kind: 'none', reason: HANDLER };
+  if (values.length === 0) {
+    return { kind: 'none', reason: HANDLER, handler: true };
+  }
 
   const scalar = scalarOf(values);
   if (scalar) return scalar;
 
   const reason = notNeeded(part, name);
-  if (reason) return { kind: 'none', reason };
+  if (reason) return { kind: 'none', reason, handler: false };
   if (JSON_PROPS[part]?.includes(name)) return jsonOf(checker, type, values);
 
   if (values.every(isDate)) return { kind: 'date', selection: null };

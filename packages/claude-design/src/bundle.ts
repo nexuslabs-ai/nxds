@@ -3,7 +3,7 @@
 import { react18Src } from '@nxds/source-model/roots.mjs';
 import { parse } from 'acorn';
 import { build, type Metafile, type Plugin } from 'esbuild';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 
@@ -206,6 +206,26 @@ function assertOneSlot(metafile: Metafile) {
   }
 }
 
+// A component that draws a weight phosphorWeights strips draws an empty icon.
+function assertIconWeights(metafile: Metafile) {
+  const problems = Object.keys(metafile.inputs)
+    .filter((input) => !input.includes('node_modules') && existsSync(input))
+    .flatMap((input) =>
+      [
+        ...readFileSync(input, 'utf8').matchAll(
+          /\bweight(?:=|:\s*)["'](\w+)["']/g
+        ),
+      ]
+        .filter(([, weight = '']) => !ICON_WEIGHTS.has(weight))
+        .map(([match]) => `${input}: ${match}`)
+    );
+  if (problems.length > 0) {
+    throw new Error(
+      `bundle.js: these icons use a weight the bundle strips. Use ${[...ICON_WEIGHTS].join(' or ')}:\n  ${problems.join('\n  ')}`
+    );
+  }
+}
+
 function virtualModules(
   slugs: readonly string[],
   parts: readonly FlatComponent[]
@@ -358,6 +378,7 @@ export async function buildBundle(
     metafile: true,
   });
   assertOneSlot(result.metafile);
+  assertIconWeights(result.metafile);
   const [output] = result.outputFiles;
   if (!output) throw new Error('bundle.js: esbuild wrote no output.');
   return { code: output.text, metafile: result.metafile };

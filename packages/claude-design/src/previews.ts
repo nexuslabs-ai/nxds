@@ -12,7 +12,7 @@ import { build, type Plugin } from 'esbuild';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { CANVAS_EXAMPLES } from './canvas-examples.ts';
+import { CANVAS_EXAMPLES, canvasSectionMarkdown } from './canvas-examples.ts';
 import { type CanvasExample, canvasExample } from './canvas-markup.ts';
 import { ROOT_PARTS } from './groups.ts';
 import type { FlatComponent, FlatProp } from './props.ts';
@@ -250,7 +250,11 @@ export function checkCanvasExamples(
   const problems = Object.entries(CANVAS_EXAMPLES).flatMap(
     ([card, section]) => {
       if (!cards.includes(card)) return [`${card} is no card`];
-      return [...section.matchAll(new RegExp(`\\b${NAMESPACE}\\.(\\w+)`, 'g'))]
+      return [
+        ...canvasSectionMarkdown(section).matchAll(
+          new RegExp(`\\b${NAMESPACE}\\.(\\w+)`, 'g')
+        ),
+      ]
         .map(([, part]) => part ?? '')
         .filter((part) => !exported.has(part))
         .map(
@@ -279,7 +283,7 @@ function canvasSection(
       `README: ${folder.name} has a canvas example now; remove its entry from CANVAS_EXAMPLES in src/canvas-examples.ts.`
     );
   }
-  if (written) return [written];
+  if (written) return [canvasSectionMarkdown(written)];
   const markup =
     example?.markup ??
     `<x-import component-from-global-scope="${NAMESPACE}.${main.name}"></x-import>`;

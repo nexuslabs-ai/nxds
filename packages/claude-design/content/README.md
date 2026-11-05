@@ -33,7 +33,7 @@ Status is never colour alone. Every alert, badge and toast carries a word or an 
 
 ## Type
 
-{{typeFaces}}
+{{nxds:typeFaces}}
 
 | Use                         | Style                                             |
 | --------------------------- | ------------------------------------------------- |
@@ -46,7 +46,7 @@ Status is never colour alone. Every alert, badge and toast carries a word or an 
 | Overlines, small caps       | `typography-label-caps`                           |
 | Code                        | `typography-code-block`, `typography-code-inline` |
 
-Body copy is {{bodySize}} and code is {{codeSize}}. Keep one heading level per region, and step down one size at a time.
+Body copy is {{nxds:bodySize}} and code is {{nxds:codeSize}}. Keep one heading level per region, and step down one size at a time.
 
 ## Spacing and layout
 
@@ -91,7 +91,7 @@ The system has a Light and a Dark theme. Set `data-theme="dark"` on `<html>` to 
 
 ## Appearance
 
-{{appearance}}
+{{nxds:appearance}}
 
 Set an attribute on any element to change density, corners, elevation or stroke for everything inside it:
 

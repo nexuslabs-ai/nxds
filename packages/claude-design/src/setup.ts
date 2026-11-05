@@ -328,15 +328,15 @@ function guideProblems({
       problems.push(`SETUP.md has no ${missing}.`);
       continue;
     }
-    if (!step.includes('{{textPlainFiles}}')) {
+    if (!step.includes('{{nxds:textPlainFiles}}')) {
       problems.push(
-        `SETUP.md: ${name} must send {{textPlainFiles}} as text/plain, or the publish is refused.`
+        `SETUP.md: ${name} must send {{nxds:textPlainFiles}} as text/plain, or the publish is refused.`
       );
     }
   }
   const sampler = markdownSection(template, '4. Add the sampler');
   if (
-    !['{{boardEntry}}', '`order`', `\`${CANVAS_ROOT}/canvas.json\``].every(
+    !['{{nxds:boardEntry}}', '`order`', `\`${CANVAS_ROOT}/canvas.json\``].every(
       (text) => sampler?.includes(text)
     )
   ) {
@@ -395,12 +395,12 @@ export function guideTemplate({
     (file) => `\`project/${file}\``
   ).join(' and ');
   const guide = template
-    .replaceAll('{{version}}', version)
-    .replaceAll('{{textPlainFiles}}', () => textPlainFiles)
-    .replace('{{canvasFiles}}', () => canvasFiles);
-  for (const [, name = ''] of guide.matchAll(/\{\{(\w+)\}\}/g)) {
+    .replaceAll('{{nxds:version}}', version)
+    .replaceAll('{{nxds:textPlainFiles}}', () => textPlainFiles)
+    .replace('{{nxds:canvasFiles}}', () => canvasFiles);
+  for (const [, name = ''] of guide.matchAll(/\{\{nxds:(\w+)\}\}/g)) {
     if (!THEME_PLACEHOLDERS.includes(name)) {
-      throw new Error(`SETUP.md: {{${name}}} has no value.`);
+      throw new Error(`SETUP.md: {{nxds:${name}}} has no value.`);
     }
   }
   return guide;

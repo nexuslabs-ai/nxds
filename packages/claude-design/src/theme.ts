@@ -52,9 +52,9 @@ export interface ThemeInput {
   ref: string;
   reads: ComponentReads;
   stylesheetReads: ReadonlySet<string>;
-  /** README.md, with `{{…}}` where the theme's text goes. */
+  /** README.md, with `{{nxds:…}}` where the theme's text goes. */
   readme: string;
-  /** SETUP.md, with this release's values in and `{{…}}` for the theme's. */
+  /** SETUP.md, with this release's values in and `{{nxds:…}}` for the theme's. */
   guide: string;
   /** The sampler's `canvas.json` entry at the default text size. */
   board: CanvasBoards;
@@ -92,25 +92,25 @@ export interface RenderedTheme {
 
 const DEFAULT_TITLE = 'nxds';
 
-// How much taller the sampler gets for each px of UI text above the default,
-// rounded up from its height at the default and at 20px (scripts/smoke/sampler.ts).
-export const SAMPLER_PX_PER_TEXT_PX = 50;
+// How much the sampler's height changes for each px of UI text above and below
+// the default, from its height at the default, at 20px and at 8px
+// (scripts/smoke/sampler.ts). Each rounds the way that keeps the page inside
+// its board.
+const SAMPLER_PX_PER_LARGER_TEXT_PX = 50;
+const SAMPLER_PX_PER_SMALLER_TEXT_PX = 33;
 
 /** The sampler's `canvas.json` entry with a height that fits its text size. */
 export function themedBoard(board: CanvasBoards, uiFontSize: number) {
-  const larger = uiFontSize - DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize;
+  const offset = uiFontSize - DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize;
+  const rate =
+    offset > 0 ? SAMPLER_PX_PER_LARGER_TEXT_PX : SAMPLER_PX_PER_SMALLER_TEXT_PX;
   return Object.fromEntries(
     Object.entries(board).map(([file, entry]) => [
       file,
-      { ...entry, h: entry.h + SAMPLER_PX_PER_TEXT_PX * Math.max(0, larger) },
+      { ...entry, h: entry.h + rate * offset },
     ])
   );
 }
-
-/** The `{{name}}` canvas bindings README.md shows, which stay as written. */
-const CANVAS_BINDINGS = Object.fromEntries(
-  ['mode', 'filters', 'setFilters'].map((name) => [name, `{{${name}}}`])
-);
 
 type FamilyKey = 'sans' | 'heading' | 'mono';
 
@@ -345,7 +345,6 @@ export function renderTheme(
         typeFaces: typeFaces(fonts),
         bodySize: `${appearance.prefs.uiFontSize}px`,
         codeSize: `${appearance.prefs.codeFontSize}px`,
-        ...CANVAS_BINDINGS,
       }),
     },
     index: { title, theme },

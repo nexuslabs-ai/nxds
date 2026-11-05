@@ -1,9 +1,35 @@
 // What a card's README shows under "On the canvas", where no docs story can be
-// written as markup and its root part alone would render nothing. Each entry
-// is that section's markdown. The smoke test mounts every html block in it
-// that has no `{{…}}` binding.
+// written as markup and its root part alone would render nothing. The README
+// renders each section from here, and the smoke test mounts each block.
 
-const html = (markup: string) => ['```html', markup.trim(), '```'].join('\n');
+/** One html block of a card's "On the canvas" section. */
+export interface CanvasBlock {
+  /** The paragraph before the block. */
+  prose?: string;
+  markup: string;
+  /** The artboard script whose `renderVals()` gives the markup's `{{name}}` bindings. The README shows it after the markup. */
+  script?: string;
+}
+
+export interface CanvasSection {
+  intro: string;
+  blocks: CanvasBlock[];
+}
+
+const html = (markup: string) => ['```html', markup.trim(), '```'];
+
+/** The section as README markdown. */
+export function canvasSectionMarkdown({ intro, blocks }: CanvasSection) {
+  return [
+    intro,
+    ...blocks.flatMap(({ prose, markup, script }) => [
+      ...(prose ? ['', prose] : []),
+      '',
+      ...html(markup),
+      ...(script ? ['', ...html(script)] : []),
+    ]),
+  ].join('\n');
+}
 
 const FILTER_FIELDS =
   '[{"id":"status","label":"Status","type":"choice","options":[{"value":"active","label":"Active"},{"value":"invited","label":"Invited"},{"value":"suspended","label":"Suspended"}]},{"id":"name","label":"Name","type":"text"},{"id":"projects","label":"Projects","type":"number"}]';
@@ -39,22 +65,28 @@ class Component extends DCLogic {
 const FILLER =
   'display: flex; align-items: center; justify-content: center; height: 100%;';
 
-export const CANVAS_EXAMPLES: Readonly<Record<string, string>> = {
-  AspectRatio: [
-    'Give it a `ratio` of width over height, such as `1.5` for 3:2. It takes its width from its container.',
-    '',
-    html(`
+export const CANVAS_EXAMPLES: Readonly<Record<string, CanvasSection>> = {
+  AspectRatio: {
+    intro:
+      'Give it a `ratio` of width over height, such as `1.5` for 3:2. It takes its width from its container.',
+    blocks: [
+      {
+        markup: `
 <div style="width: var(--nx-spacing-80);">
   <x-import component-from-global-scope="Nxds.AspectRatio" ratio="1.5">
     <div class="typography-body-small" style="${FILLER} border-radius: var(--nx-radius-md); background: var(--nx-color-muted); color: var(--nx-color-muted-foreground);">Cover image</div>
   </x-import>
-</div>`),
-  ].join('\n'),
+</div>`,
+      },
+    ],
+  },
 
-  Carousel: [
-    "Put each slide in a `Nxds.CarouselItem`. A canvas can't scroll the carousel, so it shows the first slide.",
-    '',
-    html(`
+  Carousel: {
+    intro:
+      "Put each slide in a `Nxds.CarouselItem`. A canvas can't scroll the carousel, so it shows the first slide.",
+    blocks: [
+      {
+        markup: `
 <div style="width: var(--nx-spacing-80); padding: 0 var(--nx-spacing-12);">
   <x-import component-from-global-scope="Nxds.Carousel">
     <x-import component-from-global-scope="Nxds.CarouselContent">
@@ -77,13 +109,17 @@ export const CANVAS_EXAMPLES: Readonly<Record<string, string>> = {
     <x-import component-from-global-scope="Nxds.CarouselPrevious"></x-import>
     <x-import component-from-global-scope="Nxds.CarouselNext"></x-import>
   </x-import>
-</div>`),
-  ].join('\n'),
+</div>`,
+      },
+    ],
+  },
 
-  Combobox: [
-    "Write the picked option as the trigger's text, and mark that option `selected`.",
-    '',
-    html(`
+  Combobox: {
+    intro:
+      "Write the picked option as the trigger's text, and mark that option `selected`.",
+    blocks: [
+      {
+        markup: `
 <x-import component-from-global-scope="Nxds.Combobox">
   <x-import component-from-global-scope="Nxds.ComboboxTrigger" class-name="nx:w-64">Astro</x-import>
   <x-import component-from-global-scope="Nxds.ComboboxContent" label="Framework">
@@ -99,43 +135,51 @@ export const CANVAS_EXAMPLES: Readonly<Record<string, string>> = {
       </x-import>
     </x-import>
   </x-import>
-</x-import>`),
-  ].join('\n'),
+</x-import>`,
+      },
+    ],
+  },
 
-  FilterBuilder: [
-    "`value` takes the filter tree either as JSON or as a `{{name}}` from the artboard's script.",
-    '',
-    "Pass `fields` and `value` as JSON to show a filter in a mockup. Its controls don't change anything.",
-    '',
-    html(
-      `<x-import component-from-global-scope="Nxds.FilterBuilder" aria-label="Member filters" fields='${FILTER_FIELDS}' value='${FILTER_VALUE}'></x-import>`
-    ),
-    '',
-    "To let the person edit the filter, keep the tree in the artboard's script state. Bind `value` to it, and `on-value-change` to the function that sets it.",
-    '',
-    html(
-      `<x-import component-from-global-scope="Nxds.FilterBuilder" aria-label="Member filters" fields='${FILTER_FIELDS}' value="{{filters}}" on-value-change="{{setFilters}}"></x-import>`
-    ),
-    '',
-    html(FILTER_SCRIPT),
-  ].join('\n'),
+  FilterBuilder: {
+    intro:
+      "`value` takes the filter tree either as JSON or as a `{{name}}` from the artboard's script.",
+    blocks: [
+      {
+        prose:
+          "Pass `fields` and `value` as JSON to show a filter in a mockup. Its controls don't change anything.",
+        markup: `<x-import component-from-global-scope="Nxds.FilterBuilder" aria-label="Member filters" fields='${FILTER_FIELDS}' value='${FILTER_VALUE}'></x-import>`,
+      },
+      {
+        prose:
+          "To let the person edit the filter, keep the tree in the artboard's script state. Bind `value` to it, and `on-value-change` to the function that sets it.",
+        markup: `<x-import component-from-global-scope="Nxds.FilterBuilder" aria-label="Member filters" fields='${FILTER_FIELDS}' value="{{filters}}" on-value-change="{{setFilters}}"></x-import>`,
+        script: FILTER_SCRIPT,
+      },
+    ],
+  },
 
-  FilterCondition: [
-    'Write each segment as text. Name every segment and the remove button for screen readers.',
-    '',
-    html(`
+  FilterCondition: {
+    intro:
+      'Write each segment as text. Name every segment and the remove button for screen readers.',
+    blocks: [
+      {
+        markup: `
 <x-import component-from-global-scope="Nxds.FilterCondition">
   <x-import component-from-global-scope="Nxds.FilterConditionField">Status</x-import>
   <x-import component-from-global-scope="Nxds.FilterConditionSegment" aria-label="Edit Status operator">is</x-import>
   <x-import component-from-global-scope="Nxds.FilterConditionSegment" aria-label="Edit Status value: Paid">Paid</x-import>
   <x-import component-from-global-scope="Nxds.FilterConditionRemove" aria-label="Remove Status filter"></x-import>
-</x-import>`),
-  ].join('\n'),
+</x-import>`,
+      },
+    ],
+  },
 
-  Resizable: [
-    "Give the group a height from its container. Set each panel's `default-size` as a percentage.",
-    '',
-    html(`
+  Resizable: {
+    intro:
+      "Give the group a height from its container. Set each panel's `default-size` as a percentage.",
+    blocks: [
+      {
+        markup: `
 <div style="width: var(--nx-spacing-96); height: var(--nx-spacing-48); border: var(--nx-borderwidth-default) solid var(--nx-color-border-default); border-radius: var(--nx-radius-md);">
   <x-import component-from-global-scope="Nxds.ResizablePanelGroup" orientation="horizontal">
     <x-import component-from-global-scope="Nxds.ResizablePanel" default-size="35">
@@ -146,13 +190,16 @@ export const CANVAS_EXAMPLES: Readonly<Record<string, string>> = {
       <div class="typography-label-default" style="${FILLER}">Messages</div>
     </x-import>
   </x-import>
-</div>`),
-  ].join('\n'),
+</div>`,
+      },
+    ],
+  },
 
-  ScrollArea: [
-    'Give it a height. Content taller than that scrolls inside it.',
-    '',
-    html(`
+  ScrollArea: {
+    intro: 'Give it a height. Content taller than that scrolls inside it.',
+    blocks: [
+      {
+        markup: `
 <div style="width: var(--nx-spacing-48); border: var(--nx-borderwidth-default) solid var(--nx-color-border-default); border-radius: var(--nx-radius-md);">
   <x-import component-from-global-scope="Nxds.ScrollArea" class-name="nx:h-48">
     <div class="typography-body-small" style="display: flex; flex-direction: column; gap: var(--nx-spacing-2); padding: var(--nx-spacing-4);">
@@ -169,24 +216,33 @@ export const CANVAS_EXAMPLES: Readonly<Record<string, string>> = {
       <span>v2.0.0</span>
     </div>
   </x-import>
-</div>`),
-  ].join('\n'),
+</div>`,
+      },
+    ],
+  },
 
-  Sidebar:
-    'Mount `Nxds.Sidebar` inside `Nxds.SidebarProvider`. On its own, `Nxds.Sidebar` throws. Put `Nxds.SidebarHeader`, `Nxds.SidebarContent` and `Nxds.SidebarFooter` inside it, and `Nxds.SidebarInset` beside it for the page.',
+  Sidebar: {
+    intro:
+      'Mount `Nxds.Sidebar` inside `Nxds.SidebarProvider`. On its own, `Nxds.Sidebar` throws. Put `Nxds.SidebarHeader`, `Nxds.SidebarContent` and `Nxds.SidebarFooter` inside it, and `Nxds.SidebarInset` beside it for the page.',
+    blocks: [],
+  },
 
-  Sonner: [
-    '`Nxds.Toaster` shows a toast only when code calls `toast()`, so on its own it draws nothing. On a static screen, place a `Nxds.Toast` where the app shows its toasts.',
-    '',
-    html(
-      '<x-import component-from-global-scope="Nxds.Toast" variant="success" title="Changes saved" description="Your profile is up to date."></x-import>'
-    ),
-  ].join('\n'),
+  Sonner: {
+    intro:
+      '`Nxds.Toaster` shows a toast only when code calls `toast()`, so on its own it draws nothing. On a static screen, place a `Nxds.Toast` where the app shows its toasts.',
+    blocks: [
+      {
+        markup:
+          '<x-import component-from-global-scope="Nxds.Toast" variant="success" title="Changes saved" description="Your profile is up to date."></x-import>',
+      },
+    ],
+  },
 
-  Table: [
-    'Mount every row and cell as its own part.',
-    '',
-    html(`
+  Table: {
+    intro: 'Mount every row and cell as its own part.',
+    blocks: [
+      {
+        markup: `
 <x-import component-from-global-scope="Nxds.Table" aria-label="Invoices">
   <x-import component-from-global-scope="Nxds.TableHeader">
     <x-import component-from-global-scope="Nxds.TableRow">
@@ -212,6 +268,8 @@ export const CANVAS_EXAMPLES: Readonly<Record<string, string>> = {
       <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">$2,100.00</x-import>
     </x-import>
   </x-import>
-</x-import>`),
-  ].join('\n'),
+</x-import>`,
+      },
+    ],
+  },
 };

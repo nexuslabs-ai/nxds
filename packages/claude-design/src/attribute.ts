@@ -59,6 +59,8 @@ export interface ContentAttribute {
 export interface NoAttribute {
   kind: 'none';
   reason: string;
+  /** The prop takes only a function or a ref. */
+  handler: boolean;
 }
 
 /** An attribute bundle.js converts from its string. */
