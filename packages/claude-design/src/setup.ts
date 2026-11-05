@@ -522,6 +522,30 @@ function attributeProblems(sampler: string, parts: FlatComponent[]) {
   return problems;
 }
 
+// README.md's "On a Design canvas" section shows the mode tweak every artboard
+// gets. It has to be the sampler's: the same tweak and the same script.
+function modeRuleProblems(readme: string, { props, script }: SamplerFile) {
+  const rule =
+    /<script type="text\/x-dc" data-dc-script data-props='([^']*)'>\n([\s\S]*?)\n<\/script>/.exec(
+      canvasSection(readme)
+    );
+  let tweaks: Record<string, unknown> = {};
+  try {
+    tweaks = JSON.parse(rule?.[1] ?? '') as Record<string, unknown>;
+  } catch {
+    // Reported below as a missing tweak.
+  }
+  if (
+    JSON.stringify(tweaks['mode']) === JSON.stringify(props['mode']) &&
+    rule?.[2] === script
+  ) {
+    return [];
+  }
+  return [
+    `README.md: "On a Design canvas" must show the sampler's mode tweak and script in a data-dc-script block with single-quoted data-props.`,
+  ];
+}
+
 /** Everything that would keep the sampler file from showing, checking or mounting on a canvas. */
 export function samplerProblems(
   file: string,
@@ -530,6 +554,7 @@ export function samplerProblems(
   const sampler = samplerFile(file);
   return [
     ...fileProblems(file, sampler, context),
+    ...modeRuleProblems(context.readme, sampler),
     ...attributeProblems(sampler.markup, context.parts),
   ];
 }

@@ -89,6 +89,11 @@ export interface RenderedTheme {
 
 const DEFAULT_TITLE = 'nxds';
 
+/** The `{{name}}` canvas bindings README.md shows, which stay as written. */
+const CANVAS_BINDINGS = Object.fromEntries(
+  ['mode', 'filters', 'setFilters'].map((name) => [name, `{{${name}}}`])
+);
+
 type FamilyKey = 'sans' | 'heading' | 'mono';
 
 /** The font flags, with the `type.families` key each sets. */
@@ -322,6 +327,7 @@ export function renderTheme(
         typeFaces: typeFaces(fonts),
         bodySize: `${appearance.prefs.uiFontSize}px`,
         codeSize: `${appearance.prefs.codeFontSize}px`,
+        ...CANVAS_BINDINGS,
       }),
     },
     index: { title, theme },
