@@ -151,7 +151,10 @@ type ToasterProps = Omit<SonnerToasterProps, 'id'>;
 function Toaster({ style, ...props }: ToasterProps) {
   const theme = useToasterTheme();
   return (
-    <div data-slot="toaster">
+    <div
+      data-slot="toaster"
+      className="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke nx:[&_[data-close-button]_svg]:[--nx-icon-size:12px]"
+    >
       <Sonner
         theme={theme}
         icons={toasterIcons}

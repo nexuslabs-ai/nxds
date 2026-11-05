@@ -29,7 +29,7 @@ const SelectValue = SelectPrimitive.Value;
 
 const selectTriggerVariants = cva(
   [
-    'nx:group/select-trigger nx:flex nx:box-border nx:w-full nx:items-center nx:justify-between nx:gap-2',
+    'nx:group/select-trigger nx:flex nx:box-border nx:w-full nx:items-center nx:justify-between nx:gap-2 nx:icon-stroke',
     'nx:rounded-md nx:border-default nx:transition-field',
     'nx:whitespace-nowrap nx:text-inherit',
     'nx:data-[placeholder]:text-muted-foreground',
@@ -99,7 +99,7 @@ function SelectScrollUpButton({
     <SelectPrimitive.ScrollUpButton
       data-slot="select-scroll-up-button"
       className={cn(
-        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1',
+        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1 nx:icon-stroke',
         className
       )}
       {...props}
@@ -120,7 +120,7 @@ function SelectScrollDownButton({
     <SelectPrimitive.ScrollDownButton
       data-slot="select-scroll-down-button"
       className={cn(
-        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1',
+        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1 nx:icon-stroke',
         className
       )}
       {...props}
@@ -209,7 +209,7 @@ function SelectItem({ className, children, ...props }: SelectItemProps) {
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        'nx:group nx:relative nx:flex nx:w-full nx:cursor-default nx:select-none nx:items-center',
+        'nx:group nx:relative nx:flex nx:w-full nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
         'nx:rounded-sm nx:py-1.5 nx:pl-8 nx:pr-2 nx:typography-body-default nx:outline-none',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',

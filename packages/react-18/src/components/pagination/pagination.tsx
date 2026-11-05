@@ -241,7 +241,7 @@ const PaginationEllipsis = React.forwardRef<
       aria-hidden
       data-slot="pagination-ellipsis"
       className={cn(
-        'nx:flex nx:items-center nx:justify-center nx:size-10',
+        'nx:flex nx:items-center nx:justify-center nx:size-10 nx:icon-stroke',
         className
       )}
       {...props}

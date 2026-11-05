@@ -173,7 +173,7 @@ function MultiSelectTrigger({
         aria-expanded={open}
         data-slot="multi-select-trigger"
         className={cn(
-          'nx:group/multi-select nx:flex nx:h-auto nx:min-h-10 nx:w-full nx:items-center nx:justify-between nx:gap-2 nx:rounded-md nx:border-default nx:border-border-default nx:bg-container nx:text-inherit nx:px-3 nx:py-1.5 nx:typography-body-default nx:whitespace-nowrap nx:transition-field',
+          'nx:group/multi-select nx:flex nx:h-auto nx:min-h-10 nx:w-full nx:items-center nx:justify-between nx:gap-2 nx:rounded-md nx:border-default nx:border-border-default nx:bg-container nx:text-inherit nx:px-3 nx:py-1.5 nx:typography-body-default nx:whitespace-nowrap nx:transition-field nx:icon-stroke',
           'nx:enabled:hover:bg-container-hover',
           'nx:focus-visible:outline-default nx:focus-visible:outline-focus-default nx:focus-visible:border-focus-default',
           'nx:aria-invalid:border-error-border nx:aria-invalid:focus-visible:outline-focus-error nx:aria-invalid:focus-visible:border-focus-error',
@@ -334,7 +334,7 @@ function MultiSelectValue({
           {clickToRemove && (
             <IconX
               aria-hidden="true"
-              className="nx:size-3 nx:text-muted-foreground nx:transition-colors nx:group-hover/chip:text-error-subtle-foreground"
+              className="nx:size-icon-[var(--nx-spacing-3)] nx:text-muted-foreground nx:transition-colors nx:group-hover/chip:text-error-subtle-foreground"
             />
           )}
         </Badge>

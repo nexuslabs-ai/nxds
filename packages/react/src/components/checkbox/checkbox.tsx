@@ -25,7 +25,7 @@ function Checkbox({ className, ...props }: CheckboxProps) {
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        'nx:group nx:peer nx:inline-flex nx:size-4 nx:shrink-0 nx:items-center nx:justify-center nx:p-0',
+        'nx:group nx:peer nx:inline-flex nx:size-4 nx:shrink-0 nx:items-center nx:justify-center nx:p-0 nx:icon-stroke',
         'nx:rounded-sm nx:border-default nx:border-border-default nx:bg-container',
         'nx:transition-control',
         'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
@@ -60,7 +60,7 @@ function Checkbox({ className, ...props }: CheckboxProps) {
           data-slot="checkbox-check"
           aria-hidden="true"
           className={cn(
-            'nx:absolute nx:size-3.5',
+            'nx:absolute nx:size-icon-[var(--nx-spacing-3_5)]',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )}
@@ -69,7 +69,7 @@ function Checkbox({ className, ...props }: CheckboxProps) {
           data-slot="checkbox-minus"
           aria-hidden="true"
           className={cn(
-            'nx:absolute nx:size-3.5',
+            'nx:absolute nx:size-icon-[var(--nx-spacing-3_5)]',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=indeterminate]:scale-100 nx:group-data-[state=indeterminate]:opacity-100'
           )}

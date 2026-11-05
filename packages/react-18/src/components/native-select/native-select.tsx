@@ -61,7 +61,7 @@ const NativeSelect = React.forwardRef<
   return (
     <div
       data-slot="native-select-wrapper"
-      className="nx:group/native-select nx:relative nx:w-full"
+      className="nx:group/native-select nx:relative nx:w-full nx:icon-stroke"
     >
       <select
         data-slot="native-select"

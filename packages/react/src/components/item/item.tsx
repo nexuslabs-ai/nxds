@@ -95,7 +95,7 @@ function Item({
 }
 
 const itemMediaVariants = cva(
-  'nx:flex nx:shrink-0 nx:items-center nx:justify-center nx:gap-2 nx:group-has-[[data-item-part=description]]/item:translate-y-0.5 nx:group-has-[[data-item-part=description]]/item:self-start nx:[&_svg]:pointer-events-none',
+  'nx:flex nx:shrink-0 nx:items-center nx:justify-center nx:gap-2 nx:group-has-[[data-item-part=description]]/item:translate-y-0.5 nx:group-has-[[data-item-part=description]]/item:self-start nx:[&_svg]:pointer-events-none nx:icon-stroke',
   {
     variants: {
       variant: {
