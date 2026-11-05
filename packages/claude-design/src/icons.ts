@@ -1,8 +1,8 @@
 // The Phosphor icons a canvas can use, by their phosphoricons.com names:
 // common product and UI icons, every icon the nxds sources and stories import,
 // and the Apple, GitHub and Google logos for sign-in screens. A `-fill` name
-// draws the filled weight. Each icon adds about 3 KB to bundle.js, since
-// a Phosphor icon carries all six weights. nxds.dev lists them too.
+// draws the filled weight. bundle.js keeps only the regular and fill weights,
+// about 1 KB per icon. nxds.dev lists them too.
 export const ICON_NAMES = [
   'address-book',
   'airplane',

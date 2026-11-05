@@ -961,16 +961,6 @@ function canvasParts(): FlatComponent[] {
           defaultValue: '16',
         }),
         canvasProp(
-          'weight',
-          {
-            ...TEXT,
-            string: false,
-            literals: ['thin', 'light', 'regular', 'bold', 'fill', 'duotone'],
-          },
-          'Line weight, or a filled shape.',
-          { defaultValue: '"regular"' }
-        ),
-        canvasProp(
           'aria-label',
           TEXT,
           'Names the icon for screen readers. Without it, they skip the icon. An icon-only button names itself instead.'

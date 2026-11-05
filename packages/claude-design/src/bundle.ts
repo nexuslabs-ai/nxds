@@ -1,6 +1,7 @@
 // components/bundle.js: @nxds/react-18 as ONE classic script. It reads React
 // and ReactDOM from the page's globals and assigns `window.Nxds`.
 import { react18Src } from '@nxds/source-model/roots.mjs';
+import { parse } from 'acorn';
 import { build, type Metafile, type Plugin } from 'esbuild';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -128,6 +129,62 @@ const canvasSlot: Plugin = {
   },
 };
 
+/** The Phosphor weights a canvas draws: plain names and `-fill` names. */
+const ICON_WEIGHTS = new Set(['regular', 'fill']);
+
+// Each Phosphor icon's defs file maps all six weights to their paths. Keep
+// only the entries of ICON_WEIGHTS in its `new Map([...])`.
+function iconWeights(file: string) {
+  const source = readFileSync(file, 'utf8');
+  const entries: { weight: unknown; start: number; end: number }[] = [];
+  const program = parse(source, {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+  });
+  for (const statement of program.body) {
+    if (statement.type !== 'VariableDeclaration') continue;
+    for (const { init } of statement.declarations) {
+      if (init?.type !== 'NewExpression') continue;
+      const [list] = init.arguments;
+      if (list?.type !== 'ArrayExpression') continue;
+      for (const element of list.elements) {
+        if (element?.type !== 'ArrayExpression') continue;
+        const [key] = element.elements;
+        entries.push({
+          weight: key?.type === 'Literal' ? key.value : undefined,
+          start: element.start,
+          end: element.end,
+        });
+      }
+    }
+  }
+  const kept = entries.filter(({ weight }) => ICON_WEIGHTS.has(String(weight)));
+  if (kept.length !== ICON_WEIGHTS.size) {
+    throw new Error(
+      `bundle.js: ${file} has no ${[...ICON_WEIGHTS].join(' and ')} weight entries to keep.`
+    );
+  }
+  const [first] = entries;
+  const last = entries.at(-1);
+  if (!first || !last) throw new Error(`bundle.js: ${file} has no weights.`);
+  return `${source.slice(0, first.start)}${kept
+    .map(({ start, end }) => source.slice(start, end))
+    .join(', ')}${source.slice(last.end)}`;
+}
+
+const phosphorWeights: Plugin = {
+  name: 'nxds-phosphor-weights',
+  setup(builder) {
+    builder.onLoad(
+      {
+        filter:
+          /@phosphor-icons[\\/]react[\\/]dist[\\/]defs[\\/][^\\/]+\.es\.js$/,
+      },
+      (args) => ({ contents: iconWeights(args.path), loader: 'js' })
+    );
+  },
+};
+
 // One copy of react-slot, reached only through the shim, so no Slot misses it.
 function assertOneSlot(metafile: Metafile) {
   const copies = Object.keys(metafile.inputs).filter((input) =>
@@ -158,8 +215,7 @@ function virtualModules(
     [ICONS_MODULE]: iconsModule,
     [ICON_NAMES_MODULE]: iconNamesModule,
     [RECHARTS_MODULE]: rechartsModule,
-    [SCHEMA_MODULE]: () =>
-      `export const CANVAS_SCHEMA = ${JSON.stringify(canvasSchema(parts))};`,
+    [SCHEMA_MODULE]: () => schemaModule(parts),
   };
   return {
     name: 'nxds-virtual-modules',
@@ -183,6 +239,35 @@ function virtualModules(
       );
     },
   };
+}
+
+// CANVAS_SCHEMA with each distinct attribute written once: most props share
+// one of about a hundred shapes, such as a plain boolean.
+function schemaModule(parts: readonly FlatComponent[]) {
+  const { attributes, ...rest } = canvasSchema(parts);
+  const shapes: string[] = [];
+  const indexes = new Map<string, number>();
+  const shape = (attribute: unknown) => {
+    const json = JSON.stringify(attribute);
+    let index = indexes.get(json);
+    if (index === undefined) {
+      index = shapes.push(json) - 1;
+      indexes.set(json, index);
+    }
+    return `A[${index}]`;
+  };
+  const byPart = Object.entries(attributes).map(
+    ([part, props]) =>
+      `${JSON.stringify(part)}: { ${Object.entries(props)
+        .map(
+          ([prop, attribute]) => `${JSON.stringify(prop)}: ${shape(attribute)}`
+        )
+        .join(', ')} }`
+  );
+  return [
+    `const A = [${shapes.join(', ')}];`,
+    `export const CANVAS_SCHEMA = { ...${JSON.stringify(rest)}, attributes: { ${byPart.join(', ')} } };`,
+  ].join('\n');
 }
 
 // Every Recharts export, with the typed parts (src/canvas/recharts.ts) taking
@@ -261,6 +346,7 @@ export async function buildBundle(
     },
     plugins: [
       canvasSlot,
+      phosphorWeights,
       pageGlobals,
       virtualModules(
         folders.map((folder) => folder.slug),

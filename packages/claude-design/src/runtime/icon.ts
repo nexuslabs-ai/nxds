@@ -9,7 +9,6 @@ import { useCanvasProps } from './attributes.ts';
 export interface IconProps {
   name: string;
   size?: number;
-  weight?: 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone';
   className?: string;
   'aria-label'?: string;
   [attribute: `data-${string}`]: string | undefined;
@@ -19,7 +18,6 @@ export function Icon(raw: IconProps) {
   const {
     name,
     size = 16,
-    weight,
     className,
     'aria-label': label,
     ...rest
@@ -30,11 +28,9 @@ export function Icon(raw: IconProps) {
   const naming = label
     ? { role: 'img', 'aria-label': label }
     : { 'aria-hidden': true };
-  // A `-fill` name sets its own weight, so pass one only when it is set.
   return React.createElement(Component, {
     ...rest,
     size,
-    ...(weight ? { weight } : {}),
     className,
     ...naming,
   });

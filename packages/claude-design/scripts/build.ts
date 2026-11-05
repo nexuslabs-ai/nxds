@@ -74,16 +74,16 @@ function gitRef() {
 }
 
 // nxds's own budgets, well under the Design System format's caps (src/validate.ts).
-const BUNDLE_BUDGET = 2.7 * 1024 * 1024;
+// An open canvas takes in a script over 2 MB only after a reload, so bundle.js
+// stays under it with room to grow.
+const BUNDLE_BUDGET = 1_800_000;
 const TYPES_BUDGET = 1024 * 1024;
 const THEME_BUDGET = 2 * 1024 * 1024;
 
 function assertBudget(file: string, contents: string, budget: number) {
   const bytes = Buffer.byteLength(contents);
   if (bytes <= budget) return;
-  throw new Error(
-    `${file}: ${Math.round(bytes / 1024)} KB, over its ${Math.round(budget / 1024)} KB budget.`
-  );
+  throw new Error(`${file}: ${bytes} bytes, over its ${budget}-byte budget.`);
 }
 
 function write(relative: string, contents: string) {
