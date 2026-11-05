@@ -1,11 +1,12 @@
 // nxds:canvas-schema, the attributes bundle.js converts strings by
 // (src/runtime/attributes.ts), as index.d.ts reads them from each prop.
-import type {
-  Attribute,
-  CanvasAttribute,
-  ScalarAttribute,
-  SchemaAttribute,
-  SchemaScalar,
+import {
+  type Attribute,
+  type CanvasAttribute,
+  isCanvasAttribute,
+  type ScalarAttribute,
+  type SchemaAttribute,
+  type SchemaScalar,
 } from './attribute.ts';
 import { type FlatComponent, isRequired } from './props.ts';
 import type { CanvasSchema } from './runtime/attributes.ts';
@@ -33,14 +34,7 @@ function converted(
   attribute: Attribute | null,
   required: boolean
 ): SchemaAttribute | null {
-  if (
-    !attribute ||
-    attribute.kind === 'content' ||
-    attribute.kind === 'handler' ||
-    attribute.kind === 'none'
-  ) {
-    return null;
-  }
+  if (!isCanvasAttribute(attribute)) return null;
   if (attribute.kind !== 'scalar' || required) return forRuntime(attribute);
   const { literals, string, number, boolean } = attribute;
   const plainString = string && literals.length === 0 && !number && !boolean;

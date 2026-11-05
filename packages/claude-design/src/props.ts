@@ -9,12 +9,13 @@ import { componentsRoot } from '@nxds/source-model/roots.mjs';
 import path from 'node:path';
 import ts from 'typescript';
 
-import type {
-  Attribute,
-  DateAttribute,
-  JsonAttribute,
-  ListAttribute,
-  ScalarAttribute,
+import {
+  type Attribute,
+  type DateAttribute,
+  isCanvasAttribute,
+  type JsonAttribute,
+  type ListAttribute,
+  type ScalarAttribute,
 } from './attribute.ts';
 import { RECHARTS_PARTS } from './canvas/recharts.ts';
 import { iconSet } from './icon-set.ts';
@@ -588,9 +589,8 @@ function optionCount(attribute: Attribute) {
 }
 
 function controlOf(attribute: Attribute | null, type: string): Control | null {
-  if (!attribute) return null;
-  if (attribute.kind === 'content') return 'content';
-  if (attribute.kind === 'handler' || attribute.kind === 'none') return null;
+  if (attribute?.kind === 'content') return 'content';
+  if (!isCanvasAttribute(attribute)) return null;
   if (type === 'boolean') return 'toggle';
   if (type === 'number') return 'number';
   if (type === 'string') return 'text';
@@ -877,12 +877,7 @@ function rechartsParts(
         `${name}.${prop}`,
         to
       );
-      if (
-        !found ||
-        !attribute ||
-        attribute.kind === 'handler' ||
-        attribute.kind === 'none'
-      ) {
+      if (!found || !isCanvasAttribute(attribute)) {
         problems.push(
           `${name}.${prop}${found ? `: ${found.type}` : ' (no such prop)'}`
         );

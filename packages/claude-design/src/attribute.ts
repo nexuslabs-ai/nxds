@@ -80,6 +80,17 @@ export type Attribute =
   | HandlerAttribute
   | NoAttribute;
 
+export function isCanvasAttribute(
+  attribute: Attribute | null
+): attribute is CanvasAttribute {
+  return (
+    attribute !== null &&
+    attribute.kind !== 'content' &&
+    attribute.kind !== 'handler' &&
+    attribute.kind !== 'none'
+  );
+}
+
 /** A scalar as nxds:canvas-schema ships it, without the panel-only `suggested`. */
 export type SchemaScalar = Omit<ScalarAttribute, 'suggested'>;
 

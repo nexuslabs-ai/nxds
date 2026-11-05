@@ -4,7 +4,7 @@
 // the export ships as an artboard file, which Claude puts on the canvas
 // unchanged. It mounts every attribute form a canvas writes, so it doubles
 // as the install test.
-import type { Attribute } from './attribute.ts';
+import { type Attribute, isCanvasAttribute } from './attribute.ts';
 import { ICON_NAMES } from './icons.ts';
 import { type FlatComponent, isRequired } from './props.ts';
 import {
@@ -450,13 +450,7 @@ function formOf(
   props: Props,
   required: boolean
 ): Form {
-  if (
-    attribute.kind === 'content' ||
-    attribute.kind === 'handler' ||
-    attribute.kind === 'none'
-  ) {
-    return null;
-  }
+  if (!isCanvasAttribute(attribute)) return null;
   if (attribute.kind === 'icon') {
     return ICONS.has(raw) ? 'an icon name' : null;
   }
