@@ -12,8 +12,8 @@ function jsxText(text: string) {
   if (lines.length === 1) return text;
   return lines
     .map((line, index) => {
-      const start = index === 0 ? line : line.trimStart();
-      return index === lines.length - 1 ? start : start.trimEnd();
+      const start = index === 0 ? line : line.replace(/^[ \t]+/, '');
+      return index === lines.length - 1 ? start : start.replace(/[ \t]+$/, '');
     })
     .filter((line) => line !== '')
     .join(' ');

@@ -151,26 +151,43 @@ export interface FlatComponent {
 
 // Recharts finds a chart's series and Cells by type inside its container, and
 // cmdk sorts search results by moving each item element within its list.
-const UNWRAPPING_TAGS = new Set([
+const UNWRAPPING_TAGS = [
   'RechartsPrimitive.ResponsiveContainer',
   'CommandPrimitive.List',
-  'CommandList',
-]);
+];
 
-// Whether the part's own declaration renders one of UNWRAPPING_TAGS.
-function rendersUnwrappingTag(symbol: ts.Symbol) {
-  const declaration = symbol.declarations?.[0];
-  if (!declaration) return false;
-  const visit = (node: ts.Node): boolean => {
-    if (
-      (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
-      UNWRAPPING_TAGS.has(node.tagName.getText())
-    ) {
-      return true;
+// The JSX tag names the part's own declaration renders.
+function renderedTags(symbol: ts.Symbol) {
+  const tags = new Set<string>();
+  const visit = (node: ts.Node) => {
+    if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
+      tags.add(node.tagName.getText());
     }
-    return ts.forEachChild(node, visit) ?? false;
+    ts.forEachChild(node, visit);
   };
-  return visit(declaration);
+  const declaration = symbol.declarations?.[0];
+  if (declaration) visit(declaration);
+  return tags;
+}
+
+// The parts that render an UNWRAPPING_TAGS primitive, directly or through
+// another such part, so `ComboboxList` counts because it renders `CommandList`.
+function unwrappingParts(parts: ReadonlyMap<string, ts.Symbol>) {
+  const tagsByPart = [...parts].map(
+    ([name, symbol]) => [name, renderedTags(symbol)] as const
+  );
+  const unwrapping = new Set(UNWRAPPING_TAGS);
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const [name, tags] of tagsByPart) {
+      if (unwrapping.has(name)) continue;
+      if (![...tags].some((tag) => unwrapping.has(tag))) continue;
+      unwrapping.add(name);
+      grew = true;
+    }
+  }
+  return unwrapping;
 }
 
 const PRINT_FLAGS =
@@ -702,7 +719,7 @@ function flatComponent(
   name: string,
   symbol: ts.Symbol,
   listed: (prop: ts.Symbol) => boolean = isListedProp
-): FlatComponent {
+): Omit<FlatComponent, 'unwraps'> {
   const fileName = symbol.declarations?.[0]?.getSourceFile().fileName ?? '';
   const defaults = componentDefaults(checker, symbol);
   const resolved = propsType(checker, symbol);
@@ -751,16 +768,20 @@ function flatComponent(
     slug: slugOf(fileName),
     description: documentation(checker, symbol),
     props,
-    unwraps: rendersUnwrappingTag(symbol),
   };
 }
 
 /** Every component part the bundle exports, in name order. */
 export function flatComponents(): FlatComponent[] {
   const { checker, exported } = reactProgram();
+  const parts = publicComponents(checker, exported, componentsRoot);
+  const unwrapping = unwrappingParts(parts);
   return [
-    ...[...publicComponents(checker, exported, componentsRoot)]
-      .map(([name, symbol]) => flatComponent(checker, name, symbol))
+    ...[...parts]
+      .map(([name, symbol]) => ({
+        ...flatComponent(checker, name, symbol),
+        unwraps: unwrapping.has(name),
+      }))
       .filter((component) => component.slug !== 'appearance'),
     ...canvasParts(),
     ...rechartsParts(checker, exported),
