@@ -80,15 +80,18 @@ export type Attribute =
   | HandlerAttribute
   | NoAttribute;
 
+const CANVAS_KINDS = {
+  scalar: true,
+  list: true,
+  date: true,
+  json: true,
+  icon: true,
+} satisfies Record<CanvasAttribute['kind'], true>;
+
 export function isCanvasAttribute(
   attribute: Attribute | null
 ): attribute is CanvasAttribute {
-  return (
-    attribute !== null &&
-    attribute.kind !== 'content' &&
-    attribute.kind !== 'handler' &&
-    attribute.kind !== 'none'
-  );
+  return attribute !== null && attribute.kind in CANVAS_KINDS;
 }
 
 /** A scalar as nxds:canvas-schema ships it, without the panel-only `suggested`. */
