@@ -469,6 +469,25 @@ export const KeyboardTooltip: Story = {
   },
 };
 
+export const SeriesOrder: Story = {
+  render: () => (
+    <div className="nx:w-[600px] nx:max-w-full">
+      <BarChart data={visitors} xKey="month" series={['mobile', 'desktop']} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const legend = canvasElement.querySelector('.recharts-legend-wrapper');
+    await waitFor(() => expect(legend).toHaveTextContent('MobileDesktop'));
+    await userEvent.tab();
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('.recharts-tooltip-wrapper')
+      ).toHaveTextContent('FebMobile200Desktop305')
+    );
+  },
+};
+
 export const HorizontalCategories: Story = {
   render: () => (
     <div className="nx:w-[600px] nx:max-w-full">
@@ -582,12 +601,12 @@ export const PieSlices: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
     await waitFor(() =>
       expect(shapes(canvasElement, '.recharts-pie-sector')).toHaveLength(5)
     );
-    await expect(canvas.getByText('Chrome')).toBeInTheDocument();
-    await expect(canvas.getByText('Other')).toBeInTheDocument();
+    await expect(
+      canvasElement.querySelector('.recharts-legend-wrapper')
+    ).toHaveTextContent('ChromeSafariFirefoxEdgeOther');
   },
 };
 
