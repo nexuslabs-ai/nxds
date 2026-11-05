@@ -369,7 +369,7 @@ export function angularExampleSource(
     // `hugeicon()` already returns `IconMarkup`, so it replaces the wrapper too.
     if (huge) {
       rewritten = rewritten.replace(
-        new RegExp(`\\biconMarkup\\(${name}\\)`, 'g'),
+        new RegExp(`\\btrustIconMarkup\\(${name}\\)`, 'g'),
         `hugeicon(${icon})`
       );
     }
@@ -386,7 +386,7 @@ export function angularExampleSource(
   );
   if (huge) {
     const libIcon = rewritten.match(ANGULAR_LIB_ICON);
-    const stillMarked = /\biconMarkup\(/.test(rewritten);
+    const stillMarked = /\btrustIconMarkup\(/.test(rewritten);
     const helpers = [
       ...(libIcon?.[1] ?? '').split(',').map((name) => name.trim()),
       'hugeicon',
