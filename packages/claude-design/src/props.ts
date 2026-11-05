@@ -145,6 +145,59 @@ export interface FlatComponent {
   slug: string;
   description: string;
   props: FlatProp[];
+  /** Whether the part reads its children's types or moves their elements, so a canvas wrapper between them breaks it. */
+  unwraps: boolean;
+}
+
+// Recharts finds a chart's series and Cells by type inside its container, and
+// cmdk sorts search results by moving each item element within its list.
+const UNWRAPPING_TAGS = [
+  'RechartsPrimitive.ResponsiveContainer',
+  'CommandPrimitive.List',
+];
+
+// The JSX tag names the part's own declaration renders.
+function renderedTags(symbol: ts.Symbol) {
+  const tags = new Set<string>();
+  const visit = (node: ts.Node) => {
+    if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
+      tags.add(node.tagName.getText());
+    }
+    ts.forEachChild(node, visit);
+  };
+  const declaration = symbol.declarations?.[0];
+  if (declaration) visit(declaration);
+  return tags;
+}
+
+function takesChildren(checker: ts.TypeChecker, symbol: ts.Symbol) {
+  const resolved = propsType(checker, symbol);
+  if (!resolved) return false;
+  return propSymbols(checker, resolved.type).byName.has('children');
+}
+
+// The parts that take children and render an UNWRAPPING_TAGS primitive,
+// directly or through another such part, so `ComboboxList` counts because it
+// renders `CommandList`, and `BarChart` doesn't because it takes no children.
+function unwrappingParts(
+  checker: ts.TypeChecker,
+  parts: ReadonlyMap<string, ts.Symbol>
+) {
+  const tagsByPart = [...parts]
+    .filter(([, symbol]) => takesChildren(checker, symbol))
+    .map(([name, symbol]) => [name, renderedTags(symbol)] as const);
+  const unwrapping = new Set(UNWRAPPING_TAGS);
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const [name, tags] of tagsByPart) {
+      if (unwrapping.has(name)) continue;
+      if (![...tags].some((tag) => unwrapping.has(tag))) continue;
+      unwrapping.add(name);
+      grew = true;
+    }
+  }
+  return unwrapping;
 }
 
 const PRINT_FLAGS =
@@ -676,7 +729,7 @@ function flatComponent(
   name: string,
   symbol: ts.Symbol,
   listed: (prop: ts.Symbol) => boolean = isListedProp
-): FlatComponent {
+): Omit<FlatComponent, 'unwraps'> {
   const fileName = symbol.declarations?.[0]?.getSourceFile().fileName ?? '';
   const defaults = componentDefaults(checker, symbol);
   const resolved = propsType(checker, symbol);
@@ -731,9 +784,14 @@ function flatComponent(
 /** Every component part the bundle exports, in name order. */
 export function flatComponents(): FlatComponent[] {
   const { checker, exported } = reactProgram();
+  const parts = publicComponents(checker, exported, componentsRoot);
+  const unwrapping = unwrappingParts(checker, parts);
   return [
-    ...[...publicComponents(checker, exported, componentsRoot)]
-      .map(([name, symbol]) => flatComponent(checker, name, symbol))
+    ...[...parts]
+      .map(([name, symbol]) => ({
+        ...flatComponent(checker, name, symbol),
+        unwraps: unwrapping.has(name),
+      }))
       .filter((component) => component.slug !== 'appearance'),
     ...canvasParts(),
     ...rechartsParts(checker, exported),
@@ -829,7 +887,7 @@ function rechartsParts(
         { ...found, attribute, type, control: controlOf(attribute, type) },
       ];
     });
-    return { ...part, slug: 'recharts', props };
+    return { ...part, slug: 'recharts', props, unwraps: true };
   });
   if (problems.length > 0) {
     throw new Error(
@@ -889,6 +947,7 @@ function canvasParts(): FlatComponent[] {
     {
       name: 'Icon',
       slug: 'icon',
+      unwraps: false,
       description:
         'A Phosphor icon by name, such as `plus`. It takes the colour of its text. `components/Icon/README.md` lists every name.',
       props: [
@@ -922,6 +981,7 @@ function canvasParts(): FlatComponent[] {
     {
       name: 'Toast',
       slug: 'toast',
+      unwraps: false,
       description:
         'One toast, shown in place, as `toast()` shows it in an app. Use it to show a toast on a static screen.',
       props: [

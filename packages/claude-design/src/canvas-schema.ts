@@ -42,15 +42,11 @@ function converted(
   return plainString ? null : withoutSuggested(attribute);
 }
 
-/** Parts that read their children's types, as Recharts finds a chart's series and Cells. */
-const UNWRAPS = (part: FlatComponent) =>
-  part.slug === 'recharts' || part.name === 'ChartContainer';
-
 export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
   const schema: CanvasSchema = {
     attributes: {},
     required: {},
-    unwrap: parts.filter(UNWRAPS).map((part) => part.name),
+    unwrap: parts.filter((part) => part.unwraps).map((part) => part.name),
     renames: {},
   };
   for (const part of parts) {

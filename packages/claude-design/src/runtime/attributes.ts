@@ -12,7 +12,7 @@ import { ICON_COMPONENTS } from 'nxds:icon-names';
 import type { IconAttribute, SchemaAttribute } from '../attribute.ts';
 
 import { kebab } from './canvas-names.ts';
-import { unwrapped } from './canvas-wrapper.ts';
+import { unwrapped, withoutIndentation } from './canvas-wrapper.ts';
 import { Icon } from './icon.ts';
 import { type Converted, convertValue, fail, type Props } from './values.ts';
 
@@ -172,16 +172,6 @@ function ordered(props: Props, attributes: Record<string, SchemaAttribute>) {
   ];
 }
 
-// A canvas passes x-import content as an array and keeps indentation, so
-// `<x-import>` with only a line break inside has a `["\n"]` child. That would
-// replace a FieldError's `errors`, and an `<input>` throws on any child.
-function isIndentation(children: unknown) {
-  return (
-    Array.isArray(children) &&
-    children.every((child) => typeof child === 'string' && child.trim() === '')
-  );
-}
-
 // `props` with each `data-*` attribute a part declares as a prop renamed to it.
 function renamed(part: string, props: Props): Props | null {
   const renames = CANVAS_SCHEMA.renames[part];
@@ -200,13 +190,18 @@ function renamed(part: string, props: Props): Props | null {
 export function useCanvasProps<P extends object>(part: string, props: P): P {
   const id = React.useId().replace(/:/g, '');
   let result: Props | null = renamed(part, props as Props);
-  const children = (result ?? (props as Props))['children'];
-  if (isIndentation(children)) {
+  // A canvas passes x-import content as an array, even for one child, and
+  // keeps indentation. Button's `asChild` needs its one element, AvatarGroup's
+  // `max` counts children, and a `["\n"]` child would replace a FieldError's
+  // `errors` and make an `<input>` throw.
+  const children = (result ?? (props as Props))['children'] as React.ReactNode;
+  const content = CANVAS_SCHEMA.unwrap.includes(part)
+    ? unwrapped(children)
+    : withoutIndentation(children);
+  if (content !== children) {
     result ??= { ...(props as Props) };
-    delete result['children'];
-  } else if (children !== undefined && CANVAS_SCHEMA.unwrap.includes(part)) {
-    result ??= { ...(props as Props) };
-    result['children'] = unwrapped(children as React.ReactNode);
+    if (content === undefined) delete result['children'];
+    else result['children'] = content;
   }
   const attributes = CANVAS_SCHEMA.attributes[part];
   if (!attributes) return (result ?? props) as P;
