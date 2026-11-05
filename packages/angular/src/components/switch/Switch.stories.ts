@@ -1,3 +1,6 @@
+import { Component, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { disabled, form, FormField } from '@angular/forms/signals';
 import {
   type Meta,
   moduleMetadata,
@@ -329,5 +332,97 @@ export const TwoWayBinding: Story = {
     await expect(canvas.getByText('Emails on')).toBeVisible();
     await userEvent.click(canvas.getByRole('switch'));
     await expect(canvas.getByText('Emails off')).toBeVisible();
+  },
+};
+
+export const NgModel: Story = {
+  decorators: [moduleMetadata({ imports: [FormsModule] })],
+  render: () => ({
+    props: { enabled: true },
+    template: `
+      <div class="nx:flex nx:items-center nx:gap-2">
+        <button nxSwitch id="ng-model-emails" [(ngModel)]="enabled"></button>
+        <label for="ng-model-emails">Emails {{ enabled ? 'on' : 'off' }}</label>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByRole('switch')).toBeChecked();
+    await userEvent.click(canvas.getByRole('switch'));
+    await expect(canvas.getByText('Emails off')).toBeVisible();
+  },
+};
+
+/** Toggles a reactive form control, then disables it. */
+export const ReactiveForm: Story = {
+  decorators: [moduleMetadata({ imports: [ReactiveFormsModule] })],
+  render: () => ({
+    props: { emails: new FormControl(true, { nonNullable: true }) },
+    template: `
+      <div class="nx:flex nx:items-center nx:gap-2">
+        <button nxSwitch id="reactive-emails" [formControl]="emails"></button>
+        <label for="reactive-emails">Emails {{ emails.value ? 'on' : 'off' }}</label>
+        <button type="button" (click)="emails.disable()">Lock settings</button>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const switchEl = canvas.getByRole('switch');
+
+    await expect(switchEl).toBeChecked();
+    await userEvent.click(switchEl);
+    await expect(canvas.getByText('Emails off')).toBeVisible();
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Lock settings' })
+    );
+    await expect(switchEl).toBeDisabled();
+  },
+};
+
+@Component({
+  selector: 'nx-switch-signal-form',
+  imports: [NxSwitch, FormField],
+  template: `
+    <div class="nx:flex nx:items-center nx:gap-2">
+      <button
+        nxSwitch
+        id="signal-emails"
+        [formField]="settings.emails"
+      ></button>
+      <label for="signal-emails"
+        >Emails {{ model().emails ? 'on' : 'off' }}</label
+      >
+      <button type="button" (click)="locked.set(true)">Lock settings</button>
+    </div>
+  `,
+})
+class SignalFormSettings {
+  protected readonly model = signal({ emails: true });
+  protected readonly locked = signal(false);
+  protected readonly settings = form(this.model, (path) =>
+    disabled(path.emails, { when: () => this.locked() })
+  );
+}
+
+/** Toggles a Signal Forms field, then disables it. */
+export const SignalForm: Story = {
+  decorators: [moduleMetadata({ imports: [SignalFormSettings] })],
+  render: () => ({ template: '<nx-switch-signal-form />' }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const switchEl = canvas.getByRole('switch');
+
+    await expect(switchEl).toBeChecked();
+    await userEvent.click(switchEl);
+    await expect(canvas.getByText('Emails off')).toBeVisible();
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Lock settings' })
+    );
+    await expect(switchEl).toBeDisabled();
   },
 };

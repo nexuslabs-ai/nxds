@@ -357,10 +357,12 @@ jobs:
       fail-fast: false
       matrix:
         lane:
-          - name: React 19, Vue, Angular, parity
+          - name: React 19, Vue, parity
             script: react19
           - name: React 18
             script: react18
+          - name: Angular
+            script: angular
     steps:
       - name: Checkout
         uses: actions/checkout@v4

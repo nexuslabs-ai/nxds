@@ -1,4 +1,5 @@
-import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
+import { NoopScrollStrategy } from '@angular/cdk/overlay';
+import { NgTemplateOutlet } from '@angular/common';
 import {
   booleanAttribute,
   ChangeDetectionStrategy,
@@ -23,6 +24,7 @@ import {
 import {
   BrnDialog,
   BrnDialogClose,
+  type BrnDialogOptions,
   BrnDialogRef,
   BrnDialogTrigger,
   provideBrnDialogDefaultOptions,
@@ -31,6 +33,7 @@ import type { ClassValue } from 'clsx';
 
 import { NxIcon } from '../../lib/icon';
 import { IconX } from '../../lib/icons';
+import { lockPageScroll } from '../../lib/scroll-lock';
 import { cn } from '../../lib/utils';
 import {
   defaultOverlayLayout,
@@ -43,49 +46,17 @@ import {
 
 let nextDialogId = 0;
 
-/**
- * The dialog's content, written as `<ng-template nxDialogContent>`. It renders
- * in a portal above an overlay once the dialog opens.
- */
-@Directive({ selector: 'ng-template[nxDialogContent]' })
-export class NxDialogContent {
-  readonly template = inject(TemplateRef);
-  /** Shows the close button in the top-right corner. */
-  readonly showCloseButton = input(true, { transform: booleanAttribute });
-  /** Title for a generated header. Leave it unset when you write `nxDialogHeader`. */
-  readonly title = input<string>();
-  /** Description for a generated header. Leave it unset when you write `nxDialogHeader`. */
-  readonly description = input<string>();
-  /** Text for a generated `nxDialogBody`, before the content. Leave it unset when you write `nxDialogBody`. */
-  readonly body = input<string>();
-  readonly userClass = input<ClassValue>('', { alias: 'class' });
-}
-
 const NX_DIALOG = new InjectionToken<NxDialog>('NxDialog');
 
-let openPanels = 0;
-let unlockPageScroll = () => {};
-
 /**
- * Stops the page scrolling behind an open dialog until the last one closes.
- * The body takes the scrollbar's width as padding, so the page doesn't shift.
+ * Leaves CDK's dialog container without a role or `aria-modal`: the panel
+ * names itself, and the container also holds the overlay. Brain's types allow
+ * only a role, but CDK drops a null attribute.
  */
-function lockPageScroll() {
-  const { body, documentElement } = inject(DOCUMENT);
-  if (openPanels++ === 0) {
-    const { overflow, paddingRight } = body.style;
-    const scrollbar = window.innerWidth - documentElement.clientWidth;
-    body.style.overflow = 'hidden';
-    if (scrollbar > 0) body.style.paddingRight = `${scrollbar}px`;
-    unlockPageScroll = () => {
-      body.style.overflow = overflow;
-      body.style.paddingRight = paddingRight;
-    };
-  }
-  inject(DestroyRef).onDestroy(() => {
-    if (--openPanels === 0) unlockPageScroll();
-  });
-}
+const noContainerSemantics = {
+  role: null,
+  ariaModal: null,
+} as unknown as Pick<BrnDialogOptions, 'role' | 'ariaModal'>;
 
 /** Ids the panel names itself with, filled in by its title and descriptions. */
 class DialogLabels {
@@ -143,6 +114,24 @@ export class NxDialogBody {
 }
 
 /**
+ * The dialog's content, written as `<ng-template nxDialogContent>`. It renders
+ * in a portal above an overlay once the dialog opens.
+ */
+@Directive({ selector: 'ng-template[nxDialogContent]' })
+export class NxDialogContent {
+  readonly template = inject(TemplateRef);
+  /** Shows the close button in the top-right corner. */
+  readonly showCloseButton = input(true, { transform: booleanAttribute });
+  /** Title for a generated header. Ignored when `nxDialogHeader` is a direct child. */
+  readonly title = input<string>();
+  /** Description for a generated header. Ignored when `nxDialogHeader` is a direct child. */
+  readonly description = input<string>();
+  /** Text for a generated `nxDialogBody`, before the content. Ignored when `nxDialogBody` is a direct child. */
+  readonly body = input<string>();
+  readonly userClass = input<ClassValue>('', { alias: 'class' });
+}
+
+/**
  * Holds the dialog's action buttons. Stacks them on narrow screens and lines
  * them up in a row from the `sm` breakpoint.
  */
@@ -193,7 +182,8 @@ export class NxDialogTitle {
 })
 export class NxDialogDescription {
   readonly userClass = input<ClassValue>('', { alias: 'class' });
-  protected readonly id = `${inject(DialogLabels).titleId}-description-${nextDialogId++}`;
+  private readonly labels = inject(DialogLabels);
+  protected readonly id = `${this.labels.titleId}-description-${nextDialogId++}`;
   protected readonly classes = computed(() =>
     cn(
       'nx:m-0 nx:typography-body-default nx:text-muted-foreground',
@@ -202,7 +192,12 @@ export class NxDialogDescription {
   );
 
   constructor() {
-    inject(DialogLabels).descriptionIds.update((ids) => [...ids, this.id]);
+    this.labels.descriptionIds.update((ids) => [...ids, this.id]);
+    inject(DestroyRef).onDestroy(() =>
+      this.labels.descriptionIds.update((ids) =>
+        ids.filter((id) => id !== this.id)
+      )
+    );
   }
 }
 
@@ -234,7 +229,9 @@ export class NxDialogDescription {
   },
   template: `
     @let options = dialog.content();
-    @if (options.title() || options.description()) {
+    @if (
+      !dialog.authoredHeader() && (options.title() || options.description())
+    ) {
       <div nxDialogHeader>
         @if (options.title()) {
           <h2 nxDialogTitle>{{ options.title() }}</h2>
@@ -244,7 +241,7 @@ export class NxDialogDescription {
         }
       </div>
     }
-    @if (options.body()) {
+    @if (!dialog.authoredBody() && options.body()) {
       <div nxDialogBody>{{ options.body() }}</div>
     }
     <ng-container
@@ -292,13 +289,13 @@ class NxDialogPanel {
   hostDirectives: [BrnDialog],
   providers: [
     { provide: NX_DIALOG, useExisting: forwardRef(() => NxDialog) },
-    // nxds draws the overlay and names the panel itself, so CDK adds no
-    // backdrop and leaves its container without a role.
+    // nxds draws the overlay, names the panel and locks page scroll itself,
+    // so CDK adds no backdrop and no scroll lock.
     provideBrnDialogDefaultOptions({
-      role: null as never,
-      ariaModal: null as never,
+      ...noContainerSemantics,
       ariaLabelledBy: null,
       hasBackdrop: false,
+      scrollStrategy: new NoopScrollStrategy(),
     }),
   ],
   host: { class: 'nx:contents' },
@@ -315,6 +312,10 @@ export class NxDialog {
   readonly open = model(false);
 
   readonly content = contentChild.required(NxDialogContent);
+  readonly authoredHeader = contentChild(NxDialogHeader, {
+    descendants: false,
+  });
+  readonly authoredBody = contentChild(NxDialogBody, { descendants: false });
   private readonly portal = viewChild.required<TemplateRef<unknown>>('portal');
   private readonly brn = inject(BrnDialog);
 

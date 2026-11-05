@@ -16,6 +16,7 @@ import { cn } from '../../lib/utils';
     'aria-label': 'Loading',
     'data-slot': 'spinner',
     '[class]': 'classes()',
+    '[innerHTML]': 'shapes()',
   },
 })
 export class NxSpinner {
@@ -24,8 +25,5 @@ export class NxSpinner {
   protected readonly classes = computed(() =>
     cn('nx:size-4 nx:animate-spin', this.userClass())
   );
-
-  constructor() {
-    drawIcon(() => IconLoader2);
-  }
+  protected readonly shapes = drawIcon(() => IconLoader2);
 }

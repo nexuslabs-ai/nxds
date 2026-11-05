@@ -77,9 +77,10 @@ const ICONS_FILE = 'lib/icons.ts';
 
 /**
  * What each framework's setup copies and installs: the appearance provider and
- * `cn`, which every app needs before any component, and the packages the
- * framework's CSS entry imports.
- * @type {Record<import('./catalog-schema').Framework, { roots: string[]; packages: string[]; steps: import('./catalog-schema').SetupStep[] }>}
+ * `cn`, which every app needs before any component, the packages the
+ * framework's CSS entry imports, and the component dependencies no setup file
+ * imports, at the framework package's range.
+ * @type {Record<import('./catalog-schema').Framework, { roots: string[]; packages: string[]; componentPackages: string[]; steps: import('./catalog-schema').SetupStep[] }>}
  */
 const SETUP_SOURCES = {
   react: {
@@ -89,16 +90,19 @@ const SETUP_SOURCES = {
       'lib/utils.ts',
     ],
     packages: ['tw-animate-css'],
+    componentPackages: [],
     steps: ['add-css-import', 'add-head-script', 'wrap-root-with-provider'],
   },
   vue: {
     roots: ['components/appearance/index.ts', 'lib/utils.ts'],
     packages: ['tw-animate-css'],
+    componentPackages: [],
     steps: [],
   },
   angular: {
     roots: ['components/appearance/appearance.ts', 'lib/utils.ts'],
     packages: ['tw-animate-css'],
+    componentPackages: ['@spartan-ng/brain', '@angular/cdk'],
     steps: [],
   },
 };
@@ -296,7 +300,8 @@ function tokenCss() {
  */
 function setupVariant(framework) {
   const { planner, src } = FRAMEWORKS[framework];
-  const { roots, packages, steps } = SETUP_SOURCES[framework];
+  const { roots, packages, componentPackages, steps } =
+    SETUP_SOURCES[framework];
   const walked = planner.walkRoots(
     SETUP,
     roots.map((file) => path.join(src, file))
@@ -305,7 +310,9 @@ function setupVariant(framework) {
     items: [],
     packages: {
       npm: {
-        ...packageRecord(walked.packages.map(planner.toInstall)),
+        ...packageRecord(
+          [...walked.packages, ...componentPackages].map(planner.toInstall)
+        ),
         ...Object.fromEntries(packages.map((name) => [name, devRanges[name]])),
       },
       tailwind: tailwindRange(),

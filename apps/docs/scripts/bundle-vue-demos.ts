@@ -3,6 +3,7 @@
 // usage: node scripts/bundle-vue-demos.ts
 import { toRepoPath, vueSrc } from '@nxds/source-model/roots.mjs';
 import vue from '@vitejs/plugin-vue';
+import { existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { build, type Plugin } from 'vite';
 
@@ -53,5 +54,9 @@ await build({
     lib: { entry, formats: ['es'], fileName: 'entry', cssFileName: 'entry' },
   },
 });
+
+// The docs page always loads the bundle's stylesheet, so write one even when no demo imports CSS.
+const styles = path.join(bundleDir, 'entry.css');
+if (!existsSync(styles)) writeFileSync(styles, '');
 
 console.log(`Vue demos bundle -> ${toRepoPath(bundleDir)}`);

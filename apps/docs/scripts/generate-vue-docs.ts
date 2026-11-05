@@ -53,6 +53,11 @@ import path from 'node:path';
 import prettier from 'prettier';
 import ts from 'typescript';
 
+import type {
+  FrameworkComponentDocs,
+  FrameworkDemo,
+} from '../app/_lib/framework-docs.ts';
+
 import { docsRoot } from './docs-root.mjs';
 
 /** One line of a demo's `<script setup>`, and the node its imports are read from. */
@@ -67,24 +72,6 @@ interface DocsStory {
   description: string | null;
   byModule: Map<string, string[]>;
   source: Promise<string>;
-}
-
-interface VueDemo {
-  id: string;
-  title: string;
-  description: string | null;
-  /** The single-file component, as each icon library draws it. */
-  sources: Record<IconLibrary, string>;
-  alsoInstall: string[];
-  /** `name@range` packages it imports that its component doesn't install, by icon library. */
-  packages: Record<IconLibrary, string[]>;
-}
-
-interface VueComponentDocs {
-  description: string;
-  preview: string;
-  examples: string[];
-  imports: string;
 }
 
 const outputDir = path.join(docsRoot, 'generated', 'vue');
@@ -566,8 +553,8 @@ ${icons.join('\n')}
 
 const slugs = exportedSlugs();
 const closures = frameworkWalks(vue, slugs);
-const componentDocs: Record<string, VueComponentDocs> = {};
-const demos: Record<string, VueDemo> = {};
+const componentDocs: Record<string, FrameworkComponentDocs> = {};
+const demos: Record<string, FrameworkDemo> = {};
 
 rmSync(outputDir, { recursive: true, force: true });
 mkdirSync(propsDir, { recursive: true });

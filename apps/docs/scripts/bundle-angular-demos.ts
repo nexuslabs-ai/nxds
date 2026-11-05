@@ -3,7 +3,7 @@
 // usage: node scripts/bundle-angular-demos.ts
 import angular from '@analogjs/vite-plugin-angular';
 import { angularSrc, repoRoot, toRepoPath } from '@nxds/source-model/roots.mjs';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { build, type Plugin } from 'vite';
 
@@ -58,15 +58,17 @@ await build({
 // Ahead-of-time output never needs the compiler; the docs CSP has no
 // `unsafe-eval` for the JIT compiler to run under.
 const partial = readdirSync(bundleDir).find((file) =>
-  readFileSync(path.join(bundleDir, file), 'utf8').includes(
-    'ɵɵngDeclareComponent'
-  )
+  /ɵɵngDeclare\w+/.test(readFileSync(path.join(bundleDir, file), 'utf8'))
 );
 if (partial) {
   throw new Error(
     `bundle-angular-demos: ${file(partial)} holds partially compiled Angular code, which needs the JIT compiler.`
   );
 }
+
+// The docs page always loads the bundle's stylesheet, so write one even when no demo imports CSS.
+const styles = path.join(bundleDir, 'entry.css');
+if (!existsSync(styles)) writeFileSync(styles, '');
 
 function file(name: string) {
   return toRepoPath(path.join(bundleDir, name));

@@ -48,10 +48,21 @@ import {
   property,
   unwrap,
 } from '@nxds/source-model/story-ast.ts';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import path from 'node:path';
 import prettier from 'prettier';
 import ts from 'typescript';
+
+import type {
+  FrameworkComponentDocs,
+  FrameworkDemo,
+} from '../app/_lib/framework-docs.ts';
 
 import { docsRoot } from './docs-root.mjs';
 
@@ -64,22 +75,6 @@ interface DocsStory {
   byModule: Map<string, string[]>;
   fields: { name: string; value: string; constant: boolean }[];
   template: string;
-}
-
-interface AngularDemo {
-  id: string;
-  title: string;
-  description: string | null;
-  sources: Record<IconLibrary, string>;
-  alsoInstall: string[];
-  packages: Record<IconLibrary, string[]>;
-}
-
-interface AngularComponentDocs {
-  description: string;
-  preview: string;
-  examples: string[];
-  imports: string;
 }
 
 const outputDir = path.join(docsRoot, 'generated', 'angular');
@@ -197,12 +192,8 @@ function storyFields(
 function readDocsStories(slug: string) {
   const dir = path.join(angularComponentsRoot, slug);
   const file = path.join(dir, `${pascal(slug)}.stories.ts`);
-  let source: ts.SourceFile;
-  try {
-    source = parseFile(file);
-  } catch {
-    return null;
-  }
+  if (!existsSync(file)) return null;
+  const source = parseFile(file);
 
   const imported = new Map<string, string>();
   const consts = new Map<string, ts.ObjectLiteralExpression>();
@@ -450,8 +441,8 @@ ${names.map((name) => `  ${name} = ICON_SETS[library].${name};`).join('\n')}
 
 const slugs = exportedSlugs();
 const closures = frameworkWalks(angular, slugs);
-const componentDocs: Record<string, AngularComponentDocs> = {};
-const demos: Record<string, AngularDemo> = {};
+const componentDocs: Record<string, FrameworkComponentDocs> = {};
+const demos: Record<string, FrameworkDemo> = {};
 const demoClasses: Record<string, string> = {};
 const storyIcons = new Set<string>();
 

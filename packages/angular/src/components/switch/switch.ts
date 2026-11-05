@@ -10,7 +10,6 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { type ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import type { FormCheckboxControl } from '@angular/forms/signals';
 import { cva, type VariantProps } from 'class-variance-authority';
 import type { ClassValue } from 'clsx';
 
@@ -100,7 +99,7 @@ type SwitchSize = NonNullable<VariantProps<typeof switchVariants>['size']>;
     ><ng-content
   /></span>`,
 })
-export class NxSwitch implements FormCheckboxControl, ControlValueAccessor {
+export class NxSwitch implements ControlValueAccessor {
   /** Whether the switch is on. Bind `[(checked)]` to follow it. */
   readonly checked = model(false);
   /** Stops the switch from turning on or off. */

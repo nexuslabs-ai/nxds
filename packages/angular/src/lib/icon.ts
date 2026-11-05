@@ -6,40 +6,73 @@ import {
   inject,
   input,
   Renderer2,
+  RendererStyleFlags2,
+  type Signal,
 } from '@angular/core';
+import { DomSanitizer, type SafeHtml } from '@angular/platform-browser';
 
 const SVG_MARKUP = /^\s*<svg([^>]*)>([\s\S]*)<\/svg>\s*$/;
 const ATTRIBUTE = /([\w:-]+)="([^"]*)"/g;
 
+/** A `style` attribute's `property: value` declarations. */
+function declarations(style: string) {
+  return style.split(';').flatMap((declaration) => {
+    const colon = declaration.indexOf(':');
+    if (colon < 0) return [];
+    return [
+      [
+        declaration.slice(0, colon).trim(),
+        declaration.slice(colon + 1).trim(),
+      ] as const,
+    ];
+  });
+}
+
 /**
  * Draws icon markup, such as an export of `lib/icons`, as the host `<svg>`
  * itself: its attributes land on the host and its shapes inside it. The icon
- * stays one bare `<svg>`, so `[&>svg]` and `[&_svg]` classes style it. Call it
- * from the constructor of a directive on an `<svg>`.
+ * stays one bare `<svg>`, so `[&>svg]` and `[&_svg]` classes style it.
+ *
+ * The markup must be trusted icon markup, never user input: its shapes are
+ * written unsanitized. Call it from the constructor of a directive on an
+ * `<svg>`, and bind what it returns to the host's `[innerHTML]`.
  */
-export function drawIcon(markup: () => string): void {
+export function drawIcon(markup: () => string): Signal<SafeHtml> {
   const element = inject<ElementRef<SVGSVGElement>>(ElementRef).nativeElement;
   const renderer = inject(Renderer2);
+  const sanitizer = inject(DomSanitizer);
   const parts = computed(() => {
     const [, attributes = '', children = ''] = SVG_MARKUP.exec(markup()) ?? [];
+    const pairs = [...attributes.matchAll(ATTRIBUTE)]
+      .map(([, name = '', value = '']) => [name, value] as const)
+      .filter(([name]) => name !== 'xmlns');
     return {
-      attributes: [...attributes.matchAll(ATTRIBUTE)]
-        .map(([, name = '', value = '']) => [name, value] as const)
-        .filter(([name]) => name !== 'xmlns'),
+      attributes: pairs.filter(([name]) => name !== 'style'),
+      styles: pairs
+        .filter(([name]) => name === 'style')
+        .flatMap(([, value]) => declarations(value)),
       children,
     };
   });
 
+  // The markup's styles merge into the host's, so the host keeps its own.
   effect((onCleanup) => {
-    const { attributes, children } = parts();
+    const { attributes, styles } = parts();
     for (const [name, value] of attributes) {
       renderer.setAttribute(element, name, value);
     }
-    renderer.setProperty(element, 'innerHTML', children);
+    for (const [property, value] of styles) {
+      renderer.setStyle(element, property, value, RendererStyleFlags2.DashCase);
+    }
     onCleanup(() => {
       for (const [name] of attributes) renderer.removeAttribute(element, name);
+      for (const [property] of styles) {
+        renderer.removeStyle(element, property, RendererStyleFlags2.DashCase);
+      }
     });
   });
+
+  return computed(() => sanitizer.bypassSecurityTrustHtml(parts().children));
 }
 
 type IconSvgElement = readonly (readonly [
@@ -63,13 +96,14 @@ export function hugeicon(icon: IconSvgElement, { fill = 'none' } = {}) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${fill}">${children}</svg>`;
 }
 
-/** Draws an internal icon: `<svg [nxIcon]="IconX"></svg>`. */
-@Directive({ selector: 'svg[nxIcon]' })
+/** Draws an icon: `<svg [nxIcon]="IconX"></svg>`. */
+@Directive({
+  selector: 'svg[nxIcon]',
+  host: { '[innerHTML]': 'shapes()' },
+})
 export class NxIcon {
-  /** The icon's SVG markup. */
+  /** The icon's SVG markup. Pass trusted icon markup only, never user input. */
   readonly nxIcon = input.required<string>();
 
-  constructor() {
-    drawIcon(this.nxIcon);
-  }
+  protected readonly shapes = drawIcon(this.nxIcon);
 }

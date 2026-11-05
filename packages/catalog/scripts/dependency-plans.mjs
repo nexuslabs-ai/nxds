@@ -62,6 +62,7 @@ export const angular = createInstallPlanner({
   frameworkPackages: [
     '@angular/core',
     '@angular/common',
+    '@angular/forms',
     '@angular/platform-browser',
   ],
   isModuleSource: isAngularModuleSource,

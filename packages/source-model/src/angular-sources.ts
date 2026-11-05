@@ -211,14 +211,18 @@ function hostDirectiveInputs(
       return [];
     }
     const declared = checker.getTypeAtLocation(directive);
-    const instance = declared.getConstructSignatures()[0]?.getReturnType();
-    if (!instance) return [];
+    const instance =
+      declared.getConstructSignatures()[0]?.getReturnType() ??
+      fail(`${directive.getText()} has no constructor type.`);
     return inputs.elements.flatMap((input) => {
       if (!ts.isStringLiteral(input)) return [];
       const [inner = '', exposed] = input.text.split(':').map((s) => s.trim());
       const property = directiveInputProperty(declared, inner);
-      const symbol = property && instance.getProperty(property);
-      if (!symbol) return [];
+      const symbol =
+        (property && instance.getProperty(property)) ||
+        fail(
+          `${directive.getText()}'s \`${inner}\` input isn't in its compiled ɵdir input map.`
+        );
       const [value] = checker.getTypeArguments(
         checker.getTypeOfSymbol(symbol) as ts.TypeReference
       );

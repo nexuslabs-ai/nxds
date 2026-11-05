@@ -14,12 +14,6 @@ type FrameworkDemos = {
   setIconLibrary: (library: NxdsIconLibrary) => void;
 };
 
-/** Whether a framework's demos import CSS, such as vue-sonner's, which its bundle writes beside the entry. */
-const IMPORTS_CSS: Record<OtherFramework, boolean> = {
-  vue: true,
-  angular: false,
-};
-
 /** The compiled demos `scripts/bundle-{framework}-demos.ts` writes to public/. */
 function bundle(framework: OtherFramework) {
   return {
@@ -30,7 +24,6 @@ function bundle(framework: OtherFramework) {
 
 function loadDemoStyles(framework: OtherFramework) {
   const { styles } = bundle(framework);
-  if (!IMPORTS_CSS[framework]) return;
   if (document.querySelector(`link[href="${styles}"]`)) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
@@ -80,7 +73,8 @@ export function FrameworkDemoStage({
           if (cancelled) dispose();
           else unmount = dispose;
         },
-        () => {
+        (error: unknown) => {
+          console.error(`${framework} demo ${id} failed to load`, error);
           if (!cancelled) setFailedId(id);
         }
       );

@@ -570,14 +570,65 @@ export const OverlayClick: Story = {
 };
 
 export const LocksPageScroll: Story = {
+  render: () => ({
+    template: `
+      <nx-dialog>
+        <button nxButton nxDialogTrigger variant="outline">Edit profile</button>
+        <ng-template nxDialogContent title="Edit profile">
+          <nx-dialog>
+            <button nxButton nxDialogTrigger variant="outline">Change avatar</button>
+            <ng-template nxDialogContent title="Change avatar" />
+          </nx-dialog>
+        </ng-template>
+      </nx-dialog>
+    `,
+  }),
   play: async ({ canvasElement }) => {
     const before = document.body.style.overflow;
 
     await openDialog(canvasElement);
     await expect(document.body.style.overflow).toBe('hidden');
 
+    await userEvent.click(page.getByRole('button', { name: 'Change avatar' }));
+    await page.findByRole('dialog', { name: 'Change avatar' });
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(page.queryByRole('dialog', { name: 'Change avatar' })).toBeNull()
+    );
+    await expect(document.body.style.overflow).toBe('hidden');
+
     await userEvent.keyboard('{Escape}');
     await expectClosed();
     await expect(document.body.style.overflow).toBe(before);
+  },
+};
+
+export const AuthoredHeaderReplacesTitle: Story = {
+  render: () => ({
+    template: `
+      <nx-dialog>
+        <button nxButton nxDialogTrigger variant="outline">Edit profile</button>
+        <ng-template nxDialogContent title="Generated title" body="Generated body">
+          <div nxDialogHeader>
+            <h2 nxDialogTitle>Edit profile</h2>
+          </div>
+          <div nxDialogBody>Your changes apply to every workspace.</div>
+        </ng-template>
+      </nx-dialog>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const dialog = await openDialog(canvasElement);
+
+    await expect(
+      dialog.querySelectorAll('[data-slot="dialog-header"]')
+    ).toHaveLength(1);
+    await expect(
+      dialog.querySelectorAll('[data-slot="dialog-body"]')
+    ).toHaveLength(1);
+    await expect(dialog).not.toHaveTextContent('Generated');
+
+    await userEvent.keyboard('{Escape}');
+    await expectClosed();
   },
 };

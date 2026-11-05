@@ -1,6 +1,5 @@
 import {
   afterRenderEffect,
-  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -227,9 +226,6 @@ const tabsTriggerVariants = cva(
     '[id]': 'triggerId()',
     '[attr.aria-controls]': 'panelId()',
     '[attr.aria-disabled]': 'null',
-    '[attr.disabled]': "disabled() ? '' : null",
-    '[attr.data-disabled]': "disabled() ? '' : null",
-    '[tabindex]': 'disabled() ? -1 : brn.selected() ? 0 : -1',
     '[attr.data-variant]': 'list.variant()',
     '[attr.data-size]': 'list.size()',
     '[class]': 'classes()',
@@ -237,12 +233,10 @@ const tabsTriggerVariants = cva(
 })
 export class NxTabsTrigger {
   readonly value = input.required<string>();
-  readonly disabled = input(false, { transform: booleanAttribute });
   readonly userClass = input<ClassValue>('', { alias: 'class' });
 
   protected readonly list = inject(NxTabsList);
   private readonly root = inject(NxTabs);
-  protected readonly brn = inject(BrnTabsTrigger);
 
   protected readonly triggerId = computed(
     () => `${this.root.id}-trigger-${this.value()}`

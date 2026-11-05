@@ -1,11 +1,12 @@
 import { NgTemplateOutlet } from '@angular/common';
 import {
-  afterRenderEffect,
+  afterNextRender,
   booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
   contentChild,
+  DestroyRef,
   Directive,
   ElementRef,
   inject,
@@ -256,7 +257,8 @@ export class NxBadge {
 
   constructor() {
     const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
-    afterRenderEffect((onCleanup) => {
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
       const update = () => this.labelled.set(hasLabel(host));
       update();
       const observer = new MutationObserver(update);
@@ -265,7 +267,7 @@ export class NxBadge {
         characterData: true,
         subtree: true,
       });
-      onCleanup(() => observer.disconnect());
+      destroyRef.onDestroy(() => observer.disconnect());
     });
   }
 }
