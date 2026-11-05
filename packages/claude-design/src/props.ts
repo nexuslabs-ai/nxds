@@ -145,6 +145,32 @@ export interface FlatComponent {
   slug: string;
   description: string;
   props: FlatProp[];
+  /** Whether the part reads its children's types or moves their elements, so a canvas wrapper between them breaks it. */
+  unwraps: boolean;
+}
+
+// Recharts finds a chart's series and Cells by type inside its container, and
+// cmdk sorts search results by moving each item element within its list.
+const UNWRAPPING_TAGS = new Set([
+  'RechartsPrimitive.ResponsiveContainer',
+  'CommandPrimitive.List',
+  'CommandList',
+]);
+
+// Whether the part's own declaration renders one of UNWRAPPING_TAGS.
+function rendersUnwrappingTag(symbol: ts.Symbol) {
+  const declaration = symbol.declarations?.[0];
+  if (!declaration) return false;
+  const visit = (node: ts.Node): boolean => {
+    if (
+      (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
+      UNWRAPPING_TAGS.has(node.tagName.getText())
+    ) {
+      return true;
+    }
+    return ts.forEachChild(node, visit) ?? false;
+  };
+  return visit(declaration);
 }
 
 const PRINT_FLAGS =
@@ -725,6 +751,7 @@ function flatComponent(
     slug: slugOf(fileName),
     description: documentation(checker, symbol),
     props,
+    unwraps: rendersUnwrappingTag(symbol),
   };
 }
 
@@ -829,7 +856,7 @@ function rechartsParts(
         { ...found, attribute, type, control: controlOf(attribute, type) },
       ];
     });
-    return { ...part, slug: 'recharts', props };
+    return { ...part, slug: 'recharts', props, unwraps: true };
   });
   if (problems.length > 0) {
     throw new Error(
@@ -889,6 +916,7 @@ function canvasParts(): FlatComponent[] {
     {
       name: 'Icon',
       slug: 'icon',
+      unwraps: false,
       description:
         'A Phosphor icon by name, such as `plus`. It takes the colour of its text. `components/Icon/README.md` lists every name.',
       props: [
@@ -922,6 +950,7 @@ function canvasParts(): FlatComponent[] {
     {
       name: 'Toast',
       slug: 'toast',
+      unwraps: false,
       description:
         'One toast, shown in place, as `toast()` shows it in an app. Use it to show a toast on a static screen.',
       props: [

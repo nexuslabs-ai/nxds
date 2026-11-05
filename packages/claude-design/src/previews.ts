@@ -241,6 +241,28 @@ export function propsSection(parts: readonly FlatComponent[]) {
   return lines;
 }
 
+/** Throws when a CANVAS_NOTES key names no card, or a note names a part the bundle doesn't export. */
+export function checkCanvasNotes(
+  cards: readonly string[],
+  exported: ReadonlySet<string>
+) {
+  const problems = Object.entries(CANVAS_NOTES).flatMap(([card, note]) => {
+    if (!cards.includes(card)) return [`${card} is no card`];
+    return [...note.matchAll(new RegExp(`\\b${NAMESPACE}\\.(\\w+)`, 'g'))]
+      .map(([, part]) => part ?? '')
+      .filter((part) => !exported.has(part))
+      .map(
+        (part) =>
+          `${card} names ${NAMESPACE}.${part}, which the bundle doesn't export`
+      );
+  });
+  if (problems.length > 0) {
+    throw new Error(
+      `README: fix these CANVAS_NOTES in src/groups.ts:\n  ${problems.join('\n  ')}`
+    );
+  }
+}
+
 // Used when no docs story's markup can be written as attributes: the card's
 // note, or its root part mounted alone.
 function canvasSection(

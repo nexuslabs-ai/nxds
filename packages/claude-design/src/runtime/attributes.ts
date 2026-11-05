@@ -195,12 +195,11 @@ export function useCanvasProps<P extends object>(part: string, props: P): P {
   // `max` counts children, and a `["\n"]` child would replace a FieldError's
   // `errors` and make an `<input>` throw.
   const children = (result ?? (props as Props))['children'] as React.ReactNode;
-  const unwraps = CANVAS_SCHEMA.unwrap.includes(part);
-  if (Array.isArray(children) || (unwraps && children !== undefined)) {
+  const content = CANVAS_SCHEMA.unwrap.includes(part)
+    ? unwrapped(children)
+    : withoutIndentation(children);
+  if (content !== children) {
     result ??= { ...(props as Props) };
-    const content = unwraps
-      ? unwrapped(children)
-      : withoutIndentation(children);
     if (content === undefined) delete result['children'];
     else result['children'] = content;
   }

@@ -30,6 +30,7 @@ import { CANVAS_PARTS, EXCLUDED_SLUGS, GROUPS } from '../src/groups.ts';
 import { withPresetTable } from '../src/presets.ts';
 import {
   buildPreview,
+  checkCanvasNotes,
   type ComponentFolder,
   componentReadme,
   folderCanvasExample,
@@ -277,6 +278,10 @@ async function main() {
   writeFileSync(path.join(distDir, 'coverage.md'), renderCoverage(report));
 
   const exported = new Set(parts.map((part) => part.name));
+  checkCanvasNotes(
+    folders.map((folder) => folder.name),
+    exported
+  );
   for (const folder of folders) {
     const html = await buildPreview(folder);
     const example = await folderCanvasExample(folder.slug, exported);

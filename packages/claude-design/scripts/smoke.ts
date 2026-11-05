@@ -26,7 +26,7 @@ import { checkRefs } from './smoke/refs.ts';
 import { exportRelease } from './smoke/release.ts';
 import { checkRuntimeLayer } from './smoke/runtime-layer.ts';
 import { checkSampler } from './smoke/sampler.ts';
-import { checkSearch } from './smoke/search.ts';
+import { checkSearch, SEARCH_CASES } from './smoke/search.ts';
 import { checkTheme } from './smoke/theme.ts';
 import { checkThemes } from './smoke/themes.ts';
 import { checkTimeZone } from './smoke/time-zone.ts';
@@ -80,5 +80,5 @@ if (failures.length > 0) {
   process.exit(1);
 }
 console.log(
-  `Smoke test passed: ${cardCount} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${exampleCount} README examples, ${ATTRIBUTE_CASES.length} attribute conversions, ${BAD_INPUT_CASES.length} bad attributes, a MultiSelect search, ${iconCount} icons, ${TOAST_CASES.length} toasts against toast(), ${RECHARTS_CASES.length} custom charts, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes, and the sampler artboard in both modes, then a themed export through the themes, tokens, presets, theme and sampler checks.`
+  `Smoke test passed: ${cardCount} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${exampleCount} README examples, ${ATTRIBUTE_CASES.length} attribute conversions, ${BAD_INPUT_CASES.length} bad attributes, ${SEARCH_CASES.length} list searches, ${iconCount} icons, ${TOAST_CASES.length} toasts against toast(), ${RECHARTS_CASES.length} custom charts, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes, and the sampler artboard in both modes, then a themed export through the themes, tokens, presets, theme and sampler checks.`
 );
