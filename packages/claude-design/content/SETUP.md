@@ -68,7 +68,7 @@ If you can't see the canvas, read its console or open its panels, ask the person
 
 - The console shows no `[nxds]` warning and no error. The one exception is a React `validateDOMNesting` warning about the deals table. The canvas's own wrappers around its rows and cells cause it.
 - Every section renders: the sidebar, the header with search, the `Sales overview` page header with its actions, the four metric cards, the `Closed won` bar chart, `Pipeline by stage`, the `Open deals` table and the `Today` tasks.
-- Nothing is cut off at the bottom of the artboard, and nothing spills past its card. If the bottom is cut off, raise the sampler's `h` in `project/canvas.json` until it fits.{{themeChecks}}
+- Nothing is cut off at the bottom of the artboard, and nothing spills past its card. The entry in step 4 sizes the artboard for this system's text. If the bottom is still cut off, raise the sampler's `h` in `project/canvas.json` until it fits, and tell the person: nxds should have fitted it.{{themeChecks}}
 - Click `This quarter`. A calendar opens on October to December 2026 with the whole quarter selected. Press Escape to close it.
 - In the Tweaks panel, set `mode` to `dark`. The whole dashboard switches to the dark theme, with no light patch left, and the console stays clean. Set it back to `light`.
 - Select the `New deal` button. In the props panel, `variant` shows as a dropdown and `disabled` as a toggle.

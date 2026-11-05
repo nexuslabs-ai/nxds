@@ -15,7 +15,7 @@
 body{margin:0}
 </style>
 </helmet>
-<div data-theme="{{mode}}" class="typography-body-default" style="background: var(--nx-color-background); color: var(--nx-color-foreground);">
+<div data-theme="{{mode}}" class="typography-body-default" style="min-height: 100svh; background: var(--nx-color-background); color: var(--nx-color-foreground);">
   <x-import component-from-global-scope="Nxds.SidebarProvider">
     <x-import component-from-global-scope="Nxds.Sidebar">
       <x-import component-from-global-scope="Nxds.SidebarHeader">
@@ -201,7 +201,7 @@ body{margin:0}
         </section>
         <div style="display: flex; gap: var(--nx-spacing-4);">
           <div style="flex: 1 1 0; min-width: 0; display: grid;">
-            <x-import component-from-global-scope="Nxds.Card">
+            <x-import component-from-global-scope="Nxds.Card" class-name="nx:flex nx:flex-col">
               <x-import component-from-global-scope="Nxds.CardHeader">
                 <x-import component-from-global-scope="Nxds.CardTitle">Closed won</x-import>
                 <x-import component-from-global-scope="Nxds.CardDescription">By month, January to October 2026</x-import>
@@ -214,8 +214,10 @@ body{margin:0}
                   </x-import>
                 </x-import>
               </x-import>
-              <x-import component-from-global-scope="Nxds.CardContent">
-                <x-import component-from-global-scope="Nxds.BarChart" data='[{"month":"Jan","won":148,"toDate":null},{"month":"Feb","won":172,"toDate":null},{"month":"Mar","won":231,"toDate":null},{"month":"Apr","won":164,"toDate":null},{"month":"May","won":189,"toDate":null},{"month":"Jun","won":247,"toDate":null},{"month":"Jul","won":176,"toDate":null},{"month":"Aug","won":203,"toDate":null},{"month":"Sep","won":268,"toDate":null},{"month":"Oct","won":null,"toDate":186}]' x-key="month" series="won,toDate" config='{"won":{"label":"Won ($K)"},"toDate":{"label":"October to date ($K)"}}' stacked value-axis="true"></x-import>
+              <x-import component-from-global-scope="Nxds.CardContent" class-name="nx:flex nx:flex-1">
+                <div style="position: relative; flex: 1 1 auto; min-height: var(--nx-spacing-64);">
+                  <x-import component-from-global-scope="Nxds.BarChart" class-name="nx:absolute nx:inset-0 nx:h-full nx:w-full" data='[{"month":"Jan","won":148,"toDate":null},{"month":"Feb","won":172,"toDate":null},{"month":"Mar","won":231,"toDate":null},{"month":"Apr","won":164,"toDate":null},{"month":"May","won":189,"toDate":null},{"month":"Jun","won":247,"toDate":null},{"month":"Jul","won":176,"toDate":null},{"month":"Aug","won":203,"toDate":null},{"month":"Sep","won":268,"toDate":null},{"month":"Oct","won":null,"toDate":186}]' x-key="month" series="won,toDate" config='{"won":{"label":"Won ($K)"},"toDate":{"label":"October to date ($K)"}}' stacked value-axis="true"></x-import>
+                </div>
               </x-import>
               <x-import component-from-global-scope="Nxds.CardFooter">
                 <span class="typography-label-small" style="color: var(--nx-color-muted-foreground);">October is month to date.</span>
@@ -223,13 +225,13 @@ body{margin:0}
             </x-import>
           </div>
           <div style="flex: 0 0 var(--nx-spacing-72); min-width: 0; display: grid;">
-            <x-import component-from-global-scope="Nxds.Card">
+            <x-import component-from-global-scope="Nxds.Card" class-name="nx:flex nx:flex-col">
               <x-import component-from-global-scope="Nxds.CardHeader">
                 <x-import component-from-global-scope="Nxds.CardTitle">Pipeline by stage</x-import>
-                <x-import component-from-global-scope="Nxds.CardDescription">62 open deals worth $1.84M</x-import>
+                <x-import component-from-global-scope="Nxds.CardDescription">62 deals · $1.84M</x-import>
               </x-import>
-              <x-import component-from-global-scope="Nxds.CardContent">
-                <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-5);">
+              <x-import component-from-global-scope="Nxds.CardContent" class-name="nx:flex nx:flex-1">
+                <div style="display: flex; flex-direction: column; flex: 1 1 auto; justify-content: space-between; gap: var(--nx-spacing-5);">
                   <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-2);">
                     <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--nx-spacing-2);">
                       <span class="typography-label-default">Lead <span class="typography-body-default" style="color: var(--nx-color-muted-foreground);">· 24 deals</span></span>
@@ -295,7 +297,6 @@ body{margin:0}
                         <x-import component-from-global-scope="Nxds.TableHead">Stage</x-import>
                         <x-import component-from-global-scope="Nxds.TableHead">Owner</x-import>
                         <x-import component-from-global-scope="Nxds.TableHead" class-name="nx:text-end">Value</x-import>
-                        <x-import component-from-global-scope="Nxds.TableHead">Close date</x-import>
                         <x-import component-from-global-scope="Nxds.TableHead" class-name="nx:text-end">Probability</x-import>
                       </x-import>
                     </x-import>
@@ -304,7 +305,7 @@ body{margin:0}
                         <x-import component-from-global-scope="Nxds.TableCell">
                           <div style="display: flex; flex-direction: column;">
                             <span class="typography-label-default">Annual platform license</span>
-                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Northvale Logistics</span>
+                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Northvale Logistics · Nov 14</span>
                           </div>
                         </x-import>
                         <x-import component-from-global-scope="Nxds.TableCell">
@@ -315,18 +316,17 @@ body{margin:0}
                             <x-import component-from-global-scope="Nxds.Avatar" size="xs">
                               <x-import component-from-global-scope="Nxds.AvatarFallback">PS</x-import>
                             </x-import>
-                            <span>Priya Shah</span>
+                            <span class="nx:sr-only">Priya Shah</span>
                           </div>
                         </x-import>
                         <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">$86,000</x-import>
-                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:tabular-nums">Nov 14</x-import>
                         <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">70%</x-import>
                       </x-import>
                       <x-import component-from-global-scope="Nxds.TableRow">
                         <x-import component-from-global-scope="Nxds.TableCell">
                           <div style="display: flex; flex-direction: column;">
                             <span class="typography-label-default">Renewal 2027</span>
-                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Atlas Biotech</span>
+                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Atlas Biotech · Nov 20</span>
                           </div>
                         </x-import>
                         <x-import component-from-global-scope="Nxds.TableCell">
@@ -337,18 +337,17 @@ body{margin:0}
                             <x-import component-from-global-scope="Nxds.Avatar" size="xs">
                               <x-import component-from-global-scope="Nxds.AvatarFallback">DO</x-import>
                             </x-import>
-                            <span>Daniel Okafor</span>
+                            <span class="nx:sr-only">Daniel Okafor</span>
                           </div>
                         </x-import>
                         <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">$63,000</x-import>
-                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:tabular-nums">Nov 20</x-import>
                         <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">75%</x-import>
                       </x-import>
                       <x-import component-from-global-scope="Nxds.TableRow">
                         <x-import component-from-global-scope="Nxds.TableCell">
                           <div style="display: flex; flex-direction: column;">
                             <span class="typography-label-default">Fleet analytics rollout</span>
-                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Cobalt Health</span>
+                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Cobalt Health · Nov 28</span>
                           </div>
                         </x-import>
                         <x-import component-from-global-scope="Nxds.TableCell">
@@ -359,18 +358,17 @@ body{margin:0}
                             <x-import component-from-global-scope="Nxds.Avatar" size="xs">
                               <x-import component-from-global-scope="Nxds.AvatarFallback">DO</x-import>
                             </x-import>
-                            <span>Daniel Okafor</span>
+                            <span class="nx:sr-only">Daniel Okafor</span>
                           </div>
                         </x-import>
                         <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">$54,500</x-import>
-                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:tabular-nums">Nov 28</x-import>
                         <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">45%</x-import>
                       </x-import>
                       <x-import component-from-global-scope="Nxds.TableRow">
                         <x-import component-from-global-scope="Nxds.TableCell">
                           <div style="display: flex; flex-direction: column;">
                             <span class="typography-label-default">Data warehouse add-on</span>
-                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Kestrel Energy</span>
+                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Kestrel Energy · Dec 5</span>
                           </div>
                         </x-import>
                         <x-import component-from-global-scope="Nxds.TableCell">
@@ -381,18 +379,17 @@ body{margin:0}
                             <x-import component-from-global-scope="Nxds.Avatar" size="xs">
                               <x-import component-from-global-scope="Nxds.AvatarFallback">PS</x-import>
                             </x-import>
-                            <span>Priya Shah</span>
+                            <span class="nx:sr-only">Priya Shah</span>
                           </div>
                         </x-import>
                         <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">$41,200</x-import>
-                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:tabular-nums">Dec 5</x-import>
                         <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">40%</x-import>
                       </x-import>
                       <x-import component-from-global-scope="Nxds.TableRow">
                         <x-import component-from-global-scope="Nxds.TableCell">
                           <div style="display: flex; flex-direction: column;">
                             <span class="typography-label-default">Seat expansion, 120 seats</span>
-                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Lumen Retail</span>
+                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Lumen Retail · Oct 31</span>
                           </div>
                         </x-import>
                         <x-import component-from-global-scope="Nxds.TableCell">
@@ -403,18 +400,17 @@ body{margin:0}
                             <x-import component-from-global-scope="Nxds.Avatar" size="xs">
                               <x-import component-from-global-scope="Nxds.AvatarFallback">AR</x-import>
                             </x-import>
-                            <span>Ana Ruiz</span>
+                            <span class="nx:sr-only">Ana Ruiz</span>
                           </div>
                         </x-import>
                         <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">$38,400</x-import>
-                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:tabular-nums">Oct 31</x-import>
                         <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">90%</x-import>
                       </x-import>
                       <x-import component-from-global-scope="Nxds.TableRow">
                         <x-import component-from-global-scope="Nxds.TableCell">
                           <div style="display: flex; flex-direction: column;">
                             <span class="typography-label-default">Pilot to production</span>
-                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Harbor &amp; Pine</span>
+                            <span class="typography-body-small" style="color: var(--nx-color-muted-foreground);">Harbor &amp; Pine · Dec 12</span>
                           </div>
                         </x-import>
                         <x-import component-from-global-scope="Nxds.TableCell">
@@ -425,11 +421,10 @@ body{margin:0}
                             <x-import component-from-global-scope="Nxds.Avatar" size="xs">
                               <x-import component-from-global-scope="Nxds.AvatarFallback">WC</x-import>
                             </x-import>
-                            <span>Wei Chen</span>
+                            <span class="nx:sr-only">Wei Chen</span>
                           </div>
                         </x-import>
                         <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">$27,000</x-import>
-                        <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:tabular-nums">Dec 12</x-import>
                         <x-import component-from-global-scope="Nxds.TableCell" class-name="nx:text-end nx:tabular-nums">25%</x-import>
                       </x-import>
                     </x-import>
@@ -449,22 +444,22 @@ body{margin:0}
               <x-import component-from-global-scope="Nxds.CardHeader">
                 <x-import component-from-global-scope="Nxds.CardTitle">Today</x-import>
                 <x-import component-from-global-scope="Nxds.CardDescription">3 open follow-ups</x-import>
-                <x-import component-from-global-scope="Nxds.CardAction">
-                  <x-import component-from-global-scope="Nxds.ToggleGroup" type="multiple" default-value="call,meeting,email" variant="outline" size="sm" aria-label="Task types">
-                    <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="call" aria-label="Calls">
-                      <x-import component-from-global-scope="Nxds.Icon" name="phone"></x-import>
-                    </x-import>
-                    <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="meeting" aria-label="Meetings">
-                      <x-import component-from-global-scope="Nxds.Icon" name="video"></x-import>
-                    </x-import>
-                    <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="email" aria-label="Emails">
-                      <x-import component-from-global-scope="Nxds.Icon" name="envelope"></x-import>
-                    </x-import>
-                  </x-import>
-                </x-import>
               </x-import>
               <x-import component-from-global-scope="Nxds.CardContent">
                 <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-4);">
+                  <div>
+                    <x-import component-from-global-scope="Nxds.ToggleGroup" type="multiple" default-value="call,meeting,email" variant="outline" size="sm" aria-label="Task types">
+                      <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="call" aria-label="Calls">
+                        <x-import component-from-global-scope="Nxds.Icon" name="phone"></x-import>
+                      </x-import>
+                      <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="meeting" aria-label="Meetings">
+                        <x-import component-from-global-scope="Nxds.Icon" name="video"></x-import>
+                      </x-import>
+                      <x-import component-from-global-scope="Nxds.ToggleGroupItem" value="email" aria-label="Emails">
+                        <x-import component-from-global-scope="Nxds.Icon" name="envelope"></x-import>
+                      </x-import>
+                    </x-import>
+                  </div>
                   <div style="display: flex; align-items: flex-start; gap: var(--nx-spacing-3);">
                     <x-import component-from-global-scope="Nxds.Checkbox" id="task-t1"></x-import>
                     <div style="display: flex; flex-direction: column; gap: var(--nx-spacing-1); min-width: 0;">
@@ -520,7 +515,7 @@ body{margin:0}
   </x-import>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;section&quot;:&quot;nxds appearance&quot;},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1700}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;section&quot;:&quot;nxds appearance&quot;},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1525}}">
 class Component extends DCLogic {
   renderVals() {
     return { mode: this.props.mode ?? 'light' };

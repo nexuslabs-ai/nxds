@@ -19,6 +19,7 @@ import {
 } from '@nxds/core';
 import { formatHex } from 'culori';
 
+import type { CanvasBoards } from './setup.ts';
 import { fillTemplate } from './template.ts';
 import {
   formatThemeFlags,
@@ -55,6 +56,8 @@ export interface ThemeInput {
   readme: string;
   /** SETUP.md, with this release's values in and `{{…}}` for the theme's. */
   guide: string;
+  /** The sampler's `canvas.json` entry at the default text size. */
+  board: CanvasBoards;
 }
 
 /** theme.js: the module a release ships for nxds-cli to theme its export with. */
@@ -88,6 +91,21 @@ export interface RenderedTheme {
 }
 
 const DEFAULT_TITLE = 'nxds';
+
+// How much taller the sampler gets for each px of UI text above the default,
+// rounded up from its height at the default and at 20px (scripts/smoke/sampler.ts).
+export const SAMPLER_PX_PER_TEXT_PX = 50;
+
+/** The sampler's `canvas.json` entry with a height that fits its text size. */
+export function themedBoard(board: CanvasBoards, uiFontSize: number) {
+  const larger = uiFontSize - DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize;
+  return Object.fromEntries(
+    Object.entries(board).map(([file, entry]) => [
+      file,
+      { ...entry, h: entry.h + SAMPLER_PX_PER_TEXT_PX * Math.max(0, larger) },
+    ])
+  );
+}
 
 /** The `{{name}}` canvas bindings README.md shows, which stay as written. */
 const CANVAS_BINDINGS = Object.fromEntries(
@@ -343,6 +361,9 @@ export function renderTheme(
           ? `This system carries the theme \`${formatThemeFlags(orderedThemeFlags(theme))}\`. Its title is \`${title}\`.\n\n`
           : '',
         themeChecks: themeChecks(theme, tokens, fonts),
+        boardEntry: JSON.stringify(
+          themedBoard(input.board, appearance.prefs.uiFontSize)
+        ),
       }),
   };
 }

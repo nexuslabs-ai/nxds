@@ -9,7 +9,8 @@
 // that changes when each part sits in a canvas wrapper, a sampler artboard
 // that logs a problem or doesn't fill its board, or a request to the network.
 // Then it exports the release again with every theme flag set, and checks
-// that the theme reaches the components, the presets and the sampler. Each
+// that the theme reaches the components, the presets and the sampler, and
+// once more with spacious density and 20px text for the sampler alone. Each
 // check lives in scripts/smoke/.
 import { FULL_THEME } from './full-theme.ts';
 import { ATTRIBUTE_CASES, checkAttributes } from './smoke/attributes.ts';
@@ -71,6 +72,10 @@ await checkTokens();
 await checkPresets();
 await checkTheme();
 await checkSampler({ themed: true });
+
+// The largest text the sampler fits without a sideways scroll.
+await openCanvas(await exportRelease(['--density=spacious', '--font-size=20']));
+await checkSampler({ themed: true });
 await closeCanvas();
 
 if (failures.length > 0) {
@@ -80,5 +85,5 @@ if (failures.length > 0) {
   process.exit(1);
 }
 console.log(
-  `Smoke test passed: ${cardCount} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${exampleCount} README examples, ${ATTRIBUTE_CASES.length} attribute conversions, ${BAD_INPUT_CASES.length} bad attributes, ${SEARCH_CASES.length} list searches, ${iconCount} icons, ${TOAST_CASES.length} toasts against toast(), ${RECHARTS_CASES.length} custom charts, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes, and the sampler artboard in both modes, then a themed export through the themes, tokens, presets, theme and sampler checks.`
+  `Smoke test passed: ${cardCount} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${exampleCount} README examples, ${ATTRIBUTE_CASES.length} attribute conversions, ${BAD_INPUT_CASES.length} bad attributes, ${SEARCH_CASES.length} list searches, ${iconCount} icons, ${TOAST_CASES.length} toasts against toast(), ${RECHARTS_CASES.length} custom charts, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes, and the sampler artboard in both modes, then a themed export through the themes, tokens, presets, theme and sampler checks, and the sampler at 20px text.`
 );

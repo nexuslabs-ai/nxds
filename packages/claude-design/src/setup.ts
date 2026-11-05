@@ -156,8 +156,10 @@ export function samplerFile(file: string) {
 
 type SamplerFile = ReturnType<typeof samplerFile>;
 
-/** The `boards` entry SETUP.md tells Claude to merge into the canvas's `canvas.json`, placed for an empty canvas. */
-export function boardEntry(file: string): Record<string, CanvasBoard> {
+export type CanvasBoards = Record<string, CanvasBoard>;
+
+/** The `boards` entry SETUP.md tells Claude to merge into the canvas's `canvas.json`, placed for an empty canvas, at the default text size. */
+export function boardEntry(file: string): CanvasBoards {
   const { title, width, height } = samplerFile(file);
   if (width === undefined || height === undefined) {
     throw new Error(`${SAMPLER_FILE}: $preview has no whole width and height.`);
@@ -367,22 +369,21 @@ const THEME_PLACEHOLDERS = [
   'themeJson',
   'themeIntro',
   'themeChecks',
+  'boardEntry',
 ];
 
 /**
  * SETUP.md with this release's values in: its version, the files a publish
- * sends as text, the canvas files and the sampler's board. The theme's
- * placeholders stay, for the theme module.
+ * sends as text and the canvas files. The theme's placeholders stay, for the
+ * theme module, which sizes the sampler's board for its text.
  */
 export function guideTemplate({
   template,
   readme,
-  sampler,
   version,
 }: {
   template: string;
   readme: string;
-  sampler: string;
   version: string;
 }) {
   const problems = guideProblems({ template, readme });
@@ -396,8 +397,7 @@ export function guideTemplate({
   const guide = template
     .replaceAll('{{version}}', version)
     .replaceAll('{{textPlainFiles}}', () => textPlainFiles)
-    .replace('{{canvasFiles}}', () => canvasFiles)
-    .replace('{{boardEntry}}', () => JSON.stringify(boardEntry(sampler)));
+    .replace('{{canvasFiles}}', () => canvasFiles);
   for (const [, name = ''] of guide.matchAll(/\{\{(\w+)\}\}/g)) {
     if (!THEME_PLACEHOLDERS.includes(name)) {
       throw new Error(`SETUP.md: {{${name}}} has no value.`);

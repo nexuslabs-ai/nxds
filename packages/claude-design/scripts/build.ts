@@ -42,7 +42,12 @@ import {
   renderIndexDts,
 } from '../src/props.ts';
 import { componentReads } from '../src/reads.ts';
-import { guideTemplate, SAMPLER_FILE, samplerProblems } from '../src/setup.ts';
+import {
+  boardEntry,
+  guideTemplate,
+  SAMPLER_FILE,
+  samplerProblems,
+} from '../src/setup.ts';
 import { buildStyles } from '../src/styles.ts';
 import { buildSystemIndex } from '../src/system-index.ts';
 import {
@@ -234,9 +239,9 @@ async function main() {
       guide: guideTemplate({
         template: readFileSync(path.join(contentDir, 'SETUP.md'), 'utf8'),
         readme,
-        sampler,
         version,
       }),
+      board: boardEntry(sampler),
     },
     path.join(distDir, THEME_FILE)
   );
