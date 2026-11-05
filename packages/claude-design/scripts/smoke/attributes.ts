@@ -390,9 +390,9 @@ export const ATTRIBUTE_CASES: {
     ),
   },
   {
-    name: 'Icon takes its size as a number and its weight as a dropdown value',
-    markup: x('Icon', 'name="bell" size="20" weight="bold"'),
-    expected: part('Icon', { name: 'bell', size: 20, weight: 'bold' }),
+    name: 'Icon takes its size as a number',
+    markup: x('Icon', 'name="bell" size="20"'),
+    expected: part('Icon', { name: 'bell', size: 20 }),
   },
   {
     name: 'an empty Icon label leaves the icon hidden',

@@ -4,7 +4,7 @@
 // the export ships as an artboard file, which Claude puts on the canvas
 // unchanged. It mounts every attribute form a canvas writes, so it doubles
 // as the install test.
-import type { Attribute } from './attribute.ts';
+import { type Attribute, isCanvasAttribute } from './attribute.ts';
 import { ICON_NAMES } from './icons.ts';
 import { type FlatComponent, isRequired } from './props.ts';
 import {
@@ -156,8 +156,10 @@ export function samplerFile(file: string) {
 
 type SamplerFile = ReturnType<typeof samplerFile>;
 
-/** The `boards` entry SETUP.md tells Claude to merge into the canvas's `canvas.json`, placed for an empty canvas. */
-export function boardEntry(file: string): Record<string, CanvasBoard> {
+export type CanvasBoards = Record<string, CanvasBoard>;
+
+/** The `boards` entry SETUP.md tells Claude to merge into the canvas's `canvas.json`, placed for an empty canvas, at the default text size. */
+export function boardEntry(file: string): CanvasBoards {
   const { title, width, height } = samplerFile(file);
   if (width === undefined || height === undefined) {
     throw new Error(`${SAMPLER_FILE}: $preview has no whole width and height.`);
@@ -326,15 +328,15 @@ function guideProblems({
       problems.push(`SETUP.md has no ${missing}.`);
       continue;
     }
-    if (!step.includes('{{textPlainFiles}}')) {
+    if (!step.includes('{{nxds:textPlainFiles}}')) {
       problems.push(
-        `SETUP.md: ${name} must send {{textPlainFiles}} as text/plain, or the publish is refused.`
+        `SETUP.md: ${name} must send {{nxds:textPlainFiles}} as text/plain, or the publish is refused.`
       );
     }
   }
   const sampler = markdownSection(template, '4. Add the sampler');
   if (
-    !['{{boardEntry}}', '`order`', `\`${CANVAS_ROOT}/canvas.json\``].every(
+    !['{{nxds:boardEntry}}', '`order`', `\`${CANVAS_ROOT}/canvas.json\``].every(
       (text) => sampler?.includes(text)
     )
   ) {
@@ -367,22 +369,21 @@ const THEME_PLACEHOLDERS = [
   'themeJson',
   'themeIntro',
   'themeChecks',
+  'boardEntry',
 ];
 
 /**
  * SETUP.md with this release's values in: its version, the files a publish
- * sends as text, the canvas files and the sampler's board. The theme's
- * placeholders stay, for the theme module.
+ * sends as text and the canvas files. The theme's placeholders stay, for the
+ * theme module, which sizes the sampler's board for its text.
  */
 export function guideTemplate({
   template,
   readme,
-  sampler,
   version,
 }: {
   template: string;
   readme: string;
-  sampler: string;
   version: string;
 }) {
   const problems = guideProblems({ template, readme });
@@ -394,13 +395,12 @@ export function guideTemplate({
     (file) => `\`project/${file}\``
   ).join(' and ');
   const guide = template
-    .replaceAll('{{version}}', version)
-    .replaceAll('{{textPlainFiles}}', () => textPlainFiles)
-    .replace('{{canvasFiles}}', () => canvasFiles)
-    .replace('{{boardEntry}}', () => JSON.stringify(boardEntry(sampler)));
-  for (const [, name = ''] of guide.matchAll(/\{\{(\w+)\}\}/g)) {
+    .replaceAll('{{nxds:version}}', version)
+    .replaceAll('{{nxds:textPlainFiles}}', () => textPlainFiles)
+    .replace('{{nxds:canvasFiles}}', () => canvasFiles);
+  for (const [, name = ''] of guide.matchAll(/\{\{nxds:(\w+)\}\}/g)) {
     if (!THEME_PLACEHOLDERS.includes(name)) {
-      throw new Error(`SETUP.md: {{${name}}} has no value.`);
+      throw new Error(`SETUP.md: {{nxds:${name}}} has no value.`);
     }
   }
   return guide;
@@ -450,7 +450,7 @@ function formOf(
   props: Props,
   required: boolean
 ): Form {
-  if (attribute.kind === 'content' || attribute.kind === 'none') return null;
+  if (!isCanvasAttribute(attribute)) return null;
   if (attribute.kind === 'icon') {
     return ICONS.has(raw) ? 'an icon name' : null;
   }
@@ -522,6 +522,30 @@ function attributeProblems(sampler: string, parts: FlatComponent[]) {
   return problems;
 }
 
+// README.md's "On a Design canvas" section shows the mode tweak every artboard
+// gets. It has to be the sampler's: the same tweak and the same script.
+function modeRuleProblems(readme: string, { props, script }: SamplerFile) {
+  const rule =
+    /<script type="text\/x-dc" data-dc-script data-props='([^']*)'>\n([\s\S]*?)\n<\/script>/.exec(
+      canvasSection(readme)
+    );
+  let tweaks: Record<string, unknown> = {};
+  try {
+    tweaks = JSON.parse(rule?.[1] ?? '') as Record<string, unknown>;
+  } catch {
+    // Reported below as a missing tweak.
+  }
+  if (
+    JSON.stringify(tweaks['mode']) === JSON.stringify(props['mode']) &&
+    rule?.[2] === script
+  ) {
+    return [];
+  }
+  return [
+    `README.md: "On a Design canvas" must show the sampler's mode tweak and script in a data-dc-script block with single-quoted data-props.`,
+  ];
+}
+
 /** Everything that would keep the sampler file from showing, checking or mounting on a canvas. */
 export function samplerProblems(
   file: string,
@@ -530,6 +554,7 @@ export function samplerProblems(
   const sampler = samplerFile(file);
   return [
     ...fileProblems(file, sampler, context),
+    ...modeRuleProblems(context.readme, sampler),
     ...attributeProblems(sampler.markup, context.parts),
   ];
 }

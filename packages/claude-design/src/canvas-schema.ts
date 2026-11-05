@@ -1,11 +1,12 @@
 // nxds:canvas-schema, the attributes bundle.js converts strings by
 // (src/runtime/attributes.ts), as index.d.ts reads them from each prop.
-import type {
-  Attribute,
-  CanvasAttribute,
-  ScalarAttribute,
-  SchemaAttribute,
-  SchemaScalar,
+import {
+  type Attribute,
+  type CanvasAttribute,
+  isCanvasAttribute,
+  type ScalarAttribute,
+  type SchemaAttribute,
+  type SchemaScalar,
 } from './attribute.ts';
 import { type FlatComponent, isRequired } from './props.ts';
 import type { CanvasSchema } from './runtime/attributes.ts';
@@ -33,9 +34,7 @@ function converted(
   attribute: Attribute | null,
   required: boolean
 ): SchemaAttribute | null {
-  if (!attribute || attribute.kind === 'content' || attribute.kind === 'none') {
-    return null;
-  }
+  if (!isCanvasAttribute(attribute)) return null;
   if (attribute.kind !== 'scalar' || required) return forRuntime(attribute);
   const { literals, string, number, boolean } = attribute;
   const plainString = string && literals.length === 0 && !number && !boolean;
@@ -48,6 +47,7 @@ export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
     required: {},
     unwrap: parts.filter((part) => part.unwraps).map((part) => part.name),
     renames: {},
+    handlers: {},
   };
   for (const part of parts) {
     const renames = part.props
@@ -55,6 +55,10 @@ export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
       .map((prop) => [kebab(prop.name), prop.name]);
     if (renames.length > 0)
       schema.renames[part.name] = Object.fromEntries(renames);
+    const handlers = part.props
+      .filter((prop) => isRequired(prop) && prop.attribute?.kind === 'handler')
+      .map((prop) => prop.name);
+    if (handlers.length > 0) schema.handlers[part.name] = handlers;
     const attributes: Record<string, SchemaAttribute> = {};
     const required: string[] = [];
     for (const prop of part.props) {

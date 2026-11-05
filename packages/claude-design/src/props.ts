@@ -9,12 +9,13 @@ import { componentsRoot } from '@nxds/source-model/roots.mjs';
 import path from 'node:path';
 import ts from 'typescript';
 
-import type {
-  Attribute,
-  DateAttribute,
-  JsonAttribute,
-  ListAttribute,
-  ScalarAttribute,
+import {
+  type Attribute,
+  type DateAttribute,
+  isCanvasAttribute,
+  type JsonAttribute,
+  type ListAttribute,
+  type ScalarAttribute,
 } from './attribute.ts';
 import { RECHARTS_PARTS } from './canvas/recharts.ts';
 import { iconSet } from './icon-set.ts';
@@ -121,7 +122,8 @@ const NOT_NEEDED: Readonly<Record<string, string>> = {
   'Toaster.*': TOASTER,
 };
 
-const HANDLER = 'a function: an event handler, callback or ref';
+export const HANDLER =
+  "a function or ref: bind a function to a handler from the artboard's script with `{{name}}`";
 
 export type Control = 'dropdown' | 'toggle' | 'number' | 'text' | 'content';
 
@@ -469,7 +471,7 @@ function attributeOf(
   const values = members.filter(
     (member) => !isFunction(checker, member) && !isRef(member)
   );
-  if (values.length === 0) return { kind: 'none', reason: HANDLER };
+  if (values.length === 0) return { kind: 'handler' };
 
   const scalar = scalarOf(values);
   if (scalar) return scalar;
@@ -587,9 +589,8 @@ function optionCount(attribute: Attribute) {
 }
 
 function controlOf(attribute: Attribute | null, type: string): Control | null {
-  if (!attribute) return null;
-  if (attribute.kind === 'content') return 'content';
-  if (attribute.kind === 'none') return null;
+  if (attribute?.kind === 'content') return 'content';
+  if (!isCanvasAttribute(attribute)) return null;
   if (type === 'boolean') return 'toggle';
   if (type === 'number') return 'number';
   if (type === 'string') return 'text';
@@ -876,7 +877,7 @@ function rechartsParts(
         `${name}.${prop}`,
         to
       );
-      if (!found || !attribute || attribute.kind === 'none') {
+      if (!found || !isCanvasAttribute(attribute)) {
         problems.push(
           `${name}.${prop}${found ? `: ${found.type}` : ' (no such prop)'}`
         );
@@ -960,16 +961,6 @@ function canvasParts(): FlatComponent[] {
         canvasProp('size', NUMBER, 'Width and height in px.', {
           defaultValue: '16',
         }),
-        canvasProp(
-          'weight',
-          {
-            ...TEXT,
-            string: false,
-            literals: ['thin', 'light', 'regular', 'bold', 'fill', 'duotone'],
-          },
-          'Line weight, or a filled shape.',
-          { defaultValue: '"regular"' }
-        ),
         canvasProp(
           'aria-label',
           TEXT,
@@ -1102,6 +1093,8 @@ export function coverage(components: readonly FlatComponent[]): Coverage {
       const { attribute } = prop;
       if (!attribute) {
         report.missing.push({ name: qualified, type: prop.type });
+      } else if (attribute.kind === 'handler') {
+        add(report.notNeeded, HANDLER, qualified);
       } else if (attribute.kind === 'none') {
         add(report.notNeeded, attribute.reason, qualified);
       }

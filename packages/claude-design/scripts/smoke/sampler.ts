@@ -8,8 +8,10 @@ import {
   samplerFile,
   samplerTags,
 } from '../../src/setup.ts';
+import { themedBoard } from '../../src/theme.ts';
 
 import {
+  exportAppearance,
   exportDir,
   fail,
   failOnProblems,
@@ -43,6 +45,16 @@ function barsOf(markup: string) {
   return rows.flatMap((row) =>
     series.filter((key) => typeof row[key] === 'number')
   ).length;
+}
+
+/** The legend labels the sampler's BarChart shows, in series order. */
+function legendOf(markup: string) {
+  const config = JSON.parse(
+    attributeOf(markup, 'BarChart', 'config')
+  ) as Record<string, { label: string }>;
+  return attributeOf(markup, 'BarChart', 'series')
+    .split(',')
+    .map((key) => config[key]?.label ?? key);
 }
 
 /** The days the sampler's DatePicker range covers, both ends included. */
@@ -180,8 +192,46 @@ async function measureSampler(
           );
         }
       }
+      // Card titles and descriptions sit on one line, and each card's content
+      // fills its card, with nothing left empty under it.
+      const lines = (element: Element) => {
+        const { lineHeight } = getComputedStyle(element);
+        const line = parseFloat(lineHeight);
+        // `normal` has no px value, so the count would be NaN and pass.
+        if (!Number.isFinite(line)) return Infinity;
+        return Math.round(element.getBoundingClientRect().height / line);
+      };
+      const wrapped = [
+        ...root.querySelectorAll(
+          '[data-slot="card-title"], [data-slot="card-description"]'
+        ),
+      ]
+        .filter((element) => lines(element) > 1)
+        .map((element) => element.textContent?.trim() ?? '');
+      const empty = [...root.querySelectorAll('[data-slot="card-content"]')]
+        .map((content) => {
+          const last = content.lastElementChild;
+          if (!last) return null;
+          const bottom =
+            content.getBoundingClientRect().bottom -
+            parseFloat(getComputedStyle(content).paddingBottom);
+          const gap = Math.round(bottom - last.getBoundingClientRect().bottom);
+          const title = content
+            .closest('[data-slot="card"]')
+            ?.querySelector('[data-slot="card-title"]')
+            ?.textContent?.trim();
+          return gap > 8 ? `${title ?? 'a card'} leaves ${gap}px empty` : null;
+        })
+        .filter((entry) => entry !== null);
       return {
         overflows,
+        wrapped,
+        empty,
+        legend: [
+          ...root.querySelectorAll(
+            '[data-slot="chart"] .recharts-legend-wrapper > div > div'
+          ),
+        ].map((element) => element.textContent?.trim() ?? ''),
         slots: [...root.querySelectorAll('[data-slot]')].map((element) =>
           element.getAttribute('data-slot')
         ),
@@ -254,7 +304,9 @@ export async function checkSampler({ themed = false } = {}) {
       `The export's ${SAMPLER_FILE} isn't content/${SAMPLER_FILE}, byte for byte.`
     );
   }
-  const entry = JSON.stringify(boardEntry(source));
+  const { uiFontSize } = exportAppearance().prefs;
+  const boards = themedBoard(boardEntry(source), uiFontSize);
+  const entry = JSON.stringify(boards);
   if (shippedBoardEntry() !== entry) {
     fail(`SETUP.md's canvas.json entry isn't ${entry}.`);
   }
@@ -272,10 +324,12 @@ export async function checkSampler({ themed = false } = {}) {
     );
   }
 
-  const { markup, width, height } = samplerFile(source);
-  if (width === undefined || height === undefined) {
+  const { markup, width, height: preview } = samplerFile(source);
+  const height = boards[SAMPLER_FILE]?.h;
+  if (width === undefined || preview === undefined || height === undefined) {
     throw new Error(`${SAMPLER_FILE}: $preview has no whole width and height.`);
   }
+  const legend = legendOf(markup);
   const slots = slotsOf(markup);
   const bars = barsOf(markup);
   const days = rangeDaysOf(markup);
@@ -303,6 +357,25 @@ export async function checkSampler({ themed = false } = {}) {
         `${name}: the page ends at ${board.bottom}px, but $preview and the canvas.json entry give ${height}px. Set $preview's height to ${board.bottom}.`
       );
     }
+    // A themed board fits its page. Denser spacing leaves a strip of
+    // background under it, up to 80px with compact density.
+    if (themed && (board.bottom > height || height - board.bottom > 80)) {
+      fail(
+        `${name}: at ${uiFontSize}px text the page ends at ${board.bottom}px, but the canvas.json entry gives ${height}px. Set the SAMPLER_PX_PER_*_TEXT_PX rates in src/theme.ts from the page's height at ${uiFontSize}px and at the default.`
+      );
+    }
+    if (board.legend.join(', ') !== legend.join(', ')) {
+      fail(
+        `${name}: the legend lists ${board.legend.join(', ')}, not the series order ${legend.join(', ')}.`
+      );
+    }
+    for (const text of board.wrapped) {
+      fail(
+        `${name}: the card text "${text}" wraps onto two lines, or its line height has no px value.`
+      );
+    }
+    for (const empty of board.empty)
+      fail(`${name}: ${empty} under its content.`);
     if (board.scrollHeight > height) {
       fail(
         `${name}: the board scrolls to ${board.scrollHeight}px, past its ${height}px height.`

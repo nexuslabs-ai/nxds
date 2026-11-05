@@ -33,7 +33,7 @@ Status is never colour alone. Every alert, badge and toast carries a word or an 
 
 ## Type
 
-{{typeFaces}}
+{{nxds:typeFaces}}
 
 | Use                         | Style                                             |
 | --------------------------- | ------------------------------------------------- |
@@ -46,7 +46,7 @@ Status is never colour alone. Every alert, badge and toast carries a word or an 
 | Overlines, small caps       | `typography-label-caps`                           |
 | Code                        | `typography-code-block`, `typography-code-inline` |
 
-Body copy is {{bodySize}} and code is {{codeSize}}. Keep one heading level per region, and step down one size at a time.
+Body copy is {{nxds:bodySize}} and code is {{nxds:codeSize}}. Keep one heading level per region, and step down one size at a time.
 
 ## Spacing and layout
 
@@ -91,7 +91,7 @@ The system has a Light and a Dark theme. Set `data-theme="dark"` on `<html>` to 
 
 ## Appearance
 
-{{appearance}}
+{{nxds:appearance}}
 
 Set an attribute on any element to change density, corners, elevation or stroke for everything inside it:
 
@@ -120,8 +120,22 @@ Add one `../` in front of each path for each folder the artboard is in.
 
 The System page is read-only for this system. An edit there recompiles tokens.css without the theme layer, the font variables and the text style rules, so presets, fonts and text styles stop applying. Change the token in nxds and export again.
 
-- Switch to dark with `data-theme="dark"` or the `dark` class on the artboard's root.
-- An overlay's content renders outside the artboard's root. Give its content part, such as `Nxds.PopoverContent`, the same `data-theme`.
+- Give every artboard a `mode` tweak, so the person can switch it between light and dark in the Tweaks panel. Declare it in the `data-props` of the artboard's `data-dc-script` block, and return it from `renderVals()`:
+
+<!-- prettier-ignore -->
+```html
+<script type="text/x-dc" data-dc-script data-props='{"mode":{"editor":"enum","options":["light","dark"],"default":"light","section":"nxds appearance"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { mode: this.props.mode ?? 'light' };
+  }
+}
+</script>
+```
+
+- If the artboard's script returns other values, add `mode` to them.
+- Set `data-theme="{{mode}}"` on the artboard's root element. Every token and component inside it follows.
+- An overlay's content renders outside the artboard's root. Give its content part, such as `Nxds.PopoverContent`, `data-theme="{{mode}}"` too.
 - Set a `data-density`, `data-radius`, `data-borderwidth` or `data-shadow` attribute from Appearance on any element to change everything inside it.
 - Override a token by setting its variable on an element, such as `style="--nx-radius-md: 8px"`. Components inside that element follow.
 - Read `components/<Name>/README.md` before you mount a component. It lists the component's parts and props.
@@ -143,7 +157,7 @@ The System page is read-only for this system. An edit there recompiles tokens.cs
 - A prop with a doc comment such as "With `type="multiple"`, a comma list" reads its list form only beside that `type`. DatePicker's `selected` follows `mode` the same way: one date, a comma list of dates, or a range as its first and last date, `"2026-10-01,2026-10-07"`.
 - An attribute that doesn't fit its prop logs a `[nxds]` warning and leaves the prop at its default. Read the console when a component looks wrong.
 - `{{...}}` and `dc-props` pass their values through unchanged.
-- A prop that takes a function, a ref or a DOM node has no attribute. `coverage.md` in the export lists them, and why a canvas doesn't need them.
+- A prop that takes a function has no attribute of its own. Bind it to a handler the artboard's script returns: `on-value-change="{{setFilters}}"`. `{{filters}}` looks up a name that `renderVals()` returns. It is never an expression, so work out a computed value in `renderVals()` and return it by name. A ref or a DOM node can't be set. `coverage.md` in the export lists these props.
 - Show an overlay open with `default-open` on its root part, such as `Nxds.Dialog`. A modal overlay locks the rest of the artboard while it's open, as it does in an app. Set `modal="false"` on a `Nxds.DropdownMenu` that shouldn't.
 - Lay out artboards with the spacing tokens, not raw pixel values.
 - Mount each part as its own `x-import`, the way a component's README shows. The canvas puts each one in a wrapper, and the parts keep their layout, borders and icon sizes through it. An `as-child` trigger opens its overlay from the element inside the wrapper.
