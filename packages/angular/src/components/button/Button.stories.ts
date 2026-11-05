@@ -10,7 +10,7 @@ import {
 } from '@storybook/angular-vite';
 import { expect, fn, type Mock, userEvent, within } from 'storybook/test';
 
-import { iconMarkup, NxIcon } from '../../lib/icon';
+import { NxIcon, trustIconMarkup } from '../../lib/icon';
 import { expectHeightPinned } from '../../stories/support/story-height-test-utils';
 
 import { NxButton, NxButtonEndIcon, NxButtonStartIcon } from './button';
@@ -27,9 +27,9 @@ const VARIANTS = [
 ] as const;
 
 const icons = {
-  arrowRight: iconMarkup(phosphorArrowRight),
-  rocket: iconMarkup(phosphorRocket),
-  star: iconMarkup(phosphorStar),
+  arrowRight: trustIconMarkup(phosphorArrowRight),
+  rocket: trustIconMarkup(phosphorRocket),
+  star: trustIconMarkup(phosphorStar),
 };
 
 // `click` is the native element's event, so it is not a declared output.

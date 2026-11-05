@@ -41,48 +41,48 @@ import {
   remixSubtractLine,
 } from '@ng-icons/remixicon';
 
-import { iconMarkup } from '../icon';
+import { trustIconMarkup } from '../icon';
 
 // Loading states
-export const IconLoader2 = iconMarkup(remixLoader4Line);
+export const IconLoader2 = trustIconMarkup(remixLoader4Line);
 
 // Navigation
-export const IconArrowDown = iconMarkup(remixArrowDownLine);
-export const IconArrowLeft = iconMarkup(remixArrowLeftLine);
-export const IconArrowRight = iconMarkup(remixArrowRightLine);
-export const IconArrowUp = iconMarkup(remixArrowUpLine);
-export const IconChevronDown = iconMarkup(remixArrowDownSLine);
-export const IconChevronLeft = iconMarkup(remixArrowLeftSLine);
-export const IconChevronRight = iconMarkup(remixArrowRightSLine);
-export const IconChevronUp = iconMarkup(remixArrowUpSLine);
-export const IconDots = iconMarkup(remixMoreLine);
-export const IconLayoutSidebar = iconMarkup(remixSideBarLine);
-export const IconSelector = iconMarkup(remixExpandUpDownLine);
+export const IconArrowDown = trustIconMarkup(remixArrowDownLine);
+export const IconArrowLeft = trustIconMarkup(remixArrowLeftLine);
+export const IconArrowRight = trustIconMarkup(remixArrowRightLine);
+export const IconArrowUp = trustIconMarkup(remixArrowUpLine);
+export const IconChevronDown = trustIconMarkup(remixArrowDownSLine);
+export const IconChevronLeft = trustIconMarkup(remixArrowLeftSLine);
+export const IconChevronRight = trustIconMarkup(remixArrowRightSLine);
+export const IconChevronUp = trustIconMarkup(remixArrowUpSLine);
+export const IconDots = trustIconMarkup(remixMoreLine);
+export const IconLayoutSidebar = trustIconMarkup(remixSideBarLine);
+export const IconSelector = trustIconMarkup(remixExpandUpDownLine);
 
 // Actions
-export const IconCheck = iconMarkup(remixCheckLine);
-export const IconCopy = iconMarkup(remixFileCopyLine);
-export const IconMinus = iconMarkup(remixSubtractLine);
-export const IconPencil = iconMarkup(remixPencilLine);
-export const IconPlus = iconMarkup(remixAddLine);
-export const IconX = iconMarkup(remixCloseLine);
-export const IconCircleFilled = iconMarkup(remixCircleFill);
+export const IconCheck = trustIconMarkup(remixCheckLine);
+export const IconCopy = trustIconMarkup(remixFileCopyLine);
+export const IconMinus = trustIconMarkup(remixSubtractLine);
+export const IconPencil = trustIconMarkup(remixPencilLine);
+export const IconPlus = trustIconMarkup(remixAddLine);
+export const IconX = trustIconMarkup(remixCloseLine);
+export const IconCircleFilled = trustIconMarkup(remixCircleFill);
 
 // Filter field types
-export const IconCalendar = iconMarkup(remixCalendarLine);
-export const IconHash = iconMarkup(remixHashtag);
-export const IconLetterCase = iconMarkup(remixFontSize);
-export const IconList = iconMarkup(remixListUnordered);
+export const IconCalendar = trustIconMarkup(remixCalendarLine);
+export const IconHash = trustIconMarkup(remixHashtag);
+export const IconLetterCase = trustIconMarkup(remixFontSize);
+export const IconList = trustIconMarkup(remixListUnordered);
 
 // Search / input
-export const IconSearch = iconMarkup(remixSearchLine);
+export const IconSearch = trustIconMarkup(remixSearchLine);
 
 // Alerts/Status
-export const IconAlertCircle = iconMarkup(remixErrorWarningLine);
-export const IconAlertTriangle = iconMarkup(remixAlertLine);
-export const IconCircleCheck = iconMarkup(remixCheckboxCircleLine);
-export const IconInfoCircle = iconMarkup(remixInformationLine);
+export const IconAlertCircle = trustIconMarkup(remixErrorWarningLine);
+export const IconAlertTriangle = trustIconMarkup(remixAlertLine);
+export const IconCircleCheck = trustIconMarkup(remixCheckboxCircleLine);
+export const IconInfoCircle = trustIconMarkup(remixInformationLine);
 
 // Layout
-export const IconGripVertical = iconMarkup(remixDraggable);
-export const IconPalette = iconMarkup(remixPaletteLine);
+export const IconGripVertical = trustIconMarkup(remixDraggable);
+export const IconPalette = trustIconMarkup(remixPaletteLine);

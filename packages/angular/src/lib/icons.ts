@@ -41,48 +41,48 @@ import {
   phosphorX,
 } from '@ng-icons/phosphor-icons/regular';
 
-import { iconMarkup } from './icon';
+import { trustIconMarkup } from './icon';
 
 // Loading states
-export const IconLoader2 = iconMarkup(phosphorCircleNotch);
+export const IconLoader2 = trustIconMarkup(phosphorCircleNotch);
 
 // Navigation
-export const IconArrowDown = iconMarkup(phosphorArrowDown);
-export const IconArrowLeft = iconMarkup(phosphorArrowLeft);
-export const IconArrowRight = iconMarkup(phosphorArrowRight);
-export const IconArrowUp = iconMarkup(phosphorArrowUp);
-export const IconChevronDown = iconMarkup(phosphorCaretDown);
-export const IconChevronLeft = iconMarkup(phosphorCaretLeft);
-export const IconChevronRight = iconMarkup(phosphorCaretRight);
-export const IconChevronUp = iconMarkup(phosphorCaretUp);
-export const IconDots = iconMarkup(phosphorDotsThree);
-export const IconLayoutSidebar = iconMarkup(phosphorSidebarSimple);
-export const IconSelector = iconMarkup(phosphorCaretUpDown);
+export const IconArrowDown = trustIconMarkup(phosphorArrowDown);
+export const IconArrowLeft = trustIconMarkup(phosphorArrowLeft);
+export const IconArrowRight = trustIconMarkup(phosphorArrowRight);
+export const IconArrowUp = trustIconMarkup(phosphorArrowUp);
+export const IconChevronDown = trustIconMarkup(phosphorCaretDown);
+export const IconChevronLeft = trustIconMarkup(phosphorCaretLeft);
+export const IconChevronRight = trustIconMarkup(phosphorCaretRight);
+export const IconChevronUp = trustIconMarkup(phosphorCaretUp);
+export const IconDots = trustIconMarkup(phosphorDotsThree);
+export const IconLayoutSidebar = trustIconMarkup(phosphorSidebarSimple);
+export const IconSelector = trustIconMarkup(phosphorCaretUpDown);
 
 // Actions
-export const IconCheck = iconMarkup(phosphorCheck);
-export const IconCopy = iconMarkup(phosphorCopy);
-export const IconMinus = iconMarkup(phosphorMinus);
-export const IconPencil = iconMarkup(phosphorPencilSimple);
-export const IconPlus = iconMarkup(phosphorPlus);
-export const IconX = iconMarkup(phosphorX);
-export const IconCircleFilled = iconMarkup(phosphorCircleFill);
+export const IconCheck = trustIconMarkup(phosphorCheck);
+export const IconCopy = trustIconMarkup(phosphorCopy);
+export const IconMinus = trustIconMarkup(phosphorMinus);
+export const IconPencil = trustIconMarkup(phosphorPencilSimple);
+export const IconPlus = trustIconMarkup(phosphorPlus);
+export const IconX = trustIconMarkup(phosphorX);
+export const IconCircleFilled = trustIconMarkup(phosphorCircleFill);
 
 // Filter field types
-export const IconCalendar = iconMarkup(phosphorCalendarBlank);
-export const IconHash = iconMarkup(phosphorHash);
-export const IconLetterCase = iconMarkup(phosphorTextAa);
-export const IconList = iconMarkup(phosphorListBullets);
+export const IconCalendar = trustIconMarkup(phosphorCalendarBlank);
+export const IconHash = trustIconMarkup(phosphorHash);
+export const IconLetterCase = trustIconMarkup(phosphorTextAa);
+export const IconList = trustIconMarkup(phosphorListBullets);
 
 // Search / input
-export const IconSearch = iconMarkup(phosphorMagnifyingGlass);
+export const IconSearch = trustIconMarkup(phosphorMagnifyingGlass);
 
 // Alerts/Status
-export const IconAlertCircle = iconMarkup(phosphorWarningCircle);
-export const IconAlertTriangle = iconMarkup(phosphorWarning);
-export const IconCircleCheck = iconMarkup(phosphorCheckCircle);
-export const IconInfoCircle = iconMarkup(phosphorInfo);
+export const IconAlertCircle = trustIconMarkup(phosphorWarningCircle);
+export const IconAlertTriangle = trustIconMarkup(phosphorWarning);
+export const IconCircleCheck = trustIconMarkup(phosphorCheckCircle);
+export const IconInfoCircle = trustIconMarkup(phosphorInfo);
 
 // Layout
-export const IconGripVertical = iconMarkup(phosphorDotsSixVertical);
-export const IconPalette = iconMarkup(phosphorPalette);
+export const IconGripVertical = trustIconMarkup(phosphorDotsSixVertical);
+export const IconPalette = trustIconMarkup(phosphorPalette);

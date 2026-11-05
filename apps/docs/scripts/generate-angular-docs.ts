@@ -157,14 +157,18 @@ function metadataImports(object: ts.ObjectLiteralExpression) {
   });
 }
 
-/** The imports `value` reads when it is a name, or a call such as `iconMarkup(phosphorX)`. */
-function importsRead(value: ts.Expression): string[] {
+/** The imports `value` reads when it is a name, or a call such as `trustIconMarkup(phosphorX)`. */
+function importsRead(where: string, value: ts.Expression): string[] {
   if (ts.isIdentifier(value)) return [value.text];
   if (!ts.isCallExpression(value) || !ts.isIdentifier(value.expression)) {
     return [];
   }
   const args = value.arguments.map(unwrap);
-  if (!args.every(ts.isIdentifier)) return [];
+  if (!args.every(ts.isIdentifier)) {
+    fail(
+      `${where}: \`${value.getText()}\` passes something other than names. A call in props takes only imported names, as \`trustIconMarkup(phosphorX)\`.`
+    );
+  }
   return [value.expression.text, ...args.map((arg) => arg.text)];
 }
 
@@ -194,7 +198,7 @@ function storyFields(
       {
         name: prop.name.getText(),
         value: value.getText(),
-        uses: importsRead(value),
+        uses: importsRead(where, value),
       },
     ];
   });

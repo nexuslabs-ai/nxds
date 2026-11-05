@@ -390,7 +390,7 @@ export function angularExampleSource(
     const helpers = [
       ...(libIcon?.[1] ?? '').split(',').map((name) => name.trim()),
       'hugeicon',
-    ].filter((name) => name && (name !== 'iconMarkup' || stillMarked));
+    ].filter((name) => name && (name !== 'trustIconMarkup' || stillMarked));
     rewritten = libIcon
       ? rewritten.replace(libIcon[0], importLine(helpers, '@/lib/icon'))
       : `${importLine(helpers, '@/lib/icon')}\n${rewritten}`;

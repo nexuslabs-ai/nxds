@@ -30,14 +30,14 @@ function declarations(style: string) {
 
 declare const trusted: unique symbol;
 
-/** SVG markup the app ships, marked by `iconMarkup`. `nxIcon` draws only this. */
+/** SVG markup the app ships, marked by `trustIconMarkup`. `nxIcon` draws only this. */
 export type IconMarkup = string & { readonly [trusted]: true };
 
 /**
  * Marks `svg` as icon markup the app ships, such as an `@ng-icons` export.
  * Never pass user input: `nxIcon` writes the markup unsanitized.
  */
-export function iconMarkup(svg: string): IconMarkup {
+export function trustIconMarkup(svg: string): IconMarkup {
   return svg as IconMarkup;
 }
 
@@ -96,7 +96,10 @@ const kebab = (name: string) =>
   name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
 /** HugeIcons ships elements as data; this writes them as the SVG markup the other sets ship. */
-export function hugeicon(icon: IconSvgElement, { fill = 'none' } = {}) {
+export function hugeicon(
+  icon: IconSvgElement,
+  { fill = 'none' }: { fill?: 'none' | 'currentColor' } = {}
+) {
   const children = icon
     .map(([tag, attributes]) => {
       const pairs = Object.entries(attributes)
@@ -105,7 +108,7 @@ export function hugeicon(icon: IconSvgElement, { fill = 'none' } = {}) {
       return `<${tag} ${pairs.join(' ')}></${tag}>`;
     })
     .join('');
-  return iconMarkup(
+  return trustIconMarkup(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${fill}">${children}</svg>`
   );
 }
@@ -116,7 +119,7 @@ export function hugeicon(icon: IconSvgElement, { fill = 'none' } = {}) {
   host: { '[innerHTML]': 'shapes()' },
 })
 export class NxIcon {
-  /** The icon's SVG markup, marked by `iconMarkup`. */
+  /** The icon's SVG markup, marked by `trustIconMarkup`. */
   readonly nxIcon = input.required<IconMarkup>();
 
   protected readonly shapes = drawIcon(this.nxIcon);
