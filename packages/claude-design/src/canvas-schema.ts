@@ -42,9 +42,19 @@ function converted(
   return plainString ? null : withoutSuggested(attribute);
 }
 
-/** Parts that read their children's types, as Recharts finds a chart's series and Cells. */
+// cmdk sorts search results by moving each ungrouped item within its list,
+// and throws when a wrapper sits between them.
+const ITEM_LISTS = new Set([
+  'CommandList',
+  'ComboboxList',
+  'MultiSelectContent',
+]);
+
+/** Parts that read their children's types, as Recharts finds a chart's series and Cells, or move their children's elements, as a searchable list does. */
 const UNWRAPS = (part: FlatComponent) =>
-  part.slug === 'recharts' || part.name === 'ChartContainer';
+  part.slug === 'recharts' ||
+  part.name === 'ChartContainer' ||
+  ITEM_LISTS.has(part.name);
 
 export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
   const schema: CanvasSchema = {

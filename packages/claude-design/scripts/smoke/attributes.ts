@@ -1,6 +1,7 @@
 import {
   compareSignatures,
   date,
+  el,
   failOnProblems,
   LIGHT,
   openPage,
@@ -24,6 +25,11 @@ const FRUITS = [
   ['apple', 'Apple'],
   ['banana', 'Banana'],
 ] as const;
+const TEAM = ['AL', 'BK', 'CM', 'DR'];
+const avatar = (initials: string) =>
+  x('Avatar', '', x('AvatarFallback', '', initials));
+const avatarPart = (initials: string) =>
+  part('Avatar', null, part('AvatarFallback', null, initials));
 
 /** Markup whose attribute strings must convert to the typed props beside it. */
 export const ATTRIBUTE_CASES: {
@@ -204,6 +210,20 @@ export const ATTRIBUTE_CASES: {
         )
       )
     ),
+  },
+  {
+    name: 'an as-child Button slots its one element',
+    markup: x('Button', 'as-child', el('a', 'href="#docs"', 'Docs')),
+    expected: part(
+      'Button',
+      { asChild: true },
+      part('a', { href: '#docs' }, 'Docs')
+    ),
+  },
+  {
+    name: 'AvatarGroup max counts its avatars, not the indentation',
+    markup: x('AvatarGroup', 'max="2"', ...TEAM.map(avatar)),
+    expected: part('AvatarGroup', { max: 2 }, ...TEAM.map(avatarPart)),
   },
   {
     name: 'an ISO date selects a day',

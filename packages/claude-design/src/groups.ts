@@ -8,6 +8,14 @@ export const ROOT_PARTS: Readonly<Record<string, string>> = {
   Sonner: 'Toaster',
 };
 
+/** What a card's README says in place of a canvas example, where its root part can't mount alone and no docs story can be written as markup. */
+export const CANVAS_NOTES: Readonly<Record<string, string>> = {
+  FilterBuilder:
+    "FilterBuilder needs `value` and `onValueChange` from app state. A canvas can't pass a function, so FilterBuilder can't be mounted on a canvas. Show a filter with `Nxds.FilterCondition` parts instead.",
+  Sidebar:
+    'Mount `Nxds.Sidebar` inside `Nxds.SidebarProvider`. On its own, `Nxds.Sidebar` throws. Put `Nxds.SidebarHeader`, `Nxds.SidebarContent` and `Nxds.SidebarFooter` inside it, and `Nxds.SidebarInset` beside it for the page.',
+};
+
 // The card groups on the system page, in display order. The bundle header
 // lists components in this order too. Every exported component folder needs a
 // place here; the build fails on one that has none.

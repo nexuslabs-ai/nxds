@@ -4,12 +4,19 @@ import { CANVAS_WRAPPER_CLASS } from './canvas-names.ts';
 
 type WrapperProps = { className?: unknown; children?: React.ReactNode };
 
+// JSX's rule: blank text that spans a line break is indentation. A space
+// between two elements on one line is text.
+function isIndentation(child: unknown) {
+  return (
+    typeof child === 'string' && child.trim() === '' && /[\n\r]/.test(child)
+  );
+}
+
 /** x-import content without its indentation: a canvas passes it as an array, even for one child, and keeps the space between tags as strings. */
 export function withoutIndentation(children: React.ReactNode): React.ReactNode {
   if (!Array.isArray(children)) return children;
-  const content = children.filter(
-    (child) => typeof child !== 'string' || child.trim() !== ''
-  );
+  const content = children.filter((child) => !isIndentation(child));
+  if (content.length === 0) return undefined;
   return content.length === 1 ? content[0] : content;
 }
 
