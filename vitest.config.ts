@@ -1,4 +1,5 @@
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
+import { storybookAngularVitest } from '@storybook/angular-vite/vitest';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import vue from '@vitejs/plugin-vue';
@@ -11,11 +12,14 @@ export default defineConfig({
     alias: [
       {
         find: /^@nxds\/core$/,
-        replacement: path.resolve(__dirname, './packages/core/src/index.ts'),
+        replacement: path.resolve(
+          import.meta.dirname,
+          './packages/core/src/index.ts'
+        ),
       },
       {
         find: /^@\//,
-        replacement: `${path.resolve(__dirname, './packages/react/src')}/`,
+        replacement: `${path.resolve(import.meta.dirname, './packages/react/src')}/`,
       },
     ],
   },
@@ -56,12 +60,15 @@ export default defineConfig({
         extends: true, // Inherit resolve.alias from root config
         plugins: [
           storybookTest({
-            configDir: path.resolve(__dirname, 'packages/react/.storybook'),
+            configDir: path.resolve(
+              import.meta.dirname,
+              'packages/react/.storybook'
+            ),
             // Auto-start Storybook in watch mode for debugging links
             storybookScript: 'pnpm storybook --no-open',
           }),
         ],
-        root: path.resolve(__dirname, 'packages/react'),
+        root: path.resolve(import.meta.dirname, 'packages/react'),
         test: {
           name: 'storybook',
           browser: {
@@ -72,7 +79,7 @@ export default defineConfig({
           },
           setupFiles: [
             path.resolve(
-              __dirname,
+              import.meta.dirname,
               'packages/react/.storybook/vitest.setup.ts'
             ),
           ],
@@ -85,11 +92,14 @@ export default defineConfig({
         extends: true,
         plugins: [
           storybookTest({
-            configDir: path.resolve(__dirname, 'packages/react-18/.storybook'),
+            configDir: path.resolve(
+              import.meta.dirname,
+              'packages/react-18/.storybook'
+            ),
             storybookScript: 'pnpm --filter @nxds/react-18 storybook --no-open',
           }),
         ],
-        root: path.resolve(__dirname, 'packages/react-18'),
+        root: path.resolve(import.meta.dirname, 'packages/react-18'),
         resolve: { dedupe: ['react', 'react-dom'] },
         test: {
           name: 'storybook-react18',
@@ -101,7 +111,7 @@ export default defineConfig({
           },
           setupFiles: [
             path.resolve(
-              __dirname,
+              import.meta.dirname,
               'packages/react-18/.storybook/vitest.setup.ts'
             ),
           ],
@@ -113,11 +123,14 @@ export default defineConfig({
         plugins: [
           vue(),
           storybookTest({
-            configDir: path.resolve(__dirname, 'packages/vue/.storybook'),
+            configDir: path.resolve(
+              import.meta.dirname,
+              'packages/vue/.storybook'
+            ),
             storybookScript: 'pnpm --filter @nxds/vue storybook --no-open',
           }),
         ],
-        root: path.resolve(__dirname, 'packages/vue'),
+        root: path.resolve(import.meta.dirname, 'packages/vue'),
         test: {
           name: 'storybook-vue',
           browser: {
@@ -126,6 +139,40 @@ export default defineConfig({
             headless: true,
             instances: [{ browser: 'chromium' }],
           },
+        },
+      },
+      // Angular story tests - the same play-function and axe checks for
+      // @nxds/angular. The Storybook preset compiles the components with Analog.
+      {
+        extends: true,
+        plugins: [
+          storybookAngularVitest({}),
+          storybookTest({
+            configDir: path.resolve(
+              import.meta.dirname,
+              'packages/angular/.storybook'
+            ),
+            storybookScript: 'pnpm --filter @nxds/angular storybook --no-open',
+          }),
+        ],
+        root: path.resolve(import.meta.dirname, 'packages/angular'),
+        // Scan the stories for dependencies before the browser loads, so a
+        // newly seen dependency doesn't reload the page mid-run.
+        optimizeDeps: { entries: ['src/**/*.stories.ts'] },
+        test: {
+          name: 'storybook-angular',
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            headless: true,
+            instances: [{ browser: 'chromium' }],
+          },
+          setupFiles: [
+            path.resolve(
+              import.meta.dirname,
+              'packages/angular/.storybook/vitest.setup.ts'
+            ),
+          ],
         },
       },
       // Cross-framework parity of rendered DOM: each docs story mounted in

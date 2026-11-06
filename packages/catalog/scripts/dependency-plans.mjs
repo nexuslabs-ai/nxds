@@ -1,6 +1,6 @@
 // @ts-check
 /**
- * What installing each React and Vue component, and each React block, takes:
+ * What installing each React, Vue and Angular component, and each React block, takes:
  * the files and packages it reaches, and the plan its docs page shows.
  */
 import {
@@ -11,6 +11,13 @@ import {
   linkedComponentSlug,
 } from '@nxds/source-model/react-sources.mjs';
 import {
+  isAngularModuleSource,
+  linkedAngularSlug,
+} from '@nxds/source-model/angular-sources.ts';
+import {
+  angularComponentsRoot,
+  angularRoot,
+  angularSrc,
   componentsRoot,
   reactRoot,
   reactSrc,
@@ -32,7 +39,7 @@ export const react = createInstallPlanner({
   root: reactRoot,
   src: reactSrc,
   componentsRoot,
-  framework: 'react',
+  frameworkPackages: ['react'],
   isModuleSource,
   readScript: (file) => readFileSync(file, 'utf8'),
   linkedComponentSlug,
@@ -42,19 +49,35 @@ export const vue = createInstallPlanner({
   root: vueRoot,
   src: vueSrc,
   componentsRoot: vueComponentsRoot,
-  framework: 'vue',
+  frameworkPackages: ['vue'],
   isModuleSource: isVueModuleSource,
   readScript: readVueScript,
   linkedComponentSlug: linkedVueSlug,
 });
 
+export const angular = createInstallPlanner({
+  root: angularRoot,
+  src: angularSrc,
+  componentsRoot: angularComponentsRoot,
+  frameworkPackages: [
+    '@angular/core',
+    '@angular/common',
+    '@angular/forms',
+    '@angular/platform-browser',
+  ],
+  isModuleSource: isAngularModuleSource,
+  readScript: (file) => readFileSync(file, 'utf8'),
+  linkedComponentSlug: linkedAngularSlug,
+});
+
 /**
  * Each slug's walked files and packages, by slug, once every package they import is declared.
+ * @param {ReturnType<typeof createInstallPlanner>} planner
  * @param {string[]} slugs
  */
-export function vueWalks(slugs) {
-  const walks = slugs.map(vue.walkSlug).filter((walked) => walked !== null);
-  vue.assertDeclaredPackages(walks);
+export function frameworkWalks(planner, slugs) {
+  const walks = slugs.map(planner.walkSlug).filter((walked) => walked !== null);
+  planner.assertDeclaredPackages(walks);
   return new Map(walks.map((walked) => [walked.name, walked]));
 }
 

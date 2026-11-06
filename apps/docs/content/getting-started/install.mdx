@@ -831,7 +831,7 @@ under `src/`, and the imports between files work without edits.
 
 Render it:
 
-<VueDemo id="button/default" />
+<FrameworkDemo framework="vue" id="button/default" />
 
 To check dark mode, add a toggle that uses `useNxdsAppearance`:
 
@@ -875,6 +875,226 @@ key.
 | Appearance plugin | `packages/vue/src/components/appearance/` |
 | `cn` helper       | `packages/vue/src/lib/utils.ts`           |
 | Components        | `packages/vue/src/components/{name}/`     |
+
+</FrameworkPanel>
+<FrameworkPanel framework="angular">
+
+## Step 1: Install Tailwind 4
+
+```bash
+npm install -D tailwindcss @tailwindcss/postcss postcss
+```
+
+Tailwind 4 builds the `nx:` classes. These steps use a new Angular 22 app from
+`ng new`, which runs Tailwind through PostCSS:
+
+```json
+// .postcssrc.json
+{
+  "plugins": { "@tailwindcss/postcss": {} }
+}
+```
+
+## Step 2: Add the token CSS
+
+The token CSS defines the colors, spacing and type scale. Copy the seven files
+from `packages/tailwind/` in the
+[nxds repo](https://github.com/nexuslabs-ai/nxds) into `src/styles/nxds/`.
+
+Install the animation utilities that some components use to open and close:
+
+```bash
+npm install tw-animate-css
+```
+
+Import Tailwind's Preflight, the token CSS and the animation utilities from your
+global stylesheet:
+
+```css
+/* src/styles.css */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/preflight.css' layer(base);
+@import './styles/nxds/nxds.css';
+@import 'tw-animate-css';
+```
+
+nxds ships no reset, so the page brings Preflight. nxds components need its
+`box-sizing: border-box`.
+
+## Step 3: Add the appearance provider
+
+The provider applies the theme and saves the user's choices, like dark mode. A
+script in `index.html` applies the saved theme before the first paint.
+
+Install the theme engine and the Angular component dependencies:
+
+```bash
+npm install @nxds/core @spartan-ng/brain @angular/cdk
+```
+
+Copy `packages/angular/src/components/appearance/` into
+`src/components/appearance/`.
+
+Add the `@` import alias to `tsconfig.json`:
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "paths": { "@/*": ["./src/*"] }
+  }
+}
+```
+
+Set your app's starting theme:
+
+```ts
+// src/appearance-state.ts
+import { DEFAULT_NXDS_APPEARANCE, type NxdsAppearanceState } from '@nxds/core';
+
+export const defaultAppearance = {
+  ...DEFAULT_NXDS_APPEARANCE,
+  brandColor: '#2563eb',
+} satisfies NxdsAppearanceState;
+```
+
+Write the theme script into `public/` before each build:
+
+```js
+// scripts/nxds-appearance.mjs
+import {
+  createNxdsAppearanceBootstrapScript,
+  createNxdsAppearanceSnapshotFromState,
+} from '@nxds/core';
+import { writeFileSync } from 'node:fs';
+
+import { defaultAppearance } from '../src/appearance-state.ts';
+
+writeFileSync(
+  'public/nxds-appearance.js',
+  createNxdsAppearanceBootstrapScript({
+    storageKey: 'app-appearance',
+    defaultSnapshot: createNxdsAppearanceSnapshotFromState(defaultAppearance),
+  })
+);
+```
+
+```json
+// package.json
+{
+  "scripts": {
+    "prestart": "node scripts/nxds-appearance.mjs",
+    "prebuild": "node scripts/nxds-appearance.mjs"
+  }
+}
+```
+
+Load it first in `index.html`, and give the page the nxds background, text
+color and font:
+
+```html
+<head>
+  <script src="nxds-appearance.js"></script>
+</head>
+<body
+  class="nx:bg-background nx:text-foreground nx:typography-body-default"
+></body>
+```
+
+Provide the appearance with the same storage key:
+
+```ts
+// src/app/app.config.ts
+import type { ApplicationConfig } from '@angular/core';
+
+import { defaultAppearance } from '../appearance-state';
+import { provideNxdsAppearance } from '../components/appearance/appearance';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideNxdsAppearance({
+      storageKey: 'app-appearance',
+      defaultState: defaultAppearance,
+    }),
+  ],
+};
+```
+
+## Step 4: Add the `cn` helper
+
+```bash
+npm install clsx tailwind-merge class-variance-authority
+```
+
+Copy `packages/angular/src/lib/utils.ts` to `src/lib/utils.ts`.
+
+`cn` merges class names and resolves conflicts between `nx:` classes. That's
+what lets `<button nxButton class="nx:bg-error-background">` replace the
+button's own background.
+
+## Add your first component
+
+Each component lists the components to install first, the packages to install,
+and the files to copy. For Button:
+
+<InstallBlock slug="button" framework="angular" />
+
+Paths are relative to `packages/angular/src/` in the repo. Keep the same folders
+under `src/`, and the imports between files work without edits.
+
+Render it:
+
+<FrameworkDemo framework="angular" id="button/default" />
+
+To check dark mode, add a toggle that uses `NxdsAppearance`:
+
+```ts
+// src/app/mode-toggle.ts
+import { Component, inject } from '@angular/core';
+
+import { NxdsAppearance } from '@/components/appearance/appearance';
+import { NxButton } from '@/components/button/button';
+
+@Component({
+  selector: 'app-mode-toggle',
+  imports: [NxButton],
+  template: `
+    <button nxButton (click)="toggle()">
+      Mode: {{ appearance.resolvedMode() }}
+    </button>
+  `,
+})
+export class ModeToggle {
+  protected readonly appearance = inject(NxdsAppearance);
+
+  protected toggle() {
+    this.appearance.setState((state) => ({
+      ...state,
+      mode: this.appearance.resolvedMode() === 'dark' ? 'light' : 'dark',
+    }));
+  }
+}
+```
+
+## Check your setup
+
+- [ ] `nxds.css` is imported from `src/styles.css`
+- [ ] `app.config.ts` provides `provideNxdsAppearance`
+- [ ] Reloading in dark mode doesn't flash light first
+- [ ] The mode you pick is still set after a full reload
+
+If the button has no styles, `nxds.css` isn't imported (step 2). If the page
+flashes on reload, check that the script and the provider use the same storage
+key.
+
+## Where the files are
+
+| File                | Path in the repo                              |
+| ------------------- | --------------------------------------------- |
+| Token CSS           | `packages/tailwind/*.css`                     |
+| Appearance provider | `packages/angular/src/components/appearance/` |
+| `cn` helper         | `packages/angular/src/lib/utils.ts`           |
+| Components          | `packages/angular/src/components/{name}/`     |
 
 </FrameworkPanel>
 </FrameworkTabs>

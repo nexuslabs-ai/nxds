@@ -25,6 +25,11 @@ const COPY_TARGET: Record<Framework, ReactNode> = {
       Keep the same folders under your <code>@/</code> root
     </>
   ),
+  angular: (
+    <>
+      Keep the same folders under your <code>@/</code> root
+    </>
+  ),
 };
 
 /** Where each framework's copied paths are relative to, and React 18's. */
@@ -71,7 +76,12 @@ function ManualSteps({
   steps.push({
     title: 'Copy and paste the following code into your project.',
     body: sources.map(({ path, source }) => (
-      <SourceFile key={path} path={path} source={source} />
+      <SourceFile
+        key={path}
+        path={path}
+        source={source}
+        framework={framework}
+      />
     )),
   });
   if (styles.length > 0) {
@@ -152,17 +162,26 @@ export function ComponentInstallation({
   );
 }
 
-function sourceLanguage(path: string) {
+function sourceLanguage(path: string, framework: Framework) {
   if (path.endsWith('.css')) return 'css';
   if (path.endsWith('.vue')) return 'vue';
+  if (framework === 'angular') return 'angular-ts';
   return 'tsx';
 }
 
-export function SourceFile({ path, source }: { path: string; source: string }) {
+export function SourceFile({
+  path,
+  source,
+  framework = 'react',
+}: {
+  path: string;
+  source: string;
+  framework?: Framework;
+}) {
   return (
     <CodeSampleCard
       className="nx:mb-4"
-      lang={sourceLanguage(path)}
+      lang={sourceLanguage(path, framework)}
       code={source}
       header={
         <figcaption className="nx:px-4 nx:py-2 nx:border-b nx:border-border-default nx:typography-code-inline nx:text-muted-foreground">

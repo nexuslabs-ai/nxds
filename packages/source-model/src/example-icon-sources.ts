@@ -329,3 +329,76 @@ export function vueExampleSource(
   assertNoPhosphor(id, rewritten, /@phosphor-icons\/|\bPh[A-Z]\w*\b/);
   return rewritten;
 }
+
+const ANGULAR_LIB_ICON = /import \{([^}]*)\} from '@\/lib\/icon';/;
+
+/**
+ * An Angular example component, drawn by `library`. Its Phosphor icons are
+ * `@ng-icons` markup it holds in fields; another library's markup takes their
+ * place, and HugeIcons' data is drawn through `hugeicon()`. An example that
+ * imports no Phosphor icon comes back as it is.
+ */
+export function angularExampleSource(
+  id: string,
+  source: string,
+  library: IconLibrary
+) {
+  const phosphorModule = ICON_PACKAGES.phosphor.angular.icons;
+  const declaration = source.match(
+    new RegExp(`import \\{([^}]*)\\} from '${phosphorModule}';\\n`)
+  );
+  if (!declaration) return source;
+  const names = (declaration[1] ?? '')
+    .split(',')
+    .map((name) => name.trim())
+    .filter(Boolean);
+  const phosphorOf = (name: string) => name.replace(/^phosphor/, '');
+  for (const name of names) exampleIconName(phosphorOf(name), library);
+  if (library === 'phosphor') return source;
+
+  const huge = library === 'hugeicons';
+  const imported = new Set<string>();
+  let rewritten = source.replace(declaration[0], '');
+  for (const name of names) {
+    const icon = iconExport(
+      library,
+      'angular',
+      exampleIconName(phosphorOf(name), library)
+    );
+    imported.add(icon);
+    // `hugeicon()` already returns `IconMarkup`, so it replaces the wrapper too.
+    if (huge) {
+      rewritten = rewritten.replace(
+        new RegExp(`\\btrustIconMarkup\\(${name}\\)`, 'g'),
+        `hugeicon(${icon})`
+      );
+    }
+    rewritten = rewritten.replace(
+      new RegExp(`\\b${name}\\b`, 'g'),
+      huge ? `hugeicon(${icon})` : icon
+    );
+  }
+
+  const lines = [importLine(imported, ICON_PACKAGES[library].angular.icons)];
+  rewritten = rewritten.replace(
+    /^(import [^;]+;\n)(?=\n|import)/m,
+    (first) => `${first}${lines.join('\n')}\n`
+  );
+  if (huge) {
+    const libIcon = rewritten.match(ANGULAR_LIB_ICON);
+    const stillMarked = /\btrustIconMarkup\(/.test(rewritten);
+    const helpers = [
+      ...(libIcon?.[1] ?? '').split(',').map((name) => name.trim()),
+      'hugeicon',
+    ].filter((name) => name && (name !== 'trustIconMarkup' || stillMarked));
+    rewritten = libIcon
+      ? rewritten.replace(libIcon[0], importLine(helpers, '@/lib/icon'))
+      : `${importLine(helpers, '@/lib/icon')}\n${rewritten}`;
+  }
+  assertNoPhosphor(
+    id,
+    rewritten,
+    /@ng-icons\/phosphor-icons|\bphosphor[A-Z]\w*\b/
+  );
+  return rewritten;
+}

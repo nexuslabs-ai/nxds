@@ -262,7 +262,7 @@ const FAQ = [
   {
     value: 'frameworks',
     question: 'Which frameworks?',
-    answer: 'React and Vue today.',
+    answer: 'React, Vue and Angular today.',
   },
 ];
 

@@ -18,13 +18,17 @@ const TARGETS = [
     css: 'packages/vue/.storybook/preview.css',
     sources: 'packages/vue/src',
   },
+  {
+    css: 'packages/angular/.storybook/preview.css',
+    sources: 'packages/angular/src',
+  },
   { css: 'apps/docs/app/globals.css', sources: 'apps/docs' },
 ];
 
 // The primitive/unknown `--nx-color-*` ban applies only to component code:
 // apps are consumers (free to reach for primitives) and non-component
-// `{react,vue}/src` is internal plumbing. Components are the public surface.
-const COMPONENT_DIRS = ['react', 'vue'].map((framework) =>
+// `{react,vue,angular}/src` is internal plumbing. Components are the public surface.
+const COMPONENT_DIRS = ['react', 'vue', 'angular'].map((framework) =>
   path.join(REPO_ROOT, 'packages', framework, 'src', 'components')
 );
 
@@ -42,8 +46,9 @@ const IGNORE_NEXT_LINE = 'audit-class-refs-ignore-next-line';
 const VARIANT_MARKER = /^nx:(group|peer)(\/[\w-]+)?$/;
 
 // Custom properties set at runtime rather than in CSS: Radix's `--radix-*`,
-// Reka's `--reka-*`, and component inline-style keys or `style.setProperty` calls.
-const LIBRARY_RUNTIME_VAR = /^--(?:radix|reka)-/;
+// Reka's `--reka-*`, brain's `--brn-*`, and component inline-style keys or
+// `style.setProperty` calls.
+const LIBRARY_RUNTIME_VAR = /^--(?:radix|reka|brn)-/;
 const RUNTIME_VAR_DECLARATIONS = [
   /['"](--[\w-]+)['"]\s*:/g,
   /setProperty\(\s*['"](--[\w-]+)['"]/g,

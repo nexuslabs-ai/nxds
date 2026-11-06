@@ -65,7 +65,7 @@ const npmNameSchema = z
     'must be an npm package name'
   );
 
-const frameworkSchema = z.enum(['react', 'vue']);
+const frameworkSchema = z.enum(['react', 'vue', 'angular']);
 
 export type Framework = z.infer<typeof frameworkSchema>;
 
@@ -81,6 +81,7 @@ function variantsSchema<V extends z.ZodType>(variant: V) {
   return z.object({
     react: variant.optional(),
     vue: variant.optional(),
+    angular: variant.optional(),
   } satisfies Record<Framework, z.ZodOptional<V>>);
 }
 

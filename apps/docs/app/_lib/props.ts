@@ -27,6 +27,10 @@ const FRAMEWORK_PROPS: Record<Framework, { dir: string; generate: string }> = {
     dir: path.join(process.cwd(), 'generated', 'vue', 'props'),
     generate: 'generate:vue',
   },
+  angular: {
+    dir: path.join(process.cwd(), 'generated', 'angular', 'props'),
+    generate: 'generate:angular',
+  },
 };
 
 const readPropsJson = cache(

@@ -1,0 +1,12 @@
+/* @nxds/angular component styles.
+ *
+ * Ships UTILITIES ONLY, like @nxds/react: consumers supply the tokens by
+ * importing @nxds/tailwind, so importing this file never re-defines them.
+ */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme) prefix(nx);
+@import 'tailwindcss/utilities.css' layer(utilities) prefix(nx) source(none);
+@source './components';
+@source './lib';
+@reference '@nxds/tailwind';
+@import 'tw-animate-css';

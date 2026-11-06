@@ -2,7 +2,7 @@
   "name": "@nxds/catalog",
   "version": "0.0.2",
   "private": true,
-  "description": "The install catalog the docs read and nxds-cli fetches, built from the React and Vue sources",
+  "description": "The install catalog the docs read and nxds-cli fetches, built from the React, Vue and Angular sources",
   "type": "module",
   "exports": {
     ".": "./scripts/catalog-schema.ts",
@@ -34,6 +34,6 @@
     "@fontsource-variable/playfair-display": "^5.3.0",
     "@types/node": "^25.9.1",
     "@types/semver": "^7.8.0",
-    "typescript": "^5.9.3"
+    "typescript": "~6.0.3"
   }
 }

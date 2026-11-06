@@ -67,14 +67,6 @@ jobs:
           node-version-file: '.nvmrc'
           cache: 'pnpm'
 
-      # `changeset publish` runs `pnpm publish` (pnpm is the detected package
-      # manager), which packs each package then shells out to the system npm to
-      # upload it — so the OIDC trusted-publishing exchange runs in npm, which
-      # must be >= 11.5.1 (newer than the npm bundled with Node 22). Pinned (not
-      # @latest) so the publish path stays reproducible.
-      - name: Upgrade npm for trusted publishing
-        run: npm install -g npm@11.5.1
-
       - name: Install dependencies
         # --ignore-scripts: RELEASE_TOKEN is persisted in .git/config for this
         # job, so keep untrusted third-party dependency lifecycle scripts from
