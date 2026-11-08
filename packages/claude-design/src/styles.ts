@@ -4,7 +4,8 @@
 // misses fails validation instead of falling back to a default here. The
 // appearance presets stay, `.dark` rules also match the page's
 // `data-theme="dark"`, and structural selectors reach through the wrapper the
-// canvas puts around each component.
+// canvas puts around each component. A canvas has no Preflight, so the file
+// carries Preflight's box-sizing rule, the one part of it nxds needs.
 import { createTokenCatalogue } from '@nxds/core/catalogue';
 import { react18Src } from '@nxds/source-model/roots.mjs';
 import { compile } from '@tailwindcss/node';
@@ -29,6 +30,13 @@ const ENTRY = [
 const DARK_CLASS = /(?<![\w\\-])\.dark(?![\w-])/g;
 const DARK_SCOPE = ':is(.dark, [data-theme="dark"])';
 const NXDS_CLASS = /\.nx\\:/;
+// Preflight's own selectors and value, in its layer, so a utility still wins.
+const BOX_SIZING = `@layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    box-sizing: border-box;
+  }
+}
+`;
 /** The selectors that hold a token's default value, before the `.dark` rewrite. */
 const DEFAULT_SELECTORS: ReadonlySet<string> = new Set([':root', '.dark']);
 
@@ -115,6 +123,6 @@ export async function buildStyles() {
     createTokenCatalogue().map((token) => token.name)
   );
   return tolerateCanvasWrappers(
-    moveValuesToTokens(compiler.build(candidates()), tokenNames)
+    moveValuesToTokens(compiler.build(candidates()), tokenNames) + BOX_SIZING
   );
 }

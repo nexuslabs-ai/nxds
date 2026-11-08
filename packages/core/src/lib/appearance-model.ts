@@ -1,10 +1,9 @@
-import typographyTokens from '../../tokens/primitives/typography/typography-default.json';
-
 import { normalizeContrast } from './contrast';
 import type { ThemeDerivationInput, ThemeSeeds } from './derive-theme';
 import type { NxdsSurfaceTone } from './palette';
 import { isColor } from './perceptual-ramp';
 import { inRuntimeLayer } from './runtime-layer';
+import { TYPOGRAPHY_BASE_PX, typographyScale } from './typography-scale';
 
 type ModeSeeds = Pick<ThemeSeeds, 'background' | 'foreground'>;
 
@@ -138,7 +137,7 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
     uiFont: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     headingFont: null,
     codeFont: 'ui-monospace, "SF Mono", Menlo, monospace',
-    uiFontSize: 14,
+    uiFontSize: TYPOGRAPHY_BASE_PX,
     codeFontSize: 12,
     reduceMotion: false,
     pointerCursors: false,
@@ -202,22 +201,10 @@ const clampFontSize = (value: unknown, fallback: number): number =>
     ? Math.min(FONT_SIZE_PX_MAX, Math.max(FONT_SIZE_PX_MIN, value))
     : fallback;
 
-function formatPx(value: number): string {
-  return `${Number(value.toFixed(4))}px`;
-}
-
-function typographyScaleVariables(uiPx: number): string {
-  const scale = uiPx / DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize;
-  const sizeVars = Object.entries(typographyTokens.size).map(
-    ([name, token]) =>
-      `  --nx-typography-size-${name}: ${formatPx(token.$value.value * scale)};`
-  );
-  const lineHeightVars = Object.entries(typographyTokens['line-height']).map(
-    ([name, token]) =>
-      `  --nx-typography-line-height-${name}: ${formatPx(token.$value.value * scale)};`
-  );
-
-  return [...sizeVars, ...lineHeightVars].join('\n');
+function typographyScaleVariables(uiPx: number, codePx: number): string {
+  return [...typographyScale(uiPx, codePx)]
+    .map(([name, value]) => `  ${name}: ${value};`)
+    .join('\n');
 }
 
 // Retired public-mode codename -> friendly, applied to persisted state on read
@@ -296,8 +283,14 @@ export function sanitizeNxdsAppearance(rawInput: unknown): NxdsAppearanceState {
   };
 }
 
+/** The appearance fields runtime colours derive from. */
+export type NxdsColorAppearance = Pick<
+  NxdsAppearanceState,
+  'brandColor' | 'surfaceTone' | 'lightContrast' | 'darkContrast'
+>;
+
 export function createNxdsThemeContract(
-  state: NxdsAppearanceState
+  state: NxdsColorAppearance
 ): ThemeDerivationInput {
   const tone = BASE_TONE_SEEDS[state.surfaceTone];
   return {
@@ -324,8 +317,7 @@ export function appearancePrefsToCss(prefs: NxdsAppearancePrefs): string {
   --nx-typography-family-font-sans: ${prefs.uiFont};
   --nx-typography-family-font-heading: ${prefs.headingFont ?? 'var(--nx-typography-family-font-sans)'};
   --nx-typography-family-font-mono: ${prefs.codeFont};
-  --nx-typography-code-size: ${formatPx(codePx)};
-${typographyScaleVariables(uiPx)}
+${typographyScaleVariables(uiPx, codePx)}
 }`),
   ];
   if (prefs.fontSmoothing) {

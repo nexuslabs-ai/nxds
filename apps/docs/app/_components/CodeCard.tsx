@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { cn } from '@nxds/react/utils';
+import { cn } from '@/lib/utils';
 
 import { getScrollOffset } from '../_lib/scroll-offset';
 
@@ -34,7 +34,7 @@ export function CodeCard({
 
   const returnToCard = () => {
     const card = cardRef.current;
-    if (card && card.getBoundingClientRect().top < getScrollOffset()) {
+    if (card && card.getBoundingClientRect().top < getScrollOffset(card)) {
       card.scrollIntoView({ block: 'start' });
     }
   };

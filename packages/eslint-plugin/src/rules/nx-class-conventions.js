@@ -201,9 +201,17 @@ function leavesIconUnstroked(scope) {
   return classes.some((token) => sizesSvg(token, ANY_SIZE));
 }
 
-// Only `size-icon-glyph-*` sets `--nx-icon-size`, the size the line is drawn for.
+// `size-icon-glyph-*` sets `--nx-icon-size`, the size the line is drawn for. Any
+// other size must set the variable itself, under the same variants.
 function sizesIconWithoutLine(scope) {
-  return nxClasses(scope).some((token) => sizesSvg(token, PLAIN_SIZE));
+  const classes = nxClasses(scope);
+  return classes.some((token) => {
+    if (!sizesSvg(token, PLAIN_SIZE)) return false;
+    const variants = splitVariants(token).slice(0, -1).join(':');
+    return !classes.some((other) =>
+      other.startsWith(`${variants}:[--nx-icon-size:`)
+    );
+  });
 }
 
 function isStoryFile(filename) {
@@ -381,7 +389,7 @@ export default {
       unstrokedIcon:
         'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-icon-glyph-default`), so add `nx:icon-stroke` to draw stroked icons at the icon line width.',
       plainIconSize:
-        'Plain icon size — size `svg` children with a `size-icon-glyph-*` class, so the line matches the icon. `size-*`, `h-*` and `w-*` leave `--nx-icon-size` unset.',
+        'Plain icon size — size `svg` children with a `size-icon-glyph-*` class, so the line matches the icon. `size-*`, `h-*` and `w-*` leave `--nx-icon-size` unset, so set it on the same selector for a size off the scale.',
     },
   },
   create(context) {

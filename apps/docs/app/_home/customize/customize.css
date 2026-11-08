@@ -1,0 +1,52 @@
+/* Customize: the component wall on the canvas and the corner choices in the
+   Radius panel. */
+
+/* Clipped under the bottom fade, like the Gallery wall. */
+@utility component-wall {
+  container: component-wall / inline-size;
+  block-size: 100%;
+  overflow: hidden;
+  scroll-padding-block-end: var(--preview-fade);
+}
+
+@utility component-wall-grid {
+  columns: 1;
+  column-gap: var(--grid-gap);
+  /* Scroll room, so focus can bring the last tiles above the fade. */
+  padding-block-end: var(--preview-fade);
+
+  @container component-wall (min-width: 40rem) {
+    columns: 2;
+  }
+  @container component-wall (min-width: 60rem) {
+    columns: 3;
+  }
+}
+
+@utility component-wall-tile {
+  break-inside: avoid;
+  margin-block-end: var(--grid-gap);
+}
+
+@utility appearance-corner-options {
+  /* Outranks ToggleGroup's own flex row. */
+  &[data-slot='toggle-group'] {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
+  }
+  @container (max-width: 14rem) {
+    &[data-slot='toggle-group'] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+@utility appearance-corner-sample {
+  width: var(--nx-spacing-7);
+  height: var(--nx-spacing-7);
+  background: var(--nx-color-secondary-background);
+  border-top: var(--nx-borderwidth-thick) solid currentColor;
+  border-left: var(--nx-borderwidth-thick) solid currentColor;
+  border-top-left-radius: var(--nx-radius-base);
+}

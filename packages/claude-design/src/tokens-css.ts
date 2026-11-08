@@ -1,10 +1,11 @@
-// tokens.css laid out as the Design System page compiles it, with three
+// tokens.css laid out as the Design System page compiles it, with four
 // changes. The variables sit in the `theme` layer, so the appearance presets
 // in bundle.css and the provider's `nx-runtime` layer override them. `.dark`
 // stands beside each later theme's selector, since nxds switches dark mode
 // with that class. Each text style's class carries the declarations of the
 // `nx:typography-*` utility it mirrors, so it reads the same variables as the
-// components.
+// components. And the Google Fonts families in `meta.fonts` load from one
+// `@import`, so every artboard that links tokens.css gets them.
 import { RUNTIME_LAYER_ORDER } from '@nxds/core';
 
 import {
@@ -15,6 +16,21 @@ import {
 } from './tokens.ts';
 
 const TOKENS_CSS_HEADER = '/* nxds — generated from tokens.json */';
+
+const GOOGLE_FONTS_CSS = 'https://fonts.googleapis.com/css2';
+
+/** The weights nxds sets text in. */
+const FONT_WEIGHTS = '400;500;600;700';
+
+/** The Google Fonts stylesheet that loads `families`, each at nxds's weights. */
+export function googleFontsUrl(families: readonly string[]) {
+  const query = families
+    .map(
+      (family) => `family=${family.replaceAll(' ', '+')}:wght@${FONT_WEIGHTS}`
+    )
+    .join('&');
+  return `${GOOGLE_FONTS_CSS}?${query}&display=swap`;
+}
 
 /** The families tokens.css declares under the theme selectors. */
 const THEMED_FAMILIES = new Set(['color', 'shadow']);
@@ -116,9 +132,11 @@ export function compileTokensCss(
     })
   );
 
+  const fonts = tokens.meta?.fonts ?? [];
   return [
     TOKENS_CSS_HEADER,
     RUNTIME_LAYER_ORDER,
+    ...(fonts.length > 0 ? [`@import url("${googleFontsUrl(fonts)}");`] : []),
     '@layer theme {',
     ...block(`:root, [data-theme="${first}"]`, firstTheme, '  '),
     ...laterThemes,
