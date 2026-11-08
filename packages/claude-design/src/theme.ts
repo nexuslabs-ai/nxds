@@ -96,7 +96,7 @@ const DEFAULT_TITLE = 'nxds';
 // the default, from its height at the default, at 20px and at 8px
 // (scripts/smoke/sampler.ts). Each rounds the way that keeps the page inside
 // its board.
-const SAMPLER_PX_PER_LARGER_TEXT_PX = 50;
+const SAMPLER_PX_PER_LARGER_TEXT_PX = 81;
 const SAMPLER_PX_PER_SMALLER_TEXT_PX = 33;
 
 /** The sampler's `canvas.json` entry with a height that fits its text size. */
