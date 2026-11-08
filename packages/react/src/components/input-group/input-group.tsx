@@ -125,7 +125,7 @@ const inputGroupButtonVariants = cva(
   {
     variants: {
       size: {
-        xs: 'nx:h-6 nx:rounded-sm',
+        xs: 'nx:rounded-sm',
         sm: 'nx:h-8',
       },
       iconOnly: {
@@ -138,14 +138,14 @@ const inputGroupButtonVariants = cva(
         iconOnly: false,
         size: 'xs',
         className:
-          'nx:gap-1 nx:px-2 nx:has-[>svg]:px-2 nx:[&>svg]:size-icon-glyph-sm',
+          'nx:h-auto nx:min-h-6 nx:gap-1 nx:px-2 nx:has-[>svg]:px-2 nx:[&>svg]:size-icon-glyph-sm',
       },
       {
         iconOnly: false,
         size: 'sm',
         className: 'nx:gap-1.5 nx:rounded-md nx:px-2.5 nx:has-[>svg]:px-2.5',
       },
-      { iconOnly: true, size: 'xs', className: 'nx:w-6' },
+      { iconOnly: true, size: 'xs', className: 'nx:size-6' },
       { iconOnly: true, size: 'sm', className: 'nx:w-8' },
     ],
     defaultVariants: {

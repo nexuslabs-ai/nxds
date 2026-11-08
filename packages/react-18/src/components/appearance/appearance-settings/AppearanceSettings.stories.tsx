@@ -220,6 +220,18 @@ export const HeadingFont: Story = {
   },
 };
 
+export const FontNamesInCodeFont: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const name of ['UI font', 'Heading font', 'Code font']) {
+      const style = getComputedStyle(canvas.getByRole('textbox', { name }));
+      await expect(style.fontFamily).toBe(
+        style.getPropertyValue('--nx-typography-family-font-mono').trim()
+      );
+    }
+  },
+};
+
 export const LayoutModeOptions: Story = {
   play: async ({ canvasElement }) => {
     await expectSelectOptions(

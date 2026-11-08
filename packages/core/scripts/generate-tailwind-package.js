@@ -38,6 +38,7 @@ import {
   generateSpacingModesCSS,
   generateSpacingRoleUtilitiesCSS,
   generateSurfaceUtilitiesCSS,
+  generateTargetUtilitiesCSS,
   generateThemeCSS,
   generateThemedModesCSS,
   generateTypographyUtilitiesCSS,
@@ -473,6 +474,7 @@ function generateNxdsCSS(
   css += generateNativeBrowserUIThemeCSS();
   css += generateAutofillUtilitiesCSS();
   css += generateSurfaceUtilitiesCSS();
+  css += generateTargetUtilitiesCSS();
 
   return css;
 }

@@ -392,6 +392,27 @@ export const SizeAtEveryDensity: Story = {
   },
 };
 
+export const TargetArea: Story = {
+  render: () => ({
+    components: { RadioGroup, RadioGroupItem },
+    template: `
+      <RadioGroup aria-label="Plan">
+        <RadioGroupItem value="team" aria-label="Team" />
+      </RadioGroup>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const control = within(canvasElement).getByRole('radio');
+    const box = control.getBoundingClientRect();
+    const middle = box.top + box.height / 2;
+    // A press 3px outside the 16px circle still lands on its 24px target.
+    await expect(document.elementFromPoint(box.left - 3, middle)).toBe(control);
+    await expect(document.elementFromPoint(box.right + 3, middle)).toBe(
+      control
+    );
+  },
+};
+
 export const VModel: Story = {
   render: () => ({
     components: { Label, RadioGroup, RadioGroupItem },

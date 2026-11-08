@@ -71,7 +71,7 @@ export function NxdsAppearanceColorField({
         aria-label={`${label} hex value`}
         aria-invalid={normalizeHex(draft) === null}
         spellCheck={false}
-        className="nx:w-28 nx:font-mono nx:uppercase"
+        className="nx:w-28 nx:typography-code-block nx:uppercase"
       />
     </div>
   );

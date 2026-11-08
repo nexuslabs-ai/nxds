@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { ref } from 'vue';
 
+import { expectMenuItemInsetAtEveryDensity } from '../../stories/support/menu-item-inset-test-utils';
 import {
   expectExitBeforeUnmount,
   expectInterruptibleOverlayMotion,
@@ -465,6 +466,50 @@ const threeItemMenu = (labels: [string, string, string]) => () => ({
     </DropdownMenu>
   `,
 });
+
+export const CheckInsetAtEveryDensity: Story = {
+  render: () => ({
+    components: {
+      Button,
+      DropdownMenu,
+      DropdownMenuCheckboxItem,
+      DropdownMenuContent,
+      DropdownMenuItem,
+      DropdownMenuLabel,
+      DropdownMenuTrigger,
+    },
+    template: `
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button variant="outline">View</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent class="nx:w-56">
+          <DropdownMenuLabel inset>Appearance</DropdownMenuLabel>
+          <DropdownMenuCheckboxItem :model-value="true">Status bar</DropdownMenuCheckboxItem>
+          <DropdownMenuItem inset>Reset view</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'View' }));
+    const menu = await within(document.body).findByRole('menu');
+    const item = within(menu).getByRole('menuitemcheckbox', {
+      name: 'Status bar',
+    });
+    const check = item.querySelector<HTMLElement>(
+      '[data-slot="dropdown-menu-checkbox-indicator"]'
+    )!.parentElement!;
+    await expectMenuItemInsetAtEveryDensity(menu, item, check, [
+      within(menu).getByRole('menuitem', { name: 'Reset view' }),
+      within(menu).getByText('Appearance'),
+    ]);
+
+    await userEvent.keyboard('{Escape}');
+    await expectExitBeforeUnmount(menu);
+  },
+};
 
 export const OpenCloseInteraction: Story = {
   render: threeItemMenu(['Item 1', 'Item 2', 'Item 3']),

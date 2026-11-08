@@ -4,6 +4,7 @@ import { DENSITY_OPTIONS } from '@nxds/core';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
+import { expectInsideBorder } from '../../stories/support/story-height-test-utils';
 import { Label } from '../label/label';
 
 import { Checkbox } from './checkbox';
@@ -354,6 +355,7 @@ export const WithDataAttributes: Story = {
 };
 
 const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
+const STROKES = ['fine', 'normal', 'strong'] as const;
 
 export const SizeAtEveryDensity: Story = {
   render: () => (
@@ -382,17 +384,82 @@ export const SizeAtEveryDensity: Story = {
       // The control keeps its Default size at every density.
       await expect(width(control)).toBe(reference);
       // The mark stays inside the border.
-      const mark = control
-        .querySelector('[data-slot="checkbox-check"]')!
-        .getBoundingClientRect();
-      const box = control.getBoundingClientRect();
-      const top = box.top + control.clientTop;
-      const left = box.left + control.clientLeft;
-      await expect(mark.top).toBeGreaterThanOrEqual(top);
-      await expect(mark.bottom).toBeLessThanOrEqual(top + control.clientHeight);
-      await expect(mark.left).toBeGreaterThanOrEqual(left);
-      await expect(mark.right).toBeLessThanOrEqual(left + control.clientWidth);
+      await expectInsideBorder(
+        control.querySelector('[data-slot="checkbox-check"]')!,
+        control
+      );
     }
+  },
+};
+
+export const MarkAtEveryStroke: Story = {
+  render: () => (
+    <div className="nx:flex nx:flex-col nx:gap-3">
+      {STROKES.map((stroke) => (
+        <div
+          key={stroke}
+          data-borderwidth={stroke}
+          data-testid={`row-${stroke}`}
+          className="nx:flex nx:items-center nx:gap-3"
+        >
+          <Checkbox defaultChecked aria-label={`Checked, ${stroke}`} />
+          <Checkbox
+            defaultChecked="indeterminate"
+            aria-label={`Partly checked, ${stroke}`}
+          />
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const stroke of STROKES) {
+      const controls = within(canvas.getByTestId(`row-${stroke}`)).getAllByRole(
+        'checkbox'
+      );
+      // The check and the minus stay inside the border at every stroke.
+      for (const control of controls) {
+        await expectInsideBorder(
+          control.querySelector('[data-slot="checkbox-check"]')!,
+          control
+        );
+        await expectInsideBorder(
+          control.querySelector('[data-slot="checkbox-minus"]')!,
+          control
+        );
+        // Each mark draws the line for the box less its two borders.
+        const box = getComputedStyle(control);
+        const markSize =
+          parseFloat(box.width) -
+          2 * parseFloat(box.getPropertyValue('--nx-borderwidth-default'));
+        for (const mark of control.querySelectorAll('svg')) {
+          const style = getComputedStyle(mark);
+          const base = parseFloat(
+            style.getPropertyValue('--nx-icon-stroke-base')
+          );
+          const ratio = parseFloat(
+            style.getPropertyValue('--nx-icon-stroke-ratio')
+          );
+          await expect(parseFloat(style.strokeWidth)).toBeCloseTo(
+            base + markSize * ratio
+          );
+        }
+      }
+    }
+  },
+};
+
+export const TargetArea: Story = {
+  render: () => <Checkbox aria-label="Accept terms" />,
+  play: async ({ canvasElement }) => {
+    const control = within(canvasElement).getByRole('checkbox');
+    const box = control.getBoundingClientRect();
+    const middle = box.top + box.height / 2;
+    // A press 3px outside the 16px box still lands on its 24px target.
+    await expect(document.elementFromPoint(box.left - 3, middle)).toBe(control);
+    await expect(document.elementFromPoint(box.right + 3, middle)).toBe(
+      control
+    );
   },
 };
 

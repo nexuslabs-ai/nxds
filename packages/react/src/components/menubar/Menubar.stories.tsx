@@ -3,6 +3,7 @@ import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { expectMenuItemInsetAtEveryDensity } from '../../stories/support/menu-item-inset-test-utils';
 import {
   expectExitBeforeUnmount,
   expectInterruptibleOverlayMotion,
@@ -319,6 +320,39 @@ export const WithInsetItems: Story = {
 // ============================================
 // INTERACTION TESTS
 // ============================================
+
+export const CheckInsetAtEveryDensity: Story = {
+  render: (_args) => (
+    <Menubar>
+      <MenubarMenu>
+        <MenubarTrigger>View</MenubarTrigger>
+        <MenubarContent className="nx:w-56">
+          <MenubarLabel inset>Appearance</MenubarLabel>
+          <MenubarCheckboxItem checked>Status bar</MenubarCheckboxItem>
+          <MenubarItem inset>Reset view</MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+    </Menubar>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('menuitem', { name: 'View' }));
+    const menu = await within(document.body).findByRole('menu');
+    const item = within(menu).getByRole('menuitemcheckbox', {
+      name: 'Status bar',
+    });
+    const check = item.querySelector<HTMLElement>(
+      '[data-slot="menubar-checkbox-indicator"]'
+    )!.parentElement!;
+    await expectMenuItemInsetAtEveryDensity(menu, item, check, [
+      within(menu).getByRole('menuitem', { name: 'Reset view' }),
+      within(menu).getByText('Appearance'),
+    ]);
+
+    await userEvent.keyboard('{Escape}');
+    await expectExitBeforeUnmount(menu);
+  },
+};
 
 export const OpenCloseInteraction: Story = {
   render: (_args) => (
