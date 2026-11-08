@@ -60,7 +60,7 @@ const toasterIcons = {
   loading: (
     <IconLoader2 className="nx:size-icon-glyph-default nx:animate-spin" />
   ),
-  close: <IconX className="nx:size-icon-glyph-xs nx:icon-stroke" />,
+  close: <IconX className="nx:size-icon-glyph-xs" />,
 };
 
 /**
@@ -152,13 +152,16 @@ type ToasterProps = Omit<SonnerToasterProps, 'id'>;
  * `toast()` from anywhere. It follows the `.dark` class, or `data-theme="dark"`,
  * on the document root for dark mode.
  */
-function Toaster({ style, ...props }: ToasterProps) {
+function Toaster({ style, icons, ...props }: ToasterProps) {
   const theme = useToasterTheme();
   return (
-    <div data-slot="toaster" className="nx:[&_[data-icon]]:icon-stroke">
+    <div
+      data-slot="toaster"
+      className="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke"
+    >
       <Sonner
         theme={theme}
-        icons={toasterIcons}
+        icons={{ ...toasterIcons, ...icons }}
         style={
           {
             ...toasterThemeVars,

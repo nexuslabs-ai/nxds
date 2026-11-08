@@ -114,7 +114,10 @@ const forwarded = computed(
 </script>
 
 <template>
-  <div data-slot="toaster" class="nx:[&_[data-icon]]:icon-stroke">
+  <div
+    data-slot="toaster"
+    class="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke"
+  >
     <Sonner
       v-bind="forwarded"
       :id="NXDS_TOASTER_ID"
@@ -136,9 +139,7 @@ const forwarded = computed(
       <template #loading-icon
         ><IconLoader2 class="nx:size-icon-glyph-default nx:animate-spin"
       /></template>
-      <template #close-icon
-        ><IconX class="nx:size-icon-glyph-xs nx:icon-stroke"
-      /></template>
+      <template #close-icon><IconX class="nx:size-icon-glyph-xs" /></template>
     </Sonner>
   </div>
 </template>
