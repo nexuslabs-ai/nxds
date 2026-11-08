@@ -1,5 +1,31 @@
 # nxds-cli
 
+## 0.7.0
+
+### Minor Changes
+
+- c004e3a: `nxds-cli export claude-design` takes the `init` theme flags, except `--mode` and `--icons`, and exports a system in that theme: its colours, presets, type scale, code size and fonts. Curated fonts load from Google Fonts through tokens.css. The system records its theme in `design-system.json`, so an update with `--index` keeps it. Passed flags change only the parts they name, and an empty one, such as `--density=`, resets it. Default code text in the export is 12px, as in apps.
+
+  `createTokenCatalogue` takes the appearance fields it uses: the brand colour, surface tone, contrasts, and UI and code font sizes.
+
+  Code text reads `--nx-typography-size-code`, 12px by default. `nx:typography-code-block` and `nx:typography-code-inline` are 12px without the provider too, and the code font size pref sets the variable. `nx:font-mono` sets only the font family, so mono text takes its size from its own text style.
+
+## 0.6.1
+
+### Patch Changes
+
+- 822919d: The sampler is now a sales dashboard shipped as `nxds-sampler.dc.html` beside `SETUP.md`, so it shows as an artboard on a Claude Design canvas. Claude puts the file on the canvas unchanged and adds its `canvas.json` entry. Switch its `mode` tweak to `dark` to check the dark theme. `Label`, `ChoiceRow` and `ChoiceCard` now list `htmlFor`, so a canvas can link a label to its control. A release's `files.json` now lists the files beside `project/` with their hashes too, and `nxds-cli` copies only what it lists. When a release drops a root file you edited, `nxds-cli` keeps it, lists it in the `--json` output's `data.kept`, and exits 3.
+
+## 0.6.0
+
+### Minor Changes
+
+- 6da5b6b: Set up nxds on a Claude Design canvas from one prompt in a Claude chat.
+  - The export writes `SETUP.md` beside `project/`. It walks Claude through publishing the system, installing it on a canvas, checking it and updating it to a new release. It isn't part of the published system.
+  - `SETUP.md` ships a sampler artboard that writes every attribute form a canvas reads. Claude builds it to check the install.
+  - `export claude-design` writes `SETUP.md` and `coverage.md` beside `project/`, and removes an earlier copy the release doesn't have. `--json` reports their paths in `data.root`.
+  - `export claude-design` ends by telling Claude to read `SETUP.md` and follow it.
+
 ## 0.5.0
 
 ### Minor Changes

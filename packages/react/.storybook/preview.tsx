@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   BASE_TONE_OPTIONS,
+  BRAND_COLOR_PRESETS,
   CORNER_OPTIONS,
   DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
@@ -343,6 +344,18 @@ const preview: Preview = {
           value: option.value,
           icon: option.icon,
           title: option.label,
+        })),
+        dynamicTitle: true,
+      },
+    },
+    brandColor: {
+      name: 'Primary',
+      description: 'Primary brand color',
+      toolbar: {
+        icon: 'circle',
+        items: BRAND_COLOR_PRESETS.map(({ color, label }) => ({
+          value: color,
+          title: label,
         })),
         dynamicTitle: true,
       },

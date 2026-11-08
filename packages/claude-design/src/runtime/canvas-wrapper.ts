@@ -4,12 +4,28 @@ import { CANVAS_WRAPPER_CLASS } from './canvas-names.ts';
 
 type WrapperProps = { className?: unknown; children?: React.ReactNode };
 
-/** x-import content without its indentation: a canvas passes it as an array, even for one child, and keeps the space between tags as strings. */
+// JSX's rule for text: whitespace that touches a line break goes, and the
+// lines left join with a space. Text that is all indentation becomes "". A
+// space between two elements on one line stays.
+function jsxText(text: string) {
+  const lines = text.split(/\r\n|\n|\r/);
+  if (lines.length === 1) return text;
+  return lines
+    .map((line, index) => {
+      const start = index === 0 ? line : line.replace(/^[ \t]+/, '');
+      return index === lines.length - 1 ? start : start.replace(/[ \t]+$/, '');
+    })
+    .filter((line) => line !== '')
+    .join(' ');
+}
+
+/** x-import content as JSX reads it: a canvas passes it as an array, even for one child, and keeps the indentation around and inside text. */
 export function withoutIndentation(children: React.ReactNode): React.ReactNode {
   if (!Array.isArray(children)) return children;
-  const content = children.filter(
-    (child) => typeof child !== 'string' || child.trim() !== ''
-  );
+  const content = children
+    .map((child) => (typeof child === 'string' ? jsxText(child) : child))
+    .filter((child) => child !== '');
+  if (content.length === 0) return undefined;
   return content.length === 1 ? content[0] : content;
 }
 

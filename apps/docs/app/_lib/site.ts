@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 
 export const SITE_URL = 'https://nxds.dev';
 export const SITE_NAME = 'nxds';
+/** The brand line in the site header, menu and footer. */
+export const SITE_BRAND = 'Nexus Design System';
 export const SITE_ALTERNATE_NAMES = [
   'nxds design system',
   'Nexus UI',
@@ -14,6 +16,9 @@ export const SITE_DESCRIPTION =
 export const REPO_URL = 'https://github.com/nexuslabs-ai/nxds';
 export const STORYBOOK_URL = 'https://storybook.nxds.dev';
 export const NPM_CORE_URL = 'https://www.npmjs.com/package/@nxds/core';
+export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
+export const DISCORD_URL = 'https://discord.gg/PTT5JFyhHw';
+export const X_URL = 'https://x.com/nxdsdev';
 
 export const OG_IMAGE_SIZE = { width: 1200, height: 630 };
 

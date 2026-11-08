@@ -32,7 +32,7 @@ const orientation = computed(() =>
     :orientation="orientation"
     :class="
       cn(
-        'nx:shrink-0 nx:bg-border-default nx:data-[orientation=vertical]:h-5 nx:data-[orientation=vertical]:w-px nx:data-[orientation=horizontal]:h-px nx:data-[orientation=horizontal]:w-full',
+        'nx:shrink-0 nx:bg-border-default nx:data-[orientation=vertical]:my-1.5 nx:data-[orientation=vertical]:w-px nx:data-[orientation=vertical]:self-stretch nx:data-[orientation=horizontal]:h-px nx:data-[orientation=horizontal]:w-full',
         props.class
       )
     "

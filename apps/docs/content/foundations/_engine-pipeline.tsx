@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { cn } from '@nxds/react/utils';
+import { cn } from '@/lib/utils';
 
 function Stage({
   title,

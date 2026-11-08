@@ -1,6 +1,6 @@
 {
   "name": "@nxds/docs",
-  "version": "0.0.24",
+  "version": "0.0.32",
   "private": true,
   "type": "module",
   "description": "Documentation site for the nxds design system",
@@ -56,6 +56,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-hook-form": "^7.77.0",
+    "recharts": "^3.8.1",
     "rehype-pretty-code": "^0.14.5",
     "rehype-slug": "^6.0.0",
     "remark-gfm": "^4.0.1",

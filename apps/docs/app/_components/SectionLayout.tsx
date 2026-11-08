@@ -12,7 +12,7 @@ export function SectionLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="nx:grid nx:gap-8 nx:max-w-[1280px] nx:mx-auto nx:px-6 nx:py-8 nx:pb-16 nx:grid-cols-1 nx:lg:grid-cols-[220px_minmax(0,1fr)_200px]">
+    <div className="nx:site-column nx:grid nx:gap-8 nx:py-8 nx:pb-16 nx:grid-cols-1 nx:lg:grid-cols-[220px_minmax(0,1fr)_200px]">
       <LeftRail section={section} />
       <article id={DOCS_ARTICLE_ID} className="nx:min-w-0">
         {children}
