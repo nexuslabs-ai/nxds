@@ -1,3 +1,5 @@
+import { type ExtractedToken, extractRefPath, isReference } from './tokens.ts';
+import type { TokenValue } from './types.ts';
 import type { UtilityRule } from './utilities.ts';
 
 /** Matches a per-mode spacing file in `semantic/`, capturing the mode name. */
@@ -25,6 +27,29 @@ export function spacingTokenKind(
   throw new Error(
     `spacingTokenKind: unknown top-level key "${root}" in path [${tokenPath.join('.')}] — extend SPACING_NUMERIC_ROOTS / SPACING_ROLE_ROOTS`
   );
+}
+
+/**
+ * The value a spacing token has in its density file: its own, or for a
+ * `{spacing.N}` reference, step N's value in the same file. Throws if the
+ * reference names anything but a step with a value of its own.
+ */
+export function spacingValue(
+  token: ExtractedToken,
+  fileTokens: readonly ExtractedToken[]
+): TokenValue {
+  if (!isReference(token.value)) return token.value;
+  const reference = extractRefPath(token.value);
+  const step = fileTokens.find(
+    ({ path }) =>
+      path.join('.') === reference && spacingTokenKind(path) === 'numeric'
+  );
+  if (!step || isReference(step.value)) {
+    throw new Error(
+      `spacingValue: ${token.path.join('.')} references {${reference}}, which is not a spacing step with a value`
+    );
+  }
+  return step.value;
 }
 
 export function splitSpacingTokens<T extends { path: readonly string[] }>(

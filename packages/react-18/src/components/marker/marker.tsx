@@ -93,7 +93,7 @@ const MarkerIcon = React.forwardRef<
       data-slot="marker-icon"
       aria-hidden="true"
       className={cn(
-        'nx:inline-flex nx:size-4 nx:shrink-0 nx:items-center nx:justify-center',
+        'nx:inline-flex nx:size-icon-glyph-default nx:shrink-0 nx:items-center nx:justify-center',
         className
       )}
       {...props}

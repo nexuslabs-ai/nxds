@@ -271,7 +271,7 @@ function MenubarCheckboxItem({
       checked={checked}
       {...props}
     >
-      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-3.5 nx:items-center nx:justify-center">
+      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-icon-glyph-default nx:items-center nx:justify-center">
         <MenubarPrimitive.ItemIndicator
           forceMount
           data-slot="menubar-checkbox-indicator"
@@ -321,7 +321,7 @@ function MenubarRadioItem({
       )}
       {...props}
     >
-      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-3.5 nx:items-center nx:justify-center">
+      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-icon-glyph-default nx:items-center nx:justify-center">
         <MenubarPrimitive.ItemIndicator
           forceMount
           data-slot="menubar-radio-indicator"
@@ -330,7 +330,7 @@ function MenubarRadioItem({
             data-slot="menubar-radio-indicator-icon"
             aria-hidden="true"
             className={cn(
-              'nx:size-2',
+              'nx:size-[8px]',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
             )}

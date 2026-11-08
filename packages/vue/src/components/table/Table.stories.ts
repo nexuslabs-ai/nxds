@@ -667,7 +667,7 @@ export const SortableHeader: Story = {
                 type="button"
                 class="nx:ml-auto nx:inline-flex nx:items-center nx:gap-1 nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default"
                 @click="sort = sort === 'asc' ? 'desc' : 'asc'"
-              >Amount<component :is="sort === 'asc' ? PhCaretUp : PhCaretDown" class="nx:size-4" aria-hidden="true" /></button>
+              >Amount<component :is="sort === 'asc' ? PhCaretUp : PhCaretDown" class="nx:size-icon-glyph-default" aria-hidden="true" /></button>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -1469,7 +1469,7 @@ const DataTableRecipeDemo = defineComponent({
                   @click="toggleSort"
                 >
                   Amount
-                  <component :is="sortIcon" class="nx:size-4" aria-hidden="true" />
+                  <component :is="sortIcon" class="nx:size-icon-glyph-default" aria-hidden="true" />
                 </button>
               </TableHead>
             </TableRow>
@@ -1592,7 +1592,7 @@ const SortableRecipeHead = defineComponent({
         @click="$emit('sort', sortKey)"
       >
         {{ label }}
-        <component :is="sortIcon" :class="isActive ? 'nx:size-4' : 'nx:size-4 nx:opacity-40'" aria-hidden="true" />
+        <component :is="sortIcon" :class="isActive ? 'nx:size-icon-glyph-default' : 'nx:size-icon-glyph-default nx:opacity-40'" aria-hidden="true" />
       </button>
     </TableHead>
   `,
@@ -1852,7 +1852,7 @@ const DataTableErrorRows = defineComponent({
       <TableRow>
         <TableCell :colspan="3" class="nx:py-8 nx:text-center nx:text-muted-foreground">
           <div class="nx:flex nx:flex-col nx:items-center nx:gap-3">
-            <PhWarningCircle aria-hidden="true" class="nx:size-5" />
+            <PhWarningCircle aria-hidden="true" class="nx:size-[20px]" />
             <span>{{ retried ? 'Retry queued.' : 'Could not load invoices.' }}</span>
             <Button size="sm" variant="secondary" aria-label="Retry loading invoices" @click="retried = true">Retry</Button>
           </div>

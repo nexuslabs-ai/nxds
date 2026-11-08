@@ -53,7 +53,10 @@ export const AllIcons: Story = {
               const Icon = ICON_SETS[library.value][name];
               return (
                 <td key={library.value} className="nx:p-2 nx:text-center">
-                  <Icon aria-hidden="true" className="nx:size-4" />
+                  <Icon
+                    aria-hidden="true"
+                    className="nx:size-icon-glyph-default"
+                  />
                 </td>
               );
             })}

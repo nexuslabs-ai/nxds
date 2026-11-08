@@ -889,7 +889,7 @@ function SidebarMenuSkeleton({
       {showIcon && (
         <Skeleton
           data-slot="sidebar-menu-skeleton-icon"
-          className="nx:size-4 nx:rounded-md"
+          className="nx:size-icon-glyph-default nx:rounded-md"
         />
       )}
       <Skeleton

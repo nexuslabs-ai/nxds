@@ -303,7 +303,7 @@ const ContextMenuCheckboxItem = React.forwardRef<
       checked={checked}
       {...props}
     >
-      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-3.5 nx:items-center nx:justify-center">
+      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-icon-glyph-default nx:items-center nx:justify-center">
         <ContextMenuPrimitive.ItemIndicator
           forceMount
           data-slot="context-menu-checkbox-indicator"
@@ -364,7 +364,7 @@ const ContextMenuRadioItem = React.forwardRef<
       )}
       {...props}
     >
-      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-3.5 nx:items-center nx:justify-center">
+      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-icon-glyph-default nx:items-center nx:justify-center">
         <ContextMenuPrimitive.ItemIndicator
           forceMount
           data-slot="context-menu-radio-indicator"
@@ -373,7 +373,7 @@ const ContextMenuRadioItem = React.forwardRef<
             data-slot="context-menu-radio-indicator-icon"
             aria-hidden="true"
             className={cn(
-              'nx:size-2',
+              'nx:size-[8px]',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
             )}
