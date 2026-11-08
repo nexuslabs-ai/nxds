@@ -95,7 +95,7 @@ function changeOperator(operator: FilterOperator) {
             <component
               :is="fieldTypeIcons[field.type]"
               aria-hidden="true"
-              class="nx:size-3.5 nx:shrink-0 nx:text-muted-foreground"
+              class="nx:size-icon-glyph-sm nx:shrink-0 nx:text-muted-foreground"
             />
           </template>
         </Picker>

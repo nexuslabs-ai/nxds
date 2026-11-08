@@ -246,7 +246,7 @@ const PaginationEllipsis = React.forwardRef<
       )}
       {...props}
     >
-      <IconDots className="nx:size-4" />
+      <IconDots className="nx:size-icon-glyph-default nx:icon-stroke" />
       <span className="nx:sr-only">More pages</span>
     </span>
   );

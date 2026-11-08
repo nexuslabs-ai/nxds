@@ -15,6 +15,7 @@
 @import './borderwidth-utilities.css';
 @import './border-color-aliases.css';
 @import './motion-utilities.css';
+@import './icon-utilities.css';
 @import './spacing-utilities.css';
 
 @custom-variant dark (&:is(.dark *));

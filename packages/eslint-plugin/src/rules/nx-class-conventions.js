@@ -105,6 +105,73 @@ function fadesItsFocusRing(scope) {
   );
 }
 
+/** Splits a class at the `:` separators outside `[…]` and `(…)`. */
+function classSegments(className) {
+  const parts = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < className.length; i++) {
+    const char = className[i];
+    if (char === '[' || char === '(') depth++;
+    else if (char === ']' || char === ')') depth--;
+    else if (char === ':' && depth === 0) {
+      parts.push(className.slice(start, i));
+      start = i + 1;
+    }
+  }
+  parts.push(className.slice(start));
+  return parts;
+}
+
+// An arbitrary variant whose subject is a child `svg`, such as `[&_svg]` or
+// `[&>svg:not([class*='size-'])]`. Nested groups are dropped first, so in
+// `[&:has(svg)]` the subject is the box around the icon.
+function selectsChildSvg(variant) {
+  if (!variant.startsWith('[') || !variant.endsWith(']')) return false;
+  let depth = 0;
+  let selector = '';
+  for (const char of variant.slice(1, -1)) {
+    if (char === '[' || char === '(') depth++;
+    else if (char === ']' || char === ')') depth--;
+    else if (depth === 0) selector += char;
+  }
+  return /^svg(?![\w-])/.test(selector.split(/[_>+~]/).at(-1));
+}
+
+// The sizing utilities a class list applies to its `svg` children, each with
+// its variants: `nx:[&_svg]:size-4` gives `{ variants: '[&_svg]', utility: 'size-4' }`.
+function svgChildSizes(classes) {
+  return classes.flatMap((token) => {
+    if (!token.startsWith('nx:')) return [];
+    const parts = classSegments(token.slice('nx:'.length));
+    const utility = parts.pop();
+    if (!/^(?:size|h|w)-/.test(utility)) return [];
+    if (!parts.some(selectsChildSvg)) return [];
+    return [{ variants: parts.join(':'), utility }];
+  });
+}
+
+// A class list that sizes its `svg` children draws the icon, so it sets the
+// icon's line with `nx:icon-stroke` too.
+function leavesIconUnstroked(scope) {
+  const classes = scope.split(/\s+/);
+  if (classes.includes('nx:icon-stroke')) return false;
+  return svgChildSizes(classes).length > 0;
+}
+
+// `size-icon-glyph-*` sets `--nx-icon-size`, the size the line is drawn for. Any
+// other size must set the variable itself, under the same variants.
+function sizesIconWithoutLine(scope) {
+  const classes = scope.split(/\s+/);
+  return svgChildSizes(classes).some(
+    ({ variants, utility }) =>
+      !utility.startsWith('size-icon-glyph-') &&
+      !classes.some((token) =>
+        token.startsWith(`nx:${variants}:[--nx-icon-size:`)
+      )
+  );
+}
+
 function isStoryFile(filename) {
   return /\.stories\.[jt]sx?$/.test(filename);
 }
@@ -255,7 +322,7 @@ export default {
     type: 'problem',
     docs: {
       description:
-        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, and no ring-fading `transition-colors` on a focus-ring surface.',
+        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, no ring-fading `transition-colors` on a focus-ring surface, and no sized `svg` children without `nx:icon-stroke`.',
     },
     schema: [],
     messages: {
@@ -277,6 +344,10 @@ export default {
         'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
+      unstrokedIcon:
+        'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-icon-glyph-default`), so add `nx:icon-stroke` to draw stroked icons at the icon line width.',
+      plainIconSize:
+        'Plain icon size — size `svg` children with a `size-icon-glyph-*` class, so the line matches the icon. `size-*`, `h-*` and `w-*` leave `--nx-icon-size` unset, so set it on the same selector for a size off the scale.',
     },
   },
   create(context) {
@@ -290,13 +361,21 @@ export default {
     }
 
     function reportScope(node) {
-      if (isDocsSpecimenPage(filename) || isInsideClassCall(node)) {
+      if (isInsideClassCall(node)) {
         return;
       }
       const collected = [];
       collectClassStrings(node, visitorKeys, collected);
-      if (fadesItsFocusRing(collected.join(' '))) {
+      const scope = collected.join(' ');
+      if (!isDocsSpecimenPage(filename) && fadesItsFocusRing(scope)) {
         context.report({ node, messageId: 'ringFadingTransition' });
+      }
+      if (isExampleFile(filename)) return;
+      if (leavesIconUnstroked(scope)) {
+        context.report({ node, messageId: 'unstrokedIcon' });
+      }
+      if (sizesIconWithoutLine(scope)) {
+        context.report({ node, messageId: 'plainIconSize' });
       }
     }
 

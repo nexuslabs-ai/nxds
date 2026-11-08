@@ -24,6 +24,15 @@ export const NXDS_THEME_SCALES = {
  * each one extends, so a conflicting pair collapses to last-wins in `cn()`.
  */
 export const NXDS_CLASS_GROUPS = {
+  size: [
+    'size-icon-glyph-xs',
+    'size-icon-glyph-sm',
+    'size-icon-glyph-default',
+    'size-icon-glyph-lg',
+    'size-icon-glyph-xl',
+  ],
+  // Strokes the icons inside, so the element's own `stroke-*` must not drop it.
+  'icon-stroke': ['icon-stroke'],
   animate: ['animate-overlay-presence-exit'],
   duration: [
     'duration-0',
@@ -182,6 +191,7 @@ export const NXDS_CLASS_GROUPS = {
   Record<
     | DefaultClassGroupIds
     | 'typography'
+    | 'icon-stroke'
     | 'autofill-bg'
     | 'autofill-text'
     | 'surface',

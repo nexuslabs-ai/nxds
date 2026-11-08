@@ -43,6 +43,7 @@ const LIST_FAMILY_KEYS = [
   'borderWidth',
   'zIndex',
   'motion',
+  'icon',
   'typeScale',
 ] as const;
 

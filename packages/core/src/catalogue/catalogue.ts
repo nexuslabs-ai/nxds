@@ -29,6 +29,7 @@ import {
   borderWidthAliasUtilities,
   DEFAULT_TRANSITION,
   durationUtility,
+  iconUtility,
 } from '../token-source/utilities';
 
 import { RUNTIME_COLOR_DESCRIPTIONS } from './descriptions';
@@ -47,12 +48,19 @@ import type {
 
 type PrimitiveFamily = Extract<
   CatalogueFamily,
-  'borderwidth' | 'color' | 'motion' | 'radius' | 'shadow' | 'typography'
+  | 'borderwidth'
+  | 'color'
+  | 'icon'
+  | 'motion'
+  | 'radius'
+  | 'shadow'
+  | 'typography'
 >;
 
 const PRIMITIVE_FAMILIES: readonly PrimitiveFamily[] = [
   'borderwidth',
   'color',
+  'icon',
   'motion',
   'radius',
   'shadow',
@@ -300,6 +308,7 @@ function primitiveAliases(
   path: readonly string[]
 ): CatalogueAlias[] {
   const key = path.join('-');
+  if (family === 'icon') return [utility(iconUtility(path).name)];
   if (family === 'radius') return [cssVariable(`--radius-${key}`)];
   if (family === 'borderwidth') {
     return [

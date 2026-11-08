@@ -23,6 +23,8 @@ import {
   borderWidthAliasUtilities,
   DEFAULT_TRANSITION,
   durationUtility,
+  ICON_STROKE_UTILITY,
+  iconSizeUtility,
 } from '../src/token-source/utilities.ts';
 
 /**
@@ -382,12 +384,19 @@ export function generateTypographyUtilitiesCSS(tokensDir, primitiveMap) {
  * @param {import('../src/token-source/utilities.ts').UtilityRule} rule
  * @returns {string}
  */
-function formatUtilityRule({ name, declarations }) {
-  let css = `@utility ${name} {\n`;
-  for (const { property, value } of declarations) {
-    css += `  ${property}: ${value};\n`;
-  }
-  return `${css}}\n\n`;
+function formatUtilityRule({ name, selectors, declarations }) {
+  const declarationLines = declarations
+    .map(({ property, value }) => `${property}: ${value};`)
+    .join('\n');
+  const body = selectors
+    ? `${selectors.join(',\n')} {\n${indentLines(declarationLines)}\n}`
+    : declarationLines;
+  return `@utility ${name} {\n${indentLines(body)}\n}\n\n`;
+}
+
+/** `text` with every line indented by two spaces. */
+function indentLines(text) {
+  return text.replace(/^/gm, '  ');
 }
 
 /**
@@ -411,6 +420,26 @@ export function generateBorderWidthUtilitiesCSS(tokens) {
   css += rules.map(formatUtilityRule).join('');
 
   return { css, count: rules.length };
+}
+
+/**
+ * Generate the icon utilities: `size-icon-{name}` for each glyph size, and
+ * `icon-stroke`, which draws the line from the two stroke tokens. They read the fixed `--nx-icon-*`
+ * variables, so icons keep their size and line at every density.
+ *
+ * @param {object[]} tokens - Array of icon tokens with a dotted path property (e.g., "glyph.default")
+ * @returns {{ css: string, count: number }} Generated CSS and utility count
+ */
+export function generateIconUtilitiesCSS(tokens) {
+  const sizeRules = tokens
+    .filter((token) => token.path.startsWith('glyph.'))
+    .map((token) => iconSizeUtility(token.path.replaceAll('.', '-')));
+  const rules = [...sizeRules, ICON_STROKE_UTILITY];
+
+  return {
+    css: `/* Icon Utilities */\n\n${rules.map(formatUtilityRule).join('')}`,
+    count: rules.length,
+  };
 }
 
 /**

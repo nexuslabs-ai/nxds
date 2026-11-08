@@ -29,7 +29,7 @@ const SelectValue = SelectPrimitive.Value;
 
 const selectTriggerVariants = cva(
   [
-    'nx:group/select-trigger nx:flex nx:box-border nx:w-full nx:items-center nx:justify-between nx:gap-2',
+    'nx:group/select-trigger nx:flex nx:box-border nx:w-full nx:items-center nx:justify-between nx:gap-2 nx:icon-stroke',
     'nx:rounded-md nx:border-default nx:transition-field',
     'nx:whitespace-nowrap nx:text-inherit',
     'nx:data-[placeholder]:text-muted-foreground',
@@ -82,7 +82,7 @@ function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <IconChevronDown className="nx:size-4 nx:text-muted-foreground nx:group-disabled/select-trigger:text-disabled-foreground" />
+        <IconChevronDown className="nx:size-icon-glyph-default nx:text-muted-foreground nx:group-disabled/select-trigger:text-disabled-foreground" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -104,7 +104,7 @@ function SelectScrollUpButton({
       )}
       {...props}
     >
-      <IconChevronUp className="nx:size-4" />
+      <IconChevronUp className="nx:size-icon-glyph-default nx:icon-stroke" />
     </SelectPrimitive.ScrollUpButton>
   );
 }
@@ -125,7 +125,7 @@ function SelectScrollDownButton({
       )}
       {...props}
     >
-      <IconChevronDown className="nx:size-4" />
+      <IconChevronDown className="nx:size-icon-glyph-default nx:icon-stroke" />
     </SelectPrimitive.ScrollDownButton>
   );
 }
@@ -209,7 +209,7 @@ function SelectItem({ className, children, ...props }: SelectItemProps) {
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        'nx:group nx:relative nx:flex nx:w-full nx:cursor-default nx:select-none nx:items-center',
+        'nx:group nx:relative nx:flex nx:w-full nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
         'nx:rounded-sm nx:py-1.5 nx:pl-8 nx:pr-2 nx:typography-body-default nx:outline-none',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',
@@ -224,7 +224,7 @@ function SelectItem({ className, children, ...props }: SelectItemProps) {
           data-slot="select-item-indicator-icon"
           aria-hidden="true"
           className={cn(
-            'nx:size-4',
+            'nx:size-icon-glyph-default',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )}

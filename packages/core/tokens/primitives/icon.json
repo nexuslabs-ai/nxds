@@ -1,0 +1,59 @@
+{
+  "glyph": {
+    "xs": {
+      "$value": {
+        "value": 12,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$description": "Small icon in a compact part, such as Kbd. The same at every density."
+    },
+    "sm": {
+      "$value": {
+        "value": 14,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$description": "Icon beside small text, such as in a Badge. The same at every density."
+    },
+    "default": {
+      "$value": {
+        "value": 16,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$description": "Icon in a control, at every control size. The same at every density."
+    },
+    "lg": {
+      "$value": {
+        "value": 24,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$description": "Large standalone icon, such as in an EmptyState. The same at every density."
+    },
+    "xl": {
+      "$value": {
+        "value": 32,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$description": "Extra large standalone icon, such as in a vertical Attachment. The same at every density."
+    }
+  },
+  "stroke": {
+    "base": {
+      "$value": {
+        "value": 0.5,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$description": "Line a stroked icon, such as Lucide, Tabler or HugeIcons, draws before it grows with the icon. The line is this plus the icon size times the stroke ratio: 1.5px at 16px. Filled icons, such as Phosphor and Remix, keep their own line."
+    },
+    "ratio": {
+      "$value": 0.0625,
+      "$type": "number",
+      "$description": "Line a stroked icon adds for each pixel of its size. 0.0625 adds 1px of line for every 16px of icon."
+    }
+  }
+}

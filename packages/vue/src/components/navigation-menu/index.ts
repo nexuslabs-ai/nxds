@@ -34,5 +34,5 @@ export {
 } from './NavigationMenuViewport.vue';
 
 export const navigationMenuTriggerStyle = cva(
-  'nx:group nx:inline-flex nx:w-max nx:items-center nx:justify-center nx:rounded-md nx:border-0 nx:bg-background nx:px-4 nx:py-2 nx:text-inherit nx:typography-label-default nx:transition-control nx:hover:bg-background-hover nx:hover:text-foreground nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:disabled:pointer-events-none nx:disabled:text-disabled-foreground nx:data-[state=open]:bg-background-hover nx:data-[state=open]:text-foreground'
+  'nx:group nx:inline-flex nx:w-max nx:items-center nx:justify-center nx:rounded-md nx:border-0 nx:bg-background nx:px-4 nx:py-2 nx:text-inherit nx:typography-label-default nx:transition-control nx:hover:bg-background-hover nx:hover:text-foreground nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:disabled:pointer-events-none nx:disabled:text-disabled-foreground nx:data-[state=open]:bg-background-hover nx:data-[state=open]:text-foreground nx:icon-stroke'
 );

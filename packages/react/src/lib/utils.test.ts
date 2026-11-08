@@ -171,6 +171,11 @@ describe('cn', () => {
     ],
     ['z-index', 'nx:z-overlay nx:z-popover', 'nx:z-popover'],
     [
+      'icon size',
+      'nx:size-4 nx:size-icon-glyph-default',
+      'nx:size-icon-glyph-default',
+    ],
+    [
       'spacing role',
       'nx:gap-container nx:gap-layout-stack',
       'nx:gap-layout-stack',
@@ -237,6 +242,13 @@ describe('cn', () => {
     ).toBe(
       'nx:focus-visible:outline-default nx:focus-visible:outline-focus-default'
     );
+  });
+
+  it("keeps the icon stroke beside the element's own stroke utilities", () => {
+    expect(cn('nx:icon-stroke', 'nx:stroke-2 nx:stroke-current')).toBe(
+      'nx:icon-stroke nx:stroke-2 nx:stroke-current'
+    );
+    expect(cn('nx:icon-stroke', 'nx:icon-stroke')).toBe('nx:icon-stroke');
   });
 
   it('merges custom utilities within the same modifier scope', () => {

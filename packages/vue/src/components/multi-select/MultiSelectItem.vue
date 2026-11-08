@@ -79,7 +79,10 @@ function searchKeywords() {
         )
       "
     >
-      <IconCheck v-if="selectedValues.has(value)" class="nx:size-3" />
+      <IconCheck
+        v-if="selectedValues.has(value)"
+        class="nx:size-icon-glyph-xs"
+      />
     </span>
     <span class="nx:min-w-0 nx:flex-1"><slot /></span>
   </CommandItem>

@@ -30,7 +30,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     data-slot="select-item"
     :class="
       cn(
-        'nx:group nx:relative nx:flex nx:w-full nx:cursor-default nx:select-none nx:items-center',
+        'nx:group nx:relative nx:flex nx:w-full nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
         'nx:rounded-sm nx:py-1.5 nx:pl-8 nx:pr-2 nx:typography-body-default nx:outline-none',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',
@@ -46,7 +46,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
         aria-hidden="true"
         :class="
           cn(
-            'nx:size-4',
+            'nx:size-icon-glyph-default',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )

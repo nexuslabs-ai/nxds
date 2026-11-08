@@ -36,7 +36,7 @@ const forwarded = useForwardProps(delegated);
     <slot />
     <SelectIcon as-child>
       <IconChevronDown
-        class="nx:size-4 nx:text-muted-foreground nx:group-disabled/select-trigger:text-disabled-foreground"
+        class="nx:size-icon-glyph-default nx:text-muted-foreground nx:group-disabled/select-trigger:text-disabled-foreground"
       />
     </SelectIcon>
   </SelectTrigger>
