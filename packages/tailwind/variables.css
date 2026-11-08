@@ -346,6 +346,8 @@
     --nx-icon-glyph-xs: 12px;
     --nx-icon-glyph-sm: 14px;
     --nx-icon-glyph-default: 16px;
+    --nx-icon-glyph-lg: 24px;
+    --nx-icon-glyph-xl: 32px;
     --nx-icon-stroke-base: 0.5px;
     --nx-icon-stroke-ratio: 0.0625;
 
@@ -398,6 +400,7 @@
     --nx-typography-size-7xl: 72px;
     --nx-typography-size-8xl: 96px;
     --nx-typography-size-9xl: 128px;
+    --nx-typography-size-code: 12px;
     --nx-typography-weight-thin: 100;
     --nx-typography-weight-extralight: 200;
     --nx-typography-weight-light: 300;

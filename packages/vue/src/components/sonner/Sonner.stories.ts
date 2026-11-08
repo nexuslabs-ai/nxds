@@ -188,6 +188,52 @@ export const IconStroke: Story = {
   },
 };
 
+const CloseStarIcon = markRaw(
+  defineComponent({
+    components: { Star },
+    template: '<Star class="nx:size-icon-glyph-xs" />',
+  })
+);
+
+// Your icons replace the ones you name, and the rest stay the nxds icons. A
+// close icon you pass draws the line the stroke tokens set for its size.
+export const PartialIcons: Story = {
+  render: () => ({
+    components: { Button, Toaster },
+    setup: () => ({
+      icons: {
+        success: StarredIcon,
+        error: undefined,
+        close: CloseStarIcon,
+      },
+      showToasts: () => {
+        toast.success('Changes saved');
+        toast.error('Something went wrong');
+      },
+    }),
+    template: `
+      <Button @click="showToasts">Show toasts</Button>
+      <Toaster close-button :icons="icons" />
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+    await userEvent.click(canvas.getByRole('button', { name: 'Show toasts' }));
+
+    const saved = await body.findByText('Changes saved');
+    const failed = await body.findByText('Something went wrong');
+    await expect(
+      toastPart(saved, '[data-icon] svg.lucide-star')
+    ).toBeInTheDocument();
+    await expect(
+      drawnLine(toastPart(saved, '[data-close-button] svg.lucide-star'))
+    ).toEqual(expectedLine(canvasElement, 12));
+    await expect(drawnLine(toastPart(failed, '[data-icon] svg')).size).toBe(16);
+    toast.dismiss();
+  },
+};
+
 const NxdsToastCount = defineComponent({
   setup: () => useSonner(),
   template:

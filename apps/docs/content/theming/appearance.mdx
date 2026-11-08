@@ -294,10 +294,20 @@ To change the line, set the two tokens:
 To change the line in one component, set the tokens in its class, such as
 `nx:[--nx-icon-stroke-base:1px]`. A `stroke-*` class doesn't change the line.
 
-An icon sized with `nx:size-icon-glyph-xs`, `-sm` or `-default` draws the line
-for its size. For another size, use `nx:size-icon-[24px]`. It sets the icon's
-width, height and line from one value. An icon sized another way, such as with
-`nx:size-[24px]`, draws the 16px line.
+To size an icon yourself, use a named size. Named sizes are the same at every
+density.
+
+| Class                        | Size |
+| ---------------------------- | ---- |
+| `nx:size-icon-glyph-xs`      | 12px |
+| `nx:size-icon-glyph-sm`      | 14px |
+| `nx:size-icon-glyph-default` | 16px |
+| `nx:size-icon-glyph-lg`      | 24px |
+| `nx:size-icon-glyph-xl`      | 32px |
+
+Each class sets the icon's width, height and line. An icon sized another way,
+such as with `nx:size-12`, draws the 16px line. To give that icon its own line,
+set its size in the variable too: `nx:size-12 nx:[--nx-icon-size:48px]`.
 
 ## Shuffle
 

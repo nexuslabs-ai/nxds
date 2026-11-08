@@ -3,7 +3,7 @@ import * as React from 'react';
 import {
   ArrowRightIcon,
   DownloadSimpleIcon,
-  PaperPlaneRightIcon,
+  PaperPlaneTiltIcon,
   StarIcon,
   UploadSimpleIcon,
 } from '@phosphor-icons/react/ssr';
@@ -394,7 +394,7 @@ export const Disabled: Story = {
 export const Loading: Story = {
   args: {
     loading: true,
-    startIcon: <PaperPlaneRightIcon />,
+    startIcon: <PaperPlaneTiltIcon />,
     endIcon: <ArrowRightIcon />,
     children: 'Submitting',
   },

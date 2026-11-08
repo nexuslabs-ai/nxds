@@ -66,7 +66,7 @@ type Story = StoryObj<typeof Badge>;
 
 // `nx:h-6` / `nx:w-6` at `density: default`.
 const BADGE_SIZE_PX = 24;
-// `nx:size-3.5` icon slot.
+// `nx:size-icon-glyph-sm` icon slot.
 const BADGE_ICON_SIZE_PX = 14;
 
 // ============================================

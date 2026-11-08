@@ -9,12 +9,13 @@ import { componentsRoot } from '@nxds/source-model/roots.mjs';
 import path from 'node:path';
 import ts from 'typescript';
 
-import type {
-  Attribute,
-  DateAttribute,
-  JsonAttribute,
-  ListAttribute,
-  ScalarAttribute,
+import {
+  type Attribute,
+  type DateAttribute,
+  isCanvasAttribute,
+  type JsonAttribute,
+  type ListAttribute,
+  type ScalarAttribute,
 } from './attribute.ts';
 import { RECHARTS_PARTS } from './canvas/recharts.ts';
 import { iconSet } from './icon-set.ts';
@@ -29,6 +30,7 @@ const ELEMENT_DOM_PROPS = new Set([
   'defaultValue',
   'disabled',
   'href',
+  'htmlFor',
   'max',
   'maxLength',
   'min',
@@ -120,7 +122,8 @@ const NOT_NEEDED: Readonly<Record<string, string>> = {
   'Toaster.*': TOASTER,
 };
 
-const HANDLER = 'a function: an event handler, callback or ref';
+export const HANDLER =
+  "a function or ref: bind a function to a handler from the artboard's script with `{{name}}`";
 
 export type Control = 'dropdown' | 'toggle' | 'number' | 'text' | 'content';
 
@@ -135,11 +138,68 @@ export interface FlatProp {
   control: Control | null;
 }
 
+/** A prop the part can't render without: required, with no default. */
+export const isRequired = (prop: FlatProp) =>
+  !prop.optional && prop.defaultValue === null;
+
 export interface FlatComponent {
   name: string;
   slug: string;
   description: string;
   props: FlatProp[];
+  /** Whether the part reads its children's types or moves their elements, so a canvas wrapper between them breaks it. */
+  unwraps: boolean;
+}
+
+// Recharts finds a chart's series and Cells by type inside its container, and
+// cmdk sorts search results by moving each item element within its list.
+const UNWRAPPING_TAGS = [
+  'RechartsPrimitive.ResponsiveContainer',
+  'CommandPrimitive.List',
+];
+
+// The JSX tag names the part's own declaration renders.
+function renderedTags(symbol: ts.Symbol) {
+  const tags = new Set<string>();
+  const visit = (node: ts.Node) => {
+    if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
+      tags.add(node.tagName.getText());
+    }
+    ts.forEachChild(node, visit);
+  };
+  const declaration = symbol.declarations?.[0];
+  if (declaration) visit(declaration);
+  return tags;
+}
+
+function takesChildren(checker: ts.TypeChecker, symbol: ts.Symbol) {
+  const resolved = propsType(checker, symbol);
+  if (!resolved) return false;
+  return propSymbols(checker, resolved.type).byName.has('children');
+}
+
+// The parts that take children and render an UNWRAPPING_TAGS primitive,
+// directly or through another such part, so `ComboboxList` counts because it
+// renders `CommandList`, and `BarChart` doesn't because it takes no children.
+function unwrappingParts(
+  checker: ts.TypeChecker,
+  parts: ReadonlyMap<string, ts.Symbol>
+) {
+  const tagsByPart = [...parts]
+    .filter(([, symbol]) => takesChildren(checker, symbol))
+    .map(([name, symbol]) => [name, renderedTags(symbol)] as const);
+  const unwrapping = new Set(UNWRAPPING_TAGS);
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const [name, tags] of tagsByPart) {
+      if (unwrapping.has(name)) continue;
+      if (![...tags].some((tag) => unwrapping.has(tag))) continue;
+      unwrapping.add(name);
+      grew = true;
+    }
+  }
+  return unwrapping;
 }
 
 const PRINT_FLAGS =
@@ -411,7 +471,7 @@ function attributeOf(
   const values = members.filter(
     (member) => !isFunction(checker, member) && !isRef(member)
   );
-  if (values.length === 0) return { kind: 'none', reason: HANDLER };
+  if (values.length === 0) return { kind: 'handler' };
 
   const scalar = scalarOf(values);
   if (scalar) return scalar;
@@ -517,14 +577,25 @@ function attributeType(attribute: Attribute, ownType: string) {
   }
 }
 
+/**
+ * The most options the props panel shows as a dropdown. A longer union gets a
+ * text field, and an icon set past it fails the build.
+ */
+const DROPDOWN_LIMIT = 400;
+
+function optionCount(attribute: Attribute) {
+  if (attribute.kind !== 'scalar') return 0;
+  return attribute.literals.length + (attribute.boolean ? 2 : 0);
+}
+
 function controlOf(attribute: Attribute | null, type: string): Control | null {
-  if (!attribute) return null;
-  if (attribute.kind === 'content') return 'content';
-  if (attribute.kind === 'none') return null;
+  if (attribute?.kind === 'content') return 'content';
+  if (!isCanvasAttribute(attribute)) return null;
   if (type === 'boolean') return 'toggle';
   if (type === 'number') return 'number';
   if (type === 'string') return 'text';
-  return 'dropdown';
+  if (attribute.kind === 'icon') return 'dropdown';
+  return optionCount(attribute) > DROPDOWN_LIMIT ? 'text' : 'dropdown';
 }
 
 const LIST_FORMAT: Record<string, string> = {
@@ -659,7 +730,7 @@ function flatComponent(
   name: string,
   symbol: ts.Symbol,
   listed: (prop: ts.Symbol) => boolean = isListedProp
-): FlatComponent {
+): Omit<FlatComponent, 'unwraps'> {
   const fileName = symbol.declarations?.[0]?.getSourceFile().fileName ?? '';
   const defaults = componentDefaults(checker, symbol);
   const resolved = propsType(checker, symbol);
@@ -714,9 +785,14 @@ function flatComponent(
 /** Every component part the bundle exports, in name order. */
 export function flatComponents(): FlatComponent[] {
   const { checker, exported } = reactProgram();
+  const parts = publicComponents(checker, exported, componentsRoot);
+  const unwrapping = unwrappingParts(checker, parts);
   return [
-    ...[...publicComponents(checker, exported, componentsRoot)]
-      .map(([name, symbol]) => flatComponent(checker, name, symbol))
+    ...[...parts]
+      .map(([name, symbol]) => ({
+        ...flatComponent(checker, name, symbol),
+        unwraps: unwrapping.has(name),
+      }))
       .filter((component) => component.slug !== 'appearance'),
     ...canvasParts(),
     ...rechartsParts(checker, exported),
@@ -801,7 +877,7 @@ function rechartsParts(
         `${name}.${prop}`,
         to
       );
-      if (!found || !attribute || attribute.kind === 'none') {
+      if (!found || !isCanvasAttribute(attribute)) {
         problems.push(
           `${name}.${prop}${found ? `: ${found.type}` : ' (no such prop)'}`
         );
@@ -812,7 +888,7 @@ function rechartsParts(
         { ...found, attribute, type, control: controlOf(attribute, type) },
       ];
     });
-    return { ...part, slug: 'recharts', props };
+    return { ...part, slug: 'recharts', props, unwraps: true };
   });
   if (problems.length > 0) {
     throw new Error(
@@ -823,9 +899,13 @@ function rechartsParts(
 }
 
 function iconNameUnion() {
-  return iconSet()
-    .map(({ name }) => JSON.stringify(name))
-    .join(' | ');
+  const icons = iconSet();
+  if (icons.length > DROPDOWN_LIMIT) {
+    throw new Error(
+      `icons: ${icons.length} icons, over the ${DROPDOWN_LIMIT} the props panel shows as a dropdown. Trim src/icons.ts.`
+    );
+  }
+  return icons.map(({ name }) => JSON.stringify(name)).join(' | ');
 }
 
 const NUMBER = {
@@ -868,6 +948,7 @@ function canvasParts(): FlatComponent[] {
     {
       name: 'Icon',
       slug: 'icon',
+      unwraps: false,
       description:
         'A Phosphor icon by name, such as `plus`. It takes the colour of its text. `components/Icon/README.md` lists every name.',
       props: [
@@ -881,16 +962,6 @@ function canvasParts(): FlatComponent[] {
           defaultValue: '16',
         }),
         canvasProp(
-          'weight',
-          {
-            ...TEXT,
-            string: false,
-            literals: ['thin', 'light', 'regular', 'bold', 'fill', 'duotone'],
-          },
-          'Line weight, or a filled shape.',
-          { defaultValue: '"regular"' }
-        ),
-        canvasProp(
           'aria-label',
           TEXT,
           'Names the icon for screen readers. Without it, they skip the icon. An icon-only button names itself instead.'
@@ -901,6 +972,7 @@ function canvasParts(): FlatComponent[] {
     {
       name: 'Toast',
       slug: 'toast',
+      unwraps: false,
       description:
         'One toast, shown in place, as `toast()` shows it in an app. Use it to show a toast on a static screen.',
       props: [
@@ -1021,6 +1093,8 @@ export function coverage(components: readonly FlatComponent[]): Coverage {
       const { attribute } = prop;
       if (!attribute) {
         report.missing.push({ name: qualified, type: prop.type });
+      } else if (attribute.kind === 'handler') {
+        add(report.notNeeded, HANDLER, qualified);
       } else if (attribute.kind === 'none') {
         add(report.notNeeded, attribute.reason, qualified);
       }

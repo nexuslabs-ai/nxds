@@ -1,7 +1,7 @@
 import {
   PhArrowRight,
   PhDownloadSimple,
-  PhPaperPlaneRight,
+  PhPaperPlaneTilt,
   PhStar,
   PhUploadSimple,
 } from '@phosphor-icons/vue';
@@ -249,7 +249,7 @@ export const AllVariants: Story = {
 
 /** A story render that binds the story args, so `args.onClick` stays a spy. */
 const labelled = (template: string) => (args: ButtonArgs) => ({
-  components: { Button, PhArrowRight, PhPaperPlaneRight },
+  components: { Button, PhArrowRight, PhPaperPlaneTilt },
   setup: () => ({ args }),
   template,
 });
@@ -402,7 +402,7 @@ export const Disabled: Story = {
 export const Loading: Story = {
   render: labelled(`
     <Button v-bind="args" loading>
-      <template #start-icon><PhPaperPlaneRight /></template>
+      <template #start-icon><PhPaperPlaneTilt /></template>
       Submitting
       <template #end-icon><PhArrowRight /></template>
     </Button>

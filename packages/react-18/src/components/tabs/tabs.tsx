@@ -5,10 +5,8 @@ import * as React from 'react';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { cva } from 'class-variance-authority';
 
+import { useIsomorphicLayoutEffect } from '../../hooks/use-isomorphic-layout-effect';
 import { cn } from '../../lib/utils';
-
-const useIsomorphicLayoutEffect =
-  typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
 
 /**
  * Root of the tabs. Holds the active tab, the list and the panels.

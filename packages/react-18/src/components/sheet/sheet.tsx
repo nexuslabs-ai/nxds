@@ -151,7 +151,7 @@ const SheetContent = React.forwardRef<
             data-slot="sheet-close-button"
             className={overlayCloseButtonClassName}
           >
-            <IconX className="nx:size-icon-glyph-default" />
+            <IconX className="nx:size-icon-glyph-default nx:icon-stroke" />
             <span className="nx:sr-only">Close</span>
           </DialogPrimitive.Close>
         )}

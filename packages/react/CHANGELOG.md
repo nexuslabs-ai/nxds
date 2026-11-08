@@ -1,5 +1,54 @@
 # @nxds/react
 
+## 0.16.0
+
+### Minor Changes
+
+- 8e13859: `components/bundle.js` drops from 2,433,281 to 1,635,661 bytes. A canvas takes in a script under 2 MB as soon as the system updates. Over 2 MB, the new components showed only after a reload. The build fails past 1,800,000 bytes.
+
+  The bundle keeps only Phosphor's regular and fill weights. `Nxds.Icon` loses its `weight` prop. Use a `-fill` name, such as `check-circle-fill`, for a filled icon. A canvas that still sets `weight` draws the regular icon and logs a warning, so remove the attribute.
+
+  Data charts list their legend items in `series` order, and PieChart's legend follows its rows. Recharts sorted them alphabetically.
+
+  README.md tells Claude to give every artboard a `mode` tweak of light and dark, and to bind the root's and each overlay content part's `data-theme` to it. A function prop takes a handler from the artboard's script, such as `on-value-change="{{setFilters}}"`.
+
+  The sampler fits its board at the theme's text size. SETUP.md's `canvas.json` entry is 1525px tall at the default. It grows 50px for each px of text above the default, and shrinks 33px for each px below. Its chart fills its card, Today's toggles sit in its content, and the deals table fits without a sideways scroll up to 20px text.
+
+  AspectRatio, Carousel, Combobox, FilterBuilder, FilterCondition, Resizable, ScrollArea, Sonner and Table READMEs show a full canvas example. Each used to show a bare part that rendered nothing, or a note. FilterBuilder shows a JSON mockup and a version bound to the artboard's script state. A static FilterBuilder no longer throws when clicked.
+
+## 0.15.1
+
+## 0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [c004e3a]
+  - @nxds/core@0.13.0
+  - @nxds/tailwind@0.3.0
+
+## 0.13.3
+
+## 0.13.2
+
+## 0.13.1
+
+## 0.13.0
+
+### Minor Changes
+
+- a333b42: Toolbar gets tools that open panels, and a floating variant.
+  - `ToolbarToolGroup`, `ToolbarTool` and `ToolbarToolPanel` add a set of tools. Selecting a tool opens its panel, and selecting it again closes it. Each tool tells assistive technology whether its panel is open.
+  - `<Toolbar variant="floating">` is a bar for canvas tools, with more padding, space and shadow.
+  - Groups inside a toolbar use the same gap as the toolbar.
+  - A vertical separator grows with the height of the row.
+  - In `@nxds/vue`, PopoverContent emits `closeAutoFocus`, `interactOutside` and `pointerDownOutside` once per event, as React does. Combobox and MultiSelect pass these events on once too.
+
+### Patch Changes
+
+- a333b42: `Show` and `Hide` pass their parent's `gap` to children that inherit it. A toolbar group inside them keeps the toolbar's gap.
+
 ## 0.12.0
 
 ### Minor Changes

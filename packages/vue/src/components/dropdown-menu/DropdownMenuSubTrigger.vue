@@ -42,6 +42,6 @@ const forwarded = useForwardProps(delegated);
     "
   >
     <slot />
-    <IconChevronRight class="nx:ml-auto nx:size-icon-glyph-default" />
+    <IconChevronRight class="nx:ml-auto" />
   </DropdownMenuSubTrigger>
 </template>

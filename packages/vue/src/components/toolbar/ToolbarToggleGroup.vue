@@ -10,6 +10,8 @@ import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
 
+import { toolbarGroupLayout } from '.';
+
 export interface ToolbarToggleGroupProps
   extends
     Required<Pick<ToggleGroupRootProps<string | string[]>, 'type'>>,
@@ -42,12 +44,7 @@ whose role wins. -->
       v-bind="$attrs"
       data-slot="toolbar-toggle-group"
       :role="type === 'single' ? 'radiogroup' : 'group'"
-      :class="
-        cn(
-          'nx:flex nx:min-w-0 nx:flex-wrap nx:items-center nx:gap-0.5 nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
-          props.class
-        )
-      "
+      :class="cn(toolbarGroupLayout, props.class)"
     >
       <slot />
     </div>
