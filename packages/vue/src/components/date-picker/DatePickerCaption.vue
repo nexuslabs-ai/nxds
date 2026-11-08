@@ -53,7 +53,7 @@ const dropdownRootClass =
 const dropdownClass = 'nx:absolute nx:inset-0 nx:bg-popover nx:opacity-0';
 const dropdownLabelClass = cn(
   'nx:typography-label-default nx:select-none',
-  'nx:flex nx:h-8 nx:items-center nx:gap-1 nx:rounded-md nx:pr-1 nx:pl-2 nx:[&>svg]:size-icon-[var(--nx-spacing-3_5)] nx:[&>svg]:text-muted-foreground nx:icon-stroke'
+  'nx:flex nx:h-8 nx:items-center nx:gap-1 nx:rounded-md nx:pr-1 nx:pl-2 nx:[&>svg]:size-icon-glyph-sm nx:[&>svg]:text-muted-foreground nx:icon-stroke'
 );
 </script>
 
@@ -82,7 +82,7 @@ const dropdownLabelClass = cn(
         </select>
         <span :class="dropdownLabelClass" aria-hidden="true">
           {{ months[month.month - 1]?.label }}
-          <IconChevronDown class="nx:size-4" />
+          <IconChevronDown class="nx:size-icon-glyph-default" />
         </span>
       </span>
       <span :class="dropdownRootClass">
@@ -98,7 +98,7 @@ const dropdownLabelClass = cn(
         </select>
         <span :class="dropdownLabelClass" aria-hidden="true">
           {{ month.year }}
-          <IconChevronDown class="nx:size-4" />
+          <IconChevronDown class="nx:size-icon-glyph-default" />
         </span>
       </span>
     </div>

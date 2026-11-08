@@ -1,15 +1,33 @@
 /* Icon Utilities */
 
+@utility size-icon-glyph-xs {
+  width: var(--nx-icon-glyph-xs);
+  height: var(--nx-icon-glyph-xs);
+  --nx-icon-size: var(--nx-icon-glyph-xs);
+}
+
+@utility size-icon-glyph-sm {
+  width: var(--nx-icon-glyph-sm);
+  height: var(--nx-icon-glyph-sm);
+  --nx-icon-size: var(--nx-icon-glyph-sm);
+}
+
 @utility size-icon-glyph-default {
   width: var(--nx-icon-glyph-default);
   height: var(--nx-icon-glyph-default);
   --nx-icon-size: var(--nx-icon-glyph-default);
 }
 
-@utility size-icon-* {
-  width: --value([*]);
-  height: --value([*]);
-  --nx-icon-size: --value([*]);
+@utility size-icon-glyph-lg {
+  width: var(--nx-icon-glyph-lg);
+  height: var(--nx-icon-glyph-lg);
+  --nx-icon-size: var(--nx-icon-glyph-lg);
+}
+
+@utility size-icon-glyph-xl {
+  width: var(--nx-icon-glyph-xl);
+  height: var(--nx-icon-glyph-xl);
+  --nx-icon-size: var(--nx-icon-glyph-xl);
 }
 
 @utility icon-stroke {

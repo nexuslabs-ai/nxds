@@ -48,7 +48,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
           aria-hidden="true"
           :class="
             cn(
-              'nx:size-4',
+              'nx:size-icon-glyph-default',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100',
               'nx:group-data-[state=indeterminate]:scale-100 nx:group-data-[state=indeterminate]:opacity-100'

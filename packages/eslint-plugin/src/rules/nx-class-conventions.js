@@ -138,17 +138,31 @@ function selectsChildSvg(variant) {
   return /^svg(?![\w-])/.test(selector.split(/[_>+~]/).at(-1));
 }
 
-// A class list that sizes its `svg` children, such as `nx:[&_svg]:size-4`,
-// draws the icon, so it sets the icon's line with `nx:icon-stroke` too.
+// The sizing utilities a class list applies to its `svg` children, such as
+// `size-icon-glyph-default` from `nx:[&_svg]:size-icon-glyph-default`.
+function svgChildSizes(classes) {
+  return classes.flatMap((token) => {
+    if (!token.startsWith('nx:')) return [];
+    const parts = classSegments(token.slice('nx:'.length));
+    const utility = parts.pop();
+    if (!/^(?:size|h|w)-/.test(utility)) return [];
+    return parts.some(selectsChildSvg) ? [utility] : [];
+  });
+}
+
+// A class list that sizes its `svg` children draws the icon, so it sets the
+// icon's line with `nx:icon-stroke` too.
 function leavesIconUnstroked(scope) {
   const classes = scope.split(/\s+/);
   if (classes.includes('nx:icon-stroke')) return false;
-  return classes.some((token) => {
-    if (!token.startsWith('nx:')) return false;
-    const parts = classSegments(token.slice('nx:'.length));
-    const utility = parts.pop();
-    return /^(?:size|h|w)-/.test(utility) && parts.some(selectsChildSvg);
-  });
+  return svgChildSizes(classes).length > 0;
+}
+
+// Only `size-icon-glyph-*` sets `--nx-icon-size`, the size the line is drawn for.
+function sizesIconWithoutLine(scope) {
+  return svgChildSizes(scope.split(/\s+/)).some(
+    (utility) => !utility.startsWith('size-icon-glyph-')
+  );
 }
 
 function isStoryFile(filename) {
@@ -324,7 +338,9 @@ export default {
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
       unstrokedIcon:
-        'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-4`), so add `nx:icon-stroke` to draw stroked icons at the icon line width.',
+        'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-icon-glyph-default`), so add `nx:icon-stroke` to draw stroked icons at the icon line width.',
+      plainIconSize:
+        'Plain icon size — size `svg` children with a `size-icon-glyph-*` class, so the line matches the icon. `size-*`, `h-*` and `w-*` leave `--nx-icon-size` unset.',
     },
   },
   create(context) {
@@ -347,8 +363,12 @@ export default {
       if (!isDocsSpecimenPage(filename) && fadesItsFocusRing(scope)) {
         context.report({ node, messageId: 'ringFadingTransition' });
       }
-      if (!isExampleFile(filename) && leavesIconUnstroked(scope)) {
+      if (isExampleFile(filename)) return;
+      if (leavesIconUnstroked(scope)) {
         context.report({ node, messageId: 'unstrokedIcon' });
+      }
+      if (sizesIconWithoutLine(scope)) {
+        context.report({ node, messageId: 'plainIconSize' });
       }
     }
 

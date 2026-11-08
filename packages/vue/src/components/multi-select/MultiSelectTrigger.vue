@@ -52,7 +52,7 @@ function handleKeyDown(event: KeyboardEvent) {
       <slot />
       <IconChevronDown
         aria-hidden="true"
-        class="nx:size-4 nx:shrink-0 nx:text-muted-foreground nx:group-disabled/multi-select:text-disabled-foreground"
+        class="nx:size-icon-glyph-default nx:shrink-0 nx:text-muted-foreground nx:group-disabled/multi-select:text-disabled-foreground"
       />
     </button>
   </PopoverTrigger>

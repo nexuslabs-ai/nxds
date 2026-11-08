@@ -192,7 +192,7 @@ export const AsyncLoading: Story = {
       <Command label="Async command menu" class="nx:w-[480px] nx:rounded-lg nx:border-default nx:border-border-default nx:shadow-md">
         <CommandInput placeholder="Search commands..." />
         <CommandLoading :progress="60" label="Loading command results">
-          <Spinner aria-hidden="true" role="presentation" class="nx:size-icon-[var(--nx-spacing-3_5)]" />Loading commands...</CommandLoading>
+          <Spinner aria-hidden="true" role="presentation" class="nx:size-icon-glyph-sm" />Loading commands...</CommandLoading>
         <CommandList>
           <CommandGroup heading="Recent">
             <CommandItem v-for="item in recent" :key="item" :value="item">

@@ -61,7 +61,7 @@ const NativeSelect = React.forwardRef<
   return (
     <div
       data-slot="native-select-wrapper"
-      className="nx:group/native-select nx:relative nx:w-full nx:icon-stroke"
+      className="nx:group/native-select nx:relative nx:w-full"
     >
       <select
         data-slot="native-select"
@@ -73,7 +73,7 @@ const NativeSelect = React.forwardRef<
       <IconChevronDown
         aria-hidden="true"
         data-slot="native-select-icon"
-        className="nx:pointer-events-none nx:absolute nx:top-1/2 nx:right-3.5 nx:size-4 nx:-translate-y-1/2 nx:text-muted-foreground nx:select-none nx:group-has-[select:disabled]/native-select:text-disabled-foreground"
+        className="nx:pointer-events-none nx:absolute nx:top-1/2 nx:right-3.5 nx:size-icon-glyph-default nx:icon-stroke nx:-translate-y-1/2 nx:text-muted-foreground nx:select-none nx:group-has-[select:disabled]/native-select:text-disabled-foreground"
       />
     </div>
   );

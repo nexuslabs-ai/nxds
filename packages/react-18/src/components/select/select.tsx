@@ -91,7 +91,7 @@ const SelectTrigger = React.forwardRef<
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <IconChevronDown className="nx:size-4 nx:text-muted-foreground nx:group-disabled/select-trigger:text-disabled-foreground" />
+        <IconChevronDown className="nx:size-icon-glyph-default nx:text-muted-foreground nx:group-disabled/select-trigger:text-disabled-foreground" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -119,12 +119,12 @@ const SelectScrollUpButton = React.forwardRef<
     <SelectPrimitive.ScrollUpButton
       data-slot="select-scroll-up-button"
       className={cn(
-        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1 nx:icon-stroke',
+        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1',
         className
       )}
       {...props}
     >
-      <IconChevronUp className="nx:size-4" />
+      <IconChevronUp className="nx:size-icon-glyph-default nx:icon-stroke" />
     </SelectPrimitive.ScrollUpButton>
   );
 });
@@ -151,12 +151,12 @@ const SelectScrollDownButton = React.forwardRef<
     <SelectPrimitive.ScrollDownButton
       data-slot="select-scroll-down-button"
       className={cn(
-        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1 nx:icon-stroke',
+        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1',
         className
       )}
       {...props}
     >
-      <IconChevronDown className="nx:size-4" />
+      <IconChevronDown className="nx:size-icon-glyph-default nx:icon-stroke" />
     </SelectPrimitive.ScrollDownButton>
   );
 });
@@ -288,7 +288,7 @@ const SelectItem = React.forwardRef<
           data-slot="select-item-indicator-icon"
           aria-hidden="true"
           className={cn(
-            'nx:size-4',
+            'nx:size-icon-glyph-default',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )}

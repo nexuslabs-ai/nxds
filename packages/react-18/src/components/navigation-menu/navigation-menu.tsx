@@ -162,7 +162,7 @@ const NavigationMenuTrigger = React.forwardRef<
     >
       {children}{' '}
       <IconChevronDown
-        className="nx:relative nx:top-px nx:ml-1 nx:size-icon-[var(--nx-spacing-3)] nx:transition nx:duration-slow nx:group-data-[state=open]:rotate-180"
+        className="nx:relative nx:top-px nx:ml-1 nx:size-icon-glyph-xs nx:transition nx:duration-slow nx:group-data-[state=open]:rotate-180"
         aria-hidden="true"
       />
     </NavigationMenuPrimitive.Trigger>
@@ -288,7 +288,7 @@ const NavigationMenuLink = React.forwardRef<
         'nx:hover:bg-popover-hover nx:hover:text-popover-foreground',
         'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
         'nx:data-[active=true]:bg-popover-hover nx:data-[active=true]:text-popover-foreground',
-        'nx:[&_svg:not([class*=size-])]:size-4 nx:[&_svg:not([class*=text-])]:text-muted-foreground nx:icon-stroke',
+        'nx:[&_svg:not([class*=size-])]:size-icon-glyph-default nx:[&_svg:not([class*=text-])]:text-muted-foreground nx:icon-stroke',
         className
       )}
       {...props}

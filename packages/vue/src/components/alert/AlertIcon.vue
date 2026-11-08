@@ -17,7 +17,7 @@ const props = defineProps<AlertIconProps>();
     :class="
       cn(
         [
-          'nx:flex nx:[&>svg]:size-4 nx:icon-stroke',
+          'nx:flex nx:[&>svg]:size-icon-glyph-default nx:icon-stroke',
           'nx:group-data-[layout=stack]/alert:translate-y-0.5',
         ],
         props.class

@@ -52,11 +52,13 @@ function useToasterTheme(): 'light' | 'dark' {
 
 /** nxds's internal icons in place of sonner's bundled set. */
 const toasterIcons = {
-  success: <IconCircleCheck className="nx:size-4" />,
-  info: <IconInfoCircle className="nx:size-4" />,
-  warning: <IconAlertTriangle className="nx:size-4" />,
-  error: <IconAlertCircle className="nx:size-4" />,
-  loading: <IconLoader2 className="nx:size-4 nx:animate-spin" />,
+  success: <IconCircleCheck className="nx:size-icon-glyph-default" />,
+  info: <IconInfoCircle className="nx:size-icon-glyph-default" />,
+  warning: <IconAlertTriangle className="nx:size-icon-glyph-default" />,
+  error: <IconAlertCircle className="nx:size-icon-glyph-default" />,
+  loading: (
+    <IconLoader2 className="nx:size-icon-glyph-default nx:animate-spin" />
+  ),
 };
 
 /**
@@ -153,7 +155,7 @@ function Toaster({ style, ...props }: ToasterProps) {
   return (
     <div
       data-slot="toaster"
-      className="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke nx:[&_[data-close-button]_svg]:[--nx-icon-size:12px]"
+      className="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke nx:[&_[data-close-button]_svg]:[--nx-icon-size:var(--nx-icon-glyph-xs)]"
     >
       <Sonner
         theme={theme}

@@ -195,7 +195,7 @@ const MultiSelectTrigger = React.forwardRef<
         {children}
         <IconChevronDown
           aria-hidden="true"
-          className="nx:size-4 nx:shrink-0 nx:text-muted-foreground nx:group-disabled/multi-select:text-disabled-foreground"
+          className="nx:size-icon-glyph-default nx:shrink-0 nx:text-muted-foreground nx:group-disabled/multi-select:text-disabled-foreground"
         />
       </button>
     </PopoverTrigger>
@@ -351,7 +351,7 @@ const MultiSelectValue = React.forwardRef<
           {clickToRemove && (
             <IconX
               aria-hidden="true"
-              className="nx:size-icon-[var(--nx-spacing-3)] nx:text-muted-foreground nx:transition-colors nx:group-hover/chip:text-error-subtle-foreground"
+              className="nx:size-icon-glyph-xs nx:text-muted-foreground nx:transition-colors nx:group-hover/chip:text-error-subtle-foreground"
             />
           )}
         </Badge>
@@ -497,7 +497,7 @@ const MultiSelectItem = React.forwardRef<
             : 'nx:border-border-default nx:bg-background'
         )}
       >
-        {selected && <IconCheck className="nx:size-3" />}
+        {selected && <IconCheck className="nx:size-icon-glyph-xs" />}
       </span>
       <span className="nx:min-w-0 nx:flex-1">{children}</span>
     </CommandItem>

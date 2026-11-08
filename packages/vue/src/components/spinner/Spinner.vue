@@ -16,6 +16,11 @@ const props = defineProps<SpinnerProps>();
     role="status"
     aria-label="Loading"
     data-slot="spinner"
-    :class="cn('nx:size-4 nx:animate-spin nx:icon-stroke', props.class)"
+    :class="
+      cn(
+        'nx:size-icon-glyph-default nx:animate-spin nx:icon-stroke',
+        props.class
+      )
+    "
   />
 </template>
