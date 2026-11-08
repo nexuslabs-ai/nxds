@@ -18,10 +18,16 @@
   --nx-icon-size: var(--nx-icon-glyph-default);
 }
 
-@utility size-icon-* {
-  width: --value([*]);
-  height: --value([*]);
-  --nx-icon-size: --value([*]);
+@utility size-icon-glyph-lg {
+  width: var(--nx-icon-glyph-lg);
+  height: var(--nx-icon-glyph-lg);
+  --nx-icon-size: var(--nx-icon-glyph-lg);
+}
+
+@utility size-icon-glyph-xl {
+  width: var(--nx-icon-glyph-xl);
+  height: var(--nx-icon-glyph-xl);
+  --nx-icon-size: var(--nx-icon-glyph-xl);
 }
 
 @utility icon-stroke {

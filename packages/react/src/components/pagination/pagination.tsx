@@ -164,12 +164,12 @@ function PaginationEllipsis({ className, ...props }: PaginationEllipsisProps) {
       aria-hidden
       data-slot="pagination-ellipsis"
       className={cn(
-        'nx:flex nx:items-center nx:justify-center nx:size-10 nx:icon-stroke',
+        'nx:flex nx:items-center nx:justify-center nx:size-10',
         className
       )}
       {...props}
     >
-      <IconDots className="nx:size-icon-glyph-default" />
+      <IconDots className="nx:size-icon-glyph-default nx:icon-stroke" />
       <span className="nx:sr-only">More pages</span>
     </span>
   );

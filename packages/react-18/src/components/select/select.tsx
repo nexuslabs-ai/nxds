@@ -119,12 +119,12 @@ const SelectScrollUpButton = React.forwardRef<
     <SelectPrimitive.ScrollUpButton
       data-slot="select-scroll-up-button"
       className={cn(
-        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1 nx:icon-stroke',
+        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1',
         className
       )}
       {...props}
     >
-      <IconChevronUp className="nx:size-icon-glyph-default" />
+      <IconChevronUp className="nx:size-icon-glyph-default nx:icon-stroke" />
     </SelectPrimitive.ScrollUpButton>
   );
 });
@@ -151,12 +151,12 @@ const SelectScrollDownButton = React.forwardRef<
     <SelectPrimitive.ScrollDownButton
       data-slot="select-scroll-down-button"
       className={cn(
-        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1 nx:icon-stroke',
+        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1',
         className
       )}
       {...props}
     >
-      <IconChevronDown className="nx:size-icon-glyph-default" />
+      <IconChevronDown className="nx:size-icon-glyph-default nx:icon-stroke" />
     </SelectPrimitive.ScrollDownButton>
   );
 });

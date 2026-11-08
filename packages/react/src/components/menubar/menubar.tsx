@@ -120,7 +120,7 @@ function MenubarSubTrigger({
       {...props}
     >
       {children}
-      <IconChevronRight className="nx:ml-auto nx:size-icon-glyph-default" />
+      <IconChevronRight className="nx:ml-auto" />
     </MenubarPrimitive.SubTrigger>
   );
 }
@@ -330,7 +330,7 @@ function MenubarRadioItem({
             data-slot="menubar-radio-indicator-icon"
             aria-hidden="true"
             className={cn(
-              'nx:size-icon-[8px]',
+              'nx:size-[8px]',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
             )}
