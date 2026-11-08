@@ -26,11 +26,11 @@ const forwarded = useForwardProps(delegated);
     data-slot="select-scroll-up-button"
     :class="
       cn(
-        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1 nx:icon-stroke',
+        'nx:flex nx:cursor-default nx:items-center nx:justify-center nx:py-1',
         props.class
       )
     "
   >
-    <IconChevronUp class="nx:size-icon-glyph-default" />
+    <IconChevronUp class="nx:size-icon-glyph-default nx:icon-stroke" />
   </SelectScrollUpButton>
 </template>

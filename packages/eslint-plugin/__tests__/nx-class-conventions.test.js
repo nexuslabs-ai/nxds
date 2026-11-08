@@ -28,9 +28,6 @@ ruleTester.run('nx-class-conventions', rule, {
     // Icon sizes from glyph tokens or arbitrary values, and box sizes, stay legal.
     "const c = 'nx:[&_svg]:size-icon-glyph-default nx:icon-stroke';",
     "const c = 'nx:[&>svg]:size-icon-glyph-sm nx:text-muted-foreground nx:icon-stroke';",
-    "const c = 'nx:[&_svg]:size-[calc(var(--nx-icon-glyph-default)*2)] nx:icon-stroke';",
-    "const c = 'nx:[&_svg]:size-[24px] nx:icon-stroke';",
-    "const c = 'nx:[&_svg]:size-icon-[calc(var(--nx-icon-glyph-default)*2)] nx:icon-stroke';",
     "const c = 'nx:size-8 nx:rounded-sm';",
     "const c = 'nx:h-(--nx-spacing-8) nx:[&_svg]:size-icon-glyph-sm nx:icon-stroke';",
     // A `:has()` selector sizes the box around the icon, not the icon.
@@ -129,7 +126,7 @@ ruleTester.run('nx-class-conventions', rule, {
     // same string or anywhere in the same `cva()` call.
     "const c = 'nx:icon-stroke nx:[&>svg]:size-icon-glyph-xs';",
     "const c = cva('nx:flex nx:icon-stroke', { variants: { size: { sm: 'nx:[&>svg]:size-icon-glyph-sm' } } });",
-    "const c = cva('nx:flex', { variants: { variant: { default: '', icon: 'nx:[&_svg]:size-[24px] nx:icon-stroke' } } });",
+    "const c = cva('nx:flex', { variants: { variant: { default: '', icon: 'nx:[&_svg]:size-icon-glyph-lg nx:icon-stroke' } } });",
     // Sizing the box around an icon, or styling the icon without sizing it,
     // needs no stroke.
     "const c = 'nx:has-[>svg]:size-8 nx:[&:has(svg)]:h-9';",
@@ -185,11 +182,11 @@ ruleTester.run('nx-class-conventions', rule, {
     },
     // A value that reads a spacing variable follows density too.
     {
-      code: "const c = 'nx:[&_svg]:size-icon-[var(--nx-spacing-8)] nx:icon-stroke';",
+      code: "const c = 'nx:[&_svg]:size-[var(--nx-spacing-8)] nx:icon-stroke';",
       errors: [{ messageId: 'densityIconSize' }],
     },
     {
-      code: "const c = 'nx:[&_svg]:size-icon-[length:var(--nx-spacing-8)] nx:icon-stroke';",
+      code: "const c = 'nx:[&_svg]:size-[length:var(--nx-spacing-8)] nx:icon-stroke';",
       errors: [{ messageId: 'densityIconSize' }],
     },
     {
@@ -201,7 +198,7 @@ ruleTester.run('nx-class-conventions', rule, {
       errors: [{ messageId: 'densityIconSize' }],
     },
     {
-      code: "const x = <IconX className='nx:size-icon-(--nx-spacing-2_5)' />;",
+      code: "const x = <IconX className='nx:size-(--nx-spacing-2_5)' />;",
       errors: [{ messageId: 'densityIconSize' }],
     },
     // The docs pages copy a story's code into apps.
@@ -419,7 +416,7 @@ ruleTester.run('nx-class-conventions', rule, {
     },
     {
       code: "const c = 'nx:[&>svg]:h-[12px] nx:[&>svg]:w-[12px]';",
-      errors: [{ messageId: 'unstrokedIcon' }],
+      errors: [{ messageId: 'unstrokedIcon' }, { messageId: 'plainIconSize' }],
     },
     {
       code: "const c = `nx:[&_svg:not([class*='size-'])]:size-icon-glyph-default`;",
@@ -430,12 +427,12 @@ ruleTester.run('nx-class-conventions', rule, {
       errors: [{ messageId: 'unstrokedIcon' }],
     },
     {
-      code: "const c = 'nx:group-data-[orientation=vertical]/attachment:[&_svg]:size-[32px]';",
+      code: "const c = 'nx:group-data-[orientation=vertical]/attachment:[&_svg]:size-icon-glyph-xl';",
       errors: [{ messageId: 'unstrokedIcon' }],
     },
     // The whole `cva()` call is one class list, reported once.
     {
-      code: "const c = cva('nx:flex', { variants: { variant: { default: '', icon: 'nx:[&_svg]:size-[24px]' } } });",
+      code: "const c = cva('nx:flex', { variants: { variant: { default: '', icon: 'nx:[&_svg]:size-icon-glyph-lg' } } });",
       errors: [{ messageId: 'unstrokedIcon' }],
     },
     {
@@ -447,6 +444,36 @@ ruleTester.run('nx-class-conventions', rule, {
     {
       code: "const c = 'nx:[&_svg]:size-icon-glyph-default nx:hover:icon-stroke';",
       errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    // `svg` children are sized with `size-icon-*`, so the line matches.
+    {
+      code: "const c = 'nx:[&_svg]:size-[24px] nx:icon-stroke';",
+      errors: [{ messageId: 'plainIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&>svg]:h-[12px] nx:[&>svg]:w-[12px] nx:icon-stroke';",
+      errors: [{ messageId: 'plainIconSize' }],
+    },
+    {
+      code: "const c = `nx:[&_svg:not([class*='size-'])]:size-[16px] nx:icon-stroke`;",
+      errors: [{ messageId: 'plainIconSize' }],
+    },
+    {
+      code: "const c = cva('nx:flex nx:icon-stroke', { variants: { size: { sm: 'nx:[&>svg]:size-[14px]' } } });",
+      errors: [{ messageId: 'plainIconSize' }],
+    },
+    // A size from spacing reports density, and not a plain size as well.
+    {
+      code: "const c = 'nx:[&_svg]:size-4';",
+      errors: [
+        { messageId: 'densityIconSize' },
+        { messageId: 'unstrokedIcon' },
+      ],
+    },
+    // A list that misses both gets both reports.
+    {
+      code: "const c = 'nx:[&_svg]:size-[24px]';",
+      errors: [{ messageId: 'unstrokedIcon' }, { messageId: 'plainIconSize' }],
     },
   ],
 });

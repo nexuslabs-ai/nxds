@@ -6,7 +6,7 @@
         "unit": "px"
       },
       "$type": "dimension",
-      "$description": "Icon beside 12px text, such as in Kbd. The same at every density."
+      "$description": "Small icon in a compact part, such as Kbd. The same at every density."
     },
     "sm": {
       "$value": {
@@ -14,7 +14,7 @@
         "unit": "px"
       },
       "$type": "dimension",
-      "$description": "Small icon or mark, such as a Badge icon or a Checkbox check. The same at every density."
+      "$description": "Icon beside small text, such as in a Badge. The same at every density."
     },
     "default": {
       "$value": {
@@ -23,6 +23,22 @@
       },
       "$type": "dimension",
       "$description": "Icon in a control, at every control size. The same at every density."
+    },
+    "lg": {
+      "$value": {
+        "value": 24,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$description": "Large standalone icon, such as in an EmptyState. The same at every density."
+    },
+    "xl": {
+      "$value": {
+        "value": 32,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$description": "Extra large standalone icon, such as in a vertical Attachment. The same at every density."
     }
   },
   "stroke": {
