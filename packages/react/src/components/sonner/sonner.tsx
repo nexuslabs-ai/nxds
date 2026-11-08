@@ -147,11 +147,11 @@ function useNxdsToasts() {
 
 type ToasterProps = Omit<SonnerToasterProps, 'id'>;
 
-// Sonner hides a status icon set to `null`, so only `undefined` keeps the
-// nxds icon.
+// Sonner hides the icon or draws its own for an empty entry, so only a real
+// icon replaces the nxds one.
 function withNxdsIcons(icons: ToasterProps['icons']) {
   const entries = Object.entries(icons ?? {});
-  const setIcons = entries.filter(([, icon]) => icon !== undefined);
+  const setIcons = entries.filter(([, icon]) => Boolean(icon));
   return { ...toasterIcons, ...Object.fromEntries(setIcons) };
 }
 
