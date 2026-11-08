@@ -101,6 +101,8 @@ ruleTester.run('nx-class-conventions', rule, {
     "const c = 'nx:[&_svg]:size-icon-glyph-default nx:icon-stroke';",
     "const c = cva('nx:flex nx:icon-stroke', { variants: { size: { sm: 'nx:[&>svg]:size-icon-glyph-sm' } } });",
     "const c = cva('nx:flex', { variants: { variant: { default: '', icon: 'nx:[&_svg]:size-icon-glyph-lg nx:icon-stroke' } } });",
+    // A size off the scale is fine when the same selector sets the line's size.
+    "const c = 'nx:[&_svg]:size-12 nx:[&_svg]:[--nx-icon-size:48px] nx:icon-stroke';",
     // Sizing the box around an icon, or styling the icon without sizing it,
     // needs no stroke.
     "const c = 'nx:has-[>svg]:size-8 nx:[&:has(svg)]:h-9';",
@@ -342,7 +344,11 @@ ruleTester.run('nx-class-conventions', rule, {
       code: "const c = 'nx:[&_svg]:size-icon-glyph-default nx:hover:icon-stroke';",
       errors: [{ messageId: 'unstrokedIcon' }],
     },
-    // `svg` children are sized with `size-icon-*`, so the line matches.
+    // `svg` children are sized with `size-icon-glyph-*`, so the line matches.
+    {
+      code: "const c = 'nx:[&_svg]:size-12 nx:[&>svg]:[--nx-icon-size:48px] nx:icon-stroke';",
+      errors: [{ messageId: 'plainIconSize' }],
+    },
     {
       code: "const c = 'nx:[&_svg]:size-4 nx:icon-stroke';",
       errors: [{ messageId: 'plainIconSize' }],

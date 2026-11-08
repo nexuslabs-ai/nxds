@@ -138,15 +138,16 @@ function selectsChildSvg(variant) {
   return /^svg(?![\w-])/.test(selector.split(/[_>+~]/).at(-1));
 }
 
-// The sizing utilities a class list applies to its `svg` children, such as
-// `size-icon-glyph-default` from `nx:[&_svg]:size-icon-glyph-default`.
+// The sizing utilities a class list applies to its `svg` children, each with
+// its variants: `nx:[&_svg]:size-4` gives `{ variants: '[&_svg]', utility: 'size-4' }`.
 function svgChildSizes(classes) {
   return classes.flatMap((token) => {
     if (!token.startsWith('nx:')) return [];
     const parts = classSegments(token.slice('nx:'.length));
     const utility = parts.pop();
     if (!/^(?:size|h|w)-/.test(utility)) return [];
-    return parts.some(selectsChildSvg) ? [utility] : [];
+    if (!parts.some(selectsChildSvg)) return [];
+    return [{ variants: parts.join(':'), utility }];
   });
 }
 
@@ -158,10 +159,16 @@ function leavesIconUnstroked(scope) {
   return svgChildSizes(classes).length > 0;
 }
 
-// Only `size-icon-glyph-*` sets `--nx-icon-size`, the size the line is drawn for.
+// `size-icon-glyph-*` sets `--nx-icon-size`, the size the line is drawn for. Any
+// other size must set the variable itself, under the same variants.
 function sizesIconWithoutLine(scope) {
-  return svgChildSizes(scope.split(/\s+/)).some(
-    (utility) => !utility.startsWith('size-icon-glyph-')
+  const classes = scope.split(/\s+/);
+  return svgChildSizes(classes).some(
+    ({ variants, utility }) =>
+      !utility.startsWith('size-icon-glyph-') &&
+      !classes.some((token) =>
+        token.startsWith(`nx:${variants}:[--nx-icon-size:`)
+      )
   );
 }
 
@@ -340,7 +347,7 @@ export default {
       unstrokedIcon:
         'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-icon-glyph-default`), so add `nx:icon-stroke` to draw stroked icons at the icon line width.',
       plainIconSize:
-        'Plain icon size — size `svg` children with a `size-icon-glyph-*` class, so the line matches the icon. `size-*`, `h-*` and `w-*` leave `--nx-icon-size` unset.',
+        'Plain icon size — size `svg` children with a `size-icon-glyph-*` class, so the line matches the icon. `size-*`, `h-*` and `w-*` leave `--nx-icon-size` unset, so set it on the same selector for a size off the scale.',
     },
   },
   create(context) {

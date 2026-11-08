@@ -24,6 +24,7 @@ import {
   IconCircleCheck,
   IconInfoCircle,
   IconLoader2,
+  IconX,
 } from '../../lib/icons';
 
 import 'vue-sonner/style.css';
@@ -113,10 +114,7 @@ const forwarded = computed(
 </script>
 
 <template>
-  <div
-    data-slot="toaster"
-    class="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke nx:[&_[data-close-button]_svg]:[--nx-icon-size:var(--nx-icon-glyph-xs)]"
-  >
+  <div data-slot="toaster" class="nx:[&_[data-icon]]:icon-stroke">
     <Sonner
       v-bind="forwarded"
       :id="NXDS_TOASTER_ID"
@@ -137,6 +135,9 @@ const forwarded = computed(
       /></template>
       <template #loading-icon
         ><IconLoader2 class="nx:size-icon-glyph-default nx:animate-spin"
+      /></template>
+      <template #close-icon
+        ><IconX class="nx:size-icon-glyph-xs nx:icon-stroke"
       /></template>
     </Sonner>
   </div>

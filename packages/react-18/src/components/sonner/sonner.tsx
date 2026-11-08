@@ -18,6 +18,7 @@ import {
   IconCircleCheck,
   IconInfoCircle,
   IconLoader2,
+  IconX,
 } from '../../lib/icons';
 
 /**
@@ -59,6 +60,7 @@ const toasterIcons = {
   loading: (
     <IconLoader2 className="nx:size-icon-glyph-default nx:animate-spin" />
   ),
+  close: <IconX className="nx:size-icon-glyph-xs nx:icon-stroke" />,
 };
 
 /**
@@ -153,10 +155,7 @@ type ToasterProps = Omit<SonnerToasterProps, 'id'>;
 function Toaster({ style, ...props }: ToasterProps) {
   const theme = useToasterTheme();
   return (
-    <div
-      data-slot="toaster"
-      className="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke nx:[&_[data-close-button]_svg]:[--nx-icon-size:var(--nx-icon-glyph-xs)]"
-    >
+    <div data-slot="toaster" className="nx:[&_[data-icon]]:icon-stroke">
       <Sonner
         theme={theme}
         icons={toasterIcons}
