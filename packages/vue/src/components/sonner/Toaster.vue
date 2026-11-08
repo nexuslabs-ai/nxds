@@ -124,21 +124,29 @@ const forwarded = computed(
       :theme="props.theme ?? documentTheme"
       :style="style"
     >
-      <template #success-icon
-        ><IconCircleCheck class="nx:size-icon-glyph-default"
-      /></template>
-      <template #info-icon
-        ><IconInfoCircle class="nx:size-icon-glyph-default"
-      /></template>
-      <template #warning-icon
-        ><IconAlertTriangle class="nx:size-icon-glyph-default"
-      /></template>
-      <template #error-icon
-        ><IconAlertCircle class="nx:size-icon-glyph-default"
-      /></template>
-      <template #loading-icon
-        ><IconLoader2 class="nx:size-icon-glyph-default nx:animate-spin"
-      /></template>
+      <template #success-icon>
+        <component :is="props.icons.success" v-if="props.icons?.success" />
+        <IconCircleCheck v-else class="nx:size-icon-glyph-default" />
+      </template>
+      <template #info-icon>
+        <component :is="props.icons.info" v-if="props.icons?.info" />
+        <IconInfoCircle v-else class="nx:size-icon-glyph-default" />
+      </template>
+      <template #warning-icon>
+        <component :is="props.icons.warning" v-if="props.icons?.warning" />
+        <IconAlertTriangle v-else class="nx:size-icon-glyph-default" />
+      </template>
+      <template #error-icon>
+        <component :is="props.icons.error" v-if="props.icons?.error" />
+        <IconAlertCircle v-else class="nx:size-icon-glyph-default" />
+      </template>
+      <template #loading-icon>
+        <component :is="props.icons.loading" v-if="props.icons?.loading" />
+        <IconLoader2
+          v-else
+          class="nx:size-icon-glyph-default nx:animate-spin"
+        />
+      </template>
       <template #close-icon><IconX class="nx:size-icon-glyph-xs" /></template>
     </Sonner>
   </div>

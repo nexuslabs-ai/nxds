@@ -147,6 +147,14 @@ function useNxdsToasts() {
 
 type ToasterProps = Omit<SonnerToasterProps, 'id'>;
 
+// Sonner hides a status icon set to `null`, so only `undefined` keeps the
+// nxds icon.
+function withNxdsIcons(icons: ToasterProps['icons']) {
+  const entries = Object.entries(icons ?? {});
+  const setIcons = entries.filter(([, icon]) => icon !== undefined);
+  return { ...toasterIcons, ...Object.fromEntries(setIcons) };
+}
+
 /**
  * Renders toast notifications. Mount it once near your app root, then call
  * `toast()` from anywhere. It follows the `.dark` class, or `data-theme="dark"`,
@@ -161,7 +169,7 @@ function Toaster({ style, icons, ...props }: ToasterProps) {
     >
       <Sonner
         theme={theme}
-        icons={{ ...toasterIcons, ...icons }}
+        icons={withNxdsIcons(icons)}
         style={
           {
             ...toasterThemeVars,

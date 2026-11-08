@@ -193,6 +193,46 @@ export const IconStroke: Story = {
   },
 };
 
+// Your icons replace the ones you name, and the rest stay the nxds icons. A
+// close icon you pass draws the line the stroke tokens set for its size.
+export const PartialIcons: Story = {
+  render: () => {
+    const showToasts = () => {
+      toast.success('Changes saved');
+      toast.error('Something went wrong');
+    };
+    return (
+      <>
+        <Button onClick={showToasts}>Show toasts</Button>
+        <Toaster
+          closeButton
+          icons={{
+            success: <Star className="nx:size-4" />,
+            error: undefined,
+            close: <Star className="nx:size-icon-glyph-xs" />,
+          }}
+        />
+      </>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+    await userEvent.click(canvas.getByRole('button', { name: 'Show toasts' }));
+
+    const saved = await body.findByText('Changes saved');
+    const failed = await body.findByText('Something went wrong');
+    await expect(
+      toastPart(saved, '[data-icon] svg.lucide-star')
+    ).toBeInTheDocument();
+    await expect(
+      drawnLine(toastPart(saved, '[data-close-button] svg.lucide-star'))
+    ).toEqual(expectedLine(canvasElement, 12));
+    await expect(drawnLine(toastPart(failed, '[data-icon] svg')).size).toBe(16);
+    toast.dismiss();
+  },
+};
+
 function NxdsToastCount() {
   const { toasts } = useSonner();
   return <output aria-label="nxds toast count">{toasts.length}</output>;
