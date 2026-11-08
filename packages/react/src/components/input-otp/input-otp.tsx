@@ -121,10 +121,10 @@ function InputOTPSeparator({ className, ...props }: InputOTPSeparatorProps) {
     <div
       data-slot="input-otp-separator"
       aria-hidden="true"
-      className={cn('nx:flex nx:items-center nx:icon-stroke', className)}
+      className={cn('nx:flex nx:items-center', className)}
       {...props}
     >
-      <IconCircleFilled className="nx:size-icon-[4px] nx:text-muted-foreground" />
+      <IconCircleFilled className="nx:size-[4px] nx:text-muted-foreground" />
     </div>
   );
 }

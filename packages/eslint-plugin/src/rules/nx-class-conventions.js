@@ -37,13 +37,17 @@ export const RAW_LETTER_SPACINGS = [
 
 // A size from spacing follows density: a numeric spacing step (`size-4`), or an
 // arbitrary value that reads a spacing variable
-// (`size-icon-[var(--nx-spacing-8)]`, `size-(--nx-spacing-8)`). Glyph tokens
+// (`size-[var(--nx-spacing-8)]`, `size-(--nx-spacing-8)`). Glyph tokens
 // (`size-icon-glyph-sm`) and other arbitrary values (`size-[24px]`) do not.
 // A leading `!` is Tailwind's important modifier.
-const SPACING_SIZE = /^!?(?:size|h|w)-(?:\d|(?:icon-)?[[(].*--nx-spacing-)/;
+const SPACING_SIZE = /^!?(?:size|h|w)-(?:\d|[[(].*--nx-spacing-)/;
 
 // Any size utility: a spacing step, a glyph token or an arbitrary value.
 const ANY_SIZE = /^!?(?:size|h|w)-/;
+
+// A fixed size that leaves `--nx-icon-size` unset, such as `size-[24px]`. A size
+// from spacing reports `densityIconSize` instead.
+const PLAIN_SIZE = /^!?(?:size|h|w)-(?!icon-glyph-|\d|[[(].*--nx-spacing-)/;
 
 // An `Icon*` or `*Icon` JSX element, such as `IconX` or `CheckIcon`.
 const ICON_ELEMENT_NAME = /^Icon(?![a-z])|Icon$/;
@@ -189,12 +193,17 @@ function fadesItsFocusRing(scope) {
   );
 }
 
-// A class list that sizes its `svg` children, such as `nx:[&_svg]:size-4`,
-// draws the icon, so it sets the icon's line with `nx:icon-stroke` too.
+// A class list that sizes its `svg` children draws the icon, so it sets the
+// icon's line with `nx:icon-stroke` too.
 function leavesIconUnstroked(scope) {
   const classes = nxClasses(scope);
   if (classes.includes('nx:icon-stroke')) return false;
   return classes.some((token) => sizesSvg(token, ANY_SIZE));
+}
+
+// Only `size-icon-glyph-*` sets `--nx-icon-size`, the size the line is drawn for.
+function sizesIconWithoutLine(scope) {
+  return nxClasses(scope).some((token) => sizesSvg(token, PLAIN_SIZE));
 }
 
 function isStoryFile(filename) {
@@ -366,11 +375,13 @@ export default {
       rawLetterSpacing:
         'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
       densityIconSize:
-        'Icon size from spacing — a numeric `size-*`, `h-*` or `w-*`, or one that reads a `--nx-spacing-*` variable, on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm`, `-default` or `-lg` (12, 14, 16 or 24px at the Default UI scale). For another size, use a whole multiple of the default icon in `size-icon-[…]`, such as `size-icon-[calc(var(--nx-icon-glyph-default)*2)]`. It follows the UI scale and sets the line for that size too.',
+        'Icon size from spacing — a numeric `size-*`, `h-*` or `w-*`, or one that reads a `--nx-spacing-*` variable, on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm`, `-default`, `-lg` or `-xl` (12, 14, 16, 24 or 32px at the Default UI scale).',
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
       unstrokedIcon:
-        'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-4`), so add `nx:icon-stroke` to draw stroked icons at the icon line width.',
+        'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-icon-glyph-default`), so add `nx:icon-stroke` to draw stroked icons at the icon line width.',
+      plainIconSize:
+        'Plain icon size — size `svg` children with a `size-icon-glyph-*` class, so the line matches the icon. `size-*`, `h-*` and `w-*` leave `--nx-icon-size` unset.',
     },
   },
   create(context) {
@@ -393,8 +404,12 @@ export default {
       if (!isDocsSpecimenPage(filename) && fadesItsFocusRing(scope)) {
         context.report({ node, messageId: 'ringFadingTransition' });
       }
-      if (!isExampleFile(filename) && leavesIconUnstroked(scope)) {
+      if (isExampleFile(filename)) return;
+      if (leavesIconUnstroked(scope)) {
         context.report({ node, messageId: 'unstrokedIcon' });
+      }
+      if (sizesIconWithoutLine(scope)) {
+        context.report({ node, messageId: 'plainIconSize' });
       }
     }
 

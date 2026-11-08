@@ -112,7 +112,7 @@ const ContextMenuSubTrigger = React.forwardRef<
       {...props}
     >
       {children}
-      <IconChevronRight className="nx:ml-auto nx:size-icon-glyph-default" />
+      <IconChevronRight className="nx:ml-auto" />
     </ContextMenuPrimitive.SubTrigger>
   );
 });
@@ -376,7 +376,7 @@ const ContextMenuRadioItem = React.forwardRef<
             data-slot="context-menu-radio-indicator-icon"
             aria-hidden="true"
             className={cn(
-              'nx:size-icon-[calc(var(--nx-icon-glyph-default)_-_8px)]',
+              'nx:size-[calc(var(--nx-icon-glyph-default)_-_8px)]',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
             )}

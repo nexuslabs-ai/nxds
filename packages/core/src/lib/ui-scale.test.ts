@@ -164,6 +164,7 @@ describe('UI scale CSS', () => {
     expect(glyph('sm')).toEqual([12, 16, 18]);
     expect(glyph('default')).toEqual([14, 18, 20]);
     expect(glyph('lg')).toEqual([22, 28, 30]);
+    expect(glyph('xl')).toEqual([28, 36, 40]);
     for (const scale of SCALES) {
       for (const [name, px] of blocks.get(`[data-ui-scale='${scale}']`)!) {
         if (name.startsWith('icon-glyph-')) expect(px % 2, name).toBe(0);

@@ -156,7 +156,7 @@ function Toaster({ style, ...props }: ToasterProps) {
   return (
     <div
       data-slot="toaster"
-      className="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke nx:[&_[data-close-button]_svg]:[--nx-icon-size:12px]"
+      className="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke nx:[&_[data-close-button]_svg]:[--nx-icon-size:var(--nx-icon-glyph-xs)]"
     >
       <Sonner
         theme={theme}

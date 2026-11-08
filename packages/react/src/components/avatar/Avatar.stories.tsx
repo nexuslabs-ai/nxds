@@ -136,7 +136,7 @@ export const WithIcon: Story = {
   render: (_args) => (
     <Avatar role="img" aria-label="Unknown user">
       <AvatarFallback aria-hidden="true">
-        <UserIcon aria-hidden="true" className="nx:size-icon-glyph-default" />
+        <UserIcon aria-hidden="true" className="nx:size-icon-glyph-lg" />
       </AvatarFallback>
     </Avatar>
   ),

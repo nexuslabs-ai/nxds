@@ -400,7 +400,7 @@ export const WithIcon: Story = {
     template: `
       <Avatar role="img" aria-label="Unknown user">
         <AvatarFallback aria-hidden="true">
-          <PhUser aria-hidden="true" class="nx:size-icon-glyph-default" />
+          <PhUser aria-hidden="true" class="nx:size-icon-glyph-lg" />
         </AvatarFallback>
       </Avatar>
     `,
