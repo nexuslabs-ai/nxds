@@ -1,3 +1,4 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import {
   EnvelopeIcon,
   EyeIcon,
@@ -8,6 +9,10 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
+import {
+  expectInsideBorder,
+  expectTextFits,
+} from '../../stories/support/story-height-test-utils';
 import { Spinner } from '../spinner/spinner';
 
 import {
@@ -606,6 +611,46 @@ export const WithKbd: Story = {
     await expect(
       window.getComputedStyle(canvas.getByTestId('ig-kbd-addon')).marginRight
     ).toBe('-6px');
+  },
+};
+
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
+
+export const ExtraSmallButtonAtEveryDensity: Story = {
+  // At 16px UI text, the text line is taller than the Tight minimum height.
+  globals: { uiFontSize: 16 },
+  render: () => (
+    <div className="nx:flex nx:w-80 nx:flex-col nx:gap-3">
+      {DENSITIES.map((density) => (
+        <div
+          key={density}
+          data-density={density}
+          data-testid={`row-${density}`}
+        >
+          <InputGroup>
+            <InputGroupInput aria-label={`Invite link, ${density}`} />
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton size="xs">Copy</InputGroupButton>
+            </InputGroupAddon>
+          </InputGroup>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const density of DENSITIES) {
+      const button = within(canvas.getByTestId(`row-${density}`)).getByRole(
+        'button',
+        { name: 'Copy' }
+      );
+      // The label fits inside the button, and the button inside the group.
+      await expectTextFits(button);
+      await expectInsideBorder(
+        button,
+        button.closest<HTMLElement>('[data-slot="input-group"]')!
+      );
+    }
   },
 };
 

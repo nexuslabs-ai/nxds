@@ -1,5 +1,6 @@
 import * as React from 'react';
 
+import { DENSITY_OPTIONS } from '@nxds/core';
 import {
   CalendarBlankIcon,
   CaretRightIcon,
@@ -20,6 +21,7 @@ import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
+import { expectTextFits } from '../../stories/support/story-height-test-utils';
 
 import {
   Sidebar,
@@ -601,6 +603,45 @@ export const Disabled: Story = {
     // full opacity (not a fade).
     await expect(button).toHaveClass('nx:disabled:text-disabled-foreground');
     await expect(getComputedStyle(button).opacity).toBe('1');
+  },
+};
+
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
+
+export const BadgeTextFitsAtEveryDensity: Story = {
+  // At 16px UI text, the text line is taller than the Tight minimum height.
+  globals: { uiFontSize: 16 },
+  render: () => (
+    <SidebarProvider>
+      <Sidebar collapsible="none">
+        <SidebarContent>
+          {DENSITIES.map((density) => (
+            <SidebarMenu
+              key={density}
+              data-density={density}
+              data-testid={`row-${density}`}
+            >
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <TrayIcon />
+                  <span>Inbox</span>
+                </SidebarMenuButton>
+                <SidebarMenuBadge>4</SidebarMenuBadge>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          ))}
+        </SidebarContent>
+      </Sidebar>
+    </SidebarProvider>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const density of DENSITIES) {
+      // The count fits inside the badge at every density.
+      await expectTextFits(
+        within(canvas.getByTestId(`row-${density}`)).getByText('4')
+      );
+    }
   },
 };
 
