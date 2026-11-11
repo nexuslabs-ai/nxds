@@ -7,12 +7,12 @@
 // switch that changes nothing, an overlay that doesn't open, close and return
 // focus, a token or preset that doesn't reach a component, a tree or overlay
 // that changes when each part sits in a canvas wrapper, a sampler artboard
-// that logs a problem or doesn't fill its board at any density or stroke, or a request
-// to the network. Then it exports the release again with every theme flag
-// set, and checks that the theme reaches the components, the presets and the
-// sampler, and once more at the Larger UI scale with spacious density and at
-// the Small UI scale, for the sampler alone. Each check lives in
-// scripts/smoke/.
+// that logs a problem or doesn't fill its board at any density or stroke, or
+// a request to the network. Then it exports the release again with every
+// theme flag set, and checks that the theme reaches the components, the
+// presets and the sampler, and once more at the Larger UI scale with
+// spacious density and at the Small UI scale, for the sampler alone. Each
+// check lives in scripts/smoke/.
 import { FULL_THEME } from './full-theme.ts';
 import { ATTRIBUTE_CASES, checkAttributes } from './smoke/attributes.ts';
 import { BAD_INPUT_CASES, checkBadInput } from './smoke/bad-input.ts';

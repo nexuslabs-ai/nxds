@@ -208,8 +208,9 @@ async function measureSampler(
           );
         }
       }
-      // Card titles and descriptions sit on one line, and each card's content
-      // fills its card, with nothing left empty under it.
+      // Card titles and descriptions sit on one line, no text is cut short at
+      // an ellipsis, and each card's content fills its card, with nothing
+      // left empty under it.
       const lines = (element: Element) => {
         const { lineHeight } = getComputedStyle(element);
         const line = parseFloat(lineHeight);
@@ -223,6 +224,13 @@ async function measureSampler(
         ),
       ]
         .filter((element) => lines(element) > 1)
+        .map((element) => element.textContent?.trim() ?? '');
+      const truncated = [...root.querySelectorAll('*')]
+        .filter(
+          (element) =>
+            getComputedStyle(element).textOverflow === 'ellipsis' &&
+            element.scrollWidth > element.clientWidth
+        )
         .map((element) => element.textContent?.trim() ?? '');
       const empty = [...root.querySelectorAll('[data-slot="card-content"]')]
         .map((content) => {
@@ -242,6 +250,7 @@ async function measureSampler(
       return {
         overflows,
         wrapped,
+        truncated,
         empty,
         legend: [
           ...root.querySelectorAll(
@@ -305,6 +314,11 @@ async function measureSampler(
       .catch(() => false);
   }
   return { board: { ...board, ...open, opens, closes } };
+}
+
+/** Whether a page that ends at `end` misses `height` by more than 1px. An unmeasured page doesn't. */
+function misses(end: number | undefined, height: number) {
+  return end !== undefined && Math.abs(end - height) > 1;
 }
 
 /** How far past `base` the page ends at each option, or undefined when one wasn't measured. */
@@ -387,8 +401,6 @@ export async function checkSampler() {
   // stroke at the export's density.
   const byDensity: Partial<Record<NxdsDensity, number>> = {};
   const byStroke: Partial<Record<NxdsStroke, number>> = {};
-  // The tables a board that misses its page points at.
-  const offTable = { density: false, stroke: false };
 
   const mounts: Mount[] = [
     ...DENSITY_OPTIONS.map(({ value: density }) => ({
@@ -436,8 +448,7 @@ export async function checkSampler() {
     if (mode === 'light' && density === appearance.density) {
       byStroke[stroke] = board.bottom;
     }
-    if (Math.abs(board.bottom - height) > 1) {
-      offTable[stroke === 'normal' ? 'density' : 'stroke'] = true;
+    if (misses(board.bottom, height)) {
       fail(
         `${name}: at the ${uiScale} UI scale the page ends at ${board.bottom}px, but the canvas.json entry gives ${height}px.`
       );
@@ -451,6 +462,9 @@ export async function checkSampler() {
       fail(
         `${name}: the card text "${text}" wraps onto two lines, or its line height has no px value.`
       );
+    }
+    for (const text of board.truncated) {
+      fail(`${name}: the text "${text}" is cut short at an ellipsis.`);
     }
     for (const empty of board.empty)
       fail(`${name}: ${empty} under its content.`);
@@ -479,9 +493,25 @@ export async function checkSampler() {
       fail(`the sampler in dark: ${slot} keeps its light background.`);
     }
   }
+  // A density row is off when a page at normal stroke misses its board. The
+  // stroke table is off when a stroke moves the page by other than it moves
+  // the board, so a density row that's off doesn't flag it too.
+  const densityOff = DENSITY_OPTIONS.some(({ value: density }) =>
+    misses(byDensity[density], boardAt(density, 'normal').height)
+  );
+  const normal = byStroke.normal;
+  const normalBoard = boardAt(appearance.density, 'normal').height;
+  const strokeOff =
+    normal !== undefined &&
+    STROKE_OPTIONS.some(({ value: stroke }) =>
+      misses(
+        byStroke[stroke],
+        normal + boardAt(appearance.density, stroke).height - normalBoard
+      )
+    );
   const end = byDensity.default;
   if (
-    offTable.density &&
+    densityOff &&
     uiScale === 'default' &&
     end !== undefined &&
     end !== preview
@@ -492,13 +522,13 @@ export async function checkSampler() {
     return;
   }
   const extra = heightsAbove(byDensity, DENSITY_OPTIONS, preview);
-  if (offTable.density && extra) {
+  if (densityOff && extra) {
     fail(
       `Set SAMPLER_EXTRA_HEIGHT.${uiScale} in src/theme.ts to ${JSON.stringify(extra)}.`
     );
   }
-  const strokes = heightsAbove(byStroke, STROKE_OPTIONS, byStroke.normal);
-  if (offTable.stroke && strokes) {
+  const strokes = heightsAbove(byStroke, STROKE_OPTIONS, normal);
+  if (strokeOff && strokes) {
     fail(
       `Set SAMPLER_STROKE_HEIGHT in src/theme.ts to ${JSON.stringify(strokes)}.`
     );
