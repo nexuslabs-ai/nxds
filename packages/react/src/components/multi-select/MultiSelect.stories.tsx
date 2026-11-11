@@ -4,6 +4,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { expectImmediateItemMotion } from '../../stories/support/motion-test-utils';
+import { Checkbox } from '../checkbox/checkbox';
 import {
   Field,
   FieldDescription,
@@ -520,6 +521,31 @@ export const WithDataAttributes: Story = {
     await expect(option).toHaveAttribute('data-slot', 'multi-select-item');
     await userEvent.click(option);
     await expect(option).toHaveAttribute('data-checked', 'true');
+  },
+};
+
+export const IndicatorMatchesCheckboxAtLargerScale: Story = {
+  // The option box grows with the UI scale, as a Checkbox does.
+  globals: { uiScale: 'larger' },
+  render: () => (
+    <div className="nx:flex nx:flex-col nx:gap-4">
+      <Checkbox aria-label="Notify me" />
+      <Frameworks defaultValues={['react']} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+    const checkbox = canvas.getByRole('checkbox').getBoundingClientRect();
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Frameworks' }));
+    const option = await body.findByRole('option', { name: 'React' });
+    const indicator = option
+      .querySelector('[data-slot="multi-select-indicator"]')!
+      .getBoundingClientRect();
+
+    await expect(indicator.width).toBe(checkbox.width);
+    await expect(indicator.height).toBe(checkbox.height);
   },
 };
 

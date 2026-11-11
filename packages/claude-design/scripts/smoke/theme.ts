@@ -4,20 +4,17 @@
 import { DARK, exportTokens, fail, LIGHT, openPage } from './harness.ts';
 import { BUTTON, measure } from './probes.ts';
 
-type ListToken = { name: string; value: string | Record<string, string> };
-
-function listToken(family: string, name: string) {
-  const list = (exportTokens()[family] as { tokens: ListToken[] }).tokens;
-  const token = list.find((candidate) => candidate.name === name);
+function listToken(family: 'color' | 'typeScale', name: string) {
+  const token = exportTokens()[family]?.tokens.find(
+    (candidate) => candidate.name === name
+  );
   if (!token) throw new Error(`tokens.json has no ${name}.`);
   return token.value;
 }
 
 /** Each text family's class and the first face its stack names. */
 function familyHeads() {
-  const { families } = exportTokens()['type'] as {
-    families: Record<string, string>;
-  };
+  const { families } = exportTokens().type;
   const classes: Record<string, string> = {
     sans: 'typography-body-default',
     heading: 'typography-heading-large',
@@ -31,7 +28,7 @@ function familyHeads() {
 
 export async function checkTheme() {
   const primary = listToken('color', 'nx-color-primary-background');
-  const codeSize = listToken('typeScale', 'nx-typography-size-code');
+  const codeSize = listToken('typeScale', 'nx-typography-code-size');
   const fonts = exportTokens().meta.fonts ?? [];
   for (const theme of [LIGHT, DARK]) {
     const mode = theme.attribute ?? 'light';

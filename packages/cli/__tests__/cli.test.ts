@@ -941,7 +941,7 @@ describe('theme', () => {
       if (field.flag === 'density') {
         return { ...field, kind: 'choice', values: ['default', 'roomy'] };
       }
-      if (field.flag === 'font-size') {
+      if (field.flag === 'code-font-size') {
         return { ...field, kind: 'integer', min: 8, max: 40 };
       }
       return field;
@@ -949,14 +949,14 @@ describe('theme', () => {
     const context = setup([release]);
 
     const run = await cli(
-      ['init', '--density', 'roomy', '--font-size', '36'],
+      ['init', '--density', 'roomy', '--code-font-size', '36'],
       context
     );
 
     expect(run.exitCode, run.stdout + run.stderr).toBe(EXIT_CODES.ok);
     const theme = readApp(context.app, NXDS_THEME);
     expect(theme).toContain("density: 'roomy',");
-    expect(theme).toContain('uiFontSize: 36,');
+    expect(theme).toContain('codeFontSize: 36,');
   });
 
   it('resets a part of the theme an empty flag names', async () => {

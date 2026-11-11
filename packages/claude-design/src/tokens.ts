@@ -7,6 +7,7 @@ import type { NxdsAppearanceState } from '@nxds/core';
 import type { CatalogueToken, CatalogueVariant } from '@nxds/core/catalogue';
 import { createTokenCatalogue } from '@nxds/core/catalogue';
 
+import { PRESETS } from './presets.ts';
 import {
   type ComponentReads,
   readersOf,
@@ -15,6 +16,13 @@ import {
 
 export type ThemeId = 'light' | 'dark';
 export type ThemedValue = string | Partial<Record<ThemeId, string>>;
+
+/** A preset attribute's value and the tokens it sets, by name. */
+export interface ScaledPreset {
+  attribute: string;
+  value: string;
+  tokens: Readonly<Record<string, string>>;
+}
 
 export interface ListToken {
   name: string;
@@ -38,6 +46,8 @@ export interface TokensFile {
   meta: Record<string, unknown> & {
     /** The Google Fonts families tokens.css loads. */
     fonts?: readonly string[];
+    /** A system at another UI scale: its density and corner presets at that scale. */
+    presets?: readonly ScaledPreset[];
   };
   color: { themes: { id: ThemeId; name: string }[]; tokens: ListToken[] };
   type: {
@@ -52,6 +62,8 @@ export interface TokensFile {
   zIndex?: { tokens: ListToken[] };
   motion?: { tokens: ListToken[] };
   icon?: { tokens: ListToken[] };
+  uiScale?: { tokens: ListToken[] };
+  width?: { tokens: ListToken[] };
   typeScale?: { tokens: ListToken[] };
 }
 
@@ -69,6 +81,8 @@ const LIST_FAMILIES = {
   'z-index': 'zIndex',
   motion: 'motion',
   icon: 'icon',
+  'ui-scale': 'uiScale',
+  width: 'width',
 } as const;
 
 /** A tokens.json list family key, such as `borderWidth`. */
@@ -109,8 +123,8 @@ function pageVariant(
   mode: ThemeId,
   appearance: NxdsAppearanceState
 ) {
-  const field = token.control?.kind === 'preset' ? token.control.field : null;
-  const preset = field ? appearance[field] : null;
+  const control = token.controls.find((each) => each.kind === 'preset');
+  const preset = control ? appearance[control.field] : null;
   const inPreset = token.variants.filter(
     (variant) => variant.preset === null || variant.preset === preset
   );
@@ -454,5 +468,49 @@ export function buildTokens(
     };
   }
   tokens.typeScale = { tokens: typeScaleTokens(context) };
+  const presets = scaledPresets(context, appearance, tokens);
+  if (presets.length > 0) meta.presets = presets;
   return tokens;
+}
+
+/**
+ * Each density and corner preset at the system's UI scale. bundle.css holds
+ * them at the Default scale, so a system at another scale declares its own.
+ */
+function scaledPresets(
+  { catalogue }: Context,
+  appearance: NxdsAppearanceState,
+  tokens: TokensFile
+): ScaledPreset[] {
+  if (appearance.uiScale === 'default') return [];
+  const byName = new Map(
+    catalogue.map((token) => [bareName(token.name), token])
+  );
+  return Object.entries(PRESETS).flatMap(
+    ([attribute, { options, field, family }]) => {
+      const scaled = (tokens[family]?.tokens ?? []).flatMap(({ name }) => {
+        const token = byName.get(name);
+        return token?.controls.some(({ kind }) => kind === 'scale')
+          ? [token]
+          : [];
+      });
+      if (scaled.length === 0) return [];
+      return options.map(({ value }) => {
+        const resolver = createResolver(catalogue, {
+          ...appearance,
+          [field]: value,
+        });
+        return {
+          attribute,
+          value,
+          tokens: Object.fromEntries(
+            scaled.map((token) => [
+              bareName(token.name),
+              String(tokenValue(token, resolver)),
+            ])
+          ),
+        };
+      });
+    }
+  );
 }

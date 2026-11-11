@@ -2,7 +2,8 @@
 // React 18 sources use. Every catalogue token's default leaves this file:
 // tokens.css declares the ones a component reads, and a read the scanner
 // misses fails validation instead of falling back to a default here. The
-// appearance presets stay, `.dark` rules also match the page's
+// appearance presets stay, less the UI scale ones, since the export sets the
+// UI scale in tokens.css. `.dark` rules also match the page's
 // `data-theme="dark"`, and structural selectors reach through the wrapper the
 // canvas puts around each component. A canvas has no Preflight, so the file
 // carries Preflight's box-sizing rule, the one part of it nxds needs.
@@ -30,6 +31,7 @@ const ENTRY = [
 const DARK_CLASS = /(?<![\w\\-])\.dark(?![\w-])/g;
 const DARK_SCOPE = ':is(.dark, [data-theme="dark"])';
 const NXDS_CLASS = /\.nx\\:/;
+const UI_SCALE_RULE = /\[data-ui-scale=/;
 // Preflight's own selectors and value, in its layer, so a utility still wins.
 const BOX_SIZING = `@layer base {
   *, ::after, ::before, ::backdrop, ::file-selector-button {
@@ -37,8 +39,16 @@ const BOX_SIZING = `@layer base {
   }
 }
 `;
-/** The selectors that hold a token's default value, before the `.dark` rewrite. */
-const DEFAULT_SELECTORS: ReadonlySet<string> = new Set([':root', '.dark']);
+/**
+ * The selectors that hold a token's default value, before the `.dark` rewrite.
+ * Tailwind writes its theme variables, such as the page widths, to
+ * `:root, :host`.
+ */
+const DEFAULT_SELECTORS: ReadonlySet<string> = new Set([
+  ':root',
+  ':host',
+  '.dark',
+]);
 
 /** The `nx:` classes `source` names. */
 export function classCandidates(source: string) {
@@ -100,6 +110,9 @@ function moveDefaultsToTokens(
 
 function moveValuesToTokens(css: string, tokenNames: ReadonlySet<string>) {
   const root = postcss.parse(css);
+  root.walkRules(UI_SCALE_RULE, (rule) => {
+    rule.remove();
+  });
   root.walkRules((rule) => moveDefaultsToTokens(rule, tokenNames));
   root.walkRules((rule) => {
     rule.selector = rule.selector.replace(DARK_CLASS, DARK_SCOPE);

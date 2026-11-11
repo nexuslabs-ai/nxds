@@ -3,7 +3,10 @@ import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { expectMenuItemInsetAtEveryDensity } from '../../stories/support/menu-item-inset-test-utils';
+import {
+  expectMenuItemInsetAtEveryDensity,
+  expectRadioDotInsetAtEveryUiScale,
+} from '../../stories/support/menu-item-inset-test-utils';
 import {
   expectExitBeforeUnmount,
   expectInterruptibleOverlayMotion,
@@ -439,6 +442,38 @@ export const CheckInsetAtEveryDensity: Story = {
       within(menu).getByRole('menuitem', { name: 'Reset view' }),
       within(menu).getByText('Appearance'),
     ]);
+
+    await userEvent.keyboard('{Escape}');
+    await expectExitBeforeUnmount(menu);
+  },
+};
+
+export const RadioDotAtEveryUiScale: Story = {
+  render: (_args) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">View</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="nx:w-56">
+        <DropdownMenuRadioGroup value="bottom">
+          <DropdownMenuRadioItem value="top">Top</DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="bottom">Bottom</DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'View' }));
+    const menu = await within(document.body).findByRole('menu');
+    const item = within(menu).getByRole('menuitemradio', { name: 'Bottom' });
+    const indicator = item.querySelector<HTMLElement>(
+      '[data-slot="dropdown-menu-radio-indicator"]'
+    )!.parentElement!;
+    const dot = item.querySelector(
+      '[data-slot="dropdown-menu-radio-indicator-icon"]'
+    )!;
+    await expectRadioDotInsetAtEveryUiScale(menu, indicator, dot);
 
     await userEvent.keyboard('{Escape}');
     await expectExitBeforeUnmount(menu);

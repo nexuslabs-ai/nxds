@@ -186,6 +186,16 @@ describe('cn', () => {
       'nx:size-icon-glyph-sm',
     ],
     [
+      'icon size lg',
+      'nx:size-6 nx:size-icon-glyph-lg',
+      'nx:size-icon-glyph-lg',
+    ],
+    [
+      'icon size xl',
+      'nx:size-8 nx:size-icon-glyph-xl',
+      'nx:size-icon-glyph-xl',
+    ],
+    [
       'spacing role',
       'nx:gap-container nx:gap-layout-stack',
       'nx:gap-layout-stack',

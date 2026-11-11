@@ -180,8 +180,8 @@ export const StatusWithIcons: Story = {
 const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
 
 export const TextFitsAtEveryDensity: Story = {
-  // At 16px UI text, the text line is taller than the Tight minimum height.
-  globals: { uiFontSize: 16 },
+  // Text is tallest at the Larger UI scale, so it fits at every smaller one.
+  globals: { uiScale: 'larger' },
   render: () => ({
     components: { Badge },
     setup: () => ({ densities: DENSITIES }),

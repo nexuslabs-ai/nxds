@@ -25,6 +25,7 @@ const THEME: NxdsTheme = {
     surfaceTone: 'slate',
     lightContrast: 30,
     darkContrast: 80,
+    uiScale: 'large',
     density: 'compact',
     corners: 'round',
     elevation: 'soft',
@@ -34,7 +35,6 @@ const THEME: NxdsTheme = {
       uiFont: family('inter'),
       headingFont: family('lora'),
       codeFont: family('jetbrains-mono'),
-      uiFontSize: 15,
       codeFontSize: 13,
     },
   },
@@ -106,7 +106,8 @@ describe('theme flags', () => {
       /--brand-color "not-a-color" isn't a CSS color/,
     ],
     ['light-contrast', '101', /from 0 to 100/],
-    ['font-size', '40', /from 8 to 32/],
+    ['ui-scale', 'huge', /--ui-scale "huge" isn't one of small/],
+    ['code-font-size', '40', /from 8 to 32/],
     ['icons', 'feather', /--icons "feather" isn't one of phosphor/],
   ])('reject --%s %s', (flag, value, message) => {
     expect(() => applyNxdsThemeFlags(THEME, { [flag]: value })).toThrow(

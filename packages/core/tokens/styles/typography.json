@@ -166,7 +166,7 @@
       "$type": "typography",
       "$value": {
         "fontFamily": "{family.font-mono}",
-        "fontSize": "{size.code}",
+        "fontSize": "{code.size}",
         "fontWeight": "{weight.normal}",
         "lineHeight": "{line-height.sm}",
         "letterSpacing": {
@@ -179,7 +179,7 @@
       "$type": "typography",
       "$value": {
         "fontFamily": "{family.font-mono}",
-        "fontSize": "{size.code}",
+        "fontSize": "{code.size}",
         "fontWeight": "{weight.semibold}",
         "lineHeight": "auto",
         "letterSpacing": {

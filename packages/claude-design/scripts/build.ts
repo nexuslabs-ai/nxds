@@ -27,7 +27,6 @@ import path from 'node:path';
 import { buildBundle } from '../src/bundle.ts';
 import { canvasPartFiles } from '../src/canvas/pages.ts';
 import { CANVAS_PARTS, EXCLUDED_SLUGS, GROUPS } from '../src/groups.ts';
-import { withPresetTable } from '../src/presets.ts';
 import {
   buildPreview,
   checkCanvasExamples,
@@ -225,9 +224,7 @@ async function main() {
   const folders = componentFolders();
   const reads = await componentReads(folders);
   const styles = await buildStyles();
-  const readme = withPresetTable(
-    readFileSync(path.join(contentDir, 'README.md'), 'utf8')
-  );
+  const readme = readFileSync(path.join(contentDir, 'README.md'), 'utf8');
   const sampler = readFileSync(path.join(contentDir, SAMPLER_FILE), 'utf8');
   const { module: theme, bytes: themeBytes } = await buildThemeModule(
     {

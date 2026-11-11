@@ -1,3 +1,9 @@
+import {
+  DENSITY_OPTIONS,
+  type NxdsDensity,
+  type NxdsStroke,
+  STROKE_OPTIONS,
+} from '@nxds/core';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Page } from 'playwright';
@@ -8,11 +14,13 @@ import {
   samplerFile,
   samplerTags,
 } from '../../src/setup.ts';
-import { themedBoard } from '../../src/theme.ts';
+import { themedBoard, uiScaleFactor } from '../../src/theme.ts';
+import type { ThemeId } from '../../src/tokens.ts';
 
 import {
   exportAppearance,
   exportDir,
+  exportTokens,
   fail,
   failOnProblems,
   LIGHT,
@@ -21,8 +29,7 @@ import {
   projectDir,
 } from './harness.ts';
 
-const MODES = ['light', 'dark'] as const;
-type Mode = (typeof MODES)[number];
+type Mode = ThemeId;
 
 /** The value `attribute` takes on the markup's `Nxds.<part>` tag. */
 function attributeOf(markup: string, part: string, attribute: string) {
@@ -113,10 +120,18 @@ type Size = { width: number; height: number };
 const SURFACES =
   '[data-slot="card"], [data-slot="sidebar-inner"], [data-slot="sidebar-inset"], [data-slot="popover-content"]';
 
-async function mountSampler(markup: string, size: Size, mode: Mode) {
+/** Where the sampler mounts: its board, mode and the density and stroke presets around it. */
+type Mount = {
+  size: Size;
+  mode: Mode;
+  density: NxdsDensity;
+  stroke: NxdsStroke;
+};
+
+async function mountSampler(markup: string, mount: Mount) {
   const { page, problems } = await openPage('Button', LIGHT);
   try {
-    return { ...(await measureSampler(page, markup, size, mode)), problems };
+    return { ...(await measureSampler(page, markup, mount)), problems };
   } finally {
     await page.close();
   }
@@ -125,18 +140,19 @@ async function mountSampler(markup: string, size: Size, mode: Mode) {
 async function measureSampler(
   page: Page,
   markup: string,
-  size: Size,
-  mode: Mode
+  { size, mode, density, stroke }: Mount
 ) {
   await page.setViewportSize(size);
   const board = await page.evaluate(
-    async ({ markup, height }) => {
+    async ({ markup, height, density, stroke }) => {
       const { ReactDOM, __nxdsMarkup, __nxdsSettle } =
         window as unknown as PageGlobals;
       document.body.replaceChildren();
       document.body.style.margin = '0';
       const host = document.createElement('div');
       host.id = 'sampler';
+      host.setAttribute('data-density', density);
+      host.setAttribute('data-borderwidth', stroke);
       document.body.append(host);
       try {
         ReactDOM.flushSync(() =>
@@ -192,8 +208,9 @@ async function measureSampler(
           );
         }
       }
-      // Card titles and descriptions sit on one line, and each card's content
-      // fills its card, with nothing left empty under it.
+      // Card titles and descriptions sit on one line, no text is cut short at
+      // an ellipsis, and each card's content fills its card, with nothing
+      // left empty under it.
       const lines = (element: Element) => {
         const { lineHeight } = getComputedStyle(element);
         const line = parseFloat(lineHeight);
@@ -207,6 +224,13 @@ async function measureSampler(
         ),
       ]
         .filter((element) => lines(element) > 1)
+        .map((element) => element.textContent?.trim() ?? '');
+      const truncated = [...root.querySelectorAll('*')]
+        .filter(
+          (element) =>
+            getComputedStyle(element).textOverflow === 'ellipsis' &&
+            element.scrollWidth > element.clientWidth
+        )
         .map((element) => element.textContent?.trim() ?? '');
       const empty = [...root.querySelectorAll('[data-slot="card-content"]')]
         .map((content) => {
@@ -226,6 +250,7 @@ async function measureSampler(
       return {
         overflows,
         wrapped,
+        truncated,
         empty,
         legend: [
           ...root.querySelectorAll(
@@ -243,7 +268,12 @@ async function measureSampler(
         scrollHeight: Math.max(document.documentElement.scrollHeight, height),
       };
     },
-    { markup: markup.replaceAll('{{mode}}', mode), height: size.height }
+    {
+      markup: markup.replaceAll('{{mode}}', mode),
+      height: size.height,
+      density,
+      stroke,
+    }
   );
   if (board.error !== undefined) return { error: board.error };
 
@@ -286,14 +316,37 @@ async function measureSampler(
   return { board: { ...board, ...open, opens, closes } };
 }
 
+/** Whether a page that ends at `end` misses `height` by more than 1px. An unmeasured page doesn't. */
+function misses(end: number | undefined, height: number) {
+  return end !== undefined && Math.abs(end - height) > 1;
+}
+
+/** How far past `base` the page ends at each option, or undefined when one wasn't measured. */
+function heightsAbove<K extends string>(
+  ends: Partial<Record<K, number>>,
+  options: readonly { value: K }[],
+  base: number | undefined
+) {
+  if (base === undefined) return undefined;
+  const heights: Partial<Record<K, number>> = {};
+  for (const { value } of options) {
+    const end = ends[value];
+    if (end === undefined) return undefined;
+    heights[value] = end - base;
+  }
+  return heights;
+}
+
 // The sampler the export ships, mounted the way a canvas does in each mode
 // of its tweak, renders every part with no console problem, fills its board
-// to the height its canvas.json entry gives and stays inside its cards. A
-// themed export's sampler only has to fit its board: its theme moves where
-// the page ends. The
-// table puts canvas wrappers where only rows and cells belong, so the
-// wrapper's own nesting warning is allowed.
-export async function checkSampler({ themed = false } = {}) {
+// to the height its canvas.json entry gives and stays inside its cards. In
+// light mode it mounts inside each density's preset at normal stroke, and
+// inside each other stroke's preset at the export's density, on the board
+// each gets at the export's UI scale. So one export checks a whole row of
+// SAMPLER_EXTRA_HEIGHT and all of SAMPLER_STROKE_HEIGHT. The table puts canvas
+// wrappers where only rows and cells belong, so the wrapper's own nesting
+// warning is allowed.
+export async function checkSampler() {
   const file = readFileSync(path.join(exportDir, SAMPLER_FILE), 'utf8');
   const source = readFileSync(
     path.join(import.meta.dirname, '..', '..', 'content', SAMPLER_FILE),
@@ -304,9 +357,19 @@ export async function checkSampler({ themed = false } = {}) {
       `The export's ${SAMPLER_FILE} isn't content/${SAMPLER_FILE}, byte for byte.`
     );
   }
-  const { uiFontSize } = exportAppearance().prefs;
-  const boards = themedBoard(boardEntry(source), uiFontSize);
-  const entry = JSON.stringify(boards);
+  const appearance = exportAppearance();
+  const { uiScale } = appearance;
+  const factor = uiScaleFactor(exportTokens());
+  const base = boardEntry(source);
+  // The board at the export's UI scale, `density` and `stroke`.
+  const boardAt = (density: NxdsDensity, stroke: NxdsStroke) => {
+    const board = themedBoard(base, { uiScale, density, stroke }, factor)[
+      SAMPLER_FILE
+    ];
+    if (!board) throw new Error(`${SAMPLER_FILE}: no canvas.json entry.`);
+    return { width: board.w, height: board.h };
+  };
+  const entry = JSON.stringify(themedBoard(base, appearance, factor));
   if (shippedBoardEntry() !== entry) {
     fail(`SETUP.md's canvas.json entry isn't ${entry}.`);
   }
@@ -324,10 +387,9 @@ export async function checkSampler({ themed = false } = {}) {
     );
   }
 
-  const { markup, width, height: preview } = samplerFile(source);
-  const height = boards[SAMPLER_FILE]?.h;
-  if (width === undefined || preview === undefined || height === undefined) {
-    throw new Error(`${SAMPLER_FILE}: $preview has no whole width and height.`);
+  const { markup, height: preview } = samplerFile(source);
+  if (preview === undefined) {
+    throw new Error(`${SAMPLER_FILE}: $preview has no whole height.`);
   }
   const legend = legendOf(markup);
   const slots = slotsOf(markup);
@@ -335,10 +397,38 @@ export async function checkSampler({ themed = false } = {}) {
   const days = rangeDaysOf(markup);
   const backgrounds: Partial<Record<Mode, { slot: string; color: string }[]>> =
     {};
+  // Where the page ends in light mode: by density at normal stroke, and by
+  // stroke at the export's density.
+  const byDensity: Partial<Record<NxdsDensity, number>> = {};
+  const byStroke: Partial<Record<NxdsStroke, number>> = {};
 
-  for (const mode of MODES) {
-    const name = `the sampler in ${mode}`;
-    const mounted = await mountSampler(markup, { width, height }, mode);
+  const mounts: Mount[] = [
+    ...DENSITY_OPTIONS.map(({ value: density }) => ({
+      size: boardAt(density, 'normal'),
+      mode: 'light' as const,
+      density,
+      stroke: 'normal' as const,
+    })),
+    ...STROKE_OPTIONS.filter(({ value }) => value !== 'normal').map(
+      ({ value: stroke }) => ({
+        size: boardAt(appearance.density, stroke),
+        mode: 'light' as const,
+        density: appearance.density,
+        stroke,
+      })
+    ),
+    {
+      size: boardAt(appearance.density, appearance.stroke),
+      mode: 'dark',
+      density: appearance.density,
+      stroke: appearance.stroke,
+    },
+  ];
+  for (const mount of mounts) {
+    const { mode, density, stroke } = mount;
+    const { height } = mount.size;
+    const name = `the sampler in ${mode} at ${density} density and ${stroke} stroke`;
+    const mounted = await mountSampler(markup, mount);
     failOnProblems(name, mounted.problems, true);
     if ('error' in mounted) {
       fail(`${name}: ${mounted.error}`);
@@ -352,16 +442,15 @@ export async function checkSampler({ themed = false } = {}) {
     if (board.bars !== bars) {
       fail(`${name}: the bar chart draws ${board.bars} bars, not ${bars}.`);
     }
-    if (!themed && Math.abs(board.bottom - height) > 1) {
-      fail(
-        `${name}: the page ends at ${board.bottom}px, but $preview and the canvas.json entry give ${height}px. Set $preview's height to ${board.bottom}.`
-      );
+    if (mode === 'light' && stroke === 'normal') {
+      byDensity[density] = board.bottom;
     }
-    // A themed board fits its page. Denser spacing leaves a strip of
-    // background under it, up to 80px with compact density.
-    if (themed && (board.bottom > height || height - board.bottom > 80)) {
+    if (mode === 'light' && density === appearance.density) {
+      byStroke[stroke] = board.bottom;
+    }
+    if (misses(board.bottom, height)) {
       fail(
-        `${name}: at ${uiFontSize}px text the page ends at ${board.bottom}px, but the canvas.json entry gives ${height}px. Set the SAMPLER_PX_PER_*_TEXT_PX rates in src/theme.ts from the page's height at ${uiFontSize}px and at the default.`
+        `${name}: at the ${uiScale} UI scale the page ends at ${board.bottom}px, but the canvas.json entry gives ${height}px.`
       );
     }
     if (board.legend.join(', ') !== legend.join(', ')) {
@@ -373,6 +462,9 @@ export async function checkSampler({ themed = false } = {}) {
       fail(
         `${name}: the card text "${text}" wraps onto two lines, or its line height has no px value.`
       );
+    }
+    for (const text of board.truncated) {
+      fail(`${name}: the text "${text}" is cut short at an ellipsis.`);
     }
     for (const empty of board.empty)
       fail(`${name}: ${empty} under its content.`);
@@ -392,11 +484,49 @@ export async function checkSampler({ themed = false } = {}) {
     }
     if (!board.closes)
       fail(`${name}: Escape doesn't close This quarter's calendar.`);
-    backgrounds[mode] = board.backgrounds;
+    if (density === appearance.density && stroke === appearance.stroke) {
+      backgrounds[mode] = board.backgrounds;
+    }
   }
   for (const [index, { slot, color }] of (backgrounds.dark ?? []).entries()) {
     if (color === backgrounds.light?.[index]?.color) {
       fail(`the sampler in dark: ${slot} keeps its light background.`);
     }
+  }
+  // A density row is off when a page at normal stroke misses its board. The
+  // stroke table is off when a page at another stroke misses its board while
+  // the page at normal stroke and the same density fits its own, so a density
+  // row that's off doesn't flag it too.
+  const densityOff = DENSITY_OPTIONS.some(({ value: density }) =>
+    misses(byDensity[density], boardAt(density, 'normal').height)
+  );
+  const strokeOff =
+    !misses(byStroke.normal, boardAt(appearance.density, 'normal').height) &&
+    STROKE_OPTIONS.some(({ value: stroke }) =>
+      misses(byStroke[stroke], boardAt(appearance.density, stroke).height)
+    );
+  const end = byDensity.default;
+  if (
+    densityOff &&
+    uiScale === 'default' &&
+    end !== undefined &&
+    end !== preview
+  ) {
+    fail(
+      `the sampler at the default UI scale and density ends ${end - preview}px past $preview. Set $preview's height to ${end}, then run the smoke test again.`
+    );
+    return;
+  }
+  const extra = heightsAbove(byDensity, DENSITY_OPTIONS, preview);
+  if (densityOff && extra) {
+    fail(
+      `Set SAMPLER_EXTRA_HEIGHT.${uiScale} in src/theme.ts to ${JSON.stringify(extra)}.`
+    );
+  }
+  const strokes = heightsAbove(byStroke, STROKE_OPTIONS, byStroke.normal);
+  if (strokeOff && strokes) {
+    fail(
+      `Set SAMPLER_STROKE_HEIGHT in src/theme.ts to ${JSON.stringify(strokes)}.`
+    );
   }
 }

@@ -16,6 +16,7 @@ import {
   type NxdsIconLibrary,
   type NxdsResolvedAppearanceMode,
   STROKE_OPTIONS,
+  UI_SCALE_OPTIONS,
 } from '@nxds/core';
 
 import { NxdsAppearanceBrandColorField } from '@/components/appearance/brand-color-field/brand-color-field';
@@ -315,6 +316,12 @@ export function AppearanceControls({
       </ControlGroup>
       <ControlGroup title="Shape">
         <SelectField
+          label="UI scale"
+          value={state.uiScale}
+          options={UI_SCALE_OPTIONS}
+          onChange={(uiScale) => onChange({ uiScale })}
+        />
+        <SelectField
           label="Density"
           value={state.density}
           options={DENSITY_OPTIONS}
@@ -370,11 +377,6 @@ export function AppearanceControls({
         />
       </ControlGroup>
       <ControlGroup title="Preferences">
-        <FontSizeField
-          label="UI font size"
-          value={state.prefs.uiFontSize}
-          onChange={(uiFontSize) => changePrefs({ uiFontSize })}
-        />
         <FontSizeField
           label="Code font size"
           value={state.prefs.codeFontSize}

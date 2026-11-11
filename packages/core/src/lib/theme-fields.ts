@@ -9,6 +9,7 @@ import {
   type NxdsAppearancePrefs,
   type NxdsAppearanceState,
   STROKE_OPTIONS,
+  UI_SCALE_OPTIONS,
 } from './appearance-model';
 import { CONTRAST_MAX, CONTRAST_MIN } from './contrast';
 import { FONT_OPTIONS, type NxdsFontCategory } from './font-options';
@@ -122,6 +123,7 @@ function oneOf<V extends string>(
 type EnumKey =
   | 'mode'
   | 'surfaceTone'
+  | 'uiScale'
   | 'density'
   | 'corners'
   | 'elevation'
@@ -176,26 +178,6 @@ function contrastField(
     write: (theme, value) =>
       withAppearance(theme, {
         [key]: integer(flag, value, CONTRAST_MIN, CONTRAST_MAX),
-      }),
-  };
-}
-
-function fontSizeField(
-  flag: string,
-  key: 'uiFontSize' | 'codeFontSize',
-  description: string
-): NxdsThemeField {
-  return {
-    kind: 'integer',
-    flag,
-    key: `prefs.${key}`,
-    description,
-    min: FONT_SIZE_PX_MIN,
-    max: FONT_SIZE_PX_MAX,
-    read: (theme) => String(theme.appearance.prefs[key]),
-    write: (theme, value) =>
-      withPrefs(theme, {
-        [key]: integer(flag, value, FONT_SIZE_PX_MIN, FONT_SIZE_PX_MAX),
       }),
   };
 }
@@ -272,6 +254,12 @@ export const NXDS_THEME_FIELDS: readonly NxdsThemeField[] = [
     BASE_TONE_OPTIONS.map((option) => option.value)
   ),
   enumField(
+    'ui-scale',
+    'uiScale',
+    'size of text, icons and spacing together',
+    UI_SCALE_OPTIONS.map((option) => option.value)
+  ),
+  enumField(
     'density',
     'density',
     'spacing and control size',
@@ -321,8 +309,24 @@ export const NXDS_THEME_FIELDS: readonly NxdsThemeField[] = [
     value: 'system',
     family: DEFAULT_PREFS.codeFont,
   }),
-  fontSizeField('font-size', 'uiFontSize', 'UI text size in px'),
-  fontSizeField('code-font-size', 'codeFontSize', 'code text size in px'),
+  {
+    kind: 'integer',
+    flag: 'code-font-size',
+    key: 'prefs.codeFontSize',
+    description: 'code text size in px',
+    min: FONT_SIZE_PX_MIN,
+    max: FONT_SIZE_PX_MAX,
+    read: (theme) => String(theme.appearance.prefs.codeFontSize),
+    write: (theme, value) =>
+      withPrefs(theme, {
+        codeFontSize: integer(
+          'code-font-size',
+          value,
+          FONT_SIZE_PX_MIN,
+          FONT_SIZE_PX_MAX
+        ),
+      }),
+  },
   {
     kind: 'choice',
     flag: 'icons',

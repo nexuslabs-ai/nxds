@@ -10,14 +10,15 @@ import {
   inlineVariables,
 } from '../src/token-source/format.ts';
 import {
+  referencedStep,
   SPACING_MODE_FILE_PATTERN,
   spacingRoleUtility,
-  spacingValue,
 } from '../src/token-source/spacing.ts';
 import {
   extractTokens,
   pathToCssVarPrefixed,
 } from '../src/token-source/tokens.ts';
+import { scaleBlocks, scaledModeBlocks } from '../src/token-source/ui-scale.ts';
 import {
   BORDER_COLOR_ALIAS_NAMES,
   borderColorAliasName,
@@ -511,7 +512,8 @@ export const CANONICAL_SPACING_DEFAULT_MODE = 'default';
  *    (`var(--nx-container-p)`). See `generateSpacingRoleUtilitiesCSS`.
  *
  * A role token's `{spacing.N}` reference resolves to step N's value in the
- * same mode (`spacingValue`).
+ * same mode (`referencedStep`), and the token keeps that step's cssName as
+ * `step`, so the UI scale gives the role its step's scaled value.
  *
  * Throws on cssName collisions across paths within a single mode — two paths
  * flattening to the same name (e.g. `layout.section-gap` and
@@ -519,7 +521,7 @@ export const CANONICAL_SPACING_DEFAULT_MODE = 'default';
  * one declaration.
  *
  * @param {string} semanticDir - Path to semantic directory
- * @returns {Record<string, {cssName: string, path: string[], value: string}[]>}
+ * @returns {Record<string, {cssName: string, path: string[], value: string, step?: string}[]>}
  *   Modes keyed by name (e.g. `vega`, `lyra`, `maia`, `mira`, `nova`, `luma`, `sera`).
  *   Each token carries the original JSON `path` so downstream emitters
  *   (`generateSpacingRoleUtilitiesCSS`) can derive structure without
@@ -552,15 +554,14 @@ export function collectSpacingTokens(semanticDir) {
         );
       }
       seen.add(cssName);
-      tokens.push({
+      const step = referencedStep(token, extracted);
+      const entry = {
         cssName,
         path: token.path,
-        value: formatTokenValue(
-          spacingValue(token, extracted),
-          token.type,
-          token.path
-        ),
-      });
+        value: formatTokenValue((step ?? token).value, token.type, token.path),
+      };
+      if (step) entry.step = step.path.join('-');
+      tokens.push(entry);
     }
 
     result[mode] = tokens;
@@ -657,6 +658,50 @@ export function generateSpacingModesCSS(modesByName, opts = {}) {
     css += `\n${writeBlock(`[${attrName}="${mode}"]`, modesByName[mode])}`;
   }
 
+  return css;
+}
+
+/**
+ * Emit the UI scale: the default factor and page widths on `:root`, one
+ * `[data-ui-scale="X"]` block per scale for type, code, icons and widths, and every
+ * density and radius mode at each scale. The default scale has no block, so
+ * the per-mode blocks above apply as they are.
+ *
+ * @param {object} input
+ * @param {Record<string, {cssName: string, value: string, step?: string}[]>} input.spacingModes
+ * @param {string} input.spacingDefault
+ * @param {Record<string, {cssName: string, value: string}[]>} input.radiusModes
+ * @param {string} input.radiusDefault
+ * @param {import('../src/token-source/ui-scale.ts').UiScaleBase} input.base
+ *   The Default sizes the UI scale multiplies.
+ * @returns {string} CSS string with all UI scale blocks
+ */
+export function generateUiScaleCSS({
+  spacingModes,
+  spacingDefault,
+  radiusModes,
+  radiusDefault,
+  base,
+}) {
+  const blocks = [
+    ...scaleBlocks(base),
+    ...scaledModeBlocks(spacingModes, {
+      attrName: 'data-density',
+      defaultMode: spacingDefault,
+    }),
+    ...scaledModeBlocks(radiusModes, {
+      attrName: 'data-radius',
+      defaultMode: radiusDefault,
+    }),
+  ];
+  let css = `\n/* ===== UI SCALE ([data-ui-scale="X"] on the root, modes nest under it) ===== */\n`;
+  for (const { selectors, tokens } of blocks) {
+    css += `\n${selectors.join(',\n')} {\n`;
+    for (const token of tokens) {
+      css += `  --nx-${token.cssName}: ${token.value};\n`;
+    }
+    css += `}\n`;
+  }
   return css;
 }
 

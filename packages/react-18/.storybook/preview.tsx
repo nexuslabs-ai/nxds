@@ -11,6 +11,7 @@ import {
   type NxdsAppearanceState,
   sanitizeNxdsAppearance,
   STROKE_OPTIONS,
+  UI_SCALE_OPTIONS,
 } from '@nxds/core';
 import type { Decorator, Preview } from '@storybook/react-vite';
 import { useGlobals } from 'storybook/preview-api';
@@ -29,6 +30,7 @@ type AppearanceGlobalKey =
   | 'surfaceTone'
   | 'lightContrast'
   | 'darkContrast'
+  | 'uiScale'
   | 'density'
   | 'corners'
   | 'elevation'
@@ -36,7 +38,6 @@ type AppearanceGlobalKey =
   | 'uiFont'
   | 'headingFont'
   | 'codeFont'
-  | 'uiFontSize'
   | 'codeFontSize'
   | 'reduceMotion'
   | 'pointerCursors'
@@ -48,6 +49,7 @@ const APPEARANCE_GLOBAL_KEYS: AppearanceGlobalKey[] = [
   'surfaceTone',
   'lightContrast',
   'darkContrast',
+  'uiScale',
   'density',
   'corners',
   'elevation',
@@ -55,7 +57,6 @@ const APPEARANCE_GLOBAL_KEYS: AppearanceGlobalKey[] = [
   'uiFont',
   'headingFont',
   'codeFont',
-  'uiFontSize',
   'codeFontSize',
   'reduceMotion',
   'pointerCursors',
@@ -109,6 +110,7 @@ function appearanceStateFromGlobals(
       typeof globals.darkContrast === 'number'
         ? globals.darkContrast
         : defaults.darkContrast,
+    uiScale: pickOption(globals.uiScale, UI_SCALE_OPTIONS, defaults.uiScale),
     density: pickOption(globals.density, DENSITY_OPTIONS, defaults.density),
     corners: pickOption(globals.corners, CORNER_OPTIONS, defaults.corners),
     elevation: pickOption(
@@ -128,10 +130,6 @@ function appearanceStateFromGlobals(
         typeof globals.codeFont === 'string'
           ? globals.codeFont
           : prefs.codeFont,
-      uiFontSize:
-        typeof globals.uiFontSize === 'number'
-          ? globals.uiFontSize
-          : prefs.uiFontSize,
       codeFontSize:
         typeof globals.codeFontSize === 'number'
           ? globals.codeFontSize
@@ -161,6 +159,7 @@ function globalsFromAppearanceState(
     surfaceTone: state.surfaceTone,
     lightContrast: state.lightContrast,
     darkContrast: state.darkContrast,
+    uiScale: state.uiScale,
     density: state.density,
     corners: state.corners,
     elevation: state.elevation,
@@ -168,7 +167,6 @@ function globalsFromAppearanceState(
     uiFont: state.prefs.uiFont,
     headingFont: state.prefs.headingFont,
     codeFont: state.prefs.codeFont,
-    uiFontSize: state.prefs.uiFontSize,
     codeFontSize: state.prefs.codeFontSize,
     reduceMotion: state.prefs.reduceMotion,
     pointerCursors: state.prefs.pointerCursors,
@@ -321,6 +319,7 @@ const preview: Preview = {
     surfaceTone: DEFAULT_NXDS_APPEARANCE.surfaceTone,
     lightContrast: DEFAULT_NXDS_APPEARANCE.lightContrast,
     darkContrast: DEFAULT_NXDS_APPEARANCE.darkContrast,
+    uiScale: DEFAULT_NXDS_APPEARANCE.uiScale,
     density: DEFAULT_NXDS_APPEARANCE.density,
     corners: DEFAULT_NXDS_APPEARANCE.corners,
     elevation: DEFAULT_NXDS_APPEARANCE.elevation,
@@ -328,7 +327,6 @@ const preview: Preview = {
     uiFont: DEFAULT_NXDS_APPEARANCE.prefs.uiFont,
     headingFont: DEFAULT_NXDS_APPEARANCE.prefs.headingFont,
     codeFont: DEFAULT_NXDS_APPEARANCE.prefs.codeFont,
-    uiFontSize: DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize,
     codeFontSize: DEFAULT_NXDS_APPEARANCE.prefs.codeFontSize,
     reduceMotion: DEFAULT_NXDS_APPEARANCE.prefs.reduceMotion,
     pointerCursors: DEFAULT_NXDS_APPEARANCE.prefs.pointerCursors,
@@ -366,6 +364,15 @@ const preview: Preview = {
       toolbar: {
         icon: 'paintbrush',
         items: toolbarItems(BASE_TONE_OPTIONS),
+        dynamicTitle: true,
+      },
+    },
+    uiScale: {
+      name: 'UI scale',
+      description: 'Text, icon and spacing scale',
+      toolbar: {
+        icon: 'zoom',
+        items: toolbarItems(UI_SCALE_OPTIONS),
         dynamicTitle: true,
       },
     },

@@ -14,7 +14,9 @@ import {
   type NxdsElevation,
   type NxdsStroke,
   type NxdsSurfaceTone,
+  type NxdsUiScale,
   STROKE_OPTIONS,
+  UI_SCALE_OPTIONS,
 } from '@nxds/core';
 
 import {
@@ -166,15 +168,6 @@ export function NxdsAppearanceSettings() {
     setState((current) => ({ ...current, [contrastKey]: value }));
   };
 
-  const setFontSize = (key: 'uiFontSize' | 'codeFontSize', value: number) => {
-    if (key === 'uiFontSize') {
-      updatePrefs({ uiFontSize: value });
-      return;
-    }
-
-    updatePrefs({ codeFontSize: value });
-  };
-
   return (
     <div data-slot="appearance-settings" className="nx:space-y-6">
       <Card>
@@ -294,18 +287,11 @@ export function NxdsAppearanceSettings() {
               className="nx:w-56 nx:typography-code-block"
             />
           </NxdsAppearanceSettingRow>
-          <NxdsAppearanceSettingRow label="UI font size">
-            <FontSizeInput
-              value={state.prefs.uiFontSize}
-              ariaLabel="UI font size"
-              onCommit={(value) => setFontSize('uiFontSize', value)}
-            />
-          </NxdsAppearanceSettingRow>
           <NxdsAppearanceSettingRow label="Code font size">
             <FontSizeInput
               value={state.prefs.codeFontSize}
               ariaLabel="Code font size"
-              onCommit={(value) => setFontSize('codeFontSize', value)}
+              onCommit={(codeFontSize) => updatePrefs({ codeFontSize })}
             />
           </NxdsAppearanceSettingRow>
         </CardContent>
@@ -315,10 +301,21 @@ export function NxdsAppearanceSettings() {
         <CardHeader>
           <CardTitle>Layout Feel</CardTitle>
           <CardDescription>
-            Density, corners, elevation, and stroke use curated token modes.
+            UI scale, density, corners, elevation, and stroke use curated token
+            modes.
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <NxdsAppearanceSettingRow label="UI scale">
+            <AxisSelect<NxdsUiScale>
+              value={state.uiScale}
+              options={UI_SCALE_OPTIONS}
+              onValueChange={(uiScale) =>
+                setState((current) => ({ ...current, uiScale }))
+              }
+              ariaLabel="UI scale"
+            />
+          </NxdsAppearanceSettingRow>
           <NxdsAppearanceSettingRow label="Density">
             <AxisSelect<NxdsDensity>
               value={state.density}

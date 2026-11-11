@@ -440,6 +440,56 @@ export const CloseButtonFocus: Story = {
   },
 };
 
+export const CloseButtonTargetAtSmallScale: Story = {
+  globals: { uiScale: 'small' },
+  render: () => ({
+    components: {
+      Button,
+      Dialog,
+      DialogContent,
+      DialogDescription,
+      DialogHeader,
+      DialogTitle,
+      DialogTrigger,
+    },
+    template: `
+      <Dialog>
+        <DialogTrigger as-child>
+          <Button variant="outline">Open settings dialog</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Settings</DialogTitle>
+            <DialogDescription>The close button keeps a 24px target at every UI scale.</DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Open settings dialog' })
+    );
+
+    const dialog = await within(document.body).findByRole('dialog');
+    const closeButton = within(dialog).getByRole('button', { name: 'Close' });
+    const box = closeButton.getBoundingClientRect();
+    const before =
+      parseFloat(getComputedStyle(closeButton, '::before').width) || 0;
+    // At the Small scale the button shrinks, but its target stays 24px.
+    await expect(
+      Math.min(Math.max(box.width, before), Math.max(box.height, before))
+    ).toBeGreaterThanOrEqual(24);
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+    });
+  },
+};
+
 export const NestedOverlayStacking: Story = {
   render: () => ({
     components: {

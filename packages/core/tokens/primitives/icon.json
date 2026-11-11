@@ -6,7 +6,7 @@
         "unit": "px"
       },
       "$type": "dimension",
-      "$description": "Small icon in a compact part, such as Kbd. The same at every density."
+      "$description": "Small icon in a compact part, such as Kbd. It follows the UI scale and is the same at every density."
     },
     "sm": {
       "$value": {
@@ -14,7 +14,7 @@
         "unit": "px"
       },
       "$type": "dimension",
-      "$description": "Icon beside small text, such as in a Badge. The same at every density."
+      "$description": "Small icon, such as a Badge icon or the small Switch. It follows the UI scale and is the same at every density."
     },
     "default": {
       "$value": {
@@ -22,7 +22,7 @@
         "unit": "px"
       },
       "$type": "dimension",
-      "$description": "Icon in a control, at every control size. The same at every density."
+      "$description": "Icon in a control, at every control size, and the Checkbox, Radio and Switch size. It follows the UI scale and is the same at every density."
     },
     "lg": {
       "$value": {
@@ -30,7 +30,7 @@
         "unit": "px"
       },
       "$type": "dimension",
-      "$description": "Large standalone icon, such as in an EmptyState. The same at every density."
+      "$description": "Large standalone icon, such as in an EmptyState. It follows the UI scale and is the same at every density."
     },
     "xl": {
       "$value": {
@@ -38,7 +38,7 @@
         "unit": "px"
       },
       "$type": "dimension",
-      "$description": "Extra large standalone icon, such as in a vertical Attachment. The same at every density."
+      "$description": "Extra large standalone icon, such as in a vertical Attachment. It follows the UI scale and is the same at every density."
     }
   },
   "stroke": {

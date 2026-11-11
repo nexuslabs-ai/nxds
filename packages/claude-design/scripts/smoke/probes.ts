@@ -59,6 +59,14 @@ export const TABLE_HEAD: Omit<Probe, 'property'> = {
   },
   target: '[data-slot="table-head"]',
 };
+export const BREADCRUMB_PAGE: Omit<Probe, 'property'> = {
+  tree: { part: 'BreadcrumbPage', children: ['Invoices'] },
+  target: '[data-slot="breadcrumb-page"]',
+};
+export const EMPTY_STATE_HEADER: Omit<Probe, 'property'> = {
+  tree: { part: 'EmptyStateHeader', children: ['No invoices yet'] },
+  target: '[data-slot="empty-state-header"]',
+};
 export const TEXT_STYLE: Omit<Probe, 'property'> = {
   tree: {
     part: 'p',

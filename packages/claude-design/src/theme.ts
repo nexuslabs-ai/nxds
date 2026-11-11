@@ -15,10 +15,15 @@ import {
   FONT_OPTIONS,
   NXDS_THEME_FIELDS,
   type NxdsAppearanceState,
+  type NxdsDensity,
+  type NxdsStroke,
+  type NxdsUiScale,
   STROKE_OPTIONS,
+  UI_SCALE_OPTIONS,
 } from '@nxds/core';
 import { formatHex } from 'culori';
 
+import { withPresetTable } from './presets.ts';
 import type { CanvasBoards } from './setup.ts';
 import { fillTemplate } from './template.ts';
 import {
@@ -56,7 +61,7 @@ export interface ThemeInput {
   readme: string;
   /** SETUP.md, with this release's values in and `{{nxds:…}}` for the theme's. */
   guide: string;
-  /** The sampler's `canvas.json` entry at the default text size. */
+  /** The sampler's `canvas.json` entry at the Default UI scale and density, at normal stroke. */
   board: CanvasBoards;
 }
 
@@ -92,22 +97,85 @@ export interface RenderedTheme {
 
 const DEFAULT_TITLE = 'nxds';
 
-// How much the sampler's height changes for each px of UI text above and below
-// the default, from its height at the default, at 20px and at 8px
-// (scripts/smoke/sampler.ts). Each rounds the way that keeps the page inside
-// its board.
-const SAMPLER_PX_PER_LARGER_TEXT_PX = 81;
-const SAMPLER_PX_PER_SMALLER_TEXT_PX = 33;
+// How much taller the sampler is at each UI scale and density than at the
+// Default scale and density, at normal stroke, on a board widened by the
+// scale's factor, as scripts/smoke/sampler.ts measures it.
+const SAMPLER_EXTRA_HEIGHT: Record<NxdsUiScale, Record<NxdsDensity, number>> = {
+  small: {
+    tight: -238,
+    compact: -185,
+    default: -159,
+    comfortable: -106,
+    relaxed: -69,
+    spacious: -15,
+  },
+  default: {
+    tight: -90,
+    compact: -37,
+    default: 0,
+    comfortable: 53,
+    relaxed: 90,
+    spacious: 143,
+  },
+  large: {
+    tight: 58,
+    compact: 121,
+    default: 159,
+    comfortable: 211,
+    relaxed: 249,
+    spacious: 323,
+  },
+  larger: {
+    tight: 308,
+    compact: 362,
+    default: 398,
+    comfortable: 452,
+    relaxed: 524,
+    spacious: 594,
+  },
+};
 
-/** The sampler's `canvas.json` entry with a height that fits its text size. */
-export function themedBoard(board: CanvasBoards, uiFontSize: number) {
-  const offset = uiFontSize - DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize;
-  const rate =
-    offset > 0 ? SAMPLER_PX_PER_LARGER_TEXT_PX : SAMPLER_PX_PER_SMALLER_TEXT_PX;
+// How much taller the sampler is at each stroke than at normal stroke. Border
+// widths don't follow the UI scale or density, so one row holds for every
+// scale and density.
+const SAMPLER_STROKE_HEIGHT: Record<NxdsStroke, number> = {
+  fine: -1,
+  normal: 0,
+  strong: 14,
+};
+
+/** The UI scale's factor, which `--nx-ui-scale` holds. */
+export function uiScaleFactor(tokens: TokensFile) {
+  const factor = Number(
+    tokens.uiScale?.tokens.find(({ name }) => name === 'nx-ui-scale')?.value
+  );
+  if (!Number.isFinite(factor)) {
+    throw new Error('tokens.json: no nx-ui-scale factor.');
+  }
+  return factor;
+}
+
+/** The sampler's `canvas.json` entry with a size that fits its UI scale, density and stroke. */
+export function themedBoard(
+  board: CanvasBoards,
+  {
+    uiScale,
+    density,
+    stroke,
+  }: Pick<NxdsAppearanceState, 'uiScale' | 'density' | 'stroke'>,
+  factor: number
+) {
   return Object.fromEntries(
     Object.entries(board).map(([file, entry]) => [
       file,
-      { ...entry, h: entry.h + rate * offset },
+      {
+        ...entry,
+        w: Math.round(entry.w * factor),
+        h:
+          entry.h +
+          SAMPLER_EXTRA_HEIGHT[uiScale][density] +
+          SAMPLER_STROKE_HEIGHT[stroke],
+      },
     ])
   );
 }
@@ -220,12 +288,24 @@ function appearancePhrase(appearance: NxdsAppearanceState) {
   return [
     `a ${brandPhrase(appearance.brandColor)} brand colour`,
     ` on ${label(BASE_TONE_OPTIONS, appearance.surfaceTone)} surfaces`,
+    `, ${label(UI_SCALE_OPTIONS, appearance.uiScale)} UI scale`,
     `, ${label(DENSITY_OPTIONS, appearance.density)} density`,
     `, ${label(CORNER_OPTIONS, appearance.corners)} corners`,
     `, ${label(ELEVATION_OPTIONS, appearance.elevation)} shadows`,
     ` and ${label(STROKE_OPTIONS, appearance.stroke)} strokes`,
     contrast,
   ].join('');
+}
+
+/** The value of a step on the type scale. */
+function typeSize(tokens: TokensFile, name: string) {
+  const value = tokens.typeScale?.tokens.find(
+    (token) => token.name === name
+  )?.value;
+  if (typeof value !== 'string') {
+    throw new Error(`tokens.json: ${name} isn't on the type scale.`);
+  }
+  return value;
 }
 
 /** README.md's type sentence: the faces text, headings and code are set in. */
@@ -340,11 +420,11 @@ export function renderTheme(
     project: {
       'tokens.json': `${JSON.stringify(tokens, null, 2)}\n`,
       'tokens.css': compileTokensCss(tokens, typeStyleRules()),
-      'README.md': fillTemplate('README.md', input.readme, {
+      'README.md': fillTemplate('README.md', withPresetTable(input.readme), {
         appearance: `This system shows ${themed ? 'its own appearance' : 'the default nxds appearance'}: ${phrase}.`,
         typeFaces: typeFaces(fonts),
-        bodySize: `${appearance.prefs.uiFontSize}px`,
-        codeSize: `${appearance.prefs.codeFontSize}px`,
+        bodySize: typeSize(tokens, 'nx-typography-size-sm'),
+        codeSize: typeSize(tokens, 'nx-typography-code-size'),
       }),
     },
     index: { title, theme },
@@ -361,7 +441,7 @@ export function renderTheme(
           : '',
         themeChecks: themeChecks(theme, tokens, fonts),
         boardEntry: JSON.stringify(
-          themedBoard(input.board, appearance.prefs.uiFontSize)
+          themedBoard(input.board, appearance, uiScaleFactor(tokens))
         ),
       }),
   };

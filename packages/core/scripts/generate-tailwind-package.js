@@ -11,6 +11,7 @@ import {
   extractTokens,
   pathToCssVarPrefixed,
 } from '../src/token-source/tokens.ts';
+import { uiScaleBase } from '../src/token-source/ui-scale.ts';
 
 import {
   CANONICAL_SPACING_DEFAULT_MODE,
@@ -42,6 +43,7 @@ import {
   generateThemeCSS,
   generateThemedModesCSS,
   generateTypographyUtilitiesCSS,
+  generateUiScaleCSS,
   getGoogleFontsImportFromTokens,
   log,
   parseArgs,
@@ -348,16 +350,6 @@ function generateVariablesCSS(primitiveTokens, usedModes) {
   return css;
 }
 
-/**
- * Generate nxds.css using shared generateThemeCSS function.
- *
- * `spacingDefault` controls which mode lands under `:root, [data-density="X"]`
- * (i.e. which mode applies when no `data-density` attribute is set). All six
- * modes still ship in the bundle either way — the other five emit as plain
- * `[data-density="X"]` blocks. The @theme numeric subset always comes from the
- * canonical default baseline because @theme drives Tailwind's utility codegen
- * (build-time); the cascade flip happens at runtime via the per-mode blocks.
- */
 function generateNxdsCSS(
   primitiveMap,
   lightSemanticTokens,
@@ -468,6 +460,16 @@ function generateNxdsCSS(
     attrName: 'data-borderwidth',
     commentLabel: 'BORDER WIDTH',
     duplicateValuePrefix: null,
+  });
+  css += generateUiScaleCSS({
+    spacingModes,
+    spacingDefault,
+    radiusModes: runtimeModes.radiusModes,
+    radiusDefault: usedModes.radius,
+    base: uiScaleBase(
+      readTokenFile(typographyFilePath),
+      readTokenFile(path.join(PRIMITIVES_DIR, 'icon.json'))
+    ),
   });
   css += `}\n`;
 

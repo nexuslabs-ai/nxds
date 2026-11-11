@@ -14,6 +14,7 @@ function toLines(
     { key: 'surfaceTone', text: `surfaceTone: "${state.surfaceTone}",` },
     { key: 'lightContrast', text: `lightContrast: ${state.lightContrast},` },
     { key: 'darkContrast', text: `darkContrast: ${state.darkContrast},` },
+    { key: 'uiScale', text: `uiScale: "${state.uiScale}",` },
     { key: 'density', text: `density: "${state.density}",` },
     { key: 'corners', text: `corners: "${state.corners}",` },
     { key: 'elevation', text: `elevation: "${state.elevation}",` },
