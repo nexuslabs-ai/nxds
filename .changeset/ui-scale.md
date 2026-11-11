@@ -15,10 +15,11 @@ Add `uiScale` to the appearance: `'small'`, `'default'`, `'large'` or `'larger'`
 - Page widths (`max-w-*` and the other named widths) and the Sidebar and Toaster widths scale with it. `--nx-ui-scale` holds the factor (0.9, 1, 1.1 or 1.25) for the few other fixed sizes. The collapsed Sidebar rail is now its button plus padding, so the buttons stay inside it and centered at every scale and density, also with `data-density` on the Sidebar. From `md` up, Sidebar props other than `className` go on its root, so the space the Sidebar keeps beside the page is as wide as the rail. The Sidebar no longer sets `--sidebar-width-icon`.
 - The provider sets `data-ui-scale` on `<html>`. Density and corners nest under it.
 - Checkbox, Radio and Switch take their size from the icon tokens, so they follow the UI scale and still ignore density. The MultiSelect option box is the Checkbox size.
-- Adds the `--nx-icon-glyph-lg` icon token (24px at the Default scale) and its `size-icon-glyph-lg` utility. The EmptyState icon uses it.
+- Every named icon size follows it: `lg` is 22, 24, 28 or 30px and `xl` is 28, 32, 36 or 40px.
 - Code text grows with the label text. `prefs.codeFontSize` is the code size at the Default scale, and 12px code is 10, 14 and 15px at Small, Large and Larger. The `[data-ui-scale]` blocks in `nxds.css` set the code size too, so code scales without the provider.
 - The UI scale never shrinks text below 8px.
 - The close button of Dialog and Sheet keeps a 24px target at every scale.
+- The code size variable is `--nx-typography-code-size`, in its own `code` group. It was `--nx-typography-size-code`.
 - `prefs.uiFontSize` is gone. Use `uiScale`. The CLI flag `--font-size` is replaced by `--ui-scale`. Shuffle keeps the user's UI scale.
 - The token catalogue's `control` is now `controls`, a list. A new `scale` control names `uiScale`, which scales the token. Spacing and radius name their mode and `uiScale`, and the code size names `codeFontSize` and `uiScale`. The catalogue also lists `--nx-ui-scale` in family `ui-scale` and the page widths in family `width`.
 - The settings screen, the Storybook toolbars and Claude Design (`data-ui-scale`) offer the new mode.
