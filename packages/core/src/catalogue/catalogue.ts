@@ -33,6 +33,7 @@ import {
   type ScaleToken,
   UI_SCALES,
   type UiScale,
+  uiScaleBase,
   uiScaleSelector,
   widthTokens,
 } from '../token-source/ui-scale';
@@ -356,7 +357,6 @@ function primitiveAliases(
   return [];
 }
 
-/** `scaled` holds the type sizes and line heights at the appearance's font sizes. */
 function primitiveEntry(lookup: ReferenceLookup) {
   return ({ family, leaf }: AuthoredLeaf): LeafEntry => {
     const name = primitiveName(family, leaf.path);
@@ -616,17 +616,6 @@ function variantValue(variant: CatalogueVariant | undefined) {
   return variant?.declarations[0]?.value;
 }
 
-/** The px value of each token whose name starts with `prefix`, by what follows. */
-function pxValues(tokens: readonly CatalogueToken[], prefix: string) {
-  return Object.fromEntries(
-    tokens.flatMap((token) => {
-      const value = variantValue(token.variants[0]);
-      if (!token.name.startsWith(prefix) || value === undefined) return [];
-      return [[token.name.slice(prefix.length), Number.parseFloat(value)]];
-    })
-  );
-}
-
 /** A moded family's scaled values, keyed by preset and token name. */
 function scaledPresets(
   tokens: readonly CatalogueToken[],
@@ -659,13 +648,12 @@ function scaledPresets(
 /** Every value the UI scale writes for `uiScale`, the same as the generated CSS. */
 function uiScaleValues(tokens: readonly CatalogueToken[], uiScale: UiScale) {
   if (uiScale === 'default') return [];
-  const block = scaleBlocks({
-    sizes: pxValues(tokens, '--nx-typography-size-'),
-    lineHeights: pxValues(tokens, '--nx-typography-line-height-'),
-    codeSize: 0,
-    glyphs: pxValues(tokens, '--nx-icon-glyph-'),
-    widths: PAGE_WIDTHS_REM,
-  }).find(({ selectors }) => selectors.includes(uiScaleSelector(uiScale)));
+  const block = scaleBlocks(
+    uiScaleBase(
+      TOKEN_FILES['primitives/typography/typography-default.json'],
+      TOKEN_FILES['primitives/icon.json']
+    )
+  ).find(({ selectors }) => selectors.includes(uiScaleSelector(uiScale)));
   const { spacing } = UI_SCALES[uiScale];
   return [
     ...(block?.tokens ?? []).map(({ cssName, value }): [string, string] => [
@@ -709,7 +697,7 @@ function atUiScale(
 /**
  * Every nxds token, identified by its `--nx-*` name: primitives, runtime
  * colours, spacing, z-index, breakpoints, typography and shadow styles, and
- * the UI scale factor and page widths at the Default scale.
+ * the UI scale factor and page widths.
  * Shadow layer primitives only compose the shadow styles.
  * Runtime colours are computed from `appearance` in explicit light and dark
  * modes; each variant records the colour fields and mode it used. Sizes

@@ -16,8 +16,8 @@ type DeepReadonly<T> = T extends object
 
 /**
  * The appearance fields the catalogue derives values from: runtime colours
- * from the brand colour, surface tone and contrasts, and type sizes from the
- * UI and code font sizes.
+ * from the brand colour, surface tone and contrasts, sizes from the UI scale,
+ * and the code size from `codeFontSize`.
  */
 export type CatalogueAppearance = NxdsColorAppearance & {
   readonly uiScale: NxdsUiScale;

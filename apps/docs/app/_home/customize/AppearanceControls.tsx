@@ -113,14 +113,12 @@ function AppearanceRange({
   value,
   min,
   max,
-  unit = '',
   onChange,
 }: {
   label: string;
   value: number;
   min: number;
   max: number;
-  unit?: string;
   onChange: (value: number) => void;
 }) {
   const { startStep } = useDocsTheme();
@@ -165,21 +163,18 @@ function AppearanceRange({
         <FieldLabel id={labelId} asChild className={labelClass}>
           <span>{label}</span>
         </FieldLabel>
-        <span className="nx:flex nx:shrink-0 nx:items-center nx:typography-body-small nx:text-muted-foreground">
-          <Input
-            size="sm"
-            variant="ghost"
-            inputMode="decimal"
-            value={draft}
-            aria-label={`${label} value${unit ? ` in ${unit}` : ''}`}
-            aria-invalid={(draft.trim() !== '' && !parsable) || undefined}
-            onChange={(event) => setDraft(event.target.value)}
-            onBlur={commit}
-            onKeyDown={handleKeyDown}
-            className="nx:w-12 nx:px-1 nx:text-right nx:font-mono nx:typography-label-small nx:tabular-nums"
-          />
-          {unit && <span aria-hidden="true">{unit}</span>}
-        </span>
+        <Input
+          size="sm"
+          variant="ghost"
+          inputMode="decimal"
+          value={draft}
+          aria-label={`${label} value`}
+          aria-invalid={(draft.trim() !== '' && !parsable) || undefined}
+          onChange={(event) => setDraft(event.target.value)}
+          onBlur={commit}
+          onKeyDown={handleKeyDown}
+          className="nx:w-12 nx:shrink-0 nx:px-1 nx:text-right nx:font-mono nx:typography-label-small nx:tabular-nums"
+        />
       </div>
       <Slider
         min={min}
@@ -275,10 +270,9 @@ function useAppearanceEditor() {
   }
   function updatePrefs<K extends keyof NxdsAppearancePrefs>(
     name: K,
-    value: NxdsAppearancePrefs[K],
-    group?: 'prefs'
+    value: NxdsAppearancePrefs[K]
   ) {
-    change({ prefs: { ...state.prefs, [name]: value } }, group);
+    change({ prefs: { ...state.prefs, [name]: value } });
   }
   return {
     state,

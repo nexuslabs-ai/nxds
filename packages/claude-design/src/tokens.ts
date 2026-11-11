@@ -7,7 +7,7 @@ import type { NxdsAppearanceState } from '@nxds/core';
 import type { CatalogueToken, CatalogueVariant } from '@nxds/core/catalogue';
 import { createTokenCatalogue } from '@nxds/core/catalogue';
 
-import { exportPresets } from './presets.ts';
+import { PRESETS } from './presets.ts';
 import {
   type ComponentReads,
   readersOf,
@@ -486,7 +486,7 @@ function scaledPresets(
   const byName = new Map(
     catalogue.map((token) => [bareName(token.name), token])
   );
-  return exportPresets(appearance).flatMap(
+  return Object.entries(PRESETS).flatMap(
     ([attribute, { options, field, family }]) => {
       const scaled = (tokens[family]?.tokens ?? []).flatMap(({ name }) => {
         const token = byName.get(name);

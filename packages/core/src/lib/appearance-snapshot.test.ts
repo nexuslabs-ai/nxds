@@ -43,7 +43,7 @@ function mockSystemPrefersDark(matches: boolean): void {
 
 describe('NxdsAppearanceSnapshot', () => {
   it('invalidates cached CSS from before the UI scale', () => {
-    expect(SNAPSHOT_VERSION).toBe(11);
+    expect(SNAPSHOT_VERSION).toBe(10);
   });
 
   it('stores pre-derived CSS verbatim', () => {
@@ -97,7 +97,7 @@ describe('NxdsAppearanceSnapshot', () => {
     expect(snapshot.state).toEqual(state);
   });
 
-  it.each([1, 5, 6, 9, 10])(
+  it.each([1, 5, 6, 9])(
     'refreshes a v%s snapshot without resetting the stored state',
     (version) => {
       const state = {

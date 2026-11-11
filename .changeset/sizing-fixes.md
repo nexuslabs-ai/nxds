@@ -11,6 +11,4 @@ Controls hold their parts at every stroke and density.
 - Checkbox and RadioGroup have a 24 × 24px target around the box. The Switch has a 24px-high target across its track. To give your own small control the same target, add `nx:target-24` and `nx:relative`.
 - Badge, Kbd, SidebarMenuBadge and the InputGroup `xs` button grow with their text, so the text stays inside the border at every UI scale and density.
 - In menus, the text of a check item, an inset item and an inset label starts 8px after the check at every density.
-- Code text has its own size token, `--nx-typography-code-size`. The code font size setting writes it, and `typography-code-block` and `typography-code-inline` read it. Text that has only `font-mono` keeps the size of its own text style.
-- Without the provider, `typography-code-*` text, such as CodeBlock, drops from 14px to 12px.
 - The NxdsAppearanceColorField hex input and the NxdsAppearanceSettings font inputs show their text in the code font.

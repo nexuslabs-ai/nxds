@@ -146,7 +146,7 @@ export function compileTokensCss(
     ...laterThemes,
     ...block(':root', root, '  '),
     '}',
-    ...(tokens.meta.presets ?? []).flatMap(({ attribute, value, tokens }) =>
+    ...(tokens.meta?.presets ?? []).flatMap(({ attribute, value, tokens }) =>
       block(
         `[${attribute}="${value}"]`,
         Object.entries(tokens).map(

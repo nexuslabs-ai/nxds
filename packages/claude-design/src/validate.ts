@@ -7,9 +7,14 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import postcss from 'postcss';
 
+import { PRESETS } from './presets.ts';
 import { IDENTIFIER, isPageGenerated, validateIndex } from './system-index.ts';
 import { DYNAMIC_VARIABLE, variablesRead } from './token-reads.ts';
-import { familyVariable, type TokensFile } from './tokens.ts';
+import {
+  familyVariable,
+  type ScaledPreset,
+  type TokensFile,
+} from './tokens.ts';
 import { compileTokensCss, listFamilies } from './tokens-css.ts';
 
 const KB = 1024;
@@ -302,6 +307,43 @@ function checkFonts(tokens: TokensFile, errors: string[]) {
   }
 }
 
+// tokens.css declares each `meta.presets` entry as an `[attribute="value"]`
+// rule, so each must name a preset attribute, one of its values, and lengths
+// for tokens the system lists.
+function checkPresets(
+  tokens: TokensFile,
+  allNames: ReadonlySet<string>,
+  errors: string[]
+) {
+  const presets: unknown = tokens.meta?.presets;
+  if (presets === undefined) return;
+  if (!Array.isArray(presets)) {
+    errors.push('tokens.json meta.presets: must be a list.');
+    return;
+  }
+  for (const preset of presets as (Partial<ScaledPreset> | null)[]) {
+    const where = `tokens.json meta.presets ${preset?.attribute}="${preset?.value}"`;
+    const options = Object.entries(PRESETS).find(
+      ([attribute]) => attribute === preset?.attribute
+    )?.[1].options;
+    if (!preset || !options?.some(({ value }) => value === preset.value)) {
+      errors.push(`${where}: isn't a preset attribute and value.`);
+      continue;
+    }
+    if (typeof preset.tokens !== 'object' || preset.tokens === null) {
+      errors.push(`${where}: needs a tokens map.`);
+      continue;
+    }
+    for (const [name, value] of Object.entries(preset.tokens)) {
+      if (!allNames.has(name)) {
+        errors.push(`${where}: ${name} isn't a token in tokens.json.`);
+      } else if (typeof value !== 'string' || !LENGTH.test(value)) {
+        errors.push(`${where}: ${name}'s value "${value}" isn't a length.`);
+      }
+    }
+  }
+}
+
 function checkTokens(root: string, errors: string[]) {
   const tokens = readJson(root, 'tokens.json', errors) as
     | TokensFile
@@ -367,6 +409,7 @@ function checkTokenFiles(
   checkAliases(colors, errors);
   checkType(tokens.type, errors);
   checkFonts(tokens, errors);
+  checkPresets(tokens, allNames, errors);
 
   if (css === undefined) {
     errors.push('tokens.css: missing.');

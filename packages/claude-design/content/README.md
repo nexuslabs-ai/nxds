@@ -93,11 +93,11 @@ The system has a Light and a Dark theme. Set `data-theme="dark"` on `<html>` to 
 
 {{nxds:appearance}}
 
-Set an attribute on any element to change density, corners, elevation or stroke for everything inside it. {{nxds:uiScaleAttribute}}
+Set an attribute on any element to change density, corners, elevation or stroke for everything inside it:
 
 <!-- appearance-presets -->
 
-Brand colour, surface tone and contrast are app-wide settings in nxds apps. They have no attribute.
+Brand colour, surface tone, contrast and UI scale are app-wide settings in nxds apps. They have no attribute.
 
 ## On a Design canvas
 

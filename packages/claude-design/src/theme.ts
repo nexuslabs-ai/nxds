@@ -15,13 +15,14 @@ import {
   FONT_OPTIONS,
   NXDS_THEME_FIELDS,
   type NxdsAppearanceState,
+  type NxdsDensity,
   type NxdsUiScale,
   STROKE_OPTIONS,
   UI_SCALE_OPTIONS,
 } from '@nxds/core';
 import { formatHex } from 'culori';
 
-import { exportPresets, withPresetTable } from './presets.ts';
+import { withPresetTable } from './presets.ts';
 import type { CanvasBoards } from './setup.ts';
 import { fillTemplate } from './template.ts';
 import {
@@ -59,7 +60,7 @@ export interface ThemeInput {
   readme: string;
   /** SETUP.md, with this release's values in and `{{nxds:…}}` for the theme's. */
   guide: string;
-  /** The sampler's `canvas.json` entry at the default text size. */
+  /** The sampler's `canvas.json` entry at the Default UI scale and density. */
   board: CanvasBoards;
 }
 
@@ -95,16 +96,42 @@ export interface RenderedTheme {
 
 const DEFAULT_TITLE = 'nxds';
 
-// How much taller the sampler is at each UI scale than at the default, on a
-// board widened by the scale's factor, as scripts/smoke/sampler.ts measures
-// it: Small at Default density, Large at Compact and Larger at Spacious. Each
-// takes the tallest board the smoke test allows, so a taller density still
-// fits.
-const SAMPLER_EXTRA_HEIGHT: Record<NxdsUiScale, number> = {
-  small: -79,
-  default: 0,
-  large: 215,
-  larger: 594,
+// How much taller the sampler is at each UI scale and density than at the
+// Default scale and density, on a board widened by the scale's factor, as
+// scripts/smoke/sampler.ts measures it.
+const SAMPLER_EXTRA_HEIGHT: Record<NxdsUiScale, Record<NxdsDensity, number>> = {
+  small: {
+    tight: -238,
+    compact: -185,
+    default: -159,
+    comfortable: -106,
+    relaxed: -69,
+    spacious: -15,
+  },
+  default: {
+    tight: -90,
+    compact: -37,
+    default: 0,
+    comfortable: 53,
+    relaxed: 90,
+    spacious: 165,
+  },
+  large: {
+    tight: 72,
+    compact: 135,
+    default: 173,
+    comfortable: 244,
+    relaxed: 284,
+    spacious: 362,
+  },
+  larger: {
+    tight: 308,
+    compact: 362,
+    default: 398,
+    comfortable: 452,
+    relaxed: 524,
+    spacious: 594,
+  },
 };
 
 /** The UI scale's factor, which `--nx-ui-scale` holds. */
@@ -118,10 +145,10 @@ export function uiScaleFactor(tokens: TokensFile) {
   return factor;
 }
 
-/** The sampler's `canvas.json` entry with a size that fits its UI scale. */
+/** The sampler's `canvas.json` entry with a size that fits its UI scale and density. */
 export function themedBoard(
   board: CanvasBoards,
-  uiScale: NxdsUiScale,
+  { uiScale, density }: Pick<NxdsAppearanceState, 'uiScale' | 'density'>,
   factor: number
 ) {
   return Object.fromEntries(
@@ -130,7 +157,7 @@ export function themedBoard(
       {
         ...entry,
         w: Math.round(entry.w * factor),
-        h: entry.h + SAMPLER_EXTRA_HEIGHT[uiScale],
+        h: entry.h + SAMPLER_EXTRA_HEIGHT[uiScale][density],
       },
     ])
   );
@@ -376,20 +403,12 @@ export function renderTheme(
     project: {
       'tokens.json': `${JSON.stringify(tokens, null, 2)}\n`,
       'tokens.css': compileTokensCss(tokens, typeStyleRules()),
-      'README.md': fillTemplate(
-        'README.md',
-        withPresetTable(input.readme, exportPresets(appearance)),
-        {
-          appearance: `This system shows ${themed ? 'its own appearance' : 'the default nxds appearance'}: ${phrase}.`,
-          typeFaces: typeFaces(fonts),
-          bodySize: typeSize(tokens, 'nx-typography-size-sm'),
-          codeSize: typeSize(tokens, 'nx-typography-code-size'),
-          uiScaleAttribute:
-            appearance.uiScale === 'default'
-              ? "Set `data-ui-scale` on the artboard's outer element, so the density and corners inside it follow its scale:"
-              : `This system is at the ${label(UI_SCALE_OPTIONS, appearance.uiScale)} UI scale, so it has no \`data-ui-scale\` attribute:`,
-        }
-      ),
+      'README.md': fillTemplate('README.md', withPresetTable(input.readme), {
+        appearance: `This system shows ${themed ? 'its own appearance' : 'the default nxds appearance'}: ${phrase}.`,
+        typeFaces: typeFaces(fonts),
+        bodySize: typeSize(tokens, 'nx-typography-size-sm'),
+        codeSize: typeSize(tokens, 'nx-typography-code-size'),
+      }),
     },
     index: { title, theme },
     guide: (files) =>
@@ -405,7 +424,7 @@ export function renderTheme(
           : '',
         themeChecks: themeChecks(theme, tokens, fonts),
         boardEntry: JSON.stringify(
-          themedBoard(input.board, appearance.uiScale, uiScaleFactor(tokens))
+          themedBoard(input.board, appearance, uiScaleFactor(tokens))
         ),
       }),
   };

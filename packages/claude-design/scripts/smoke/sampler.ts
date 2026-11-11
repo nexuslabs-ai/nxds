@@ -1,3 +1,4 @@
+import { DENSITY_OPTIONS, type NxdsDensity } from '@nxds/core';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Page } from 'playwright';
@@ -9,7 +10,7 @@ import {
   samplerTags,
 } from '../../src/setup.ts';
 import { themedBoard, uiScaleFactor } from '../../src/theme.ts';
-import type { TokensFile } from '../../src/tokens.ts';
+import type { ThemeId } from '../../src/tokens.ts';
 
 import {
   exportAppearance,
@@ -23,8 +24,7 @@ import {
   projectDir,
 } from './harness.ts';
 
-const MODES = ['light', 'dark'] as const;
-type Mode = (typeof MODES)[number];
+type Mode = ThemeId;
 
 /** The value `attribute` takes on the markup's `Nxds.<part>` tag. */
 function attributeOf(markup: string, part: string, attribute: string) {
@@ -115,10 +115,13 @@ type Size = { width: number; height: number };
 const SURFACES =
   '[data-slot="card"], [data-slot="sidebar-inner"], [data-slot="sidebar-inset"], [data-slot="popover-content"]';
 
-async function mountSampler(markup: string, size: Size, mode: Mode) {
+/** Where the sampler mounts: its board, mode and the density preset around it. */
+type Mount = { size: Size; mode: Mode; density: NxdsDensity };
+
+async function mountSampler(markup: string, mount: Mount) {
   const { page, problems } = await openPage('Button', LIGHT);
   try {
-    return { ...(await measureSampler(page, markup, size, mode)), problems };
+    return { ...(await measureSampler(page, markup, mount)), problems };
   } finally {
     await page.close();
   }
@@ -127,18 +130,18 @@ async function mountSampler(markup: string, size: Size, mode: Mode) {
 async function measureSampler(
   page: Page,
   markup: string,
-  size: Size,
-  mode: Mode
+  { size, mode, density }: Mount
 ) {
   await page.setViewportSize(size);
   const board = await page.evaluate(
-    async ({ markup, height }) => {
+    async ({ markup, height, density }) => {
       const { ReactDOM, __nxdsMarkup, __nxdsSettle } =
         window as unknown as PageGlobals;
       document.body.replaceChildren();
       document.body.style.margin = '0';
       const host = document.createElement('div');
       host.id = 'sampler';
+      host.setAttribute('data-density', density);
       document.body.append(host);
       try {
         ReactDOM.flushSync(() =>
@@ -245,7 +248,11 @@ async function measureSampler(
         scrollHeight: Math.max(document.documentElement.scrollHeight, height),
       };
     },
-    { markup: markup.replaceAll('{{mode}}', mode), height: size.height }
+    {
+      markup: markup.replaceAll('{{mode}}', mode),
+      height: size.height,
+      density,
+    }
   );
   if (board.error !== undefined) return { error: board.error };
 
@@ -290,12 +297,12 @@ async function measureSampler(
 
 // The sampler the export ships, mounted the way a canvas does in each mode
 // of its tweak, renders every part with no console problem, fills its board
-// to the height its canvas.json entry gives and stays inside its cards. A
-// themed export's sampler only has to fit its board: its theme moves where
-// the page ends. The
-// table puts canvas wrappers where only rows and cells belong, so the
-// wrapper's own nesting warning is allowed.
-export async function checkSampler({ themed = false } = {}) {
+// to the height its canvas.json entry gives and stays inside its cards. In
+// light mode it also mounts inside each other density's preset, on the board
+// that density gets at the export's UI scale, so one export checks a whole
+// row of SAMPLER_EXTRA_HEIGHT. The table puts canvas wrappers where only rows
+// and cells belong, so the wrapper's own nesting warning is allowed.
+export async function checkSampler() {
   const file = readFileSync(path.join(exportDir, SAMPLER_FILE), 'utf8');
   const source = readFileSync(
     path.join(import.meta.dirname, '..', '..', 'content', SAMPLER_FILE),
@@ -306,13 +313,17 @@ export async function checkSampler({ themed = false } = {}) {
       `The export's ${SAMPLER_FILE} isn't content/${SAMPLER_FILE}, byte for byte.`
     );
   }
-  const { uiScale } = exportAppearance();
-  const boards = themedBoard(
-    boardEntry(source),
-    uiScale,
-    uiScaleFactor(exportTokens() as unknown as TokensFile)
-  );
-  const entry = JSON.stringify(boards);
+  const appearance = exportAppearance();
+  const { uiScale } = appearance;
+  const factor = uiScaleFactor(exportTokens());
+  const base = boardEntry(source);
+  // The board at the export's UI scale and `density`.
+  const boardAt = (density: NxdsDensity) => {
+    const board = themedBoard(base, { uiScale, density }, factor)[SAMPLER_FILE];
+    if (!board) throw new Error(`${SAMPLER_FILE}: no canvas.json entry.`);
+    return { width: board.w, height: board.h };
+  };
+  const entry = JSON.stringify(themedBoard(base, appearance, factor));
   if (shippedBoardEntry() !== entry) {
     fail(`SETUP.md's canvas.json entry isn't ${entry}.`);
   }
@@ -331,11 +342,8 @@ export async function checkSampler({ themed = false } = {}) {
   }
 
   const { markup, height: preview } = samplerFile(source);
-  // The board widens with the UI scale, so the page lays out as at the default.
-  const width = boards[SAMPLER_FILE]?.w;
-  const height = boards[SAMPLER_FILE]?.h;
-  if (width === undefined || preview === undefined || height === undefined) {
-    throw new Error(`${SAMPLER_FILE}: $preview has no whole width and height.`);
+  if (preview === undefined) {
+    throw new Error(`${SAMPLER_FILE}: $preview has no whole height.`);
   }
   const legend = legendOf(markup);
   const slots = slotsOf(markup);
@@ -343,10 +351,27 @@ export async function checkSampler({ themed = false } = {}) {
   const days = rangeDaysOf(markup);
   const backgrounds: Partial<Record<Mode, { slot: string; color: string }[]>> =
     {};
+  // How much taller the page is at each density than $preview's height.
+  const measured: Partial<Record<NxdsDensity, number>> = {};
+  let offTable = false;
 
-  for (const mode of MODES) {
-    const name = `the sampler in ${mode}`;
-    const mounted = await mountSampler(markup, { width, height }, mode);
+  const mounts: Mount[] = [
+    ...DENSITY_OPTIONS.map(({ value: density }) => ({
+      size: boardAt(density),
+      mode: 'light' as const,
+      density,
+    })),
+    {
+      size: boardAt(appearance.density),
+      mode: 'dark',
+      density: appearance.density,
+    },
+  ];
+  for (const mount of mounts) {
+    const { mode, density } = mount;
+    const { height } = mount.size;
+    const name = `the sampler in ${mode} at ${density} density`;
+    const mounted = await mountSampler(markup, mount);
     failOnProblems(name, mounted.problems, true);
     if ('error' in mounted) {
       fail(`${name}: ${mounted.error}`);
@@ -360,16 +385,11 @@ export async function checkSampler({ themed = false } = {}) {
     if (board.bars !== bars) {
       fail(`${name}: the bar chart draws ${board.bars} bars, not ${bars}.`);
     }
-    if (!themed && Math.abs(board.bottom - height) > 1) {
+    measured[density] = board.bottom - preview;
+    if (Math.abs(board.bottom - height) > 1) {
+      offTable = true;
       fail(
-        `${name}: the page ends at ${board.bottom}px, but $preview and the canvas.json entry give ${height}px. Set $preview's height to ${board.bottom}.`
-      );
-    }
-    // A themed board fits its page. Denser spacing leaves a strip of
-    // background under it, up to 80px with compact density.
-    if (themed && (board.bottom > height || height - board.bottom > 80)) {
-      fail(
-        `${name}: at the ${uiScale} UI scale the page ends at ${board.bottom}px, but the canvas.json entry gives ${height}px. Set SAMPLER_EXTRA_HEIGHT in src/theme.ts from the page's height at this scale and at the default.`
+        `${name}: at the ${uiScale} UI scale the page ends at ${board.bottom}px, but the canvas.json entry gives ${height}px.`
       );
     }
     if (board.legend.join(', ') !== legend.join(', ')) {
@@ -400,11 +420,22 @@ export async function checkSampler({ themed = false } = {}) {
     }
     if (!board.closes)
       fail(`${name}: Escape doesn't close This quarter's calendar.`);
-    backgrounds[mode] = board.backgrounds;
+    if (density === appearance.density) backgrounds[mode] = board.backgrounds;
   }
   for (const [index, { slot, color }] of (backgrounds.dark ?? []).entries()) {
     if (color === backgrounds.light?.[index]?.color) {
       fail(`the sampler in dark: ${slot} keeps its light background.`);
     }
   }
+  if (!offTable) return;
+  const offset = measured.default;
+  if (uiScale === 'default' && offset !== undefined && offset !== 0) {
+    fail(
+      `the sampler at the default UI scale and density ends ${offset}px past $preview. Set $preview's height to ${preview + offset}, then run the smoke test again.`
+    );
+    return;
+  }
+  fail(
+    `Set SAMPLER_EXTRA_HEIGHT.${uiScale} in src/theme.ts to ${JSON.stringify(measured)}.`
+  );
 }

@@ -1,4 +1,4 @@
-import { exportPresets, PRESETS } from '../../src/presets.ts';
+import { PRESETS } from '../../src/presets.ts';
 
 import { DARK, exportAppearance, fail, LIGHT, openPage } from './harness.ts';
 import { CARD, measure, tokenLists } from './probes.ts';
@@ -10,7 +10,7 @@ export const PRESET_CASES = Object.keys(PRESETS);
 // the check reads them all.
 function presetCases() {
   const appearance = exportAppearance();
-  return exportPresets(appearance).map(
+  return Object.entries(PRESETS).map(
     ([attribute, { options, field, family }]) => {
       const initial = appearance[field];
       return {
