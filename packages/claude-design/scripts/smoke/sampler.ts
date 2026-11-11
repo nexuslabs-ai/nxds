@@ -1,3 +1,5 @@
+import type { Root } from 'react-dom/client';
+
 import {
   DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
@@ -155,9 +157,9 @@ function typeTokens(textSize: NxdsTextSize) {
     });
 }
 
-/** The page global that holds the sampler's React root, so the next mount can unmount it. */
 type SamplerGlobals = PageGlobals & {
-  __nxdsSampler?: ReturnType<PageGlobals['ReactDOM']['createRoot']>;
+  /** The sampler's React root, so the next mount can unmount it. */
+  __nxdsSampler?: Root;
 };
 
 async function measureSampler(
@@ -304,7 +306,14 @@ async function measureSampler(
     }
   );
   if (board.error !== undefined) return { error: board.error };
+  return { board };
+}
 
+/**
+ * Opens This quarter's calendar, reads each surface's background while it's
+ * open, then closes it with Escape.
+ */
+async function roundTripCalendar(page: Page) {
   const trigger = page.getByRole('button', {
     name: 'This quarter',
     exact: true,
@@ -341,7 +350,7 @@ async function measureSampler(
       .then(() => true)
       .catch(() => false);
   }
-  return { board: { ...board, ...open, opens, closes } };
+  return { ...open, opens, closes };
 }
 
 /** Whether a page that ends at `end` misses `height` by more than 1px. An unmeasured page doesn't. */
@@ -373,8 +382,11 @@ function heightsAbove<K extends string>(
 // export's density, on the board each gets at the export's UI scale. Each
 // mount sets its text size's type tokens on the page. So one export checks
 // its UI scale's whole entry in SAMPLER_EXTRA_HEIGHT and all of
-// SAMPLER_STROKE_HEIGHT. The table puts canvas wrappers where only rows and
-// cells belong, so the wrapper's own nesting warning is allowed.
+// SAMPLER_STROKE_HEIGHT. At the export's own density, stroke and text size it
+// mounts in both modes, and there its This quarter calendar opens on the
+// range and closes, and its surfaces change background with the mode. The
+// table puts canvas wrappers where only rows and cells belong, so the
+// wrapper's own nesting warning is allowed.
 export async function checkSampler() {
   const file = readFileSync(path.join(exportDir, SAMPLER_FILE), 'utf8');
   const source = readFileSync(
@@ -440,6 +452,15 @@ export async function checkSampler() {
     Record<NxdsTextSize, Partial<Record<NxdsDensity, number>>>
   > = {};
   const byStroke: Partial<Record<NxdsStroke, number>> = {};
+  const own = {
+    density: appearance.density,
+    stroke: appearance.stroke,
+    textSize: appearance.textSize,
+  };
+  const isOwn = ({ density, stroke, textSize }: Omit<Mount, 'size'>) =>
+    density === own.density &&
+    stroke === own.stroke &&
+    textSize === own.textSize;
 
   const settings: Omit<Mount, 'size'>[] = [
     ...TEXT_SIZE_OPTIONS.flatMap(({ value: textSize }) =>
@@ -458,13 +479,11 @@ export async function checkSampler() {
         textSize: plainText,
       })
     ),
-    {
-      mode: 'dark',
-      density: appearance.density,
-      stroke: appearance.stroke,
-      textSize: appearance.textSize,
-    },
   ];
+  // A stroke other than normal mounts only at 14px text, so an export at
+  // another stroke and text size needs its own light mount.
+  if (!settings.some(isOwn)) settings.push({ mode: 'light', ...own });
+  settings.push({ mode: 'dark', ...own });
   const mounts = settings.map((each) => ({ ...each, size: boardAt(each) }));
   const { page, problems } = await openPage('Button', LIGHT);
   for (const mount of mounts) {
@@ -520,20 +539,21 @@ export async function checkSampler() {
         `${name}: the board scrolls to ${board.scrollHeight}px, past its ${height}px height.`
       );
     }
-    if (!board.opens) {
+    if (!isOwn(mount)) continue;
+    const calendar = await roundTripCalendar(page);
+    failOnProblems(name, problems, true);
+    if (!calendar.opens) {
       fail(`${name}: no This quarter button opens its calendar.`);
       continue;
     }
-    if (board.selectedDays !== days) {
+    if (calendar.selectedDays !== days) {
       fail(
-        `${name}: This quarter's calendar selects ${board.selectedDays} days, not ${days}.`
+        `${name}: This quarter's calendar selects ${calendar.selectedDays} days, not ${days}.`
       );
     }
-    if (!board.closes)
+    if (!calendar.closes)
       fail(`${name}: Escape doesn't close This quarter's calendar.`);
-    if (density === appearance.density && stroke === appearance.stroke) {
-      backgrounds[mode] = board.backgrounds;
-    }
+    backgrounds[mode] = calendar.backgrounds;
   }
   await page.close();
   for (const [index, { slot, color }] of (backgrounds.dark ?? []).entries()) {
