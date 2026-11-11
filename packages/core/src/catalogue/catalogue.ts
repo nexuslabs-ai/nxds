@@ -655,7 +655,7 @@ function scaledPresets(
  * Every value the UI scale and text size write for `appearance`, the same as
  * the generated CSS: the scale's block, then the text size's type tokens.
  */
-function uiScaleValues(
+function sizeValues(
   tokens: readonly CatalogueToken[],
   { uiScale, textSize }: CatalogueAppearance
 ) {
@@ -681,13 +681,13 @@ function uiScaleValues(
 }
 
 /** `tokens` with the sizes `appearance` puts on the page. */
-function atUiScale(
+function atSizes(
   tokens: readonly CatalogueToken[],
   appearance: CatalogueAppearance
 ): CatalogueToken[] {
   const { uiScale, textSize, prefs } = appearance;
   const scaled = new Map([
-    ...uiScaleValues(tokens, appearance),
+    ...sizeValues(tokens, appearance),
     [
       '--nx-typography-code-size',
       `${scaleText(prefs.codeFontSize, uiScale, textSize)}px`,
@@ -754,5 +754,5 @@ export function createTokenCatalogue(
     ...shadowStyleTokens(shadowLayers, lookup),
     ...widthTokens(PAGE_WIDTHS_REM, 'default').map(uiScaleEntry),
   ];
-  return atUiScale(tokens, appearance);
+  return atSizes(tokens, appearance);
 }

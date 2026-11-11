@@ -144,20 +144,21 @@ function typeTokens(textSize: NxdsTextSize) {
         (control) => control.kind === 'scale' && control.field === 'textSize'
       )
     )
-    .map(({ name, variants }): [string, string] => [
-      name,
-      variants[0]?.declarations[0]?.value ?? '',
-    ]);
+    .map(({ name, variants }): [string, string] => {
+      const value = variants[0]?.declarations[0]?.value;
+      if (value === undefined) {
+        throw new Error(
+          `The token catalogue gives ${name} no value at ${textSize}px text.`
+        );
+      }
+      return [name, value];
+    });
 }
 
-async function mountSampler(markup: string, mount: Mount) {
-  const { page, problems } = await openPage('Button', LIGHT);
-  try {
-    return { ...(await measureSampler(page, markup, mount)), problems };
-  } finally {
-    await page.close();
-  }
-}
+/** The page global that holds the sampler's React root, so the next mount can unmount it. */
+type SamplerGlobals = PageGlobals & {
+  __nxdsSampler?: ReturnType<PageGlobals['ReactDOM']['createRoot']>;
+};
 
 async function measureSampler(
   page: Page,
@@ -167,8 +168,9 @@ async function measureSampler(
   await page.setViewportSize(size);
   const board = await page.evaluate(
     async ({ markup, height, density, stroke, types }) => {
-      const { ReactDOM, __nxdsMarkup, __nxdsSettle } =
-        window as unknown as PageGlobals;
+      const globals = window as unknown as SamplerGlobals;
+      const { ReactDOM, __nxdsMarkup, __nxdsSettle } = globals;
+      globals.__nxdsSampler?.unmount();
       for (const [name, value] of types) {
         document.documentElement.style.setProperty(name, value);
       }
@@ -179,10 +181,10 @@ async function measureSampler(
       host.setAttribute('data-density', density);
       host.setAttribute('data-borderwidth', stroke);
       document.body.append(host);
+      const reactRoot = ReactDOM.createRoot(host);
+      globals.__nxdsSampler = reactRoot;
       try {
-        ReactDOM.flushSync(() =>
-          ReactDOM.createRoot(host).render(__nxdsMarkup(markup, true))
-        );
+        ReactDOM.flushSync(() => reactRoot.render(__nxdsMarkup(markup, true)));
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         return { error: `rendering threw ${message}` };
@@ -464,12 +466,13 @@ export async function checkSampler() {
     },
   ];
   const mounts = settings.map((each) => ({ ...each, size: boardAt(each) }));
+  const { page, problems } = await openPage('Button', LIGHT);
   for (const mount of mounts) {
     const { mode, density, stroke, textSize } = mount;
     const { height } = mount.size;
     const name = `the sampler in ${mode} at ${density} density, ${stroke} stroke and ${textSize}px text`;
-    const mounted = await mountSampler(markup, mount);
-    failOnProblems(name, mounted.problems, true);
+    const mounted = await measureSampler(page, markup, mount);
+    failOnProblems(name, problems, true);
     if ('error' in mounted) {
       fail(`${name}: ${mounted.error}`);
       continue;
@@ -532,6 +535,7 @@ export async function checkSampler() {
       backgrounds[mode] = board.backgrounds;
     }
   }
+  await page.close();
   for (const [index, { slot, color }] of (backgrounds.dark ?? []).entries()) {
     if (color === backgrounds.light?.[index]?.color) {
       fail(`the sampler in dark: ${slot} keeps its light background.`);
