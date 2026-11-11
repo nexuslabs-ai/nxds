@@ -168,7 +168,7 @@ async function measureSampler(
   { size, mode, density, stroke, textSize }: Mount
 ) {
   await page.setViewportSize(size);
-  const board = await page.evaluate(
+  return page.evaluate(
     async ({ markup, height, density, stroke, types }) => {
       const globals = window as unknown as SamplerGlobals;
       const { ReactDOM, __nxdsMarkup, __nxdsSettle } = globals;
@@ -305,13 +305,12 @@ async function measureSampler(
       types: typeTokens(textSize),
     }
   );
-  if (board.error !== undefined) return { error: board.error };
-  return { board };
 }
 
 /**
- * Opens This quarter's calendar, reads each surface's background while it's
- * open, then closes it with Escape.
+ * Opens This quarter's calendar, reads its selected days and each surface's
+ * background while it's open, then closes it with Escape. Null when the
+ * calendar doesn't open.
  */
 async function roundTripCalendar(page: Page) {
   const trigger = page.getByRole('button', {
@@ -326,6 +325,7 @@ async function roundTripCalendar(page: Page) {
       .then(() => popover.waitFor({ timeout: 2000 }))
       .then(() => true)
       .catch(() => false));
+  if (!opens) return null;
   const open = await page.evaluate(async (surfaces) => {
     const { __nxdsSettle } = window as unknown as PageGlobals;
     await __nxdsSettle(document.body);
@@ -342,15 +342,12 @@ async function roundTripCalendar(page: Page) {
       ),
     };
   }, SURFACES);
-  let closes = false;
-  if (opens) {
-    await page.keyboard.press('Escape');
-    closes = await popover
-      .waitFor({ state: 'detached', timeout: 2000 })
-      .then(() => true)
-      .catch(() => false);
-  }
-  return { ...open, opens, closes };
+  await page.keyboard.press('Escape');
+  const closes = await popover
+    .waitFor({ state: 'detached', timeout: 2000 })
+    .then(() => true)
+    .catch(() => false);
+  return { ...open, closes };
 }
 
 /** Whether a page that ends at `end` misses `height` by more than 1px. An unmeasured page doesn't. */
@@ -457,7 +454,11 @@ export async function checkSampler() {
     stroke: appearance.stroke,
     textSize: appearance.textSize,
   };
-  const isOwn = ({ density, stroke, textSize }: Omit<Mount, 'size'>) =>
+  const isOwn = ({
+    textSize,
+    density,
+    stroke,
+  }: Pick<Mount, 'textSize' | 'density' | 'stroke'>) =>
     density === own.density &&
     stroke === own.stroke &&
     textSize === own.textSize;
@@ -490,13 +491,12 @@ export async function checkSampler() {
     const { mode, density, stroke, textSize } = mount;
     const { height } = mount.size;
     const name = `the sampler in ${mode} at ${density} density, ${stroke} stroke and ${textSize}px text`;
-    const mounted = await measureSampler(page, markup, mount);
+    const board = await measureSampler(page, markup, mount);
     failOnProblems(name, problems, true);
-    if ('error' in mounted) {
-      fail(`${name}: ${mounted.error}`);
+    if (board.error !== undefined) {
+      fail(`${name}: ${board.error}`);
       continue;
     }
-    const { board } = mounted;
     for (const slot of slots) {
       if (!board.slots.includes(slot)) fail(`${name}: no ${slot} renders.`);
     }
@@ -542,7 +542,7 @@ export async function checkSampler() {
     if (!isOwn(mount)) continue;
     const calendar = await roundTripCalendar(page);
     failOnProblems(name, problems, true);
-    if (!calendar.opens) {
+    if (!calendar) {
       fail(`${name}: no This quarter button opens its calendar.`);
       continue;
     }
