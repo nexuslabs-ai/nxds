@@ -22,3 +22,5 @@ Add `uiScale` to the appearance: `'small'`, `'default'`, `'large'` or `'larger'`
 - `prefs.uiFontSize` is gone. Use `uiScale`. The CLI flag `--font-size` is replaced by `--ui-scale`. Shuffle keeps the user's UI scale.
 - The token catalogue's `control` is now `controls`, a list. A new `scale` control names `uiScale`, which scales the token. Spacing and radius name their mode and `uiScale`, and the code size names `codeFontSize` and `uiScale`. The catalogue also lists `--nx-ui-scale` in family `ui-scale` and the page widths in family `width`.
 - The settings screen, the Storybook toolbars and Claude Design (`data-ui-scale`) offer the new mode.
+- `nxds-cli export claude-design` takes `--ui-scale` in place of `--font-size`. A system at another scale lists every token at that scale, declares its density and corner presets at that scale in `tokens.css`, and has no `data-ui-scale` attribute. Its sampler board is wider and taller to match.
+- `createTokenCatalogue(appearance)` lists each token at the appearance's UI scale, the same values the `[data-ui-scale]` blocks in `nxds.css` hold.

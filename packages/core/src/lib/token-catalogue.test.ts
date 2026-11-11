@@ -14,8 +14,10 @@ import {
   DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
   type NxdsAppearancePrefs,
+  type NxdsAppearanceState,
   UI_SCALE_OPTIONS,
 } from './appearance-model';
+import { createNxdsAppearanceSnapshotFromState } from './appearance-snapshot';
 import type { Mode } from './palette';
 
 const catalogue = createTokenCatalogue();
@@ -620,3 +622,128 @@ describe('density spacing order', () => {
     }
   });
 });
+
+const APPEARANCES: [string, NxdsAppearanceState][] = [
+  [
+    'an oklch brand on stone',
+    {
+      ...DEFAULT_NXDS_APPEARANCE,
+      brandColor: 'oklch(0.7 0.25 20)',
+      surfaceTone: 'stone',
+    },
+  ],
+  [
+    'the lowest contrast',
+    {
+      ...DEFAULT_NXDS_APPEARANCE,
+      brandColor: '#e11d48',
+      lightContrast: 0,
+      darkContrast: 0,
+    },
+  ],
+  [
+    'the highest contrast',
+    {
+      ...DEFAULT_NXDS_APPEARANCE,
+      brandColor: '#4f46e5',
+      lightContrast: 100,
+      darkContrast: 100,
+    },
+  ],
+  [
+    'the largest code font',
+    {
+      ...DEFAULT_NXDS_APPEARANCE,
+      prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs, codeFontSize: 32 },
+    },
+  ],
+];
+
+/** The custom properties of the block `selector` opens in `css`. */
+function snapshotBlock(css: string, selector: string): Map<string, string> {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const body = new RegExp(`(?:^|\\n)${escaped} \\{\\n([^}]*)\\}`).exec(
+    css
+  )?.[1];
+  if (body === undefined) throw new Error(`no "${selector}" block`);
+  return customProperties(body);
+}
+
+describe.each(APPEARANCES)('token catalogue at %s', (_, appearance) => {
+  const themed = new Map(
+    createTokenCatalogue(appearance).map((token) => [token.name, token])
+  );
+  const { themeCss, prefsCss } =
+    createNxdsAppearanceSnapshotFromState(appearance);
+
+  function expectAgreement(
+    declared: Map<string, string>,
+    key: VariantKey
+  ): void {
+    expect(declared.size).toBeGreaterThan(0);
+    for (const [name, value] of declared) {
+      const token = themed.get(name as CatalogueToken['name']);
+      if (!token) throw new Error(`the catalogue has no ${name}`);
+      expect(variantValue(token, key), name).toBe(value);
+    }
+  }
+
+  it('derives the colours the provider applies, in each mode', () => {
+    expectAgreement(snapshotBlock(themeCss, ':root'), {
+      preset: null,
+      mode: 'light',
+    });
+    expectAgreement(snapshotBlock(themeCss, ':root.dark'), {
+      preset: null,
+      mode: 'dark',
+    });
+  });
+
+  it('writes the code size the provider applies', () => {
+    const code = new Map(
+      [...snapshotBlock(prefsCss, ':root')].filter(
+        ([name]) => name === '--nx-typography-code-size'
+      )
+    );
+    expectAgreement(code, { preset: null, mode: null });
+  });
+});
+
+describe.each(['small', 'large', 'larger'] as const)(
+  'token catalogue at the %s UI scale',
+  (uiScale) => {
+    const themed = new Map(
+      createTokenCatalogue({ ...DEFAULT_NXDS_APPEARANCE, uiScale }).map(
+        (token) => [token.name, token]
+      )
+    );
+    const scale = `[data-ui-scale='${uiScale}']`;
+
+    /** The custom properties of the first `nxds.css` rule `selector` opens. */
+    function cssBlock(selector: string, tail: string) {
+      const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const body = new RegExp(`${escaped}${tail}\\{([^}]*)\\}`).exec(
+        nxdsCss
+      )?.[1];
+      if (body === undefined) throw new Error(`no "${selector}" rule`);
+      return customProperties(body);
+    }
+
+    it.each([
+      ['type, icons and page widths', scale, '\\s*', null],
+      ['density', `${scale}[data-density='tight']`, '[^{]*', 'tight'],
+      ['corners', `${scale}[data-radius='round']`, '[^{]*', 'round'],
+    ])(
+      'writes the same %s as the generated CSS',
+      (_, selector, tail, preset) => {
+        const declared = cssBlock(selector, tail);
+        expect(declared.size).toBeGreaterThan(0);
+        for (const [name, value] of declared) {
+          const token = themed.get(name as CatalogueToken['name']);
+          if (!token) throw new Error(`the catalogue has no ${name}`);
+          expect(variantValue(token, { preset, mode: null }), name).toBe(value);
+        }
+      }
+    );
+  }
+);

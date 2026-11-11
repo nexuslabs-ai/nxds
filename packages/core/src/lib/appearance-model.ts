@@ -295,8 +295,14 @@ export function sanitizeNxdsAppearance(rawInput: unknown): NxdsAppearanceState {
   };
 }
 
+/** The appearance fields runtime colours derive from. */
+export type NxdsColorAppearance = Pick<
+  NxdsAppearanceState,
+  'brandColor' | 'surfaceTone' | 'lightContrast' | 'darkContrast'
+>;
+
 export function createNxdsThemeContract(
-  state: NxdsAppearanceState
+  state: NxdsColorAppearance
 ): ThemeDerivationInput {
   const tone = BASE_TONE_SEEDS[state.surfaceTone];
   return {

@@ -135,7 +135,7 @@ function ResizableHandle({
       {...props}
     >
       {withHandle && (
-        <div className="nx:z-10 nx:flex nx:h-4 nx:w-3 nx:items-center nx:justify-center nx:rounded-sm nx:border-default nx:border-border-default nx:bg-border-default">
+        <div className="nx:z-10 nx:flex nx:items-center nx:justify-center nx:py-px nx:rounded-sm nx:border-default nx:border-border-default nx:bg-border-default">
           <IconGripVertical className="nx:size-icon-glyph-xs nx:icon-stroke" />
         </div>
       )}

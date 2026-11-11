@@ -1,11 +1,10 @@
 import {
-  CARD_JOINER,
   type ManifestPage,
   type ManifestSection,
   PAGE_MANIFEST,
 } from './page-manifest.generated.ts';
 
-export { CARD_JOINER, type ManifestPage, type ManifestSection, PAGE_MANIFEST };
+export { type ManifestPage, type ManifestSection, PAGE_MANIFEST };
 
 export function getSection(slug: string): ManifestSection | undefined {
   return PAGE_MANIFEST.find((section) => section.slug === slug);
@@ -19,6 +18,11 @@ export function requireSection(slug: string): ManifestSection {
     );
   }
   return section;
+}
+
+/** The route a section's own URL redirects to: its first page. */
+export function sectionHomeRoute(section: ManifestSection): string | undefined {
+  return section.pages[0]?.route;
 }
 
 export function requirePage(

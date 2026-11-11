@@ -4,6 +4,12 @@ import {
   type SystemIndex,
   validateIndex,
 } from '@nxds/claude-design/system-index';
+import type {
+  RenderedTheme,
+  ThemeFlags,
+  ThemeModule,
+} from '@nxds/claude-design/theme';
+import { formatThemeFlags } from '@nxds/claude-design/theme-fields';
 import { createHash } from 'node:crypto';
 import {
   existsSync,
@@ -41,10 +47,21 @@ export type ExportOptions = {
   index?: string;
   existing?: string;
   overwrite: boolean;
+  /** The theme flags passed, by name. An empty value resets the system's. */
+  theme: Record<string, string>;
 };
 
-/** `files.json`: each file under `project/`, as the package build wrote it. */
-type Manifest = { path: string; sha256: string }[];
+type ManifestEntry = { path: string; sha256: string };
+
+/** The module that themes an export, beside `project/`. */
+const THEME_FILE = 'theme.js';
+
+/** `files.json`: each file the release ships, as the package build wrote it. `project` paths are under `project/`, and `root` files sit beside it. `theme` is theme.js, beside them too. Releases from before themes have none. */
+type Manifest = {
+  project: ManifestEntry[];
+  root: ManifestEntry[];
+  theme?: ManifestEntry;
+};
 
 type Packument = {
   'dist-tags'?: Record<string, string>;
@@ -192,7 +209,7 @@ function localPackage(source: string) {
 function assertWritable(out: string, overwrite: boolean) {
   if (!existsSync(out) || readdirSync(out).length === 0 || overwrite) return;
   throw new UsageError(
-    `${out} already has files. Pass --overwrite to replace its project/ folder, or choose another --out.`
+    `${out} already has files. Pass --overwrite to replace the export in it, or choose another --out.`
   );
 }
 
@@ -220,6 +237,28 @@ function stalePaths(existing: string[], exported: Set<string>) {
     .sort();
 }
 
+// The names the export writes beside project/ itself.
+const EXPORT_NAMES = new Set(['project', 'files.json', 'removed.json']);
+
+// A root file is one name beside project/ that the export doesn't write
+// itself.
+const isRootName = (name: string) =>
+  name !== '' &&
+  name !== '.' &&
+  name !== '..' &&
+  path.basename(name) === name &&
+  !EXPORT_NAMES.has(name);
+
+const sha256 = (bytes: Buffer) =>
+  createHash('sha256').update(bytes).digest('hex');
+
+const isEntry = (value: unknown): value is ManifestEntry =>
+  typeof (value as ManifestEntry | undefined)?.path === 'string' &&
+  typeof (value as ManifestEntry).sha256 === 'string';
+
+const isEntryList = (value: unknown): value is ManifestEntry[] =>
+  Array.isArray(value) && value.every(isEntry);
+
 function readManifest(root: string): Manifest {
   const file = path.join(root, 'files.json');
   if (!existsSync(file)) {
@@ -227,41 +266,37 @@ function readManifest(root: string): Manifest {
       `${root} has no files.json. Export from an @nxds/claude-design release or a built dist folder.`
     );
   }
-  const value = readJson(file);
+  const value = readJson(file) as Partial<Manifest> | null;
   if (
-    !Array.isArray(value) ||
-    !value.every(
-      (entry) =>
-        typeof entry?.path === 'string' && typeof entry.sha256 === 'string'
+    !isEntryList(value?.project) ||
+    !isEntryList(value.root) ||
+    !(
+      value.theme === undefined ||
+      (isEntry(value.theme) && value.theme.path === THEME_FILE)
     )
   ) {
     throw new CliError(
-      `${file} must be a JSON array of { path, sha256 } entries.`
+      `${file} must hold project and root, each a JSON array of { path, sha256 } entries, and may hold theme, the { path, sha256 } entry for ${THEME_FILE}.`
     );
   }
-  return value;
+  return { project: value.project, root: value.root, theme: value.theme };
 }
 
-// The package build validated exactly the files files.json lists, at its
-// hashes, so those are the only files read.
-function readProject(root: string) {
-  const projectDir = path.join(root, 'project');
+// The bytes of each entry under `dir`, checked against its hash. An error
+// names the entry by `prefix` and its path.
+function readEntries(dir: string, entries: ManifestEntry[], prefix: string) {
   const files = new Map<string, Buffer>();
-  for (const entry of readManifest(root)) {
-    const file = path.join(projectDir, entry.path);
-    const relative = path.relative(projectDir, file);
-    if (relative.split(path.sep)[0] === '..' || path.isAbsolute(relative)) {
-      throw new CliError(`files.json lists ${entry.path}, outside project/.`);
-    }
+  for (const entry of entries) {
+    const file = path.join(dir, entry.path);
     if (!existsSync(file) || !lstatSync(file).isFile()) {
       throw new CliError(
-        `project/${entry.path} is missing from the release, or isn't a regular file.`
+        `${prefix}${entry.path} is missing from the release, or isn't a regular file.`
       );
     }
     const bytes = readFileSync(file);
-    if (createHash('sha256').update(bytes).digest('hex') !== entry.sha256) {
+    if (sha256(bytes) !== entry.sha256) {
       throw new CliError(
-        `project/${entry.path} doesn't match the release's files.json, so nothing was written.`
+        `${prefix}${entry.path} doesn't match the release's files.json, so nothing was written.`
       );
     }
     files.set(entry.path, bytes);
@@ -269,23 +304,306 @@ function readProject(root: string) {
   return files;
 }
 
-function mergeIndex(files: Map<string, Buffer>, currentFile: string) {
+// The package build validated exactly the files files.json lists, at its
+// hashes, so those are the only files read: `project/` and the files beside it.
+function readRelease(root: string) {
+  const manifest = readManifest(root);
+  const projectDir = path.join(root, 'project');
+  for (const { path: file } of manifest.project) {
+    const relative = path.relative(projectDir, path.join(projectDir, file));
+    if (relative.split(path.sep)[0] === '..' || path.isAbsolute(relative)) {
+      throw new CliError(`files.json lists ${file}, outside project/.`);
+    }
+  }
+  for (const { path: file } of manifest.root) {
+    if (!isRootName(file)) {
+      throw new CliError(
+        `files.json lists ${file || 'an empty path'} as a root file. A root file is one name beside project/, other than project, files.json and removed.json.`
+      );
+    }
+  }
+  if (!manifest.root.some((entry) => entry.path === 'SETUP.md')) {
+    throw new CliError(
+      "The release's files.json lists no SETUP.md, so there's no guide to follow."
+    );
+  }
+  return {
+    files: readEntries(projectDir, manifest.project, 'project/'),
+    rootFiles: readEntries(root, manifest.root, ''),
+    themeModule: manifest.theme
+      ? readEntries(root, [manifest.theme], '').get(THEME_FILE)
+      : undefined,
+  };
+}
+
+// The root files the last export into `out` listed in its files.json and
+// this release doesn't ship.
+function droppedRootFiles(out: string, rootFiles: Map<string, Buffer>) {
+  const file = path.join(out, 'files.json');
+  if (!existsSync(file)) return [];
+  const value = readJson(file) as Partial<Manifest> | null;
+  if (!isEntryList(value?.root)) {
+    throw new UsageError(
+      `${file} must hold root, a JSON array of { path, sha256 } entries. Delete it, then run the command again.`
+    );
+  }
+  return value.root.filter(
+    (entry) => isRootName(entry.path) && !rootFiles.has(entry.path)
+  );
+}
+
+// Removes each dropped root file the last export wrote, and returns the names
+// of the ones that were edited since, which stay.
+function removeDroppedRootFiles(out: string, dropped: ManifestEntry[]) {
+  const edited: string[] = [];
+  for (const entry of dropped) {
+    const file = path.join(out, entry.path);
+    if (!existsSync(file)) continue;
+    const unchanged =
+      lstatSync(file).isFile() && sha256(readFileSync(file)) === entry.sha256;
+    if (unchanged) rmSync(file);
+    else edited.push(entry.path);
+  }
+  return edited;
+}
+
+function writeRootFiles(out: string, rootFiles: Map<string, Buffer>) {
+  for (const [name, bytes] of rootFiles) {
+    writeFileSync(path.join(out, name), bytes);
+  }
+}
+
+const entriesOf = (files: Map<string, Buffer>) =>
+  [...files].map(([file, bytes]) => ({ path: file, sha256: sha256(bytes) }));
+
+// Lists what the export wrote in files.json, so the next export can remove a
+// root file its release drops.
+function writeManifest(
+  out: string,
+  files: Map<string, Buffer>,
+  rootFiles: Map<string, Buffer>
+) {
+  const manifest: Manifest = {
+    project: entriesOf(files),
+    root: entriesOf(rootFiles),
+  };
+  writeFileSync(
+    path.join(out, 'files.json'),
+    `${JSON.stringify(manifest, null, 2)}\n`
+  );
+}
+
+function readIndex(file: string) {
+  const index = readJson(file);
+  if (typeof index !== 'object' || index === null || Array.isArray(index)) {
+    throw new UsageError(`${file} must be a system's design-system.json.`);
+  }
+  return index as Record<string, unknown>;
+}
+
+/** The theme a system's index records. A system from before themes has none. */
+function storedTheme(index: Record<string, unknown>, file: string): ThemeFlags {
+  const theme = index['theme'];
+  if (theme === undefined) return {};
+  if (
+    typeof theme !== 'object' ||
+    theme === null ||
+    Array.isArray(theme) ||
+    !Object.values(theme).every((value) => typeof value === 'string')
+  ) {
+    throw new UsageError(
+      `${file}: "theme" must be an object of theme flag values, such as {"corners": "round"}. Fix it, or remove it to export the default theme.`
+    );
+  }
+  return theme as ThemeFlags;
+}
+
+/** `stored` with each `passed` flag over it. An empty passed flag removes its stored value. */
+function layeredTheme(stored: ThemeFlags, passed: ThemeFlags): ThemeFlags {
+  const flags: Record<string, string> = { ...stored, ...passed };
+  for (const [flag, value] of Object.entries(passed)) {
+    if (value === '') delete flags[flag];
+  }
+  return flags;
+}
+
+type ThemeSource = { passed: ThemeFlags; indexFile?: string; version: string };
+
+const noFlagError = (flag: string, version: string) =>
+  new UsageError(
+    `nxds ${version} has no --${flag}. Pass --release latest to export a release that has it.`
+  );
+
+/** The error for a theme on a release from before themes, which has no theme module. */
+function noThemeModuleError(
+  theme: ThemeFlags,
+  { passed, indexFile, version }: ThemeSource
+) {
+  const flag = Object.keys(theme).find((name) => name in passed);
+  if (flag !== undefined) return noFlagError(flag, version);
+  return new UsageError(
+    `${indexFile} has a theme, and nxds ${version} can't theme an export. Pass --release latest to keep the theme.`
+  );
+}
+
+/** Throws on a flag the release doesn't take, naming where it came from. */
+function assertThemeFlags(
+  flags: ThemeFlags,
+  taken: readonly string[],
+  { passed, indexFile, version }: ThemeSource
+) {
+  for (const flag of Object.keys(flags)) {
+    if (taken.includes(flag)) continue;
+    if (flag in passed) throw noFlagError(flag, version);
+    if (flag === 'mode' || flag === 'icons') {
+      throw new UsageError(
+        `${indexFile} theme: a system carries Light and Dark and one icon library, so it has no "${flag}". Remove it from "theme".`
+      );
+    }
+    throw new UsageError(
+      `${indexFile} theme: "${flag}" isn't a theme flag nxds ${version} takes. Remove it from "theme".`
+    );
+  }
+}
+
+const isThemeModule = (value: unknown): value is ThemeModule =>
+  typeof value === 'object' &&
+  value !== null &&
+  (value as ThemeModule).api === 1 &&
+  Array.isArray((value as ThemeModule).flags) &&
+  typeof (value as ThemeModule).render === 'function' &&
+  typeof (value as ThemeModule).title === 'function';
+
+/** The release's theme module, imported from the bytes files.json's hash checked. */
+async function importTheme(bytes: Buffer, version: string) {
+  let imported: { default?: unknown };
+  try {
+    imported = (await import(
+      `data:text/javascript;base64,${bytes.toString('base64')}`
+    )) as { default?: unknown };
+  } catch (error) {
+    throw new CliError(
+      `nxds ${version}'s theme.js failed to load (${(error as Error).message}). Report it at https://github.com/nexuslabs-ai/nxds/issues.`
+    );
+  }
+  if (!isThemeModule(imported.default)) {
+    throw new CliError(
+      `nxds ${version}'s theme.js is newer than this nxds-cli. Run \`npx nxds-cli@latest\` to get the newest one.`
+    );
+  }
+  return imported.default;
+}
+
+const isRendered = (value: unknown): value is RenderedTheme => {
+  const rendered = value as RenderedTheme | undefined;
+  return (
+    typeof rendered?.guide === 'function' &&
+    typeof rendered.index?.title === 'string' &&
+    typeof rendered.index.theme === 'object' &&
+    ['tokens.json', 'tokens.css', 'README.md'].every(
+      (file) =>
+        typeof rendered.project?.[file as keyof RenderedTheme['project']] ===
+        'string'
+    )
+  );
+};
+
+/** `error`, thrown by theme.js, as the error to report. A flag it rejects names where the flag came from. */
+function themeError(
+  error: unknown,
+  { passed, indexFile, version }: ThemeSource
+) {
+  const { message, flag } = error as Error & { flag?: unknown };
+  if (typeof flag === 'string' && flag in passed) {
+    return new UsageError(message);
+  }
+  if (typeof flag === 'string' && indexFile !== undefined) {
+    return new UsageError(
+      `${indexFile} theme: ${message} Pass --${flag} <value> to change it, or --${flag}= to reset it.`
+    );
+  }
+  return new CliError(`nxds ${version}'s theme.js failed: ${message}`);
+}
+
+/** What `theme` renders for `flags`. */
+function renderTheme(
+  theme: ThemeModule,
+  flags: ThemeFlags,
+  source: ThemeSource
+) {
+  const { version } = source;
+  let rendered: unknown;
+  try {
+    rendered = theme.render(flags);
+  } catch (error) {
+    throw themeError(error, source);
+  }
+  if (!isRendered(rendered)) {
+    throw new CliError(
+      `nxds ${version}'s theme.js rendered no token files, README or setup guide.`
+    );
+  }
+  return rendered;
+}
+
+/**
+ * The title an export in theme `stored` gave the system, so a title that
+ * still matches it is one the person never renamed. Undefined when the
+ * release can't say.
+ */
+function storedThemeTitle(
+  stored: ThemeFlags,
+  module: ThemeModule | undefined,
+  defaultTitle: string
+) {
+  if (Object.keys(stored).length === 0) return defaultTitle;
+  try {
+    return module?.title(stored);
+  } catch {
+    return undefined;
+  }
+}
+
+function exportedIndex(files: Map<string, Buffer>) {
   const exported = files.get('design-system.json');
   if (!exported) throw new CliError('The release has no design-system.json.');
-  const merged = mergeSystemIndex(
-    readJson(currentFile) as Record<string, unknown>,
-    JSON.parse(exported.toString('utf8')) as SystemIndex
+  return JSON.parse(exported.toString('utf8')) as SystemIndex;
+}
+
+const jsonBytes = (value: unknown) =>
+  Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
+
+/** Puts `rendered`'s files and its title and theme in place of the release's defaults. */
+function applyTheme(
+  rendered: RenderedTheme,
+  files: Map<string, Buffer>,
+  rootFiles: Map<string, Buffer>
+) {
+  const { project } = rendered;
+  files.set('tokens.json', Buffer.from(project['tokens.json']));
+  files.set('tokens.css', Buffer.from(project['tokens.css']));
+  files.set('README.md', Buffer.from(project['README.md']));
+  files.set(
+    'design-system.json',
+    jsonBytes({ ...exportedIndex(files), ...rendered.index })
   );
+  rootFiles.set('SETUP.md', Buffer.from(rendered.guide(files.size)));
+}
+
+function mergeIndex(
+  files: Map<string, Buffer>,
+  current: Record<string, unknown>,
+  currentFile: string,
+  retitle: boolean
+) {
+  const merged = mergeSystemIndex(current, exportedIndex(files), { retitle });
   const errors = validateIndex(merged);
   if (errors.length > 0) {
     throw new UsageError(
       `${currentFile} merges into an index the page can't read, so nothing was written:\n${errors.map((error) => `  ${error}`).join('\n')}`
     );
   }
-  files.set(
-    'design-system.json',
-    Buffer.from(`${JSON.stringify(merged, null, 2)}\n`)
-  );
+  files.set('design-system.json', jsonBytes(merged));
 }
 
 // Stages beside `out`, so the staging folder is never inside the published
@@ -358,47 +676,93 @@ export async function exportClaudeDesign(
       );
 
   try {
-    const files = readProject(pkg.root);
-    if (options.index) mergeIndex(files, path.resolve(cwd, options.index));
+    const { files, rootFiles, themeModule } = readRelease(pkg.root);
+    const indexFile = options.index && path.resolve(cwd, options.index);
+    const current = indexFile ? readIndex(indexFile) : undefined;
+    const passed = options.theme;
+    const stored = current && indexFile ? storedTheme(current, indexFile) : {};
+    const theme = layeredTheme(stored, passed);
+    const source: ThemeSource = {
+      passed,
+      indexFile: options.index,
+      version: pkg.version,
+    };
+    const defaultTitle = exportedIndex(files).title;
+    const module =
+      themeModule &&
+      (Object.keys(theme).length > 0 || Object.keys(stored).length > 0)
+        ? await importTheme(themeModule, pkg.version)
+        : undefined;
+    let themed: ThemeFlags = {};
+    if (Object.keys(theme).length > 0) {
+      if (!module) throw noThemeModuleError(theme, source);
+      assertThemeFlags(theme, module.flags, source);
+      const rendered = renderTheme(module, theme, source);
+      applyTheme(rendered, files, rootFiles);
+      themed = rendered.index.theme;
+    }
+    if (current && indexFile) {
+      const retitle =
+        current['title'] === storedThemeTitle(stored, module, defaultTitle);
+      mergeIndex(files, current, indexFile, retitle);
+    }
     const exported = new Set(
       [...files.keys()].map((file) => `project/${file}`)
     );
     const removed = options.existing
       ? stalePaths(readPaths(path.resolve(cwd, options.existing)), exported)
       : [];
-    const coverageFile = path.join(pkg.root, 'coverage.md');
-    const coverage = existsSync(coverageFile)
-      ? readFileSync(coverageFile)
-      : undefined;
-
+    const dropped = droppedRootFiles(out, rootFiles);
     writeProject(out, files);
-    if (coverage) writeFileSync(path.join(out, 'coverage.md'), coverage);
+    const kept = removeDroppedRootFiles(out, dropped);
+    writeRootFiles(out, rootFiles);
+    writeManifest(out, files, rootFiles);
+    const removedFile = path.join(out, 'removed.json');
     if (options.existing) {
-      writeFileSync(
-        path.join(out, 'removed.json'),
-        `${JSON.stringify(removed, null, 2)}\n`
-      );
+      writeFileSync(removedFile, `${JSON.stringify(removed, null, 2)}\n`);
+    } else {
+      rmSync(removedFile, { force: true });
     }
 
     const relative = path.relative(cwd, out) || '.';
     const lines = [
       `Exported nxds ${pkg.version} as a Claude Design System: ${files.size} files in ${path.join(relative, 'project')}.`,
-      `Publish ${relative} as a Design System artifact in Claude, with ${relative} as the root.`,
     ];
+    if (Object.keys(themed).length > 0) {
+      lines.push(
+        `Themed with ${formatThemeFlags(Object.entries(themed).map(([flag, value]) => ({ flag, value })))}.`
+      );
+    }
+    if (rootFiles.has('coverage.md')) {
+      lines.push(
+        `The props the canvas can't set are in ${path.join(relative, 'coverage.md')}.`
+      );
+    }
+    for (const name of kept) {
+      lines.push(
+        `Kept ${path.join(relative, name)}: this release doesn't ship it, and you edited it.`
+      );
+    }
     if (removed.length > 0) {
       lines.push(
         `Remove the ${removed.length} files the system has and this release doesn't: they're listed in ${path.join(relative, 'removed.json')}.`
       );
     }
-    if (coverage) {
-      lines.push(
-        `The props the canvas can't set are in ${path.join(relative, 'coverage.md')}.`
-      );
-    }
+    lines.push(
+      `Read ${path.join(relative, 'SETUP.md')} and follow it. It publishes the system, installs it on a canvas and checks it.`
+    );
     return {
-      ok: true,
+      ok: kept.length === 0,
       lines,
-      data: { version: pkg.version, out, files: files.size, removed },
+      data: {
+        version: pkg.version,
+        theme: themed,
+        out,
+        files: files.size,
+        removed,
+        kept: kept.map((name) => path.join(out, name)),
+        root: [...rootFiles.keys()].map((name) => path.join(out, name)),
+      },
     };
   } finally {
     pkg.cleanup();

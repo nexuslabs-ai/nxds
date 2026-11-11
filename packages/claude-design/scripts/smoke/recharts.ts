@@ -8,6 +8,7 @@ import {
 } from './harness.ts';
 
 const MONTHS = `[{"month":"Jan","desktop":186,"mobile":80},{"month":"Feb","desktop":305,"mobile":200},{"month":"Mar","desktop":237,"mobile":120}]`;
+const DESKTOP_BAR = '.recharts-bar-rectangle path[fill="var(--color-desktop)"]';
 const CHART_CONFIG = `{"desktop":{"label":"Desktop","color":"var(--nx-color-chart-categorical-1)"},"mobile":{"label":"Mobile","color":"var(--nx-color-chart-categorical-2)"}}`;
 
 /** Custom charts composed from Nxds.Recharts parts, and what each must draw. */
@@ -32,7 +33,7 @@ export const RECHARTS_CASES: {
         ),
         x(
           'Recharts.Bar',
-          'data-key="desktop" fill="var(--color-desktop)" radius="4"'
+          'data-key="desktop" fill="var(--color-desktop)" fill-opacity="0.35" stroke="var(--color-desktop)" stroke-width="2" radius="4"'
         ),
         x(
           'Recharts.Bar',
@@ -45,7 +46,9 @@ export const RECHARTS_CASES: {
       '.recharts-cartesian-axis-tick-value': 3,
     },
     attributes: [
-      ['.recharts-bar-rectangle path', 'fill', 'var(--color-desktop)'],
+      [DESKTOP_BAR, 'fill-opacity', '0.35'],
+      [DESKTOP_BAR, 'stroke', 'var(--color-desktop)'],
+      [DESKTOP_BAR, 'stroke-width', '2'],
     ],
   },
   {

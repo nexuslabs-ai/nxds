@@ -70,7 +70,10 @@ const stepOf = (cssName: string) =>
  * step that rounds onto the one before it moves up to the next allowed length.
  * A role token takes the scaled value of the step it references.
  */
-function scaleMode(tokens: readonly ModeToken[], factor: number): ScaleToken[] {
+export function scaleMode(
+  tokens: readonly ModeToken[],
+  factor: number
+): ScaleToken[] {
   const scaled = new Map(
     tokens
       .filter(({ step }) => !step)

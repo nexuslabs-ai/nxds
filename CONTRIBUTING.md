@@ -22,12 +22,13 @@ That's the whole first-time setup. It also wires the Husky pre-commit hook, whic
 
 Pick the surface you're working on — each is one `make` command that turbo orchestrates (parallel servers, prefixed logs, one Ctrl-C stops all):
 
-| Command        | Brings up                                                                   |
-| -------------- | --------------------------------------------------------------------------- |
-| `make dev`     | **Storybook** — the component catalog + interaction tests. The 90% surface. |
-| `make dev-vue` | the **`@nxds/vue`** Storybook, on port 6007                                 |
-| `make docs`    | the docs site **+ live `@nxds/react`**                                      |
-| `make dev-all` | everything: docs + storybook + all package watchers                         |
+| Command             | Brings up                                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------- |
+| `make dev`          | **Storybook** — the component catalog + interaction tests. The 90% surface.                 |
+| `make dev-vue`      | the **`@nxds/vue`** Storybook, on port 6007                                                 |
+| `make docs`         | the docs site **+ live `@nxds/react`**                                                      |
+| `make docs-preview` | the **production** docs build on port 4321, with each page's `.md` and the Copy page button |
+| `make dev-all`      | everything: docs + storybook + all package watchers                                         |
 
 > **The docs site's generated inputs come from the turbo graph**, not from its package scripts, and none of them are committed: `apps/docs/turbo.json` puts `generate:manifest` (the page manifest and its loader map), `generate:demos` (the docs code generated from every story tagged `docs`, under `__generated__/`), `@nxds/catalog#generate:catalog` (the install catalog the docs and the `nxds` CLI share) and `generate:props` (the per-component props JSON that `PropsTable` reads) ahead of both `build` and `dev`, and the two the TypeScript graph imports — `generate:manifest` and `generate:demos` — ahead of `typecheck`. `make build`, `make docs` and `make typecheck` get them. `PropsTable` reads the props JSON on each request, so after changing a component's props or JSDoc during `make docs`, rerun `pnpm --filter @nxds/docs generate:props` and reload — no restart. A bare `pnpm --filter @nxds/docs dev` runs only the docs-story watcher: on a clean checkout there is no page manifest, demo index or install catalog, so start the docs with `make docs`.
 
@@ -186,12 +187,14 @@ Everything lives under the `@nxds` scope — the published packages on npm and t
 The packages authenticate to npm with **trusted publishing** (OIDC): GitHub Actions mints a short-lived credential at publish time, so there is **no `NPM_TOKEN` secret** in the repo. A new package is bootstrapped once, by hand:
 
 1. Publish it manually with `npm publish` from the branch that introduces it. Trusted publishing can't be configured until a package exists on npm.
-2. Register a **trusted publisher** on npmjs.com (_Settings → Trusted Publisher → GitHub Actions_) pointing at `nexuslabs-ai/nxds` and the `release.yml` workflow.
+2. Register a **trusted publisher** on npmjs.com (_Settings → Trusted Publisher → GitHub Actions_) pointing at `nexuslabs-ai/nxds`, the `release.yml` workflow and the `npm` environment.
 3. Lock the package to OIDC: _Settings → Publishing access → Require two-factor authentication and disallow tokens_. Then revoke the token used for the manual publish.
 
 The release workflow also needs a repo secret, **`RELEASE_TOKEN`**. It is a fine-grained PAT from `nexuslabs-ai-bot` with **contents: read/write** and **pull requests: read/write** on this repo. It authenticates the "Version Packages" PR. The default `GITHUB_TOKEN` can't be used here: PRs it opens don't fire `pull_request`, so the required `CI Status` check would never run on the version PR and it couldn't merge. Rotate the PAT before it expires.
 
 The workflow grants `id-token: write` for the OIDC exchange, upgrades npm to a trusted-publishing-capable version (≥ 11.5.1) on the `.nvmrc` Node, and uses `RELEASE_TOKEN` for the release PR and tags. There is **no npm token** — publish auth is OIDC. Provenance attestations are emitted automatically.
+
+The release job runs in the **`npm`** environment, whose only deployment branch is `main`. Each package's trusted publisher names that environment, so no other branch can publish.
 
 ### Day-to-day: adding a changeset
 

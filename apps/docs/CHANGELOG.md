@@ -1,5 +1,74 @@
 # @nxds/docs
 
+## 0.0.32
+
+### Patch Changes
+
+- Updated dependencies [8e13859]
+  - @nxds/claude-design@0.16.0
+  - @nxds/react@0.16.0
+
+## 0.0.31
+
+### Patch Changes
+
+- Updated dependencies [3cd037e]
+  - @nxds/claude-design@0.15.1
+  - @nxds/react@0.15.1
+
+## 0.0.30
+
+### Patch Changes
+
+- Updated dependencies [cbbd852]
+  - @nxds/claude-design@0.15.0
+  - @nxds/react@0.15.0
+
+## 0.0.29
+
+### Patch Changes
+
+- Updated dependencies [c004e3a]
+  - @nxds/core@0.13.0
+  - @nxds/tailwind@0.3.0
+  - @nxds/claude-design@0.14.0
+  - @nxds/catalog@0.0.2
+  - @nxds/react@0.14.0
+
+## 0.0.28
+
+### Patch Changes
+
+- Updated dependencies [458bfd7]
+  - @nxds/claude-design@0.13.3
+  - @nxds/react@0.13.3
+
+## 0.0.27
+
+### Patch Changes
+
+- Updated dependencies [822919d]
+  - @nxds/claude-design@0.13.2
+  - @nxds/react@0.13.2
+
+## 0.0.26
+
+### Patch Changes
+
+- Updated dependencies [704182b]
+  - @nxds/claude-design@0.13.1
+  - @nxds/react@0.13.1
+
+## 0.0.25
+
+### Patch Changes
+
+- Updated dependencies [6da5b6b]
+- Updated dependencies [a333b42]
+- Updated dependencies [a333b42]
+  - @nxds/claude-design@0.13.0
+  - @nxds/react@0.13.0
+
 ## 0.0.24
 
 ### Patch Changes

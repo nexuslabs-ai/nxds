@@ -1,0 +1,188 @@
+/* The homepage's styles, as nx: utilities so the docs class lint knows them.
+   Imported by globals.css; Tailwind emits a utility only where it is used. */
+@import './gallery/gallery.css';
+@import './customize/customize.css';
+@import './coexist/coexist-lanes.css';
+@import './frameworks/core-chip-chapter.css';
+
+/* The homepage: chapters as sections of one scrolling page, on one 12-column
+   grid inside the site column. */
+@utility home-journey {
+  --grid-gap: var(--nx-spacing-6);
+  /* Every section has the same space above its title and below its last
+     part, so the gap between any two sections is the same. */
+  --section-space-top: var(--nx-spacing-8);
+  --section-space-bottom: var(--nx-spacing-24);
+  /* The first section sits under the header, not under another section,
+     and leads the page, so it has more space around its title block. */
+  --first-section-space-top: var(--nx-spacing-16);
+  --first-heading-space-bottom: var(--nx-spacing-20);
+  /* The space under a title block's links. */
+  --heading-space-bottom: var(--nx-spacing-14);
+  /* About one title and its links, and the toolbar with the space above it,
+     so a section is about one screen tall. */
+  --heading-allowance: 8.5rem;
+  --toolbar-allowance: 5rem;
+  --preview-fade: var(--nx-spacing-24);
+  --preview-min: 24rem;
+  --preview-max: 100svh;
+
+  /* Desktop previews stop at 60% of the column's width. */
+  @media (width >= 64rem) {
+    --section-space-top: var(--nx-spacing-12);
+    --first-section-space-top: var(--nx-spacing-32);
+    --first-heading-space-bottom: var(--nx-spacing-28);
+    --preview-min: 30rem;
+    --preview-max: calc(
+      0.6 * min(100vw - 2 * var(--nx-spacing-8), var(--site-column))
+    );
+  }
+}
+
+/* The title block, then the preview. */
+@utility home-section {
+  display: flex;
+  flex-direction: column;
+  padding-block: var(--section-space-top) var(--section-space-bottom);
+  /* The preview height reads these too, so the first section stays about
+     one screen tall. */
+  &:first-child {
+    --section-space-top: var(--first-section-space-top);
+    --heading-space-bottom: var(--first-heading-space-bottom);
+  }
+}
+
+@utility chapter-heading {
+  text-align: center;
+  padding-block-end: var(--heading-space-bottom);
+
+  & :is(h1, h2) {
+    @apply nx:typography-display-small nx:md:typography-display-medium nx:lg:typography-display-large;
+    margin: 0 0 var(--nx-spacing-7);
+  }
+
+  /* 8 of the 12 grid columns. */
+  @media (width >= 64rem) {
+    inline-size: calc(
+      (100% - 11 * var(--grid-gap)) / 12 * 8 + 7 * var(--grid-gap)
+    );
+    margin-inline: auto;
+  }
+}
+
+@utility chapter-subtitle {
+  margin: calc(var(--nx-spacing-3) * -1) 0 var(--nx-spacing-6);
+  color: var(--nx-color-muted-foreground);
+  text-wrap: balance;
+}
+
+@utility chapter-ctas {
+  display: flex;
+  justify-content: center;
+  gap: var(--nx-spacing-3);
+}
+
+/* The rest of the screen below the header, the section's spaces, a title
+   block and a toolbar, kept between the minimum and the desktop cap. */
+@utility chapter-canvas {
+  container: chapter-canvas / size;
+  position: relative;
+  isolation: isolate;
+  block-size: max(
+    var(--preview-min),
+    min(
+      100svh - var(--site-header-h) - var(--section-space-top) -
+        var(--section-space-bottom) - var(--heading-allowance) -
+        var(--heading-space-bottom) - var(--toolbar-allowance),
+      var(--preview-max)
+    )
+  );
+
+  /* The chapter fills the preview, whatever height the section gives it. */
+  & > * {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Below lg a stacked chapter grows its preview, and its section, to fit,
+     so it never scrolls inside. */
+  &[data-grows] {
+    @media (width < 64rem) {
+      container-type: inline-size;
+      block-size: auto;
+
+      & > * {
+        position: static;
+      }
+    }
+  }
+}
+
+/* On desktop, the Stories preview is as tall as its longest story on every
+   screen, so a tall screen doesn't stretch the live example. */
+@utility stories-section {
+  @media (width >= 64rem) {
+    --preview-min: 32rem;
+    --preview-max: 32rem;
+  }
+}
+
+/* A light signal that runs along a flow line, then rests. Frameworks and
+   Coexist draw their lines sideways and run it on the child <i>. */
+@keyframes flow-signal {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  5% {
+    opacity: 0.85;
+  }
+  25% {
+    opacity: 0.85;
+    transform: translateX(100%);
+  }
+  26%,
+  100% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* A dotted stage a live example or an app sketch sits on. */
+@utility dotted-stage {
+  background-color: var(--nx-color-background);
+  background-image: radial-gradient(
+    var(--nx-color-border-default) var(--nx-borderwidth-default),
+    transparent 0
+  );
+  background-size: var(--nx-spacing-4) var(--nx-spacing-4);
+}
+
+/* A bottom fade where a clipped preview ends. */
+@utility preview-fade {
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - var(--preview-fade)),
+    #000a calc(100% - var(--preview-fade) / 2),
+    transparent 100%
+  );
+}
+
+/* Each chapter's toolbar floats at the screen bottom while its section is on
+   screen, and comes to rest centred under its preview. */
+@utility chapter-toolbar {
+  position: sticky;
+  inset-block-end: var(--nx-spacing-5);
+  z-index: var(--nx-z-index-sticky);
+  display: flex;
+  justify-content: center;
+  margin-block-start: var(--nx-spacing-6);
+  pointer-events: none;
+
+  & > * {
+    pointer-events: auto;
+  }
+  @media (width < 48rem) {
+    inset-block-end: var(--nx-spacing-4);
+  }
+}

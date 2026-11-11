@@ -8,15 +8,16 @@ import type {
   TokenMap,
 } from '@nxds/core';
 import type { CatalogueControl } from '@nxds/core/catalogue';
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-  Badge,
-  Button,
-  Input,
-} from '@nxds/react';
+} from '@/components/accordion/accordion';
+import { Badge } from '@/components/badge/badge';
+import { Button } from '@/components/button/button';
+import { Input } from '@/components/input/input';
 
 import type { ScaleFamily, ScaleToken } from './lab-data';
 import { LEDGER_ROW_CLASS } from './token-ledger';
