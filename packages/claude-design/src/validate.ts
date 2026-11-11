@@ -309,36 +309,47 @@ function checkFonts(tokens: TokensFile, errors: string[]) {
 
 // tokens.css declares each `meta.presets` entry as an `[attribute="value"]`
 // rule, so each must name a preset attribute, one of its values, and lengths
-// for tokens the system lists.
-function checkPresets(
-  tokens: TokensFile,
-  allNames: ReadonlySet<string>,
-  errors: string[]
-) {
+// for tokens of the family that attribute swaps.
+function checkPresets(tokens: TokensFile, errors: string[]) {
   const presets: unknown = tokens.meta?.presets;
   if (presets === undefined) return;
   if (!Array.isArray(presets)) {
     errors.push('tokens.json meta.presets: must be a list.');
     return;
   }
-  for (const preset of presets as (Partial<ScaledPreset> | null)[]) {
-    const where = `tokens.json meta.presets ${preset?.attribute}="${preset?.value}"`;
-    const options = Object.entries(PRESETS).find(
-      ([attribute]) => attribute === preset?.attribute
-    )?.[1].options;
-    if (!preset || !options?.some(({ value }) => value === preset.value)) {
-      errors.push(`${where}: isn't a preset attribute and value.`);
+  const families = new Map(listFamilies(tokens));
+  for (const [index, preset] of (presets as unknown[]).entries()) {
+    const where = `tokens.json meta.presets[${index}]`;
+    if (typeof preset !== 'object' || preset === null) {
+      errors.push(`${where}: must be an object.`);
       continue;
     }
-    if (typeof preset.tokens !== 'object' || preset.tokens === null) {
+    const {
+      attribute,
+      value,
+      tokens: lengths,
+    } = preset as Partial<ScaledPreset>;
+    const spec = Object.entries(PRESETS).find(
+      ([name]) => name === attribute
+    )?.[1];
+    if (!spec?.options.some((option) => option.value === value)) {
+      errors.push(`${where}: isn't a preset attribute and one of its values.`);
+      continue;
+    }
+    if (typeof lengths !== 'object' || lengths === null) {
       errors.push(`${where}: needs a tokens map.`);
       continue;
     }
-    for (const [name, value] of Object.entries(preset.tokens)) {
-      if (!allNames.has(name)) {
-        errors.push(`${where}: ${name} isn't a token in tokens.json.`);
-      } else if (typeof value !== 'string' || !LENGTH.test(value)) {
-        errors.push(`${where}: ${name}'s value "${value}" isn't a length.`);
+    const names = new Set(
+      (families.get(spec.family) ?? []).map((token) => String(token.name))
+    );
+    for (const [name, length] of Object.entries(lengths)) {
+      if (!names.has(name)) {
+        errors.push(
+          `${where}: ${name} isn't a ${spec.family} token in tokens.json.`
+        );
+      } else if (typeof length !== 'string' || !LENGTH.test(length)) {
+        errors.push(`${where}: ${name}'s value "${length}" isn't a length.`);
       }
     }
   }
@@ -409,7 +420,7 @@ function checkTokenFiles(
   checkAliases(colors, errors);
   checkType(tokens.type, errors);
   checkFonts(tokens, errors);
-  checkPresets(tokens, allNames, errors);
+  checkPresets(tokens, errors);
 
   if (css === undefined) {
     errors.push('tokens.css: missing.');

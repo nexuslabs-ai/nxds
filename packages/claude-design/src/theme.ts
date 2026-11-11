@@ -16,6 +16,7 @@ import {
   NXDS_THEME_FIELDS,
   type NxdsAppearanceState,
   type NxdsDensity,
+  type NxdsStroke,
   type NxdsUiScale,
   STROKE_OPTIONS,
   UI_SCALE_OPTIONS,
@@ -60,7 +61,7 @@ export interface ThemeInput {
   readme: string;
   /** SETUP.md, with this release's values in and `{{nxds:…}}` for the theme's. */
   guide: string;
-  /** The sampler's `canvas.json` entry at the Default UI scale and density. */
+  /** The sampler's `canvas.json` entry at the Default UI scale and density, at normal stroke. */
   board: CanvasBoards;
 }
 
@@ -97,8 +98,8 @@ export interface RenderedTheme {
 const DEFAULT_TITLE = 'nxds';
 
 // How much taller the sampler is at each UI scale and density than at the
-// Default scale and density, on a board widened by the scale's factor, as
-// scripts/smoke/sampler.ts measures it.
+// Default scale and density, at normal stroke, on a board widened by the
+// scale's factor, as scripts/smoke/sampler.ts measures it.
 const SAMPLER_EXTRA_HEIGHT: Record<NxdsUiScale, Record<NxdsDensity, number>> = {
   small: {
     tight: -238,
@@ -114,15 +115,15 @@ const SAMPLER_EXTRA_HEIGHT: Record<NxdsUiScale, Record<NxdsDensity, number>> = {
     default: 0,
     comfortable: 53,
     relaxed: 90,
-    spacious: 165,
+    spacious: 143,
   },
   large: {
-    tight: 72,
-    compact: 135,
-    default: 173,
-    comfortable: 244,
-    relaxed: 284,
-    spacious: 362,
+    tight: 58,
+    compact: 121,
+    default: 159,
+    comfortable: 211,
+    relaxed: 249,
+    spacious: 323,
   },
   larger: {
     tight: 308,
@@ -132,6 +133,15 @@ const SAMPLER_EXTRA_HEIGHT: Record<NxdsUiScale, Record<NxdsDensity, number>> = {
     relaxed: 524,
     spacious: 594,
   },
+};
+
+// How much taller the sampler is at each stroke than at normal stroke. Border
+// widths don't follow the UI scale or density, so one row holds for every
+// scale and density.
+const SAMPLER_STROKE_HEIGHT: Record<NxdsStroke, number> = {
+  fine: -1,
+  normal: 0,
+  strong: 14,
 };
 
 /** The UI scale's factor, which `--nx-ui-scale` holds. */
@@ -145,10 +155,14 @@ export function uiScaleFactor(tokens: TokensFile) {
   return factor;
 }
 
-/** The sampler's `canvas.json` entry with a size that fits its UI scale and density. */
+/** The sampler's `canvas.json` entry with a size that fits its UI scale, density and stroke. */
 export function themedBoard(
   board: CanvasBoards,
-  { uiScale, density }: Pick<NxdsAppearanceState, 'uiScale' | 'density'>,
+  {
+    uiScale,
+    density,
+    stroke,
+  }: Pick<NxdsAppearanceState, 'uiScale' | 'density' | 'stroke'>,
   factor: number
 ) {
   return Object.fromEntries(
@@ -157,7 +171,10 @@ export function themedBoard(
       {
         ...entry,
         w: Math.round(entry.w * factor),
-        h: entry.h + SAMPLER_EXTRA_HEIGHT[uiScale][density],
+        h:
+          entry.h +
+          SAMPLER_EXTRA_HEIGHT[uiScale][density] +
+          SAMPLER_STROKE_HEIGHT[stroke],
       },
     ])
   );
