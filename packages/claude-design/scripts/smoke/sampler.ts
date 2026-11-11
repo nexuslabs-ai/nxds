@@ -494,20 +494,16 @@ export async function checkSampler() {
     }
   }
   // A density row is off when a page at normal stroke misses its board. The
-  // stroke table is off when a stroke moves the page by other than it moves
-  // the board, so a density row that's off doesn't flag it too.
+  // stroke table is off when a page at another stroke misses its board while
+  // the page at normal stroke and the same density fits its own, so a density
+  // row that's off doesn't flag it too.
   const densityOff = DENSITY_OPTIONS.some(({ value: density }) =>
     misses(byDensity[density], boardAt(density, 'normal').height)
   );
-  const normal = byStroke.normal;
-  const normalBoard = boardAt(appearance.density, 'normal').height;
   const strokeOff =
-    normal !== undefined &&
+    !misses(byStroke.normal, boardAt(appearance.density, 'normal').height) &&
     STROKE_OPTIONS.some(({ value: stroke }) =>
-      misses(
-        byStroke[stroke],
-        normal + boardAt(appearance.density, stroke).height - normalBoard
-      )
+      misses(byStroke[stroke], boardAt(appearance.density, stroke).height)
     );
   const end = byDensity.default;
   if (
@@ -527,7 +523,7 @@ export async function checkSampler() {
       `Set SAMPLER_EXTRA_HEIGHT.${uiScale} in src/theme.ts to ${JSON.stringify(extra)}.`
     );
   }
-  const strokes = heightsAbove(byStroke, STROKE_OPTIONS, normal);
+  const strokes = heightsAbove(byStroke, STROKE_OPTIONS, byStroke.normal);
   if (strokeOff && strokes) {
     fail(
       `Set SAMPLER_STROKE_HEIGHT in src/theme.ts to ${JSON.stringify(strokes)}.`
