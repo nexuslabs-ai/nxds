@@ -6,7 +6,7 @@
         "unit": "px"
       },
       "$type": "dimension",
-      "$description": "Icon beside 12px text, such as in Kbd. It follows the UI scale and is the same at every density."
+      "$description": "Small icon in a compact part, such as Kbd. It follows the UI scale and is the same at every density."
     },
     "sm": {
       "$value": {
@@ -30,7 +30,15 @@
         "unit": "px"
       },
       "$type": "dimension",
-      "$description": "Large icon, such as the EmptyState icon. It follows the UI scale and is the same at every density."
+      "$description": "Large standalone icon, such as in an EmptyState. It follows the UI scale and is the same at every density."
+    },
+    "xl": {
+      "$value": {
+        "value": 32,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$description": "Extra large standalone icon, such as in a vertical Attachment. It follows the UI scale and is the same at every density."
     }
   },
   "stroke": {

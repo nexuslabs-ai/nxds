@@ -1,14 +1,18 @@
 'use client';
 
+import { formatThemeFlags } from '@nxds/claude-design/theme-fields';
 import {
   createNxdsAppearanceSnapshotFromState,
   type NxdsAppearanceState,
   type NxdsTheme,
   nxdsThemeFlags,
 } from '@nxds/core';
+import { useNxdsAppearance } from '@nxds/react/appearance';
+import Link from 'next/link';
+
+import { Button } from '@/components/button/button';
+import { CodeBlockLine } from '@/components/code-block/code-block';
 import {
-  Button,
-  CodeBlockLine,
   Dialog,
   DialogBody,
   DialogContent,
@@ -17,9 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@nxds/react';
-import { useNxdsAppearance } from '@nxds/react/appearance';
-import Link from 'next/link';
+} from '@/components/dialog/dialog';
 
 import { useIconLibrary } from '../_lib/icon-library';
 
@@ -32,19 +34,10 @@ export const appearance = ${JSON.stringify(state, null, 2)} satisfies NxdsAppear
 `;
 }
 
-/** A flag value as a shell reads it: quoted unless it's a plain word. */
-function shellValue(value: string) {
-  return /^[\w.-]+$/.test(value) ? value : `"${value}"`;
-}
-
 /** The `nxds-cli init` that sets up `theme`, with a flag for each part off nxds's default. */
 function initCommand(theme: NxdsTheme) {
-  return [
-    'npx nxds-cli@latest init',
-    ...nxdsThemeFlags(theme).map(
-      ({ flag, value }) => `--${flag} ${shellValue(value)}`
-    ),
-  ].join(' ');
+  const flags = formatThemeFlags(nxdsThemeFlags(theme));
+  return ['npx nxds-cli@latest init', ...(flags ? [flags] : [])].join(' ');
 }
 
 function CodeFile({ name, code }: { name: string; code: string }) {

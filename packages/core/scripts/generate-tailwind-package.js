@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
-import { PAGE_WIDTHS_REM } from '../src/lib/token-scales.generated.ts';
 import { formatTokenValue, resolveValue } from '../src/token-source/format.ts';
 import {
   SPACING_MODE_FILE_PATTERN,
@@ -12,6 +11,7 @@ import {
   extractTokens,
   pathToCssVarPrefixed,
 } from '../src/token-source/tokens.ts';
+import { uiScaleBase } from '../src/token-source/ui-scale.ts';
 
 import {
   CANONICAL_SPACING_DEFAULT_MODE,
@@ -348,24 +348,6 @@ function generateVariablesCSS(primitiveTokens, usedModes) {
   css += `}\n`;
 
   return css;
-}
-
-/**
- * The Default sizes the UI scale multiplies: the px type sizes, line heights,
- * code size and icon glyphs, and Tailwind's rem page widths.
- */
-function uiScaleBase(typography, icon) {
-  const values = (group) =>
-    Object.fromEntries(
-      Object.entries(group).map(([name, token]) => [name, token.$value.value])
-    );
-  return {
-    sizes: values(typography.size),
-    lineHeights: values(typography['line-height']),
-    codeSize: typography.code.size.$value.value,
-    glyphs: values(icon.glyph),
-    widths: PAGE_WIDTHS_REM,
-  };
 }
 
 function generateNxdsCSS(

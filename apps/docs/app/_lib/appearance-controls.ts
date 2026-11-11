@@ -8,10 +8,21 @@ import {
 
 export const DOCS_APPEARANCE_STORAGE_KEY = 'nxds-docs-appearance';
 
+// Taken from the catalogue, not spelled out, so the font pickers name it; a
+// catalogue without DM Sans fails the build here.
+const dmSans = FONT_OPTIONS.find(({ value }) => value === 'dm-sans');
+if (!dmSans) throw new Error('FONT_OPTIONS no longer offers DM Sans.');
+
+/** The look every nxds.dev page opens with, and the one Reset returns to. */
 export const DOCS_APPEARANCE_DEFAULT_STATE = {
   ...DEFAULT_NXDS_APPEARANCE,
   mode: 'system',
+  corners: 'smooth',
+  prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs, uiFont: dmSans.family },
 } satisfies NxdsAppearanceState;
+
+/** The contrast the Playground and the homepage Customize panel both allow. */
+export const CONTRAST_RANGE = { min: 0, max: 100 } as const;
 
 export const MODE_OPTIONS = [
   { value: 'system', label: 'System' },
@@ -51,12 +62,28 @@ export const CODE_FONTS: FontChoice[] = [
 ];
 
 /**
- * The choice a font picker shows for `family`, and the choices it offers. A
- * stack set some other way shows as Custom.
+ * The option of `options` a select picked, narrowed from the select's string
+ * value. Every appearance editor reads its selects through this.
+ */
+export function findOption<T extends string>(
+  options: readonly { value: T }[],
+  value: string
+): T | undefined {
+  return options.find((option) => option.value === value)?.value;
+}
+
+/**
+ * A font picker for `family`: the value it shows, the choices it offers, and
+ * the family a picked value names. A stack set some other way shows as Custom.
  */
 export function fontPick(family: string | null, choices: FontChoice[]) {
   const chosen = choices.find((choice) => choice.family === family);
-  if (chosen) return { chosen, options: choices };
   const custom = { value: 'custom', label: 'Custom', family };
-  return { chosen: custom, options: [...choices, custom] };
+  const options = chosen ? choices : [...choices, custom];
+  return {
+    value: (chosen ?? custom).value,
+    options,
+    familyOf: (value: string) =>
+      options.find((option) => option.value === value)?.family ?? family,
+  };
 }

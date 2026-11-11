@@ -18,6 +18,7 @@ import {
   IconCircleCheck,
   IconInfoCircle,
   IconLoader2,
+  IconX,
 } from '../../lib/icons';
 
 /**
@@ -59,6 +60,7 @@ const toasterIcons = {
   loading: (
     <IconLoader2 className="nx:size-icon-glyph-default nx:animate-spin" />
   ),
+  close: <IconX className="nx:size-icon-glyph-xs" />,
 };
 
 /**
@@ -146,21 +148,29 @@ function useNxdsToasts() {
 
 type ToasterProps = Omit<SonnerToasterProps, 'id'>;
 
+// Sonner hides the icon or draws its own for an empty entry, so only a real
+// icon replaces the nxds one.
+function withNxdsIcons(icons: ToasterProps['icons']) {
+  const entries = Object.entries(icons ?? {});
+  const setIcons = entries.filter(([, icon]) => Boolean(icon));
+  return { ...toasterIcons, ...Object.fromEntries(setIcons) };
+}
+
 /**
  * Renders toast notifications. Mount it once near your app root, then call
  * `toast()` from anywhere. It follows the `.dark` class, or `data-theme="dark"`,
  * on the document root for dark mode.
  */
-function Toaster({ style, ...props }: ToasterProps) {
+function Toaster({ style, icons, ...props }: ToasterProps) {
   const theme = useToasterTheme();
   return (
     <div
       data-slot="toaster"
-      className="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke nx:[&_[data-close-button]_svg]:[--nx-icon-size:12px]"
+      className="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke"
     >
       <Sonner
         theme={theme}
-        icons={toasterIcons}
+        icons={withNxdsIcons(icons)}
         style={
           {
             ...toasterThemeVars,

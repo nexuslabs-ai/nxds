@@ -1107,6 +1107,7 @@
     --nx-icon-glyph-sm: 12px;
     --nx-icon-glyph-default: 14px;
     --nx-icon-glyph-lg: 22px;
+    --nx-icon-glyph-xl: 28px;
     --nx-ui-scale: 0.9;
     --nx-container-3xs: 14.4rem;
     --nx-container-2xs: 16.2rem;
@@ -1157,6 +1158,7 @@
     --nx-icon-glyph-sm: 16px;
     --nx-icon-glyph-default: 18px;
     --nx-icon-glyph-lg: 28px;
+    --nx-icon-glyph-xl: 36px;
     --nx-ui-scale: 1.1;
     --nx-container-3xs: 17.6rem;
     --nx-container-2xs: 19.8rem;
@@ -1207,6 +1209,7 @@
     --nx-icon-glyph-sm: 18px;
     --nx-icon-glyph-default: 20px;
     --nx-icon-glyph-lg: 30px;
+    --nx-icon-glyph-xl: 40px;
     --nx-ui-scale: 1.25;
     --nx-container-3xs: 20rem;
     --nx-container-2xs: 22.5rem;

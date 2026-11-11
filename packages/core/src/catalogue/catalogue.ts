@@ -1,7 +1,6 @@
 import {
   createNxdsThemeContract,
   DEFAULT_NXDS_APPEARANCE,
-  type NxdsAppearanceState,
 } from '../lib/appearance-model';
 import { deriveThemeMode } from '../lib/derive-theme';
 import type { Mode } from '../lib/palette';
@@ -26,7 +25,19 @@ import {
   pathToCssVarPrefixed,
   tokenReferences,
 } from '../token-source/tokens';
-import { type ScaleToken, widthTokens } from '../token-source/ui-scale';
+import {
+  type ModeToken,
+  scaleBlocks,
+  scaleMode,
+  scaleText,
+  type ScaleToken,
+  textSizeBlocks,
+  textSizeSelector,
+  UI_SCALES,
+  uiScaleBase,
+  uiScaleSelector,
+  widthTokens,
+} from '../token-source/ui-scale';
 import {
   borderColorAliasName,
   borderWidthAliasUtilities,
@@ -39,6 +50,7 @@ import { RUNTIME_COLOR_DESCRIPTIONS } from './descriptions';
 import { TOKEN_FILES, type TokenFile } from './token-files';
 import type {
   CatalogueAlias,
+  CatalogueAppearance,
   CatalogueControl,
   CatalogueDeclaration,
   CatalogueFamily,
@@ -507,14 +519,6 @@ function styleLeaves(family: CatalogueFamily, file: TokenFile): AuthoredLeaf[] {
   );
 }
 
-function runtimeAppearance(mode: Mode): NxdsAppearanceState {
-  return {
-    ...DEFAULT_NXDS_APPEARANCE,
-    prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs },
-    mode,
-  };
-}
-
 function runtimeColorAliases(name: string): CatalogueAlias[] {
   const aliases = [cssVariable(`--color-${name}`)];
   const borderName = borderColorAliasName(name);
@@ -524,15 +528,14 @@ function runtimeColorAliases(name: string): CatalogueAlias[] {
   return aliases;
 }
 
-function runtimeColorTokens(): CatalogueToken[] {
-  const themes = RUNTIME_MODES.map((mode) => {
-    const appearance = runtimeAppearance(mode);
-    return {
-      mode,
-      appearance,
-      values: deriveThemeMode(createNxdsThemeContract(appearance), mode),
-    };
-  });
+function runtimeColorTokens(appearance: CatalogueAppearance): CatalogueToken[] {
+  const { brandColor, surfaceTone, lightContrast, darkContrast } = appearance;
+  const colors = { brandColor, surfaceTone, lightContrast, darkContrast };
+  const themes = RUNTIME_MODES.map((mode) => ({
+    mode,
+    appearance: { ...colors, mode },
+    values: deriveThemeMode(createNxdsThemeContract(colors), mode),
+  }));
 
   return SEMANTIC_TOKEN_REGISTRY.map(({ name, category }) => {
     const property: CatalogueTokenName = `--nx-color-${name}`;
@@ -612,26 +615,126 @@ function uiScaleEntry(token: ScaleToken): CatalogueToken {
   });
 }
 
+const CSS_NAME_START = '--nx-'.length;
+
+/** A variant's value, the one declaration the catalogue gives it. */
+function variantValue(variant: CatalogueVariant | undefined) {
+  return variant?.declarations[0]?.value;
+}
+
+/** A moded family's scaled values, keyed by preset and token name. */
+function scaledPresets(
+  tokens: readonly CatalogueToken[],
+  family: CatalogueFamily,
+  factor: number
+): [string, string][] {
+  const modes = new Map<string, ModeToken[]>();
+  for (const token of tokens.filter((each) => each.family === family)) {
+    for (const variant of token.variants) {
+      const value = variantValue(variant);
+      if (variant.preset === null || value === undefined) continue;
+      const target = variant.references[0]?.target;
+      const mode = modes.get(variant.preset) ?? [];
+      mode.push({
+        cssName: token.name.slice(CSS_NAME_START),
+        value,
+        ...(target && { step: target.slice(CSS_NAME_START) }),
+      });
+      modes.set(variant.preset, mode);
+    }
+  }
+  return [...modes].flatMap(([preset, mode]) =>
+    scaleMode(mode, factor).map(({ cssName, value }): [string, string] => [
+      `${preset}/--nx-${cssName}`,
+      value,
+    ])
+  );
+}
+
+/**
+ * Every value the UI scale and text size write for `appearance`, the same as
+ * the generated CSS: the scale's block, then the text size's type tokens.
+ */
+function uiScaleValues(
+  tokens: readonly CatalogueToken[],
+  { uiScale, textSize }: CatalogueAppearance
+) {
+  const base = uiScaleBase(
+    TOKEN_FILES['primitives/typography/typography-default.json'],
+    TOKEN_FILES['primitives/icon.json']
+  );
+  const selectors = [
+    uiScaleSelector(uiScale),
+    textSizeSelector(uiScale, textSize),
+  ];
+  const values = [...scaleBlocks(base), ...textSizeBlocks(base)]
+    .filter((block) => block.selectors.some((each) => selectors.includes(each)))
+    .flatMap((block) => block.tokens)
+    .map(({ cssName, value }): [string, string] => [`--nx-${cssName}`, value]);
+  if (uiScale === 'default') return values;
+  const { spacing } = UI_SCALES[uiScale];
+  return [
+    ...values,
+    ...scaledPresets(tokens, 'spacing', spacing),
+    ...scaledPresets(tokens, 'radius', spacing),
+  ];
+}
+
+/** `tokens` with the sizes `appearance` puts on the page. */
+function atUiScale(
+  tokens: readonly CatalogueToken[],
+  appearance: CatalogueAppearance
+): CatalogueToken[] {
+  const { uiScale, textSize, prefs } = appearance;
+  const scaled = new Map([
+    ...uiScaleValues(tokens, appearance),
+    [
+      '--nx-typography-code-size',
+      `${scaleText(prefs.codeFontSize, uiScale, textSize)}px`,
+    ],
+  ]);
+  return tokens.map((token) => ({
+    ...token,
+    variants: token.variants.map((variant) => {
+      const value =
+        scaled.get(`${variant.preset}/${token.name}`) ?? scaled.get(token.name);
+      if (value === undefined) return variant;
+      return {
+        ...variant,
+        declarations: variant.declarations.map((each) => ({
+          ...each,
+          value,
+        })),
+      };
+    }),
+  }));
+}
+
 /**
  * Every nxds token, identified by its `--nx-*` name: primitives, runtime
  * colours, spacing, z-index, breakpoints, typography and shadow styles, and
- * the UI scale factor and page widths at the Default scale.
+ * the UI scale factor and page widths.
  * Shadow layer primitives only compose the shadow styles.
- * Runtime colours are computed from `DEFAULT_NXDS_APPEARANCE` in explicit
- * light and dark modes; each variant records the appearance it used.
+ * Runtime colours are computed from `appearance` in explicit light and dark
+ * modes; each variant records the colour fields and mode it used. Sizes
+ * follow its UI scale, type sizes its text size too, and the code size its
+ * code font size. Every preset's variants are listed, and the appearance only
+ * says which one is in use.
  */
-export function createTokenCatalogue(): readonly CatalogueToken[] {
+export function createTokenCatalogue(
+  appearance: CatalogueAppearance = DEFAULT_NXDS_APPEARANCE
+): readonly CatalogueToken[] {
   const primitives = PRIMITIVE_FAMILIES.flatMap(primitiveLeaves);
   const lookup = primitiveLookup(primitives);
   const shadowLayers = primitives.filter(({ family }) => family === 'shadow');
   const spacing = spacingLeaves();
-  return [
+  const tokens = [
     ...authoredTokens(
       primitives.filter((leaf) => leaf.family !== 'shadow'),
       lookup,
       primitiveEntry(lookup)
     ),
-    ...runtimeColorTokens(),
+    ...runtimeColorTokens(appearance),
     ...authoredTokens(spacing, spacingStepLookup(spacing), spacingEntry),
     ...authoredTokens(
       fileLeaves('z-index', Z_INDEX_FILE, SINGLE_SOURCE),
@@ -651,4 +754,5 @@ export function createTokenCatalogue(): readonly CatalogueToken[] {
     ...shadowStyleTokens(shadowLayers, lookup),
     ...widthTokens(PAGE_WIDTHS_REM, 'default').map(uiScaleEntry),
   ];
+  return atUiScale(tokens, appearance);
 }

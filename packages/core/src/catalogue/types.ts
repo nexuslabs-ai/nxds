@@ -1,7 +1,9 @@
 import type {
   NxdsAppearancePrefs,
-  NxdsAppearanceState,
+  NxdsColorAppearance,
   NxdsPresetField,
+  NxdsTextSize,
+  NxdsUiScale,
 } from '../lib/appearance-model';
 import type { Mode } from '../lib/palette';
 import type { TokenValue } from '../token-source/types';
@@ -12,6 +14,17 @@ export type { TokenValue } from '../token-source/types';
 type DeepReadonly<T> = T extends object
   ? { readonly [Key in keyof T]: DeepReadonly<T[Key]> }
   : T;
+
+/**
+ * The appearance fields the catalogue derives values from: runtime colours
+ * from the brand colour, surface tone and contrasts, sizes from the UI scale,
+ * type sizes from the text size too, and the code size from `codeFontSize`.
+ */
+export type CatalogueAppearance = NxdsColorAppearance & {
+  readonly uiScale: NxdsUiScale;
+  readonly textSize: NxdsTextSize;
+  readonly prefs: Pick<NxdsAppearancePrefs, 'codeFontSize'>;
+};
 
 /** Token families the catalogue covers. */
 export type CatalogueFamily =
@@ -86,8 +99,10 @@ export interface CatalogueVariant {
    * UI scale factor and page widths.
    */
   readonly source: CatalogueSource | null;
-  /** The full appearance config a derived colour was computed from. */
-  readonly appearance: DeepReadonly<NxdsAppearanceState> | null;
+  /** The appearance fields a derived colour was computed from, and its mode. */
+  readonly appearance: DeepReadonly<
+    NxdsColorAppearance & { readonly mode: Mode }
+  > | null;
   readonly authoredValue: TokenValue | null;
   /**
    * What the generated CSS declares: one custom property for a scalar or a
@@ -101,8 +116,8 @@ export interface CatalogueVariant {
 
 /**
  * An appearance setting that writes a token at runtime: a preset field that
- * picks one of its moded values, the UI scale that scales its value, or a
- * preference the provider computes it from.
+ * picks one of its moded values, the UI scale or text size that scales its
+ * value, or a preference the provider computes it from.
  */
 export type CatalogueControl =
   | { readonly kind: 'preset'; readonly field: NxdsPresetField }

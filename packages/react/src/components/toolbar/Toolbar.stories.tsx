@@ -3,6 +3,9 @@ import * as React from 'react';
 import {
   ArchiveIcon,
   ArrowUUpLeftIcon,
+  CursorIcon,
+  EraserIcon,
+  PencilSimpleIcon,
   TextBIcon,
   TextItalicIcon,
   TextUnderlineIcon,
@@ -25,7 +28,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../dropdown-menu/dropdown-menu';
+import { Hide } from '../hide/hide';
 import { Label } from '../label/label';
+import { Show } from '../show/show';
 import {
   Tooltip,
   TooltipContent,
@@ -41,6 +46,9 @@ import {
   ToolbarSeparator,
   ToolbarToggleGroup,
   ToolbarToggleItem,
+  ToolbarTool,
+  ToolbarToolGroup,
+  ToolbarToolPanel,
 } from './toolbar';
 
 const meta: Meta<typeof Toolbar> = {
@@ -55,7 +63,9 @@ const meta: Meta<typeof Toolbar> = {
           '',
           '- Label the toolbar with `aria-label` or `aria-labelledby`.',
           '- Build it from ToolbarButton, ToolbarLink, ToolbarToggleGroup and ToolbarToggleItem so every control joins the arrow-key order.',
+          '- For tools with options, use ToolbarToolGroup, ToolbarTool and ToolbarToolPanel. Choosing another tool swaps the open panel. Escape returns focus to the tool.',
           '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading` or icon slots.',
+          '- Use `variant="floating"` for a toolbar that sits over content, like a canvas.',
           '- Use `asChild` to make a toolbar control a menu trigger.',
           '- Keep text fields outside the toolbar, because arrow keys would conflict with typing.',
           '- In narrow containers, controls wrap in DOM order and arrow keys still reach every row.',
@@ -469,7 +479,13 @@ export const InsideTooltipProvider: Story = {
 export const Sizes: Story = {
   render: () => (
     <div className="nx:grid nx:gap-4">
-      {(['sm', 'default', 'lg'] as const).map((size) => (
+      {(
+        [
+          ['sm', 'icon-sm'],
+          ['default', 'icon'],
+          ['lg', 'icon-lg'],
+        ] as const
+      ).map(([size, iconSize]) => (
         <Toolbar key={size} aria-label={size + ' controls'}>
           <ToolbarButton size={size}>Action</ToolbarButton>
           <ToolbarToggleGroup type="multiple" aria-label="Formatting">
@@ -477,22 +493,192 @@ export const Sizes: Story = {
               Bold
             </ToolbarToggleItem>
           </ToolbarToggleGroup>
+          <ToolbarSeparator />
+          <ToolbarButton size={iconSize} aria-label="Undo">
+            <ArrowUUpLeftIcon aria-hidden="true" />
+          </ToolbarButton>
         </Toolbar>
       ))}
     </div>
   ),
   play: async ({ canvasElement }) => {
+    const separators: number[] = [];
     for (const toolbar of within(canvasElement).getAllByRole('toolbar', {
       name: /controls$/,
     })) {
-      const button = within(toolbar).getByRole('button', { name: 'Action' });
-      const toggle = within(toolbar).getByRole('button', { name: 'Bold' });
-      await expect(toggle.getBoundingClientRect().height).toBe(
-        button.getBoundingClientRect().height
-      );
+      const bar = within(toolbar);
+      const button = bar.getByRole('button', { name: 'Action' });
+      const toggle = bar.getByRole('button', { name: 'Bold' });
+      const undo = bar.getByRole('button', { name: 'Undo' });
+      const height = button.getBoundingClientRect().height;
+      await expect(toggle.getBoundingClientRect().height).toBe(height);
+      await expect(undo.getBoundingClientRect().height).toBe(height);
       await expect(getComputedStyle(toggle).fontSize).toBe(
         getComputedStyle(button).fontSize
       );
+      const separator = bar.getByRole('separator').getBoundingClientRect();
+      await expect(separator.height).toBeLessThan(height);
+      separators.push(separator.height);
+    }
+    await expect(separators[0]).toBeLessThan(separators[2] ?? 0);
+  },
+};
+
+export const Floating: Story = {
+  tags: ['docs'],
+  render: () => (
+    <div className="nx:flex nx:min-h-40 nx:items-end nx:justify-center">
+      <Toolbar variant="floating" aria-label="Canvas">
+        <ToolbarToolGroup aria-label="Drawing tools" defaultValue="select">
+          <ToolbarTool value="select" size="icon-sm" aria-label="Select">
+            <CursorIcon aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
+            <PencilSimpleIcon aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
+            <EraserIcon aria-hidden="true" />
+          </ToolbarTool>
+        </ToolbarToolGroup>
+        <ToolbarSeparator />
+        <ToolbarButton size="icon-sm" aria-label="Undo">
+          <ArrowUUpLeftIcon aria-hidden="true" />
+        </ToolbarButton>
+      </Toolbar>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('toolbar', { name: 'Canvas' })
+    ).toHaveAttribute('data-variant', 'floating');
+  },
+};
+
+export const GroupSpacing: Story = {
+  render: () => (
+    <div className="nx:grid nx:gap-6">
+      {(
+        [
+          ['default', undefined],
+          ['floating', undefined],
+          ['default', 'nx:gap-4'],
+        ] as const
+      ).map(([variant, className]) => (
+        <Toolbar
+          key={`${variant}-${className}`}
+          variant={variant}
+          className={className}
+          aria-label={`${variant} bar`}
+        >
+          <ToolbarToolGroup aria-label="Tools" defaultValue="select">
+            <ToolbarTool value="select" size="icon-sm" aria-label="Select">
+              <CursorIcon aria-hidden="true" />
+            </ToolbarTool>
+            <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
+              <PencilSimpleIcon aria-hidden="true" />
+            </ToolbarTool>
+          </ToolbarToolGroup>
+          <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+            <ToolbarToggleItem value="bold" size="icon-sm" aria-label="Bold">
+              <TextBIcon aria-hidden="true" />
+            </ToolbarToggleItem>
+            <ToolbarToggleItem
+              value="italic"
+              size="icon-sm"
+              aria-label="Italic"
+            >
+              <TextItalicIcon aria-hidden="true" />
+            </ToolbarToggleItem>
+          </ToolbarToggleGroup>
+          <ToolbarGroup aria-label="History">
+            <ToolbarButton size="icon-sm" aria-label="Undo">
+              <ArrowUUpLeftIcon aria-hidden="true" />
+            </ToolbarButton>
+          </ToolbarGroup>
+        </Toolbar>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const toolbar of within(canvasElement).getAllByRole('toolbar')) {
+      const barGap = getComputedStyle(toolbar).columnGap;
+      for (const name of ['Tools', 'Formatting', 'History']) {
+        await expect(
+          getComputedStyle(within(toolbar).getByRole('group', { name }))
+            .columnGap
+        ).toBe(barGap);
+      }
+    }
+  },
+};
+
+function HistoryGroup() {
+  return (
+    <ToolbarGroup aria-label="History">
+      <ToolbarButton size="icon-sm" aria-label="Undo">
+        <ArrowUUpLeftIcon aria-hidden="true" />
+      </ToolbarButton>
+      <ToolbarButton size="icon-sm" aria-label="Clear canvas">
+        <EraserIcon aria-hidden="true" />
+      </ToolbarButton>
+    </ToolbarGroup>
+  );
+}
+
+export const GroupInShowHide: Story = {
+  render: () => (
+    <Toolbar variant="floating" aria-label="Canvas tools">
+      <Show above="md" as="div">
+        <HistoryGroup />
+      </Show>
+      <Hide above="md" as="div">
+        <HistoryGroup />
+      </Hide>
+    </Toolbar>
+  ),
+  play: async ({ canvasElement }) => {
+    const toolbar = within(canvasElement).getByRole('toolbar');
+    await expect(
+      getComputedStyle(within(toolbar).getByRole('group', { name: 'History' }))
+        .columnGap
+    ).toBe(getComputedStyle(toolbar).columnGap);
+  },
+};
+
+export const VerticalTools: Story = {
+  render: () => (
+    <Toolbar orientation="vertical" aria-label="Canvas tools">
+      <ToolbarToolGroup aria-label="Tools" defaultValue="select">
+        <ToolbarTool value="select" size="icon-sm" aria-label="Select">
+          <CursorIcon aria-hidden="true" />
+        </ToolbarTool>
+        <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
+          <PencilSimpleIcon aria-hidden="true" />
+        </ToolbarTool>
+      </ToolbarToolGroup>
+      <ToolbarGroup aria-label="History">
+        <ToolbarButton size="icon-sm" aria-label="Undo">
+          <ArrowUUpLeftIcon aria-hidden="true" />
+        </ToolbarButton>
+        <ToolbarButton size="icon-sm" aria-label="Clear canvas">
+          <EraserIcon aria-hidden="true" />
+        </ToolbarButton>
+      </ToolbarGroup>
+    </Toolbar>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const [first, second] of [
+      ['Select', 'Draw'],
+      ['Undo', 'Clear canvas'],
+    ]) {
+      const above = canvas
+        .getByRole('button', { name: first })
+        .getBoundingClientRect();
+      const below = canvas
+        .getByRole('button', { name: second })
+        .getBoundingClientRect();
+      await expect(below.top).toBeGreaterThanOrEqual(above.bottom);
     }
   },
 };
@@ -503,6 +689,18 @@ export const AllVariants: Story = {
       <InlineExample />
       <AttachedExample />
       <SelectionExample />
+      <Toolbar variant="floating" aria-label="Floating canvas tools">
+        <ToolbarButton size="icon-sm" aria-label="Pointer">
+          <CursorIcon aria-hidden="true" />
+        </ToolbarButton>
+        <ToolbarButton size="icon-sm" aria-label="Pencil">
+          <PencilSimpleIcon aria-hidden="true" />
+        </ToolbarButton>
+        <ToolbarSeparator />
+        <ToolbarButton size="icon-sm" aria-label="Undo last change">
+          <ArrowUUpLeftIcon aria-hidden="true" />
+        </ToolbarButton>
+      </Toolbar>
     </div>
   ),
 };
@@ -789,7 +987,7 @@ function SelectionExample() {
             >
               {selected.length} selected
             </span>
-            <ToolbarSeparator className="nx:self-stretch nx:data-[orientation=vertical]:h-auto" />
+            <ToolbarSeparator />
             <ToolbarButton onClick={archiveSelection}>
               <ArchiveIcon aria-hidden="true" />
               Archive
@@ -897,5 +1095,360 @@ export const Selection: Story = {
       '1 document archived.'
     );
     await expect(canvas.queryByRole('toolbar')).not.toBeInTheDocument();
+  },
+};
+
+export const ToolsWithPanels: Story = {
+  tags: ['docs'],
+  render: function Example() {
+    const id = React.useId();
+    return (
+      <div className="nx:flex nx:min-h-64 nx:items-end">
+        <Toolbar aria-label="Canvas">
+          <ToolbarToolGroup aria-label="Drawing tools" defaultValue="select">
+            <ToolbarTool value="select" size="icon-sm" aria-label="Select">
+              <CursorIcon aria-hidden="true" />
+            </ToolbarTool>
+            <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
+              <PencilSimpleIcon aria-hidden="true" />
+            </ToolbarTool>
+            <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
+              <EraserIcon aria-hidden="true" />
+            </ToolbarTool>
+            <ToolbarToolPanel value="draw" side="top">
+              <div className="nx:flex nx:items-center nx:gap-2">
+                <Checkbox id={`${id}-smooth`} defaultChecked />
+                <Label htmlFor={`${id}-smooth`}>Smooth strokes</Label>
+              </div>
+            </ToolbarToolPanel>
+            <ToolbarToolPanel value="erase" side="top">
+              <div className="nx:flex nx:items-center nx:gap-2">
+                <Checkbox id={`${id}-whole`} />
+                <Label htmlFor={`${id}-whole`}>Erase whole strokes</Label>
+              </div>
+            </ToolbarToolPanel>
+          </ToolbarToolGroup>
+          <ToolbarSeparator />
+          <ToolbarButton size="icon-sm" aria-label="Undo">
+            <ArrowUUpLeftIcon aria-hidden="true" />
+          </ToolbarButton>
+        </Toolbar>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    const select = canvas.getByRole('button', { name: 'Select' });
+    const draw = canvas.getByRole('button', { name: 'Draw' });
+    await expect(select).toHaveAttribute('aria-pressed', 'true');
+    await expect(select).not.toHaveAttribute('aria-haspopup');
+    await expect(select).not.toHaveAttribute('aria-expanded');
+    await expect(draw).toHaveAttribute('aria-haspopup', 'dialog');
+    await expect(draw).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(draw);
+    const panel = await page.findByRole('dialog', { name: 'Draw' });
+    await expect(draw).toHaveAttribute('aria-pressed', 'true');
+    await expect(draw).toHaveAttribute('aria-expanded', 'true');
+    await expect(draw).toHaveAttribute('aria-controls', panel.id);
+    await expect(select).toHaveAttribute('aria-pressed', 'false');
+  },
+};
+
+type ToolStory = StoryObj<typeof ToolbarToolGroup>;
+
+function CanvasTools({
+  onDrawPanelClose,
+  ...props
+}: React.ComponentProps<typeof ToolbarToolGroup> & {
+  onDrawPanelClose?: () => void;
+}) {
+  const id = React.useId();
+  return (
+    <div className="nx:flex nx:min-h-64 nx:items-end nx:gap-4">
+      <Toolbar aria-label="Canvas">
+        <ToolbarToolGroup
+          aria-label="Drawing tools"
+          defaultValue="select"
+          {...props}
+        >
+          <ToolbarTool value="select" size="icon-sm" aria-label="Select">
+            <CursorIcon aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
+            <PencilSimpleIcon aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
+            <EraserIcon aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarTool value="text" size="icon-sm" aria-label="Text" disabled>
+            <TextItalicIcon aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarToolPanel
+            value="draw"
+            side="top"
+            onCloseAutoFocus={onDrawPanelClose}
+          >
+            <div className="nx:flex nx:items-center nx:gap-2">
+              <Checkbox id={`${id}-smooth`} defaultChecked />
+              <Label htmlFor={`${id}-smooth`}>Smooth strokes</Label>
+            </div>
+          </ToolbarToolPanel>
+          <ToolbarToolPanel value="erase" side="top">
+            <div className="nx:flex nx:items-center nx:gap-2">
+              <Checkbox id={`${id}-whole`} />
+              <Label htmlFor={`${id}-whole`}>Erase whole strokes</Label>
+            </div>
+          </ToolbarToolPanel>
+        </ToolbarToolGroup>
+      </Toolbar>
+      <Button variant="outline">Done</Button>
+    </div>
+  );
+}
+
+export const SwitchingTools: ToolStory = {
+  args: { onValueChange: fn(), onOpenChange: fn() },
+  render: (args) => <CanvasTools {...args} />,
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    const erase = canvas.getByRole('button', { name: 'Erase' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Draw' }));
+    await page.findByRole('dialog', { name: 'Draw' });
+    const focused: EventTarget[] = [];
+    function recordFocus(event: FocusEvent) {
+      if (event.target) focused.push(event.target);
+    }
+    canvasElement.ownerDocument.addEventListener('focusin', recordFocus);
+    await userEvent.click(erase);
+    const panel = await page.findByRole('dialog', { name: 'Erase' });
+    await expect(panel).toBeVisible();
+    await expect(
+      page.queryByRole('dialog', { name: 'Draw' })
+    ).not.toBeInTheDocument();
+    await expect(erase).toHaveFocus();
+    canvasElement.ownerDocument.removeEventListener('focusin', recordFocus);
+    await expect(
+      focused.filter((target) => panel.contains(target as Node))
+    ).toEqual([]);
+    await expect(args.onValueChange).toHaveBeenLastCalledWith('erase');
+    await expect(args.onOpenChange).not.toHaveBeenCalledWith(false);
+  },
+};
+
+export const ToolPanelKeyboard: ToolStory = {
+  render: (args) => <CanvasTools {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    const select = canvas.getByRole('button', { name: 'Select' });
+    const draw = canvas.getByRole('button', { name: 'Draw' });
+    await expect(canvas.getByRole('button', { name: 'Text' })).toBeDisabled();
+    await userEvent.tab();
+    await expect(select).toHaveFocus();
+    await userEvent.keyboard('{End}');
+    await expect(canvas.getByRole('button', { name: 'Erase' })).toHaveFocus();
+    await userEvent.keyboard('{ArrowLeft}');
+    await expect(draw).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    const panel = await page.findByRole('dialog', { name: 'Draw' });
+    await waitFor(() =>
+      expect(panel).toContainElement(
+        canvasElement.ownerDocument.activeElement as HTMLElement
+      )
+    );
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(draw).toHaveFocus());
+    await expect(draw).toHaveAttribute('aria-expanded', 'false');
+    await expect(draw).toHaveAttribute('aria-pressed', 'true');
+  },
+};
+
+export const ToolWithoutPanel: ToolStory = {
+  args: { onOpenChange: fn() },
+  render: (args) => <CanvasTools {...args} />,
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    const select = canvas.getByRole('button', { name: 'Select' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Draw' }));
+    await page.findByRole('dialog', { name: 'Draw' });
+    await userEvent.click(select);
+    await waitFor(() =>
+      expect(page.queryByRole('dialog')).not.toBeInTheDocument()
+    );
+    await expect(args.onOpenChange).toHaveBeenLastCalledWith(false);
+    await expect(select).toHaveAttribute('aria-pressed', 'true');
+    await expect(select).not.toHaveAttribute('aria-expanded');
+    await expect(select).toHaveFocus();
+  },
+};
+
+export const ToolPanelOutsideClick: StoryObj<typeof CanvasTools> = {
+  args: { onDrawPanelClose: fn() },
+  render: (args) => <CanvasTools {...args} />,
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    const draw = canvas.getByRole('button', { name: 'Draw' });
+    const done = canvas.getByRole('button', { name: 'Done' });
+    await userEvent.click(draw);
+    await page.findByRole('dialog', { name: 'Draw' });
+    await userEvent.click(done);
+    await waitFor(() => expect(args.onDrawPanelClose).toHaveBeenCalledTimes(1));
+    await expect(done).toHaveFocus();
+    await expect(draw).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(draw);
+    await page.findByRole('dialog', { name: 'Draw' });
+    await userEvent.click(canvasElement);
+    await waitFor(() => expect(args.onDrawPanelClose).toHaveBeenCalledTimes(2));
+    await expect(draw).not.toHaveFocus();
+  },
+};
+
+export const ControlledTools: ToolStory = {
+  args: {
+    value: 'draw',
+    open: false,
+    onValueChange: fn(),
+    onOpenChange: fn(),
+  },
+  render: (args) => <CanvasTools {...args} />,
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    const draw = canvas.getByRole('button', { name: 'Draw' });
+    await expect(
+      canvas.getByRole('group', { name: 'Drawing tools' })
+    ).toHaveAttribute('data-slot', 'toolbar-tool-group');
+    await expect(draw).toHaveAttribute('data-slot', 'toolbar-tool');
+    await expect(draw).toHaveAttribute('data-state', 'on');
+    await expect(draw).toHaveAttribute('data-size', 'icon-sm');
+    await expect(
+      canvas.getByRole('button', { name: 'Select' })
+    ).toHaveAttribute('data-state', 'off');
+    await userEvent.click(draw);
+    await expect(args.onOpenChange).toHaveBeenLastCalledWith(true);
+    await expect(args.onValueChange).not.toHaveBeenCalled();
+    await expect(page.queryByRole('dialog')).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'Erase' }));
+    await expect(args.onValueChange).toHaveBeenLastCalledWith('erase');
+    await expect(draw).toHaveAttribute('data-state', 'on');
+  },
+};
+
+function SwitchFromPanelDemo({
+  onDrawPanelClose,
+}: {
+  onDrawPanelClose: () => void;
+}) {
+  const id = React.useId();
+  const [value, setValue] = React.useState('draw');
+  return (
+    <div className="nx:flex nx:min-h-64 nx:items-end">
+      <Toolbar aria-label="Canvas">
+        <ToolbarToolGroup
+          aria-label="Drawing tools"
+          value={value}
+          onValueChange={setValue}
+          defaultOpen
+        >
+          <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
+            <PencilSimpleIcon aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
+            <EraserIcon aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarToolPanel
+            value="draw"
+            side="top"
+            onCloseAutoFocus={onDrawPanelClose}
+          >
+            <Button size="sm" onClick={() => setValue('erase')}>
+              Switch to eraser
+            </Button>
+          </ToolbarToolPanel>
+          <ToolbarToolPanel value="erase" side="top">
+            <div className="nx:flex nx:items-center nx:gap-2">
+              <Checkbox id={`${id}-whole`} />
+              <Label htmlFor={`${id}-whole`}>Erase whole strokes</Label>
+            </div>
+          </ToolbarToolPanel>
+        </ToolbarToolGroup>
+      </Toolbar>
+    </div>
+  );
+}
+
+export const SwitchFromPanel: StoryObj<typeof SwitchFromPanelDemo> = {
+  args: { onDrawPanelClose: fn() },
+  render: (args) => <SwitchFromPanelDemo {...args} />,
+  play: async ({ canvasElement, args }) => {
+    const page = within(canvasElement.ownerDocument.body);
+    await userEvent.click(
+      await page.findByRole('button', { name: 'Switch to eraser' })
+    );
+    const panel = await page.findByRole('dialog', { name: 'Erase' });
+    await waitFor(() => expect(args.onDrawPanelClose).toHaveBeenCalled());
+    await expect(panel).toContainElement(
+      canvasElement.ownerDocument.activeElement as HTMLElement
+    );
+  },
+};
+
+function NamedPanelsDemo() {
+  const id = React.useId();
+  return (
+    <div className="nx:flex nx:min-h-64 nx:items-end">
+      <Toolbar aria-label="Canvas">
+        <ToolbarToolGroup aria-label="Drawing tools" defaultValue="select">
+          <ToolbarTool value="select" size="icon-sm" aria-label="Select">
+            <CursorIcon aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
+            <PencilSimpleIcon aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
+            <EraserIcon aria-hidden="true" />
+          </ToolbarTool>
+          <ToolbarToolPanel value="draw" side="top" aria-label="Brush options">
+            <Button size="sm">Reset brush</Button>
+          </ToolbarToolPanel>
+          <ToolbarToolPanel
+            value="erase"
+            side="top"
+            aria-labelledby={`${id}-eraser`}
+          >
+            <p
+              id={`${id}-eraser`}
+              className="nx:m-0 nx:mb-2 nx:typography-label-default"
+            >
+              Eraser settings
+            </p>
+            <div className="nx:flex nx:items-center nx:gap-2">
+              <Checkbox id={`${id}-whole`} />
+              <Label htmlFor={`${id}-whole`}>Erase whole strokes</Label>
+            </div>
+          </ToolbarToolPanel>
+        </ToolbarToolGroup>
+      </Toolbar>
+    </div>
+  );
+}
+
+export const NamedPanels: Story = {
+  render: () => <NamedPanelsDemo />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    await userEvent.click(canvas.getByRole('button', { name: 'Draw' }));
+    await expect(
+      await page.findByRole('dialog', { name: 'Brush options' })
+    ).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Erase' }));
+    await expect(
+      await page.findByRole('dialog', { name: 'Eraser settings' })
+    ).toBeVisible();
   },
 };

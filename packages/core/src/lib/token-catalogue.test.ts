@@ -14,8 +14,10 @@ import {
   DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
   type NxdsAppearancePrefs,
+  type NxdsAppearanceState,
   UI_SCALE_OPTIONS,
 } from './appearance-model';
+import { createNxdsAppearanceSnapshotFromState } from './appearance-snapshot';
 import type { Mode } from './palette';
 
 const catalogue = createTokenCatalogue();
@@ -644,3 +646,158 @@ describe('density spacing order', () => {
     }
   });
 });
+
+const APPEARANCES: [string, NxdsAppearanceState][] = [
+  [
+    'an oklch brand on stone',
+    {
+      ...DEFAULT_NXDS_APPEARANCE,
+      brandColor: 'oklch(0.7 0.25 20)',
+      surfaceTone: 'stone',
+    },
+  ],
+  [
+    'the lowest contrast',
+    {
+      ...DEFAULT_NXDS_APPEARANCE,
+      brandColor: '#e11d48',
+      lightContrast: 0,
+      darkContrast: 0,
+    },
+  ],
+  [
+    'the highest contrast',
+    {
+      ...DEFAULT_NXDS_APPEARANCE,
+      brandColor: '#4f46e5',
+      lightContrast: 100,
+      darkContrast: 100,
+    },
+  ],
+  [
+    'the largest code font',
+    {
+      ...DEFAULT_NXDS_APPEARANCE,
+      prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs, codeFontSize: 32 },
+    },
+  ],
+];
+
+/** The custom properties of the block `selector` opens in `css`. */
+function snapshotBlock(css: string, selector: string): Map<string, string> {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const body = new RegExp(`(?:^|\\n)${escaped} \\{\\n([^}]*)\\}`).exec(
+    css
+  )?.[1];
+  if (body === undefined) throw new Error(`no "${selector}" block`);
+  return customProperties(body);
+}
+
+/** The catalogue at `appearance`, by token name. */
+function catalogueAt(appearance: NxdsAppearanceState) {
+  return new Map<string, CatalogueToken>(
+    createTokenCatalogue(appearance).map((token) => [token.name, token])
+  );
+}
+
+/** Expects `themed` to hold each of `declared`'s values in its `key` variant. */
+function expectDeclared(
+  themed: Map<string, CatalogueToken>,
+  declared: Map<string, string>,
+  key: VariantKey
+): void {
+  expect(declared.size).toBeGreaterThan(0);
+  for (const [name, value] of declared) {
+    const token = themed.get(name);
+    if (!token) throw new Error(`the catalogue has no ${name}`);
+    expect(variantValue(token, key), name).toBe(value);
+  }
+}
+
+/** The custom properties of the first `nxds.css` rule `selector` starts a line with. */
+function cssBlock(selector: string, tail: string) {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const body = new RegExp(`\\n\\s*${escaped}${tail}\\{([^}]*)\\}`).exec(
+    nxdsCss
+  )?.[1];
+  if (body === undefined) throw new Error(`no "${selector}" rule`);
+  return customProperties(body);
+}
+
+describe.each(APPEARANCES)('token catalogue at %s', (_, appearance) => {
+  const themed = catalogueAt(appearance);
+  const { themeCss, prefsCss } =
+    createNxdsAppearanceSnapshotFromState(appearance);
+
+  it('derives the colours the provider applies, in each mode', () => {
+    expectDeclared(themed, snapshotBlock(themeCss, ':root'), {
+      preset: null,
+      mode: 'light',
+    });
+    expectDeclared(themed, snapshotBlock(themeCss, ':root.dark'), {
+      preset: null,
+      mode: 'dark',
+    });
+  });
+
+  it('writes the code size the provider applies', () => {
+    const code = new Map(
+      [...snapshotBlock(prefsCss, ':root')].filter(
+        ([name]) => name === '--nx-typography-code-size'
+      )
+    );
+    expectDeclared(themed, code, { preset: null, mode: null });
+  });
+});
+
+describe.each(['small', 'large', 'larger'] as const)(
+  'token catalogue at the %s UI scale',
+  (uiScale) => {
+    const themed = catalogueAt({ ...DEFAULT_NXDS_APPEARANCE, uiScale });
+    const scale = `[data-ui-scale='${uiScale}']`;
+
+    it.each([
+      ['type, icons and page widths', scale, '\\s*', null],
+      ['density', `${scale}[data-density='tight']`, '[^{]*', 'tight'],
+      ['corners', `${scale}[data-radius='round']`, '[^{]*', 'round'],
+    ])(
+      'writes the same %s as the generated CSS',
+      (_, selector, tail, preset) => {
+        expectDeclared(themed, cssBlock(selector, tail), {
+          preset,
+          mode: null,
+        });
+      }
+    );
+  }
+);
+
+describe.each([
+  ['default', 16, "[data-text-size='16']"],
+  ['small', 12, "[data-ui-scale='small'][data-text-size='12']"],
+  ['larger', 16, "[data-ui-scale='larger'][data-text-size='16']"],
+] as const)(
+  'token catalogue at the %s UI scale and text size %s',
+  (uiScale, textSize, selector) => {
+    const appearance = { ...DEFAULT_NXDS_APPEARANCE, uiScale, textSize };
+
+    it('writes the same type sizes as the generated CSS', () => {
+      expectDeclared(catalogueAt(appearance), cssBlock(selector, '\\s*'), {
+        preset: null,
+        mode: null,
+      });
+    });
+
+    it('writes the code size the provider applies', () => {
+      const withCode = {
+        ...appearance,
+        prefs: { ...appearance.prefs, codeFontSize: 15 },
+      };
+      const { prefsCss } = createNxdsAppearanceSnapshotFromState(withCode);
+      expectDeclared(catalogueAt(withCode), snapshotBlock(prefsCss, selector), {
+        preset: null,
+        mode: null,
+      });
+    });
+  }
+);

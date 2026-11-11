@@ -1,3 +1,5 @@
+import { PAGE_WIDTHS_REM } from '../lib/token-scales.generated.ts';
+
 /**
  * Each UI scale, as factors of the Default scale. `spacing` multiplies every
  * density and radius step and the page widths, `text` every type size, and
@@ -129,7 +131,10 @@ const stepOf = (cssName: string) =>
  * step that rounds onto the one before it moves up to the next allowed length.
  * A role token takes the scaled value of the step it references.
  */
-function scaleMode(tokens: readonly ModeToken[], factor: number): ScaleToken[] {
+export function scaleMode(
+  tokens: readonly ModeToken[],
+  factor: number
+): ScaleToken[] {
   const scaled = new Map(
     tokens
       .filter(({ step }) => !step)
@@ -217,6 +222,39 @@ export interface UiScaleBase {
   glyphs: Readonly<Record<string, number>>;
   /** Page widths in rem, by name. */
   widths: Readonly<Record<string, number>>;
+}
+
+interface DimensionToken {
+  readonly $value: { readonly value: number };
+}
+
+type DimensionGroup = Readonly<Record<string, DimensionToken>>;
+
+const groupValues = (group: DimensionGroup) =>
+  Object.fromEntries(
+    Object.entries(group).map(([name, token]) => [name, token.$value.value])
+  );
+
+/**
+ * The Default sizes from the typography and icon token files: the px type
+ * sizes, line heights, code size and icon glyphs, and Tailwind's rem page
+ * widths.
+ */
+export function uiScaleBase(
+  typography: {
+    readonly size: DimensionGroup;
+    readonly 'line-height': DimensionGroup;
+    readonly code: { readonly size: DimensionToken };
+  },
+  icon: { readonly glyph: DimensionGroup }
+): UiScaleBase {
+  return {
+    sizes: groupValues(typography.size),
+    lineHeights: groupValues(typography['line-height']),
+    codeSize: typography.code.size.$value.value,
+    glyphs: groupValues(icon.glyph),
+    widths: PAGE_WIDTHS_REM,
+  };
 }
 
 /**

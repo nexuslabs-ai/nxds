@@ -1,5 +1,88 @@
 # @nxds/claude-design
 
+## 0.16.0
+
+### Minor Changes
+
+- 8e13859: `components/bundle.js` drops from 2,433,281 to 1,635,661 bytes. A canvas takes in a script under 2 MB as soon as the system updates. Over 2 MB, the new components showed only after a reload. The build fails past 1,800,000 bytes.
+
+  The bundle keeps only Phosphor's regular and fill weights. `Nxds.Icon` loses its `weight` prop. Use a `-fill` name, such as `check-circle-fill`, for a filled icon. A canvas that still sets `weight` draws the regular icon and logs a warning, so remove the attribute.
+
+  Data charts list their legend items in `series` order, and PieChart's legend follows its rows. Recharts sorted them alphabetically.
+
+  README.md tells Claude to give every artboard a `mode` tweak of light and dark, and to bind the root's and each overlay content part's `data-theme` to it. A function prop takes a handler from the artboard's script, such as `on-value-change="{{setFilters}}"`.
+
+  The sampler fits its board at the theme's text size. SETUP.md's `canvas.json` entry is 1525px tall at the default. It grows 50px for each px of text above the default, and shrinks 33px for each px below. Its chart fills its card, Today's toggles sit in its content, and the deals table fits without a sideways scroll up to 20px text.
+
+  AspectRatio, Carousel, Combobox, FilterBuilder, FilterCondition, Resizable, ScrollArea, Sonner and Table READMEs show a full canvas example. Each used to show a bare part that rendered nothing, or a note. FilterBuilder shows a JSON mockup and a version bound to the artboard's script state. A static FilterBuilder no longer throws when clicked.
+
+## 0.15.1
+
+### Patch Changes
+
+- 3cd037e: Components read their content on a Design canvas the way they do in an app.
+  - An `as-child` Button slots its one element, so `<a>` inside it renders as a link styled as a button, not a button around a link.
+  - AvatarGroup's `max` counts avatars, not the indentation between them.
+  - Searching a MultiSelect, Combobox or Command list filters its items by their text, and no longer throws.
+  - The FilterBuilder and Sidebar READMEs say what each needs, in place of an example that throws.
+
+## 0.15.0
+
+### Minor Changes
+
+- cbbd852: The props panel now shows every icon prop as a dropdown with a search box. The canvas icon set goes from 422 to 381 names, under the panel's 400-option limit, and the build fails if it grows past 400.
+
+  These icon names are gone. A canvas that uses one logs an `[nxds] … isn't an icon name` warning and draws nothing:
+  - Logos: `amazon-logo`, `discord-logo`, `facebook-logo`, `figma-logo`, `gitlab-logo`, `instagram-logo`, `linkedin-logo`, `notion-logo`, `open-ai-logo`, `paypal-logo`, `slack-logo`, `stripe-logo`, `webhooks-logo`, `whatsapp-logo`, `windows-logo`, `x-logo`, `youtube-logo`. `apple-logo`, `github-logo` and `google-logo` stay.
+  - `-simple` versions, with the icon to use instead: `bell-simple-ringing` (`bell-ringing`), `bookmark-simple` (`bookmark`), `copy-simple` (`copy`), `envelope-simple` (`envelope`), `funnel-simple` (`funnel`), `shopping-cart-simple` (`shopping-cart`), `stack-simple` (`stack`), `tag-simple` (`tag`), `trash-simple` (`trash`).
+  - Near-duplicates, with the icon to use instead: `calendar-dot` (`calendar-dots`), `chat-centered` (`chat`), `gear-fine` and `gear-six` (`gear`), `pencil-circle` and `pencil-simple-line` (`pencil-simple`), `question-mark` (`question`), `share-fat` (`share`), `sidebar` (`sidebar-simple`), `sun-dim` (`sun`), `image-square` (`image`), `arrows-vertical` (`arrows-down-up`), `paper-plane-right` (`paper-plane-tilt`), `warning-diamond` (`warning`), `frame-corners` (`corners-out`).
+
+  The Recharts parts list their SVG props in the panel: `fill`, `fillOpacity`, `stroke`, `strokeWidth`, `strokeDasharray` and `opacity`, wherever the part draws them. Every series, grid and reference part gains the ones it lacked. `strokeDasharray` is a string everywhere, so `stroke-dasharray="4 4"` works on Line and ReferenceLine.
+
+## 0.14.0
+
+### Minor Changes
+
+- c004e3a: `nxds-cli export claude-design` takes the `init` theme flags, except `--mode` and `--icons`, and exports a system in that theme: its colours, presets, type scale, code size and fonts. Curated fonts load from Google Fonts through tokens.css. The system records its theme in `design-system.json`, so an update with `--index` keeps it. Passed flags change only the parts they name, and an empty one, such as `--density=`, resets it. Default code text in the export is 12px, as in apps.
+
+  `createTokenCatalogue` takes the appearance fields it uses: the brand colour, surface tone, contrasts, and UI and code font sizes.
+
+  Code text reads `--nx-typography-size-code`, 12px by default. `nx:typography-code-block` and `nx:typography-code-inline` are 12px without the provider too, and the code font size pref sets the variable. `nx:font-mono` sets only the font family, so mono text takes its size from its own text style.
+
+## 0.13.3
+
+### Patch Changes
+
+- 458bfd7: `SETUP.md` now puts the sampler at `project/nxds-sampler.dc.html`, where a canvas shows it. Its `canvas.json` entry in `boards` is keyed by the file name, with `x`, `y`, `w` and `h`, and the file name goes in `order`. Step 2 and the troubleshooting table name the installed system at `project/ds/nxds/`.
+
+## 0.13.2
+
+### Patch Changes
+
+- 822919d: The sampler is now a sales dashboard shipped as `nxds-sampler.dc.html` beside `SETUP.md`, so it shows as an artboard on a Claude Design canvas. Claude puts the file on the canvas unchanged and adds its `canvas.json` entry. Switch its `mode` tweak to `dark` to check the dark theme. `Label`, `ChoiceRow` and `ChoiceCard` now list `htmlFor`, so a canvas can link a label to its control. A release's `files.json` now lists the files beside `project/` with their hashes too, and `nxds-cli` copies only what it lists. When a release drops a root file you edited, `nxds-cli` keeps it, lists it in the `--json` output's `data.kept`, and exits 3.
+
+## 0.13.1
+
+### Patch Changes
+
+- 704182b: Fix what a fresh chat hit when it followed `SETUP.md` word for word on claude.ai.
+  - `SETUP.md` tells Claude to publish `components/index.d.ts` as `text/plain`. An Artifact publish refused it before.
+  - The sampler comes as two blocks: link lines for the artboard's `<head>`, and markup for inside its `<x-dc>`. The artboard file is `nxds-sampler.html`.
+  - README.md's "On a Design canvas" section names `components/index.d.ts`, so a canvas install copies it and every prop gets a control.
+  - The version checks read `meta.version` in `tokens.json`, which holds the release.
+  - `bundle.css` sets `box-sizing: border-box` the way Preflight does, so a full-width component no longer grows past its container on a canvas.
+  - Icon props show as a text field in the props panel, and the READMEs say so.
+
+## 0.13.0
+
+### Minor Changes
+
+- 6da5b6b: Set up nxds on a Claude Design canvas from one prompt in a Claude chat.
+  - The export writes `SETUP.md` beside `project/`. It walks Claude through publishing the system, installing it on a canvas, checking it and updating it to a new release. It isn't part of the published system.
+  - `SETUP.md` ships a sampler artboard that writes every attribute form a canvas reads. Claude builds it to check the install.
+  - `export claude-design` writes `SETUP.md` and `coverage.md` beside `project/`, and removes an earlier copy the release doesn't have. `--json` reports their paths in `data.root`.
+  - `export claude-design` ends by telling Claude to read `SETUP.md` and follow it.
+
 ## 0.12.0
 
 ### Minor Changes
