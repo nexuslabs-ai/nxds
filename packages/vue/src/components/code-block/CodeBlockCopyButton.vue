@@ -75,8 +75,8 @@ async function handleClick(event: MouseEvent) {
     data-slot="code-block-copy-button"
     :data-state="state"
     variant="outline"
-    size="icon-sm"
-    aria-label="Copy code"
+    size="sm"
+    icon-only
     v-bind="$attrs"
     :class="
       cn(
@@ -86,8 +86,9 @@ async function handleClick(event: MouseEvent) {
     "
     @click="handleClick"
   >
-    <component :is="COPY_ICONS[state]" />
-  </Button>
+    <template #start-icon><component :is="COPY_ICONS[state]" /></template>Copy
+    code</Button
+  >
   <span role="status" class="nx:sr-only"
     ><span :key="seq">{{ COPY_MESSAGES[state] }}</span></span
   >

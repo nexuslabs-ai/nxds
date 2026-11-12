@@ -61,7 +61,8 @@ const meta = {
           '- Label the toolbar with `aria-label` or `aria-labelledby`.',
           '- Build it from ToolbarButton, ToolbarLink, ToolbarToggleGroup and ToolbarToggleItem so every control joins the arrow-key order.',
           '- For tools with options, use ToolbarToolGroup, ToolbarTool and ToolbarToolPanel. Choosing another tool swaps the open panel. Escape returns focus to the tool.',
-          '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading` or icon slots.',
+          '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading`.',
+          '- ToolbarButton, ToolbarToggleItem and ToolbarTool take `#start-icon` and `icon-only`. `icon-only` shows only the icon, and the text stays as the hidden name. `icon-only` ignores `as-child`.',
           '- Use `variant="floating"` for a toolbar that sits over content, like a canvas.',
           '- Use `as-child` to make a toolbar control a menu trigger.',
           '- Keep text fields outside the toolbar, because arrow keys would conflict with typing.',
@@ -100,9 +101,8 @@ export const Default: Story = {
           <Tooltip>
             <TooltipTrigger as-child>
               <span class="nx:inline-flex">
-                <ToolbarButton size="icon-sm" aria-label="Undo formatting" class="nx:text-muted-foreground" @click="formatting = []">
-                  <PhArrowUUpLeft aria-hidden="true" />
-                </ToolbarButton>
+                <ToolbarButton icon-only class="nx:text-muted-foreground" @click="formatting = []">
+                  <template #start-icon><PhArrowUUpLeft /></template>Undo formatting</ToolbarButton>
               </span>
             </TooltipTrigger>
             <TooltipContent>Reset formatting</TooltipContent>
@@ -112,9 +112,8 @@ export const Default: Story = {
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="bold" aria-label="Bold" size="icon-sm">
-                    <PhTextB aria-hidden="true" />
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="bold" icon-only>
+                    <template #start-icon><PhTextB /></template>Bold</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Bold</TooltipContent>
@@ -122,9 +121,8 @@ export const Default: Story = {
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="italic" aria-label="Italic" size="icon-sm">
-                    <PhTextItalic aria-hidden="true" />
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="italic" icon-only>
+                    <template #start-icon><PhTextItalic /></template>Italic</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Italic</TooltipContent>
@@ -132,9 +130,8 @@ export const Default: Story = {
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="underline" aria-label="Underline" size="icon-sm">
-                    <PhTextUnderline aria-hidden="true" />
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="underline" icon-only>
+                    <template #start-icon><PhTextUnderline /></template>Underline</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Underline</TooltipContent>
@@ -207,9 +204,8 @@ export const FileActions: Story = {
         <ToolbarSeparator />
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <ToolbarButton size="icon-sm" aria-label="More file actions">
-              <PhDotsThree />
-            </ToolbarButton>
+            <ToolbarButton icon-only>
+              <template #start-icon><PhDotsThree /></template>More file actions</ToolbarButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem>Rename</DropdownMenuItem>
@@ -259,13 +255,11 @@ export const Calendar: Story = {
     template: `
       <Toolbar aria-label="Calendar controls">
         <ToolbarGroup aria-label="Date navigation">
-          <ToolbarButton size="icon-sm" aria-label="Previous period">
-            <PhCaretLeft />
-          </ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhCaretLeft /></template>Previous period</ToolbarButton>
           <ToolbarButton>Today</ToolbarButton>
-          <ToolbarButton size="icon-sm" aria-label="Next period">
-            <PhCaretRight />
-          </ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhCaretRight /></template>Next period</ToolbarButton>
         </ToolbarGroup>
         <ToolbarToggleGroup
           class="nx:ms-auto"
@@ -465,9 +459,8 @@ export const InsideTooltipProvider: Story = {
         <Toolbar aria-label="Text formatting">
           <Tooltip>
             <TooltipTrigger as-child>
-              <ToolbarButton size="icon-sm" aria-label="Bold">
-                <PhTextB aria-hidden="true" />
-              </ToolbarButton>
+              <ToolbarButton icon-only>
+                <template #start-icon><PhTextB /></template>Bold</ToolbarButton>
             </TooltipTrigger>
             <TooltipContent>Bold</TooltipContent>
           </Tooltip>
@@ -499,24 +492,17 @@ export const Sizes: Story = {
       ToolbarToggleGroup,
       ToolbarToggleItem,
     },
-    setup: () => ({
-      sizes: [
-        ['sm', 'icon-sm'],
-        ['default', 'icon'],
-        ['lg', 'icon-lg'],
-      ] as const,
-    }),
+    setup: () => ({ sizes: ['sm', 'default', 'lg'] as const }),
     template: `
       <div class="nx:grid nx:gap-4">
-        <Toolbar v-for="[size, iconSize] in sizes" :key="size" :aria-label="size + ' controls'">
+        <Toolbar v-for="size in sizes" :key="size" :aria-label="size + ' controls'">
           <ToolbarButton :size="size">Action</ToolbarButton>
           <ToolbarToggleGroup type="multiple" aria-label="Formatting">
             <ToolbarToggleItem value="bold" :size="size">Bold</ToolbarToggleItem>
           </ToolbarToggleGroup>
           <ToolbarSeparator />
-          <ToolbarButton :size="iconSize" aria-label="Undo">
-            <PhArrowUUpLeft aria-hidden="true" />
-          </ToolbarButton>
+          <ToolbarButton :size="size" icon-only>
+            <template #start-icon><PhArrowUUpLeft /></template>Undo</ToolbarButton>
         </Toolbar>
       </div>
     `,
@@ -562,20 +548,16 @@ export const Floating: Story = {
       <div class="nx:flex nx:min-h-40 nx:items-end nx:justify-center">
         <Toolbar variant="floating" aria-label="Canvas">
           <ToolbarToolGroup aria-label="Drawing tools" default-value="select">
-            <ToolbarTool value="select" size="icon-sm" aria-label="Select">
-              <PhCursor aria-hidden="true" />
-            </ToolbarTool>
-            <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
-              <PhPencilSimple aria-hidden="true" />
-            </ToolbarTool>
-            <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
-              <PhEraser aria-hidden="true" />
-            </ToolbarTool>
+            <ToolbarTool value="select" icon-only>
+              <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+            <ToolbarTool value="draw" icon-only>
+              <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
+            <ToolbarTool value="erase" icon-only>
+              <template #start-icon><PhEraser /></template>Erase</ToolbarTool>
           </ToolbarToolGroup>
           <ToolbarSeparator />
-          <ToolbarButton size="icon-sm" aria-label="Undo">
-            <PhArrowUUpLeft aria-hidden="true" />
-          </ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhArrowUUpLeft /></template>Undo</ToolbarButton>
         </Toolbar>
       </div>
     `,
@@ -620,25 +602,20 @@ export const GroupSpacing: Story = {
           :aria-label="variant + ' bar'"
         >
           <ToolbarToolGroup aria-label="Tools" default-value="select">
-            <ToolbarTool value="select" size="icon-sm" aria-label="Select">
-              <PhCursor aria-hidden="true" />
-            </ToolbarTool>
-            <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
-              <PhPencilSimple aria-hidden="true" />
-            </ToolbarTool>
+            <ToolbarTool value="select" icon-only>
+              <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+            <ToolbarTool value="draw" icon-only>
+              <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
           </ToolbarToolGroup>
           <ToolbarToggleGroup type="multiple" aria-label="Formatting">
-            <ToolbarToggleItem value="bold" size="icon-sm" aria-label="Bold">
-              <PhTextB aria-hidden="true" />
-            </ToolbarToggleItem>
-            <ToolbarToggleItem value="italic" size="icon-sm" aria-label="Italic">
-              <PhTextItalic aria-hidden="true" />
-            </ToolbarToggleItem>
+            <ToolbarToggleItem value="bold" icon-only>
+              <template #start-icon><PhTextB /></template>Bold</ToolbarToggleItem>
+            <ToolbarToggleItem value="italic" icon-only>
+              <template #start-icon><PhTextItalic /></template>Italic</ToolbarToggleItem>
           </ToolbarToggleGroup>
           <ToolbarGroup aria-label="History">
-            <ToolbarButton size="icon-sm" aria-label="Undo">
-              <PhArrowUUpLeft aria-hidden="true" />
-            </ToolbarButton>
+            <ToolbarButton icon-only>
+              <template #start-icon><PhArrowUUpLeft /></template>Undo</ToolbarButton>
           </ToolbarGroup>
         </Toolbar>
       </div>
@@ -661,12 +638,10 @@ const HistoryGroup = defineComponent({
   components: { PhArrowUUpLeft, PhEraser, ToolbarButton, ToolbarGroup },
   template: `
     <ToolbarGroup aria-label="History">
-      <ToolbarButton size="icon-sm" aria-label="Undo">
-        <PhArrowUUpLeft aria-hidden="true" />
-      </ToolbarButton>
-      <ToolbarButton size="icon-sm" aria-label="Clear canvas">
-        <PhEraser aria-hidden="true" />
-      </ToolbarButton>
+      <ToolbarButton icon-only>
+        <template #start-icon><PhArrowUUpLeft /></template>Undo</ToolbarButton>
+      <ToolbarButton icon-only>
+        <template #start-icon><PhEraser /></template>Clear canvas</ToolbarButton>
     </ToolbarGroup>
   `,
 });
@@ -710,20 +685,16 @@ export const VerticalTools: Story = {
     template: `
       <Toolbar orientation="vertical" aria-label="Canvas tools">
         <ToolbarToolGroup aria-label="Tools" default-value="select">
-          <ToolbarTool value="select" size="icon-sm" aria-label="Select">
-            <PhCursor aria-hidden="true" />
-          </ToolbarTool>
-          <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
-            <PhPencilSimple aria-hidden="true" />
-          </ToolbarTool>
+          <ToolbarTool value="select" icon-only>
+            <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+          <ToolbarTool value="draw" icon-only>
+            <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
         </ToolbarToolGroup>
         <ToolbarGroup aria-label="History">
-          <ToolbarButton size="icon-sm" aria-label="Undo">
-            <PhArrowUUpLeft aria-hidden="true" />
-          </ToolbarButton>
-          <ToolbarButton size="icon-sm" aria-label="Clear canvas">
-            <PhEraser aria-hidden="true" />
-          </ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhArrowUUpLeft /></template>Undo</ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhEraser /></template>Clear canvas</ToolbarButton>
         </ToolbarGroup>
       </Toolbar>
     `,
@@ -741,6 +712,89 @@ export const VerticalTools: Story = {
         .getByRole('button', { name: second })
         .getBoundingClientRect();
       await expect(below.top).toBeGreaterThanOrEqual(above.bottom);
+    }
+  },
+};
+
+export const IconOnly: Story = {
+  render: () => ({
+    components: {
+      PhArrowUUpLeft,
+      PhCursor,
+      PhTextB,
+      Toolbar,
+      ToolbarButton,
+      ToolbarToggleGroup,
+      ToolbarToggleItem,
+      ToolbarTool,
+      ToolbarToolGroup,
+    },
+    template: `
+      <Toolbar aria-label="Text formatting">
+        <ToolbarButton icon-only>
+          <template #start-icon><PhArrowUUpLeft /></template>Undo formatting</ToolbarButton>
+        <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+          <ToolbarToggleItem value="bold" icon-only>
+            <template #start-icon><PhTextB /></template>Bold</ToolbarToggleItem>
+        </ToolbarToggleGroup>
+        <ToolbarToolGroup aria-label="Tools" default-value="select">
+          <ToolbarTool value="select" icon-only>
+            <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+        </ToolbarToolGroup>
+      </Toolbar>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const toolbar = within(canvasElement).getByRole('toolbar', {
+      name: 'Text formatting',
+    });
+    for (const name of ['Undo formatting', 'Bold', 'Select']) {
+      const button = within(toolbar).getByRole('button', { name });
+      const { width, height } = button.getBoundingClientRect();
+      await expect(width).toBe(height);
+      await expect(within(button).getByText(name)).toHaveClass('nx:sr-only');
+    }
+  },
+};
+
+export const StartIcon: Story = {
+  render: () => ({
+    components: {
+      PhArrowUUpLeft,
+      PhCursor,
+      PhTextB,
+      Toolbar,
+      ToolbarButton,
+      ToolbarToggleGroup,
+      ToolbarToggleItem,
+      ToolbarTool,
+      ToolbarToolGroup,
+    },
+    template: `
+      <Toolbar aria-label="Text formatting">
+        <ToolbarButton>
+          <template #start-icon><PhArrowUUpLeft /></template>Undo formatting</ToolbarButton>
+        <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+          <ToolbarToggleItem value="bold">
+            <template #start-icon><PhTextB /></template>Bold</ToolbarToggleItem>
+        </ToolbarToggleGroup>
+        <ToolbarToolGroup aria-label="Tools" default-value="select">
+          <ToolbarTool value="select">
+            <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+        </ToolbarToolGroup>
+      </Toolbar>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const toolbar = within(canvasElement).getByRole('toolbar', {
+      name: 'Text formatting',
+    });
+    for (const name of ['Undo formatting', 'Bold', 'Select']) {
+      const button = within(toolbar).getByRole('button', { name });
+      await expect(
+        button.querySelector('[aria-hidden="true"] svg')
+      ).not.toBeNull();
+      await expect(button.querySelector('.nx\\:sr-only')).toBeNull();
     }
   },
 };
@@ -888,9 +942,8 @@ const AttachedExample = defineComponent({
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="bold" size="icon-sm" aria-label="Bold note">
-                    <span class="nx:font-bold">B</span>
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="bold" icon-only>
+                    <template #start-icon><span class="nx:font-bold">B</span></template>Bold note</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Bold</TooltipContent>
@@ -898,9 +951,8 @@ const AttachedExample = defineComponent({
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="italic" size="icon-sm" aria-label="Italic note">
-                    <span class="nx:italic">I</span>
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="italic" icon-only>
+                    <template #start-icon><span class="nx:italic">I</span></template>Italic note</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Italic</TooltipContent>
@@ -908,9 +960,8 @@ const AttachedExample = defineComponent({
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="underline" size="icon-sm" aria-label="Underline note">
-                    <span class="nx:underline">U</span>
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="underline" icon-only>
+                    <template #start-icon><span class="nx:underline">U</span></template>Underline note</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Underline</TooltipContent>
@@ -1063,13 +1114,12 @@ const SelectionExample = defineComponent({
           <Tooltip>
             <TooltipTrigger as-child>
               <ToolbarButton
-                size="icon-sm"
-                aria-label="Clear selection"
+                icon-only
+               
                 class="nx:text-muted-foreground"
                 @click="clearSelection"
               >
-                <PhX aria-hidden="true" />
-              </ToolbarButton>
+                <template #start-icon><PhX /></template>Clear selection</ToolbarButton>
             </TooltipTrigger>
             <TooltipContent>Clear selection</TooltipContent>
           </Tooltip>
@@ -1135,15 +1185,12 @@ export const ToolsWithPanels: Story = {
       <div class="nx:flex nx:min-h-64 nx:items-end">
         <Toolbar aria-label="Canvas">
           <ToolbarToolGroup aria-label="Drawing tools" default-value="select">
-            <ToolbarTool value="select" size="icon-sm" aria-label="Select">
-              <PhCursor aria-hidden="true" />
-            </ToolbarTool>
-            <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
-              <PhPencilSimple aria-hidden="true" />
-            </ToolbarTool>
-            <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
-              <PhEraser aria-hidden="true" />
-            </ToolbarTool>
+            <ToolbarTool value="select" icon-only>
+              <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+            <ToolbarTool value="draw" icon-only>
+              <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
+            <ToolbarTool value="erase" icon-only>
+              <template #start-icon><PhEraser /></template>Erase</ToolbarTool>
             <ToolbarToolPanel value="draw" side="top">
               <div class="nx:flex nx:items-center nx:gap-2">
                 <Checkbox :id="id + '-smooth'" :default-value="true" />
@@ -1158,9 +1205,8 @@ export const ToolsWithPanels: Story = {
             </ToolbarToolPanel>
           </ToolbarToolGroup>
           <ToolbarSeparator />
-          <ToolbarButton size="icon-sm" aria-label="Undo">
-            <PhArrowUUpLeft aria-hidden="true" />
-          </ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhArrowUUpLeft /></template>Undo</ToolbarButton>
         </Toolbar>
       </div>
     `,
@@ -1205,18 +1251,14 @@ const CanvasTools = defineComponent({
     <div class="nx:flex nx:min-h-64 nx:items-end nx:gap-4">
       <Toolbar aria-label="Canvas">
         <ToolbarToolGroup aria-label="Drawing tools" default-value="select" v-bind="$attrs">
-          <ToolbarTool value="select" size="icon-sm" aria-label="Select">
-            <PhCursor aria-hidden="true" />
-          </ToolbarTool>
-          <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
-            <PhPencilSimple aria-hidden="true" />
-          </ToolbarTool>
-          <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
-            <PhEraser aria-hidden="true" />
-          </ToolbarTool>
-          <ToolbarTool value="text" size="icon-sm" aria-label="Text" disabled>
-            <PhTextItalic aria-hidden="true" />
-          </ToolbarTool>
+          <ToolbarTool value="select" icon-only>
+            <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+          <ToolbarTool value="draw" icon-only>
+            <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
+          <ToolbarTool value="erase" icon-only>
+            <template #start-icon><PhEraser /></template>Erase</ToolbarTool>
+          <ToolbarTool value="text" icon-only disabled>
+            <template #start-icon><PhTextItalic /></template>Text</ToolbarTool>
           <ToolbarToolPanel value="draw" side="top" @close-auto-focus="$emit('draw-panel-close')">
             <div class="nx:flex nx:items-center nx:gap-2">
               <Checkbox :id="id + '-smooth'" :default-value="true" />
@@ -1380,7 +1422,7 @@ export const ControlledTools: Story = {
     ).toHaveAttribute('data-slot', 'toolbar-tool-group');
     await expect(draw).toHaveAttribute('data-slot', 'toolbar-tool');
     await expect(draw).toHaveAttribute('data-state', 'on');
-    await expect(draw).toHaveAttribute('data-size', 'icon-sm');
+    await expect(draw).toHaveAttribute('data-size', 'sm');
     await expect(
       canvas.getByRole('button', { name: 'Select' })
     ).toHaveAttribute('data-state', 'off');
@@ -1417,12 +1459,10 @@ const SwitchFromPanelDemo = defineComponent({
           default-open
           @value-change="(next) => (value = next)"
         >
-          <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
-            <PhPencilSimple aria-hidden="true" />
-          </ToolbarTool>
-          <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
-            <PhEraser aria-hidden="true" />
-          </ToolbarTool>
+          <ToolbarTool value="draw" icon-only>
+            <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
+          <ToolbarTool value="erase" icon-only>
+            <template #start-icon><PhEraser /></template>Erase</ToolbarTool>
           <ToolbarToolPanel value="draw" side="top" @close-auto-focus="$emit('draw-panel-close')">
             <Button size="sm" @click="value = 'erase'">Switch to eraser</Button>
           </ToolbarToolPanel>
@@ -1476,15 +1516,12 @@ const NamedPanelsDemo = defineComponent({
     <div class="nx:flex nx:min-h-64 nx:items-end">
       <Toolbar aria-label="Canvas">
         <ToolbarToolGroup aria-label="Drawing tools" default-value="select">
-          <ToolbarTool value="select" size="icon-sm" aria-label="Select">
-            <PhCursor aria-hidden="true" />
-          </ToolbarTool>
-          <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
-            <PhPencilSimple aria-hidden="true" />
-          </ToolbarTool>
-          <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
-            <PhEraser aria-hidden="true" />
-          </ToolbarTool>
+          <ToolbarTool value="select" icon-only>
+            <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+          <ToolbarTool value="draw" icon-only>
+            <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
+          <ToolbarTool value="erase" icon-only>
+            <template #start-icon><PhEraser /></template>Erase</ToolbarTool>
           <ToolbarToolPanel value="draw" side="top" aria-label="Brush options">
             <Button size="sm">Reset brush</Button>
           </ToolbarToolPanel>
@@ -1536,16 +1573,13 @@ export const AllVariants: Story = {
         <AttachedExample />
         <SelectionExample />
         <Toolbar variant="floating" aria-label="Floating canvas tools">
-          <ToolbarButton size="icon-sm" aria-label="Pointer">
-            <PhCursor aria-hidden="true" />
-          </ToolbarButton>
-          <ToolbarButton size="icon-sm" aria-label="Pencil">
-            <PhPencilSimple aria-hidden="true" />
-          </ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhCursor /></template>Pointer</ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhPencilSimple /></template>Pencil</ToolbarButton>
           <ToolbarSeparator />
-          <ToolbarButton size="icon-sm" aria-label="Undo last change">
-            <PhArrowUUpLeft aria-hidden="true" />
-          </ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhArrowUUpLeft /></template>Undo last change</ToolbarButton>
         </Toolbar>
       </div>
     `,

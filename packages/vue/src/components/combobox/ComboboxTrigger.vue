@@ -7,7 +7,10 @@ import { IconSelector } from '../../lib/icons';
 import { cn } from '../../lib/utils';
 import { Button, type ButtonProps } from '../button';
 
-export interface ComboboxTriggerProps extends Omit<ButtonProps, 'class'> {
+export interface ComboboxTriggerProps extends Omit<
+  ButtonProps,
+  'class' | 'iconOnly'
+> {
   class?: HTMLAttributes['class'];
 }
 
@@ -16,6 +19,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<ComboboxTriggerProps>(), {
   as: 'button',
   variant: 'outline',
+  loading: false,
   type: 'button',
 });
 

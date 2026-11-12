@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import { cva, type VariantProps } from 'class-variance-authority';
 
-import { cn } from '../../lib/utils';
+import { cn, type DistributiveOmit } from '../../lib/utils';
 import { Button } from '../button/button';
 import { Input } from '../input/input';
 import { Textarea } from '../textarea/textarea';
@@ -126,15 +126,32 @@ const inputGroupButtonVariants = cva(
   {
     variants: {
       size: {
-        xs: 'nx:h-auto nx:min-h-6 nx:gap-1 nx:rounded-sm nx:px-2 nx:has-[>svg]:px-2 nx:[&>svg]:size-icon-glyph-sm',
-        sm: 'nx:h-fit nx:min-h-8 nx:gap-1.5 nx:rounded-md nx:px-2.5 nx:has-[>svg]:px-2.5',
-        'icon-xs':
-          'nx:size-6 nx:min-h-0 nx:rounded-sm nx:p-0 nx:has-[>svg]:p-0',
-        'icon-sm': 'nx:size-8 nx:min-h-0 nx:p-0 nx:has-[>svg]:p-0',
+        xs: 'nx:h-auto nx:min-h-6 nx:rounded-sm',
+        sm: 'nx:h-fit nx:min-h-8',
+      },
+      iconOnly: {
+        false: '',
+        true: 'nx:p-0',
       },
     },
+    compoundVariants: [
+      {
+        iconOnly: false,
+        size: 'xs',
+        className:
+          'nx:gap-1 nx:px-2 nx:has-[>svg]:px-2 nx:[&>svg]:size-icon-glyph-sm',
+      },
+      {
+        iconOnly: false,
+        size: 'sm',
+        className: 'nx:gap-1.5 nx:rounded-md nx:px-2.5 nx:has-[>svg]:px-2.5',
+      },
+      { iconOnly: true, size: 'xs', className: 'nx:w-6' },
+      { iconOnly: true, size: 'sm', className: 'nx:w-8' },
+    ],
     defaultVariants: {
       size: 'xs',
+      iconOnly: false,
     },
   }
 );
@@ -142,8 +159,11 @@ const inputGroupButtonVariants = cva(
 /**
  * Props for the InputGroupButton component.
  */
-type InputGroupButtonProps = Omit<React.ComponentProps<typeof Button>, 'size'> &
-  VariantProps<typeof inputGroupButtonVariants>;
+type InputGroupButtonProps = DistributiveOmit<
+  React.ComponentProps<typeof Button>,
+  'size'
+> &
+  Pick<VariantProps<typeof inputGroupButtonVariants>, 'size'>;
 
 /**
  * Compact button sized to fit inside an `InputGroupAddon`. Uses the `ghost`
@@ -162,7 +182,10 @@ function InputGroupButton({
       data-slot="input-group-button"
       data-size={size}
       variant={variant}
-      className={cn(inputGroupButtonVariants({ size }), className)}
+      className={cn(
+        inputGroupButtonVariants({ size, iconOnly: props.iconOnly }),
+        className
+      )}
       {...props}
     />
   );

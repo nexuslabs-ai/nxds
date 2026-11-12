@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import { IconX } from '../../lib/icons';
 import { cn } from '../../lib/utils';
-import { buttonVariants } from '../button/button';
+import { buttonVariants } from '../button/button-variants';
 
 interface FilterChipProps extends Omit<
   React.ComponentProps<'button'>,

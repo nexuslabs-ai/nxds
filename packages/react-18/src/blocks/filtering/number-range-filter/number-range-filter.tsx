@@ -120,11 +120,9 @@ export function NumberRangeFilter({
                 </FilterConditionSegment>
               </PopoverTrigger>
             )}
-            <FilterConditionRemove
-              disabled={disabled}
-              aria-label={`Remove ${label} filter`}
-              onClick={remove}
-            />
+            <FilterConditionRemove disabled={disabled} onClick={remove}>
+              {`Remove ${label} filter`}
+            </FilterConditionRemove>
           </div>
         </FilterCondition>
       ) : (

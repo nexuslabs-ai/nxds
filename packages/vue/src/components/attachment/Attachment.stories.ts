@@ -93,9 +93,8 @@ export const Default: Story = {
           <AttachmentDescription>2.4 MB</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
-          <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf">
-            <PhX />
-          </Button>
+          <Button variant="ghost" size="sm" icon-only>
+            <template #start-icon><PhX /></template>Remove report.pdf</Button>
         </AttachmentActions>
       </Attachment>
     `,
@@ -141,9 +140,8 @@ export const States: Story = {
             <AttachmentDescription>PDF or PNG, up to 10 MB</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
-            <Button variant="ghost" size="icon-sm" aria-label="Dismiss">
-              <PhX />
-            </Button>
+            <Button variant="ghost" size="sm" icon-only>
+              <template #start-icon><PhX /></template>Dismiss</Button>
           </AttachmentActions>
         </Attachment>
         <Attachment state="uploading">
@@ -154,9 +152,8 @@ export const States: Story = {
             <AttachmentProgress :model-value="62" aria-label="Uploading report.pdf" />
           </AttachmentContent>
           <AttachmentActions>
-            <Button variant="ghost" size="icon-sm" aria-label="Cancel upload of report.pdf">
-              <PhX />
-            </Button>
+            <Button variant="ghost" size="sm" icon-only>
+              <template #start-icon><PhX /></template>Cancel upload of report.pdf</Button>
           </AttachmentActions>
         </Attachment>
         <Attachment state="processing">
@@ -166,9 +163,8 @@ export const States: Story = {
             <AttachmentDescription>Processing…</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
-            <Button variant="ghost" size="icon-sm" aria-label="Cancel processing of scan.png">
-              <PhX />
-            </Button>
+            <Button variant="ghost" size="sm" icon-only>
+              <template #start-icon><PhX /></template>Cancel processing of scan.png</Button>
           </AttachmentActions>
         </Attachment>
         <Attachment state="error">
@@ -178,12 +174,10 @@ export const States: Story = {
             <AttachmentDescription>Upload failed — file too large</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
-            <Button variant="ghost" size="icon-sm" aria-label="Retry upload of archive.zip">
-              <PhArrowClockwise />
-            </Button>
-            <Button variant="ghost" size="icon-sm" aria-label="Dismiss archive.zip">
-              <PhX />
-            </Button>
+            <Button variant="ghost" size="sm" icon-only>
+              <template #start-icon><PhArrowClockwise /></template>Retry upload of archive.zip</Button>
+            <Button variant="ghost" size="sm" icon-only>
+              <template #start-icon><PhX /></template>Dismiss archive.zip</Button>
           </AttachmentActions>
         </Attachment>
         <Attachment state="done">
@@ -195,12 +189,10 @@ export const States: Story = {
             <AttachmentDescription>8 KB · Uploaded just now</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
-            <Button variant="ghost" size="icon-sm" aria-label="Download notes.txt">
-              <PhDownloadSimple />
-            </Button>
-            <Button variant="ghost" size="icon-sm" aria-label="Remove notes.txt">
-              <PhX />
-            </Button>
+            <Button variant="ghost" size="sm" icon-only>
+              <template #start-icon><PhDownloadSimple /></template>Download notes.txt</Button>
+            <Button variant="ghost" size="sm" icon-only>
+              <template #start-icon><PhX /></template>Remove notes.txt</Button>
           </AttachmentActions>
         </Attachment>
       </div>
@@ -240,9 +232,8 @@ export const Sizes: Story = {
             <AttachmentDescription>2.4 MB</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
-            <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf">
-              <PhX />
-            </Button>
+            <Button variant="ghost" size="sm" icon-only>
+              <template #start-icon><PhX /></template>Remove report.pdf</Button>
           </AttachmentActions>
         </Attachment>
         <Attachment size="sm">
@@ -252,9 +243,8 @@ export const Sizes: Story = {
             <AttachmentDescription>8 KB</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
-            <Button variant="ghost" size="icon-sm" aria-label="Remove notes.txt">
-              <PhX />
-            </Button>
+            <Button variant="ghost" size="sm" icon-only>
+              <template #start-icon><PhX /></template>Remove notes.txt</Button>
           </AttachmentActions>
         </Attachment>
       </div>
@@ -385,9 +375,8 @@ export const LongFileName: Story = {
             <AttachmentDescription>2.4 MB</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
-            <Button variant="ghost" size="icon-sm" :aria-label="'Remove ' + name">
-              <PhX />
-            </Button>
+            <Button variant="ghost" size="sm" icon-only>
+              <template #start-icon><PhX /></template>Remove {{ name }}</Button>
           </AttachmentActions>
         </Attachment>
       </TooltipProvider>
@@ -424,9 +413,8 @@ export const ClickInteraction: ActionStory = {
           <AttachmentDescription>2.4 MB</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
-          <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf" @click="args.onRemove">
-            <PhX />
-          </Button>
+          <Button variant="ghost" size="sm" icon-only @click="args.onRemove">
+            <template #start-icon><PhX /></template>Remove report.pdf</Button>
         </AttachmentActions>
       </Attachment>
     `,
@@ -487,9 +475,8 @@ export const Disabled: ActionStory = {
           <AttachmentDescription>Uploading…</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
-          <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf" disabled @click="args.onRemove">
-            <PhX />
-          </Button>
+          <Button variant="ghost" size="sm" icon-only disabled @click="args.onRemove">
+            <template #start-icon><PhX /></template>Remove report.pdf</Button>
         </AttachmentActions>
       </Attachment>
     `,
@@ -527,9 +514,8 @@ export const WithDataAttributes: Story = {
           <AttachmentDescription>2.4 MB</AttachmentDescription>
         </AttachmentContent>
         <AttachmentActions>
-          <Button variant="ghost" size="icon-sm" aria-label="Remove report.pdf">
-            <PhX />
-          </Button>
+          <Button variant="ghost" size="sm" icon-only>
+            <template #start-icon><PhX /></template>Remove report.pdf</Button>
         </AttachmentActions>
       </Attachment>
     `,

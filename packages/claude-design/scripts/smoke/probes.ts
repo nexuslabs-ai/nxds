@@ -24,8 +24,8 @@ export const BUTTON: Omit<Probe, 'property'> = {
 export const ICON_BUTTON: Omit<Probe, 'property'> = {
   tree: {
     part: 'Button',
-    props: { size: 'icon', 'aria-label': 'Download' },
-    children: [{ part: 'svg' }],
+    props: { iconOnly: true, startIcon: { __icon: 'download' } },
+    children: ['Download'],
   },
   target: 'button svg',
 };

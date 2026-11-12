@@ -72,7 +72,7 @@ Motion answers input and then gets out of the way. Popovers, menus and routine s
 - Name an icon on an icon prop the same way: Button `start-icon="plus"`, Badge `left-icon="check-circle"`. `components/Icon/README.md` lists every name the system ships.
 - The props panel lists every icon name in a dropdown with a search box. A name outside that list draws nothing.
 - An icon takes the colour of its text. Don't tint icons on their own.
-- An icon-only button needs an `aria-label`.
+- An icon-only button sets `icon-only` and names its icon with `start-icon`. Its text is the name screen readers read: Button `icon-only start-icon="download"` with the text `Download`.
 - No emoji as icons.
 
 ## Using the components

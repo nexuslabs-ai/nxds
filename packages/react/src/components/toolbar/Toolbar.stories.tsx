@@ -3,23 +3,21 @@ import * as React from 'react';
 import {
   ArchiveIcon,
   ArrowUUpLeftIcon,
+  CaretDownIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
   CursorIcon,
+  DotsThreeIcon,
   EraserIcon,
   PencilSimpleIcon,
   TextBIcon,
   TextItalicIcon,
   TextUnderlineIcon,
+  XIcon,
 } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import {
-  IconChevronDown,
-  IconChevronLeft,
-  IconChevronRight,
-  IconDots,
-  IconX,
-} from '../../lib/icons';
 import { Button } from '../button/button';
 import { Checkbox } from '../checkbox/checkbox';
 import {
@@ -64,7 +62,8 @@ const meta: Meta<typeof Toolbar> = {
           '- Label the toolbar with `aria-label` or `aria-labelledby`.',
           '- Build it from ToolbarButton, ToolbarLink, ToolbarToggleGroup and ToolbarToggleItem so every control joins the arrow-key order.',
           '- For tools with options, use ToolbarToolGroup, ToolbarTool and ToolbarToolPanel. Choosing another tool swaps the open panel. Escape returns focus to the tool.',
-          '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading` or icon slots.',
+          '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading`.',
+          '- ToolbarButton, ToolbarToggleItem and ToolbarTool take `startIcon` and `iconOnly`. `iconOnly` shows only the icon, and the text stays as the hidden name.',
           '- Use `variant="floating"` for a toolbar that sits over content, like a canvas.',
           '- Use `asChild` to make a toolbar control a menu trigger.',
           '- Keep text fields outside the toolbar, because arrow keys would conflict with typing.',
@@ -88,12 +87,12 @@ function EditorToolbar() {
           <TooltipTrigger asChild>
             <span className="nx:inline-flex">
               <ToolbarButton
-                size="icon-sm"
-                aria-label="Undo formatting"
+                iconOnly
                 onClick={() => setFormatting([])}
                 className="nx:text-muted-foreground"
+                startIcon={<ArrowUUpLeftIcon />}
               >
-                <ArrowUUpLeftIcon aria-hidden="true" />
+                Undo formatting
               </ToolbarButton>
             </span>
           </TooltipTrigger>
@@ -111,10 +110,10 @@ function EditorToolbar() {
               <span className="nx:inline-flex">
                 <ToolbarToggleItem
                   value="bold"
-                  aria-label="Bold"
-                  size="icon-sm"
+                  iconOnly
+                  startIcon={<TextBIcon />}
                 >
-                  <TextBIcon aria-hidden="true" />
+                  Bold
                 </ToolbarToggleItem>
               </span>
             </TooltipTrigger>
@@ -125,10 +124,10 @@ function EditorToolbar() {
               <span className="nx:inline-flex">
                 <ToolbarToggleItem
                   value="italic"
-                  aria-label="Italic"
-                  size="icon-sm"
+                  iconOnly
+                  startIcon={<TextItalicIcon />}
                 >
-                  <TextItalicIcon aria-hidden="true" />
+                  Italic
                 </ToolbarToggleItem>
               </span>
             </TooltipTrigger>
@@ -139,10 +138,10 @@ function EditorToolbar() {
               <span className="nx:inline-flex">
                 <ToolbarToggleItem
                   value="underline"
-                  aria-label="Underline"
-                  size="icon-sm"
+                  iconOnly
+                  startIcon={<TextUnderlineIcon />}
                 >
-                  <TextUnderlineIcon aria-hidden="true" />
+                  Underline
                 </ToolbarToggleItem>
               </span>
             </TooltipTrigger>
@@ -208,8 +207,8 @@ function FileToolbar() {
       <ToolbarSeparator />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarButton size="icon-sm" aria-label="More file actions">
-            <IconDots />
+          <ToolbarButton iconOnly startIcon={<DotsThreeIcon />}>
+            More file actions
           </ToolbarButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
@@ -256,12 +255,12 @@ function CalendarToolbar() {
   return (
     <Toolbar aria-label="Calendar controls">
       <ToolbarGroup aria-label="Date navigation">
-        <ToolbarButton size="icon-sm" aria-label="Previous period">
-          <IconChevronLeft />
+        <ToolbarButton iconOnly startIcon={<CaretLeftIcon />}>
+          Previous period
         </ToolbarButton>
         <ToolbarButton>Today</ToolbarButton>
-        <ToolbarButton size="icon-sm" aria-label="Next period">
-          <IconChevronRight />
+        <ToolbarButton iconOnly startIcon={<CaretRightIcon />}>
+          Next period
         </ToolbarButton>
       </ToolbarGroup>
       <ToolbarToggleGroup
@@ -453,8 +452,8 @@ export const InsideTooltipProvider: Story = {
       <Toolbar aria-label="Text formatting">
         <Tooltip>
           <TooltipTrigger asChild>
-            <ToolbarButton size="icon-sm" aria-label="Bold">
-              <TextBIcon aria-hidden="true" />
+            <ToolbarButton iconOnly startIcon={<TextBIcon />}>
+              Bold
             </ToolbarButton>
           </TooltipTrigger>
           <TooltipContent>Bold</TooltipContent>
@@ -479,13 +478,7 @@ export const InsideTooltipProvider: Story = {
 export const Sizes: Story = {
   render: () => (
     <div className="nx:grid nx:gap-4">
-      {(
-        [
-          ['sm', 'icon-sm'],
-          ['default', 'icon'],
-          ['lg', 'icon-lg'],
-        ] as const
-      ).map(([size, iconSize]) => (
+      {(['sm', 'default', 'lg'] as const).map((size) => (
         <Toolbar key={size} aria-label={size + ' controls'}>
           <ToolbarButton size={size}>Action</ToolbarButton>
           <ToolbarToggleGroup type="multiple" aria-label="Formatting">
@@ -494,8 +487,8 @@ export const Sizes: Story = {
             </ToolbarToggleItem>
           </ToolbarToggleGroup>
           <ToolbarSeparator />
-          <ToolbarButton size={iconSize} aria-label="Undo">
-            <ArrowUUpLeftIcon aria-hidden="true" />
+          <ToolbarButton size={size} iconOnly startIcon={<ArrowUUpLeftIcon />}>
+            Undo
           </ToolbarButton>
         </Toolbar>
       ))}
@@ -530,19 +523,19 @@ export const Floating: Story = {
     <div className="nx:flex nx:min-h-40 nx:items-end nx:justify-center">
       <Toolbar variant="floating" aria-label="Canvas">
         <ToolbarToolGroup aria-label="Drawing tools" defaultValue="select">
-          <ToolbarTool value="select" size="icon-sm" aria-label="Select">
-            <CursorIcon aria-hidden="true" />
+          <ToolbarTool value="select" iconOnly startIcon={<CursorIcon />}>
+            Select
           </ToolbarTool>
-          <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
-            <PencilSimpleIcon aria-hidden="true" />
+          <ToolbarTool value="draw" iconOnly startIcon={<PencilSimpleIcon />}>
+            Draw
           </ToolbarTool>
-          <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
-            <EraserIcon aria-hidden="true" />
+          <ToolbarTool value="erase" iconOnly startIcon={<EraserIcon />}>
+            Erase
           </ToolbarTool>
         </ToolbarToolGroup>
         <ToolbarSeparator />
-        <ToolbarButton size="icon-sm" aria-label="Undo">
-          <ArrowUUpLeftIcon aria-hidden="true" />
+        <ToolbarButton iconOnly startIcon={<ArrowUUpLeftIcon />}>
+          Undo
         </ToolbarButton>
       </Toolbar>
     </div>
@@ -571,28 +564,28 @@ export const GroupSpacing: Story = {
           aria-label={`${variant} bar`}
         >
           <ToolbarToolGroup aria-label="Tools" defaultValue="select">
-            <ToolbarTool value="select" size="icon-sm" aria-label="Select">
-              <CursorIcon aria-hidden="true" />
+            <ToolbarTool value="select" iconOnly startIcon={<CursorIcon />}>
+              Select
             </ToolbarTool>
-            <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
-              <PencilSimpleIcon aria-hidden="true" />
+            <ToolbarTool value="draw" iconOnly startIcon={<PencilSimpleIcon />}>
+              Draw
             </ToolbarTool>
           </ToolbarToolGroup>
           <ToolbarToggleGroup type="multiple" aria-label="Formatting">
-            <ToolbarToggleItem value="bold" size="icon-sm" aria-label="Bold">
-              <TextBIcon aria-hidden="true" />
+            <ToolbarToggleItem value="bold" iconOnly startIcon={<TextBIcon />}>
+              Bold
             </ToolbarToggleItem>
             <ToolbarToggleItem
               value="italic"
-              size="icon-sm"
-              aria-label="Italic"
+              iconOnly
+              startIcon={<TextItalicIcon />}
             >
-              <TextItalicIcon aria-hidden="true" />
+              Italic
             </ToolbarToggleItem>
           </ToolbarToggleGroup>
           <ToolbarGroup aria-label="History">
-            <ToolbarButton size="icon-sm" aria-label="Undo">
-              <ArrowUUpLeftIcon aria-hidden="true" />
+            <ToolbarButton iconOnly startIcon={<ArrowUUpLeftIcon />}>
+              Undo
             </ToolbarButton>
           </ToolbarGroup>
         </Toolbar>
@@ -615,11 +608,11 @@ export const GroupSpacing: Story = {
 function HistoryGroup() {
   return (
     <ToolbarGroup aria-label="History">
-      <ToolbarButton size="icon-sm" aria-label="Undo">
-        <ArrowUUpLeftIcon aria-hidden="true" />
+      <ToolbarButton iconOnly startIcon={<ArrowUUpLeftIcon />}>
+        Undo
       </ToolbarButton>
-      <ToolbarButton size="icon-sm" aria-label="Clear canvas">
-        <EraserIcon aria-hidden="true" />
+      <ToolbarButton iconOnly startIcon={<EraserIcon />}>
+        Clear canvas
       </ToolbarButton>
     </ToolbarGroup>
   );
@@ -649,19 +642,19 @@ export const VerticalTools: Story = {
   render: () => (
     <Toolbar orientation="vertical" aria-label="Canvas tools">
       <ToolbarToolGroup aria-label="Tools" defaultValue="select">
-        <ToolbarTool value="select" size="icon-sm" aria-label="Select">
-          <CursorIcon aria-hidden="true" />
+        <ToolbarTool value="select" iconOnly startIcon={<CursorIcon />}>
+          Select
         </ToolbarTool>
-        <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
-          <PencilSimpleIcon aria-hidden="true" />
+        <ToolbarTool value="draw" iconOnly startIcon={<PencilSimpleIcon />}>
+          Draw
         </ToolbarTool>
       </ToolbarToolGroup>
       <ToolbarGroup aria-label="History">
-        <ToolbarButton size="icon-sm" aria-label="Undo">
-          <ArrowUUpLeftIcon aria-hidden="true" />
+        <ToolbarButton iconOnly startIcon={<ArrowUUpLeftIcon />}>
+          Undo
         </ToolbarButton>
-        <ToolbarButton size="icon-sm" aria-label="Clear canvas">
-          <EraserIcon aria-hidden="true" />
+        <ToolbarButton iconOnly startIcon={<EraserIcon />}>
+          Clear canvas
         </ToolbarButton>
       </ToolbarGroup>
     </Toolbar>
@@ -683,6 +676,98 @@ export const VerticalTools: Story = {
   },
 };
 
+export const IconOnly: Story = {
+  render: () => (
+    <Toolbar aria-label="Text formatting">
+      <ToolbarButton iconOnly startIcon={<ArrowUUpLeftIcon />}>
+        Undo formatting
+      </ToolbarButton>
+      <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+        <ToolbarToggleItem value="bold" iconOnly startIcon={<TextBIcon />}>
+          Bold
+        </ToolbarToggleItem>
+      </ToolbarToggleGroup>
+      <ToolbarToolGroup aria-label="Tools" defaultValue="select">
+        <ToolbarTool value="select" iconOnly startIcon={<CursorIcon />}>
+          Select
+        </ToolbarTool>
+      </ToolbarToolGroup>
+    </Toolbar>
+  ),
+  play: async ({ canvasElement }) => {
+    const toolbar = within(canvasElement).getByRole('toolbar', {
+      name: 'Text formatting',
+    });
+    for (const name of ['Undo formatting', 'Bold', 'Select']) {
+      const button = within(toolbar).getByRole('button', { name });
+      const { width, height } = button.getBoundingClientRect();
+      await expect(width).toBe(height);
+      await expect(within(button).getByText(name)).toHaveClass('nx:sr-only');
+    }
+  },
+};
+
+export const StartIcon: Story = {
+  render: () => (
+    <Toolbar aria-label="Text formatting">
+      <ToolbarButton startIcon={<ArrowUUpLeftIcon />}>
+        Undo formatting
+      </ToolbarButton>
+      <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+        <ToolbarToggleItem value="bold" startIcon={<TextBIcon />}>
+          Bold
+        </ToolbarToggleItem>
+      </ToolbarToggleGroup>
+      <ToolbarToolGroup aria-label="Tools" defaultValue="select">
+        <ToolbarTool value="select" startIcon={<CursorIcon />}>
+          Select
+        </ToolbarTool>
+      </ToolbarToolGroup>
+    </Toolbar>
+  ),
+  play: async ({ canvasElement }) => {
+    const toolbar = within(canvasElement).getByRole('toolbar', {
+      name: 'Text formatting',
+    });
+    for (const name of ['Undo formatting', 'Bold', 'Select']) {
+      const button = within(toolbar).getByRole('button', { name });
+      await expect(
+        button.querySelector('[aria-hidden="true"] svg')
+      ).not.toBeNull();
+      await expect(button.querySelector('.nx\\:sr-only')).toBeNull();
+    }
+  },
+};
+
+// A screen-size switch is one boolean prop.
+function _ResponsiveFormatting({ isNarrow }: { isNarrow: boolean }) {
+  return (
+    <Toolbar aria-label="Text formatting">
+      <ToolbarButton iconOnly={isNarrow} startIcon={<ArrowUUpLeftIcon />}>
+        Undo formatting
+      </ToolbarButton>
+      <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+        <ToolbarToggleItem
+          value="bold"
+          iconOnly={isNarrow}
+          startIcon={<TextBIcon />}
+        >
+          Bold
+        </ToolbarToggleItem>
+      </ToolbarToggleGroup>
+      <ToolbarToolGroup aria-label="Tools" defaultValue="select">
+        <ToolbarTool
+          value="select"
+          iconOnly={isNarrow}
+          startIcon={<CursorIcon />}
+        >
+          Select
+        </ToolbarTool>
+      </ToolbarToolGroup>
+    </Toolbar>
+  );
+}
+
 export const AllVariants: Story = {
   render: () => (
     <div className="nx:grid nx:gap-10">
@@ -690,15 +775,15 @@ export const AllVariants: Story = {
       <AttachedExample />
       <SelectionExample />
       <Toolbar variant="floating" aria-label="Floating canvas tools">
-        <ToolbarButton size="icon-sm" aria-label="Pointer">
-          <CursorIcon aria-hidden="true" />
+        <ToolbarButton iconOnly startIcon={<CursorIcon />}>
+          Pointer
         </ToolbarButton>
-        <ToolbarButton size="icon-sm" aria-label="Pencil">
-          <PencilSimpleIcon aria-hidden="true" />
+        <ToolbarButton iconOnly startIcon={<PencilSimpleIcon />}>
+          Pencil
         </ToolbarButton>
         <ToolbarSeparator />
-        <ToolbarButton size="icon-sm" aria-label="Undo last change">
-          <ArrowUUpLeftIcon aria-hidden="true" />
+        <ToolbarButton iconOnly startIcon={<ArrowUUpLeftIcon />}>
+          Undo last change
         </ToolbarButton>
       </Toolbar>
     </div>
@@ -766,7 +851,7 @@ function InlineExample() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <ToolbarButton className="nx:ms-auto">
-              Show <IconChevronDown aria-hidden="true" />
+              Show <CaretDownIcon aria-hidden="true" />
             </ToolbarButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -819,10 +904,10 @@ function AttachedExample() {
                 <span className="nx:inline-flex">
                   <ToolbarToggleItem
                     value="bold"
-                    size="icon-sm"
-                    aria-label="Bold note"
+                    iconOnly
+                    startIcon={<span className="nx:font-bold">B</span>}
                   >
-                    <span className="nx:font-bold">B</span>
+                    Bold note
                   </ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
@@ -833,10 +918,10 @@ function AttachedExample() {
                 <span className="nx:inline-flex">
                   <ToolbarToggleItem
                     value="italic"
-                    size="icon-sm"
-                    aria-label="Italic note"
+                    iconOnly
+                    startIcon={<span className="nx:italic">I</span>}
                   >
-                    <span className="nx:italic">I</span>
+                    Italic note
                   </ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
@@ -847,10 +932,10 @@ function AttachedExample() {
                 <span className="nx:inline-flex">
                   <ToolbarToggleItem
                     value="underline"
-                    size="icon-sm"
-                    aria-label="Underline note"
+                    iconOnly
+                    startIcon={<span className="nx:underline">U</span>}
                   >
-                    <span className="nx:underline">U</span>
+                    Underline note
                   </ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
@@ -861,7 +946,7 @@ function AttachedExample() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <ToolbarButton>
-                More <IconChevronDown aria-hidden="true" />
+                More <CaretDownIcon aria-hidden="true" />
               </ToolbarButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -971,12 +1056,12 @@ function SelectionExample() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <ToolbarButton
-                  size="icon-sm"
-                  aria-label="Clear selection"
+                  iconOnly
                   className="nx:text-muted-foreground"
                   onClick={clearSelection}
+                  startIcon={<XIcon />}
                 >
-                  <IconX aria-hidden="true" />
+                  Clear selection
                 </ToolbarButton>
               </TooltipTrigger>
               <TooltipContent>Clear selection</TooltipContent>
@@ -1106,14 +1191,14 @@ export const ToolsWithPanels: Story = {
       <div className="nx:flex nx:min-h-64 nx:items-end">
         <Toolbar aria-label="Canvas">
           <ToolbarToolGroup aria-label="Drawing tools" defaultValue="select">
-            <ToolbarTool value="select" size="icon-sm" aria-label="Select">
-              <CursorIcon aria-hidden="true" />
+            <ToolbarTool value="select" iconOnly startIcon={<CursorIcon />}>
+              Select
             </ToolbarTool>
-            <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
-              <PencilSimpleIcon aria-hidden="true" />
+            <ToolbarTool value="draw" iconOnly startIcon={<PencilSimpleIcon />}>
+              Draw
             </ToolbarTool>
-            <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
-              <EraserIcon aria-hidden="true" />
+            <ToolbarTool value="erase" iconOnly startIcon={<EraserIcon />}>
+              Erase
             </ToolbarTool>
             <ToolbarToolPanel value="draw" side="top">
               <div className="nx:flex nx:items-center nx:gap-2">
@@ -1129,8 +1214,8 @@ export const ToolsWithPanels: Story = {
             </ToolbarToolPanel>
           </ToolbarToolGroup>
           <ToolbarSeparator />
-          <ToolbarButton size="icon-sm" aria-label="Undo">
-            <ArrowUUpLeftIcon aria-hidden="true" />
+          <ToolbarButton iconOnly startIcon={<ArrowUUpLeftIcon />}>
+            Undo
           </ToolbarButton>
         </Toolbar>
       </div>
@@ -1172,17 +1257,22 @@ function CanvasTools({
           defaultValue="select"
           {...props}
         >
-          <ToolbarTool value="select" size="icon-sm" aria-label="Select">
-            <CursorIcon aria-hidden="true" />
+          <ToolbarTool value="select" iconOnly startIcon={<CursorIcon />}>
+            Select
           </ToolbarTool>
-          <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
-            <PencilSimpleIcon aria-hidden="true" />
+          <ToolbarTool value="draw" iconOnly startIcon={<PencilSimpleIcon />}>
+            Draw
           </ToolbarTool>
-          <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
-            <EraserIcon aria-hidden="true" />
+          <ToolbarTool value="erase" iconOnly startIcon={<EraserIcon />}>
+            Erase
           </ToolbarTool>
-          <ToolbarTool value="text" size="icon-sm" aria-label="Text" disabled>
-            <TextItalicIcon aria-hidden="true" />
+          <ToolbarTool
+            value="text"
+            iconOnly
+            disabled
+            startIcon={<TextItalicIcon />}
+          >
+            Text
           </ToolbarTool>
           <ToolbarToolPanel
             value="draw"
@@ -1324,7 +1414,7 @@ export const ControlledTools: ToolStory = {
     ).toHaveAttribute('data-slot', 'toolbar-tool-group');
     await expect(draw).toHaveAttribute('data-slot', 'toolbar-tool');
     await expect(draw).toHaveAttribute('data-state', 'on');
-    await expect(draw).toHaveAttribute('data-size', 'icon-sm');
+    await expect(draw).toHaveAttribute('data-size', 'sm');
     await expect(
       canvas.getByRole('button', { name: 'Select' })
     ).toHaveAttribute('data-state', 'off');
@@ -1354,11 +1444,11 @@ function SwitchFromPanelDemo({
           onValueChange={setValue}
           defaultOpen
         >
-          <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
-            <PencilSimpleIcon aria-hidden="true" />
+          <ToolbarTool value="draw" iconOnly startIcon={<PencilSimpleIcon />}>
+            Draw
           </ToolbarTool>
-          <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
-            <EraserIcon aria-hidden="true" />
+          <ToolbarTool value="erase" iconOnly startIcon={<EraserIcon />}>
+            Erase
           </ToolbarTool>
           <ToolbarToolPanel
             value="draw"
@@ -1403,14 +1493,14 @@ function NamedPanelsDemo() {
     <div className="nx:flex nx:min-h-64 nx:items-end">
       <Toolbar aria-label="Canvas">
         <ToolbarToolGroup aria-label="Drawing tools" defaultValue="select">
-          <ToolbarTool value="select" size="icon-sm" aria-label="Select">
-            <CursorIcon aria-hidden="true" />
+          <ToolbarTool value="select" iconOnly startIcon={<CursorIcon />}>
+            Select
           </ToolbarTool>
-          <ToolbarTool value="draw" size="icon-sm" aria-label="Draw">
-            <PencilSimpleIcon aria-hidden="true" />
+          <ToolbarTool value="draw" iconOnly startIcon={<PencilSimpleIcon />}>
+            Draw
           </ToolbarTool>
-          <ToolbarTool value="erase" size="icon-sm" aria-label="Erase">
-            <EraserIcon aria-hidden="true" />
+          <ToolbarTool value="erase" iconOnly startIcon={<EraserIcon />}>
+            Erase
           </ToolbarTool>
           <ToolbarToolPanel value="draw" side="top" aria-label="Brush options">
             <Button size="sm">Reset brush</Button>

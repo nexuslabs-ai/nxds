@@ -161,18 +161,18 @@ export const WithSeparator: Story = {
   },
   render: () => (
     <ButtonGroup>
-      <Button variant="ghost" size="icon" aria-label="Bold">
-        <TextBIcon />
+      <Button variant="ghost" iconOnly startIcon={<TextBIcon />}>
+        Bold
       </Button>
-      <Button variant="ghost" size="icon" aria-label="Italic">
-        <TextItalicIcon />
+      <Button variant="ghost" iconOnly startIcon={<TextItalicIcon />}>
+        Italic
       </Button>
-      <Button variant="ghost" size="icon" aria-label="Underline">
-        <TextUnderlineIcon />
+      <Button variant="ghost" iconOnly startIcon={<TextUnderlineIcon />}>
+        Underline
       </Button>
       <ButtonGroupSeparator />
-      <Button variant="ghost" size="icon" aria-label="Add link">
-        <LinkIcon />
+      <Button variant="ghost" iconOnly startIcon={<LinkIcon />}>
+        Add link
       </Button>
     </ButtonGroup>
   ),
@@ -183,6 +183,30 @@ export const WithSeparator: Story = {
 
     await expect(separator).toBeInTheDocument();
     await expect(separator).toHaveAttribute('data-orientation', 'vertical');
+  },
+};
+
+// The group's size reaches an icon-only member, which stays square.
+export const IconOnlyInSmallGroup: Story = {
+  render: () => (
+    <ButtonGroup size="sm">
+      <Button variant="outline">Copy link</Button>
+      <Button variant="outline" iconOnly startIcon={<CaretDownIcon />}>
+        More share options
+      </Button>
+    </ButtonGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const text = canvas.getByRole('button', { name: 'Copy link' });
+    const icon = canvas.getByRole('button', { name: 'More share options' });
+    const { width, height } = icon.getBoundingClientRect();
+
+    await expect(icon).toHaveAttribute('data-size', 'sm');
+    // `sm` is 32px high.
+    await expect(height).toBe(32);
+    await expect(width).toBe(height);
+    await expect(text.getBoundingClientRect().height).toBe(height);
   },
 };
 
