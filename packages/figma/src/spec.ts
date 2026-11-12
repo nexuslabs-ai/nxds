@@ -101,10 +101,10 @@ export interface TextLayer extends LayerBase {
   font: {
     family: string;
     weight: number;
-    size: number;
+    size: Bound;
     /** Undefined for `normal`. */
-    lineHeight?: number;
-    letterSpacing: number;
+    lineHeight?: Bound;
+    letterSpacing: Bound;
   };
   fill: Paint;
   textCase: 'ORIGINAL' | 'UPPER';
@@ -114,11 +114,21 @@ export interface TextLayer extends LayerBase {
   autoResize: 'WIDTH_AND_HEIGHT' | 'HEIGHT' | 'NONE';
 }
 
-/** An icon or other SVG, imported as vectors. `fill` is the colour `currentColor` drew. */
+/** An SVG that isn't an icon, such as a chart, imported as vectors. Each shape's colour that came from a token is bound to it. */
 export interface VectorLayer extends LayerBase {
   type: 'SVG';
   svg: string;
-  fill?: Paint;
+  /** Tokens by the `#rrggbb` colour they drew in this SVG. */
+  colors: Record<string, string>;
+}
+
+/** An instance of an icon from the icon set, recoloured to the colour it drew in. */
+export interface IconLayer extends LayerBase {
+  type: 'ICON';
+  icon: string;
+  fill: Paint;
+  /** The instance-swap component property that picks this icon. */
+  swapProperty?: string;
 }
 
 /** An instance of another component this file builds, such as a Button inside an Alert. */
@@ -129,9 +139,18 @@ export interface InstanceLayer extends LayerBase {
   variant: Record<string, string>;
   /** Text property overrides, by property name. */
   texts: Record<string, string>;
+  /** Boolean property overrides, by property name. */
+  booleans: Record<string, boolean>;
+  /** Instance-swap overrides, by property name: the icon each shows. */
+  swaps: Record<string, string>;
 }
 
-export type Layer = FrameLayer | TextLayer | VectorLayer | InstanceLayer;
+export type Layer =
+  | FrameLayer
+  | TextLayer
+  | VectorLayer
+  | IconLayer
+  | InstanceLayer;
 
 export interface VariantSpec {
   /** By variant property name. */
@@ -150,6 +169,8 @@ export interface ComponentSpec {
   variantProperties: { name: string; values: string[] }[];
   booleanProperties: { name: string; default: boolean }[];
   textProperties: { name: string; default: string }[];
+  /** Instance-swap properties, with the icon each shows by default. */
+  swapProperties: { name: string; default: string }[];
   variants: VariantSpec[];
 }
 
@@ -178,6 +199,8 @@ export interface TextStyleSpec {
   size: number;
   lineHeight?: number;
   letterSpacing: number;
+  /** The typography tokens its class declares, by the text field each sets. */
+  variables: { fontSize?: string; lineHeight?: string; letterSpacing?: string };
   description: string;
 }
 
@@ -188,13 +211,22 @@ export interface EffectStyleSpec {
   description: string;
 }
 
+export interface IconSpec {
+  /** The name `Nxds.Icon` takes, such as `plus` or `check-circle-fill`. */
+  name: string;
+  svg: string;
+}
+
 export interface CaptureFile {
   format: typeof CAPTURE_FORMAT;
-  version: 1;
+  version: 2;
   nxds: { release: string; theme: Record<string, string> };
   collections: CollectionSpec[];
   textStyles: TextStyleSpec[];
   effectStyles: EffectStyleSpec[];
+  /** The icon set; its components take the colour token `iconColor`. */
+  icons: IconSpec[];
+  iconColor: string;
   /** In build order: a component comes after every component it holds an instance of. */
   components: ComponentSpec[];
 }
@@ -211,12 +243,13 @@ export interface UnboundValue {
 
 export interface BuildReport {
   format: typeof REPORT_FORMAT;
-  version: 1;
+  version: 2;
   created: {
     collections: number;
     variables: number;
     textStyles: number;
     effectStyles: number;
+    icons: number;
     componentSets: number;
     components: number;
     instances: number;
@@ -243,9 +276,8 @@ const css = ({ r, g, b, a }: Rgba) =>
 
 /**
  * Every value in a variant that isn't bound to a variable or style: colours,
- * sizes, padding, gaps, radii, stroke widths, shadows and text without a
- * text style. Zero and fully transparent values are left out, since there is
- * nothing to bind.
+ * sizes, padding, gaps, radii, stroke widths, shadows and type. Zero and
+ * fully transparent values are left out, since there is nothing to bind.
  */
 export function unboundValues(component: string, variant: VariantSpec) {
   const found: UnboundValue[] = [];
@@ -258,19 +290,18 @@ export function unboundValues(component: string, variant: VariantSpec) {
       value,
     });
   const bound = (path: string[], property: string, value: Bound) => {
-    if (value.token === undefined && value.value !== 0) {
+    if (value.token === undefined && value.value !== 0)
       add(path, property, `${value.value}px`);
-    }
   };
   const paint = (path: string[], property: string, value: Paint) => {
-    if (value.token === undefined && value.color.a > 0) {
+    if (value.token === undefined && value.color.a > 0)
       add(path, property, css(value.color));
-    }
   };
   const visit = (layer: Layer, parent: string[]) => {
     const path = [...parent, layer.name];
-    // An instance takes its size from its component, which reports its own.
-    if (layer.type === 'INSTANCE') return;
+    // An instance takes its size from its component, which reports its own,
+    // and a layer drawn at opacity 0, such as an unchecked tick, shows no value.
+    if (layer.type === 'INSTANCE' || layer.opacity === 0) return;
     // A stretched layer, such as a focus ring, takes its size from its parent.
     if (!layer.absolute?.stretch) {
       if (layer.sizing.horizontal === 'FIXED')
@@ -281,11 +312,13 @@ export function unboundValues(component: string, variant: VariantSpec) {
     if (layer.type === 'TEXT') {
       paint(path, 'text colour', layer.fill);
       if (!layer.style) {
-        add(path, 'text style', `${layer.font.size}px ${layer.font.weight}`);
+        bound(path, 'font size', layer.font.size);
+        if (layer.font.lineHeight)
+          bound(path, 'line height', layer.font.lineHeight);
+        bound(path, 'letter spacing', layer.font.letterSpacing);
       }
     }
-    if (layer.type === 'SVG' && layer.fill)
-      paint(path, 'icon colour', layer.fill);
+    if (layer.type === 'ICON') paint(path, 'icon colour', layer.fill);
     if (layer.type !== 'FRAME') return;
     for (const fill of layer.fills) paint(path, 'fill', fill);
     if (layer.stroke) {
@@ -302,9 +335,8 @@ export function unboundValues(component: string, variant: VariantSpec) {
     ] as const) {
       bound(path, `radius ${corner}`, layer.radius[corner]);
     }
-    if (layer.shadow && !layer.shadow.style) {
+    if (layer.shadow && !layer.shadow.style)
       add(path, 'shadow', `${layer.shadow.effects.length} shadow(s)`);
-    }
     if (layer.layout) {
       bound(path, 'gap', layer.layout.gap);
       if (layer.layout.wrap) bound(path, 'line gap', layer.layout.lineGap);

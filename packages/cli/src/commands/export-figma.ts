@@ -78,7 +78,7 @@ const plural = (count: number, word: string) =>
 function reportLines(report: BuildReport, relative: string) {
   const { created } = report;
   const lines = [
-    `The plugin built ${plural(created.componentSets, 'component set')} and ${plural(created.components, 'component')}, with ${plural(created.instances, 'nested instance')}, ${plural(created.variables, 'variable')}, ${plural(created.textStyles, 'text style')} and ${plural(created.effectStyles, 'shadow style')}.`,
+    `The plugin built ${plural(created.componentSets, 'component set')} and ${plural(created.components, 'component')}, with ${plural(created.instances, 'nested instance')}, ${plural(created.icons, 'icon')}, ${plural(created.variables, 'variable')}, ${plural(created.textStyles, 'text style')} and ${plural(created.effectStyles, 'shadow style')}.`,
     report.darkModeError === undefined
       ? `Colour modes: ${report.modes.join(' and ')}.`
       : `Figma refused the Dark mode: "${report.darkModeError}". The file has Light only.`,
@@ -138,9 +138,14 @@ export async function exportFigma(
   mkdirSync(out, { recursive: true });
   rmSync(path.join(out, 'screenshots'), { recursive: true, force: true });
   rmSync(path.join(out, 'report.json'), { force: true });
-  let capture: Awaited<ReturnType<typeof captureComponents>>;
+  const readmes: Record<string, string> = {};
+  for (const [name, bytes] of files) {
+    const card = /^components\/([^/]+)\/README\.md$/.exec(name)?.[1];
+    if (card) readmes[card] = bytes.toString('utf8');
+  }
+  let result: Awaited<ReturnType<typeof captureComponents>>;
   try {
-    capture = await captureComponents({
+    result = await captureComponents({
       release: pkg.version,
       theme,
       files: {
@@ -149,6 +154,7 @@ export async function exportFigma(
         tokensCss: rendered.project['tokens.css'],
         tokensJson: rendered.project['tokens.json'],
         indexDts: file('components/index.d.ts'),
+        readmes,
       },
       react,
       reactDom,
@@ -158,6 +164,7 @@ export async function exportFigma(
   } catch (error) {
     throw new CliError((error as Error).message);
   }
+  const { capture, problems } = result;
   const json = JSON.stringify(capture, null, 2);
   writeFileSync(path.join(out, 'capture.json'), `${json}\n`);
 
@@ -167,7 +174,8 @@ export async function exportFigma(
     0
   );
   const captured = [
-    `Captured ${plural(variants, 'variant')} of ${plural(capture.components.length, 'component')} from nxds ${pkg.version} in ${path.join(relative, 'capture.json')}, with a screenshot of each in ${path.join(relative, 'screenshots')}.`,
+    `Captured ${plural(variants, 'variant')} of ${plural(capture.components.length, 'component')} and ${plural(capture.icons.length, 'icon')} from nxds ${pkg.version} in ${path.join(relative, 'capture.json')}, with a screenshot of each variant in ${path.join(relative, 'screenshots')}.`,
+    ...problems.map((problem) => `Couldn't capture ${problem}`),
   ];
   if (passed['font'] === undefined) {
     captured.push(
@@ -204,14 +212,18 @@ export async function exportFigma(
   );
 
   return {
-    ok: report.failures.length === 0,
-    lines: reportLines(report, relative),
+    ok: report.failures.length === 0 && problems.length === 0,
+    lines: [
+      ...problems.map((problem) => `Couldn't capture ${problem}`),
+      ...reportLines(report, relative),
+    ],
     data: {
       version: pkg.version,
       theme,
       out,
       variants,
       components: capture.components.map((component) => component.name),
+      problems,
       report,
     },
   };

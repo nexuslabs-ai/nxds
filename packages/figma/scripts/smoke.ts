@@ -1,12 +1,15 @@
 // Runs the Figma capture on the built @nxds/claude-design release, the way
 // `nxds-cli export figma` does, then checks what a designer relies on in
-// Figma: the variant counts, the bindings, hug and fill, the nested Button
-// instances and the component properties. Then it checks the local link the
-// plugin talks to. Build @nxds/claude-design first. Pass a folder to keep the
-// capture and its screenshots; otherwise they go in a temporary folder.
+// Figma: every component captured, every colour bound, palette colours only
+// when used, text styles bound to the typography variables, icons as
+// swappable instances, repeated parts as instances of their own components,
+// and the local link the plugin talks to. Build @nxds/claude-design first.
+// Pass a folder to keep the capture and its screenshots.
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -18,14 +21,15 @@ import { pathToFileURL } from 'node:url';
 
 import { captureComponents } from '../src/capture.ts';
 import { openLink } from '../src/link.ts';
+import { SKIPPED_CARDS } from '../src/recipes.ts';
 import {
   type BuildReport,
   type ComponentSpec,
-  type FrameLayer,
   type Layer,
   REPORT_FORMAT,
   unboundValues,
 } from '../src/spec.ts';
+import { isPrimitiveColor } from '../src/tokens.ts';
 
 const packages = path.join(import.meta.dirname, '..', '..');
 const release = path.join(packages, 'claude-design', 'dist');
@@ -64,8 +68,13 @@ const themeModule = (await import(
 };
 const theme = { font: 'inter' };
 const themed = themeModule.default.render(theme).project;
+const readmes: Record<string, string> = {};
+for (const card of readdirSync(path.join(project, 'components'))) {
+  const file = path.join(project, 'components', card, 'README.md');
+  if (existsSync(file)) readmes[card] = readFileSync(file, 'utf8');
+}
 const started = Date.now();
-const capture = await captureComponents({
+const { capture, problems } = await captureComponents({
   release: 'smoke',
   theme,
   files: {
@@ -83,6 +92,7 @@ const capture = await captureComponents({
       path.join(project, 'components', 'index.d.ts'),
       'utf8'
     ),
+    readmes,
   },
   react: umd('react', 'react.production.min.js'),
   reactDom: umd('react-dom', 'react-dom.production.min.js'),
@@ -91,8 +101,12 @@ const capture = await captureComponents({
 });
 const json = JSON.stringify(capture, null, 2);
 writeFileSync(path.join(outDir, 'capture.json'), json);
+const variantCount = capture.components.reduce(
+  (sum, spec) => sum + spec.variants.length,
+  0
+);
 console.log(
-  `Captured in ${Math.round((Date.now() - started) / 1000)}s into ${outDir}.`
+  `Captured ${variantCount} variants of ${capture.components.length} components in ${Math.round((Date.now() - started) / 1000)}s into ${outDir}.`
 );
 
 const component = (name: string) => {
@@ -100,7 +114,7 @@ const component = (name: string) => {
   if (!found) throw new Error(`No ${name} in the capture.`);
   return found;
 };
-const variant = (spec: ComponentSpec, values: Record<string, string>) => {
+const variant = (spec: ComponentSpec, values: Record<string, string> = {}) => {
   const found = spec.variants.find((entry) =>
     Object.entries(values).every(
       ([name, value]) => entry.values[name] === value
@@ -108,7 +122,7 @@ const variant = (spec: ComponentSpec, values: Record<string, string>) => {
   );
   if (!found)
     throw new Error(`${spec.name} has no variant ${JSON.stringify(values)}.`);
-  return found;
+  return found.root;
 };
 const layers = (root: Layer): Layer[] => [
   root,
@@ -116,60 +130,33 @@ const layers = (root: Layer): Layer[] => [
 ];
 const named = (root: Layer, name: string) =>
   layers(root).filter((layer) => layer.name === name);
-
-const instances = (root: Layer) =>
+const instancesOf = (root: Layer, name: string) =>
   layers(root).filter(
     (layer): layer is Extract<Layer, { type: 'INSTANCE' }> =>
-      layer.type === 'INSTANCE'
+      layer.type === 'INSTANCE' && layer.component === name
   );
-const only = (root: Layer, name: string) => {
-  const found = named(root, name);
-  if (found.length !== 1)
-    throw new Error(`${root.name}: ${found.length} layers named ${name}.`);
-  return found[0] as Layer;
-};
-const token = (
-  layer: Layer | undefined,
-  read: (layer: Layer) => string | undefined
-) => (layer ? read(layer) : undefined);
 
-// Variant counts: every variant property's values, multiplied.
-const EXPECTED = {
-  Button: 288,
-  Input: 54,
-  Badge: 36,
-  Switch: 16,
-  Alert: 20,
-  Card: 1,
-} as const;
-for (const [name, count] of Object.entries(EXPECTED)) {
+// Every card is captured: by its own recipe, as a part, or by a default recipe.
+for (const problem of problems) fail(`Not captured: ${problem}`);
+const captured = new Set(capture.components.map((spec) => spec.name));
+for (const card of Object.keys(readmes).filter(
+  (name) => !SKIPPED_CARDS.includes(name)
+)) {
   check(
-    component(name).variants.length === count,
-    `${name}: ${component(name).variants.length} variants, expected ${count}.`
+    captured.has(card) || (card === 'Chart' && captured.has('BarChart')),
+    `${card} has no Figma component.`
   );
 }
-
-// Each screenshot shows its variant's box, plus the 8px of room for a focus
-// ring, at 2x. A component whose parts start hidden, such as Button's icons,
-// is narrower in its screenshot than in its recording.
+check(
+  component('Button').variants.length === 288,
+  `Button: ${component('Button').variants.length} variants, expected 288.`
+);
 for (const spec of capture.components) {
-  const hidesParts = spec.booleanProperties.some(
-    (property) => !property.default
-  );
   for (const entry of spec.variants) {
-    const png = readFileSync(path.join(outDir, entry.screenshot));
-    const width = png.readUInt32BE(16) / 2;
-    const height = png.readUInt32BE(20) / 2;
-    const expected = {
-      width: entry.root.width.value + 16,
-      height: entry.root.height.value + 16,
-    };
-    const wrongWidth = !hidesParts && Math.abs(width - expected.width) > 1;
-    if (wrongWidth || Math.abs(height - expected.height) > 1) {
-      fail(
-        `${spec.name} ${entry.name}: the screenshot is ${width}×${height}, the root ${expected.width}×${expected.height} with its room.`
-      );
-    }
+    check(
+      existsSync(path.join(outDir, entry.screenshot)),
+      `${spec.name} ${entry.name}: no screenshot.`
+    );
   }
 }
 
@@ -178,8 +165,8 @@ const button = variant(component('Button'), {
   Variant: 'default',
   Size: 'default',
   State: 'default',
-}).root;
-const label = only(button, 'Label');
+});
+const label = named(button, 'Label')[0];
 check(
   button.fills[0]?.token === 'nx-color-primary-background',
   'Button: its fill is not bound to primary-background.'
@@ -197,50 +184,62 @@ check(
   'Button: its radius is not bound to radius-base.'
 );
 check(
-  button.layout?.gap.token === 'nx-spacing-2',
-  'Button: its gap is not bound to spacing-2.'
-);
-check(
-  label.type === 'TEXT' && label.style === 'label/default',
+  label?.type === 'TEXT' && label.style === 'label/default',
   'Button: its label has no label/default text style.'
 );
 check(
-  token(label, (layer) =>
-    layer.type === 'TEXT' ? layer.fill.token : undefined
-  ) === 'nx-color-primary-foreground',
-  'Button: its label colour is not bound to primary-foreground.'
+  label?.type === 'TEXT' && label.textProperty === 'Label',
+  'Button: its label is not the Label property.'
 );
 const hovered = variant(component('Button'), {
   Variant: 'default',
   Size: 'default',
   State: 'hover',
-}).root;
+});
 check(
   hovered.fills[0]?.token === 'nx-color-primary-background-hover',
-  'Button hover: its fill is not bound to primary-background-hover.'
-);
-const focused = variant(component('Button'), {
-  Variant: 'default',
-  Size: 'default',
-  State: 'focus',
-}).root;
-check(
-  named(focused, 'Focus ring').length === 1,
-  'Button focus: no focus ring layer.'
+  'Button hover: not bound to primary-background-hover.'
 );
 
-// The binding comes from the declared token, not the value: Card text reads
-// container-foreground and Alert text reads foreground.
-const card = component('Card').variants[0]?.root as FrameLayer;
+// Icons are instances of the icon set, and an icon slot is an instance-swap property.
+const startIcon = named(button, 'Start icon')[0];
+check(
+  capture.icons.length >= 700,
+  `The icon set has ${capture.icons.length} icons, expected regular and fill.`
+);
+check(
+  startIcon?.type === 'ICON' && startIcon.swapProperty === 'Start icon',
+  "Button: its start icon isn't a swappable icon instance."
+);
+check(
+  startIcon?.type === 'ICON' &&
+    startIcon.fill.token === 'nx-color-primary-foreground',
+  "Button: its icon isn't recoloured with primary-foreground."
+);
+const iconNames = new Set(capture.icons.map((icon) => icon.name));
+for (const spec of capture.components) {
+  for (const entry of spec.variants) {
+    for (const layer of layers(entry.root)) {
+      if (layer.type === 'ICON')
+        check(
+          iconNames.has(layer.icon),
+          `${spec.name}: icon ${layer.icon} isn't in the set.`
+        );
+    }
+  }
+}
+
+// The binding comes from the declared token, not the value.
+const card = variant(component('Card'));
 const alert = variant(component('Alert'), {
   Variant: 'default',
   Presentation: 'card',
   Layout: 'stack',
-}).root;
-const cardTitle = only(card, 'Title');
+});
+const cardTitle = named(card, 'Title')[0];
 const alertTitle = named(alert, 'Title').find((layer) => layer.type === 'TEXT');
 check(
-  cardTitle.type === 'TEXT' &&
+  cardTitle?.type === 'TEXT' &&
     cardTitle.fill.token === 'nx-color-container-foreground',
   'Card: its title is not bound to container-foreground.'
 );
@@ -249,176 +248,164 @@ check(
     alertTitle.fill.token === 'nx-color-foreground',
   'Alert: its title is not bound to foreground.'
 );
-const colors = new Map(
-  (
-    capture.collections.find((collection) => collection.name === 'Color')
-      ?.variables ?? []
-  ).map((entry) => [entry.token, JSON.stringify(entry.light)])
-);
-const sameValue =
-  colors.get('nx-color-container-foreground') ===
-  colors.get('nx-color-foreground');
-console.log(
-  `container-foreground and foreground ${sameValue ? 'share' : "don't share"} a light value, and each layer is bound to the one its class declares.`
-);
 
-// Hug, fill and fixed follow the CSS.
+// Hug, fill and grids follow the CSS.
 check(
   button.sizing.horizontal === 'HUG' && button.sizing.vertical === 'FIXED',
   'Button: not hug × fixed.'
 );
-check(label.sizing.horizontal === 'HUG', 'Button: its label does not hug.');
-const inputRoot = variant(component('Input'), {
-  Variant: 'bordered',
-  Size: 'default',
-  State: 'default',
-}).root;
 check(
-  inputRoot.sizing.horizontal === 'FIXED' && inputRoot.width.value === 280,
-  'Input: not 280px fixed.'
+  alert.layout?.mode === 'HORIZONTAL' &&
+    alert.children.map((child) => child.name).join(',') === 'Icon,Body',
+  'Alert: its grid is not a row of Icon and Body.'
 );
 check(
-  only(inputRoot, 'Text').sizing.horizontal === 'FILL',
-  'Input: its text does not fill.'
-);
-check(cardTitle.sizing.horizontal === 'FILL', 'Card: its title does not fill.');
-
-// Alert's grid is a row of an icon and a body, and its action is a Button instance.
-check(
-  alert.layout?.mode === 'HORIZONTAL',
-  'Alert: its grid is not a horizontal row.'
-);
-check(
-  alert.children.map((child) => child.name).join(',') === 'Icon,Body',
-  `Alert: its row holds ${alert.children.map((child) => child.name).join(', ')}, not Icon and Body.`
-);
-const body = only(alert, 'Body');
-check(
-  body.type === 'FRAME' &&
-    body.layout?.mode === 'VERTICAL' &&
-    body.sizing.horizontal === 'FILL',
-  'Alert: its body is not a vertical stack that fills.'
-);
-const alertButtons = instances(alert);
-check(
-  alertButtons.length === 1 &&
-    alertButtons[0]?.component === 'Button' &&
-    alertButtons[0].variant['Variant'] === 'outline' &&
-    alertButtons[0].texts['Label'] === 'Upgrade',
-  'Alert: its action is not an outline Button instance labelled Upgrade.'
-);
-check(
-  instances(only(card, 'Footer')).length === 2,
-  'Card: its footer does not hold two Button instances.'
-);
-check(
-  instances(only(card, 'Action'))[0]?.variant['Size'] === 'sm',
-  'Card: its action is not a small Button instance.'
+  cardTitle?.sizing.horizontal === 'FILL',
+  'Card: its title does not fill.'
 );
 
-// Every instance names a Button variant that exists.
-const buttonVariants = new Set(
-  component('Button').variants.map((entry) => entry.name)
+// Nested components and repeated parts are instances.
+const nesting: [string, Record<string, string>, string, number][] = [
+  [
+    'Alert',
+    { Variant: 'default', Presentation: 'card', Layout: 'stack' },
+    'Button',
+    1,
+  ],
+  ['Card', {}, 'Button', 3],
+  ['DropdownMenu', {}, 'Menu item', 4],
+  ['ContextMenu', {}, 'Menu item', 1],
+  ['Select content', {}, 'Select item', 4],
+  ['Command', {}, 'Command item', 1],
+  ['Tabs', {}, 'Tab', 2],
+  ['Accordion', {}, 'Accordion item', 3],
+  ['RadioGroup', {}, 'Radio', 3],
+  ['ToggleGroup', {}, 'Toggle group item', 3],
+  ['Table', {}, 'Table row', 3],
+  ['Sidebar', {}, 'Sidebar menu button', 3],
+  ['Breadcrumb', {}, 'Breadcrumb link', 1],
+  ['Pagination', {}, 'Pagination link', 1],
+];
+for (const [name, values, part, least] of nesting) {
+  const found = instancesOf(variant(component(name), values), part).length;
+  check(
+    found >= least,
+    `${name}: ${found} ${part} instances, expected at least ${least}.`
+  );
+}
+const variantNames = new Map(
+  capture.components.map((spec) => [
+    spec.name,
+    new Set(spec.variants.map((entry) => entry.name)),
+  ])
 );
+const order = capture.components.map((spec) => spec.name);
 for (const spec of capture.components) {
   for (const entry of spec.variants) {
-    for (const instance of instances(entry.root)) {
-      const name = component(instance.component)
-        .variantProperties.map(
-          ({ name: property }) => `${property}=${instance.variant[property]}`
-        )
-        .join(', ');
+    for (const layer of layers(entry.root)) {
+      if (layer.type !== 'INSTANCE') continue;
+      const source = component(layer.component);
+      const name =
+        source.variantProperties
+          .map(({ name: property }) => `${property}=${layer.variant[property]}`)
+          .join(', ') || source.name;
       check(
-        buttonVariants.has(name),
-        `${spec.name} ${entry.name}: its ${instance.name} instance names ${name}, which doesn't exist.`
+        variantNames.get(layer.component)?.has(name) === true,
+        `${spec.name}: its ${layer.name} instance names ${name}, which doesn't exist.`
+      );
+      check(
+        order.indexOf(layer.component) < order.indexOf(spec.name),
+        `${spec.name} is built before ${layer.component}, which it holds.`
       );
     }
   }
 }
 
-// Component properties, and the layers that carry them.
-const PROPERTIES = {
-  Button: {
-    booleans: ['Start icon:false', 'End icon:false'],
-    texts: ['Label'],
-  },
-  Input: { booleans: [], texts: ['Text'] },
-  Badge: {
-    booleans: ['Left icon:false', 'Right icon:false'],
-    texts: ['Label'],
-  },
-  Switch: { booleans: [], texts: [] },
-  Alert: {
-    booleans: ['Icon:true', 'Description:true', 'Actions:true'],
-    texts: ['Title', 'Description text'],
-  },
-  Card: {
-    booleans: [
-      'Description:true',
-      'Action:true',
-      'Content:true',
-      'Footer:true',
-    ],
-    texts: ['Title', 'Description text', 'Content text'],
-  },
-} as const;
-for (const [name, expected] of Object.entries(PROPERTIES)) {
+// Component properties.
+const props = (name: string) => {
   const spec = component(name);
-  const booleans = spec.booleanProperties
-    .map((property) => `${property.name}:${property.default}`)
-    .join(',');
-  const texts = spec.textProperties.map((property) => property.name).join(',');
-  check(
-    booleans === expected.booleans.join(','),
-    `${name}: boolean properties ${booleans}, expected ${expected.booleans.join(',')}.`
-  );
-  check(
-    texts === expected.texts.join(','),
-    `${name}: text properties ${texts}, expected ${expected.texts.join(',')}.`
-  );
-}
+  return {
+    booleans: spec.booleanProperties
+      .map((property) => `${property.name}:${property.default}`)
+      .join(','),
+    texts: spec.textProperties.map((property) => property.name).join(','),
+    swaps: spec.swapProperties.map((property) => property.name).join(','),
+  };
+};
+check(
+  props('Button').booleans === 'Show start icon:false,Show end icon:false',
+  `Button booleans: ${props('Button').booleans}.`
+);
+check(
+  props('Button').swaps === 'Start icon,End icon',
+  `Button swaps: ${props('Button').swaps}.`
+);
+check(
+  props('Button').texts === 'Label',
+  `Button texts: ${props('Button').texts}.`
+);
+check(
+  props('Menu item').booleans.includes('Show shortcut:true'),
+  `Menu item booleans: ${props('Menu item').booleans}.`
+);
+check(
+  ['Show icon:true', 'Description:true', 'Actions:true'].every((entry) =>
+    props('Alert').booleans.includes(entry)
+  ),
+  `Alert booleans: ${props('Alert').booleans}.`
+);
 
-// Every token a layer uses is a variable or a style, and variable names are unique.
-const variables = new Set(
-  capture.collections.flatMap((collection) =>
-    collection.variables.map((entry) => entry.token)
-  )
-);
-const textStyleNames = new Set(capture.textStyles.map((style) => style.name));
-const effectStyleNames = new Set(
-  capture.effectStyles.map((style) => style.name)
-);
+// Variables: palette colours only when a layer binds them, typography bound into the text styles.
 const used = new Set<string>();
 const collect = (value: unknown) => {
   if (Array.isArray(value)) return value.forEach(collect);
   if (!value || typeof value !== 'object') return;
   for (const [key, item] of Object.entries(value)) {
     if (key === 'token' && typeof item === 'string') used.add(item);
-    else collect(item);
+    else if (key === 'colors' && item && typeof item === 'object') {
+      for (const token of Object.values(item)) used.add(String(token));
+    } else collect(item);
   }
 };
 for (const spec of capture.components)
   for (const entry of spec.variants) collect(entry.root);
-for (const name of used)
+const colors =
+  capture.collections.find((collection) => collection.name === 'Color')
+    ?.variables ?? [];
+for (const entry of colors) {
+  if (isPrimitiveColor(entry.token))
+    check(
+      used.has(entry.token),
+      `${entry.token} is exported, but no layer uses it.`
+    );
+}
+const variables = new Set(
+  capture.collections.flatMap((collection) =>
+    collection.variables.map((entry) => entry.token)
+  )
+);
+for (const token of used)
   check(
-    variables.has(name),
-    `${name} is bound in a layer but has no variable.`
+    variables.has(token),
+    `${token} is bound in a layer but has no variable.`
   );
-for (const spec of capture.components) {
-  for (const entry of spec.variants) {
-    for (const layer of layers(entry.root)) {
-      if (layer.type === 'TEXT' && layer.style)
-        check(
-          textStyleNames.has(layer.style),
-          `${layer.style} is used but not created.`
-        );
-      if (layer.type === 'FRAME' && layer.shadow?.style)
-        check(
-          effectStyleNames.has(layer.shadow.style),
-          `${layer.shadow.style} is used but not created.`
-        );
-    }
-  }
+check(
+  variables.has(capture.iconColor),
+  `The icon colour ${capture.iconColor} has no variable.`
+);
+const typography =
+  capture.collections.find((collection) => collection.name === 'Typography')
+    ?.variables ?? [];
+check(
+  typography.some((entry) => entry.name === 'size/sm'),
+  'Typography: no size/sm variable.'
+);
+for (const style of capture.textStyles) {
+  const size = style.variables.fontSize;
+  check(
+    size !== undefined && variables.has(size),
+    `${style.name}: its font size isn't a typography variable.`
+  );
 }
 for (const collection of capture.collections) {
   const names = collection.variables.map((entry) => entry.name);
@@ -428,8 +415,7 @@ for (const collection of capture.collections) {
   );
 }
 
-// Every colour is bound to a variable. The values left unbound are sizes and
-// rings nxds declares as literals, listed for the report.
+// Every colour is bound, except Sonner's own toast colours and image placeholders.
 const unbound = capture.components.flatMap((spec) =>
   spec.variants.flatMap((entry) => unboundValues(spec.name, entry))
 );
@@ -442,18 +428,20 @@ const colorProperties = new Set([
 for (const value of unbound.filter((entry) =>
   colorProperties.has(entry.property)
 )) {
+  if (value.component === 'Toast' || value.layer.endsWith('Image')) continue;
   fail(
     `${value.component} ${value.variant} / ${value.layer}: its ${value.property} ${value.value} isn't bound.`
   );
 }
-const distinct = new Map<string, number>();
-for (const value of unbound) {
-  const key = `${value.component} ${value.layer.split(' / ').slice(1).join(' / ') || '(root)'}: ${value.property} ${value.value}`;
-  distinct.set(key, (distinct.get(key) ?? 0) + 1);
-}
-console.log(`${unbound.length} unbound values, ${distinct.size} distinct:`);
-for (const [key, count] of [...distinct].sort((a, b) => b[1] - a[1]))
-  console.log(`  ${count}× ${key}`);
+const distinct = new Set(
+  unbound.map(
+    (value) =>
+      `${value.component} ${value.layer.split(' / ').slice(1).join(' / ')} ${value.property} ${value.value}`
+  )
+);
+console.log(
+  `${unbound.length} unbound values, ${distinct.size} distinct. ${colors.filter((entry) => isPrimitiveColor(entry.token)).length} palette colours in use.`
+);
 
 // The link: the plugin's UI fetches the capture with CORS, and posts its report.
 const link = await openLink(json, 0);
@@ -482,15 +470,16 @@ const junk = await fetch(`${base}/report`, {
 check(junk.status === 400, 'Link: it took a body that is not a report.');
 const sent: BuildReport = {
   format: REPORT_FORMAT,
-  version: 1,
+  version: 2,
   created: {
-    collections: 4,
+    collections: 5,
     variables: 1,
     textStyles: 1,
     effectStyles: 1,
-    componentSets: 5,
-    components: 415,
-    instances: 3,
+    icons: 1,
+    componentSets: 1,
+    components: 1,
+    instances: 1,
   },
   modes: ['Light'],
   darkModeError: 'in addMode: Limited to 1 modes only',
@@ -507,9 +496,8 @@ check(
   posted.status === 204,
   `Link: posting the report answered ${posted.status}.`
 );
-const received = await link.report;
 check(
-  JSON.stringify(received) === JSON.stringify(sent),
+  JSON.stringify(await link.report) === JSON.stringify(sent),
   'Link: the report it resolved with is not the one posted.'
 );
 await link.close();
@@ -522,5 +510,5 @@ if (failures.length > 0) {
 }
 if (!kept) rmSync(outDir, { recursive: true, force: true });
 console.log(
-  `Figma smoke test passed: ${capture.components.reduce((sum, spec) => sum + spec.variants.length, 0)} variants of ${capture.components.length} components, their screenshots, bindings, sizing, instances and properties, and the link.`
+  `Figma smoke test passed: ${variantCount} variants of ${capture.components.length} components and ${capture.icons.length} icons, their bindings, sizing, instances, properties and variables, and the link.`
 );

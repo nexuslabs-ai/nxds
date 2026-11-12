@@ -1,7 +1,7 @@
 // The plugin's main thread. It builds exactly what capture.json says:
-// variables, text and shadow styles, then one component set per component,
-// on the current page. Every value that carries a token is bound to its
-// variable. It makes no layout decisions of its own.
+// variables, text and shadow styles, the icon set on an Icons page, then one
+// component set per component on the current page. Every value that carries
+// a token is bound to its variable. It makes no layout decisions of its own.
 import {
   type Bound,
   type BuildReport,
@@ -9,6 +9,7 @@ import {
   type CaptureFile,
   type ComponentSpec,
   type FrameLayer,
+  type IconLayer,
   type InstanceLayer,
   type Layer,
   type Paint as SpecPaint,
@@ -44,11 +45,18 @@ interface Context {
   variables: Map<string, Variable>;
   textStyles: Map<string, TextStyle>;
   effectStyles: Map<string, EffectStyle>;
+  /** Icon components, by icon name. */
+  icons: Map<string, ComponentNode>;
   /** Built components, by name, for the instances later components hold. */
   components: Map<string, ComponentSetNode | ComponentNode>;
   font(family: string, weight: number): Promise<FontName>;
   /** The layers that carry a component property, in the component being built. */
-  references: { node: SceneNode; visible?: string; characters?: string }[];
+  references: {
+    node: SceneNode;
+    visible?: string;
+    characters?: string;
+    swap?: string;
+  }[];
   /** What is being built, for the report. */
   where: string;
 }
@@ -56,6 +64,10 @@ interface Context {
 const SET_PADDING = 32;
 const SET_GAP = 24;
 const COMPONENT_GAP = 160;
+/** Component sets wrap to a new row past this width on the page. */
+const PAGE_WIDTH = 6000;
+const ICON_SIZE = 24;
+const ICONS_PER_ROW = 24;
 /** How many variants are built between progress updates. */
 const PROGRESS_EVERY = 24;
 
@@ -191,6 +203,13 @@ function effect(shadow: Shadow): Effect {
     : { ...base, type: 'INNER_SHADOW' };
 }
 
+function variableFor(token: string | undefined, ctx: Context, what: string) {
+  if (token === undefined) return undefined;
+  const variable = ctx.variables.get(token);
+  if (!variable) fail(ctx, what, new Error(`No variable for --${token}.`));
+  return variable;
+}
+
 async function createStyles(capture: CaptureFile, ctx: Context) {
   ctx.where = 'text styles';
   for (const spec of capture.textStyles) {
@@ -205,6 +224,18 @@ async function createStyles(capture: CaptureFile, ctx: Context) {
           ? { unit: 'AUTO' }
           : { unit: 'PIXELS', value: spec.lineHeight };
       style.letterSpacing = { unit: 'PIXELS', value: spec.letterSpacing };
+      for (const field of [
+        'fontSize',
+        'lineHeight',
+        'letterSpacing',
+      ] as const) {
+        const variable = variableFor(
+          spec.variables[field],
+          ctx,
+          `${spec.name} ${field}`
+        );
+        if (variable) style.setBoundVariable(field, variable);
+      }
       ctx.textStyles.set(spec.name, style);
       ctx.report.created.textStyles += 1;
     } catch (error) {
@@ -226,13 +257,6 @@ async function createStyles(capture: CaptureFile, ctx: Context) {
   }
 }
 
-function variableFor(token: string | undefined, ctx: Context, what: string) {
-  if (token === undefined) return undefined;
-  const variable = ctx.variables.get(token);
-  if (!variable) fail(ctx, what, new Error(`No variable for --${token}.`));
-  return variable;
-}
-
 function paint(value: SpecPaint, ctx: Context, what: string): SolidPaint {
   const { r, g, b, a } = value.color;
   const solid: SolidPaint = { type: 'SOLID', color: { r, g, b }, opacity: a };
@@ -249,14 +273,14 @@ function paint(value: SpecPaint, ctx: Context, what: string): SolidPaint {
 
 function bind(
   node: SceneNode,
-  field: VariableBindableNodeField,
+  field: VariableBindableNodeField | VariableBindableTextField,
   token: string | undefined,
   ctx: Context
 ) {
   const variable = variableFor(token, ctx, `${node.name} ${field}`);
   if (!variable) return;
   try {
-    node.setBoundVariable(field, variable);
+    node.setBoundVariable(field as VariableBindableNodeField, variable);
   } catch (error) {
     fail(ctx, `${node.name} ${field}`, error);
   }
@@ -270,6 +294,74 @@ function setNumber(
 ) {
   node[field] = value.value;
   bind(node, field, value.token, ctx);
+}
+
+/** Every solid fill and stroke under `node` bound to `variable`, or only those drawn in `color`. */
+function recolor(
+  node: SceneNode & ChildrenMixin,
+  variable: Variable,
+  color?: string
+) {
+  const matches = (each: SolidPaint) =>
+    color === undefined ||
+    `#${[each.color.r, each.color.g, each.color.b]
+      .map((channel) =>
+        Math.round(channel * 255)
+          .toString(16)
+          .padStart(2, '0')
+      )
+      .join('')}` === color;
+  const bound = (paints: readonly Paint[]) =>
+    paints.map((each) =>
+      each.type === 'SOLID' && matches(each)
+        ? figma.variables.setBoundVariableForPaint(each, 'color', variable)
+        : each
+    );
+  for (const child of node.findAll()) {
+    if ('fills' in child && child.fills !== figma.mixed)
+      child.fills = bound(child.fills);
+    if ('strokes' in child) child.strokes = bound(child.strokes);
+  }
+}
+
+/** The icon set, as one component per icon on an Icons page, each a single vector so its colour survives a swap. */
+async function createIcons(capture: CaptureFile, ctx: Context) {
+  ctx.where = 'icons';
+  if (capture.icons.length === 0) return;
+  const page = figma.createPage();
+  page.name = 'Icons';
+  const color = variableFor(capture.iconColor, ctx, 'icon colour');
+  for (const [index, spec] of capture.icons.entries()) {
+    try {
+      const frame = figma.createNodeFromSvg(spec.svg);
+      page.appendChild(frame);
+      const vectors = frame.findAll(
+        (node) => node.type === 'VECTOR' || node.type === 'BOOLEAN_OPERATION'
+      );
+      if (vectors.length > 1) figma.flatten(vectors, frame);
+      const vector = frame.findOne((node) => node.type === 'VECTOR');
+      if (vector && 'constraints' in vector) {
+        vector.name = 'Vector';
+        vector.constraints = { horizontal: 'SCALE', vertical: 'SCALE' };
+      }
+      frame.fills = [];
+      frame.clipsContent = false;
+      frame.resize(ICON_SIZE, ICON_SIZE);
+      const component = figma.createComponentFromNode(frame);
+      component.name = `icon/${spec.name}`;
+      if (color) recolor(component, color);
+      component.x = (index % ICONS_PER_ROW) * (ICON_SIZE * 3);
+      component.y = Math.floor(index / ICONS_PER_ROW) * (ICON_SIZE * 3);
+      ctx.icons.set(spec.name, component);
+      ctx.report.created.icons += 1;
+    } catch (error) {
+      fail(ctx, spec.name, error);
+    }
+    if (index % 100 === 99)
+      await progress(
+        `Building icons: ${index + 1} of ${capture.icons.length}…`
+      );
+  }
 }
 
 async function applyFrame(node: Container, layer: FrameLayer, ctx: Context) {
@@ -356,15 +448,21 @@ function place(
   } catch (error) {
     fail(ctx, `${layer.name} sizing`, error);
   }
-  if (node.type === 'TEXT' || node.type === 'INSTANCE') return;
+  if (node.type === 'TEXT') return;
   if (horizontal === 'FIXED') bind(node, 'width', layer.width.token, ctx);
   if (vertical === 'FIXED') bind(node, 'height', layer.height.token, ctx);
 }
 
 function reference(node: SceneNode, layer: Layer, ctx: Context) {
   const characters = layer.type === 'TEXT' ? layer.textProperty : undefined;
-  if (layer.visibleProperty || characters) {
-    ctx.references.push({ node, visible: layer.visibleProperty, characters });
+  const swap = layer.type === 'ICON' ? layer.swapProperty : undefined;
+  if (layer.visibleProperty || characters || swap) {
+    ctx.references.push({
+      node,
+      visible: layer.visibleProperty,
+      characters,
+      swap,
+    });
   }
 }
 
@@ -373,14 +471,23 @@ async function buildText(layer: TextLayer, parent: Container, ctx: Context) {
   parent.appendChild(node);
   node.fontName = await ctx.font(layer.font.family, layer.font.weight);
   node.characters = layer.characters;
-  node.fontSize = layer.font.size;
+  node.fontSize = layer.font.size.value;
   node.lineHeight =
     layer.font.lineHeight === undefined
       ? { unit: 'AUTO' }
-      : { unit: 'PIXELS', value: layer.font.lineHeight };
-  node.letterSpacing = { unit: 'PIXELS', value: layer.font.letterSpacing };
+      : { unit: 'PIXELS', value: layer.font.lineHeight.value };
+  node.letterSpacing = {
+    unit: 'PIXELS',
+    value: layer.font.letterSpacing.value,
+  };
   const style = layer.style ? ctx.textStyles.get(layer.style) : undefined;
-  if (style) await node.setTextStyleIdAsync(style.id);
+  if (style) {
+    await node.setTextStyleIdAsync(style.id);
+  } else {
+    bind(node, 'fontSize', layer.font.size.token, ctx);
+    bind(node, 'lineHeight', layer.font.lineHeight?.token, ctx);
+    bind(node, 'letterSpacing', layer.font.letterSpacing.token, ctx);
+  }
   node.textCase = layer.textCase;
   node.textDecoration = layer.underline ? 'UNDERLINE' : 'NONE';
   node.textAlignHorizontal = layer.align;
@@ -404,27 +511,47 @@ function buildVector(layer: VectorLayer, parent: Container, ctx: Context) {
   node.fills = [];
   node.clipsContent = false;
   node.opacity = layer.opacity;
-  const variable = variableFor(layer.fill?.token, ctx, `${layer.name} colour`);
-  const recolor = (paints: readonly Paint[]) =>
-    paints.map((each) =>
-      each.type === 'SOLID' && variable
-        ? figma.variables.setBoundVariableForPaint(each, 'color', variable)
-        : each
-    );
   for (const child of node.findAll()) {
     if ('constraints' in child)
       child.constraints = { horizontal: 'SCALE', vertical: 'SCALE' };
-    if (!variable) continue;
-    if ('fills' in child && child.fills !== figma.mixed)
-      child.fills = recolor(child.fills);
-    if ('strokes' in child) child.strokes = recolor(child.strokes);
   }
+  for (const [color, token] of Object.entries(layer.colors)) {
+    const variable = variableFor(token, ctx, `${layer.name} colour`);
+    if (variable) recolor(node, variable, color);
+  }
+  return node;
+}
+
+function buildIcon(layer: IconLayer, parent: Container, ctx: Context) {
+  const main = ctx.icons.get(layer.icon);
+  if (!main) throw new Error(`The icon set has no ${layer.icon}.`);
+  const node = main.createInstance();
+  parent.appendChild(node);
+  node.name = layer.name;
+  node.opacity = layer.opacity;
+  node.resize(
+    Math.max(layer.width.value, 0.01),
+    Math.max(layer.height.value, 0.01)
+  );
+  const vector = node.findOne((child) => child.name === 'Vector');
+  if (vector && 'fills' in vector)
+    vector.fills = [paint(layer.fill, ctx, `${layer.name} colour`)];
   return node;
 }
 
 const variantValues = (name: string) =>
   Object.fromEntries(
     name.split(', ').map((pair) => pair.split('=') as [string, string])
+  );
+
+/** `properties`' key for the property called `name` of `type`, which Figma suffixes with an id. */
+const propertyKey = (
+  properties: ComponentProperties,
+  name: string,
+  type: ComponentPropertyType
+) =>
+  Object.keys(properties).find(
+    (key) => key.split('#')[0] === name && properties[key]?.type === type
   );
 
 function buildInstance(layer: InstanceLayer, parent: Container, ctx: Context) {
@@ -443,21 +570,27 @@ function buildInstance(layer: InstanceLayer, parent: Container, ctx: Context) {
             )
         )
       : owner;
-  if (main?.type !== 'COMPONENT') {
+  if (main?.type !== 'COMPONENT')
     throw new Error(
       `${layer.component} has no variant ${JSON.stringify(layer.variant)}.`
     );
-  }
   const node = main.createInstance();
   parent.appendChild(node);
   node.name = layer.name;
   const properties = node.componentProperties;
-  const updates: Record<string, string> = {};
+  const updates: Record<string, string | boolean> = {};
   for (const [name, value] of Object.entries(layer.texts)) {
-    const key = Object.keys(properties).find(
-      (each) => each.split('#')[0] === name && properties[each]?.type === 'TEXT'
-    );
+    const key = propertyKey(properties, name, 'TEXT');
     if (key) updates[key] = value;
+  }
+  for (const [name, value] of Object.entries(layer.booleans)) {
+    const key = propertyKey(properties, name, 'BOOLEAN');
+    if (key) updates[key] = value;
+  }
+  for (const [name, icon] of Object.entries(layer.swaps)) {
+    const key = propertyKey(properties, name, 'INSTANCE_SWAP');
+    const component = ctx.icons.get(icon);
+    if (key && component) updates[key] = component.id;
   }
   if (Object.keys(updates).length > 0) node.setProperties(updates);
   try {
@@ -491,26 +624,19 @@ async function buildLayer(
   }
   if (!parent)
     throw new Error(`A ${layer.type} layer can't be a component's root.`);
-  const node =
-    layer.type === 'TEXT'
-      ? await buildText(layer, parent, ctx)
-      : layer.type === 'SVG'
-        ? buildVector(layer, parent, ctx)
-        : buildInstance(layer, parent, ctx);
+  let node: SceneNode;
+  if (layer.type === 'TEXT') node = await buildText(layer, parent, ctx);
+  else if (layer.type === 'ICON') node = buildIcon(layer, parent, ctx);
+  else if (layer.type === 'INSTANCE') node = buildInstance(layer, parent, ctx);
+  else node = buildVector(layer, parent, ctx);
   if (node.type === 'FRAME') {
-    node.resize(
-      Math.max(layer.width.value, 0.01),
-      Math.max(layer.height.value, 0.01)
-    );
+    // An SVG keeps the size it was imported at.
     if (layer.absolute) {
       if (parent.layoutMode !== 'NONE') node.layoutPositioning = 'ABSOLUTE';
       node.x = layer.absolute.x;
       node.y = layer.absolute.y;
-    } else {
-      bind(node, 'width', layer.width.token, ctx);
-      bind(node, 'height', layer.height.token, ctx);
     }
-  } else {
+  } else if (node.type === 'TEXT' || node.type === 'INSTANCE') {
     place(node, layer, parent, ctx);
   }
   reference(node, layer, ctx);
@@ -566,23 +692,39 @@ async function buildComponent(spec: ComponentSpec, ctx: Context) {
   }
   ctx.report.created.components += variants.length;
   const keys = new Map<string, string>();
-  for (const property of spec.booleanProperties) {
-    keys.set(
-      `visible ${property.name}`,
-      owner.addComponentProperty(property.name, 'BOOLEAN', property.default)
-    );
+  const add = (
+    kind: string,
+    name: string,
+    type: ComponentPropertyType,
+    value: string | boolean
+  ) => {
+    try {
+      keys.set(
+        `${kind} ${name}`,
+        owner.addComponentProperty(name, type, value)
+      );
+    } catch (error) {
+      fail(ctx, `${name} property`, error);
+    }
+  };
+  for (const property of spec.booleanProperties)
+    add('visible', property.name, 'BOOLEAN', property.default);
+  for (const property of spec.textProperties)
+    add('characters', property.name, 'TEXT', property.default);
+  for (const property of spec.swapProperties) {
+    const icon = ctx.icons.get(property.default);
+    if (icon) add('swap', property.name, 'INSTANCE_SWAP', icon.id);
   }
-  for (const property of spec.textProperties) {
-    keys.set(
-      `characters ${property.name}`,
-      owner.addComponentProperty(property.name, 'TEXT', property.default)
-    );
-  }
-  for (const { node, visible, characters } of ctx.references) {
-    const references: { visible?: string; characters?: string } = {};
+  for (const { node, visible, characters, swap } of ctx.references) {
+    const references: {
+      visible?: string;
+      characters?: string;
+      mainComponent?: string;
+    } = {};
     if (visible) references.visible = keys.get(`visible ${visible}`);
     if (characters)
       references.characters = keys.get(`characters ${characters}`);
+    if (swap) references.mainComponent = keys.get(`swap ${swap}`);
     try {
       node.componentPropertyReferences = references;
     } catch (error) {
@@ -595,12 +737,13 @@ async function buildComponent(spec: ComponentSpec, ctx: Context) {
 async function build(capture: CaptureFile): Promise<BuildReport> {
   const report: BuildReport = {
     format: REPORT_FORMAT,
-    version: 1,
+    version: 2,
     created: {
       collections: 0,
       variables: 0,
       textStyles: 0,
       effectStyles: 0,
+      icons: 0,
       componentSets: 0,
       components: 0,
       instances: 0,
@@ -615,13 +758,14 @@ async function build(capture: CaptureFile): Promise<BuildReport> {
     variables: new Map(),
     textStyles: new Map(),
     effectStyles: new Map(),
+    icons: new Map(),
     components: new Map(),
     font: await fontLoader(report),
     references: [],
     where: 'setup',
   };
   try {
-    if (capture.format !== CAPTURE_FORMAT || capture.version !== 1) {
+    if (capture.format !== CAPTURE_FORMAT || capture.version !== 2) {
       throw new Error(
         'This capture comes from another nxds-cli version than this plugin. Rebuild the plugin from the same checkout.'
       );
@@ -631,7 +775,12 @@ async function build(capture: CaptureFile): Promise<BuildReport> {
     await createVariables(capture, ctx);
     await progress('Creating text and shadow styles…');
     await createStyles(capture, ctx);
+    await progress('Building the icon set…');
+    await createIcons(capture, ctx);
+    const page = figma.currentPage;
+    let x = 0;
     let y = 0;
+    let rowHeight = 0;
     const built: SceneNode[] = [];
     for (const spec of capture.components) {
       await progress(
@@ -639,9 +788,16 @@ async function build(capture: CaptureFile): Promise<BuildReport> {
       );
       try {
         const owner = await buildComponent(spec, ctx);
-        owner.x = 0;
+        page.appendChild(owner);
+        if (x > 0 && x + owner.width > PAGE_WIDTH) {
+          x = 0;
+          y += rowHeight + COMPONENT_GAP;
+          rowHeight = 0;
+        }
+        owner.x = x;
         owner.y = y;
-        y += owner.height + COMPONENT_GAP;
+        x += owner.width + COMPONENT_GAP;
+        rowHeight = Math.max(rowHeight, owner.height);
         ctx.components.set(spec.name, owner);
         built.push(owner);
       } catch (error) {

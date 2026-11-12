@@ -5,13 +5,6 @@
 // module-level values, only its arguments and the page's globals.
 import type * as ReactModule from 'react';
 
-/** A component tree, as nxds's stories pass it: each prop holds its real value. An icon is `{ __icon: name }`. */
-export interface PartTree {
-  part: string;
-  props?: Record<string, unknown>;
-  children?: (PartTree | string)[];
-}
-
 export interface Rect {
   x: number;
   y: number;
@@ -32,9 +25,9 @@ export interface ElementFacts {
   slot: string | null;
   /** The recipe's boolean property for this element, from `data-figma-part`. */
   part: string | null;
-  /** The recipe's text property for this element's own text, from `data-figma-text`. */
-  textProperty: string | null;
-  /** `data-*`, `disabled` and `aria-invalid`. */
+  /** The element's class attribute. */
+  classes: string;
+  /** `data-*`, `disabled`, `aria-invalid` and `aria-selected`. */
   attributes: Record<string, string>;
   /** The nearest `nx:typography-*` class on it or an ancestor, without `nx:`. */
   typography: string | null;
@@ -46,19 +39,37 @@ export interface ElementFacts {
   /** The nxds token each property was declared with, by CSS property. */
   tokens: Record<string, string>;
   children: (ElementFacts | TextFacts)[];
-  /** An `<svg>`'s markup, with `currentColor` left in. */
+  /** An `<svg>`'s markup, with each shape's computed colours written in. */
   svg?: string;
-  /** An `<input>`'s value and placeholder, and the placeholder's colour. */
+  /** Each colour an `<svg>`'s shapes draw with that came from a token. */
+  svgColors?: { color: string; token: string }[];
+  /** An `<input>`'s, `<textarea>`'s or `<select>`'s value and placeholder, and the placeholder's colour. */
   input?: { value: string; placeholder: string; placeholderColor: string };
 }
 
-export type Kind = 'color' | 'length' | 'shadow';
+export type Kind = 'color' | 'length' | 'shadow' | 'font-size';
+
+/** Props set on the first element of a part, such as `{ part: 'Button', props: { size: 'sm' } }`. */
+export interface Override {
+  part: string;
+  props: Record<string, unknown>;
+}
+
+export interface MountInput {
+  /** Canvas markup: `<x-import component-from-global-scope="Nxds.Button">`. */
+  markup: string;
+  overrides: Override[];
+  /** The container's width. Block-level components fill it. */
+  width: number;
+}
 
 export interface RecordInput {
+  /** The element to record, anywhere in the document, since overlays render in a portal. */
+  target: string;
   /** Every token to trace, by name without `--`, and the kind of value it holds. */
   tokens: [string, Kind][];
+  /** Elements that carry a boolean property, by selector. */
   parts: { selector: string; name: string }[];
-  texts: { selector: string; name: string }[];
 }
 
 export interface Recorded {
@@ -77,21 +88,35 @@ interface PageGlobals {
     flushSync(callback: () => void): void;
   };
   Nxds: Record<string, unknown>;
-  __figmaMount(tree: PartTree, width: number | null): void;
+  __figmaMount(input: MountInput): void;
   __figmaUnmount(): void;
 }
 
 /**
- * Defines `__figmaMount(tree, width)` and `__figmaUnmount()`. A mount renders
- * the tree into a fresh `[data-capture-root]` wrapper with 8px of room around
- * it for focus rings: `width` px wide for a component that fills its
- * container, or as wide as the component otherwise.
+ * Defines `__figmaMount(input)` and `__figmaUnmount()`. A mount renders canvas
+ * markup into a fresh `[data-capture-root]` container, `width` px wide with
+ * 8px of room around it, and sets each override's props on the first element
+ * of its part. Attribute values stay strings, as a canvas passes them; the
+ * bundle reads them the way a canvas needs. Overrides keep their real values.
  */
 export function installHelpers() {
   const page = window as unknown as PageGlobals;
   const { React, ReactDOM, Nxds } = page;
+  const NAMES: Record<string, string> = {
+    class: 'className',
+    for: 'htmlFor',
+    tabindex: 'tabIndex',
+    colspan: 'colSpan',
+    rowspan: 'rowSpan',
+    viewbox: 'viewBox',
+  };
+  const camel = (name: string) =>
+    /^(?:aria|data)-/.test(name)
+      ? name
+      : name.replace(/-([a-z])/g, (_, char: string) => char.toUpperCase());
   const component = (name: string) =>
     name
+      .replace(/^Nxds\./, '')
       .split('.')
       .reduce<unknown>(
         (scope, key) => (scope as Record<string, unknown> | undefined)?.[key],
@@ -109,48 +134,216 @@ export function installHelpers() {
       Object.entries(value).map(([key, item]) => [key, revive(item)])
     );
   };
-  const element = (
-    tree: PartTree | string,
-    key?: number
-  ): ReactModule.ReactNode => {
-    if (typeof tree === 'string') return tree;
-    // A lowercase part is a plain element, such as the `p` inside CardContent.
-    const type = /^[a-z]/.test(tree.part) ? tree.part : component(tree.part);
-    if (!type) throw new Error(`The release has no Nxds.${tree.part}.`);
-    return React.createElement(
-      type,
-      { ...(revive(tree.props ?? {}) as object), key },
-      ...(tree.children ?? []).map((child, index) => element(child, index))
+  const styleObject = (text: string) =>
+    Object.fromEntries(
+      text
+        .split(';')
+        .map((declaration) => declaration.split(':').map((side) => side.trim()))
+        .filter(([name, value]) => name && value)
+        .map(([name = '', value]) => [
+          name.startsWith('--') ? name : camel(name),
+          value,
+        ])
     );
-  };
   let root: ReturnType<PageGlobals['ReactDOM']['createRoot']> | null = null;
   page.__figmaUnmount = () => {
     root?.unmount();
     root = null;
     document.body.replaceChildren();
   };
-  page.__figmaMount = (tree, width) => {
+  page.__figmaMount = ({ markup, overrides, width }) => {
     page.__figmaUnmount();
+    const pending = new Map(
+      overrides.map((override) => [override.part, override.props])
+    );
+    const convert = (node: ChildNode, key: number): ReactModule.ReactNode => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = (node.textContent ?? '').replace(/\s+/g, ' ');
+        return text.trim() === '' ? null : text.trim();
+      }
+      if (!(node instanceof Element)) return null;
+      const children = [...node.childNodes]
+        .map((child, index) => convert(child, index))
+        .filter((child) => child !== null);
+      const tag = node.tagName.toLowerCase();
+      const props: Record<string, unknown> = { key };
+      let type: ReactModule.ElementType =
+        tag as keyof ReactModule.JSX.IntrinsicElements;
+      if (tag === 'x-import') {
+        const name = (
+          node.getAttribute('component-from-global-scope') ?? ''
+        ).replace(/^Nxds\./, '');
+        const found = component(name);
+        if (!found) throw new Error(`The release has no Nxds.${name}.`);
+        type = found;
+        for (const attribute of node.attributes) {
+          if (attribute.name === 'component-from-global-scope') continue;
+          props[camel(attribute.name)] = attribute.value;
+        }
+        const extra = pending.get(name);
+        if (extra) {
+          Object.assign(props, revive(extra));
+          pending.delete(name);
+        }
+      } else {
+        for (const attribute of node.attributes) {
+          const name = NAMES[attribute.name] ?? attribute.name;
+          props[name] =
+            name === 'style' ? styleObject(attribute.value) : attribute.value;
+        }
+      }
+      // A void element such as <input> throws on any `children` prop.
+      return children.length > 0
+        ? React.createElement(type, props, ...children)
+        : React.createElement(type, props);
+    };
+    const template = document.createElement('template');
+    template.innerHTML = markup.trim();
+    const nodes = [...template.content.childNodes]
+      .map((node, index) => convert(node, index))
+      .filter((node) => node !== null);
+    if (pending.size > 0) {
+      throw new Error(
+        `The markup has no ${[...pending.keys()].join(', ')} to set props on.`
+      );
+    }
     const wrapper = document.createElement('div');
     wrapper.setAttribute('data-capture-root', '');
-    wrapper.style.cssText =
-      width === null
-        ? 'display: inline-flex; align-items: flex-start; padding: 8px'
-        : `display: flex; flex-direction: column; width: ${width + 16}px; padding: 8px`;
+    wrapper.style.cssText = `display: flow-root; width: ${width + 16}px; padding: 8px`;
     document.body.append(wrapper);
     const mounted = ReactDOM.createRoot(wrapper);
     root = mounted;
-    ReactDOM.flushSync(() => mounted.render(element(tree)));
+    ReactDOM.flushSync(() =>
+      mounted.render(React.createElement(React.Fragment, null, ...nodes))
+    );
   };
 }
 
+/** Waits for fonts, then until the page looks the same two frames running, up to four seconds. */
+export async function settle() {
+  await document.fonts.ready;
+  const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+  const signature = () => {
+    const parts: string[] = [String(document.body.innerHTML.length)];
+    for (const el of document.body.querySelectorAll('[data-slot]')) {
+      const rect = el.getBoundingClientRect();
+      parts.push(
+        `${Math.round(rect.x)},${Math.round(rect.y)},${Math.round(rect.width)},${Math.round(rect.height)}`
+      );
+    }
+    return parts.join('|');
+  };
+  let last = signature();
+  let stable = 0;
+  const started = performance.now();
+  while (stable < 2 && performance.now() - started < 4000) {
+    await frame();
+    const next = signature();
+    stable = next === last ? stable + 1 : 0;
+    last = next;
+  }
+  await document.fonts.ready;
+}
+
 /**
- * Records the mounted component: every element's box, computed styles and
+ * The icon set: each icon `Nxds.Icon` names, at 24px, and the filled weight
+ * of each through its Phosphor component in `Nxds.Icons`, named `<name>-fill`.
+ */
+export function recordIcons(names: string[]) {
+  const page = window as unknown as PageGlobals;
+  const { React, ReactDOM, Nxds } = page;
+  const phosphor = (Nxds['Icons'] ?? {}) as Record<
+    string,
+    ReactModule.ElementType
+  >;
+  const pascal = (name: string) =>
+    `${name.replace(/(^|-)([a-z0-9])/g, (_, __, char: string) => char.toUpperCase())}Icon`;
+  const wanted = new Map<string, ReactModule.ReactElement>();
+  for (const name of names) {
+    wanted.set(
+      name,
+      React.createElement(Nxds['Icon'] as ReactModule.ElementType, {
+        name,
+        size: 24,
+      })
+    );
+    const component = phosphor[pascal(name)];
+    if (
+      !name.endsWith('-fill') &&
+      component &&
+      !names.includes(`${name}-fill`)
+    ) {
+      wanted.set(
+        `${name}-fill`,
+        React.createElement(component, { size: 24, weight: 'fill' })
+      );
+    }
+  }
+  const host = document.createElement('div');
+  document.body.append(host);
+  const root = ReactDOM.createRoot(host);
+  ReactDOM.flushSync(() =>
+    root.render(
+      React.createElement(
+        React.Fragment,
+        null,
+        ...[...wanted].map(([name, icon]) =>
+          React.createElement('span', { key: name, 'data-icon': name }, icon)
+        )
+      )
+    )
+  );
+  const icons = [...host.querySelectorAll<HTMLElement>('[data-icon]')].flatMap(
+    (span) => {
+      const svg = span.querySelector('svg');
+      if (!svg) return [];
+      const copy = svg.cloneNode(true) as SVGSVGElement;
+      for (const node of [copy, ...copy.querySelectorAll('*')]) {
+        node.removeAttribute('class');
+        node.removeAttribute('style');
+        node.removeAttribute('aria-hidden');
+      }
+      return [{ name: span.dataset['icon'] ?? '', svg: copy.outerHTML }];
+    }
+  );
+  root.unmount();
+  host.remove();
+  return icons.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** The token each `nx:typography-*` class declares for its size, line height and letter spacing, by class. */
+export function readTypography() {
+  const found: Record<string, Record<string, string>> = {};
+  const visit = (rules: CSSRuleList) => {
+    for (const rule of rules) {
+      if ('cssRules' in rule && !(rule instanceof CSSStyleRule)) {
+        visit((rule as CSSGroupingRule).cssRules);
+        continue;
+      }
+      if (!(rule instanceof CSSStyleRule)) continue;
+      const match = /^\.nx\\:(typography-[a-z0-9-]+)$/.exec(rule.selectorText);
+      if (!match?.[1]) continue;
+      const tokens: Record<string, string> = {};
+      for (const property of ['font-size', 'line-height', 'letter-spacing']) {
+        const variable = /^var\(--([\w-]+)\)$/.exec(
+          rule.style.getPropertyValue(property).trim()
+        );
+        if (variable?.[1]) tokens[property] = variable[1];
+      }
+      found[match[1]] = tokens;
+    }
+  };
+  for (const sheet of document.styleSheets) visit(sheet.cssRules);
+  return found;
+}
+
+/**
+ * Records the target element: every element's box, computed styles and
  * declared sizes, every text run and SVG, then which nxds token each style
- * was declared with. For that second pass it sets every token on the wrapper
- * to a stand-in no real value uses, reads the styles again, and decodes the
- * stand-ins that come out. Two tokens with the same value get different
- * stand-ins, so a binding never comes from matching values.
+ * was declared with. For that second pass it sets every token on the page's
+ * root element to a stand-in no real value uses, reads the styles again, and
+ * decodes the stand-ins that come out. Two tokens with the same value get
+ * different stand-ins, so a binding never comes from matching values.
  */
 export function recordVariant(input: RecordInput): Recorded {
   const STYLE = [
@@ -195,7 +388,6 @@ export function recordVariant(input: RecordInput): Recorded {
     'opacity',
     'box-shadow',
     'overflow-x',
-    'transform',
     'translate',
     'outline-style',
     'outline-width',
@@ -213,13 +405,7 @@ export function recordVariant(input: RecordInput): Recorded {
     'text-align',
     'white-space',
   ];
-  const DECLARED = [
-    'width',
-    'height',
-    'min-width',
-    'min-height',
-    'grid-template-columns',
-  ];
+  const DECLARED = ['width', 'height', 'grid-template-columns'];
   const COLOR_PROBES = [
     'background-color',
     'color',
@@ -252,22 +438,18 @@ export function recordVariant(input: RecordInput): Recorded {
     'border-bottom-left-radius',
     'outline-width',
     'outline-offset',
+    'line-height',
+    'letter-spacing',
   ];
+  const SVG_SHAPES =
+    'path, rect, circle, ellipse, line, polyline, polygon, text';
 
-  const wrapper = document.querySelector<HTMLElement>('[data-capture-root]');
-  const root = wrapper?.firstElementChild;
-  if (!wrapper || !(root instanceof Element)) {
-    throw new Error('Nothing is mounted to record.');
-  }
+  const root = document.querySelector(input.target);
+  if (!(root instanceof Element))
+    throw new Error(`Nothing matches ${input.target}.`);
   for (const { selector, name } of input.parts) {
-    for (const el of wrapper.querySelectorAll(selector)) {
+    for (const el of document.querySelectorAll(selector))
       el.setAttribute('data-figma-part', name);
-    }
-  }
-  for (const { selector, name } of input.texts) {
-    for (const el of wrapper.querySelectorAll(selector)) {
-      el.setAttribute('data-figma-text', name);
-    }
   }
 
   // Pressed shrinks the root with `scale`. Figma can't scale a variant, so
@@ -282,11 +464,7 @@ export function recordVariant(input: RecordInput): Recorded {
     height: rect.height,
   });
   const typographyOf = (el: Element) => {
-    for (
-      let at: Element | null = el;
-      at && at !== wrapper;
-      at = at.parentElement
-    ) {
+    for (let at: Element | null = el; at; at = at.parentElement) {
       for (const name of at.classList) {
         const match = /^nx:(typography-[a-z0-9-]+)$/.exec(name);
         if (match?.[1]) return match[1];
@@ -299,18 +477,47 @@ export function recordVariant(input: RecordInput): Recorded {
     for (const { name, value } of el.attributes) {
       if (
         name.startsWith('data-') ||
-        name === 'disabled' ||
-        name === 'aria-invalid'
+        [
+          'disabled',
+          'role',
+          'aria-invalid',
+          'aria-selected',
+          'aria-checked',
+          'aria-current',
+        ].includes(name)
       ) {
         found[name] = value;
       }
     }
     return found;
   };
+  // Each shape's computed paint, written in, so the markup draws without the page's CSS.
   const svgMarkup = (svg: SVGSVGElement, rect: DOMRect) => {
     const copy = svg.cloneNode(true) as SVGSVGElement;
     copy.setAttribute('width', String(rect.width));
     copy.setAttribute('height', String(rect.height));
+    const sources = [svg, ...svg.querySelectorAll(SVG_SHAPES)];
+    const targets = [copy, ...copy.querySelectorAll(SVG_SHAPES)];
+    targets.forEach((node, index) => {
+      const source = sources[index];
+      if (!source) return;
+      const computed = getComputedStyle(source);
+      for (const property of [
+        'fill',
+        'stroke',
+        'stroke-width',
+        'opacity',
+        'fill-opacity',
+        'stroke-opacity',
+      ]) {
+        node.setAttribute(property, computed.getPropertyValue(property));
+      }
+      if (node.tagName.toLowerCase() === 'text') {
+        node.setAttribute('font-family', computed.fontFamily);
+        node.setAttribute('font-size', computed.fontSize);
+        node.setAttribute('font-weight', computed.fontWeight);
+      }
+    });
     for (const node of [copy, ...copy.querySelectorAll('*')]) {
       node.removeAttribute('class');
       node.removeAttribute('style');
@@ -334,7 +541,7 @@ export function recordVariant(input: RecordInput): Recorded {
       tag: el.tagName.toLowerCase(),
       slot: el.getAttribute('data-slot'),
       part: el.getAttribute('data-figma-part'),
-      textProperty: el.getAttribute('data-figma-text'),
+      classes: el.getAttribute('class') ?? '',
       attributes: attributesOf(el),
       typography: typographyOf(el),
       rect: relative(box),
@@ -348,12 +555,21 @@ export function recordVariant(input: RecordInput): Recorded {
       facts.svg = svgMarkup(el, box);
       return facts;
     }
-    if (el instanceof HTMLInputElement) {
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
       facts.input = {
         value: el.value,
         placeholder: el.placeholder,
         placeholderColor: getComputedStyle(el, '::placeholder').color,
       };
+    }
+    // A closed <select> draws only its selected option's text, never its options.
+    if (el instanceof HTMLSelectElement) {
+      facts.input = {
+        value: el.selectedOptions[0]?.text ?? '',
+        placeholder: '',
+        placeholderColor: computed.color,
+      };
+      return facts;
     }
     for (const node of el.childNodes) {
       if (node instanceof Element) {
@@ -378,13 +594,26 @@ export function recordVariant(input: RecordInput): Recorded {
   };
   const tree = walk(root);
 
+  // Paints each SVG shape draws with before the stand-ins go in.
+  const shapePaints = new Map<Element, string[]>();
+  for (const [el, facts] of recorded) {
+    if (!facts.svg) continue;
+    for (const shape of el.querySelectorAll(SVG_SHAPES)) {
+      const computed = getComputedStyle(shape);
+      shapePaints.set(shape, [computed.fill, computed.stroke]);
+    }
+  }
+
   const standIn = (kind: Kind, index: number) => {
     if (kind === 'color') return `rgb(1, ${index >> 8}, ${index & 255})`;
     if (kind === 'shadow') return `0px 0px 0px ${10000 + index}px rgb(1, 0, 0)`;
+    // Chrome caps font sizes at 10000px, so they get their own range below it.
+    if (kind === 'font-size') return `${5000 + index}px`;
     return `${10000 + index}px`;
   };
+  const html = document.documentElement;
   input.tokens.forEach(([name, kind], index) =>
-    wrapper.style.setProperty(`--${name}`, standIn(kind, index))
+    html.style.setProperty(`--${name}`, standIn(kind, index))
   );
   const tokenAt = (index: number) => input.tokens[index]?.[0];
   const colorToken = (value: string) => {
@@ -397,18 +626,22 @@ export function recordVariant(input: RecordInput): Recorded {
     const match = /^(1\d{4})px$/.exec(value.trim());
     return match ? tokenAt(Number(match[1]) - 10000) : undefined;
   };
+  // Only font-size reads the font-size range: a length in `em` scales with it, but wasn't declared with it.
+  const fontSizeToken = (value: string) => {
+    const match = /^(5\d{3})px$/.exec(value.trim());
+    return match ? tokenAt(Number(match[1]) - 5000) : undefined;
+  };
   for (const [el, facts] of recorded) {
     const computed = getComputedStyle(el);
     const map = el.computedStyleMap();
     const set = (property: string, token: string | undefined) => {
       if (token !== undefined) facts.tokens[property] = token;
     };
-    for (const property of COLOR_PROBES) {
+    for (const property of COLOR_PROBES)
       set(property, colorToken(computed.getPropertyValue(property)));
-    }
-    for (const property of LENGTH_PROBES) {
+    for (const property of LENGTH_PROBES)
       set(property, lengthToken(String(map.get(property) ?? '')));
-    }
+    set('font-size', fontSizeToken(computed.fontSize));
     const [x = '', y = ''] = String(map.get('translate') ?? '').split(' ');
     set('translate-x', lengthToken(x));
     set('translate-y', lengthToken(y));
@@ -420,8 +653,21 @@ export function recordVariant(input: RecordInput): Recorded {
         colorToken(getComputedStyle(el, '::placeholder').color)
       );
     }
+    if (facts.svg) {
+      const colors: { color: string; token: string }[] = [];
+      for (const shape of el.querySelectorAll(SVG_SHAPES)) {
+        const before = shapePaints.get(shape) ?? [];
+        const after = getComputedStyle(shape);
+        [after.fill, after.stroke].forEach((value, index) => {
+          const token = colorToken(value);
+          const color = before[index];
+          if (token && color) colors.push({ color, token });
+        });
+      }
+      facts.svgColors = colors;
+    }
   }
-  for (const [name] of input.tokens) wrapper.style.removeProperty(`--${name}`);
+  for (const [name] of input.tokens) html.style.removeProperty(`--${name}`);
   (root as HTMLElement).style.removeProperty('scale');
   return { tree, rootScale };
 }

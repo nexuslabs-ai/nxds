@@ -42,6 +42,7 @@ export interface TokensFile {
   radius?: { tokens: ListToken[] };
   borderWidth?: { tokens: ListToken[] };
   shadow?: { tokens: ListToken[] };
+  typeScale?: { tokens: ListToken[] };
 }
 
 const toRgb = converter('rgb');
@@ -170,12 +171,36 @@ function floatVariables(
   });
 }
 
-export function collections(tokens: TokensFile): CollectionSpec[] {
+/** A palette colour, such as `nx-color-zinc-900`, rather than a semantic one. */
+export const isPrimitiveColor = (token: string) =>
+  /^nx-color-[a-z]+-\d+$/.test(token);
+
+/** `nx-typography-line-height-sm` → `line-height/sm`: the scale names the group. */
+function typographyName(token: string) {
+  const short = token
+    .replace(/^nx-typography-/, '')
+    .replace(/^letterspacing-/, 'letter-spacing-');
+  const match = /^(size|weight|line-height|letter-spacing)-(.+)$/.exec(short);
+  return match ? `${match[1]}/${match[2]}` : short;
+}
+
+/**
+ * The variable collections. A palette colour is left out unless a layer in
+ * `used` binds it, since components read semantic colours.
+ */
+export function collections(
+  tokens: TokensFile,
+  used: ReadonlySet<string>
+): CollectionSpec[] {
   return [
     {
       name: 'Color',
       themed: true,
-      variables: colorVariables(tokens.color.tokens),
+      variables: colorVariables(
+        tokens.color.tokens.filter(
+          (token) => !isPrimitiveColor(token.name) || used.has(token.name)
+        )
+      ),
     },
     {
       name: 'Spacing',
@@ -195,6 +220,16 @@ export function collections(tokens: TokensFile): CollectionSpec[] {
         'nx-borderwidth-'
       ),
     },
+    {
+      name: 'Typography',
+      themed: false,
+      variables: floatVariables(tokens.typeScale?.tokens ?? [], '').map(
+        (variable) => ({
+          ...variable,
+          name: typographyName(variable.token),
+        })
+      ),
+    },
   ];
 }
 
@@ -208,6 +243,13 @@ export function tracedTokens(tokens: TokensFile): [string, Kind][] {
     ...list(tokens.radius, 'length'),
     ...list(tokens.borderWidth, 'length'),
     ...list(tokens.shadow, 'shadow'),
+    ...(tokens.typeScale?.tokens ?? []).flatMap((token): [string, Kind][] => {
+      if (token.name.startsWith('nx-typography-size-'))
+        return [[token.name, 'font-size']];
+      if (/^nx-typography-(line-height|letterspacing)-/.test(token.name))
+        return [[token.name, 'length']];
+      return [];
+    }),
   ];
 }
 
@@ -222,7 +264,11 @@ function textStyleName(group: string, token: string) {
     : short;
 }
 
-export function textStyles(tokens: TokensFile): TextStyleSpec[] {
+/** The text styles. `declared` holds the typography tokens each style's class declares. */
+export function textStyles(
+  tokens: TokensFile,
+  declared: Readonly<Record<string, Readonly<Record<string, string>>>>
+): TextStyleSpec[] {
   return tokens.type.groups.flatMap((group) =>
     group.styles.map((style) => ({
       name: textStyleName(group.name, style.name),
@@ -232,6 +278,11 @@ export function textStyles(tokens: TokensFile): TextStyleSpec[] {
       size: px(style.fontSize) ?? 14,
       lineHeight: px(style.lineHeight),
       letterSpacing: px(style.letterSpacing) ?? 0,
+      variables: {
+        fontSize: declared[style.name]?.['font-size'],
+        lineHeight: declared[style.name]?.['line-height'],
+        letterSpacing: declared[style.name]?.['letter-spacing'],
+      },
       description: style.usage,
     }))
   );

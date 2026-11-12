@@ -2,13 +2,16 @@
 // vertical stack, and a grid a row of its columns, which is what a designer
 // builds by hand. Sizes come from what the CSS declared: a length is fixed and
 // bound to its token, `auto` hugs, and grow, stretch or 100% fills. Margins
-// and small in-flow offsets become padding, so spacing stays bound.
+// and small in-flow offsets become padding, so spacing stays bound. An icon
+// becomes an instance of the icon set, and a part another component draws
+// becomes an instance of that component.
 import type { ElementFacts, Recorded, TextFacts } from './page.ts';
 import type {
   AutoLayout,
   Bound,
   EffectStyleSpec,
   FrameLayer,
+  IconLayer,
   InstanceLayer,
   Layer,
   Padding,
@@ -20,25 +23,54 @@ import type {
 } from './spec.ts';
 import { firstFamily, hex, parseShadows, rgba } from './tokens.ts';
 
-export interface InstanceSource {
-  /** The component's name in Figma. */
+/** A variant of a component built earlier, as other components meet it. */
+export interface SourceVariant {
   name: string;
-  /** Its text property for the label, such as `Label`. */
-  textProperty?: string;
-  variant(attributes: Record<string, string>): Record<string, string>;
+  values: Record<string, string>;
+  /** How its root looks, to check an element really is this variant. */
+  fingerprint: string;
+}
+
+/** A component built earlier, which later components hold instances of. */
+export interface InstanceSource {
+  name: string;
+  variantProperties: readonly { name: string; values: readonly string[] }[];
+  variants: readonly SourceVariant[];
+  /** Its text properties, in the order its text runs appear. */
+  textProperties: readonly string[];
+  booleanProperties: readonly string[];
+  /** Its instance-swap properties, in the order its icons appear. */
+  swapProperties: readonly string[];
+  /** The variant an element of this component is, read from the element and its ancestors. */
+  variant(
+    element: ElementFacts,
+    ancestors: readonly ElementFacts[]
+  ): Record<string, string>;
 }
 
 export interface ConvertContext {
   component: string;
-  /** The root's `data-slot`, which part names drop as a prefix. */
+  /** The root's `data-slot`. */
   slot: string;
-  /** Root width for a component that fills its container. */
-  width?: number;
-  /** Components built before this one, by their root's `data-slot`. */
+  /** The card's slot prefix, such as `dropdown-menu`, which part names drop. */
+  prefix: string;
+  /** Text property names by the `data-slot` of the element holding the text. */
+  textNames: Readonly<Record<string, string>>;
+  /** Components built before this one, by each `data-slot` they draw. */
   instances: ReadonlyMap<string, InstanceSource>;
+  /** Icon names by their shape, from `svgSignature`. */
+  icons: ReadonlyMap<string, string>;
   textStyles: ReadonlyMap<string, TextStyleSpec>;
   effectStyles: ReadonlyMap<string, EffectStyleSpec>;
   notes: string[];
+}
+
+/** What one conversion tracks as it walks the tree. */
+interface Walk extends ConvertContext {
+  root: ElementFacts;
+  ancestors: ElementFacts[];
+  /** Property names given out so far in this variant, so each is unique. */
+  names: Map<string, number>;
 }
 
 /** How a parent lays out its children. `row` is a grid's row of columns, `column` one of its columns. */
@@ -71,18 +103,14 @@ const zero = (): Bound => ({ value: 0 });
 const isLength = (value: string | undefined) =>
   /^-?[\d.]+px$/.test(value ?? '');
 
-const bound = (el: ElementFacts, property: string): Bound => {
-  const token = el.tokens[property];
-  return token === undefined
-    ? { value: num(el.style[property]) }
-    : { value: num(el.style[property]), token };
-};
+const withToken = (value: number, token: string | undefined): Bound =>
+  token === undefined ? { value } : { value, token };
 
-const size = (el: ElementFacts, axis: 'width' | 'height'): Bound => {
-  const token = el.tokens[axis];
-  const value = el.rect[axis];
-  return token === undefined ? { value } : { value, token };
-};
+const bound = (el: ElementFacts, property: string): Bound =>
+  withToken(num(el.style[property]), el.tokens[property]);
+
+const size = (el: ElementFacts, axis: 'width' | 'height'): Bound =>
+  withToken(el.rect[axis], el.tokens[axis]);
 
 function paintOf(
   el: ElementFacts,
@@ -95,10 +123,44 @@ function paintOf(
   return token === undefined ? { color } : { color, token };
 }
 
+const BLACK: Paint = { color: { r: 0, g: 0, b: 0, a: 1 } };
+
+/** An SVG's shape: its viewBox and every path, so the same icon matches at any size or colour. */
+export function svgSignature(svg: string) {
+  const viewBox = /viewBox="([^"]*)"/.exec(svg)?.[1] ?? '';
+  const paths = [...svg.matchAll(/\sd="([^"]*)"/g)].map((match) => match[1]);
+  return paths.length > 0 ? `${viewBox}|${paths.join('|')}` : '';
+}
+
+/** How an element's box looks: the computed values a component's variants differ by. */
+export function fingerprint(el: ElementFacts) {
+  const properties = [
+    'background-color',
+    'color',
+    'border-top-width',
+    'border-top-color',
+    'border-bottom-width',
+    'border-left-width',
+    'padding-top',
+    'padding-right',
+    'padding-bottom',
+    'padding-left',
+    'border-top-left-radius',
+    'font-size',
+    'opacity',
+  ];
+  return [
+    el.tag,
+    Math.round(el.rect.height),
+    ...properties.map((property) => el.style[property]),
+  ].join('|');
+}
+
 const visible = (el: ElementFacts | TextFacts) => {
   if (el.kind === 'text') return true;
   const { style, rect } = el;
-  if (style['display'] === 'none') return false;
+  if (style['display'] === 'none' || style['visibility'] === 'hidden')
+    return false;
   // Screen-reader-only text, such as AlertClose's "Dismiss alert".
   if (style['clip-path'] === 'inset(50%)') return false;
   return !(
@@ -112,8 +174,8 @@ const isAbsolute = (el: ElementFacts) =>
   el.style['position'] === 'absolute' || el.style['position'] === 'fixed';
 
 function translateOf(el: ElementFacts) {
-  const [x = '0', y = '0'] = (el.style['translate'] ?? 'none').split(' ');
   if (el.style['translate'] === 'none') return { x: 0, y: 0 };
+  const [x = '0', y = '0'] = (el.style['translate'] ?? 'none').split(' ');
   return { x: num(x), y: num(y) };
 }
 
@@ -144,17 +206,31 @@ const isPlain = (el: ElementFacts) =>
   !hasPadding(el) &&
   !hasOutline(el);
 
-function layerName(el: ElementFacts, ctx: ConvertContext) {
-  if (el.part) return el.part;
+const capitalize = (words: string) =>
+  words.charAt(0).toUpperCase() + words.slice(1);
+
+function layerName(el: ElementFacts, ctx: Walk) {
+  if (el.part) return capitalize(el.part.replace(/^Show /, ''));
   if (el.slot === ctx.slot) return ctx.component;
   if (el.slot) {
-    const short = el.slot.startsWith(`${ctx.slot}-`)
-      ? el.slot.slice(ctx.slot.length + 1)
+    const short = el.slot.startsWith(`${ctx.prefix}-`)
+      ? el.slot.slice(ctx.prefix.length + 1)
       : el.slot;
-    const words = short.replace(/-/g, ' ');
-    return words.charAt(0).toUpperCase() + words.slice(1);
+    return capitalize(short.replace(/-/g, ' '));
   }
-  return el.tag === 'svg' ? 'Icon' : 'Frame';
+  const role = el.attributes['role'];
+  if (role && role !== 'presentation' && role !== 'none')
+    return capitalize(role);
+  if (el.tag === 'svg') return 'Icon';
+  if (el.tag === 'img') return 'Image';
+  return 'Frame';
+}
+
+/** `name`, or `name 2`, `name 3` when the variant already has one. */
+function unique(ctx: Walk, name: string) {
+  const count = (ctx.names.get(name) ?? 0) + 1;
+  ctx.names.set(name, count);
+  return count === 1 ? name : `${name} ${count}`;
 }
 
 const visibleKids = (el: ElementFacts) => el.children.filter(visible);
@@ -194,17 +270,21 @@ function axisSizing(
   el: ElementFacts,
   axis: 'horizontal' | 'vertical',
   parent: Parent | null,
-  autoLayout: boolean,
-  ctx: ConvertContext
+  autoLayout: boolean
 ): Sizing {
   const declared = el.declared[axis === 'horizontal' ? 'width' : 'height'];
   const hug: Sizing = autoLayout ? 'HUG' : 'FIXED';
-  if (!parent) {
-    if (axis === 'horizontal' && ctx.width !== undefined) return 'FIXED';
-    return isLength(declared) ? 'FIXED' : hug;
-  }
   if (isLength(declared)) return 'FIXED';
   const full = declared?.endsWith('%') === true && num(declared) >= 100;
+  if (!parent) {
+    // A root that fills its container, or takes a percentage of it, keeps the width it had.
+    if (
+      axis === 'horizontal' &&
+      (declared?.endsWith('%') || !el.style['display']?.startsWith('inline'))
+    )
+      return 'FIXED';
+    return hug;
+  }
   const align =
     el.style['align-self'] === 'auto'
       ? parent.alignItems
@@ -233,12 +313,11 @@ function axisSizing(
 function sizingOf(
   el: ElementFacts,
   parent: Parent | null,
-  autoLayout: boolean,
-  ctx: ConvertContext
+  autoLayout: boolean
 ) {
   return {
-    horizontal: axisSizing(el, 'horizontal', parent, autoLayout, ctx),
-    vertical: axisSizing(el, 'vertical', parent, autoLayout, ctx),
+    horizontal: axisSizing(el, 'horizontal', parent, autoLayout),
+    vertical: axisSizing(el, 'vertical', parent, autoLayout),
   };
 }
 
@@ -249,36 +328,40 @@ function textLayer(
   name: string,
   sizing: { horizontal: Sizing; vertical: Sizing },
   opacity: number,
-  ctx: ConvertContext
+  ctx: Walk
 ): TextLayer {
   const { style } = owner;
   const collapse = !(style['white-space'] ?? '').startsWith('pre');
+  const lineHeight =
+    style['line-height'] === 'normal' ? undefined : bound(owner, 'line-height');
   const font = {
     family: firstFamily(style['font-family'] ?? ''),
     weight: num(style['font-weight']) || 400,
-    size: num(style['font-size']),
-    lineHeight:
-      style['line-height'] === 'normal' ? undefined : num(style['line-height']),
+    size: bound(owner, 'font-size'),
+    lineHeight,
     letterSpacing:
-      style['letter-spacing'] === 'normal' ? 0 : num(style['letter-spacing']),
+      style['letter-spacing'] === 'normal'
+        ? zero()
+        : bound(owner, 'letter-spacing'),
   };
   const textStyle = owner.typography
     ? ctx.textStyles.get(owner.typography)
     : undefined;
   const matches =
     textStyle !== undefined &&
-    textStyle.size === font.size &&
+    textStyle.size === font.size.value &&
     textStyle.weight === font.weight &&
-    textStyle.lineHeight === font.lineHeight &&
-    Math.abs(textStyle.letterSpacing - font.letterSpacing) < 0.01;
+    textStyle.lineHeight === font.lineHeight?.value &&
+    Math.abs(textStyle.letterSpacing - font.letterSpacing.value) < 0.01;
   const align = style['text-align'];
   const layer: TextLayer = {
     type: 'TEXT',
     name,
     source: `text in ${owner.tag}`,
     characters: collapse ? run.text.replace(/\s+/g, ' ').trim() : run.text,
+    textProperty: unique(ctx, name),
     font,
-    fill: paintOf(owner, 'color') ?? { color: { r: 0, g: 0, b: 0, a: 1 } },
+    fill: paintOf(owner, 'color') ?? BLACK,
     textCase: style['text-transform'] === 'uppercase' ? 'UPPER' : 'ORIGINAL',
     underline: (style['text-decoration-line'] ?? '').includes('underline'),
     align:
@@ -297,7 +380,6 @@ function textLayer(
     opacity,
   };
   if (matches) layer.style = textStyle.name;
-  if (owner.textProperty) layer.textProperty = owner.textProperty;
   return layer;
 }
 
@@ -306,61 +388,142 @@ function runSizing(
   run: TextFacts,
   parent: Parent
 ): { horizontal: Sizing; vertical: Sizing } {
-  const horizontalFlow = parent.mode === 'HORIZONTAL';
-  if (horizontalFlow)
+  if (parent.mode === 'HORIZONTAL')
     return { horizontal: run.lines > 1 ? 'FILL' : 'HUG', vertical: 'HUG' };
   return { horizontal: 'FILL', vertical: 'HUG' };
 }
 
-function vectorLayer(
+/** An icon from the set, as an instance, or any other SVG as vectors. `named` is the element whose name and part it takes. */
+function svgLayer(
   svg: ElementFacts,
   named: ElementFacts,
-  ctx: ConvertContext
-): VectorLayer {
-  const color = rgba(svg.style['color'] ?? '');
-  const layer: VectorLayer = {
-    type: 'SVG',
+  ctx: Walk
+): IconLayer | VectorLayer {
+  const base = {
     name: layerName(named, ctx),
     source: `svg${svg.slot ? `[data-slot=${svg.slot}]` : ''}`,
-    svg: color
-      ? (svg.svg ?? '').replaceAll('currentColor', hex(color))
-      : (svg.svg ?? ''),
     width: size(svg, 'width'),
     height: size(svg, 'height'),
-    sizing: { horizontal: 'FIXED', vertical: 'FIXED' },
+    sizing: { horizontal: 'FIXED', vertical: 'FIXED' } as const,
     opacity:
-      num(svg.style['opacity'] ?? '1') * num(named.style['opacity'] ?? '1'),
+      num(svg.style['opacity'] ?? '1') *
+      (named === svg ? 1 : num(named.style['opacity'] ?? '1')),
+    ...(named.part ? { visibleProperty: named.part } : {}),
   };
-  const fill = paintOf(svg, 'color');
-  if (fill) layer.fill = fill;
-  if (named.part) layer.visibleProperty = named.part;
-  return layer;
+  const icon = ctx.icons.get(svgSignature(svg.svg ?? ''));
+  if (icon) {
+    const layer: IconLayer = {
+      ...base,
+      type: 'ICON',
+      icon,
+      fill: paintOf(svg, 'color') ?? BLACK,
+    };
+    const slotted = [svg.slot, named.slot].some((slot) =>
+      slot?.includes('icon')
+    );
+    if (slotted || named.part) layer.swapProperty = unique(ctx, base.name);
+    return layer;
+  }
+  const colors: Record<string, string> = {};
+  for (const { color, token } of svg.svgColors ?? []) {
+    const parsed = rgba(color);
+    if (parsed) colors[hex(parsed)] = token;
+  }
+  // SVG import reads hex colours, so each computed colour is written as one, with its alpha as an opacity.
+  const markup = (svg.svg ?? '').replace(
+    /(fill|stroke)="([^"]+)"/g,
+    (whole, attribute: string, value: string) => {
+      const parsed = rgba(value);
+      if (!parsed || value === 'none') return whole;
+      return `${attribute}="${hex(parsed)}"${parsed.a < 1 ? ` ${attribute}-opacity="${parsed.a}"` : ''}`;
+    }
+  );
+  return { ...base, type: 'SVG', svg: markup, colors };
+}
+
+/** Every text run, icon and part under `el`, in order. */
+function contents(el: ElementFacts) {
+  const texts: string[] = [];
+  const icons: ElementFacts[] = [];
+  const parts = new Set<string>();
+  const visit = (facts: ElementFacts) => {
+    if (facts.part) parts.add(facts.part);
+    if (facts.svg !== undefined) {
+      icons.push(facts);
+      return;
+    }
+    for (const child of facts.children.filter(visible)) {
+      if (child.kind === 'text')
+        texts.push(child.text.replace(/\s+/g, ' ').trim());
+      else visit(child);
+    }
+  };
+  visit(el);
+  return { texts: texts.filter(Boolean), icons, parts };
+}
+
+/** The variant of `source` an element is: the one its attributes name, if it looks like it, or the variant that does. */
+function matchVariant(el: ElementFacts, source: InstanceSource, ctx: Walk) {
+  const wanted = source.variant(el, ctx.ancestors);
+  const looks = fingerprint(el);
+  const named = source.variants.find((entry) =>
+    Object.entries(wanted).every(
+      ([name, value]) => entry.values[name] === value
+    )
+  );
+  if (named?.fingerprint === looks) return named;
+  const lookalikes = source.variants.filter(
+    (entry) => entry.fingerprint === looks
+  );
+  const agreement = (entry: SourceVariant) =>
+    Object.entries(wanted).filter(
+      ([name, value]) => entry.values[name] === value
+    ).length;
+  return lookalikes.sort((a, b) => agreement(b) - agreement(a))[0];
 }
 
 function instanceLayer(
   el: ElementFacts,
   source: InstanceSource,
   parent: Parent,
-  ctx: ConvertContext
-): InstanceLayer {
-  const label = (facts: ElementFacts): string =>
-    facts.children
-      .filter(visible)
-      .map((child) => (child.kind === 'text' ? child.text : label(child)))
-      .join('')
-      .replace(/\s+/g, ' ')
-      .trim();
-  const text = label(el);
+  ctx: Walk
+): InstanceLayer | null {
+  const variant = matchVariant(el, source, ctx);
+  if (!variant) {
+    ctx.notes.push(
+      `${layerName(el, ctx)}: no ${source.name} variant looks like it, so it's drawn as layers.`
+    );
+    return null;
+  }
+  const found = contents(el);
+  const texts: Record<string, string> = {};
+  source.textProperties.forEach((property, index) => {
+    const text = found.texts[index];
+    if (text !== undefined) texts[property] = text;
+  });
+  const booleans: Record<string, boolean> = {};
+  for (const property of source.booleanProperties)
+    booleans[property] = found.parts.has(property);
+  const swaps: Record<string, string> = {};
+  const icons = found.icons
+    .map((svg) => ctx.icons.get(svgSignature(svg.svg ?? '')))
+    .filter((name) => name !== undefined);
+  source.swapProperties.forEach((property, index) => {
+    const name = icons[index];
+    if (name) swaps[property] = name;
+  });
   const layer: InstanceLayer = {
     type: 'INSTANCE',
     name: source.name,
     source: `${el.tag}[data-slot=${el.slot}]`,
     component: source.name,
-    variant: source.variant(el.attributes),
-    texts: source.textProperty && text ? { [source.textProperty]: text } : {},
+    variant: variant.values,
+    texts,
+    booleans,
+    swaps,
     width: size(el, 'width'),
     height: size(el, 'height'),
-    sizing: sizingOf(el, parent, true, ctx),
+    sizing: sizingOf(el, parent, true),
     opacity: 1,
   };
   if (el.part) layer.visibleProperty = el.part;
@@ -371,10 +534,7 @@ function instanceLayer(
 function focusRing(el: ElementFacts): FrameLayer {
   const width = num(el.style['outline-width']);
   const distance = width + num(el.style['outline-offset']);
-  const stroke: Bound =
-    el.tokens['outline-width'] === undefined
-      ? { value: width }
-      : { value: width, token: el.tokens['outline-width'] };
+  const stroke = withToken(width, el.tokens['outline-width']);
   // A pill's ring stays a pill: its corners can't be rounder than half its short side.
   const pill = Math.min(el.rect.width, el.rect.height) / 2 + distance;
   const corner = (css: string): Bound => ({
@@ -391,9 +551,7 @@ function focusRing(el: ElementFacts): FrameLayer {
     opacity: 1,
     fills: [],
     stroke: {
-      paint: paintOf(el, 'outline-color') ?? {
-        color: { r: 0, g: 0, b: 0, a: 1 },
-      },
+      paint: paintOf(el, 'outline-color') ?? BLACK,
       top: stroke,
       right: stroke,
       bottom: stroke,
@@ -411,16 +569,22 @@ function focusRing(el: ElementFacts): FrameLayer {
   };
 }
 
-function boxOf(el: ElementFacts, ctx: ConvertContext) {
+function boxOf(el: ElementFacts, ctx: Walk) {
   const widths = strokeWidths(el);
   const side = SIDES[widths.findIndex((width) => width > 0)];
   const strokeSide = (index: number): Bound => {
-    const sideName = SIDES[index] ?? 'top';
-    const token = el.tokens[`border-${sideName}-width`];
     const value = widths[index] ?? 0;
-    return token === undefined || value === 0 ? { value } : { value, token };
+    return value === 0
+      ? { value }
+      : withToken(value, el.tokens[`border-${SIDES[index] ?? 'top'}-width`]);
   };
-  const fill = hasFill(el) ? paintOf(el, 'background-color') : undefined;
+  // An image is drawn as a placeholder fill: the export carries no image files.
+  const fill =
+    el.tag === 'img'
+      ? { color: { r: 0.9, g: 0.9, b: 0.9, a: 1 } }
+      : hasFill(el)
+        ? paintOf(el, 'background-color')
+        : undefined;
   const shadowToken = el.tokens['box-shadow'];
   const effects = parseShadows(el.style['box-shadow'] ?? '');
   const style = shadowToken
@@ -449,11 +613,7 @@ function boxOf(el: ElementFacts, ctx: ConvertContext) {
 }
 
 /** Margins, and an in-flow translate, as padding around the layer. */
-function offsetsOf(
-  el: ElementFacts,
-  ctx: ConvertContext,
-  name: string
-): Padding | null {
+function offsetsOf(el: ElementFacts, ctx: Walk, name: string): Padding | null {
   const offsets: Padding = {
     top: bound(el, 'margin-top'),
     right: bound(el, 'margin-right'),
@@ -504,14 +664,14 @@ function withOffsets(layer: Layer, offsets: Padding): Layer {
     side === 'top' || side === 'bottom'
       ? layer.sizing.vertical === 'FIXED'
       : layer.sizing.horizontal === 'FIXED';
-  const canPad =
+  if (
     layer.type === 'FRAME' &&
     layer.layout !== undefined &&
     layer.fills.length === 0 &&
     layer.stroke === undefined &&
     layer.shadow === undefined &&
-    SIDES.every((side) => offsets[side].value === 0 || !fixed(side));
-  if (canPad && layer.type === 'FRAME' && layer.layout) {
+    SIDES.every((side) => offsets[side].value === 0 || !fixed(side))
+  ) {
     const { padding } = layer.layout;
     for (const side of SIDES) padding[side] = add(padding[side], offsets[side]);
     layer.width = {
@@ -564,10 +724,17 @@ function withOffsets(layer: Layer, offsets: Padding): Layer {
 function childLayer(
   child: ElementFacts | TextFacts,
   parent: Parent,
-  ctx: ConvertContext
+  ctx: Walk
 ): Layer | null {
   if (child.kind === 'text') {
-    const name = parent.facts.textProperty ?? 'Text';
+    // The root's own text is its Label; text in a named part takes the part's name.
+    const owner = parent.facts;
+    const name =
+      owner === ctx.root
+        ? 'Label'
+        : owner.slot
+          ? layerName(owner, ctx)
+          : 'Text';
     return textLayer(
       child,
       parent.facts,
@@ -603,18 +770,16 @@ const isDeclaredFixed = (el: ElementFacts) =>
 /** The grid's columns, each the children whose box starts in it. Null when a child spans columns. */
 function gridColumns(el: ElementFacts, kids: ElementFacts[]) {
   const used = (el.style['grid-template-columns'] ?? '').split(' ').map(num);
-  const start =
-    num(el.style['padding-left']) + num(el.style['border-left-width']);
   const gap = num(el.style['column-gap']);
   const starts: number[] = [];
-  let at = start;
+  let at = num(el.style['padding-left']) + num(el.style['border-left-width']);
   for (const track of used) {
     starts.push(at);
     at += track + gap;
   }
   const columns: ElementFacts[][] = used.map(() => []);
   for (const kid of kids) {
-    const offset = kid.rect.x - el.rect.x;
+    const offset = kid.rect.x;
     let index = 0;
     starts.forEach((columnStart, i) => {
       if (
@@ -654,7 +819,19 @@ function tracksOf(list: string) {
 
 function frameChildren(
   el: ElementFacts,
-  ctx: ConvertContext
+  ctx: Walk
+): { layout?: AutoLayout; children: Layer[] } {
+  ctx.ancestors.push(el);
+  try {
+    return layoutChildren(el, ctx);
+  } finally {
+    ctx.ancestors.pop();
+  }
+}
+
+function layoutChildren(
+  el: ElementFacts,
+  ctx: Walk
 ): { layout?: AutoLayout; children: Layer[] } {
   const kids = visibleKids(el);
   const display = el.style['display'] ?? 'block';
@@ -672,7 +849,7 @@ function frameChildren(
       .map((item) => childLayer(item, parent, ctx))
       .filter((layer): layer is Layer => layer !== null);
 
-  if (el.tag === 'input' && el.input) {
+  if (el.input) {
     const showsValue = el.input.value !== '';
     // The placeholder draws in its own colour, from `::placeholder`.
     const owner: ElementFacts = {
@@ -690,22 +867,21 @@ function frameChildren(
       : el.tokens['placeholder-color'];
     delete owner.tokens['color'];
     if (colorToken) owner.tokens['color'] = colorToken;
-    const content =
-      num(el.style['padding-top']) + num(el.style['border-top-width']);
     const lineHeight = num(el.style['line-height']) || el.rect.height;
     const run: TextFacts = {
       kind: 'text',
       text: showsValue ? el.input.value : el.input.placeholder,
-      rect: { x: 0, y: content, width: el.rect.width, height: lineHeight },
+      rect: { x: 0, y: 0, width: el.rect.width, height: lineHeight },
       lines: 1,
     };
+    const counter = el.tag === 'textarea' ? 'MIN' : 'CENTER';
     return {
-      layout: { ...base, mode: 'HORIZONTAL', counterAlign: 'CENTER' },
+      layout: { ...base, mode: 'HORIZONTAL', counterAlign: counter },
       children: [
         textLayer(
           run,
           owner,
-          el.textProperty ?? 'Text',
+          'Text',
           { horizontal: 'FILL', vertical: 'HUG' },
           1,
           ctx
@@ -717,11 +893,10 @@ function frameChildren(
   if (display.includes('flex')) {
     const direction = el.style['flex-direction'] ?? 'row';
     const mode = direction.startsWith('column') ? 'VERTICAL' : 'HORIZONTAL';
-    if (direction.endsWith('reverse')) {
+    if (direction.endsWith('reverse'))
       ctx.notes.push(
         `${layerName(el, ctx)}: ${direction} is drawn in source order.`
       );
-    }
     const layout: AutoLayout = {
       ...base,
       mode,
@@ -804,11 +979,6 @@ function frameChildren(
       const [only] = items;
       if (items.length === 0 || !only) return [];
       if (items.length === 1) return build(row, [only]);
-      const columnFacts: ElementFacts = {
-        ...el,
-        style: { ...el.style, 'align-self': 'auto', 'flex-grow': '0' },
-        declared: { width: 'auto', height: 'auto' },
-      };
       const parent: Parent = {
         kind: 'column',
         mode: 'VERTICAL',
@@ -843,7 +1013,7 @@ function frameChildren(
         },
         sizing: {
           horizontal: track,
-          vertical: axisSizing(columnFacts, 'vertical', row, true, ctx),
+          vertical: stretches(alignItems) ? 'FILL' : 'HUG',
         },
         opacity: 1,
         fills: [],
@@ -878,33 +1048,31 @@ function frameChildren(
 function elementLayer(
   el: ElementFacts,
   parent: Parent | null,
-  ctx: ConvertContext,
+  ctx: Walk,
   isRoot: boolean
 ): Layer | null {
   if (!isRoot && !visible(el)) return null;
-  const instance =
+  const source =
     isRoot || el.slot === null ? undefined : ctx.instances.get(el.slot);
-  if (instance && parent) return instanceLayer(el, instance, parent, ctx);
-  if (el.svg !== undefined) return vectorLayer(el, el, ctx);
+  if (source && parent) {
+    const instance = instanceLayer(el, source, parent, ctx);
+    if (instance) return instance;
+  }
+  if (el.svg !== undefined) return svgLayer(el, el, ctx);
   const kids = visibleKids(el);
   const [only] = kids;
-  if (
-    !isRoot &&
-    only &&
-    kids.length === 1 &&
-    isPlain(el) &&
-    el.tag !== 'input'
-  ) {
+  if (!isRoot && only && kids.length === 1 && isPlain(el) && !el.input) {
     // A box with a declared size, such as AlertClose's 32px button, keeps its frame.
     const sized =
       isLength(el.declared['width']) || isLength(el.declared['height']);
     if (only.kind === 'text' && parent && !sized) {
-      const name = el.part ?? el.textProperty ?? layerName(el, ctx);
+      const named =
+        (el.slot ? ctx.textNames[el.slot] : undefined) ?? layerName(el, ctx);
       const layer = textLayer(
         only,
         el,
-        name,
-        sizingOf(el, parent, true, ctx),
+        named === 'Frame' ? 'Text' : named,
+        sizingOf(el, parent, true),
         num(el.style['opacity'] ?? '1'),
         ctx
       );
@@ -916,21 +1084,17 @@ function elementLayer(
       Math.abs(only.rect.width - el.rect.width) < 0.5 &&
       Math.abs(only.rect.height - el.rect.height) < 0.5;
     if (only.kind === 'element' && only.svg !== undefined && sameBox)
-      return vectorLayer(only, el, ctx);
+      return svgLayer(only, el, ctx);
   }
   const { layout, children } = frameChildren(el, ctx);
   const inFlow = children.some((child) => !child.absolute);
-  const sizing = sizingOf(el, parent, layout !== undefined && inFlow, ctx);
   const frame: FrameLayer = {
     type: 'FRAME',
     name: layerName(el, ctx),
     source: `${el.tag}${el.slot ? `[data-slot=${el.slot}]` : ''}`,
-    width:
-      isRoot && ctx.width !== undefined
-        ? { value: ctx.width }
-        : size(el, 'width'),
+    width: size(el, 'width'),
     height: size(el, 'height'),
-    sizing,
+    sizing: sizingOf(el, parent, layout !== undefined && inFlow),
     opacity: num(el.style['opacity'] ?? '1'),
     ...boxOf(el, ctx),
     clips:
@@ -943,6 +1107,45 @@ function elementLayer(
   return frame;
 }
 
+/** A component whose root is an SVG, such as Spinner: a frame its size holding the icon or vectors. */
+function svgRoot(svg: ElementFacts, ctx: Walk): FrameLayer {
+  const layer = svgLayer(svg, svg, ctx);
+  return {
+    type: 'FRAME',
+    name: ctx.component,
+    source: `svg${svg.slot ? `[data-slot=${svg.slot}]` : ''}`,
+    width: layer.width,
+    height: layer.height,
+    sizing: { horizontal: 'FIXED', vertical: 'FIXED' },
+    opacity: 1,
+    fills: [],
+    radius: {
+      topLeft: zero(),
+      topRight: zero(),
+      bottomRight: zero(),
+      bottomLeft: zero(),
+    },
+    clips: false,
+    layout: {
+      mode: 'HORIZONTAL',
+      wrap: false,
+      gap: zero(),
+      lineGap: zero(),
+      padding: { top: zero(), right: zero(), bottom: zero(), left: zero() },
+      primaryAlign: 'CENTER',
+      counterAlign: 'CENTER',
+    },
+    children: [
+      {
+        ...layer,
+        width: { value: layer.width.value },
+        height: { value: layer.height.value },
+        sizing: { horizontal: 'FILL', vertical: 'FILL' },
+      },
+    ],
+  };
+}
+
 /** The variant's root frame, which the plugin turns into a component. */
 export function convertVariant(
   recorded: Recorded,
@@ -953,8 +1156,20 @@ export function convertVariant(
       `The browser shrinks it to scale ${recorded.rootScale}. Figma can't scale a variant, so it keeps its full size.`
     );
   }
-  const root = elementLayer(recorded.tree, null, ctx, true);
+  const walk: Walk = {
+    ...ctx,
+    root: recorded.tree,
+    ancestors: [],
+    names: new Map(),
+  };
+  const root =
+    recorded.tree.svg === undefined
+      ? elementLayer(recorded.tree, null, walk, true)
+      : svgRoot(recorded.tree, walk);
   if (root?.type !== 'FRAME')
     throw new Error(`${ctx.component}: the root didn't record as a frame.`);
+  // A repeated part repeats its note.
+  const notes = [...new Set(ctx.notes)];
+  ctx.notes.splice(0, ctx.notes.length, ...notes);
   return root;
 }
