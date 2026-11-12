@@ -3,19 +3,21 @@ import * as React from 'react';
 import {
   ArchiveIcon,
   ArrowUUpLeftIcon,
+  CaretDownIcon,
   CaretLeftIcon,
   CaretRightIcon,
   CursorIcon,
+  DotsThreeIcon,
   EraserIcon,
   PencilSimpleIcon,
   TextBIcon,
   TextItalicIcon,
   TextUnderlineIcon,
+  XIcon,
 } from '@phosphor-icons/react/ssr';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import { IconChevronDown, IconDots, IconX } from '../../lib/icons';
 import { Button } from '../button/button';
 import { Checkbox } from '../checkbox/checkbox';
 import {
@@ -205,7 +207,7 @@ function FileToolbar() {
       <ToolbarSeparator />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarButton iconOnly startIcon={<IconDots />}>
+          <ToolbarButton iconOnly startIcon={<DotsThreeIcon />}>
             More file actions
           </ToolbarButton>
         </DropdownMenuTrigger>
@@ -849,7 +851,7 @@ function InlineExample() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <ToolbarButton className="nx:ms-auto">
-              Show <IconChevronDown aria-hidden="true" />
+              Show <CaretDownIcon aria-hidden="true" />
             </ToolbarButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -944,7 +946,7 @@ function AttachedExample() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <ToolbarButton>
-                More <IconChevronDown aria-hidden="true" />
+                More <CaretDownIcon aria-hidden="true" />
               </ToolbarButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
@@ -1057,7 +1059,7 @@ function SelectionExample() {
                   iconOnly
                   className="nx:text-muted-foreground"
                   onClick={clearSelection}
-                  startIcon={<IconX />}
+                  startIcon={<XIcon />}
                 >
                   Clear selection
                 </ToolbarButton>
