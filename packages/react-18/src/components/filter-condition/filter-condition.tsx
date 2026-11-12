@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import { IconChevronDown, IconX } from '../../lib/icons';
 import { cn } from '../../lib/utils';
-import { buttonVariants } from '../button/button';
+import { buttonVariants } from '../button/button-variants';
 
 const FilterCondition = React.forwardRef<
   HTMLDivElement,

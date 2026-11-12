@@ -1,6 +1,4 @@
-'use client';
-
-import { buttonVariants } from '@/components/button/button';
+import { buttonVariants } from '@/components/button/button-variants';
 import { cn } from '@/lib/utils';
 
 import { DISCORD_URL, REPO_URL, X_URL } from '../_lib/site';

@@ -21,7 +21,7 @@ import {
   IconChevronRight,
 } from '../../lib/icons';
 import { cn, type DistributiveOmit } from '../../lib/utils';
-import { type ButtonProps, buttonVariants } from '../button/button';
+import { type ButtonVariants, buttonVariants } from '../button/button-variants';
 
 type DatePickerCellSize = 'default' | 'large' | 'xlarge';
 
@@ -149,7 +149,7 @@ type DatePickerProps = DistributiveOmit<
   /**
    * Button variant for the previous and next month arrows.
    */
-  buttonVariant?: ButtonProps['variant'];
+  buttonVariant?: ButtonVariants['variant'];
   /**
    * Day-cell size: `default` is 32px, `large` 48px, `xlarge` 56px. For another
    * size, set `--cell-size` through `className`.

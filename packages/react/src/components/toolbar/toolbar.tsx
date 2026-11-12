@@ -8,7 +8,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 
 import { useIsomorphicLayoutEffect } from '../../hooks/use-isomorphic-layout-effect';
 import { cn } from '../../lib/utils';
-import { buttonVariants } from '../button/button';
+import { buttonVariants } from '../button/button-variants';
 import {
   Popover,
   PopoverAnchor,

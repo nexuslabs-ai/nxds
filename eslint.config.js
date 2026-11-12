@@ -401,7 +401,7 @@ export default tseslint.config(
     files: reactSources('src/components/**/*.{ts,tsx}'),
     ignores: [
       ...reactSources(
-        'src/components/button/button.tsx',
+        'src/components/button/button-variants.ts',
         'src/components/filter-condition/filter-condition.tsx'
       ),
       '**/*.stories.tsx',

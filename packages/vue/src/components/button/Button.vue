@@ -7,7 +7,7 @@ import { cn } from '../../lib/utils';
 import { ButtonGroupKey } from '../button-group/button-group-context';
 import Spinner from '../spinner/Spinner.vue';
 
-import { type ButtonVariants, buttonVariants } from '.';
+import { type ButtonVariants, buttonVariants } from './button-variants';
 
 export interface ButtonProps extends PrimitiveProps {
   variant?: ButtonVariants['variant'];

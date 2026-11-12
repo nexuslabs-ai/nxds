@@ -109,7 +109,7 @@ export const IconOnly: Story = {
     docs: {
       description: {
         story:
-          'When the row is narrow, set `iconOnly` on Previous and Next to show only their chevrons.',
+          'When the row is narrow, set `iconOnly` on PaginationPrevious and PaginationNext to show only their chevrons.',
       },
     },
   },
@@ -150,6 +150,24 @@ export const IconOnly: Story = {
     }
   },
 };
+
+// Each line must fail to compile: `iconOnly` renders its own chevron and
+// hidden label, so it refuses `children` and `asChild`.
+const _rejectedIconOnlyLinks = [
+  // @ts-expect-error An icon-only link renders its own label.
+  <PaginationPrevious key="children" href="#" iconOnly>
+    Back
+  </PaginationPrevious>,
+  // @ts-expect-error asChild can't render an icon-only link.
+  <PaginationNext key="as-child" iconOnly asChild>
+    <a href="#next">Next</a>
+  </PaginationNext>,
+];
+
+// A screen-size switch is one boolean prop.
+function _ResponsivePrevious({ isNarrow }: { isNarrow: boolean }) {
+  return <PaginationPrevious href="#" iconOnly={isNarrow} />;
+}
 
 // Clicking a page link fires its handler — the consumer wires this to its
 // paging state.

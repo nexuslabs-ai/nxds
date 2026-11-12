@@ -144,7 +144,7 @@ export const IconOnly: Story = {
     docs: {
       description: {
         story:
-          'When the row is narrow, set `icon-only` on PaginationPrevious and PaginationNext to show only their chevrons.',
+          'When the row is narrow, set `icon-only` on PaginationPrevious and PaginationNext to show only their chevrons. `icon-only` ignores `as-child` and the default slot.',
       },
     },
   },

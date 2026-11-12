@@ -21,7 +21,7 @@ const props = withDefaults(defineProps<PaginationNextProps>(), {
   iconOnly: false,
 });
 
-const delegated = reactiveOmit(props, 'iconOnly');
+const delegated = reactiveOmit(props, 'iconOnly', 'asChild');
 </script>
 
 <template>
@@ -29,9 +29,14 @@ const delegated = reactiveOmit(props, 'iconOnly');
     :square="iconOnly"
     aria-label="Go to next page"
     v-bind="delegated"
+    :as-child="asChild && !iconOnly"
   >
-    <slot>
-      <span :class="iconOnly ? 'nx:sr-only' : undefined">Next</span>
+    <template v-if="iconOnly">
+      <span class="nx:sr-only">Next</span>
+      <IconChevronRight />
+    </template>
+    <slot v-else>
+      <span>Next</span>
       <IconChevronRight />
     </slot>
   </PaginationAnchor>

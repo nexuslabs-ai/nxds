@@ -4,7 +4,7 @@ import { Slot } from '@radix-ui/react-slot';
 
 import { IconChevronLeft, IconChevronRight, IconDots } from '../../lib/icons';
 import { cn } from '../../lib/utils';
-import { type ButtonProps, buttonVariants } from '../button/button';
+import { type ButtonVariants, buttonVariants } from '../button/button-variants';
 
 /**
  * Props for the Pagination component.
@@ -99,7 +99,7 @@ const PaginationItem = React.forwardRef<
  * Props for the PaginationLink component.
  */
 interface PaginationLinkProps
-  extends React.ComponentProps<'a'>, Pick<ButtonProps, 'size'> {
+  extends React.ComponentProps<'a'>, Pick<ButtonVariants, 'size'> {
   /**
    * Marks the link as the current page and sets `aria-current="page"`.
    */
@@ -167,14 +167,33 @@ const PaginationLink = React.forwardRef<
 });
 
 /**
+ * Props for PaginationPrevious and PaginationNext. With `iconOnly`, the label
+ * is the hidden name, so `children` and `asChild` are not allowed.
+ */
+type PaginationEdgeProps =
+  | (PaginationLinkProps & {
+      /**
+       * Shows only the chevron, in a square. The label stays as hidden text.
+       */
+      iconOnly?: false;
+    })
+  | (Omit<PaginationLinkProps, 'children' | 'asChild'> & {
+      /**
+       * Shows only the chevron, in a square. The label stays as hidden text.
+       */
+      iconOnly: true;
+      children?: never;
+      /**
+       * Renders the child element, such as a router `Link`, with the link styles.
+       * Use it instead of wrapping, which would nest one `<a>` in another.
+       */
+      asChild?: false;
+    });
+
+/**
  * Props for the PaginationPrevious component.
  */
-interface PaginationPreviousProps extends PaginationLinkProps {
-  /**
-   * Shows only the chevron, in a square. The label stays as hidden text.
-   */
-  iconOnly?: boolean;
-}
+type PaginationPreviousProps = PaginationEdgeProps;
 
 /**
  * Link to the previous page, with a left chevron and the label "Previous".
@@ -212,12 +231,7 @@ const PaginationPrevious = React.forwardRef<
 /**
  * Props for the PaginationNext component.
  */
-interface PaginationNextProps extends PaginationLinkProps {
-  /**
-   * Shows only the chevron, in a square. The label stays as hidden text.
-   */
-  iconOnly?: boolean;
-}
+type PaginationNextProps = PaginationEdgeProps;
 
 /**
  * Link to the next page, with the label "Next" and a right chevron.

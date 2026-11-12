@@ -653,6 +653,10 @@ export const copies: [react: string, vue: string][] = [
     'packages/vue/src/lib/responsive-visibility.ts',
   ],
   [
+    'packages/react/src/components/button/button-variants.ts',
+    'packages/vue/src/components/button/button-variants.ts',
+  ],
+  [
     'packages/react/src/components/code-block/code-block-theme.ts',
     'packages/vue/src/components/code-block/code-block-theme.ts',
   ],
