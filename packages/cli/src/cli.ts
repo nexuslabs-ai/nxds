@@ -13,9 +13,10 @@ import {
   exportClaudeDesign,
   type ExportOptions,
 } from './commands/export';
+import { DEFAULT_FIGMA_DIR, exportFigma } from './commands/export-figma';
 import { add, init, update } from './commands/install';
 import type { CommandResult } from './commands/result';
-import { CliError, EXIT_CODES, type ExitCode } from './errors';
+import { CliError, EXIT_CODES, type ExitCode, UsageError } from './errors';
 import type { InstallOptions } from './install';
 import { ICONS_FLAG } from './theme';
 
@@ -60,10 +61,13 @@ function withInstallFlags(command: Command) {
 /**
  * The program, with each command's action passing its result to `done`.
  * Output is configured first, since commands copy it when they're added.
+ * A command that waits on you, such as `export figma`, says what to do next
+ * through `progress`.
  */
 function program(
   done: (result: CommandResult) => void,
-  write: (text: string) => void
+  write: (text: string) => void,
+  progress: (line: string) => void
 ) {
   const cli = new Command()
     .configureOutput({
@@ -205,12 +209,18 @@ function program(
   const exportCommand = cli
     .command('export')
     .description(
-      "export nxds as a Claude Design System folder, ready to publish. Theme flags set the system's theme, as they do for init; with --index, one left out keeps the system's value, and an empty one, such as --density=, resets it"
+      "export nxds as a Claude Design System folder, ready to publish, or as native Figma components through the nxds Figma plugin. Theme flags set the theme, as they do for init; for claude-design with --index, one left out keeps the system's value, and an empty one, such as --density=, resets it"
     )
     .addArgument(
-      new Argument('<target>', 'what to export').choices(['claude-design'])
+      new Argument('<target>', 'what to export').choices([
+        'claude-design',
+        'figma',
+      ])
     )
-    .option('--out <path>', `folder to write (default: ${DEFAULT_EXPORT_DIR})`)
+    .option(
+      '--out <path>',
+      `folder to write (default: ${DEFAULT_EXPORT_DIR}, or ${DEFAULT_FIGMA_DIR} for figma)`
+    )
     .option('--release <version>', 'nxds release to export (default: latest)')
     .option(
       '--index <path>',
@@ -239,7 +249,7 @@ function program(
     return { flag: field.flag, key: option.attributeName() };
   });
 
-  exportCommand.action(async (_target: string, _options, command: Command) => {
+  exportCommand.action(async (target: string, _options, command: Command) => {
     const options = command.opts<Record<string, string | undefined>>();
     const theme = Object.fromEntries(
       exportThemeOptions.flatMap(({ flag, key }) => {
@@ -249,6 +259,21 @@ function program(
     );
     const { out, release, source, npmRegistry, index, existing, overwrite } =
       command.opts<Omit<ExportOptions, 'theme'>>();
+    if (target === 'figma') {
+      if (index !== undefined || existing !== undefined) {
+        throw new UsageError(
+          '--index and --existing update a Claude Design System. The Figma export builds a new file each time, so it takes neither.'
+        );
+      }
+      done(
+        await exportFigma(
+          cwdOf(command),
+          { out, release, source, npmRegistry, overwrite, theme },
+          progress
+        )
+      );
+      return;
+    }
     done(
       await exportClaudeDesign(cwdOf(command), {
         out,
@@ -305,7 +330,10 @@ function commanderOutcome(error: CommanderError, printedText: string): Outcome {
   };
 }
 
-async function outcome(argv: string[]): Promise<Outcome> {
+async function outcome(
+  argv: string[],
+  progress: (line: string) => void
+): Promise<Outcome> {
   let result: CommandResult | undefined;
   let printedText = '';
   const cli = program(
@@ -314,7 +342,8 @@ async function outcome(argv: string[]): Promise<Outcome> {
     },
     (text) => {
       printedText += text;
-    }
+    },
+    progress
   );
 
   try {
@@ -349,7 +378,7 @@ async function outcome(argv: string[]): Promise<Outcome> {
 export async function main(argv: string[], output: Output): Promise<ExitCode> {
   // Read before parsing, so a bad flag still prints JSON.
   const json = argv.includes('--json');
-  const result = await outcome(argv);
+  const result = await outcome(argv, (line) => output.err(`${line}\n`));
   const ok = result.exitCode === EXIT_CODES.ok;
 
   if (json) {

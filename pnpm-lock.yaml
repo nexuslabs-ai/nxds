@@ -474,6 +474,9 @@ importers:
       node-diff3:
         specifier: ^3.2.1
         version: 3.2.1
+      playwright-core:
+        specifier: 1.64.1
+        version: 1.64.1
       semver:
         specifier: ^7.8.5
         version: 7.8.5
@@ -496,6 +499,9 @@ importers:
       '@nxds/core':
         specifier: workspace:*
         version: link:../core
+      '@nxds/figma':
+        specifier: workspace:*
+        version: link:../figma
       '@types/node':
         specifier: ^25.9.1
         version: 25.9.1
@@ -552,6 +558,31 @@ importers:
       eslint-plugin-better-tailwindcss:
         specifier: ^4.7.0
         version: 4.7.0(eslint@9.39.4(jiti@2.7.0))(tailwindcss@4.3.0)(typescript@5.9.3)
+
+  packages/figma:
+    dependencies:
+      culori:
+        specifier: ^4.0.2
+        version: 4.0.2
+      playwright-core:
+        specifier: 1.64.1
+        version: 1.64.1
+    devDependencies:
+      '@figma/plugin-typings':
+        specifier: ^1.142.0
+        version: 1.142.0
+      '@types/culori':
+        specifier: ^4.0.1
+        version: 4.0.1
+      '@types/node':
+        specifier: ^25.9.1
+        version: 25.9.1
+      esbuild:
+        specifier: ^0.28.1
+        version: 0.28.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   packages/react:
     dependencies:
@@ -1810,6 +1841,9 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
+
+  '@figma/plugin-typings@1.142.0':
+    resolution: {integrity: sha512-Loa9P4bUZi/pQejic8OYQSU4Zz9izJdIiDUkkKddq5Bfc5JPRV6pCeg3C8owovbX9lKshaFym86PlMhKZgLeBw==}
 
   '@floating-ui/core@1.7.5':
     resolution: {integrity: sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ==}
@@ -8334,6 +8368,8 @@ snapshots:
       levn: 0.4.1
 
   '@exodus/bytes@1.15.1': {}
+
+  '@figma/plugin-typings@1.142.0': {}
 
   '@floating-ui/core@1.7.5':
     dependencies:

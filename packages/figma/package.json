@@ -1,0 +1,31 @@
+{
+  "name": "@nxds/figma",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Proof of concept: nxds components as native Figma components, through `nxds-cli export figma` and a development plugin.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    "./capture": "./src/capture.ts",
+    "./link": "./src/link.ts",
+    "./port": "./src/port.ts",
+    "./spec": "./src/spec.ts"
+  },
+  "scripts": {
+    "build": "node scripts/build-plugin.ts",
+    "smoke": "node scripts/smoke.ts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p plugin",
+    "clean": "rm -rf plugin/dist"
+  },
+  "dependencies": {
+    "culori": "^4.0.2",
+    "playwright-core": "1.64.1"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.142.0",
+    "@types/culori": "^4.0.1",
+    "@types/node": "^25.9.1",
+    "esbuild": "^0.28.1",
+    "typescript": "^5.9.3"
+  }
+}

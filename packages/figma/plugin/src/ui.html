@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        margin: 0;
+        padding: 16px;
+        font:
+          12px/1.5 Inter,
+          system-ui,
+          sans-serif;
+        color: var(--figma-color-text);
+        background: var(--figma-color-bg);
+      }
+      p {
+        margin: 0 0 12px;
+      }
+      button {
+        font: inherit;
+        padding: 6px 12px;
+        border: 1px solid var(--figma-color-border);
+        border-radius: 6px;
+        background: var(--figma-color-bg-secondary);
+        color: inherit;
+      }
+      textarea {
+        width: 100%;
+        height: 120px;
+        font: 11px/1.4 monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <p id="status">Starting…</p>
+    <button id="retry" type="button" hidden>Retry</button>
+    <textarea id="report" hidden readonly></textarea>
+    <!-- ui.js -->
+  </body>
+</html>
