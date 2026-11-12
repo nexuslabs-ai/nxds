@@ -1,10 +1,10 @@
 export const description =
-  'Set your whole nxds theme from one appearance object: brand color, surface tone, contrast, UI scale, density, corners, shadows and borders.';
+  'Set your whole nxds theme from one appearance object: brand color, surface tone, contrast, UI scale, text size, density, corners, shadows and borders.';
 
 # Appearance
 
 Appearance is one object that sets your app's whole theme: colors, UI scale,
-density, corners, shadows, borders and font preferences.
+text size, density, corners, shadows, borders and font preferences.
 
 `@nxds/core` turns that object into the theme's CSS. The examples use the
 React provider or the Vue plugin you copied in
@@ -12,13 +12,14 @@ React provider or the Vue plugin you copied in
 
 ## Fields
 
-Color is one setting out of many. UI scale, density, corners, shadows, border
-width, type and motion are settings too, so "make this product denser" is a
-one-field change, not a refactor.
+Color is one setting out of many. UI scale, text size, density, corners,
+shadows, border width, type and motion are settings too. "Make this product
+denser" is a one-field change, not a refactor.
 
 Every option ships in the stylesheet. The provider applies colors as CSS
-variables, `mode` as the `.dark` class, and UI scale, density, corners, shadows
-and border width as data attributes. Switching an option needs no rebuild.
+variables and `mode` as the `.dark` class. It applies UI scale, text size,
+density, corners, shadows and border width as data attributes. Switching an
+option needs no rebuild.
 
 | Field                            | Values                                                                                                | Sets                                                                        |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
@@ -27,6 +28,7 @@ and border width as data attributes. Switching an option needs no rebuild.
 | `surfaceTone`                    | `'stone'`, `'neutral'`, `'zinc'`, `'slate'`, `'gray'`. Default `'zinc'`.                              | The gray used for backgrounds.                                              |
 | `lightContrast` / `darkContrast` | `0` to `100`. Default `50`.                                                                           | How strong text and borders are, separately for each mode.                  |
 | `uiScale`                        | `'small'`, `'default'`, `'large'`, `'larger'`. Default `'default'`.                                   | Text, icons, spacing and corners together, from 12px to 18px text.          |
+| `textSize`                       | `12` to `16`. Default `14`.                                                                           | Text only. The label text size in px at the Default UI scale.               |
 | `density`                        | `'tight'`, `'compact'`, `'default'`, `'comfortable'`, `'relaxed'`, `'spacious'`. Default `'default'`. | Spacing.                                                                    |
 | `corners`                        | `'square'`, `'subtle'`, `'smooth'`, `'round'`, `'extra-round'`. Default `'subtle'`.                   | Corner radius.                                                              |
 | `elevation`                      | `'flat'`, `'quiet'`, `'soft'`, `'standard'`, `'strong'`. Default `'quiet'`.                           | Shadows.                                                                    |
@@ -37,11 +39,12 @@ Fonts and the code font size apply to nxds components only. Reduced motion,
 pointer cursors and font smoothing apply to the whole page. All three are off
 until a user turns them on.
 
-## UI scale and density
+## UI scale, text size and density
 
 `uiScale` makes the whole UI larger or smaller and keeps its proportions. Use
-it for a user's comfort setting. `density` changes only the space around the
-content, for a denser or a roomier product.
+it for a user's comfort setting. `textSize` makes only the text larger or
+smaller, for a user who wants larger text in a dense layout. `density` changes
+only the space around the content, for a denser or a roomier product.
 
 | `uiScale`   | Label text | Icon | Default Button |
 | ----------- | ---------- | ---- | -------------- |
@@ -50,14 +53,33 @@ content, for a denser or a roomier product.
 | `'large'`   | 16px       | 18px | 44px           |
 | `'larger'`  | 18px       | 20px | 50px           |
 
+`textSize` is the label text size at the Default scale. The UI scale
+multiplies it, and every text style follows. Each cell is the label text size
+a user sees:
+
+| `textSize` | `'small'` | `'default'` | `'large'` | `'larger'` |
+| ---------- | --------- | ----------- | --------- | ---------- |
+| `12`       | 10px      | 12px        | 14px      | 15px       |
+| `13`       | 11px      | 13px        | 15px      | 17px       |
+| `14`       | 12px      | 14px        | 16px      | 18px       |
+| `15`       | 13px      | 15px        | 17px      | 19px       |
+| `16`       | 14px      | 16px        | 18px      | 21px       |
+
+Icons and spacing keep their UI scale size at every text size. A control grows
+taller only when its text needs more room. Label a text size picker with the `textSize` value. To show the size a user
+sees at the current UI scale, call `textSizePx(textSize, uiScale)` from
+`@nxds/core`.
+
 Page widths such as `max-w-lg` grow with the UI scale. Breakpoints do not.
 
 Code text grows with the label text. `prefs.codeFontSize` is its size at the
-Default scale. The UI scale never shrinks text below 8px.
+Default scale and text size. The UI scale and the text size never shrink text
+below 8px.
 
-The provider puts `data-ui-scale` on `<html>`. If you set the attribute
-yourself, put it on the root only, so density and corners inside it follow its
-scale.
+The provider puts `data-ui-scale` and `data-text-size` on `<html>`. If you set
+the attributes yourself, put both on the same root element. A UI scale and a
+text size on two different elements do not combine. Density and corners inside
+the root follow its scale.
 
 ## Change the theme at runtime
 

@@ -24,9 +24,10 @@ export const buttonVariants = cva(
         link: 'nx:border-0 nx:text-primary-subtle-foreground nx:underline-offset-4 nx:hover:underline nx:active:scale-100 nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
       },
       size: {
-        sm: 'nx:h-8 nx:px-2.5 nx:gap-2 nx:typography-label-default',
-        default: 'nx:h-10 nx:px-3 nx:gap-2 nx:typography-label-default',
-        lg: 'nx:h-12 nx:px-3.5 nx:gap-2 nx:typography-label-default',
+        sm: 'nx:h-fit nx:min-h-8 nx:px-2.5 nx:gap-2 nx:typography-label-default',
+        default:
+          'nx:h-fit nx:min-h-10 nx:px-3 nx:gap-2 nx:typography-label-default',
+        lg: 'nx:h-fit nx:min-h-12 nx:px-3.5 nx:gap-2 nx:typography-label-default',
         'icon-sm': 'nx:size-8 nx:gap-0 nx:p-0',
         icon: 'nx:size-10 nx:gap-0 nx:p-0',
         'icon-lg': 'nx:size-12 nx:gap-0 nx:p-0',
@@ -36,7 +37,7 @@ export const buttonVariants = cva(
       {
         variant: 'link',
         size: ['sm', 'default', 'lg'],
-        className: 'nx:h-auto nx:p-0!',
+        className: 'nx:h-auto nx:min-h-0 nx:p-0!',
       },
     ],
     defaultVariants: {

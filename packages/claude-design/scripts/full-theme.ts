@@ -15,5 +15,6 @@ export const FULL_THEME: ThemeFlags = {
   'heading-font': 'playfair-display',
   'code-font': 'jetbrains-mono',
   'ui-scale': 'large',
+  'text-size': '16',
   'code-font-size': '13',
 };

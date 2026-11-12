@@ -15,15 +15,16 @@ import {
   FONT_OPTIONS,
   NXDS_THEME_FIELDS,
   type NxdsAppearanceState,
-  type NxdsDensity,
-  type NxdsStroke,
-  type NxdsUiScale,
   STROKE_OPTIONS,
   UI_SCALE_OPTIONS,
 } from '@nxds/core';
 import { formatHex } from 'culori';
 
 import { withPresetTable } from './presets.ts';
+import {
+  SAMPLER_EXTRA_HEIGHT,
+  SAMPLER_STROKE_HEIGHT,
+} from './sampler-heights.ts';
 import type { CanvasBoards } from './setup.ts';
 import { fillTemplate } from './template.ts';
 import {
@@ -97,52 +98,7 @@ export interface RenderedTheme {
 
 const DEFAULT_TITLE = 'nxds';
 
-// How much taller the sampler is at each UI scale and density than at the
-// Default scale and density, at normal stroke, on a board widened by the
-// scale's factor, as scripts/smoke/sampler.ts measures it.
-const SAMPLER_EXTRA_HEIGHT: Record<NxdsUiScale, Record<NxdsDensity, number>> = {
-  small: {
-    tight: -238,
-    compact: -185,
-    default: -159,
-    comfortable: -106,
-    relaxed: -69,
-    spacious: -15,
-  },
-  default: {
-    tight: -90,
-    compact: -37,
-    default: 0,
-    comfortable: 53,
-    relaxed: 90,
-    spacious: 143,
-  },
-  large: {
-    tight: 58,
-    compact: 121,
-    default: 159,
-    comfortable: 211,
-    relaxed: 249,
-    spacious: 323,
-  },
-  larger: {
-    tight: 308,
-    compact: 362,
-    default: 398,
-    comfortable: 452,
-    relaxed: 524,
-    spacious: 594,
-  },
-};
-
-// How much taller the sampler is at each stroke than at normal stroke. Border
-// widths don't follow the UI scale or density, so one row holds for every
-// scale and density.
-const SAMPLER_STROKE_HEIGHT: Record<NxdsStroke, number> = {
-  fine: -1,
-  normal: 0,
-  strong: 14,
-};
+const PLAIN_TEXT_SIZE = DEFAULT_NXDS_APPEARANCE.textSize;
 
 /** The UI scale's factor, which `--nx-ui-scale` holds. */
 export function uiScaleFactor(tokens: TokensFile) {
@@ -155,14 +111,19 @@ export function uiScaleFactor(tokens: TokensFile) {
   return factor;
 }
 
-/** The sampler's `canvas.json` entry with a size that fits its UI scale, density and stroke. */
+/**
+ * The sampler's `canvas.json` entry with a size that fits its UI scale, text
+ * size, density and stroke. The board is wider by the UI scale's `factor`,
+ * and by a text size over 14px. A smaller text size keeps the width.
+ */
 export function themedBoard(
   board: CanvasBoards,
   {
     uiScale,
+    textSize,
     density,
     stroke,
-  }: Pick<NxdsAppearanceState, 'uiScale' | 'density' | 'stroke'>,
+  }: Pick<NxdsAppearanceState, 'uiScale' | 'textSize' | 'density' | 'stroke'>,
   factor: number
 ) {
   return Object.fromEntries(
@@ -170,10 +131,13 @@ export function themedBoard(
       file,
       {
         ...entry,
-        w: Math.round(entry.w * factor),
+        w: Math.round(
+          (entry.w * factor * Math.max(textSize, PLAIN_TEXT_SIZE)) /
+            PLAIN_TEXT_SIZE
+        ),
         h:
           entry.h +
-          SAMPLER_EXTRA_HEIGHT[uiScale][density] +
+          SAMPLER_EXTRA_HEIGHT[uiScale][textSize][density] +
           SAMPLER_STROKE_HEIGHT[stroke],
       },
     ])
@@ -289,6 +253,7 @@ function appearancePhrase(appearance: NxdsAppearanceState) {
     `a ${brandPhrase(appearance.brandColor)} brand colour`,
     ` on ${label(BASE_TONE_OPTIONS, appearance.surfaceTone)} surfaces`,
     `, ${label(UI_SCALE_OPTIONS, appearance.uiScale)} UI scale`,
+    `, ${appearance.textSize}px text size`,
     `, ${label(DENSITY_OPTIONS, appearance.density)} density`,
     `, ${label(CORNER_OPTIONS, appearance.corners)} corners`,
     `, ${label(ELEVATION_OPTIONS, appearance.elevation)} shadows`,

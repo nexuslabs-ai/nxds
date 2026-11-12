@@ -16,6 +16,8 @@ import {
   type NxdsSurfaceTone,
   type NxdsUiScale,
   STROKE_OPTIONS,
+  TEXT_SIZE_OPTIONS,
+  textSizePx,
   UI_SCALE_OPTIONS,
 } from '@nxds/core';
 
@@ -159,6 +161,19 @@ export function NxdsAppearanceSettings() {
     setState((current) => ({ ...current, mode: value }));
   };
 
+  const setTextSize = (value: string) => {
+    const option = TEXT_SIZE_OPTIONS.find(
+      (each) => String(each.value) === value
+    );
+    if (option === undefined) return;
+    setState((current) => ({ ...current, textSize: option.value }));
+  };
+
+  const textSizeOptions = TEXT_SIZE_OPTIONS.map(({ value, label }) => ({
+    value: String(value),
+    label,
+  }));
+
   const contrastKey =
     resolvedMode === 'dark' ? 'darkContrast' : 'lightContrast';
 
@@ -301,8 +316,8 @@ export function NxdsAppearanceSettings() {
         <CardHeader>
           <CardTitle>Layout Feel</CardTitle>
           <CardDescription>
-            UI scale, density, corners, elevation, and stroke use curated token
-            modes.
+            UI scale, text size, density, corners, elevation, and stroke use
+            curated token modes.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -316,6 +331,24 @@ export function NxdsAppearanceSettings() {
               ariaLabel="UI scale"
             />
           </NxdsAppearanceSettingRow>
+          <NxdsAppearanceSettingRow
+            label="Text size"
+            description="The size at the Default UI scale."
+          >
+            <AxisSelect
+              value={String(state.textSize)}
+              options={textSizeOptions}
+              onValueChange={setTextSize}
+              ariaLabel="Text size"
+            />
+          </NxdsAppearanceSettingRow>
+          <p
+            data-slot="appearance-text-size-preview"
+            className="nx:m-0 nx:pb-3 nx:typography-body-default nx:text-foreground"
+          >
+            At this UI scale, your text shows at{' '}
+            {textSizePx(state.textSize, state.uiScale)}px.
+          </p>
           <NxdsAppearanceSettingRow label="Density">
             <AxisSelect<NxdsDensity>
               value={state.density}

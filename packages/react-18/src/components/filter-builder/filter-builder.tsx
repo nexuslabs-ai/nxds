@@ -138,7 +138,7 @@ function Picker<Value extends string>({
         aria-invalid={invalid}
         aria-describedby={describedBy}
         className={cn(
-          'nx:h-(--nx-spacing-8) nx:w-auto nx:min-w-0 nx:max-w-full nx:px-2.5 nx:[&>span]:flex-1 nx:[&>span]:text-start',
+          'nx:min-h-(--nx-spacing-8) nx:w-auto nx:min-w-0 nx:max-w-full nx:px-2.5 nx:[&>span]:flex-1 nx:[&>span]:text-start',
           className
         )}
       >

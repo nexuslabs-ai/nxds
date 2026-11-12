@@ -97,7 +97,7 @@ Set an attribute on any element to change density, corners, elevation or stroke 
 
 <!-- appearance-presets -->
 
-Brand colour, surface tone and contrast are app-wide settings in nxds apps. They have no attribute. This system sets its UI scale at export, so the UI scale has no attribute here either.
+Brand colour, surface tone and contrast are app-wide settings in nxds apps. They have no attribute. This system sets its UI scale and text size at export, so they have no attribute here either.
 
 ## On a Design canvas
 

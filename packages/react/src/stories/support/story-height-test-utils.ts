@@ -73,9 +73,15 @@ function contentHeight(element: Element) {
   );
 }
 
-/** Checks that a line of `element`'s text fits inside its border and padding. */
-export async function expectTextFits(element: Element): Promise<void> {
-  await expect(contentHeight(element)).toBeGreaterThanOrEqual(
+/**
+ * Checks that a line of `element`'s text fits inside its border and padding.
+ * `label` names the case in the failure message.
+ */
+export async function expectTextFits(
+  element: Element,
+  label?: string
+): Promise<void> {
+  await expect(contentHeight(element), label).toBeGreaterThanOrEqual(
     lineHeight(element)
   );
 }

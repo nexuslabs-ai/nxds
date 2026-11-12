@@ -1,7 +1,17 @@
 // The theme the export bakes in reaches what a canvas renders: the primary
 // fill in each mode, each text family, the fonts tokens.css loads from Google
-// Fonts, and the code size.
-import { DARK, exportTokens, fail, LIGHT, openPage } from './harness.ts';
+// Fonts, and the code size. tokens.json's label size is the text size at the
+// UI scale.
+import { textSizePx } from '@nxds/core';
+
+import {
+  DARK,
+  exportAppearance,
+  exportTokens,
+  fail,
+  LIGHT,
+  openPage,
+} from './harness.ts';
 import { BUTTON, measure } from './probes.ts';
 
 function listToken(family: 'color' | 'typeScale', name: string) {
@@ -27,6 +37,14 @@ function familyHeads() {
 }
 
 export async function checkTheme() {
+  const { textSize, uiScale } = exportAppearance();
+  const label = listToken('typeScale', 'nx-typography-size-sm');
+  const labelPx = `${textSizePx(textSize, uiScale)}px`;
+  if (label !== labelPx) {
+    fail(
+      `the theme: tokens.json's label size is ${String(label)}, not ${labelPx}, the ${textSize}px text size at the ${uiScale} UI scale.`
+    );
+  }
   const primary = listToken('color', 'nx-color-primary-background');
   const codeSize = listToken('typeScale', 'nx-typography-code-size');
   const fonts = exportTokens().meta.fonts ?? [];

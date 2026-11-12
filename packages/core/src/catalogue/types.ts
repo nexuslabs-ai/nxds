@@ -2,6 +2,7 @@ import type {
   NxdsAppearancePrefs,
   NxdsColorAppearance,
   NxdsPresetField,
+  NxdsTextSize,
   NxdsUiScale,
 } from '../lib/appearance-model';
 import type { Mode } from '../lib/palette';
@@ -17,10 +18,11 @@ type DeepReadonly<T> = T extends object
 /**
  * The appearance fields the catalogue derives values from: runtime colours
  * from the brand colour, surface tone and contrasts, sizes from the UI scale,
- * and the code size from `codeFontSize`.
+ * type sizes from the text size too, and the code size from `codeFontSize`.
  */
 export type CatalogueAppearance = NxdsColorAppearance & {
   readonly uiScale: NxdsUiScale;
+  readonly textSize: NxdsTextSize;
   readonly prefs: Pick<NxdsAppearancePrefs, 'codeFontSize'>;
 };
 
@@ -114,12 +116,12 @@ export interface CatalogueVariant {
 
 /**
  * An appearance setting that writes a token at runtime: a preset field that
- * picks one of its moded values, the UI scale that scales its value, or a
- * preference the provider computes it from.
+ * picks one of its moded values, the UI scale or text size that scales its
+ * value, or a preference the provider computes it from.
  */
 export type CatalogueControl =
   | { readonly kind: 'preset'; readonly field: NxdsPresetField }
-  | { readonly kind: 'scale'; readonly field: 'uiScale' }
+  | { readonly kind: 'scale'; readonly field: 'uiScale' | 'textSize' }
   | { readonly kind: 'pref'; readonly field: keyof NxdsAppearancePrefs };
 
 export interface CatalogueToken {

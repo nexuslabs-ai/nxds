@@ -108,12 +108,12 @@ export const Sizes: Story = {
     const lg = canvas.getByRole('button', { name: 'Large' });
 
     await expect(sm).toHaveClass('nx:typography-label-small');
-    await expect(sm).toHaveClass('nx:h-8', 'nx:px-3', 'nx:gap-1.5');
+    await expect(sm).toHaveClass('nx:min-h-8', 'nx:px-3', 'nx:gap-1.5');
 
     await expect(md).toHaveClass('nx:typography-label-default');
-    await expect(md).toHaveClass('nx:h-10', 'nx:px-4', 'nx:gap-2');
+    await expect(md).toHaveClass('nx:min-h-10', 'nx:px-4', 'nx:gap-2');
     await expect(lg).toHaveClass('nx:typography-label-default');
-    await expect(lg).toHaveClass('nx:h-12', 'nx:px-8', 'nx:gap-2.5');
+    await expect(lg).toHaveClass('nx:min-h-12', 'nx:px-8', 'nx:gap-2.5');
   },
 };
 

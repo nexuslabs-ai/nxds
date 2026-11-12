@@ -31,8 +31,9 @@ import {
   scaleMode,
   scaleText,
   type ScaleToken,
+  textSizeBlocks,
+  textSizeSelector,
   UI_SCALES,
-  type UiScale,
   uiScaleBase,
   uiScaleSelector,
   widthTokens,
@@ -89,6 +90,9 @@ const SINGLE_SOURCE = { mode: null, preset: null } as const;
 /** The `[data-ui-scale]` mode, which scales every token it writes. */
 const UI_SCALE: CatalogueControl = { kind: 'scale', field: 'uiScale' };
 
+/** The `[data-text-size]` mode, which scales the type sizes and code size. */
+const TEXT_SIZE: CatalogueControl = { kind: 'scale', field: 'textSize' };
+
 /** The appearance fields that write each moded family's values. */
 const FAMILY_CONTROLS: Partial<
   Record<CatalogueFamily, readonly CatalogueControl[]>
@@ -105,9 +109,11 @@ function typographyControls(
 ): readonly CatalogueControl[] {
   const [group, key] = path;
   if (group === 'code' && key === 'size') {
-    return [{ kind: 'pref', field: 'codeFontSize' }, UI_SCALE];
+    return [{ kind: 'pref', field: 'codeFontSize' }, UI_SCALE, TEXT_SIZE];
   }
-  if (group === 'size' || group === 'line-height') return [UI_SCALE];
+  if (group === 'size' || group === 'line-height') {
+    return [UI_SCALE, TEXT_SIZE];
+  }
   if (group !== 'family') return [];
   if (key === 'font-sans') return [{ kind: 'pref', field: 'uiFont' }];
   if (key === 'font-heading') return [{ kind: 'pref', field: 'headingFont' }];
@@ -645,36 +651,46 @@ function scaledPresets(
   );
 }
 
-/** Every value the UI scale writes for `uiScale`, the same as the generated CSS. */
-function uiScaleValues(tokens: readonly CatalogueToken[], uiScale: UiScale) {
-  if (uiScale === 'default') return [];
-  const block = scaleBlocks(
-    uiScaleBase(
-      TOKEN_FILES['primitives/typography/typography-default.json'],
-      TOKEN_FILES['primitives/icon.json']
-    )
-  ).find(({ selectors }) => selectors.includes(uiScaleSelector(uiScale)));
+/**
+ * Every value the UI scale and text size write for `appearance`, the same as
+ * the generated CSS: the scale's block, then the text size's type tokens.
+ */
+function sizeValues(
+  tokens: readonly CatalogueToken[],
+  { uiScale, textSize }: CatalogueAppearance
+) {
+  const base = uiScaleBase(
+    TOKEN_FILES['primitives/typography/typography-default.json'],
+    TOKEN_FILES['primitives/icon.json']
+  );
+  const selectors = [
+    uiScaleSelector(uiScale),
+    textSizeSelector(uiScale, textSize),
+  ];
+  const values = [...scaleBlocks(base), ...textSizeBlocks(base)]
+    .filter((block) => block.selectors.some((each) => selectors.includes(each)))
+    .flatMap((block) => block.tokens)
+    .map(({ cssName, value }): [string, string] => [`--nx-${cssName}`, value]);
+  if (uiScale === 'default') return values;
   const { spacing } = UI_SCALES[uiScale];
   return [
-    ...(block?.tokens ?? []).map(({ cssName, value }): [string, string] => [
-      `--nx-${cssName}`,
-      value,
-    ]),
+    ...values,
     ...scaledPresets(tokens, 'spacing', spacing),
     ...scaledPresets(tokens, 'radius', spacing),
   ];
 }
 
 /** `tokens` with the sizes `appearance` puts on the page. */
-function atUiScale(
+function atSizes(
   tokens: readonly CatalogueToken[],
-  { uiScale, prefs }: CatalogueAppearance
+  appearance: CatalogueAppearance
 ): CatalogueToken[] {
+  const { uiScale, textSize, prefs } = appearance;
   const scaled = new Map([
-    ...uiScaleValues(tokens, uiScale),
+    ...sizeValues(tokens, appearance),
     [
       '--nx-typography-code-size',
-      `${scaleText(prefs.codeFontSize, uiScale)}px`,
+      `${scaleText(prefs.codeFontSize, uiScale, textSize)}px`,
     ],
   ]);
   return tokens.map((token) => ({
@@ -701,9 +717,9 @@ function atUiScale(
  * Shadow layer primitives only compose the shadow styles.
  * Runtime colours are computed from `appearance` in explicit light and dark
  * modes; each variant records the colour fields and mode it used. Sizes
- * follow its UI scale, and the code size its code font size too. Every
- * preset's variants are listed, and the appearance only says which one is in
- * use.
+ * follow its UI scale, type sizes its text size too, and the code size its
+ * code font size. Every preset's variants are listed, and the appearance only
+ * says which one is in use.
  */
 export function createTokenCatalogue(
   appearance: CatalogueAppearance = DEFAULT_NXDS_APPEARANCE
@@ -738,5 +754,5 @@ export function createTokenCatalogue(
     ...shadowStyleTokens(shadowLayers, lookup),
     ...widthTokens(PAGE_WIDTHS_REM, 'default').map(uiScaleEntry),
   ];
-  return atUiScale(tokens, appearance);
+  return atSizes(tokens, appearance);
 }

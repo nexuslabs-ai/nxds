@@ -1,6 +1,7 @@
 // The appearance attributes an element on a canvas can carry, with their
-// values and the appearance field each sets, from @nxds/core. The UI scale has
-// no attribute: the export sets it with `--ui-scale`.
+// values and the appearance field each sets, from @nxds/core. The UI scale and
+// text size have no attribute: the export sets them with `--ui-scale` and
+// `--text-size`.
 import {
   CORNER_OPTIONS,
   DENSITY_OPTIONS,
@@ -21,7 +22,7 @@ export interface Preset {
 }
 
 export const PRESETS: Record<
-  Exclude<NxdsAppearanceDataAttr, 'data-ui-scale'>,
+  Exclude<NxdsAppearanceDataAttr, 'data-ui-scale' | 'data-text-size'>,
   Preset
 > = {
   'data-density': {

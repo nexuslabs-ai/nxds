@@ -490,7 +490,9 @@ function scaledPresets(
     ([attribute, { options, field, family }]) => {
       const scaled = (tokens[family]?.tokens ?? []).flatMap(({ name }) => {
         const token = byName.get(name);
-        return token?.controls.some(({ kind }) => kind === 'scale')
+        return token?.controls.some(
+          (control) => control.kind === 'scale' && control.field === 'uiScale'
+        )
           ? [token]
           : [];
       });

@@ -31,7 +31,8 @@ const ENTRY = [
 const DARK_CLASS = /(?<![\w\\-])\.dark(?![\w-])/g;
 const DARK_SCOPE = ':is(.dark, [data-theme="dark"])';
 const NXDS_CLASS = /\.nx\\:/;
-const UI_SCALE_RULE = /\[data-ui-scale=/;
+// The UI scale and text size rules. The export bakes both into the tokens.
+const BAKED_SIZE_RULE = /\[data-(?:ui-scale|text-size)=/;
 // Preflight's own selectors and value, in its layer, so a utility still wins.
 const BOX_SIZING = `@layer base {
   *, ::after, ::before, ::backdrop, ::file-selector-button {
@@ -110,7 +111,7 @@ function moveDefaultsToTokens(
 
 function moveValuesToTokens(css: string, tokenNames: ReadonlySet<string>) {
   const root = postcss.parse(css);
-  root.walkRules(UI_SCALE_RULE, (rule) => {
+  root.walkRules(BAKED_SIZE_RULE, (rule) => {
     rule.remove();
   });
   root.walkRules((rule) => moveDefaultsToTokens(rule, tokenNames));

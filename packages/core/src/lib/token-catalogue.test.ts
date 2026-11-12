@@ -454,11 +454,35 @@ describe('token catalogue', () => {
     const controlled = new Set(
       catalogue
         .filter((token) =>
-          token.controls.some((control) => control.kind === 'scale')
+          token.controls.some(
+            (control) => control.kind === 'scale' && control.field === 'uiScale'
+          )
         )
         .map((token) => token.name)
     );
     expect(controlled).toEqual(scaled);
+  });
+
+  it('names textSize for exactly the tokens the [data-text-size] blocks set', () => {
+    const sized = new Set(
+      nxdsBlocks
+        .filter(({ selectors }) =>
+          selectors.some((selector) => selector.includes('[data-text-size='))
+        )
+        .flatMap(({ declarations }) => [...declarations.keys()])
+    );
+    const controlled = new Set(
+      catalogue
+        .filter((token) =>
+          token.controls.some(
+            (control) =>
+              control.kind === 'scale' && control.field === 'textSize'
+          )
+        )
+        .map((token) => token.name)
+    );
+    expect(sized.size).toBeGreaterThan(0);
+    expect(controlled).toEqual(sized);
   });
 
   it('names exactly the preference that changes each runtime typography variable', () => {
@@ -669,31 +693,48 @@ function snapshotBlock(css: string, selector: string): Map<string, string> {
   return customProperties(body);
 }
 
-describe.each(APPEARANCES)('token catalogue at %s', (_, appearance) => {
-  const themed = new Map(
+/** The catalogue at `appearance`, by token name. */
+function catalogueAt(appearance: NxdsAppearanceState) {
+  return new Map<string, CatalogueToken>(
     createTokenCatalogue(appearance).map((token) => [token.name, token])
   );
+}
+
+/** Expects `themed` to hold each of `declared`'s values in its `key` variant. */
+function expectDeclared(
+  themed: Map<string, CatalogueToken>,
+  declared: Map<string, string>,
+  key: VariantKey
+): void {
+  expect(declared.size).toBeGreaterThan(0);
+  for (const [name, value] of declared) {
+    const token = themed.get(name);
+    if (!token) throw new Error(`the catalogue has no ${name}`);
+    expect(variantValue(token, key), name).toBe(value);
+  }
+}
+
+/** The custom properties of the first `nxds.css` rule `selector` starts a line with. */
+function cssBlock(selector: string, tail: string) {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const body = new RegExp(`\\n\\s*${escaped}${tail}\\{([^}]*)\\}`).exec(
+    nxdsCss
+  )?.[1];
+  if (body === undefined) throw new Error(`no "${selector}" rule`);
+  return customProperties(body);
+}
+
+describe.each(APPEARANCES)('token catalogue at %s', (_, appearance) => {
+  const themed = catalogueAt(appearance);
   const { themeCss, prefsCss } =
     createNxdsAppearanceSnapshotFromState(appearance);
 
-  function expectAgreement(
-    declared: Map<string, string>,
-    key: VariantKey
-  ): void {
-    expect(declared.size).toBeGreaterThan(0);
-    for (const [name, value] of declared) {
-      const token = themed.get(name as CatalogueToken['name']);
-      if (!token) throw new Error(`the catalogue has no ${name}`);
-      expect(variantValue(token, key), name).toBe(value);
-    }
-  }
-
   it('derives the colours the provider applies, in each mode', () => {
-    expectAgreement(snapshotBlock(themeCss, ':root'), {
+    expectDeclared(themed, snapshotBlock(themeCss, ':root'), {
       preset: null,
       mode: 'light',
     });
-    expectAgreement(snapshotBlock(themeCss, ':root.dark'), {
+    expectDeclared(themed, snapshotBlock(themeCss, ':root.dark'), {
       preset: null,
       mode: 'dark',
     });
@@ -705,29 +746,15 @@ describe.each(APPEARANCES)('token catalogue at %s', (_, appearance) => {
         ([name]) => name === '--nx-typography-code-size'
       )
     );
-    expectAgreement(code, { preset: null, mode: null });
+    expectDeclared(themed, code, { preset: null, mode: null });
   });
 });
 
 describe.each(['small', 'large', 'larger'] as const)(
   'token catalogue at the %s UI scale',
   (uiScale) => {
-    const themed = new Map(
-      createTokenCatalogue({ ...DEFAULT_NXDS_APPEARANCE, uiScale }).map(
-        (token) => [token.name, token]
-      )
-    );
+    const themed = catalogueAt({ ...DEFAULT_NXDS_APPEARANCE, uiScale });
     const scale = `[data-ui-scale='${uiScale}']`;
-
-    /** The custom properties of the first `nxds.css` rule `selector` opens. */
-    function cssBlock(selector: string, tail: string) {
-      const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const body = new RegExp(`${escaped}${tail}\\{([^}]*)\\}`).exec(
-        nxdsCss
-      )?.[1];
-      if (body === undefined) throw new Error(`no "${selector}" rule`);
-      return customProperties(body);
-    }
 
     it.each([
       ['type, icons and page widths', scale, '\\s*', null],
@@ -736,14 +763,41 @@ describe.each(['small', 'large', 'larger'] as const)(
     ])(
       'writes the same %s as the generated CSS',
       (_, selector, tail, preset) => {
-        const declared = cssBlock(selector, tail);
-        expect(declared.size).toBeGreaterThan(0);
-        for (const [name, value] of declared) {
-          const token = themed.get(name as CatalogueToken['name']);
-          if (!token) throw new Error(`the catalogue has no ${name}`);
-          expect(variantValue(token, { preset, mode: null }), name).toBe(value);
-        }
+        expectDeclared(themed, cssBlock(selector, tail), {
+          preset,
+          mode: null,
+        });
       }
     );
+  }
+);
+
+describe.each([
+  ['default', 16, "[data-text-size='16']"],
+  ['small', 12, "[data-ui-scale='small'][data-text-size='12']"],
+  ['larger', 16, "[data-ui-scale='larger'][data-text-size='16']"],
+] as const)(
+  'token catalogue at the %s UI scale and text size %s',
+  (uiScale, textSize, selector) => {
+    const appearance = { ...DEFAULT_NXDS_APPEARANCE, uiScale, textSize };
+
+    it('writes the same type sizes as the generated CSS', () => {
+      expectDeclared(catalogueAt(appearance), cssBlock(selector, '\\s*'), {
+        preset: null,
+        mode: null,
+      });
+    });
+
+    it('writes the code size the provider applies', () => {
+      const withCode = {
+        ...appearance,
+        prefs: { ...appearance.prefs, codeFontSize: 15 },
+      };
+      const { prefsCss } = createNxdsAppearanceSnapshotFromState(withCode);
+      expectDeclared(catalogueAt(withCode), snapshotBlock(prefsCss, selector), {
+        preset: null,
+        mode: null,
+      });
+    });
   }
 );

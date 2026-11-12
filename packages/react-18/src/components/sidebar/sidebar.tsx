@@ -507,7 +507,7 @@ const SidebarInput = React.forwardRef<
     <Input
       data-slot="sidebar-input"
       className={cn(
-        'nx:h-8 nx:w-full nx:bg-background nx:autofill-bg-background',
+        'nx:min-h-8 nx:w-full nx:bg-background nx:autofill-bg-background',
         className
       )}
       {...props}

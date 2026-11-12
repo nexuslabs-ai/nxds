@@ -11,7 +11,7 @@ const TAILWIND_DIR = resolve(process.cwd(), 'packages/tailwind');
 const COMPONENT_SOURCES = ['packages/react/src', 'packages/vue/src'].map(
   (root) => resolve(process.cwd(), root)
 );
-const SCOPE = String.raw`(?::root|:host|\.dark|\[data-[a-z-]+=['"]?[a-z-]+['"]?\])+`;
+const SCOPE = String.raw`(?::root|:host|\.dark|\[data-[a-z-]+=['"]?[a-z0-9-]+['"]?\])+`;
 const VARIABLE_SCOPE = new RegExp(`^${SCOPE}(?: ${SCOPE})*$`);
 const NXDS_CLASS = /^\.nx\\:/;
 // Tailwind's registered-property fallbacks for older engines.

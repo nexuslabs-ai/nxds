@@ -22,6 +22,7 @@ const STATE = {
   ...DEFAULT_NXDS_APPEARANCE,
   mode: 'dark' as const,
   uiScale: 'large' as const,
+  textSize: 16 as const,
   lightContrast: 30,
   darkContrast: 70,
   prefs: {
@@ -48,6 +49,7 @@ describe('shuffleNxdsAppearance', () => {
     expect(shuffled).toMatchObject({
       mode: 'dark',
       uiScale: 'large',
+      textSize: 16,
       lightContrast: 30,
       darkContrast: 70,
       prefs: {
