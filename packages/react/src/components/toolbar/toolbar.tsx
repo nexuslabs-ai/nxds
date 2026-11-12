@@ -4,11 +4,11 @@ import * as React from 'react';
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 
 import { useIsomorphicLayoutEffect } from '../../hooks/use-isomorphic-layout-effect';
 import { cn } from '../../lib/utils';
-import { buttonVariants } from '../button/button-variants';
+import { type ButtonVariants, buttonVariants } from '../button/button-variants';
 import {
   Popover,
   PopoverAnchor,
@@ -122,7 +122,7 @@ function ToolbarControlContent({
 
 type ToolbarButtonProps = WithIconOnly<
   React.ComponentProps<typeof ToolbarPrimitive.Button> &
-    Pick<VariantProps<typeof buttonVariants>, 'variant' | 'size'>
+    Pick<ButtonVariants, 'variant' | 'size'>
 >;
 
 function ToolbarButton({
@@ -157,7 +157,7 @@ function ToolbarButton({
 }
 
 type ToolbarLinkProps = React.ComponentProps<typeof ToolbarPrimitive.Link> &
-  Pick<VariantProps<typeof buttonVariants>, 'variant' | 'size'>;
+  Pick<ButtonVariants, 'variant' | 'size'>;
 
 function ToolbarLink({
   className,
@@ -204,7 +204,7 @@ function ToolbarToggleGroup({ className, ...props }: ToolbarToggleGroupProps) {
 
 type ToolbarToggleItemProps = WithIconOnly<
   React.ComponentProps<typeof ToolbarPrimitive.ToggleItem> &
-    Pick<VariantProps<typeof buttonVariants>, 'size'>
+    Pick<ButtonVariants, 'size'>
 >;
 
 function ToolbarToggleItem({
@@ -406,7 +406,7 @@ function ToolbarToolGroup({
 
 type ToolbarToolProps = WithIconOnly<
   Omit<React.ComponentProps<typeof ToolbarPrimitive.Button>, 'value'> &
-    Pick<VariantProps<typeof buttonVariants>, 'size'> & {
+    Pick<ButtonVariants, 'size'> & {
       /** Matches the tool's ToolbarToolPanel, if it has one. */
       value: string;
     }

@@ -159,9 +159,7 @@ const _rejectedIconOnlyLinks = [
     Back
   </PaginationPrevious>,
   // @ts-expect-error asChild can't render an icon-only link.
-  <PaginationNext key="as-child" iconOnly asChild>
-    <a href="#next">Next</a>
-  </PaginationNext>,
+  <PaginationNext key="as-child" href="#" iconOnly asChild />,
 ];
 
 // A screen-size switch is one boolean prop.

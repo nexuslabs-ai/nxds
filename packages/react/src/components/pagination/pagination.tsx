@@ -133,10 +133,6 @@ type PaginationEdgeProps =
        */
       iconOnly: true;
       children?: never;
-      /**
-       * Renders the child element, such as a router `Link`, with the link styles.
-       * Use it instead of wrapping, which would nest one `<a>` in another.
-       */
       asChild?: false;
     });
 

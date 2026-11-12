@@ -3,6 +3,8 @@ import * as React from 'react';
 import {
   ArchiveIcon,
   ArrowUUpLeftIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
   CursorIcon,
   EraserIcon,
   PencilSimpleIcon,
@@ -13,13 +15,7 @@ import {
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import {
-  IconChevronDown,
-  IconChevronLeft,
-  IconChevronRight,
-  IconDots,
-  IconX,
-} from '../../lib/icons';
+import { IconChevronDown, IconDots, IconX } from '../../lib/icons';
 import { Button } from '../button/button';
 import { Checkbox } from '../checkbox/checkbox';
 import {
@@ -257,11 +253,11 @@ function CalendarToolbar() {
   return (
     <Toolbar aria-label="Calendar controls">
       <ToolbarGroup aria-label="Date navigation">
-        <ToolbarButton iconOnly startIcon={<IconChevronLeft />}>
+        <ToolbarButton iconOnly startIcon={<CaretLeftIcon />}>
           Previous period
         </ToolbarButton>
         <ToolbarButton>Today</ToolbarButton>
-        <ToolbarButton iconOnly startIcon={<IconChevronRight />}>
+        <ToolbarButton iconOnly startIcon={<CaretRightIcon />}>
           Next period
         </ToolbarButton>
       </ToolbarGroup>
