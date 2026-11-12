@@ -108,18 +108,18 @@ async function download(url: string) {
   return Buffer.from(await response.arrayBuffer());
 }
 
-function packageUrl(registry: string) {
-  return `${registry.replace(/\/+$/, '')}/${CLAUDE_DESIGN_PACKAGE.replace('/', '%2f')}`;
+function packageUrl(registry: string, name: string) {
+  return `${registry.replace(/\/+$/, '')}/${name.replace('/', '%2f')}`;
 }
 
-/** The tarball and its integrity for `release`, a version or a dist-tag. */
-async function resolveTarball(registry: string, release: string) {
+/** The tarball and its integrity for `name` at `release`, a version or a dist-tag. */
+async function resolveTarball(registry: string, name: string, release: string) {
   assertRegistryUrl(
     '--npm-registry (or npm_config_registry)',
     registry,
-    `For a private registry, unpack the tarball from \`npm pack ${CLAUDE_DESIGN_PACKAGE}\` and pass its package folder with --source.`
+    `For a private registry, unpack the tarball from \`npm pack ${name}\` and pass its package folder with --source.`
   );
-  const url = packageUrl(registry);
+  const url = packageUrl(registry, name);
   const body = (await download(url)).toString('utf8');
   let packument: Packument;
   try {
@@ -136,7 +136,7 @@ async function resolveTarball(registry: string, release: string) {
       .slice(-5)
       .join(', ');
     throw new UsageError(
-      `${CLAUDE_DESIGN_PACKAGE} has no release ${release}. Recent releases: ${known || 'none'}.`
+      `${name} has no release ${release}. Recent releases: ${known || 'none'}.`
     );
   }
   return { version, tarball: dist.tarball, integrity: dist.integrity };
@@ -160,15 +160,20 @@ function checkIntegrity(bytes: Buffer, integrity: string, tarball: string) {
   }
 }
 
-/** The package's files in a temporary folder: `project/`, `coverage.md` and the rest. */
-async function fetchPackage(registry: string, release: string) {
+/** `name`'s files at `release`, in a temporary folder, checked against their published integrity. */
+export async function fetchPackage(
+  registry: string,
+  name: string,
+  release: string
+) {
   const { version, tarball, integrity } = await resolveTarball(
     registry,
+    name,
     release
   );
   const bytes = await download(tarball);
   checkIntegrity(bytes, integrity, tarball);
-  const folder = mkdtempSync(path.join(tmpdir(), 'nxds-claude-design-'));
+  const folder = mkdtempSync(path.join(tmpdir(), 'nxds-package-'));
   const cleanup = () => rmSync(folder, { recursive: true, force: true });
   try {
     const file = path.join(folder, 'package.tgz');
@@ -190,7 +195,7 @@ async function fetchPackage(registry: string, release: string) {
   }
 }
 
-function localPackage(source: string) {
+export function localPackage(source: string) {
   if (!existsSync(path.join(source, 'project'))) {
     throw new UsageError(
       `${source} has no project/ folder. Point --source at a built @nxds/claude-design dist folder.`
@@ -206,7 +211,7 @@ function localPackage(source: string) {
   };
 }
 
-function assertWritable(out: string, overwrite: boolean) {
+export function assertWritable(out: string, overwrite: boolean) {
   if (!existsSync(out) || readdirSync(out).length === 0 || overwrite) return;
   throw new UsageError(
     `${out} already has files. Pass --overwrite to replace the export in it, or choose another --out.`
@@ -306,7 +311,7 @@ function readEntries(dir: string, entries: ManifestEntry[], prefix: string) {
 
 // The package build validated exactly the files files.json lists, at its
 // hashes, so those are the only files read: `project/` and the files beside it.
-function readRelease(root: string) {
+export function readRelease(root: string) {
   const manifest = readManifest(root);
   const projectDir = path.join(root, 'project');
   for (const { path: file } of manifest.project) {
@@ -427,7 +432,11 @@ function layeredTheme(stored: ThemeFlags, passed: ThemeFlags): ThemeFlags {
   return flags;
 }
 
-type ThemeSource = { passed: ThemeFlags; indexFile?: string; version: string };
+export type ThemeSource = {
+  passed: ThemeFlags;
+  indexFile?: string;
+  version: string;
+};
 
 const noFlagError = (flag: string, version: string) =>
   new UsageError(
@@ -447,7 +456,7 @@ function noThemeModuleError(
 }
 
 /** Throws on a flag the release doesn't take, naming where it came from. */
-function assertThemeFlags(
+export function assertThemeFlags(
   flags: ThemeFlags,
   taken: readonly string[],
   { passed, indexFile, version }: ThemeSource
@@ -475,7 +484,7 @@ const isThemeModule = (value: unknown): value is ThemeModule =>
   typeof (value as ThemeModule).title === 'function';
 
 /** The release's theme module, imported from the bytes files.json's hash checked. */
-async function importTheme(bytes: Buffer, version: string) {
+export async function importTheme(bytes: Buffer, version: string) {
   let imported: { default?: unknown };
   try {
     imported = (await import(
@@ -526,7 +535,7 @@ function themeError(
 }
 
 /** What `theme` renders for `flags`. */
-function renderTheme(
+export function renderTheme(
   theme: ThemeModule,
   flags: ThemeFlags,
   source: ThemeSource
@@ -672,6 +681,7 @@ export async function exportClaudeDesign(
     ? localPackage(path.resolve(cwd, options.source))
     : await fetchPackage(
         options.npmRegistry ?? DEFAULT_NPM_REGISTRY,
+        CLAUDE_DESIGN_PACKAGE,
         options.release ?? 'latest'
       );
 
