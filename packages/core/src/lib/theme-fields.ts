@@ -8,7 +8,10 @@ import {
   FONT_SIZE_PX_MIN,
   type NxdsAppearancePrefs,
   type NxdsAppearanceState,
+  type NxdsTextSize,
   STROKE_OPTIONS,
+  TEXT_SIZE_OPTIONS,
+  UI_SCALE_OPTIONS,
 } from './appearance-model';
 import { CONTRAST_MAX, CONTRAST_MIN } from './contrast';
 import { FONT_OPTIONS, type NxdsFontCategory } from './font-options';
@@ -122,6 +125,7 @@ function oneOf<V extends string>(
 type EnumKey =
   | 'mode'
   | 'surfaceTone'
+  | 'uiScale'
   | 'density'
   | 'corners'
   | 'elevation'
@@ -180,26 +184,6 @@ function contrastField(
   };
 }
 
-function fontSizeField(
-  flag: string,
-  key: 'uiFontSize' | 'codeFontSize',
-  description: string
-): NxdsThemeField {
-  return {
-    kind: 'integer',
-    flag,
-    key: `prefs.${key}`,
-    description,
-    min: FONT_SIZE_PX_MIN,
-    max: FONT_SIZE_PX_MAX,
-    read: (theme) => String(theme.appearance.prefs[key]),
-    write: (theme, value) =>
-      withPrefs(theme, {
-        [key]: integer(flag, value, FONT_SIZE_PX_MIN, FONT_SIZE_PX_MAX),
-      }),
-  };
-}
-
 /**
  * A font pref, by its curated font's value. `fallback` names the value the
  * pref takes when it isn't a curated font: the system stack, or for headings,
@@ -245,6 +229,10 @@ function fontField(
   };
 }
 
+const TEXT_SIZES = TEXT_SIZE_OPTIONS.map((option) => option.value);
+const TEXT_SIZE_MIN = Math.min(...TEXT_SIZES);
+const TEXT_SIZE_MAX = Math.max(...TEXT_SIZES);
+
 const DEFAULT_PREFS = DEFAULT_NXDS_APPEARANCE.prefs;
 const TEXT_FONTS = ['sans', 'serif'] as const;
 
@@ -271,6 +259,31 @@ export const NXDS_THEME_FIELDS: readonly NxdsThemeField[] = [
     'neutral tone of backgrounds and borders',
     BASE_TONE_OPTIONS.map((option) => option.value)
   ),
+  enumField(
+    'ui-scale',
+    'uiScale',
+    'size of text, icons and spacing together',
+    UI_SCALE_OPTIONS.map((option) => option.value)
+  ),
+  {
+    kind: 'integer',
+    flag: 'text-size',
+    key: 'textSize',
+    description: `label text size in px at the default UI scale, ${TEXT_SIZE_MIN} to ${TEXT_SIZE_MAX}`,
+    min: TEXT_SIZE_MIN,
+    max: TEXT_SIZE_MAX,
+    read: (theme) => String(theme.appearance.textSize),
+    write: (theme, value) =>
+      withAppearance(theme, {
+        // Every whole number from the minimum to the maximum is a text size.
+        textSize: integer(
+          'text-size',
+          value,
+          TEXT_SIZE_MIN,
+          TEXT_SIZE_MAX
+        ) as NxdsTextSize,
+      }),
+  },
   enumField(
     'density',
     'density',
@@ -321,8 +334,24 @@ export const NXDS_THEME_FIELDS: readonly NxdsThemeField[] = [
     value: 'system',
     family: DEFAULT_PREFS.codeFont,
   }),
-  fontSizeField('font-size', 'uiFontSize', 'UI text size in px'),
-  fontSizeField('code-font-size', 'codeFontSize', 'code text size in px'),
+  {
+    kind: 'integer',
+    flag: 'code-font-size',
+    key: 'prefs.codeFontSize',
+    description: 'code text size in px',
+    min: FONT_SIZE_PX_MIN,
+    max: FONT_SIZE_PX_MAX,
+    read: (theme) => String(theme.appearance.prefs.codeFontSize),
+    write: (theme, value) =>
+      withPrefs(theme, {
+        codeFontSize: integer(
+          'code-font-size',
+          value,
+          FONT_SIZE_PX_MIN,
+          FONT_SIZE_PX_MAX
+        ),
+      }),
+  },
   {
     kind: 'choice',
     flag: 'icons',

@@ -14,7 +14,11 @@ import {
   type NxdsElevation,
   type NxdsStroke,
   type NxdsSurfaceTone,
+  type NxdsUiScale,
   STROKE_OPTIONS,
+  TEXT_SIZE_OPTIONS,
+  textSizePx,
+  UI_SCALE_OPTIONS,
 } from '@nxds/core';
 
 import {
@@ -157,6 +161,19 @@ export function NxdsAppearanceSettings() {
     setState((current) => ({ ...current, mode: value }));
   };
 
+  const setTextSize = (value: string) => {
+    const option = TEXT_SIZE_OPTIONS.find(
+      (each) => String(each.value) === value
+    );
+    if (option === undefined) return;
+    setState((current) => ({ ...current, textSize: option.value }));
+  };
+
+  const textSizeOptions = TEXT_SIZE_OPTIONS.map(({ value, label }) => ({
+    value: String(value),
+    label,
+  }));
+
   const contrastKey =
     resolvedMode === 'dark' ? 'darkContrast' : 'lightContrast';
 
@@ -164,15 +181,6 @@ export function NxdsAppearanceSettings() {
     const value = values[0];
     if (value === undefined) return;
     setState((current) => ({ ...current, [contrastKey]: value }));
-  };
-
-  const setFontSize = (key: 'uiFontSize' | 'codeFontSize', value: number) => {
-    if (key === 'uiFontSize') {
-      updatePrefs({ uiFontSize: value });
-      return;
-    }
-
-    updatePrefs({ codeFontSize: value });
   };
 
   return (
@@ -294,18 +302,11 @@ export function NxdsAppearanceSettings() {
               className="nx:w-56 nx:typography-code-block"
             />
           </NxdsAppearanceSettingRow>
-          <NxdsAppearanceSettingRow label="UI font size">
-            <FontSizeInput
-              value={state.prefs.uiFontSize}
-              ariaLabel="UI font size"
-              onCommit={(value) => setFontSize('uiFontSize', value)}
-            />
-          </NxdsAppearanceSettingRow>
           <NxdsAppearanceSettingRow label="Code font size">
             <FontSizeInput
               value={state.prefs.codeFontSize}
               ariaLabel="Code font size"
-              onCommit={(value) => setFontSize('codeFontSize', value)}
+              onCommit={(codeFontSize) => updatePrefs({ codeFontSize })}
             />
           </NxdsAppearanceSettingRow>
         </CardContent>
@@ -315,10 +316,39 @@ export function NxdsAppearanceSettings() {
         <CardHeader>
           <CardTitle>Layout Feel</CardTitle>
           <CardDescription>
-            Density, corners, elevation, and stroke use curated token modes.
+            UI scale, text size, density, corners, elevation, and stroke use
+            curated token modes.
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <NxdsAppearanceSettingRow label="UI scale">
+            <AxisSelect<NxdsUiScale>
+              value={state.uiScale}
+              options={UI_SCALE_OPTIONS}
+              onValueChange={(uiScale) =>
+                setState((current) => ({ ...current, uiScale }))
+              }
+              ariaLabel="UI scale"
+            />
+          </NxdsAppearanceSettingRow>
+          <NxdsAppearanceSettingRow
+            label="Text size"
+            description="The size at the Default UI scale."
+          >
+            <AxisSelect
+              value={String(state.textSize)}
+              options={textSizeOptions}
+              onValueChange={setTextSize}
+              ariaLabel="Text size"
+            />
+          </NxdsAppearanceSettingRow>
+          <p
+            data-slot="appearance-text-size-preview"
+            className="nx:m-0 nx:pb-3 nx:typography-body-default nx:text-foreground"
+          >
+            At this UI scale, your text shows at{' '}
+            {textSizePx(state.textSize, state.uiScale)}px.
+          </p>
           <NxdsAppearanceSettingRow label="Density">
             <AxisSelect<NxdsDensity>
               value={state.density}

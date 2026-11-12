@@ -7,10 +7,11 @@
 // switch that changes nothing, an overlay that doesn't open, close and return
 // focus, a token or preset that doesn't reach a component, a tree or overlay
 // that changes when each part sits in a canvas wrapper, a sampler artboard
-// that logs a problem or doesn't fill its board, or a request to the network.
-// Then it exports the release again with every theme flag set, and checks
-// that the theme reaches the components, the presets and the sampler, and
-// once more each with spacious density and 20px text, and with 8px text, for the sampler alone. Each
+// that logs a problem or doesn't fill its board at any density or stroke, or
+// a request to the network. Then it exports the release again with every
+// theme flag set, and checks that the theme reaches the components, the
+// presets and the sampler, and once more at the Larger UI scale with
+// spacious density and at the Small UI scale, for the sampler alone. Each
 // check lives in scripts/smoke/.
 import { FULL_THEME } from './full-theme.ts';
 import { ATTRIBUTE_CASES, checkAttributes } from './smoke/attributes.ts';
@@ -71,15 +72,17 @@ await checkThemes();
 await checkTokens();
 await checkPresets();
 await checkTheme();
-await checkSampler({ themed: true });
+await checkSampler();
 
-// The largest text the sampler fits without a sideways scroll.
-await openCanvas(await exportRelease(['--density=spacious', '--font-size=20']));
-await checkSampler({ themed: true });
+// The largest UI scale and density.
+await openCanvas(
+  await exportRelease(['--density=spacious', '--ui-scale=larger'])
+);
+await checkSampler();
 
-// The smallest text a theme takes.
-await openCanvas(await exportRelease(['--font-size=8']));
-await checkSampler({ themed: true });
+// The smallest UI scale.
+await openCanvas(await exportRelease(['--ui-scale=small']));
+await checkSampler();
 await closeCanvas();
 
 if (failures.length > 0) {
@@ -89,5 +92,5 @@ if (failures.length > 0) {
   process.exit(1);
 }
 console.log(
-  `Smoke test passed: ${cardCount} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${exampleCount} README examples, ${ATTRIBUTE_CASES.length} attribute conversions, ${BAD_INPUT_CASES.length} bad attributes, ${SEARCH_CASES.length} list searches, ${iconCount} icons, ${TOAST_CASES.length} toasts against toast(), ${RECHARTS_CASES.length} custom charts, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes, and the sampler artboard in both modes, then a themed export through the themes, tokens, presets, theme and sampler checks, and the sampler at 20px and 8px text.`
+  `Smoke test passed: ${cardCount} cards in two themes, ${OVERLAYS.length} overlays, ${WRAPPED_CASES.length} trees and ${WRAPPED_OVERLAYS.length} overlays through canvas wrappers, ${exampleCount} README examples, ${ATTRIBUTE_CASES.length} attribute conversions, ${BAD_INPUT_CASES.length} bad attributes, ${SEARCH_CASES.length} list searches, ${iconCount} icons, ${TOAST_CASES.length} toasts against toast(), ${RECHARTS_CASES.length} custom charts, ${TOKEN_CASES.length} token overrides, ${PRESET_CASES.length} preset attributes, and the sampler artboard in both modes and at every density and stroke, then a themed export through the themes, tokens, presets, theme and sampler checks, and the sampler at the Larger UI scale with spacious density and at the Small UI scale.`
 );

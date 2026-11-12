@@ -42,7 +42,7 @@ const props = withDefaults(defineProps<DrawerContentProps>(), {
       <div
         v-if="showHandle"
         data-slot="drawer-handle"
-        class="nx:mx-auto nx:mt-4 nx:hidden nx:h-2 nx:w-[100px] nx:shrink-0 nx:rounded-full nx:bg-muted nx:group-data-[vaul-drawer-direction=bottom]/drawer-content:block"
+        class="nx:mx-auto nx:mt-4 nx:hidden nx:h-2 nx:w-[calc(100px*var(--nx-ui-scale))] nx:shrink-0 nx:rounded-full nx:bg-muted nx:group-data-[vaul-drawer-direction=bottom]/drawer-content:block"
       />
       <slot />
     </DrawerContent>

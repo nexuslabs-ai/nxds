@@ -15,6 +15,7 @@ import {
   DENSITY_OPTIONS,
   type NxdsAppearancePrefs,
   type NxdsAppearanceState,
+  UI_SCALE_OPTIONS,
 } from './appearance-model';
 import { createNxdsAppearanceSnapshotFromState } from './appearance-snapshot';
 import type { Mode } from './palette';
@@ -244,10 +245,21 @@ describe('token catalogue', () => {
     expect(byName.has('--nx-color-border-active')).toBe(false);
   });
 
-  it('declares the default runtime colours and z-index layers in the theme layer', () => {
+  it('declares the default runtime colours, z-index layers, UI scale factor and page widths in the theme layer', () => {
     const light = blockDeclarations(nxdsTheme, ':root');
     const dark = blockDeclarations(nxdsTheme, '.dark');
-    for (const token of familyTokens('z-index')) {
+    const rootTokens = [
+      ...familyTokens('z-index'),
+      ...familyTokens('ui-scale'),
+      ...familyTokens('width'),
+    ];
+    expect(familyTokens('ui-scale').map((token) => token.name)).toEqual([
+      '--nx-ui-scale',
+    ]);
+    expect(familyTokens('width').map((token) => token.name)).toContain(
+      '--nx-container-lg'
+    );
+    for (const token of rootTokens) {
       expect(light.get(token.name), token.name).toBe(
         variantValue(token, { preset: null, mode: null })
       );
@@ -415,8 +427,10 @@ describe('token catalogue', () => {
         new Set(
           familyTokens(family as CatalogueFamily)
             .filter((token) => token.variants.some((v) => v.preset !== null))
-            .map((token) =>
-              token.control?.kind === 'preset' ? token.control.field : null
+            .flatMap((token) =>
+              token.controls.flatMap((control) =>
+                control.kind === 'preset' ? [control.field] : []
+              )
             )
         ),
       ])
@@ -427,6 +441,48 @@ describe('token catalogue', () => {
       borderwidth: new Set(['stroke']),
       shadow: new Set(['elevation']),
     });
+  });
+
+  it('names uiScale for exactly the tokens the [data-ui-scale] blocks set', () => {
+    const scaled = new Set(
+      nxdsBlocks
+        .filter(({ selectors }) =>
+          selectors.some((selector) => selector.startsWith('[data-ui-scale='))
+        )
+        .flatMap(({ declarations }) => [...declarations.keys()])
+    );
+    const controlled = new Set(
+      catalogue
+        .filter((token) =>
+          token.controls.some(
+            (control) => control.kind === 'scale' && control.field === 'uiScale'
+          )
+        )
+        .map((token) => token.name)
+    );
+    expect(controlled).toEqual(scaled);
+  });
+
+  it('names textSize for exactly the tokens the [data-text-size] blocks set', () => {
+    const sized = new Set(
+      nxdsBlocks
+        .filter(({ selectors }) =>
+          selectors.some((selector) => selector.includes('[data-text-size='))
+        )
+        .flatMap(({ declarations }) => [...declarations.keys()])
+    );
+    const controlled = new Set(
+      catalogue
+        .filter((token) =>
+          token.controls.some(
+            (control) =>
+              control.kind === 'scale' && control.field === 'textSize'
+          )
+        )
+        .map((token) => token.name)
+    );
+    expect(sized.size).toBeGreaterThan(0);
+    expect(controlled).toEqual(sized);
   });
 
   it('names exactly the preference that changes each runtime typography variable', () => {
@@ -443,7 +499,6 @@ describe('token catalogue', () => {
       ['uiFont', 'serif'],
       ['headingFont', 'serif'],
       ['codeFont', 'monospace'],
-      ['uiFontSize', prefs.uiFontSize + 2],
       ['codeFontSize', prefs.codeFontSize + 2],
     ] as const) {
       for (const [name, after] of rootVariables({ [field]: value })) {
@@ -452,9 +507,9 @@ describe('token catalogue', () => {
     }
     const controlled = new Map(
       catalogue.flatMap((token) =>
-        token.control?.kind === 'pref'
-          ? [[token.name, token.control.field] as const]
-          : []
+        token.controls.flatMap((control) =>
+          control.kind === 'pref' ? [[token.name, control.field] as const] : []
+        )
       )
     );
     expect(controlled).toEqual(changedBy);
@@ -542,7 +597,10 @@ describe('density spacing order', () => {
     }
   });
 
-  it('gives each role token the value of the step it references, at every density', () => {
+  it('gives each role token the value of the step it references, at every density and UI scale', () => {
+    const scales = UI_SCALE_OPTIONS.map(({ value }) => value).filter(
+      (scale) => scale !== 'default'
+    );
     expect(roles.length).toBeGreaterThan(0);
     for (const token of roles) {
       for (const density of densities) {
@@ -550,6 +608,14 @@ describe('density spacing order', () => {
         expect(px(token, density), `${token.name} ${density}`).toBe(
           px(byName.get(target)!, density)
         );
+        for (const scale of scales) {
+          const block = modeBlock(
+            `[data-ui-scale='${scale}'][data-density='${density}']`
+          );
+          const label = `${token.name} ${scale} × ${density}`;
+          expect(block.get(token.name), label).toBeDefined();
+          expect(block.get(token.name), label).toBe(block.get(target));
+        }
       }
     }
   });
@@ -609,21 +675,10 @@ const APPEARANCES: [string, NxdsAppearanceState][] = [
     },
   ],
   [
-    'the smallest UI font',
+    'the largest code font',
     {
       ...DEFAULT_NXDS_APPEARANCE,
-      prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs, uiFontSize: 8 },
-    },
-  ],
-  [
-    'the largest UI and code fonts',
-    {
-      ...DEFAULT_NXDS_APPEARANCE,
-      prefs: {
-        ...DEFAULT_NXDS_APPEARANCE.prefs,
-        uiFontSize: 32,
-        codeFontSize: 32,
-      },
+      prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs, codeFontSize: 32 },
     },
   ],
 ];
@@ -638,42 +693,111 @@ function snapshotBlock(css: string, selector: string): Map<string, string> {
   return customProperties(body);
 }
 
-describe.each(APPEARANCES)('token catalogue at %s', (_, appearance) => {
-  const themed = new Map(
+/** The catalogue at `appearance`, by token name. */
+function catalogueAt(appearance: NxdsAppearanceState) {
+  return new Map<string, CatalogueToken>(
     createTokenCatalogue(appearance).map((token) => [token.name, token])
   );
+}
+
+/** Expects `themed` to hold each of `declared`'s values in its `key` variant. */
+function expectDeclared(
+  themed: Map<string, CatalogueToken>,
+  declared: Map<string, string>,
+  key: VariantKey
+): void {
+  expect(declared.size).toBeGreaterThan(0);
+  for (const [name, value] of declared) {
+    const token = themed.get(name);
+    if (!token) throw new Error(`the catalogue has no ${name}`);
+    expect(variantValue(token, key), name).toBe(value);
+  }
+}
+
+/** The custom properties of the first `nxds.css` rule `selector` starts a line with. */
+function cssBlock(selector: string, tail: string) {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const body = new RegExp(`\\n\\s*${escaped}${tail}\\{([^}]*)\\}`).exec(
+    nxdsCss
+  )?.[1];
+  if (body === undefined) throw new Error(`no "${selector}" rule`);
+  return customProperties(body);
+}
+
+describe.each(APPEARANCES)('token catalogue at %s', (_, appearance) => {
+  const themed = catalogueAt(appearance);
   const { themeCss, prefsCss } =
     createNxdsAppearanceSnapshotFromState(appearance);
 
-  function expectAgreement(
-    declared: Map<string, string>,
-    key: VariantKey
-  ): void {
-    expect(declared.size).toBeGreaterThan(0);
-    for (const [name, value] of declared) {
-      const token = themed.get(name as CatalogueToken['name']);
-      if (!token) throw new Error(`the catalogue has no ${name}`);
-      expect(variantValue(token, key), name).toBe(value);
-    }
-  }
-
   it('derives the colours the provider applies, in each mode', () => {
-    expectAgreement(snapshotBlock(themeCss, ':root'), {
+    expectDeclared(themed, snapshotBlock(themeCss, ':root'), {
       preset: null,
       mode: 'light',
     });
-    expectAgreement(snapshotBlock(themeCss, ':root.dark'), {
+    expectDeclared(themed, snapshotBlock(themeCss, ':root.dark'), {
       preset: null,
       mode: 'dark',
     });
   });
 
-  it('scales the type sizes and line heights the provider applies', () => {
-    const scale = new Map(
-      [...snapshotBlock(prefsCss, ':root')].filter(([name]) =>
-        /^--nx-typography-(size|line-height)-/.test(name)
+  it('writes the code size the provider applies', () => {
+    const code = new Map(
+      [...snapshotBlock(prefsCss, ':root')].filter(
+        ([name]) => name === '--nx-typography-code-size'
       )
     );
-    expectAgreement(scale, { preset: null, mode: null });
+    expectDeclared(themed, code, { preset: null, mode: null });
   });
 });
+
+describe.each(['small', 'large', 'larger'] as const)(
+  'token catalogue at the %s UI scale',
+  (uiScale) => {
+    const themed = catalogueAt({ ...DEFAULT_NXDS_APPEARANCE, uiScale });
+    const scale = `[data-ui-scale='${uiScale}']`;
+
+    it.each([
+      ['type, icons and page widths', scale, '\\s*', null],
+      ['density', `${scale}[data-density='tight']`, '[^{]*', 'tight'],
+      ['corners', `${scale}[data-radius='round']`, '[^{]*', 'round'],
+    ])(
+      'writes the same %s as the generated CSS',
+      (_, selector, tail, preset) => {
+        expectDeclared(themed, cssBlock(selector, tail), {
+          preset,
+          mode: null,
+        });
+      }
+    );
+  }
+);
+
+describe.each([
+  ['default', 16, "[data-text-size='16']"],
+  ['small', 12, "[data-ui-scale='small'][data-text-size='12']"],
+  ['larger', 16, "[data-ui-scale='larger'][data-text-size='16']"],
+] as const)(
+  'token catalogue at the %s UI scale and text size %s',
+  (uiScale, textSize, selector) => {
+    const appearance = { ...DEFAULT_NXDS_APPEARANCE, uiScale, textSize };
+
+    it('writes the same type sizes as the generated CSS', () => {
+      expectDeclared(catalogueAt(appearance), cssBlock(selector, '\\s*'), {
+        preset: null,
+        mode: null,
+      });
+    });
+
+    it('writes the code size the provider applies', () => {
+      const withCode = {
+        ...appearance,
+        prefs: { ...appearance.prefs, codeFontSize: 15 },
+      };
+      const { prefsCss } = createNxdsAppearanceSnapshotFromState(withCode);
+      expectDeclared(catalogueAt(withCode), snapshotBlock(prefsCss, selector), {
+        preset: null,
+        mode: null,
+      });
+    });
+  }
+);

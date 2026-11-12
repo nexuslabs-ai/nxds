@@ -31,9 +31,9 @@ const buttonVariants = cva(
         link: 'nx:border-0 nx:text-primary-subtle-foreground nx:underline-offset-4 nx:hover:underline nx:active:scale-100 nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
       },
       size: {
-        sm: 'nx:h-8',
-        default: 'nx:h-10',
-        lg: 'nx:h-12',
+        sm: 'nx:h-fit nx:min-h-8',
+        default: 'nx:h-fit nx:min-h-10',
+        lg: 'nx:h-fit nx:min-h-12',
       },
       iconOnly: {
         false: 'nx:gap-2 nx:typography-label-default',
@@ -47,7 +47,11 @@ const buttonVariants = cva(
       { iconOnly: true, size: 'sm', className: 'nx:w-8' },
       { iconOnly: true, size: 'default', className: 'nx:w-10' },
       { iconOnly: true, size: 'lg', className: 'nx:w-12' },
-      { variant: 'link', iconOnly: false, className: 'nx:h-auto nx:p-0!' },
+      {
+        variant: 'link',
+        iconOnly: false,
+        className: 'nx:h-auto nx:min-h-0 nx:p-0!',
+      },
     ],
     defaultVariants: {
       variant: 'default',

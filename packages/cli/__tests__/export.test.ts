@@ -897,6 +897,7 @@ function themedSetup(themeJs = THEME_JS) {
 const EVERY_FLAG: Record<string, string> = {
   'brand-color': '#e11d48',
   'surface-tone': 'stone',
+  'ui-scale': 'large',
   density: 'compact',
   corners: 'round',
   elevation: 'strong',
@@ -906,7 +907,6 @@ const EVERY_FLAG: Record<string, string> = {
   font: 'inter',
   'heading-font': 'playfair-display',
   'code-font': 'jetbrains-mono',
-  'font-size': '15',
   'code-font-size': '13',
 };
 
