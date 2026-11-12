@@ -169,7 +169,12 @@ const PaginationLink = React.forwardRef<
 /**
  * Props for the PaginationPrevious component.
  */
-type PaginationPreviousProps = React.ComponentProps<typeof PaginationLink>;
+interface PaginationPreviousProps extends PaginationLinkProps {
+  /**
+   * Shows only the chevron, in a square. The label stays as hidden text.
+   */
+  iconOnly?: boolean;
+}
 
 /**
  * Link to the previous page, with a left chevron and the label "Previous".
@@ -181,23 +186,23 @@ const PaginationPrevious = React.forwardRef<
 >(function PaginationPrevious(propsWithoutRef, forwardedRef) {
   const {
     children,
+    iconOnly = false,
     ...props
   }: React.PropsWithoutRef<PaginationPreviousProps> & {
     ref?: React.ForwardedRef<HTMLAnchorElement>;
-  } =
-    forwardedRef === null
-      ? propsWithoutRef
-      : { ...propsWithoutRef, ref: forwardedRef };
+  } = forwardedRef === null
+    ? propsWithoutRef
+    : { ...propsWithoutRef, ref: forwardedRef };
   return (
     <PaginationAnchor
-      square={false}
+      square={iconOnly}
       aria-label="Go to previous page"
       {...props}
     >
       {children ?? (
         <>
           <IconChevronLeft />
-          <span>Previous</span>
+          <span className={iconOnly ? 'nx:sr-only' : undefined}>Previous</span>
         </>
       )}
     </PaginationAnchor>
@@ -207,7 +212,12 @@ const PaginationPrevious = React.forwardRef<
 /**
  * Props for the PaginationNext component.
  */
-type PaginationNextProps = React.ComponentProps<typeof PaginationLink>;
+interface PaginationNextProps extends PaginationLinkProps {
+  /**
+   * Shows only the chevron, in a square. The label stays as hidden text.
+   */
+  iconOnly?: boolean;
+}
 
 /**
  * Link to the next page, with the label "Next" and a right chevron.
@@ -219,18 +229,18 @@ const PaginationNext = React.forwardRef<
 >(function PaginationNext(propsWithoutRef, forwardedRef) {
   const {
     children,
+    iconOnly = false,
     ...props
   }: React.PropsWithoutRef<PaginationNextProps> & {
     ref?: React.ForwardedRef<HTMLAnchorElement>;
-  } =
-    forwardedRef === null
-      ? propsWithoutRef
-      : { ...propsWithoutRef, ref: forwardedRef };
+  } = forwardedRef === null
+    ? propsWithoutRef
+    : { ...propsWithoutRef, ref: forwardedRef };
   return (
-    <PaginationAnchor square={false} aria-label="Go to next page" {...props}>
+    <PaginationAnchor square={iconOnly} aria-label="Go to next page" {...props}>
       {children ?? (
         <>
-          <span>Next</span>
+          <span className={iconOnly ? 'nx:sr-only' : undefined}>Next</span>
           <IconChevronRight />
         </>
       )}

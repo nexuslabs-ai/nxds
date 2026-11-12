@@ -17,21 +17,19 @@ export function AppearanceActions() {
   return (
     <>
       <ToolbarButton
-        size="sm"
         aria-label="Shuffle"
+        startIcon={<ShuffleActionIcon />}
         className={actionClass}
         onClick={shuffle}
       >
-        <ShuffleActionIcon aria-hidden="true" />
         <Show above="sm">Shuffle</Show>
       </ToolbarButton>
       <ToolbarButton
-        size="sm"
         aria-label="Reset"
+        startIcon={<ResetActionIcon />}
         className={actionClass}
         onClick={reset}
       >
-        <ResetActionIcon aria-hidden="true" />
         <Show above="sm">Reset</Show>
       </ToolbarButton>
     </>

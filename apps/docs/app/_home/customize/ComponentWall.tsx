@@ -128,6 +128,8 @@ import {
   PaginationEllipsis,
   PaginationItem,
   PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
 } from '@/components/pagination/pagination';
 import { Progress } from '@/components/progress/progress';
 import {
@@ -166,8 +168,6 @@ import {
 } from '@/components/toggle-group/toggle-group';
 
 import {
-  IconChevronLeft,
-  IconChevronRight,
   IconDots,
   IconList,
   IconPencil,
@@ -668,13 +668,7 @@ function PaginationTile() {
       <Pagination>
         <PaginationContent>
           <PaginationItem>
-            <PaginationLink
-              href="#"
-              onClick={stayInPlace}
-              aria-label="Go to previous page"
-            >
-              <IconChevronLeft aria-hidden="true" />
-            </PaginationLink>
+            <PaginationPrevious href="#" onClick={stayInPlace} iconOnly />
           </PaginationItem>
           <PaginationItem>
             <PaginationLink href="#" onClick={stayInPlace}>
@@ -695,13 +689,7 @@ function PaginationTile() {
             <PaginationEllipsis />
           </PaginationItem>
           <PaginationItem>
-            <PaginationLink
-              href="#"
-              onClick={stayInPlace}
-              aria-label="Go to next page"
-            >
-              <IconChevronRight aria-hidden="true" />
-            </PaginationLink>
+            <PaginationNext href="#" onClick={stayInPlace} iconOnly />
           </PaginationItem>
         </PaginationContent>
       </Pagination>

@@ -33,5 +33,6 @@ In Vue, pass the icon in the `#start-icon` slot:
 - ToolbarButton, ToolbarToggleItem and ToolbarTool take `startIcon` and `iconOnly` with the same rules.
 - InputGroupButton drops its `icon-xs` and `icon-sm` sizes for `iconOnly` at `xs` or `sm`.
 - PaginationLink takes `size` for its height and stays square.
+- PaginationPrevious and PaginationNext take `iconOnly` in place of `size="icon"`. They show only the chevron in a square, and the label stays as hidden text.
 - DatePicker day buttons render a native `<button>` with Button's styles and `data-slot="date-picker-day-button"`.
 - FilterConditionRemove takes its name as `children` text, visually hidden, in place of `aria-label`.

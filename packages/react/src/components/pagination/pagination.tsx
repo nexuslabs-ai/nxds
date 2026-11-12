@@ -119,23 +119,32 @@ function PaginationLink(props: PaginationLinkProps) {
 /**
  * Props for the PaginationPrevious component.
  */
-type PaginationPreviousProps = React.ComponentProps<typeof PaginationLink>;
+interface PaginationPreviousProps extends PaginationLinkProps {
+  /**
+   * Shows only the chevron, in a square. The label stays as hidden text.
+   */
+  iconOnly?: boolean;
+}
 
 /**
  * Link to the previous page, with a left chevron and the label "Previous".
  * With `asChild`, pass a router link that has its own children.
  */
-function PaginationPrevious({ children, ...props }: PaginationPreviousProps) {
+function PaginationPrevious({
+  children,
+  iconOnly = false,
+  ...props
+}: PaginationPreviousProps) {
   return (
     <PaginationAnchor
-      square={false}
+      square={iconOnly}
       aria-label="Go to previous page"
       {...props}
     >
       {children ?? (
         <>
           <IconChevronLeft />
-          <span>Previous</span>
+          <span className={iconOnly ? 'nx:sr-only' : undefined}>Previous</span>
         </>
       )}
     </PaginationAnchor>
@@ -145,18 +154,27 @@ function PaginationPrevious({ children, ...props }: PaginationPreviousProps) {
 /**
  * Props for the PaginationNext component.
  */
-type PaginationNextProps = React.ComponentProps<typeof PaginationLink>;
+interface PaginationNextProps extends PaginationLinkProps {
+  /**
+   * Shows only the chevron, in a square. The label stays as hidden text.
+   */
+  iconOnly?: boolean;
+}
 
 /**
  * Link to the next page, with the label "Next" and a right chevron.
  * With `asChild`, pass a router link that has its own children.
  */
-function PaginationNext({ children, ...props }: PaginationNextProps) {
+function PaginationNext({
+  children,
+  iconOnly = false,
+  ...props
+}: PaginationNextProps) {
   return (
-    <PaginationAnchor square={false} aria-label="Go to next page" {...props}>
+    <PaginationAnchor square={iconOnly} aria-label="Go to next page" {...props}>
       {children ?? (
         <>
-          <span>Next</span>
+          <span className={iconOnly ? 'nx:sr-only' : undefined}>Next</span>
           <IconChevronRight />
         </>
       )}
