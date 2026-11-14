@@ -35,7 +35,7 @@ const width = `${50 + (seed % 41)}%`;
     <Skeleton
       v-if="showIcon"
       data-slot="sidebar-menu-skeleton-icon"
-      class="nx:size-4 nx:rounded-md"
+      class="nx:size-icon-glyph-default nx:rounded-md"
     />
     <Skeleton
       data-slot="sidebar-menu-skeleton-text"

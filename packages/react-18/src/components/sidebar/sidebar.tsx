@@ -29,9 +29,8 @@ import {
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = '16rem';
-const SIDEBAR_WIDTH_NARROW = '18rem';
-const SIDEBAR_WIDTH_ICON = '3rem';
+const SIDEBAR_WIDTH = 'calc(16rem*var(--nx-ui-scale))';
+const SIDEBAR_WIDTH_NARROW = 'calc(18rem*var(--nx-ui-scale))';
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
 
 /** Whether the event target is a text-entry element (input, textarea, or contenteditable). */
@@ -177,7 +176,6 @@ const SidebarProvider = React.forwardRef<
           style={
             {
               '--sidebar-width': SIDEBAR_WIDTH,
-              '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
               ...style,
             } as React.CSSProperties
           }
@@ -215,7 +213,9 @@ interface SidebarProps extends React.ComponentProps<'div'> {
 
 /**
  * The sidebar panel. Below `md` it opens as a Sheet. From `md` up it docks to
- * `side` and collapses as `collapsible` sets.
+ * `side` and collapses as `collapsible` sets. The docked panel takes
+ * `className`. Other props, such as `data-density`, go on its root, so the
+ * panel and the space it keeps beside the page both follow them.
  */
 const Sidebar = React.forwardRef<
   HTMLDivElement,
@@ -276,10 +276,10 @@ const Sidebar = React.forwardRef<
           onOpenAutoFocus={rememberFocus}
           onCloseAutoFocus={restoreFocus}
           className={cn(
-            'nx:inset-y-2 nx:h-auto nx:w-(--sidebar-width) nx:max-w-[calc(100vw-1rem)] nx:rounded-lg nx:border-default nx:border-nav-border nx:bg-nav-background nx:p-0 nx:text-nav-foreground',
+            'nx:inset-y-2 nx:h-auto nx:w-(--sidebar-width) nx:max-w-[calc(100vw-var(--nx-spacing-2)*2)] nx:rounded-lg nx:border-default nx:border-nav-border nx:bg-nav-background nx:p-0 nx:text-nav-foreground',
             side === 'left'
-              ? 'nx:left-2 nx:data-[state=closed]:-translate-x-[calc(100%+0.5rem)]'
-              : 'nx:right-2 nx:data-[state=closed]:translate-x-[calc(100%+0.5rem)]',
+              ? 'nx:left-2 nx:data-[state=closed]:-translate-x-[calc(100%+var(--nx-spacing-2))]'
+              : 'nx:right-2 nx:data-[state=closed]:translate-x-[calc(100%+var(--nx-spacing-2))]',
             className
           )}
           style={
@@ -304,6 +304,14 @@ const Sidebar = React.forwardRef<
     );
   }
 
+  // Floating and inset variants gain padding around the panel. The collapsed
+  // rail adds this padding and the panel border to the menu button and its
+  // group padding.
+  const padded = variant === 'floating' || variant === 'inset';
+  const railWidth = padded
+    ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*4+var(--nx-borderwidth-default)*2)]'
+    : 'nx:group-data-[collapsible=icon]:w-[calc(var(--nx-spacing-8)+var(--nx-spacing-2)*2)]';
+
   return (
     <div
       className="nx:group nx:peer nx:hidden nx:text-nav-foreground nx:md:block"
@@ -312,6 +320,8 @@ const Sidebar = React.forwardRef<
       data-variant={variant}
       data-side={side}
       data-slot="sidebar"
+      style={style}
+      {...props}
     >
       {/* Handles the sidebar gap on desktop. */}
       <div
@@ -320,9 +330,7 @@ const Sidebar = React.forwardRef<
           'nx:relative nx:w-(--sidebar-width) nx:bg-transparent nx:transition-[width] nx:duration-default nx:ease-linear',
           'nx:group-data-[collapsible=offcanvas]:w-0',
           'nx:group-data-[side=right]:rotate-180',
-          variant === 'floating' || variant === 'inset'
-            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+1rem)]'
-            : 'nx:group-data-[collapsible=icon]:w-(--sidebar-width-icon)'
+          railWidth
         )}
       />
       <div
@@ -332,16 +340,12 @@ const Sidebar = React.forwardRef<
           side === 'left'
             ? 'nx:left-0 nx:group-data-[collapsible=offcanvas]:-left-(--sidebar-width)'
             : 'nx:right-0 nx:group-data-[collapsible=offcanvas]:-right-(--sidebar-width)',
-          // Floating and inset variants gain padding around the panel; the
-          // +1rem in the icon-collapse width below matches this inset.
-          (variant === 'floating' || variant === 'inset') && 'nx:p-2',
-          variant === 'floating' || variant === 'inset'
-            ? 'nx:group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+1rem+2px)]'
-            : 'nx:group-data-[collapsible=icon]:w-(--sidebar-width-icon) nx:group-data-[side=left]:border-r-default nx:group-data-[side=right]:border-l-default nx:border-nav-border',
+          padded
+            ? 'nx:p-2'
+            : 'nx:group-data-[side=left]:border-r-default nx:group-data-[side=right]:border-l-default nx:border-nav-border',
+          railWidth,
           className
         )}
-        style={style}
-        {...props}
       >
         <div
           data-slot="sidebar-inner"
@@ -357,7 +361,10 @@ const Sidebar = React.forwardRef<
 /**
  * Props for SidebarTrigger.
  */
-type SidebarTriggerProps = React.ComponentProps<typeof Button>;
+type SidebarTriggerProps = Omit<
+  React.ComponentProps<typeof Button>,
+  'iconOnly' | 'children' | 'startIcon' | 'endIcon' | 'asChild'
+>;
 
 /**
  * Icon button that opens and closes the sidebar. Place it in your top bar or
@@ -388,13 +395,13 @@ const SidebarTrigger = React.forwardRef<
     <Button
       data-slot="sidebar-trigger"
       variant="ghost"
-      size="icon"
+      iconOnly
+      startIcon={<IconLayoutSidebar />}
       className={cn('nx:size-7', className)}
       onClick={handleClick}
       {...props}
     >
-      <IconLayoutSidebar />
-      <span className="nx:sr-only">Toggle Sidebar</span>
+      Toggle Sidebar
     </Button>
   );
 });
@@ -503,7 +510,7 @@ const SidebarInput = React.forwardRef<
     <Input
       data-slot="sidebar-input"
       className={cn(
-        'nx:h-8 nx:w-full nx:bg-background nx:autofill-bg-background',
+        'nx:min-h-8 nx:w-full nx:bg-background nx:autofill-bg-background',
         className
       )}
       {...props}
@@ -708,7 +715,7 @@ const SidebarGroupLabel = React.forwardRef<
     <Comp
       data-slot="sidebar-group-label"
       className={cn(
-        'nx:flex nx:h-8 nx:shrink-0 nx:items-center nx:rounded-md nx:px-2 nx:typography-label-small nx:text-nav-muted-foreground nx:transition-[margin,opacity] nx:duration-default nx:ease-linear nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:[&>svg]:size-4 nx:[&>svg]:shrink-0',
+        'nx:flex nx:h-8 nx:shrink-0 nx:items-center nx:rounded-md nx:px-2 nx:typography-label-small nx:text-nav-muted-foreground nx:transition-[margin,opacity] nx:duration-default nx:ease-linear nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:[&>svg]:size-icon-glyph-default nx:[&>svg]:shrink-0 nx:icon-stroke',
         'nx:group-data-[collapsible=icon]:-mt-8 nx:group-data-[collapsible=icon]:opacity-0',
         className
       )}
@@ -749,7 +756,7 @@ const SidebarGroupAction = React.forwardRef<
     <Comp
       data-slot="sidebar-group-action"
       className={cn(
-        'nx:absolute nx:top-3.5 nx:right-3 nx:flex nx:aspect-square nx:w-5 nx:items-center nx:justify-center nx:rounded-md nx:border-0 nx:bg-transparent nx:p-0 nx:text-nav-foreground nx:hover:bg-nav-item-hover nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:[&>svg]:size-4 nx:[&>svg]:shrink-0',
+        'nx:absolute nx:top-3.5 nx:right-3 nx:flex nx:aspect-square nx:w-5 nx:items-center nx:justify-center nx:rounded-md nx:border-0 nx:bg-transparent nx:p-0 nx:text-nav-foreground nx:hover:bg-nav-item-hover nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:[&>svg]:size-icon-glyph-default nx:[&>svg]:shrink-0 nx:icon-stroke',
         'nx:group-data-[collapsible=icon]:hidden',
         className
       )}
@@ -862,7 +869,7 @@ const sidebarMenuButtonVariants = cva(
     'nx:disabled:pointer-events-none nx:disabled:text-disabled-foreground nx:aria-disabled:pointer-events-none nx:aria-disabled:text-disabled-foreground',
     'nx:data-[active=true]:bg-nav-item-active nx:data-[active=true]:text-nav-foreground',
     'nx:data-[state=open]:hover:bg-nav-item-hover',
-    'nx:[&>span:last-child]:truncate nx:[&>svg]:size-4 nx:[&>svg]:shrink-0'
+    'nx:[&>span:last-child]:truncate nx:[&>svg]:size-icon-glyph-default nx:[&>svg]:shrink-0 nx:icon-stroke'
   ),
   {
     variants: {
@@ -999,7 +1006,7 @@ const SidebarMenuAction = React.forwardRef<
     <Comp
       data-slot="sidebar-menu-action"
       className={cn(
-        'nx:absolute nx:top-1.5 nx:right-1 nx:flex nx:aspect-square nx:w-5 nx:items-center nx:justify-center nx:rounded-md nx:border-0 nx:bg-transparent nx:p-0 nx:text-nav-foreground nx:hover:bg-nav-item-hover nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:[&>svg]:size-4 nx:[&>svg]:shrink-0',
+        'nx:absolute nx:top-1.5 nx:right-1 nx:flex nx:aspect-square nx:w-5 nx:items-center nx:justify-center nx:rounded-md nx:border-0 nx:bg-transparent nx:p-0 nx:text-nav-foreground nx:hover:bg-nav-item-hover nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:[&>svg]:size-icon-glyph-default nx:[&>svg]:shrink-0 nx:icon-stroke',
         'nx:peer-data-[size=sm]/menu-button:top-1',
         'nx:peer-data-[size=default]/menu-button:top-1.5',
         'nx:peer-data-[size=lg]/menu-button:top-2.5',
@@ -1038,7 +1045,7 @@ const SidebarMenuBadge = React.forwardRef<
     <div
       data-slot="sidebar-menu-badge"
       className={cn(
-        'nx:pointer-events-none nx:absolute nx:right-1 nx:flex nx:h-5 nx:min-w-5 nx:items-center nx:justify-center nx:rounded-md nx:px-1 nx:typography-label-small nx:text-nav-foreground nx:tabular-nums nx:select-none',
+        'nx:pointer-events-none nx:absolute nx:right-1 nx:flex nx:min-h-5 nx:min-w-5 nx:items-center nx:justify-center nx:rounded-md nx:px-1 nx:typography-label-small nx:text-nav-foreground nx:tabular-nums nx:select-none',
         'nx:peer-data-[size=sm]/menu-button:top-1',
         'nx:peer-data-[size=default]/menu-button:top-1.5',
         'nx:peer-data-[size=lg]/menu-button:top-2.5',
@@ -1095,7 +1102,7 @@ const SidebarMenuSkeleton = React.forwardRef<
       {showIcon && (
         <Skeleton
           data-slot="sidebar-menu-skeleton-icon"
-          className="nx:size-4 nx:rounded-md"
+          className="nx:size-icon-glyph-default nx:rounded-md"
         />
       )}
       <Skeleton
@@ -1221,7 +1228,7 @@ const SidebarMenuSubButton = React.forwardRef<
       data-active={isActive}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'nx:flex nx:h-7 nx:min-w-0 nx:-translate-x-px nx:items-center nx:gap-2 nx:overflow-hidden nx:rounded-md nx:px-2 nx:text-nav-muted-foreground nx:no-underline nx:hover:bg-nav-item-hover nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:active:bg-nav-item-active nx:disabled:pointer-events-none nx:disabled:text-disabled-foreground nx:aria-disabled:pointer-events-none nx:aria-disabled:text-disabled-foreground nx:[&>span:last-child]:truncate nx:[&>svg]:size-4 nx:[&>svg]:shrink-0',
+        'nx:flex nx:h-7 nx:min-w-0 nx:-translate-x-px nx:items-center nx:gap-2 nx:overflow-hidden nx:rounded-md nx:px-2 nx:text-nav-muted-foreground nx:no-underline nx:hover:bg-nav-item-hover nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:active:bg-nav-item-active nx:disabled:pointer-events-none nx:disabled:text-disabled-foreground nx:aria-disabled:pointer-events-none nx:aria-disabled:text-disabled-foreground nx:[&>span:last-child]:truncate nx:[&>svg]:size-icon-glyph-default nx:[&>svg]:shrink-0 nx:icon-stroke',
         'nx:data-[active=true]:bg-nav-item-active nx:data-[active=true]:text-nav-foreground',
         size === 'sm' && 'nx:typography-body-small',
         size === 'md' && 'nx:typography-body-default',

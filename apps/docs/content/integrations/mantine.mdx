@@ -246,17 +246,17 @@ export const defaultAppearance = {
 } satisfies NxdsAppearanceState;
 ```
 
-| Mantine theme                  | Appearance field   | How to match                                                                                             |
-| ------------------------------ | ------------------ | -------------------------------------------------------------------------------------------------------- |
-| `primaryColor`, `primaryShade` | `brandColor`       | Use the light shade, `colors[primaryColor][6]` by default. Mantine's blue is `#228be6`                   |
-| `colors.gray`                  | `surfaceTone`      | `gray` is closest to Mantine's gray                                                                      |
-| `defaultRadius`                | `corners`          | `xs` and `sm` are `subtle`, `md` is `smooth`, `lg` and `xl` are `extra-round`. Mantine's default is `md` |
-| `spacing`, `scale`             | `density`          | Compare in the [Playground](/playground)                                                                 |
-| `shadows`                      | `elevation`        | Compare in the [Playground](/playground). `flat` turns shadows off                                       |
-| None                           | `stroke`           | Mantine has no border width setting, so keep `normal`                                                    |
-| `fontFamily`                   | `prefs.uiFont`     | Pass the same font stack                                                                                 |
-| `fontSizes.md`                 | `prefs.uiFontSize` | Mantine's default is 16 and nxds's is 14. Set `16` to match Mantine's text                               |
-| The color scheme               | `mode`             | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                           |
+| Mantine theme                  | Appearance field | How to match                                                                                             |
+| ------------------------------ | ---------------- | -------------------------------------------------------------------------------------------------------- |
+| `primaryColor`, `primaryShade` | `brandColor`     | Use the light shade, `colors[primaryColor][6]` by default. Mantine's blue is `#228be6`                   |
+| `colors.gray`                  | `surfaceTone`    | `gray` is closest to Mantine's gray                                                                      |
+| `defaultRadius`                | `corners`        | `xs` and `sm` are `subtle`, `md` is `smooth`, `lg` and `xl` are `extra-round`. Mantine's default is `md` |
+| `spacing`, `scale`             | `density`        | Compare in the [Playground](/playground)                                                                 |
+| `shadows`                      | `elevation`      | Compare in the [Playground](/playground). `flat` turns shadows off                                       |
+| None                           | `stroke`         | Mantine has no border width setting, so keep `normal`                                                    |
+| `fontFamily`                   | `prefs.uiFont`   | Pass the same font stack                                                                                 |
+| `fontSizes.md`                 | `textSize`       | Mantine's default is 16px and nxds's is 14px. Set `16` for 16px text with the same spacing               |
+| The color scheme               | `mode`           | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                           |
 
 ## Where nxds fits
 
@@ -268,7 +268,7 @@ itself: `onValueChange(value)`, `onCheckedChange(checked)`,
 | ----------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `Button`                                                    | `Button`                                                                  | `variant` `filled`, `light`, `outline`, `subtle`, `default` → `default`, `secondary`, `outline`, `ghost`, `outline` |
 | `Button color="red"`                                        | `Button variant="destructive"`                                            | nxds has no `color` prop. The brand comes from the appearance                                                       |
-| `ActionIcon`                                                | `Button size="icon"`                                                      | Give it an `aria-label`                                                                                             |
+| `ActionIcon`                                                | `Button iconOnly`                                                         | Pass the name as text and the icon as `startIcon`                                                                   |
 | `Button.Group`                                              | `ButtonGroup`                                                             |                                                                                                                     |
 | `TextInput`                                                 | `Field`, `FieldLabel`, `Input`, `FieldDescription`, `FieldError`          | `label`, `description` and `error` become parts                                                                     |
 | `Textarea`                                                  | `Textarea` in a `Field`                                                   |                                                                                                                     |

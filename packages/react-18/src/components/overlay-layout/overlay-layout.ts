@@ -27,6 +27,10 @@ const tooltipSurfaceClassName = [
   'nx:shadow-lg',
 ].join(' ');
 
+/** Starts menu item text after the check column: 8px, the check, then 8px. */
+const menuItemInsetClassName =
+  'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]';
+
 const navigationMenuInlinePopoverSurfaceClassName = [
   'nx:group-data-[viewport=false]/navigation-menu:rounded-md',
   'nx:group-data-[viewport=false]/navigation-menu:border-default',
@@ -145,7 +149,7 @@ const overlayFooterVariants = cva('nx:flex nx:shrink-0 nx:gap-2 nx:px-6', {
 });
 
 const overlayCloseButtonClassName = [
-  'nx:absolute nx:right-6 nx:top-6 nx:rounded-sm nx:border-0 nx:bg-transparent nx:p-1 nx:text-muted-foreground-subtle',
+  'nx:absolute nx:target-24 nx:right-6 nx:top-6 nx:rounded-sm nx:border-0 nx:bg-transparent nx:p-1 nx:text-muted-foreground-subtle',
   'nx:transition-control',
   'nx:hover:bg-container-hover nx:hover:text-foreground',
   'nx:focus-visible:bg-container-hover nx:focus-visible:text-foreground',
@@ -197,6 +201,7 @@ function containsComposedSlot(
 export {
   containsComposedSlot,
   defaultOverlayLayout,
+  menuItemInsetClassName,
   navigationMenuInlinePopoverSurfaceClassName,
   navigationMenuInlinePopoverTransitionClassName,
   overlayBodyClassName,

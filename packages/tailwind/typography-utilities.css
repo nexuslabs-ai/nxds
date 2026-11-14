@@ -124,7 +124,7 @@
 
 @utility typography-code-block {
   font-family: var(--nx-typography-family-font-mono);
-  font-size: var(--nx-typography-size-code);
+  font-size: var(--nx-typography-code-size);
   font-weight: var(--nx-typography-weight-normal);
   line-height: var(--nx-typography-line-height-sm);
   letter-spacing: 0px;
@@ -132,7 +132,7 @@
 
 @utility typography-code-inline {
   font-family: var(--nx-typography-family-font-mono);
-  font-size: var(--nx-typography-size-code);
+  font-size: var(--nx-typography-code-size);
   font-weight: var(--nx-typography-weight-semibold);
   line-height: normal;
   letter-spacing: 0px;

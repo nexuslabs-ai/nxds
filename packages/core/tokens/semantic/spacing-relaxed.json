@@ -23,7 +23,7 @@
     },
     "3": {
       "$value": {
-        "value": 14,
+        "value": 13,
         "unit": "px"
       },
       "$type": "dimension"
@@ -37,7 +37,7 @@
     },
     "5": {
       "$value": {
-        "value": 22,
+        "value": 23,
         "unit": "px"
       },
       "$type": "dimension"
@@ -241,33 +241,21 @@
   },
   "container": {
     "p": {
-      "$value": {
-        "value": 28,
-        "unit": "px"
-      },
+      "$value": "{spacing.6}",
       "$type": "dimension"
     },
     "gap": {
-      "$value": {
-        "value": 20,
-        "unit": "px"
-      },
+      "$value": "{spacing.4}",
       "$type": "dimension"
     }
   },
   "layout": {
     "section-gap": {
-      "$value": {
-        "value": 40,
-        "unit": "px"
-      },
+      "$value": "{spacing.8}",
       "$type": "dimension"
     },
     "stack-gap": {
-      "$value": {
-        "value": 10,
-        "unit": "px"
-      },
+      "$value": "{spacing.2}",
       "$type": "dimension"
     }
   }

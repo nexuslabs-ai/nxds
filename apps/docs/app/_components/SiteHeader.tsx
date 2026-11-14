@@ -76,13 +76,12 @@ export function SiteHeader() {
           <SiteSearch />
           <Button
             variant="outline"
-            size="icon-sm"
-            aria-label={
-              light ? 'Switch to dark theme' : 'Switch to light theme'
-            }
+            size="sm"
+            iconOnly
+            startIcon={<ThemeIcon />}
             onClick={toggleTheme}
           >
-            <ThemeIcon aria-hidden="true" />
+            {light ? 'Switch to dark theme' : 'Switch to light theme'}
           </Button>
           <Show above="lg">
             <Button

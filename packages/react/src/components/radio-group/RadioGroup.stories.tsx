@@ -1,5 +1,6 @@
 import * as React from 'react';
 
+import { DENSITY_OPTIONS } from '@nxds/core';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
@@ -331,6 +332,69 @@ export const WithDataAttributes: Story = {
     // The filled dot renders only inside the checked item
     const indicator = one.querySelector('[data-slot="radio-group-indicator"]');
     await expect(indicator).toBeInTheDocument();
+  },
+};
+
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
+
+export const SizeAtEveryDensity: Story = {
+  render: () => (
+    <div className="nx:flex nx:flex-col nx:gap-3">
+      {DENSITIES.map((density) => (
+        <RadioGroup
+          key={density}
+          data-density={density}
+          data-testid={`row-${density}`}
+          defaultValue="on"
+          aria-label={`Choice, ${density}`}
+        >
+          <RadioGroupItem value="on" aria-label={`On, ${density}`} />
+        </RadioGroup>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const width = (element: Element) => element.getBoundingClientRect().width;
+    const reference = width(
+      within(canvas.getByTestId('row-default')).getByRole('radio')
+    );
+    for (const density of DENSITIES) {
+      const control = within(canvas.getByTestId(`row-${density}`)).getByRole(
+        'radio'
+      );
+      // The control keeps its Default size at every density.
+      await expect(width(control)).toBe(reference);
+      // The mark stays inside the border.
+      const mark = control
+        .querySelector('[data-slot="radio-group-dot"]')!
+        .getBoundingClientRect();
+      const box = control.getBoundingClientRect();
+      const top = box.top + control.clientTop;
+      const left = box.left + control.clientLeft;
+      await expect(mark.top).toBeGreaterThanOrEqual(top);
+      await expect(mark.bottom).toBeLessThanOrEqual(top + control.clientHeight);
+      await expect(mark.left).toBeGreaterThanOrEqual(left);
+      await expect(mark.right).toBeLessThanOrEqual(left + control.clientWidth);
+    }
+  },
+};
+
+export const TargetArea: Story = {
+  render: () => (
+    <RadioGroup aria-label="Plan">
+      <RadioGroupItem value="team" aria-label="Team" />
+    </RadioGroup>
+  ),
+  play: async ({ canvasElement }) => {
+    const control = within(canvasElement).getByRole('radio');
+    const box = control.getBoundingClientRect();
+    const middle = box.top + box.height / 2;
+    // A press 3px outside the 16px circle still lands on its 24px target.
+    await expect(document.elementFromPoint(box.left - 3, middle)).toBe(control);
+    await expect(document.elementFromPoint(box.right + 3, middle)).toBe(
+      control
+    );
   },
 };
 

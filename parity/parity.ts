@@ -509,6 +509,8 @@ export const renderedDifferences: Record<string, string> = {
     'Radix mounts the <img> only once it loads; Reka mounts it at once as role="img", hidden until it loads',
   'date-picker':
     "react-day-picker adds its rdp-* classes to the root; Reka names the root and adds a hidden live label, 'Event Date, January 2025'",
+  'date-picker-day-button':
+    'react-day-picker and Reka each put their own day-state data attributes on the day button, such as data-outside-view, which only Reka sets',
   'input-otp':
     "input-otp puts data-slot on its hidden <input>; Vue's root is Reka's PinInputRoot <div>",
   'input-otp-slot':
@@ -651,6 +653,10 @@ export const copies: [react: string, vue: string][] = [
     'packages/vue/src/lib/responsive-visibility.ts',
   ],
   [
+    'packages/react/src/components/button/button-variants.ts',
+    'packages/vue/src/components/button/button-variants.ts',
+  ],
+  [
     'packages/react/src/components/code-block/code-block-theme.ts',
     'packages/vue/src/components/code-block/code-block-theme.ts',
   ],
@@ -669,6 +675,10 @@ export const copies: [react: string, vue: string][] = [
   [
     'packages/react/src/components/avatar/avatar-fixtures.ts',
     'packages/vue/src/stories/support/avatar-fixtures.ts',
+  ],
+  [
+    'packages/react/src/stories/support/menu-item-inset-test-utils.ts',
+    'packages/vue/src/stories/support/menu-item-inset-test-utils.ts',
   ],
   [
     'packages/react/src/stories/support/motion-test-utils.ts',

@@ -63,7 +63,7 @@ Custom brand ramps and raw surface-tone references retain their separate algorit
 
 ## Token catalogue
 
-The browser-safe `@nxds/core/catalogue` entry describes every token family for tools and docs: colour, typography, spacing, radius, border width, shadow, motion, z-index, and breakpoints. Each token has its `--nx-*` name, aliases, values per theme mode and preset as the generated CSS declares them, and the authored source leaf. It builds a fresh array and derives both runtime colour modes on each call, so call it once per build or page, not per render.
+The browser-safe `@nxds/core/catalogue` entry describes every token family for tools and docs: colour, typography, spacing, radius, border width, shadow, motion, z-index, breakpoints, and the UI scale factor and page widths. Each token has its `--nx-*` name, aliases, values per theme mode and preset as the generated CSS declares them, the authored source leaf, and the appearance settings that write it. It builds a fresh array and derives both runtime colour modes on each call, so call it once per build or page, not per render.
 
 ```ts
 import { createTokenCatalogue } from '@nxds/core/catalogue';
@@ -148,7 +148,7 @@ All tokens follow the [Design Tokens Community Group](https://tr.designtokens.or
 - Output: Tailwind v4 `@theme` block (semantic color via `@theme inline`, accepting runtime `--nx-color-*` overrides) + per-mode `[data-density="X"]` blocks
 - Example: `--color-background: var(--nx-color-background, oklch(1 0 0))` (engine color floor), `--nx-spacing-4: 16px`
 
-> **Spacing is two-tier, not three.** Unlike color/radius/shadow/typography, spacing has no `--nx-size-*` primitive layer — `semantic/spacing-{mode}.json` files carry direct px values, and the build emits per-mode `[data-density="X"]` blocks plus role utilities (`nx:p-container`, `nx:gap-layout-section`, …). Mode swap is runtime via the `data-density` attribute on `<html>`.
+> **Spacing is two-tier, not three.** Unlike color/radius/shadow/typography, spacing has no `--nx-size-*` primitive layer — `semantic/spacing-{mode}.json` files carry direct px steps and role tokens that reference a step in the same file (`{spacing.6}`), and the build emits per-mode `[data-density="X"]` blocks plus role utilities (`nx:p-container`, `nx:gap-layout-section`, …). Mode swap is runtime via the `data-density` attribute on `<html>`.
 
 **Component** (future)
 

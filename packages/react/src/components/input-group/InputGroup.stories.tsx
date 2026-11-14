@@ -1,3 +1,4 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import {
   EnvelopeIcon,
   EyeIcon,
@@ -8,6 +9,10 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
+import {
+  expectInsideBorder,
+  expectTextFits,
+} from '../../stories/support/story-height-test-utils';
 import { Spinner } from '../spinner/spinner';
 
 import {
@@ -110,8 +115,8 @@ export const Alignments: Story = {
       <InputGroup>
         <InputGroupInput aria-label="Search" placeholder="Search projects" />
         <InputGroupAddon align="inline-end">
-          <InputGroupButton size="icon-xs" aria-label="Clear">
-            <XIcon aria-hidden />
+          <InputGroupButton iconOnly startIcon={<XIcon />}>
+            Clear
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
@@ -148,11 +153,11 @@ export const ButtonSizes: Story = {
       <InputGroup>
         <InputGroupInput aria-label="Icon buttons" placeholder="icon sizes" />
         <InputGroupAddon align="inline-end">
-          <InputGroupButton size="icon-xs" aria-label="Show">
-            <EyeIcon aria-hidden />
+          <InputGroupButton iconOnly startIcon={<EyeIcon />}>
+            Show
           </InputGroupButton>
-          <InputGroupButton size="icon-sm" aria-label="Clear">
-            <XIcon aria-hidden />
+          <InputGroupButton size="sm" iconOnly startIcon={<XIcon />}>
+            Clear
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
@@ -609,6 +614,46 @@ export const WithKbd: Story = {
   },
 };
 
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
+
+export const ExtraSmallButtonAtEveryDensity: Story = {
+  // Text is tallest at the Larger UI scale, so it fits at every smaller one.
+  globals: { uiScale: 'larger' },
+  render: () => (
+    <div className="nx:flex nx:w-80 nx:flex-col nx:gap-3">
+      {DENSITIES.map((density) => (
+        <div
+          key={density}
+          data-density={density}
+          data-testid={`row-${density}`}
+        >
+          <InputGroup>
+            <InputGroupInput aria-label={`Invite link, ${density}`} />
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton size="xs">Copy</InputGroupButton>
+            </InputGroupAddon>
+          </InputGroup>
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const density of DENSITIES) {
+      const button = within(canvas.getByTestId(`row-${density}`)).getByRole(
+        'button',
+        { name: 'Copy' }
+      );
+      // The label fits inside the button, and the button inside the group.
+      await expectTextFits(button);
+      await expectInsideBorder(
+        button,
+        button.closest<HTMLElement>('[data-slot="input-group"]')!
+      );
+    }
+  },
+};
+
 // ============================================
 // ALL VARIANTS GRID
 // ============================================
@@ -630,8 +675,8 @@ export const AllVariants: Story = {
         </InputGroupAddon>
         <InputGroupInput aria-label="URL" placeholder="nxds.dev" />
         <InputGroupAddon align="inline-end">
-          <InputGroupButton size="icon-xs" aria-label="Clear">
-            <XIcon aria-hidden />
+          <InputGroupButton iconOnly startIcon={<XIcon />}>
+            Clear
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>

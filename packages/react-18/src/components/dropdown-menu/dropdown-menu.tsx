@@ -7,6 +7,7 @@ import { IconCheck, IconChevronRight, IconCircleFilled } from '../../lib/icons';
 import { selectionIndicatorMotionClassName } from '../../lib/motion';
 import { cn } from '../../lib/utils';
 import {
+  menuItemInsetClassName,
   overlayFloatingTransitionClassName,
   popoverSurfaceClassName,
 } from '../overlay-layout/overlay-layout';
@@ -82,14 +83,14 @@ const DropdownMenuSubTrigger = React.forwardRef<
         'nx:rounded-sm nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-[state=open]:bg-popover-hover nx:data-[state=open]:text-popover-foreground',
-        'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-4 nx:[&_svg]:shrink-0',
-        inset && 'nx:pl-8',
+        'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
+        inset && menuItemInsetClassName,
         className
       )}
       {...props}
     >
       {children}
-      <IconChevronRight className="nx:ml-auto nx:size-4" />
+      <IconChevronRight className="nx:ml-auto" />
     </DropdownMenuPrimitive.SubTrigger>
   );
 });
@@ -179,7 +180,7 @@ const DropdownMenuContent = React.forwardRef<
 });
 
 const dropdownMenuItemVariants = cva(
-  'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2 nx:rounded-sm nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none nx:transition-colors nx:focus:bg-popover-hover nx:focus:text-popover-foreground nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-4 nx:[&_svg]:shrink-0',
+  'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2 nx:rounded-sm nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none nx:transition-colors nx:focus:bg-popover-hover nx:focus:text-popover-foreground nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
   {
     variants: {
       variant: {
@@ -233,7 +234,7 @@ const DropdownMenuItem = React.forwardRef<
       data-variant={variant}
       className={cn(
         dropdownMenuItemVariants({ variant }),
-        inset && 'nx:pl-8',
+        inset && menuItemInsetClassName,
         className
       )}
       {...props}
@@ -272,8 +273,9 @@ const DropdownMenuCheckboxItem = React.forwardRef<
     <DropdownMenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
       className={cn(
-        'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center',
-        'nx:rounded-sm nx:py-1.5 nx:pl-8 nx:pr-2 nx:typography-body-default nx:outline-none',
+        'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
+        'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
+        menuItemInsetClassName,
         'nx:transition-colors',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',
@@ -282,7 +284,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
       checked={checked}
       {...props}
     >
-      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-3.5 nx:items-center nx:justify-center">
+      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-icon-glyph-default nx:items-center nx:justify-center">
         <DropdownMenuPrimitive.ItemIndicator
           forceMount
           data-slot="dropdown-menu-checkbox-indicator"
@@ -291,7 +293,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
             data-slot="dropdown-menu-checkbox-indicator-icon"
             aria-hidden="true"
             className={cn(
-              'nx:size-4',
+              'nx:size-icon-glyph-default',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100',
               'nx:group-data-[state=indeterminate]:scale-100 nx:group-data-[state=indeterminate]:opacity-100'
@@ -334,8 +336,9 @@ const DropdownMenuRadioItem = React.forwardRef<
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       className={cn(
-        'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center',
-        'nx:rounded-sm nx:py-1.5 nx:pl-8 nx:pr-2 nx:typography-body-default nx:outline-none',
+        'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
+        'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
+        menuItemInsetClassName,
         'nx:transition-colors',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',
@@ -343,7 +346,7 @@ const DropdownMenuRadioItem = React.forwardRef<
       )}
       {...props}
     >
-      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-3.5 nx:items-center nx:justify-center">
+      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-icon-glyph-default nx:items-center nx:justify-center">
         <DropdownMenuPrimitive.ItemIndicator
           forceMount
           data-slot="dropdown-menu-radio-indicator"
@@ -352,7 +355,7 @@ const DropdownMenuRadioItem = React.forwardRef<
             data-slot="dropdown-menu-radio-indicator-icon"
             aria-hidden="true"
             className={cn(
-              'nx:size-2',
+              'nx:size-[calc(var(--nx-icon-glyph-default)_-_8px)]',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
             )}
@@ -401,7 +404,7 @@ const DropdownMenuLabel = React.forwardRef<
       data-inset={inset}
       className={cn(
         'nx:px-2 nx:py-1.5 nx:typography-label-default',
-        inset && 'nx:pl-8',
+        inset && menuItemInsetClassName,
         className
       )}
       {...props}

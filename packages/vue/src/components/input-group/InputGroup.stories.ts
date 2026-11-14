@@ -1,8 +1,13 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import { PhEnvelope, PhEye, PhMagnifyingGlass, PhX } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, type Mock, userEvent, within } from 'storybook/test';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
+import {
+  expectInsideBorder,
+  expectTextFits,
+} from '../../stories/support/story-height-test-utils';
 import { Spinner } from '../spinner';
 
 import {
@@ -144,9 +149,8 @@ export const Alignments: Story = {
         <InputGroup>
           <InputGroupInput aria-label="Search" placeholder="Search projects" />
           <InputGroupAddon align="inline-end">
-            <InputGroupButton size="icon-xs" aria-label="Clear">
-              <PhX aria-hidden="true" />
-            </InputGroupButton>
+            <InputGroupButton icon-only>
+              <template #start-icon><PhX /></template>Clear</InputGroupButton>
           </InputGroupAddon>
         </InputGroup>
         <InputGroup>
@@ -192,12 +196,10 @@ export const ButtonSizes: Story = {
         <InputGroup>
           <InputGroupInput aria-label="Icon buttons" placeholder="icon sizes" />
           <InputGroupAddon align="inline-end">
-            <InputGroupButton size="icon-xs" aria-label="Show">
-              <PhEye aria-hidden="true" />
-            </InputGroupButton>
-            <InputGroupButton size="icon-sm" aria-label="Clear">
-              <PhX aria-hidden="true" />
-            </InputGroupButton>
+            <InputGroupButton icon-only>
+              <template #start-icon><PhEye /></template>Show</InputGroupButton>
+            <InputGroupButton size="sm" icon-only>
+              <template #start-icon><PhX /></template>Clear</InputGroupButton>
           </InputGroupAddon>
         </InputGroup>
       </div>
@@ -693,6 +695,54 @@ export const WithKbd: Story = {
   },
 };
 
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
+
+export const ExtraSmallButtonAtEveryDensity: Story = {
+  // Text is tallest at the Larger UI scale, so it fits at every smaller one.
+  globals: { uiScale: 'larger' },
+  render: () => ({
+    components: {
+      InputGroup,
+      InputGroupAddon,
+      InputGroupButton,
+      InputGroupInput,
+    },
+    setup: () => ({ densities: DENSITIES }),
+    template: `
+      <div class="nx:flex nx:w-80 nx:flex-col nx:gap-3">
+        <div
+          v-for="density in densities"
+          :key="density"
+          :data-density="density"
+          :data-testid="'row-' + density"
+        >
+          <InputGroup>
+            <InputGroupInput :aria-label="'Invite link, ' + density" />
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton size="xs">Copy</InputGroupButton>
+            </InputGroupAddon>
+          </InputGroup>
+        </div>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const density of DENSITIES) {
+      const button = within(canvas.getByTestId(`row-${density}`)).getByRole(
+        'button',
+        { name: 'Copy' }
+      );
+      // The label fits inside the button, and the button inside the group.
+      await expectTextFits(button);
+      await expectInsideBorder(
+        button,
+        button.closest<HTMLElement>('[data-slot="input-group"]')!
+      );
+    }
+  },
+};
+
 // ============================================
 // ALL VARIANTS GRID
 // ============================================
@@ -725,9 +775,8 @@ export const AllVariants: Story = {
           </InputGroupAddon>
           <InputGroupInput aria-label="URL" placeholder="nxds.dev" />
           <InputGroupAddon align="inline-end">
-            <InputGroupButton size="icon-xs" aria-label="Clear">
-              <PhX aria-hidden="true" />
-            </InputGroupButton>
+            <InputGroupButton icon-only>
+              <template #start-icon><PhX /></template>Clear</InputGroupButton>
           </InputGroupAddon>
         </InputGroup>
         <InputGroup>

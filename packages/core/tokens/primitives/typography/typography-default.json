@@ -135,13 +135,6 @@
         "unit": "px"
       },
       "$type": "dimension"
-    },
-    "code": {
-      "$value": {
-        "value": 12,
-        "unit": "px"
-      },
-      "$type": "dimension"
     }
   },
   "weight": {
@@ -324,6 +317,16 @@
         "unit": "px"
       },
       "$type": "dimension"
+    }
+  },
+  "code": {
+    "size": {
+      "$value": {
+        "value": 12,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$description": "Code text size. The code font size setting writes it, and the code text styles read it."
     }
   }
 }

@@ -8,6 +8,7 @@ import { IconCheck, IconChevronDown, IconChevronUp } from '../../lib/icons';
 import { selectionIndicatorMotionClassName } from '../../lib/motion';
 import { cn } from '../../lib/utils';
 import {
+  menuItemInsetClassName,
   overlayFloatingTransitionClassName,
   popoverSurfaceClassName,
 } from '../overlay-layout/overlay-layout';
@@ -29,7 +30,7 @@ const SelectValue = SelectPrimitive.Value;
 
 const selectTriggerVariants = cva(
   [
-    'nx:group/select-trigger nx:flex nx:box-border nx:w-full nx:items-center nx:justify-between nx:gap-2',
+    'nx:group/select-trigger nx:flex nx:box-border nx:w-full nx:items-center nx:justify-between nx:gap-2 nx:icon-stroke',
     'nx:rounded-md nx:border-default nx:transition-field',
     'nx:whitespace-nowrap nx:text-inherit',
     'nx:data-[placeholder]:text-muted-foreground',
@@ -91,7 +92,7 @@ const SelectTrigger = React.forwardRef<
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <IconChevronDown className="nx:size-4 nx:text-muted-foreground nx:group-disabled/select-trigger:text-disabled-foreground" />
+        <IconChevronDown className="nx:size-icon-glyph-default nx:text-muted-foreground nx:group-disabled/select-trigger:text-disabled-foreground" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -124,7 +125,7 @@ const SelectScrollUpButton = React.forwardRef<
       )}
       {...props}
     >
-      <IconChevronUp className="nx:size-4" />
+      <IconChevronUp className="nx:size-icon-glyph-default nx:icon-stroke" />
     </SelectPrimitive.ScrollUpButton>
   );
 });
@@ -156,7 +157,7 @@ const SelectScrollDownButton = React.forwardRef<
       )}
       {...props}
     >
-      <IconChevronDown className="nx:size-4" />
+      <IconChevronDown className="nx:size-icon-glyph-default nx:icon-stroke" />
     </SelectPrimitive.ScrollDownButton>
   );
 });
@@ -273,22 +274,23 @@ const SelectItem = React.forwardRef<
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        'nx:group nx:relative nx:flex nx:w-full nx:cursor-default nx:select-none nx:items-center',
-        'nx:rounded-sm nx:py-1.5 nx:pl-8 nx:pr-2 nx:typography-body-default nx:outline-none',
+        'nx:group nx:relative nx:flex nx:w-full nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
+        'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
+        menuItemInsetClassName,
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',
         className
       )}
       {...props}
     >
-      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-3.5 nx:items-center nx:justify-center">
+      <span className="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-icon-glyph-default nx:items-center nx:justify-center">
         {/* SelectPrimitive.ItemIndicator does not support forceMount and unmounts
             when unchecked, so this icon mirrors item state for the cross-fade. */}
         <IconCheck
           data-slot="select-item-indicator-icon"
           aria-hidden="true"
           className={cn(
-            'nx:size-4',
+            'nx:size-icon-glyph-default',
             selectionIndicatorMotionClassName,
             'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100'
           )}

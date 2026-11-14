@@ -12,6 +12,7 @@ import type { HTMLAttributes } from 'vue';
 import { IconCheck } from '../../lib/icons';
 import { selectionIndicatorMotionClassName } from '../../lib/motion';
 import { cn } from '../../lib/utils';
+import { menuItemInsetClassName } from '../overlay-layout/overlay-layout';
 
 export interface MenubarCheckboxItemProps extends RekaMenubarCheckboxItemProps {
   class?: HTMLAttributes['class'];
@@ -30,8 +31,9 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     data-slot="menubar-checkbox-item"
     :class="
       cn(
-        'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center',
-        'nx:rounded-sm nx:py-1.5 nx:pl-8 nx:pr-2 nx:typography-body-default nx:outline-none',
+        'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
+        'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
+        menuItemInsetClassName,
         'nx:transition-colors',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',
@@ -40,7 +42,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     "
   >
     <span
-      class="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-3.5 nx:items-center nx:justify-center"
+      class="nx:pointer-events-none nx:absolute nx:left-2 nx:flex nx:size-icon-glyph-default nx:items-center nx:justify-center"
     >
       <MenubarItemIndicator force-mount data-slot="menubar-checkbox-indicator">
         <IconCheck
@@ -48,7 +50,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
           aria-hidden="true"
           :class="
             cn(
-              'nx:size-4',
+              'nx:size-icon-glyph-default',
               selectionIndicatorMotionClassName,
               'nx:group-data-[state=checked]:scale-100 nx:group-data-[state=checked]:opacity-100',
               'nx:group-data-[state=indeterminate]:scale-100 nx:group-data-[state=indeterminate]:opacity-100'

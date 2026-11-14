@@ -1,8 +1,11 @@
 import { fail, LIGHT, openPage } from './harness.ts';
 import {
+  BREADCRUMB_PAGE,
   BUTTON,
   CARD,
   CARD_CONTENT,
+  EMPTY_STATE_HEADER,
+  ICON_BUTTON,
   INPUT,
   measure,
   type Probe,
@@ -65,6 +68,27 @@ export const TOKEN_CASES: (Probe & {
     value: 'linear',
     ...BUTTON,
     property: 'transition-timing-function',
+  },
+  {
+    family: 'icon',
+    name: '--nx-icon-glyph-default',
+    value: '23px',
+    ...ICON_BUTTON,
+    property: 'width',
+  },
+  {
+    family: 'uiScale',
+    name: '--nx-ui-scale',
+    value: '2',
+    ...BREADCRUMB_PAGE,
+    property: 'max-width',
+  },
+  {
+    family: 'width',
+    name: '--nx-container-sm',
+    value: '11rem',
+    ...EMPTY_STATE_HEADER,
+    property: 'max-width',
   },
   {
     family: 'typeScale',

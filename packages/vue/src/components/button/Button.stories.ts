@@ -1,4 +1,10 @@
-import { PhArrowRight, PhRocket, PhStar } from '@phosphor-icons/vue';
+import {
+  PhArrowRight,
+  PhDownloadSimple,
+  PhPaperPlaneTilt,
+  PhStar,
+  PhUploadSimple,
+} from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, type Mock, userEvent, within } from 'storybook/test';
 
@@ -28,7 +34,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'Button triggers an action. Use it for short, visible labels.\n\n- Use one decorative icon slot at most: `#start-icon` or `#end-icon`.\n- A loading button shows only a spinner and hides its icons.\n- Icon-only buttons need `aria-label` or `aria-labelledby`.',
+          'Button triggers an action. Use it for short, visible labels.\n\n- Use one decorative icon slot at most: `#start-icon` or `#end-icon`.\n- A loading button shows only a spinner and hides its icons.\n- `icon-only` shows only `#start-icon` in a square button. Its text stays as the hidden name.\n- `icon-only` ignores `as-child`. For an icon-only link, set `as="a"`.\n- Icons are 16px at every size and density.\n- Stroked icons, such as Lucide, draw a 1.5px line, whatever their `strokeWidth`. Filled icons, such as Phosphor, keep their own line.',
       },
     },
   },
@@ -40,8 +46,9 @@ const meta = {
     variant: { control: 'select', options: VARIANTS },
     size: {
       control: 'select',
-      options: ['default', 'sm', 'lg', 'icon-sm', 'icon', 'icon-lg'],
+      options: ['default', 'sm', 'lg'],
     },
+    iconOnly: { control: 'boolean' },
     disabled: { control: 'boolean' },
     loading: { control: 'boolean' },
   },
@@ -67,37 +74,42 @@ export const Default: Story = {
   }),
 };
 
+// The square each `size` gives an `icon-only` button, in px.
+const ICON_ONLY_SQUARES = [32, 40, 48];
+
 export const IconOnlySizes: Story = {
   tags: ['docs'],
   parameters: {
     docs: {
       description: {
-        story: 'Show the three icon-only sizes, each named with `aria-label`.',
+        story:
+          'Show only the icon with `icon-only`. `size` sets the height, and the text is the name screen readers read.',
       },
     },
   },
   render: () => ({
-    components: { Button, PhStar },
+    components: { Button, PhDownloadSimple, PhStar, PhUploadSimple },
     template: `
       <div class="nx:flex nx:items-center nx:gap-2">
-        <Button size="icon-sm" aria-label="Small icon"><PhStar /></Button>
-        <Button size="icon" aria-label="Default icon"><PhStar /></Button>
-        <Button size="icon-lg" aria-label="Large icon"><PhStar /></Button>
+        <Button size="sm" icon-only>
+          <template #start-icon><PhStar /></template>Add to favorites</Button>
+        <Button icon-only>
+          <template #start-icon><PhDownloadSimple /></template>Download</Button>
+        <Button size="lg" icon-only>
+          <template #start-icon><PhUploadSimple /></template>Upload</Button>
       </div>
     `,
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const buttons = canvas.getAllByRole('button');
 
-    await expect(
-      canvas.getByRole('button', { name: 'Small icon' })
-    ).toHaveClass('nx:size-8');
-    await expect(
-      canvas.getByRole('button', { name: 'Default icon' })
-    ).toHaveClass('nx:size-10');
-    await expect(
-      canvas.getByRole('button', { name: 'Large icon' })
-    ).toHaveClass('nx:size-12');
+    await expect(buttons).toHaveLength(ICON_ONLY_SQUARES.length);
+    for (const [index, button] of buttons.entries()) {
+      const { width, height } = button.getBoundingClientRect();
+      await expect(height).toBe(ICON_ONLY_SQUARES[index]);
+      await expect(width).toBe(height);
+    }
   },
 };
 
@@ -112,23 +124,21 @@ export const StartIconSlot: Story = {
     },
   },
   render: () => ({
-    components: { Button, PhRocket },
+    components: { Button, PhDownloadSimple },
     template: `
       <Button>
-        <template #start-icon><PhRocket data-testid="start-icon" /></template>
-        Launch
-      </Button>
+        <template #start-icon><PhDownloadSimple data-testid="start-icon" /></template>Download</Button>
     `,
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const button = canvas.getByRole('button', { name: 'Launch' });
+    const button = canvas.getByRole('button', { name: 'Download' });
     const startIcon = button.querySelector('[data-slot="button-start-icon"]');
 
     await expect(startIcon).toBeInTheDocument();
     await expect(startIcon).toHaveAttribute('aria-hidden', 'true');
     await expect(canvas.getByTestId('start-icon')).toBeInTheDocument();
-    await expect(button).toHaveAccessibleName('Launch');
+    await expect(button).toHaveAccessibleName('Download');
   },
 };
 
@@ -174,7 +184,7 @@ export const AllVariants: Story = {
     },
   },
   render: () => ({
-    components: { Button, PhArrowRight, PhRocket, PhStar },
+    components: { Button, PhArrowRight, PhDownloadSimple, PhStar },
     template: `
       <div class="nx:flex nx:flex-col nx:gap-6">
         <div>
@@ -196,15 +206,15 @@ export const AllVariants: Story = {
             <Button size="sm">Small</Button>
             <Button size="default">Default</Button>
             <Button size="lg">Large</Button>
-            <Button size="icon-sm" aria-label="Small icon"><PhStar /></Button>
-            <Button size="icon" aria-label="Icon"><PhStar /></Button>
-            <Button size="icon-lg" aria-label="Large icon"><PhStar /></Button>
+            <Button size="sm" icon-only><template #start-icon><PhStar /></template>Add to favorites</Button>
+            <Button icon-only><template #start-icon><PhStar /></template>Add to favorites</Button>
+            <Button size="lg" icon-only><template #start-icon><PhStar /></template>Add to favorites</Button>
           </div>
         </div>
         <div>
           <h3 class="nx:text-foreground nx:mb-2 nx:typography-label-default">Icon slots</h3>
           <div class="nx:flex nx:flex-wrap nx:items-center nx:gap-2">
-            <Button><template #start-icon><PhRocket /></template>Start icon</Button>
+            <Button><template #start-icon><PhDownloadSimple /></template>Start icon</Button>
             <Button>End icon<template #end-icon><PhArrowRight /></template></Button>
           </div>
         </div>
@@ -239,7 +249,7 @@ export const AllVariants: Story = {
 
 /** A story render that binds the story args, so `args.onClick` stays a spy. */
 const labelled = (template: string) => (args: ButtonArgs) => ({
-  components: { Button, PhArrowRight, PhRocket },
+  components: { Button, PhArrowRight, PhPaperPlaneTilt },
   setup: () => ({ args }),
   template,
 });
@@ -262,6 +272,117 @@ export const Link: Story = {
   },
 };
 
+export const IconSize: Story = {
+  render: () => ({
+    components: { Button, PhDownloadSimple, PhStar },
+    template: `
+      <div class="nx:flex nx:flex-col nx:items-start nx:gap-3">
+        <div class="nx:flex nx:items-center nx:gap-2">
+          <Button size="sm"><template #start-icon><PhDownloadSimple /></template>Download</Button>
+          <Button size="sm" icon-only><template #start-icon><PhStar /></template>Add to favorites</Button>
+        </div>
+        <div class="nx:flex nx:items-center nx:gap-2">
+          <Button><template #start-icon><PhDownloadSimple /></template>Download</Button>
+          <Button icon-only><template #start-icon><PhStar /></template>Add to favorites</Button>
+        </div>
+        <div class="nx:flex nx:items-center nx:gap-2">
+          <Button size="lg"><template #start-icon><PhDownloadSimple /></template>Download</Button>
+          <Button size="lg" icon-only><template #start-icon><PhStar /></template>Add to favorites</Button>
+        </div>
+        <div data-density="compact" class="nx:flex nx:items-center nx:gap-2">
+          <Button><template #start-icon><PhDownloadSimple /></template>Download</Button>
+          <Button icon-only><template #start-icon><PhStar /></template>Add to favorites</Button>
+        </div>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const iconToken = parseFloat(
+      getComputedStyle(canvasElement).getPropertyValue(
+        '--nx-icon-glyph-default'
+      )
+    );
+    const icons = canvasElement.querySelectorAll('button svg');
+    await expect(icons).toHaveLength(canvas.getAllByRole('button').length);
+    for (const svg of icons) {
+      const { width, height } = svg.getBoundingClientRect();
+      await expect(width).toBe(iconToken);
+      await expect(height).toBe(iconToken);
+    }
+  },
+};
+
+export const IconOnlyName: Story = {
+  render: () => ({
+    components: { Button, PhDownloadSimple },
+    template: `
+      <Button icon-only>
+        <template #start-icon><PhDownloadSimple /></template>Download</Button>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Download' });
+    const label = within(button).getByText('Download');
+
+    await expect(button).toHaveAttribute('data-icon-only', 'true');
+    await expect(label).toHaveClass('nx:sr-only');
+    const { width, height } = label.getBoundingClientRect();
+    await expect(width).toBeLessThanOrEqual(1);
+    await expect(height).toBeLessThanOrEqual(1);
+  },
+};
+
+export const IconOnlyLoading: Story = {
+  render: () => ({
+    components: { Button, PhDownloadSimple },
+    template: `
+      <Button icon-only loading>
+        <template #start-icon><PhDownloadSimple /></template>Download</Button>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Download' });
+    const { width, height } = button.getBoundingClientRect();
+
+    await expect(button).toHaveAttribute('aria-busy', 'true');
+    await expect(within(button).getByText('Download')).toHaveClass(
+      'nx:sr-only'
+    );
+    await expect(width).toBe(height);
+    await expect(
+      button.querySelector('[data-slot="button-start-icon"]')
+    ).toBeNull();
+  },
+};
+
+export const IconOnlyInteraction: Story = {
+  render: (args) => ({
+    components: { Button, PhDownloadSimple },
+    setup: () => ({ args }),
+    template: `
+      <Button icon-only @click="args.onClick">
+        <template #start-icon><PhDownloadSimple /></template>Download</Button>
+    `,
+  }),
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Download' });
+
+    await userEvent.tab();
+    await expect(button).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onClick).toHaveBeenCalledTimes(1);
+    await userEvent.keyboard(' ');
+    await expect(args.onClick).toHaveBeenCalledTimes(2);
+
+    await userEvent.click(button);
+    await expect(args.onClick).toHaveBeenCalledTimes(3);
+  },
+};
+
 export const Disabled: Story = {
   render: labelled('<Button v-bind="args" disabled>Disabled</Button>'),
   play: async ({ canvasElement, args }) => {
@@ -281,7 +402,7 @@ export const Disabled: Story = {
 export const Loading: Story = {
   render: labelled(`
     <Button v-bind="args" loading>
-      <template #start-icon><PhRocket /></template>
+      <template #start-icon><PhPaperPlaneTilt /></template>
       Submitting
       <template #end-icon><PhArrowRight /></template>
     </Button>

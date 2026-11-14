@@ -361,7 +361,8 @@ export const ATTRIBUTE_CASES: {
         'align="inline-end"',
         x(
           'InputGroupButton',
-          'start-icon="magnifying-glass" aria-label="Search"'
+          'icon-only start-icon="magnifying-glass"',
+          'Search'
         )
       )
     ),
@@ -372,10 +373,11 @@ export const ATTRIBUTE_CASES: {
       part(
         'InputGroupAddon',
         { align: 'inline-end' },
-        part('InputGroupButton', {
-          startIcon: { __icon: 'magnifying-glass' },
-          'aria-label': 'Search',
-        })
+        part(
+          'InputGroupButton',
+          { iconOnly: true, startIcon: { __icon: 'magnifying-glass' } },
+          'Search'
+        )
       )
     ),
   },

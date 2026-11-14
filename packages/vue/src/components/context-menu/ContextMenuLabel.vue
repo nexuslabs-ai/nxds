@@ -8,6 +8,7 @@ import {
 import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
+import { menuItemInsetClassName } from '../overlay-layout/overlay-layout';
 
 export interface ContextMenuLabelProps extends RekaContextMenuLabelProps {
   /**
@@ -31,7 +32,7 @@ const forwarded = useForwardProps(delegated);
     :class="
       cn(
         'nx:px-2 nx:py-1.5 nx:typography-label-default',
-        inset && 'nx:pl-8',
+        inset && menuItemInsetClassName,
         props.class
       )
     "

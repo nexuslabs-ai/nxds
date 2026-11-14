@@ -241,16 +241,20 @@ const CarouselItem = React.forwardRef<
   );
 });
 
+type CarouselPreviousProps = Omit<
+  React.ComponentProps<typeof Button>,
+  'iconOnly' | 'children' | 'startIcon' | 'endIcon' | 'asChild'
+>;
+
 const CarouselPrevious = React.forwardRef<
   HTMLButtonElement,
-  React.PropsWithoutRef<React.ComponentProps<typeof Button>>
+  React.PropsWithoutRef<CarouselPreviousProps>
 >(function CarouselPrevious(propsWithoutRef, forwardedRef) {
   const {
     className,
     variant = 'outline',
-    size = 'icon',
     ...props
-  }: React.PropsWithoutRef<React.ComponentProps<typeof Button>> & {
+  }: React.PropsWithoutRef<CarouselPreviousProps> & {
     ref?: React.ForwardedRef<HTMLButtonElement>;
   } = forwardedRef === null
     ? propsWithoutRef
@@ -261,7 +265,8 @@ const CarouselPrevious = React.forwardRef<
     <Button
       data-slot="carousel-previous"
       variant={variant}
-      size={size}
+      iconOnly
+      startIcon={<IconArrowLeft />}
       className={cn(
         carouselControlClasses,
         orientation === 'horizontal'
@@ -273,22 +278,25 @@ const CarouselPrevious = React.forwardRef<
       onClick={scrollPrev}
       {...props}
     >
-      <IconArrowLeft />
-      <span className="nx:sr-only">Previous slide</span>
+      Previous slide
     </Button>
   );
 });
 
+type CarouselNextProps = Omit<
+  React.ComponentProps<typeof Button>,
+  'iconOnly' | 'children' | 'startIcon' | 'endIcon' | 'asChild'
+>;
+
 const CarouselNext = React.forwardRef<
   HTMLButtonElement,
-  React.PropsWithoutRef<React.ComponentProps<typeof Button>>
+  React.PropsWithoutRef<CarouselNextProps>
 >(function CarouselNext(propsWithoutRef, forwardedRef) {
   const {
     className,
     variant = 'outline',
-    size = 'icon',
     ...props
-  }: React.PropsWithoutRef<React.ComponentProps<typeof Button>> & {
+  }: React.PropsWithoutRef<CarouselNextProps> & {
     ref?: React.ForwardedRef<HTMLButtonElement>;
   } = forwardedRef === null
     ? propsWithoutRef
@@ -299,7 +307,8 @@ const CarouselNext = React.forwardRef<
     <Button
       data-slot="carousel-next"
       variant={variant}
-      size={size}
+      iconOnly
+      startIcon={<IconArrowRight />}
       className={cn(
         carouselControlClasses,
         orientation === 'horizontal'
@@ -311,8 +320,7 @@ const CarouselNext = React.forwardRef<
       onClick={scrollNext}
       {...props}
     >
-      <IconArrowRight />
-      <span className="nx:sr-only">Next slide</span>
+      Next slide
     </Button>
   );
 });

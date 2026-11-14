@@ -21,6 +21,14 @@ export const BUTTON: Omit<Probe, 'property'> = {
   tree: { part: 'Button', children: ['Save changes'] },
   target: 'button',
 };
+export const ICON_BUTTON: Omit<Probe, 'property'> = {
+  tree: {
+    part: 'Button',
+    props: { iconOnly: true, startIcon: { __icon: 'download' } },
+    children: ['Download'],
+  },
+  target: 'button svg',
+};
 export const CARD: Omit<Probe, 'property'> = {
   tree: {
     part: 'Card',
@@ -50,6 +58,14 @@ export const TABLE_HEAD: Omit<Probe, 'property'> = {
     ],
   },
   target: '[data-slot="table-head"]',
+};
+export const BREADCRUMB_PAGE: Omit<Probe, 'property'> = {
+  tree: { part: 'BreadcrumbPage', children: ['Invoices'] },
+  target: '[data-slot="breadcrumb-page"]',
+};
+export const EMPTY_STATE_HEADER: Omit<Probe, 'property'> = {
+  tree: { part: 'EmptyStateHeader', children: ['No invoices yet'] },
+  target: '[data-slot="empty-state-header"]',
 };
 export const TEXT_STYLE: Omit<Probe, 'property'> = {
   tree: {

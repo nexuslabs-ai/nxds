@@ -1,7 +1,10 @@
+import { DENSITY_OPTIONS } from '@nxds/core';
 import { PhCheck } from '@phosphor-icons/vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { ref, useId } from 'vue';
+
+import { expectInsideBorder } from '../../stories/support/story-height-test-utils';
 
 import { Switch } from '.';
 
@@ -314,6 +317,114 @@ export const WithDataAttributes: Story = {
   },
 };
 
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
+const STROKES = ['fine', 'normal', 'strong'] as const;
+
+export const SizesAtEveryDensity: Story = {
+  render: () => ({
+    components: { Switch },
+    setup: () => ({ densities: DENSITIES }),
+    template: `
+      <div class="nx:flex nx:flex-col nx:gap-3">
+        <div
+          v-for="density in densities"
+          :key="density"
+          :data-density="density"
+          :data-testid="'row-' + density"
+          class="nx:flex nx:items-center nx:gap-3"
+        >
+          <Switch :default-value="true" :aria-label="'Default size, ' + density" />
+          <Switch size="sm" :default-value="true" :aria-label="'Small size, ' + density" />
+        </div>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const size = (element: Element) => {
+      const { width, height } = element.getBoundingClientRect();
+      return { width, height };
+    };
+    const reference = within(canvas.getByTestId('row-default'))
+      .getAllByRole('switch')
+      .map(size);
+    for (const density of DENSITIES) {
+      const controls = within(
+        canvas.getByTestId(`row-${density}`)
+      ).getAllByRole('switch');
+      // Each switch keeps its Default size at every density.
+      await expect(controls.map(size)).toEqual(reference);
+      // The thumb stays inside the track's border at every density.
+      for (const control of controls) {
+        await expectInsideBorder(
+          control.querySelector('[data-slot="switch-thumb"]')!,
+          control
+        );
+      }
+    }
+  },
+};
+
+export const ThumbAtEveryStroke: Story = {
+  render: () => ({
+    components: { Switch },
+    setup: () => ({ strokes: STROKES }),
+    template: `
+      <div class="nx:flex nx:flex-col nx:gap-3">
+        <div
+          v-for="stroke in strokes"
+          :key="stroke"
+          :data-borderwidth="stroke"
+          :data-testid="'row-' + stroke"
+          class="nx:flex nx:items-center nx:gap-3"
+        >
+          <Switch :aria-label="'Off, ' + stroke" />
+          <Switch :default-value="true" :aria-label="'On, ' + stroke" />
+          <Switch size="sm" :aria-label="'Small off, ' + stroke" />
+          <Switch size="sm" :default-value="true" :aria-label="'Small on, ' + stroke" />
+        </div>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const stroke of STROKES) {
+      const controls = within(canvas.getByTestId(`row-${stroke}`)).getAllByRole(
+        'switch'
+      );
+      // The thumb is a circle as tall as the inside of the track, and it
+      // stays inside the border, on and off, at every stroke.
+      for (const control of controls) {
+        const thumb = control.querySelector<HTMLElement>(
+          '[data-slot="switch-thumb"]'
+        )!;
+        await expect(thumb.offsetHeight).toBe(control.clientHeight);
+        await expect(thumb.offsetWidth).toBe(thumb.offsetHeight);
+        await expectInsideBorder(thumb, control);
+      }
+    }
+  },
+};
+
+export const TargetArea: Story = {
+  render: () => ({
+    components: { Switch },
+    template: `<Switch aria-label="Email alerts" />`,
+  }),
+  play: async ({ canvasElement }) => {
+    const control = within(canvasElement).getByRole('switch');
+    const box = control.getBoundingClientRect();
+    // A press 1px outside the track still lands on its 24px-high target,
+    // at the middle and near the end of the track.
+    await expect(
+      document.elementFromPoint(box.left + box.width / 2, box.top - 1)
+    ).toBe(control);
+    await expect(document.elementFromPoint(box.left + 3, box.bottom + 1)).toBe(
+      control
+    );
+  },
+};
+
 export const VModel: Story = {
   render: () => ({
     components: { Switch },
@@ -344,7 +455,7 @@ export const ThumbSlot: Story = {
             <PhCheck
               v-if="checked"
               aria-hidden="true"
-              class="nx:size-4 nx:p-0.5 nx:text-primary-background"
+              class="nx:size-icon-glyph-default nx:p-0.5 nx:text-primary-background"
             />
           </template>
         </Switch>

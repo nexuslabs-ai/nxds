@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import { IconChevronDown, IconX } from '../../lib/icons';
 import { cn } from '../../lib/utils';
-import { buttonVariants } from '../button/button';
+import { buttonVariants } from '../button/button-variants';
 
 const FilterCondition = React.forwardRef<
   HTMLDivElement,
@@ -48,7 +48,7 @@ const FilterConditionField = React.forwardRef<
       {...props}
       data-slot="filter-condition-field"
       className={cn(
-        'nx:inline-flex nx:h-(--nx-spacing-8) nx:shrink-0 nx:items-center nx:gap-2 nx:[&_svg]:size-3.5 nx:[&_svg]:shrink-0 nx:rounded-s-base nx:border-default nx:border-border-default nx:bg-container nx:px-2.5 nx:typography-label-default nx:text-muted-foreground',
+        'nx:inline-flex nx:h-(--nx-spacing-8) nx:shrink-0 nx:items-center nx:gap-2 nx:[&_svg]:size-icon-glyph-sm nx:[&_svg]:shrink-0 nx:icon-stroke nx:rounded-s-base nx:border-default nx:border-border-default nx:bg-container nx:px-2.5 nx:typography-label-default nx:text-muted-foreground',
         className
       )}
     >
@@ -96,7 +96,11 @@ interface FilterConditionRemoveProps extends Omit<
   React.ComponentProps<'button'>,
   'children' | 'type'
 > {
-  'aria-label': string;
+  /**
+   * The button's name, such as "Remove status filter". Screen readers read
+   * it, and it stays visually hidden.
+   */
+  children: string;
 }
 
 const FilterConditionRemove = React.forwardRef<
@@ -105,6 +109,7 @@ const FilterConditionRemove = React.forwardRef<
 >(function FilterConditionRemove(propsWithoutRef, forwardedRef) {
   const {
     className,
+    children,
     ...props
   }: React.PropsWithoutRef<FilterConditionRemoveProps> & {
     ref?: React.ForwardedRef<HTMLButtonElement>;
@@ -118,12 +123,13 @@ const FilterConditionRemove = React.forwardRef<
       type="button"
       data-slot="filter-condition-remove"
       className={cn(
-        buttonVariants({ variant: 'outline', size: 'icon-sm' }),
+        buttonVariants({ variant: 'outline', size: 'sm', iconOnly: true }),
         'nx:size-(--nx-spacing-8) nx:shrink-0 nx:rounded-s-none nx:border-s-0 nx:text-muted-foreground nx:active:scale-100 nx:focus-visible:relative nx:focus-visible:z-10',
         className
       )}
     >
       <IconX aria-hidden="true" />
+      <span className="nx:sr-only">{children}</span>
     </button>
   );
 });

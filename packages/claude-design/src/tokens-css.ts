@@ -1,6 +1,8 @@
-// tokens.css laid out as the Design System page compiles it, with four
+// tokens.css laid out as the Design System page compiles it, with five
 // changes. The variables sit in the `theme` layer, so the appearance presets
-// in bundle.css and the provider's `nx-runtime` layer override them. `.dark`
+// in bundle.css and the provider's `nx-runtime` layer override them. A system
+// at another UI scale declares its density and corner presets outside the
+// layers, so they replace bundle.css's Default-scale ones. `.dark`
 // stands beside each later theme's selector, since nxds switches dark mode
 // with that class. Each text style's class carries the declarations of the
 // `nx:typography-*` utility it mirrors, so it reads the same variables as the
@@ -43,6 +45,9 @@ const LIST_FAMILY_KEYS = [
   'borderWidth',
   'zIndex',
   'motion',
+  'icon',
+  'uiScale',
+  'width',
   'typeScale',
 ] as const;
 
@@ -141,6 +146,14 @@ export function compileTokensCss(
     ...laterThemes,
     ...block(':root', root, '  '),
     '}',
+    ...(tokens.meta?.presets ?? []).flatMap(({ attribute, value, tokens }) =>
+      block(
+        `[${attribute}="${value}"]`,
+        Object.entries(tokens).map(
+          ([name, token]) => `--${name}: ${cssValue(token)};`
+        )
+      )
+    ),
     ...styles,
     '',
   ].join('\n');
