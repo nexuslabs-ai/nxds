@@ -1,5 +1,27 @@
 # @nxds/docs
 
+## 0.0.33
+
+### Patch Changes
+
+- Updated dependencies [19e119b]
+- Updated dependencies [19e119b]
+- Updated dependencies [19e119b]
+- Updated dependencies [19e119b]
+- Updated dependencies [19e119b]
+- Updated dependencies [19e119b]
+- Updated dependencies [19e119b]
+- Updated dependencies [19e119b]
+- Updated dependencies [19e119b]
+- Updated dependencies [19e119b]
+- Updated dependencies [19e119b]
+- Updated dependencies [19e119b]
+  - @nxds/react@0.17.0
+  - @nxds/claude-design@0.17.0
+  - @nxds/core@0.14.0
+  - @nxds/tailwind@0.4.0
+  - @nxds/catalog@0.0.3
+
 ## 0.0.32
 
 ### Patch Changes
