@@ -451,6 +451,19 @@ function place(
   if (node.type === 'TEXT') return;
   if (horizontal === 'FIXED') bind(node, 'width', layer.width.token, ctx);
   if (vertical === 'FIXED') bind(node, 'height', layer.height.token, ctx);
+  if (node.type === 'INSTANCE') return;
+  for (const [field, minimum] of [
+    ['minWidth', layer.minWidth],
+    ['minHeight', layer.minHeight],
+  ] as const) {
+    if (!minimum) continue;
+    try {
+      node[field] = minimum.value;
+      bind(node, field, minimum.token, ctx);
+    } catch (error) {
+      fail(ctx, `${layer.name} ${field}`, error);
+    }
+  }
 }
 
 function reference(node: SceneNode, layer: Layer, ctx: Context) {

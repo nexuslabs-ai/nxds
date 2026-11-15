@@ -43,6 +43,7 @@ export interface TokensFile {
   borderWidth?: { tokens: ListToken[] };
   shadow?: { tokens: ListToken[] };
   typeScale?: { tokens: ListToken[] };
+  icon?: { tokens: ListToken[] };
 }
 
 const toRgb = converter('rgb');
@@ -221,6 +222,17 @@ export function collections(
       ),
     },
     {
+      name: 'Icon',
+      themed: false,
+      // `nx-icon-glyph-default` → `glyph/default`.
+      variables: floatVariables(tokens.icon?.tokens ?? [], 'nx-icon-').map(
+        (variable) => ({
+          ...variable,
+          name: variable.name.replace(/^([a-z]+)-/, '$1/'),
+        })
+      ),
+    },
+    {
       name: 'Typography',
       themed: false,
       variables: floatVariables(tokens.typeScale?.tokens ?? [], '').map(
@@ -243,6 +255,10 @@ export function tracedTokens(tokens: TokensFile): [string, Kind][] {
     ...list(tokens.radius, 'length'),
     ...list(tokens.borderWidth, 'length'),
     ...list(tokens.shadow, 'shadow'),
+    // Only the icon tokens in px are sizes; the stroke ratio has no unit.
+    ...(tokens.icon?.tokens ?? []).flatMap((token): [string, Kind][] =>
+      light(token.value).endsWith('px') ? [[token.name, 'length']] : []
+    ),
     ...(tokens.typeScale?.tokens ?? []).flatMap((token): [string, Kind][] => {
       if (token.name.startsWith('nx-typography-size-'))
         return [[token.name, 'font-size']];

@@ -41,6 +41,9 @@ interface LayerBase {
   source: string;
   width: Bound;
   height: Bound;
+  /** A declared minimum size, such as a Button's `min-h-10`. */
+  minWidth?: Bound;
+  minHeight?: Bound;
   sizing: { horizontal: Sizing; vertical: Sizing };
   /** Placed over its parent at x, y instead of in its auto layout. `stretch` keeps it on all four edges when the parent resizes. */
   absolute?: { x: number; y: number; stretch: boolean };
@@ -309,6 +312,8 @@ export function unboundValues(component: string, variant: VariantSpec) {
       if (layer.sizing.vertical === 'FIXED')
         bound(path, 'height', layer.height);
     }
+    if (layer.minWidth) bound(path, 'min width', layer.minWidth);
+    if (layer.minHeight) bound(path, 'min height', layer.minHeight);
     if (layer.type === 'TEXT') {
       paint(path, 'text colour', layer.fill);
       if (!layer.style) {

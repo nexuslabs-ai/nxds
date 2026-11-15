@@ -172,8 +172,8 @@ check(
   'Button: its fill is not bound to primary-background.'
 );
 check(
-  button.height.token === 'nx-spacing-10',
-  'Button: its height is not bound to spacing-10.'
+  button.minHeight?.token === 'nx-spacing-10',
+  'Button: its minimum height is not bound to spacing-10.'
 );
 check(
   button.layout?.padding.left.token === 'nx-spacing-3',
@@ -251,8 +251,8 @@ check(
 
 // Hug, fill and grids follow the CSS.
 check(
-  button.sizing.horizontal === 'HUG' && button.sizing.vertical === 'FIXED',
-  'Button: not hug × fixed.'
+  button.sizing.horizontal === 'HUG' && button.sizing.vertical === 'HUG',
+  'Button: not hug × hug.'
 );
 check(
   alert.layout?.mode === 'HORIZONTAL' &&

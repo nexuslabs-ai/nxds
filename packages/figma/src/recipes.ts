@@ -317,24 +317,41 @@ export const RECIPES: readonly Recipe[] = [
   // Components that others hold.
   {
     name: 'Button',
-    markup: ({ Size }) =>
-      Size?.startsWith('icon')
-        ? x('Button', { 'aria-label': 'Add' }, x('Icon', { name: 'plus' }))
-        : x('Button', {}, 'Button'),
+    markup: x('Button', {}, 'Button'),
+    axes: [
+      { name: 'Variant', prop: 'variant' },
+      { name: 'Size', prop: 'size' },
+      // An icon-only Button shows its start icon, and its children become its name.
+      {
+        name: 'Icon only',
+        values: CHECKED,
+        set: (value) =>
+          value === 'true'
+            ? [
+                {
+                  part: 'Button',
+                  props: { iconOnly: true, startIcon: icon('plus') },
+                },
+              ]
+            : [],
+      },
+    ],
     states: { ...BUTTON_STATES, loading: { props: { loading: true } } },
     textNames: { 'button-loading-label': 'Label' },
-    full: ({ Size }) =>
-      Size?.startsWith('icon')
+    full: (values) =>
+      values['Icon only'] === 'true'
         ? {}
         : { startIcon: icon('plus'), endIcon: icon('arrow-right') },
     parts: [
       {
-        selector: '[data-slot=button-start-icon]',
+        selector:
+          '[data-slot=button]:not([data-icon-only]) [data-slot=button-start-icon]',
         name: 'Show start icon',
         default: false,
       },
       {
-        selector: '[data-slot=button-end-icon]',
+        selector:
+          '[data-slot=button]:not([data-icon-only]) [data-slot=button-end-icon]',
         name: 'Show end icon',
         default: false,
       },
@@ -342,6 +359,8 @@ export const RECIPES: readonly Recipe[] = [
     instanceVariant: (element) => ({
       Variant: element.attributes['data-variant'] ?? 'default',
       Size: element.attributes['data-size'] ?? 'default',
+      'Icon only':
+        element.attributes['data-icon-only'] !== undefined ? 'true' : 'false',
       State:
         element.attributes['data-loading'] !== undefined
           ? 'loading'

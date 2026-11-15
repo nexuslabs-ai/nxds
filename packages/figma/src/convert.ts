@@ -112,6 +112,21 @@ const bound = (el: ElementFacts, property: string): Bound =>
 const size = (el: ElementFacts, axis: 'width' | 'height'): Bound =>
   withToken(el.rect[axis], el.tokens[axis]);
 
+/** The element's declared minimum width and height, when it has one in px. */
+function minimums(el: ElementFacts) {
+  const found: { minWidth?: Bound; minHeight?: Bound } = {};
+  for (const [property, key] of [
+    ['min-width', 'minWidth'],
+    ['min-height', 'minHeight'],
+  ] as const) {
+    const declared = el.declared[property];
+    if (isLength(declared) && num(declared) > 0) {
+      found[key] = withToken(num(declared), el.tokens[property]);
+    }
+  }
+  return found;
+}
+
 function paintOf(
   el: ElementFacts,
   property: string,
@@ -1095,6 +1110,7 @@ function elementLayer(
     width: size(el, 'width'),
     height: size(el, 'height'),
     sizing: sizingOf(el, parent, layout !== undefined && inFlow),
+    ...minimums(el),
     opacity: num(el.style['opacity'] ?? '1'),
     ...boxOf(el, ctx),
     clips:

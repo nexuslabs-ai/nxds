@@ -405,7 +405,13 @@ export function recordVariant(input: RecordInput): Recorded {
     'text-align',
     'white-space',
   ];
-  const DECLARED = ['width', 'height', 'grid-template-columns'];
+  const DECLARED = [
+    'width',
+    'height',
+    'min-width',
+    'min-height',
+    'grid-template-columns',
+  ];
   const COLOR_PROBES = [
     'background-color',
     'color',
@@ -428,6 +434,8 @@ export function recordVariant(input: RecordInput): Recorded {
     'column-gap',
     'width',
     'height',
+    'min-width',
+    'min-height',
     'border-top-width',
     'border-right-width',
     'border-bottom-width',
@@ -604,32 +612,46 @@ export function recordVariant(input: RecordInput): Recorded {
     }
   }
 
+  // Each kind numbers its own tokens, and a length stand-in is 16px from the
+  // next, so a value a calc() moved off a stand-in reads as no token rather
+  // than a neighbour. Chrome caps font sizes at 10000px, so they sit below it.
+  const STEP = 16;
+  const byKind = new Map<Kind, string[]>();
+  for (const [name, kind] of input.tokens)
+    byKind.set(kind, [...(byKind.get(kind) ?? []), name]);
   const standIn = (kind: Kind, index: number) => {
     if (kind === 'color') return `rgb(1, ${index >> 8}, ${index & 255})`;
-    if (kind === 'shadow') return `0px 0px 0px ${10000 + index}px rgb(1, 0, 0)`;
-    // Chrome caps font sizes at 10000px, so they get their own range below it.
-    if (kind === 'font-size') return `${5000 + index}px`;
-    return `${10000 + index}px`;
+    if (kind === 'shadow')
+      return `0px 0px 0px ${10000 + index * STEP}px rgb(1, 0, 0)`;
+    if (kind === 'font-size') return `${5000 + index * STEP}px`;
+    return `${10000 + index * STEP}px`;
   };
   const html = document.documentElement;
-  input.tokens.forEach(([name, kind], index) =>
-    html.style.setProperty(`--${name}`, standIn(kind, index))
-  );
-  const tokenAt = (index: number) => input.tokens[index]?.[0];
+  for (const [kind, names] of byKind) {
+    names.forEach((name, index) =>
+      html.style.setProperty(`--${name}`, standIn(kind, index))
+    );
+  }
+  const decode = (kind: Kind, offset: number, value: number) => {
+    const step = value - offset;
+    return step >= 0 && step % STEP === 0
+      ? byKind.get(kind)?.[step / STEP]
+      : undefined;
+  };
   const colorToken = (value: string) => {
     const match = /^rgb\(1, (\d+), (\d+)\)$/.exec(value);
     return match
-      ? tokenAt((Number(match[1]) << 8) + Number(match[2]))
+      ? byKind.get('color')?.[(Number(match[1]) << 8) + Number(match[2])]
       : undefined;
   };
   const lengthToken = (value: string) => {
     const match = /^(1\d{4})px$/.exec(value.trim());
-    return match ? tokenAt(Number(match[1]) - 10000) : undefined;
+    return match ? decode('length', 10000, Number(match[1])) : undefined;
   };
   // Only font-size reads the font-size range: a length in `em` scales with it, but wasn't declared with it.
   const fontSizeToken = (value: string) => {
-    const match = /^(5\d{3})px$/.exec(value.trim());
-    return match ? tokenAt(Number(match[1]) - 5000) : undefined;
+    const match = /^(5\d{3}|[6-9]\d{3})px$/.exec(value.trim());
+    return match ? decode('font-size', 5000, Number(match[1])) : undefined;
   };
   for (const [el, facts] of recorded) {
     const computed = getComputedStyle(el);
@@ -646,7 +668,7 @@ export function recordVariant(input: RecordInput): Recorded {
     set('translate-x', lengthToken(x));
     set('translate-y', lengthToken(y));
     const shadow = /\b(1\d{4})px\b/.exec(computed.boxShadow);
-    if (shadow) set('box-shadow', tokenAt(Number(shadow[1]) - 10000));
+    if (shadow) set('box-shadow', decode('shadow', 10000, Number(shadow[1])));
     if (facts.input) {
       set(
         'placeholder-color',
