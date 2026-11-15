@@ -342,6 +342,15 @@
     --nx-color-black-a900: oklch(0.1448 0 0 / 0.9098);
     --nx-color-black-a950: oklch(0.1448 0 0 / 0.9569);
 
+    /* icon */
+    --nx-icon-glyph-xs: 12px;
+    --nx-icon-glyph-sm: 14px;
+    --nx-icon-glyph-default: 16px;
+    --nx-icon-glyph-lg: 24px;
+    --nx-icon-glyph-xl: 32px;
+    --nx-icon-stroke-base: 0.5px;
+    --nx-icon-stroke-ratio: 0.0625;
+
     /* motion (snappy) */
     --nx-motion-duration-0: 0ms;
     --nx-motion-duration-faster: 100ms;
@@ -391,7 +400,6 @@
     --nx-typography-size-7xl: 72px;
     --nx-typography-size-8xl: 96px;
     --nx-typography-size-9xl: 128px;
-    --nx-typography-size-code: 12px;
     --nx-typography-weight-thin: 100;
     --nx-typography-weight-extralight: 200;
     --nx-typography-weight-light: 300;
@@ -421,5 +429,6 @@
     --nx-typography-letterspacing-wide: 0.4px;
     --nx-typography-letterspacing-wider: 0.8px;
     --nx-typography-letterspacing-widest: 1.6px;
+    --nx-typography-code-size: 12px;
   }
 }

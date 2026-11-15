@@ -168,8 +168,6 @@ import {
 } from '@/components/toggle-group/toggle-group';
 
 import {
-  IconChevronLeft,
-  IconChevronRight,
   IconDots,
   IconList,
   IconPencil,
@@ -298,8 +296,8 @@ function ButtonTile() {
         <Button variant="outline">Outline</Button>
         <Button variant="ghost">Ghost</Button>
         <Button variant="destructive">Delete</Button>
-        <Button variant="outline" size="icon" aria-label="Edit">
-          <IconPencil aria-hidden="true" />
+        <Button variant="outline" iconOnly startIcon={<IconPencil />}>
+          Edit
         </Button>
       </div>
     </Tile>
@@ -670,9 +668,7 @@ function PaginationTile() {
       <Pagination>
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious href="#" onClick={stayInPlace} size="icon">
-              <IconChevronLeft aria-hidden="true" />
-            </PaginationPrevious>
+            <PaginationPrevious href="#" onClick={stayInPlace} iconOnly />
           </PaginationItem>
           <PaginationItem>
             <PaginationLink href="#" onClick={stayInPlace}>
@@ -693,9 +689,7 @@ function PaginationTile() {
             <PaginationEllipsis />
           </PaginationItem>
           <PaginationItem>
-            <PaginationNext href="#" onClick={stayInPlace} size="icon">
-              <IconChevronRight aria-hidden="true" />
-            </PaginationNext>
+            <PaginationNext href="#" onClick={stayInPlace} iconOnly />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
@@ -966,10 +960,11 @@ function ItemTile() {
             <ItemActions>
               <Button
                 variant="ghost"
-                size="icon-sm"
-                aria-label={`More actions for ${name}`}
+                size="sm"
+                iconOnly
+                startIcon={<IconDots />}
               >
-                <IconDots aria-hidden="true" />
+                {`More actions for ${name}`}
               </Button>
             </ItemActions>
           </Item>

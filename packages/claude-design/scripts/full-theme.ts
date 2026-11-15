@@ -14,6 +14,7 @@ export const FULL_THEME: ThemeFlags = {
   font: 'inter',
   'heading-font': 'playfair-display',
   'code-font': 'jetbrains-mono',
-  'font-size': '15',
+  'ui-scale': 'large',
+  'text-size': '16',
   'code-font-size': '13',
 };

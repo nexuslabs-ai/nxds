@@ -1,4 +1,5 @@
-import { Button } from '@/components/button/button';
+import { buttonVariants } from '@/components/button/button-variants';
+import { cn } from '@/lib/utils';
 
 import { DISCORD_URL, REPO_URL, X_URL } from '../_lib/site';
 import { DiscordMark, GitHubMark, XMark } from '../_lib/site-icons';
@@ -29,22 +30,23 @@ export function Community() {
       </div>
       <div className="nx:flex nx:justify-center nx:gap-3">
         {communityLinks.map(({ name, href, Mark }) => (
-          <Button
+          <a
             key={name}
-            asChild
-            variant="outline"
-            size="icon-lg"
-            className="nx:[&_svg]:size-5"
+            className={cn(
+              buttonVariants({
+                variant: 'outline',
+                size: 'lg',
+                iconOnly: true,
+              }),
+              'nx:[&_svg]:size-5'
+            )}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${name} (opens in a new tab)`}
           >
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${name} (opens in a new tab)`}
-            >
-              <Mark aria-hidden="true" />
-            </a>
-          </Button>
+            <Mark aria-hidden="true" />
+          </a>
         ))}
       </div>
     </section>

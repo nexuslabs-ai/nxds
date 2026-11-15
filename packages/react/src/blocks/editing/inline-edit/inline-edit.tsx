@@ -194,28 +194,26 @@ function InlineEditEditor({
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
-            aria-label={`Save ${label}`}
+            size="sm"
+            iconOnly
+            startIcon={
+              <IconCheck className="nx:text-success-subtle-foreground" />
+            }
             title={`Save ${label}`}
             onClick={commit}
           >
-            <IconCheck
-              aria-hidden="true"
-              className="nx:text-success-subtle-foreground"
-            />
+            {`Save ${label}`}
           </Button>
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
-            aria-label={`Cancel editing ${label}`}
+            size="sm"
+            iconOnly
+            startIcon={<IconX className="nx:text-error-subtle-foreground" />}
             title="Cancel editing"
             onClick={cancel}
           >
-            <IconX
-              aria-hidden="true"
-              className="nx:text-error-subtle-foreground"
-            />
+            {`Cancel editing ${label}`}
           </Button>
         </div>
       </div>
@@ -263,13 +261,14 @@ function InlineEditPencilTrigger({
       <Button
         type="button"
         variant="ghost"
-        size="icon-sm"
+        size="sm"
+        iconOnly
+        startIcon={<IconPencil className="nx:text-muted-foreground" />}
         data-slot="inline-edit-trigger"
-        aria-label={`Edit ${label}`}
         title={`Edit ${label}`}
         {...props}
       >
-        <IconPencil aria-hidden="true" className="nx:text-muted-foreground" />
+        {`Edit ${label}`}
       </Button>
     </div>
   );

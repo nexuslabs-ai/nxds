@@ -6,7 +6,7 @@ import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import type { VariantProps } from 'class-variance-authority';
 
 import { cn } from '../../lib/utils';
-import { buttonVariants } from '../button/button';
+import { type ButtonVariants, buttonVariants } from '../button/button-variants';
 import {
   defaultOverlayLayout,
   overlayBodyClassName,
@@ -252,7 +252,7 @@ function AlertDialogDescription({
 type AlertDialogActionProps = React.ComponentProps<
   typeof AlertDialogPrimitive.Action
 > &
-  VariantProps<typeof buttonVariants>;
+  Pick<ButtonVariants, 'variant' | 'size'>;
 
 /**
  * Confirm button. Closes the dialog on click.
@@ -283,7 +283,7 @@ function AlertDialogAction({
 type AlertDialogCancelProps = React.ComponentProps<
   typeof AlertDialogPrimitive.Cancel
 > &
-  VariantProps<typeof buttonVariants>;
+  Pick<ButtonVariants, 'variant' | 'size'>;
 
 /**
  * Cancel button, styled as an `outline` Button. Closes the dialog on click.

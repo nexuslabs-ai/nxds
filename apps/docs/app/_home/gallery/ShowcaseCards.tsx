@@ -447,8 +447,8 @@ export function ConversationCard() {
           placeholder="Add your thoughts…"
           required
         />
-        <Button type="submit" size="icon" aria-label="Send demo message">
-          <SiteSendIcon aria-hidden="true" />
+        <Button type="submit" iconOnly startIcon={<SiteSendIcon />}>
+          Send demo message
         </Button>
       </form>
     </ShowcaseCard>
@@ -707,12 +707,13 @@ export function FilesCard() {
             </ItemContent>
             <ItemActions>
               <Button
-                size="icon-sm"
+                size="sm"
+                iconOnly
+                startIcon={<SiteArrowUpRightIcon />}
                 variant="ghost"
-                aria-label={`Select ${name}`}
                 onClick={() => setSelected(name)}
               >
-                <SiteArrowUpRightIcon aria-hidden="true" />
+                {`Select ${name}`}
               </Button>
             </ItemActions>
           </Item>

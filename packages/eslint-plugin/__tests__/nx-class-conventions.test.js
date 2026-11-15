@@ -14,13 +14,39 @@ RuleTester.describe = describe;
 RuleTester.it = it;
 
 const ruleTester = new RuleTester({
-  languageOptions: { ecmaVersion: 2022, sourceType: 'module' },
+  languageOptions: {
+    ecmaVersion: 2022,
+    sourceType: 'module',
+    parserOptions: { ecmaFeatures: { jsx: true } },
+  },
 });
 
 const rule = plugin.rules['nx-class-conventions'];
 
 ruleTester.run('nx-class-conventions', rule, {
   valid: [
+    // Icon sizes from glyph tokens or arbitrary values, and box sizes, stay legal.
+    "const c = 'nx:[&_svg]:size-icon-glyph-default nx:icon-stroke';",
+    "const c = 'nx:[&>svg]:size-icon-glyph-sm nx:text-muted-foreground nx:icon-stroke';",
+    "const c = 'nx:size-8 nx:rounded-sm';",
+    "const c = 'nx:h-(--nx-spacing-8) nx:[&_svg]:size-icon-glyph-sm nx:icon-stroke';",
+    // A `:has()` selector sizes the box around the icon, not the icon.
+    "const c = 'nx:has-[>svg]:size-8';",
+    "const c = 'nx:[&:has(>svg)]:size-9';",
+    "const x = <IconX className='nx:size-icon-glyph-xs nx:shrink-0' />;",
+    "const x = <CheckIcon className={cn('nx:size-[24px]', className)} />;",
+    // Only an `Icon*` or `*Icon` element is an icon.
+    "const x = <Badge className='nx:size-4' />;",
+    "const x = <Iconography className='nx:size-8' />;",
+    // The docs app styles its own chrome.
+    {
+      code: "const x = <IconX className='nx:size-4' />;",
+      filename: '/repo/apps/docs/app/_components/Nav.tsx',
+    },
+    {
+      code: "const c = 'nx:[&_svg]:size-4';",
+      filename: '/repo/apps/docs/app/_components/Nav.tsx',
+    },
     // Correct prefix order + complete semantic paths.
     "const c = 'nx:hover:bg-primary-background';",
     "const c = 'nx:bg-primary-background nx:text-foreground';",
@@ -96,8 +122,98 @@ ruleTester.run('nx-class-conventions', rule, {
       code: "const c = 'nx:transition-colors nx:focus-visible:outline-2';",
       filename: '/repo/apps/docs/app/_pages/foundations/focus.tsx',
     },
+    // A class list that sizes its `svg` children strokes them too, in the
+    // same string or anywhere in the same `cva()` call.
+    "const c = 'nx:icon-stroke nx:[&>svg]:size-icon-glyph-xs';",
+    "const c = cva('nx:flex nx:icon-stroke', { variants: { size: { sm: 'nx:[&>svg]:size-icon-glyph-sm' } } });",
+    "const c = cva('nx:flex', { variants: { variant: { default: '', icon: 'nx:[&_svg]:size-icon-glyph-lg nx:icon-stroke' } } });",
+    // A size off the scale is fine when the same selector sets the line's size.
+    "const c = 'nx:[&_svg]:size-[48px] nx:[&_svg]:[--nx-icon-size:48px] nx:icon-stroke';",
+    // Sizing the box around an icon, or styling the icon without sizing it,
+    // needs no stroke.
+    "const c = 'nx:has-[>svg]:size-8 nx:[&:has(svg)]:h-9';",
+    "const c = 'nx:[&_svg]:pointer-events-none nx:[&>svg]:text-muted-foreground';",
+    "const c = 'nx:size-4 nx:[&_img]:size-full';",
+    // Stories and the docs app skip the stroke check, like the raw typography
+    // checks.
+    {
+      code: "const c = 'nx:[&_svg]:size-icon-glyph-default';",
+      filename: '/repo/packages/react/src/components/button/Button.stories.tsx',
+    },
+    {
+      code: "const c = 'nx:[&_svg]:size-4';",
+      filename: '/repo/apps/docs/app/_components/TopNav.tsx',
+    },
   ],
   invalid: [
+    {
+      code: "const c = 'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-4 nx:icon-stroke';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&>svg]:size-3.5 nx:text-muted-foreground nx:icon-stroke';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = `nx:[&_svg:not([class*='size-'])]:size-4 nx:icon-stroke`;",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&>svg]:h-3 nx:[&>svg]:w-3 nx:icon-stroke';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:*:[svg]:size-4 nx:icon-stroke';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:group-data-[orientation=vertical]/attachment:[&_svg]:size-8 nx:icon-stroke';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const x = <IconX className='nx:size-3 nx:text-muted-foreground' />;",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const x = <CheckIcon className={cn('nx:h-4 nx:w-4', className)} />;",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&_svg]:!size-4 nx:icon-stroke';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    // A value that reads a spacing variable follows density too.
+    {
+      code: "const c = 'nx:[&_svg]:size-[var(--nx-spacing-8)] nx:icon-stroke';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&_svg]:size-[length:var(--nx-spacing-8)] nx:icon-stroke';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&>svg]:size-(--nx-spacing-8) nx:icon-stroke';",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const x = <IconX className='nx:size-[var(--nx-spacing-8)]' />;",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const x = <IconX className='nx:size-(--nx-spacing-2_5)' />;",
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    // The docs pages copy a story's code into apps.
+    {
+      code: "const x = <IconX className='nx:size-4' />;",
+      filename: '/repo/packages/react/src/components/kbd/Kbd.stories.tsx',
+      errors: [{ messageId: 'densityIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&_svg]:size-4';",
+      filename: '/repo/packages/react/src/components/kbd/Kbd.stories.tsx',
+      errors: [{ messageId: 'densityIconSize' }],
+    },
     {
       code: "const c = 'hover:nx:bg-primary-background';",
       errors: [{ messageId: 'prefixOrder' }],
@@ -294,6 +410,76 @@ ruleTester.run('nx-class-conventions', rule, {
       code: "const c = 'nx:transition-colors nx:focus-visible:outline-2';",
       filename: '/repo/apps/docs/app/_components/TopNav.tsx',
       errors: [{ messageId: 'ringFadingTransition' }],
+    },
+    // A class list that sizes its `svg` children must stroke them.
+    {
+      code: "const c = 'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default';",
+      errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    {
+      code: "const c = 'nx:[&>svg]:h-[12px] nx:[&>svg]:w-[12px]';",
+      errors: [{ messageId: 'unstrokedIcon' }, { messageId: 'plainIconSize' }],
+    },
+    {
+      code: "const c = `nx:[&_svg:not([class*='size-'])]:size-icon-glyph-default`;",
+      errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    {
+      code: "const c = 'nx:[&_svg]:!size-icon-glyph-default';",
+      errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    {
+      code: "const c = 'nx:group-data-[orientation=vertical]/attachment:[&_svg]:size-icon-glyph-xl';",
+      errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    // The whole `cva()` call is one class list, reported once.
+    {
+      code: "const c = cva('nx:flex', { variants: { variant: { default: '', icon: 'nx:[&_svg]:size-icon-glyph-lg' } } });",
+      errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    {
+      code: "const x = <span className={cn('nx:[&>svg]:size-icon-glyph-default', className)} />;",
+      languageOptions: { parserOptions: { ecmaFeatures: { jsx: true } } },
+      errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    // Only the plain class counts.
+    {
+      code: "const c = 'nx:[&_svg]:size-icon-glyph-default nx:hover:icon-stroke';",
+      errors: [{ messageId: 'unstrokedIcon' }],
+    },
+    // `svg` children are sized with `size-icon-glyph-*`, so the line matches.
+    {
+      code: "const c = 'nx:[&_svg]:size-[48px] nx:[&>svg]:[--nx-icon-size:48px] nx:icon-stroke';",
+      errors: [{ messageId: 'plainIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&_svg]:size-[24px] nx:icon-stroke';",
+      errors: [{ messageId: 'plainIconSize' }],
+    },
+    {
+      code: "const c = 'nx:[&>svg]:h-[12px] nx:[&>svg]:w-[12px] nx:icon-stroke';",
+      errors: [{ messageId: 'plainIconSize' }],
+    },
+    {
+      code: "const c = `nx:[&_svg:not([class*='size-'])]:size-[16px] nx:icon-stroke`;",
+      errors: [{ messageId: 'plainIconSize' }],
+    },
+    {
+      code: "const c = cva('nx:flex nx:icon-stroke', { variants: { size: { sm: 'nx:[&>svg]:size-[14px]' } } });",
+      errors: [{ messageId: 'plainIconSize' }],
+    },
+    // A size from spacing reports density, and not a plain size as well.
+    {
+      code: "const c = 'nx:[&_svg]:size-4';",
+      errors: [
+        { messageId: 'densityIconSize' },
+        { messageId: 'unstrokedIcon' },
+      ],
+    },
+    // A list that misses both gets both reports.
+    {
+      code: "const c = 'nx:[&_svg]:size-[24px]';",
+      errors: [{ messageId: 'unstrokedIcon' }, { messageId: 'plainIconSize' }],
     },
   ],
 });

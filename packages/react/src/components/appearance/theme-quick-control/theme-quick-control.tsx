@@ -106,11 +106,12 @@ export function NxdsThemeQuickControl({
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
-          size="icon-sm"
-          aria-label="Theme"
+          size="sm"
+          iconOnly
+          startIcon={<IconPalette />}
           data-slot="theme-quick-control-trigger"
         >
-          <IconPalette />
+          Theme
         </Button>
       </PopoverTrigger>
       <PopoverContent

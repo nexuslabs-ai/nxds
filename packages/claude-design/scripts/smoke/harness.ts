@@ -26,6 +26,7 @@ import {
 } from 'playwright';
 
 import { canvasLinks } from '../../src/setup.ts';
+import type { ThemeId, TokensFile } from '../../src/tokens.ts';
 
 const packageRoot = path.join(import.meta.dirname, '..', '..');
 const require = createRequire(path.join(packageRoot, 'package.json'));
@@ -59,7 +60,7 @@ let preload = '';
 export let browser: Browser | undefined;
 let context: BrowserContext;
 
-export type Theme = { attribute: string | null; darkClass: boolean };
+export type Theme = { attribute: ThemeId | null; darkClass: boolean };
 export const LIGHT: Theme = { attribute: 'light', darkClass: false };
 export const DARK: Theme = { attribute: 'dark', darkClass: false };
 export const DARK_CLASS: Theme = { attribute: null, darkClass: true };
@@ -382,10 +383,7 @@ function pageHelpers() {
 export function exportTokens() {
   return JSON.parse(
     readFileSync(path.join(projectDir, 'tokens.json'), 'utf8')
-  ) as {
-    meta: { theme: Record<string, string>; fonts?: string[] };
-    [family: string]: unknown;
-  };
+  ) as TokensFile & { meta: { theme: Record<string, string> } };
 }
 
 /** The appearance the export's theme sets. */

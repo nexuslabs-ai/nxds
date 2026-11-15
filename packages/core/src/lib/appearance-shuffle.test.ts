@@ -21,12 +21,14 @@ function sequence(...draws: number[]) {
 const STATE = {
   ...DEFAULT_NXDS_APPEARANCE,
   mode: 'dark' as const,
+  uiScale: 'large' as const,
+  textSize: 16 as const,
   lightContrast: 30,
   darkContrast: 70,
   prefs: {
     ...DEFAULT_NXDS_APPEARANCE.prefs,
     codeFont: '"JetBrains Mono Variable", monospace',
-    uiFontSize: 15,
+    codeFontSize: 13,
     reduceMotion: true,
   },
 };
@@ -46,11 +48,13 @@ describe('shuffleNxdsAppearance', () => {
 
     expect(shuffled).toMatchObject({
       mode: 'dark',
+      uiScale: 'large',
+      textSize: 16,
       lightContrast: 30,
       darkContrast: 70,
       prefs: {
         codeFont: STATE.prefs.codeFont,
-        uiFontSize: 15,
+        codeFontSize: 13,
         reduceMotion: true,
       },
     });

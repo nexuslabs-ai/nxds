@@ -20,8 +20,8 @@ import {
   IconChevronLeft,
   IconChevronRight,
 } from '../../lib/icons';
-import { cn } from '../../lib/utils';
-import { Button, buttonVariants } from '../button/button';
+import { cn, type DistributiveOmit } from '../../lib/utils';
+import { type ButtonVariants, buttonVariants } from '../button/button-variants';
 
 type DatePickerCellSize = 'default' | 'large' | 'xlarge';
 
@@ -135,11 +135,6 @@ const staticDayPickerClassNames = {
   hidden: cn('nx:invisible', defaultClassNames.hidden),
 } satisfies NonNullable<React.ComponentProps<typeof DayPicker>['classNames']>;
 
-// Omits from each mode's props, so `mode` still narrows the rest.
-type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
-  ? Omit<T, K>
-  : never;
-
 /**
  * DatePickerProps
  *
@@ -154,7 +149,7 @@ type DatePickerProps = DistributiveOmit<
   /**
    * Button variant for the previous and next month arrows.
    */
-  buttonVariant?: React.ComponentProps<typeof Button>['variant'];
+  buttonVariant?: ButtonVariants['variant'];
   /**
    * Day-cell size: `default` is 32px, `large` 48px, `xlarge` 56px. For another
    * size, set `--cell-size` through `className`.
@@ -244,19 +239,19 @@ function DatePicker({
           classNames={{
             ...staticDayPickerClassNames,
             button_previous: cn(
-              buttonVariants({ variant: buttonVariant, size: 'icon' }),
-              'nx:size-(--cell-size) nx:p-0 nx:select-none nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
+              buttonVariants({ variant: buttonVariant, iconOnly: true }),
+              'nx:size-(--cell-size) nx:select-none nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
               defaultClassNames.button_previous
             ),
             button_next: cn(
-              buttonVariants({ variant: buttonVariant, size: 'icon' }),
-              'nx:size-(--cell-size) nx:p-0 nx:select-none nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
+              buttonVariants({ variant: buttonVariant, iconOnly: true }),
+              'nx:size-(--cell-size) nx:select-none nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
               defaultClassNames.button_next
             ),
             caption_label: cn(
               'nx:typography-label-default nx:select-none',
               captionLayout !== 'label' &&
-                'nx:flex nx:h-8 nx:items-center nx:gap-1 nx:rounded-md nx:pr-1 nx:pl-2 nx:[&>svg]:size-3.5 nx:[&>svg]:text-muted-foreground',
+                'nx:flex nx:h-8 nx:items-center nx:gap-1 nx:rounded-md nx:pr-1 nx:pl-2 nx:[&>svg]:text-muted-foreground',
               defaultClassNames.caption_label
             ),
             day: cn(
@@ -291,7 +286,10 @@ function DatePickerChevron({
   if (orientation === 'left') {
     return (
       <IconChevronLeft
-        className={cn('nx:size-4 nx:text-muted-foreground', className)}
+        className={cn(
+          'nx:size-icon-glyph-default nx:text-muted-foreground',
+          className
+        )}
         {...props}
       />
     );
@@ -300,13 +298,21 @@ function DatePickerChevron({
   if (orientation === 'right') {
     return (
       <IconChevronRight
-        className={cn('nx:size-4 nx:text-muted-foreground', className)}
+        className={cn(
+          'nx:size-icon-glyph-default nx:text-muted-foreground',
+          className
+        )}
         {...props}
       />
     );
   }
 
-  return <IconChevronDown className={cn('nx:size-4', className)} {...props} />;
+  return (
+    <IconChevronDown
+      className={cn('nx:size-icon-glyph-sm nx:icon-stroke', className)}
+      {...props}
+    />
+  );
 }
 
 // react-day-picker passes `scope="row"` / `role="rowheader"`, valid only on a
@@ -425,10 +431,10 @@ function DatePickerDayButton({
     : children;
 
   return (
-    <Button
+    <button
       ref={ref}
-      variant="ghost"
-      size="icon"
+      type="button"
+      data-slot="date-picker-day-button"
       data-day={day.isoDate}
       data-selected-single={
         modifiers.selected &&
@@ -442,6 +448,7 @@ function DatePickerDayButton({
       data-today={isToday}
       data-outside={isOutside || undefined}
       className={cn(
+        buttonVariants({ variant: 'ghost', iconOnly: true }),
         'nx:flex nx:aspect-square nx:size-(--cell-size) nx:min-w-(--cell-size) nx:typography-body-default',
         'nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
         isOutside && 'nx:text-muted-foreground-subtle',
@@ -468,7 +475,7 @@ function DatePickerDayButton({
       >
         {content}
       </span>
-    </Button>
+    </button>
   );
 }
 

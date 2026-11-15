@@ -263,9 +263,8 @@ export const WithHeaderActions: Story = {
               <DrawerDescription>Refine the visible records without leaving the current view.</DrawerDescription>
             </div>
             <DrawerClose as-child>
-              <Button variant="ghost" size="icon" aria-label="Close drawer">
-                <PhX aria-hidden="true" />
-              </Button>
+              <Button variant="ghost" icon-only>
+                <template #start-icon><PhX /></template>Close drawer</Button>
             </DrawerClose>
           </DrawerHeader>
           <DrawerBody class="nx:pb-6 nx:typography-body-default nx:text-foreground">Header actions are regular composition: consumers place controls in the header and keep Vaul responsible for dismissal.</DrawerBody>

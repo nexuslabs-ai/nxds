@@ -24,6 +24,17 @@ export const NXDS_THEME_SCALES = {
  * each one extends, so a conflicting pair collapses to last-wins in `cn()`.
  */
 export const NXDS_CLASS_GROUPS = {
+  size: [
+    'size-icon-glyph-xs',
+    'size-icon-glyph-sm',
+    'size-icon-glyph-default',
+    'size-icon-glyph-lg',
+    'size-icon-glyph-xl',
+  ],
+  // Strokes the icons inside, so the element's own `stroke-*` must not drop it.
+  'icon-stroke': ['icon-stroke'],
+  // Lets a flex or scroll child shrink, so a later `h-*` or `size-*` keeps it.
+  'min-h-0': ['min-h-0', 'min-h-[0px]'],
   animate: ['animate-overlay-presence-exit'],
   duration: [
     'duration-0',
@@ -41,6 +52,7 @@ export const NXDS_CLASS_GROUPS = {
   'autofill-bg': [{ 'autofill-bg': [validators.isAny] }],
   'autofill-text': [{ 'autofill-text': [validators.isAny] }],
   surface: [{ surface: [validators.isAny] }],
+  target: ['target-24'],
   'ring-color': ['ring-surface'],
   'ring-offset-color': ['ring-offset-surface'],
   z: ['z-overlay', 'z-sticky', 'z-modal', 'z-popover', 'z-toast', 'z-max'],
@@ -182,9 +194,12 @@ export const NXDS_CLASS_GROUPS = {
   Record<
     | DefaultClassGroupIds
     | 'typography'
+    | 'icon-stroke'
+    | 'min-h-0'
     | 'autofill-bg'
     | 'autofill-text'
-    | 'surface',
+    | 'surface'
+    | 'target',
     (string | Record<string, ClassValidator[]>)[]
   >
 >;
@@ -212,6 +227,12 @@ const twMerge = extendTailwindMerge<NxdsClassGroupId>({
     classGroups: NXDS_CLASS_GROUPS,
     conflictingClassGroups: {
       typography: TYPOGRAPHY_CONFLICTS,
+      // A control sets `h-fit min-h-N`, so a caller's `h-*` or `size-*` must
+      // drop the min-height too, or the control stays N tall.
+      h: ['min-h'],
+      size: ['min-h'],
+      'min-h': ['min-h-0'],
+      'min-h-0': ['min-h'],
     },
   },
 });
@@ -223,3 +244,11 @@ const twMerge = extendTailwindMerge<NxdsClassGroupId>({
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/**
+ * Omits keys from each member of a union, so a prop such as Button's
+ * `iconOnly` still picks which member applies.
+ */
+export type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;

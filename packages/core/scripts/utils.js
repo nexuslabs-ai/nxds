@@ -10,6 +10,7 @@ import {
   inlineVariables,
 } from '../src/token-source/format.ts';
 import {
+  referencedStep,
   SPACING_MODE_FILE_PATTERN,
   spacingRoleUtility,
 } from '../src/token-source/spacing.ts';
@@ -18,11 +19,18 @@ import {
   pathToCssVarPrefixed,
 } from '../src/token-source/tokens.ts';
 import {
+  scaleBlocks,
+  scaledModeBlocks,
+  textSizeBlocks,
+} from '../src/token-source/ui-scale.ts';
+import {
   BORDER_COLOR_ALIAS_NAMES,
   borderColorAliasName,
   borderWidthAliasUtilities,
   DEFAULT_TRANSITION,
   durationUtility,
+  ICON_STROKE_UTILITY,
+  iconSizeUtility,
 } from '../src/token-source/utilities.ts';
 
 /**
@@ -126,10 +134,10 @@ export function discoverPrimitives(primitivesDir) {
 }
 
 /**
- * Find the per-mode spacing files in `semantic/`. Their values are direct px
- * (no `{N}` refs) and emit per-mode `[data-density="X"]` blocks via
- * `collectSpacingTokens`. Every other semantic file is read by a collector
- * that names it directly.
+ * Find the per-mode spacing files in `semantic/`. Steps are direct px, role
+ * tokens reference a step in the same file, and both emit per-mode
+ * `[data-density="X"]` blocks via `collectSpacingTokens`. Every other
+ * semantic file is read by a collector that names it directly.
  *
  * @param {string} semanticDir - Path to semantic directory
  * @returns {Record<string, string>} Mode name keyed to its `spacing-{mode}.json` filename
@@ -382,12 +390,19 @@ export function generateTypographyUtilitiesCSS(tokensDir, primitiveMap) {
  * @param {import('../src/token-source/utilities.ts').UtilityRule} rule
  * @returns {string}
  */
-function formatUtilityRule({ name, declarations }) {
-  let css = `@utility ${name} {\n`;
-  for (const { property, value } of declarations) {
-    css += `  ${property}: ${value};\n`;
-  }
-  return `${css}}\n\n`;
+function formatUtilityRule({ name, selectors, declarations }) {
+  const declarationLines = declarations
+    .map(({ property, value }) => `${property}: ${value};`)
+    .join('\n');
+  const body = selectors
+    ? `${selectors.join(',\n')} {\n${indentLines(declarationLines)}\n}`
+    : declarationLines;
+  return `@utility ${name} {\n${indentLines(body)}\n}\n\n`;
+}
+
+/** `text` with every line indented by two spaces. */
+function indentLines(text) {
+  return text.replace(/^/gm, '  ');
 }
 
 /**
@@ -411,6 +426,26 @@ export function generateBorderWidthUtilitiesCSS(tokens) {
   css += rules.map(formatUtilityRule).join('');
 
   return { css, count: rules.length };
+}
+
+/**
+ * Generate the icon utilities: `size-icon-{name}` for each glyph size, and
+ * `icon-stroke`, which draws the line from the two stroke tokens. They read the fixed `--nx-icon-*`
+ * variables, so icons keep their size and line at every density.
+ *
+ * @param {object[]} tokens - Array of icon tokens with a dotted path property (e.g., "glyph.default")
+ * @returns {{ css: string, count: number }} Generated CSS and utility count
+ */
+export function generateIconUtilitiesCSS(tokens) {
+  const sizeRules = tokens
+    .filter((token) => token.path.startsWith('glyph.'))
+    .map((token) => iconSizeUtility(token.path.replaceAll('.', '-')));
+  const rules = [...sizeRules, ICON_STROKE_UTILITY];
+
+  return {
+    css: `/* Icon Utilities */\n\n${rules.map(formatUtilityRule).join('')}`,
+    count: rules.length,
+  };
 }
 
 /**
@@ -480,13 +515,17 @@ export const CANONICAL_SPACING_DEFAULT_MODE = 'default';
  *  - `@utility` role declarations reference the prefixed form
  *    (`var(--nx-container-p)`). See `generateSpacingRoleUtilitiesCSS`.
  *
+ * A role token's `{spacing.N}` reference resolves to step N's value in the
+ * same mode (`referencedStep`), and the token keeps that step's cssName as
+ * `step`, so the UI scale gives the role its step's scaled value.
+ *
  * Throws on cssName collisions across paths within a single mode — two paths
  * flattening to the same name (e.g. `layout.section-gap` and
  * `layout.section.gap` both → `layout-section-gap`) would silently lose
  * one declaration.
  *
  * @param {string} semanticDir - Path to semantic directory
- * @returns {Record<string, {cssName: string, path: string[], value: string}[]>}
+ * @returns {Record<string, {cssName: string, path: string[], value: string, step?: string}[]>}
  *   Modes keyed by name (e.g. `vega`, `lyra`, `maia`, `mira`, `nova`, `luma`, `sera`).
  *   Each token carries the original JSON `path` so downstream emitters
  *   (`generateSpacingRoleUtilitiesCSS`) can derive structure without
@@ -519,11 +558,14 @@ export function collectSpacingTokens(semanticDir) {
         );
       }
       seen.add(cssName);
-      tokens.push({
+      const step = referencedStep(token, extracted);
+      const entry = {
         cssName,
         path: token.path,
-        value: formatTokenValue(token.value, token.type, token.path),
-      });
+        value: formatTokenValue((step ?? token).value, token.type, token.path),
+      };
+      if (step) entry.step = step.path.join('-');
+      tokens.push(entry);
     }
 
     result[mode] = tokens;
@@ -620,6 +662,52 @@ export function generateSpacingModesCSS(modesByName, opts = {}) {
     css += `\n${writeBlock(`[${attrName}="${mode}"]`, modesByName[mode])}`;
   }
 
+  return css;
+}
+
+/**
+ * Emit the UI scale: the default factor and page widths on `:root`, one
+ * `[data-ui-scale="X"]` block per scale for type, code, icons and widths, one
+ * `[data-text-size="N"]` block per text size and scale for type and code, and
+ * every density and radius mode at each scale. The default scale and text size
+ * have no block, so the per-mode blocks above apply as they are.
+ *
+ * @param {object} input
+ * @param {Record<string, {cssName: string, value: string, step?: string}[]>} input.spacingModes
+ * @param {string} input.spacingDefault
+ * @param {Record<string, {cssName: string, value: string}[]>} input.radiusModes
+ * @param {string} input.radiusDefault
+ * @param {import('../src/token-source/ui-scale.ts').UiScaleBase} input.base
+ *   The Default sizes the UI scale multiplies.
+ * @returns {string} CSS string with all UI scale blocks
+ */
+export function generateUiScaleCSS({
+  spacingModes,
+  spacingDefault,
+  radiusModes,
+  radiusDefault,
+  base,
+}) {
+  const blocks = [
+    ...scaleBlocks(base),
+    ...textSizeBlocks(base),
+    ...scaledModeBlocks(spacingModes, {
+      attrName: 'data-density',
+      defaultMode: spacingDefault,
+    }),
+    ...scaledModeBlocks(radiusModes, {
+      attrName: 'data-radius',
+      defaultMode: radiusDefault,
+    }),
+  ];
+  let css = `\n/* ===== UI SCALE ([data-ui-scale="X"] and [data-text-size="N"] on the root, modes nest under it) ===== */\n`;
+  for (const { selectors, tokens } of blocks) {
+    css += `\n${selectors.join(',\n')} {\n`;
+    for (const token of tokens) {
+      css += `  --nx-${token.cssName}: ${token.value};\n`;
+    }
+    css += `}\n`;
+  }
   return css;
 }
 
@@ -1449,6 +1537,30 @@ export function generateSurfaceUtilitiesCSS() {
 
 @utility ring-offset-surface {
   --tw-ring-offset-color: var(--nx-surface, --theme(--color-background));
+}
+`;
+}
+
+/**
+ * Target size utility: `target-24` gives a small control a pointer target at
+ * least 24 × 24px (WCAG 2.5.8), centred on it, through an invisible
+ * `::before`. The control must be positioned, such as with `relative`.
+ *
+ * @returns {string} CSS @utility declaration
+ */
+export function generateTargetUtilitiesCSS() {
+  return `
+/* ===== TARGET SIZE UTILITIES ===== */
+@utility target-24 {
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 24px);
+    height: max(100%, 24px);
+    translate: -50% -50%;
+  }
 }
 `;
 }

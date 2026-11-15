@@ -94,8 +94,8 @@ export function PageActions({ markdownHref }: { markdownHref: string }) {
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon-sm" aria-label="More actions">
-              <IconChevronDown />
+            <Button variant="outline" iconOnly startIcon={<IconChevronDown />}>
+              More actions
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

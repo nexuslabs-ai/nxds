@@ -3,6 +3,10 @@ import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { ref } from 'vue';
 
 import {
+  expectMenuItemInsetAtEveryDensity,
+  expectRadioDotInsetAtEveryUiScale,
+} from '../../stories/support/menu-item-inset-test-utils';
+import {
   expectExitBeforeUnmount,
   expectInterruptibleOverlayMotion,
 } from '../../stories/support/overlay-motion-test-utils';
@@ -398,6 +402,92 @@ export const WithInsetItems: Story = {
 // ============================================
 // INTERACTION TESTS
 // ============================================
+
+export const CheckInsetAtEveryDensity: Story = {
+  render: () => ({
+    components: {
+      ContextMenu,
+      ContextMenuCheckboxItem,
+      ContextMenuContent,
+      ContextMenuItem,
+      ContextMenuLabel,
+      ContextMenuTrigger,
+    },
+    template: `
+      <ContextMenu>
+        <ContextMenuTrigger class="nx:flex nx:h-[96px] nx:w-full nx:max-w-md nx:select-none nx:items-center nx:justify-center nx:rounded-md nx:border-default nx:border-dashed nx:border-border-default nx:typography-body-default nx:text-muted-foreground">Right click here</ContextMenuTrigger>
+        <ContextMenuContent class="nx:w-56">
+          <ContextMenuLabel inset>Appearance</ContextMenuLabel>
+          <ContextMenuCheckboxItem :model-value="true">Status bar</ContextMenuCheckboxItem>
+          <ContextMenuItem inset>Reset view</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await fireEvent.contextMenu(canvas.getByText('Right click here'), {
+      clientX: 20,
+      clientY: 20,
+    });
+    const menu = await within(document.body).findByRole('menu');
+    const item = within(menu).getByRole('menuitemcheckbox', {
+      name: 'Status bar',
+    });
+    const check = item.querySelector<HTMLElement>(
+      '[data-slot="context-menu-checkbox-indicator"]'
+    )!.parentElement!;
+    await expectMenuItemInsetAtEveryDensity(menu, item, check, [
+      within(menu).getByRole('menuitem', { name: 'Reset view' }),
+      within(menu).getByText('Appearance'),
+    ]);
+
+    await userEvent.keyboard('{Escape}');
+    await expectExitBeforeUnmount(menu);
+  },
+};
+
+export const RadioDotAtEveryUiScale: Story = {
+  render: () => ({
+    components: {
+      ContextMenu,
+      ContextMenuContent,
+      ContextMenuRadioGroup,
+      ContextMenuRadioItem,
+      ContextMenuTrigger,
+    },
+    template: `
+      <ContextMenu>
+        <ContextMenuTrigger class="nx:flex nx:h-[96px] nx:w-full nx:max-w-md nx:select-none nx:items-center nx:justify-center nx:rounded-md nx:border-default nx:border-dashed nx:border-border-default nx:typography-body-default nx:text-muted-foreground">Right click here</ContextMenuTrigger>
+        <ContextMenuContent class="nx:w-56">
+          <ContextMenuRadioGroup model-value="bottom">
+            <ContextMenuRadioItem value="top">Top</ContextMenuRadioItem>
+            <ContextMenuRadioItem value="bottom">Bottom</ContextMenuRadioItem>
+          </ContextMenuRadioGroup>
+        </ContextMenuContent>
+      </ContextMenu>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await fireEvent.contextMenu(canvas.getByText('Right click here'), {
+      clientX: 20,
+      clientY: 20,
+    });
+    const menu = await within(document.body).findByRole('menu');
+    const item = within(menu).getByRole('menuitemradio', { name: 'Bottom' });
+    const indicator = item.querySelector<HTMLElement>(
+      '[data-slot="context-menu-radio-indicator"]'
+    )!.parentElement!;
+    const dot = item.querySelector(
+      '[data-slot="context-menu-radio-indicator-icon"]'
+    )!;
+    await expectRadioDotInsetAtEveryUiScale(menu, indicator, dot);
+
+    await userEvent.keyboard('{Escape}');
+    await expectExitBeforeUnmount(menu);
+  },
+};
 
 export const OpenCloseInteraction: Story = {
   render: () => ({

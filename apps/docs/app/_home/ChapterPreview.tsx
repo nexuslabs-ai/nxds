@@ -72,11 +72,11 @@ export function ChapterPreview<T extends ToolName>({
               <span className="nx:inline-flex">
                 <ToolbarTool
                   value={tool}
-                  size="icon-sm"
-                  aria-label={tool}
+                  iconOnly
+                  startIcon={<Icon />}
                   id={toolId(index)}
                 >
-                  <Icon aria-hidden="true" />
+                  {tool}
                 </ToolbarTool>
               </span>
             </TooltipTrigger>

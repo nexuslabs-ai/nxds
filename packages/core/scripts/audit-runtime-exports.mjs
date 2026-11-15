@@ -35,7 +35,9 @@ const EXPECTED_RUNTIME_EXPORTS = [
   'SEMANTIC_TOKEN_REGISTRY',
   'SNAPSHOT_VERSION',
   'STROKE_OPTIONS',
+  'TEXT_SIZE_OPTIONS',
   'TIER_THRESHOLDS',
+  'UI_SCALE_OPTIONS',
   'adjustContrast',
   'apcaLc',
   'applyNxdsAppearance',
@@ -67,6 +69,7 @@ const EXPECTED_RUNTIME_EXPORTS = [
   'serializeNxdsAppearanceStateCookie',
   'shuffleNxdsAppearance',
   'shuffleNxdsIconLibrary',
+  'textSizePx',
   'themeToCss',
   'watchColorScheme',
 ];

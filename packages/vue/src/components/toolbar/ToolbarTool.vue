@@ -9,6 +9,7 @@ import {
   type HTMLAttributes,
   useId,
   useTemplateRef,
+  type VNode,
   watchEffect,
 } from 'vue';
 
@@ -21,6 +22,11 @@ export interface ToolbarToolProps extends RekaToolbarButtonProps {
   /** Matches the tool's ToolbarToolPanel, if it has one. */
   value: string;
   size?: ButtonVariants['size'];
+  /**
+   * Shows only `startIcon` in a square button. The text stays as the name
+   * screen readers read, visually hidden.
+   */
+  iconOnly?: boolean;
   class?: HTMLAttributes['class'];
 }
 
@@ -29,7 +35,16 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(defineProps<ToolbarToolProps>(), {
   as: 'button',
   size: 'sm',
+  iconOnly: false,
 });
+
+const slots = defineSlots<{
+  default?: () => VNode[];
+  'start-icon'?: () => VNode[];
+}>();
+
+// `iconOnly` keeps the native button, as Button does.
+const rendersAsChild = computed(() => props.asChild && !props.iconOnly);
 
 const tools = injectToolbarToolGroup();
 const button = useTemplateRef('button');
@@ -38,7 +53,7 @@ const selected = computed(() => props.value === tools.value.value);
 const hasPanel = computed(() => tools.panels.has(props.value));
 const expanded = computed(() => selected.value && tools.open.value);
 
-const delegated = reactiveOmit(props, 'class', 'size', 'value');
+const delegated = reactiveOmit(props, 'class', 'size', 'value', 'iconOnly');
 
 watchEffect(
   (onCleanup) => {
@@ -65,9 +80,10 @@ function handleClick(event: MouseEvent) {
     ref="button"
     data-slot="toolbar-tool"
     :data-size="size"
+    :data-icon-only="iconOnly || undefined"
     :class="
       cn(
-        buttonVariants({ variant: 'ghost', size }),
+        buttonVariants({ variant: 'ghost', size, iconOnly }),
         'nx:data-[state=on]:bg-primary-background nx:data-[state=on]:text-primary-foreground nx:data-[state=on]:hover:bg-primary-background-hover nx:data-[state=on]:active:bg-primary-background-active',
         props.class
       )
@@ -78,8 +94,20 @@ function handleClick(event: MouseEvent) {
     :aria-haspopup="hasPanel ? 'dialog' : undefined"
     :aria-expanded="hasPanel ? expanded : undefined"
     :aria-controls="expanded ? tools.panelId : $attrs['aria-controls']"
+    :as-child="rendersAsChild"
     @click="handleClick"
   >
-    <slot />
+    <slot v-if="rendersAsChild" />
+    <template v-else>
+      <span
+        v-if="slots['start-icon']"
+        aria-hidden="true"
+        class="nx:inline-flex nx:shrink-0"
+      >
+        <slot name="start-icon" />
+      </span>
+      <span v-if="iconOnly" class="nx:sr-only"><slot /></span>
+      <slot v-else />
+    </template>
   </ToolbarButton>
 </template>

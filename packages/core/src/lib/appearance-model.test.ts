@@ -18,6 +18,8 @@ import {
   sanitizeNxdsAppearance,
   sanitizeNxdsAppearancePrefs,
   STROKE_OPTIONS,
+  TEXT_SIZE_OPTIONS,
+  UI_SCALE_OPTIONS,
 } from './appearance-model';
 import { deriveTheme } from './derive-theme';
 
@@ -29,13 +31,14 @@ describe('appearance model', () => {
       surfaceTone: 'zinc',
       lightContrast: 50,
       darkContrast: 50,
+      uiScale: 'default',
+      textSize: 14,
       density: 'default',
       corners: 'subtle',
       elevation: 'quiet',
       stroke: 'normal',
       prefs: {
         headingFont: null,
-        uiFontSize: 14,
         codeFontSize: 12,
         reduceMotion: false,
         pointerCursors: false,
@@ -116,6 +119,8 @@ describe('sanitizeNxdsAppearance', () => {
       surfaceTone: 'slate' as const,
       lightContrast: 42,
       darkContrast: 82,
+      uiScale: 'large' as const,
+      textSize: 16 as const,
       density: 'tight' as const,
       corners: 'extra-round' as const,
       elevation: 'flat' as const,
@@ -123,7 +128,6 @@ describe('sanitizeNxdsAppearance', () => {
       prefs: {
         ...DEFAULT_NXDS_APPEARANCE.prefs,
         headingFont: '"Lora Variable", Georgia, serif',
-        uiFontSize: 16,
         codeFontSize: 13,
         reduceMotion: true,
         pointerCursors: true,
@@ -134,6 +138,16 @@ describe('sanitizeNxdsAppearance', () => {
   });
 
   it('accepts every shipped layout mode', () => {
+    for (const option of UI_SCALE_OPTIONS) {
+      expect(sanitizeNxdsAppearance({ uiScale: option.value }).uiScale).toBe(
+        option.value
+      );
+    }
+
+    for (const { value: textSize } of TEXT_SIZE_OPTIONS) {
+      expect(sanitizeNxdsAppearance({ textSize }).textSize).toBe(textSize);
+    }
+
     for (const option of DENSITY_OPTIONS) {
       expect(sanitizeNxdsAppearance({ density: option.value }).density).toBe(
         option.value
@@ -181,6 +195,19 @@ describe('sanitizeNxdsAppearance', () => {
         lightContrast: 999,
       }).lightContrast
     ).toBe(100);
+    expect(
+      sanitizeNxdsAppearance({
+        ...DEFAULT_NXDS_APPEARANCE,
+        uiScale: 'huge',
+      }).uiScale
+    ).toBe('default');
+    for (const textSize of [11, 17, 14.5, '16']) {
+      expect(
+        sanitizeNxdsAppearance({ ...DEFAULT_NXDS_APPEARANCE, textSize })
+          .textSize,
+        String(textSize)
+      ).toBe(14);
+    }
     expect(
       sanitizeNxdsAppearance({
         ...DEFAULT_NXDS_APPEARANCE,
@@ -242,12 +269,13 @@ describe('normalizeAppearanceModeIds', () => {
 });
 
 describe('sanitizeNxdsAppearancePrefs', () => {
-  it('clamps font sizes into [8,32] and falls back per field', () => {
-    expect(sanitizeNxdsAppearancePrefs({ uiFontSize: 99 }).uiFontSize).toBe(32);
+  it('clamps the code font size into [8,32] and falls back to 12', () => {
+    expect(sanitizeNxdsAppearancePrefs({ codeFontSize: 99 }).codeFontSize).toBe(
+      32
+    );
     expect(sanitizeNxdsAppearancePrefs({ codeFontSize: 2 }).codeFontSize).toBe(
       8
     );
-    expect(sanitizeNxdsAppearancePrefs({ uiFontSize: 0 }).uiFontSize).toBe(14);
     expect(sanitizeNxdsAppearancePrefs({ codeFontSize: 0 }).codeFontSize).toBe(
       12
     );
@@ -396,14 +424,9 @@ describe('createNxdsThemeContract', () => {
 
 describe('appearancePrefsToCss', () => {
   const prefs = DEFAULT_NXDS_APPEARANCE.prefs;
-  const typographyVarPattern =
-    /--nx-typography-(?:size|line-height)-[a-z0-9]+:\s*[^;]+;/g;
+  const codeSizePattern = /--nx-typography-code-size:\s*[^;]+;/;
 
-  function typographyDeclarations(css: string) {
-    return (css.match(typographyVarPattern) ?? []).sort();
-  }
-
-  it('scales only px typography dimensions', () => {
+  it('keeps every typography dimension in px, which the UI scale multiplies', () => {
     const dimensions = [
       ...Object.entries(typographyTokens.size),
       ...Object.entries(typographyTokens['line-height']),
@@ -415,13 +438,12 @@ describe('appearancePrefsToCss', () => {
     expect(nonPx).toEqual([]);
   });
 
-  it('emits font variables, a clamped type scale, and code size', () => {
+  it('emits the font variables and a clamped code size', () => {
     const css = appearancePrefsToCss({
       ...prefs,
       uiFont: 'Inter',
       codeFont: 'JetBrains Mono',
-      uiFontSize: 99,
-      codeFontSize: 0,
+      codeFontSize: 99,
     });
 
     expect(css).toContain('--nx-typography-family-font-sans: Inter;');
@@ -429,10 +451,67 @@ describe('appearancePrefsToCss', () => {
     expect(css).toContain(
       '--nx-typography-family-font-heading: var(--nx-typography-family-font-sans);'
     );
-    expect(css).toContain('--nx-typography-size-sm: 32px;');
-    expect(css).toContain('--nx-typography-line-height-xxs: 27.4286px;');
-    expect(css).toContain('--nx-typography-line-height-sm: 45.7143px;');
-    expect(css).toContain('--nx-typography-size-code: 12px;');
+    expect(css).toContain('--nx-typography-code-size: 32px;');
+  });
+
+  /** The code size the prefs CSS writes for each other UI scale. */
+  function scaledCodeSizes(codeFontSize: number) {
+    const css = appearancePrefsToCss({ ...prefs, codeFontSize });
+    return Object.fromEntries(
+      [
+        ...css.matchAll(
+          /\[data-ui-scale='([a-z]+)'\] \{\s*--nx-typography-code-size: ([\d.]+)px;/g
+        ),
+      ].map(([, scale, px]) => [scale, Number(px)])
+    );
+  }
+
+  it('grows the code size with the label text at each UI scale', () => {
+    // 12px at the Default scale, times 12/14, 16/14 and 18/14, rounded.
+    expect(scaledCodeSizes(12)).toEqual({ small: 10, large: 14, larger: 15 });
+  });
+
+  it('never shrinks code below 8px at Small', () => {
+    expect(scaledCodeSizes(9)).toMatchObject({ small: 8 });
+    expect(scaledCodeSizes(8)).toMatchObject({ small: 8 });
+  });
+
+  it('writes the code size in whole px at every scale', () => {
+    const css = appearancePrefsToCss({ ...prefs, codeFontSize: 12.5 });
+    expect(css.match(codeSizePattern)?.[0]).toBe(
+      '--nx-typography-code-size: 13px;'
+    );
+    for (const [scale, px] of Object.entries(scaledCodeSizes(12.5))) {
+      expect(Number.isInteger(px), scale).toBe(true);
+    }
+  });
+
+  it('grows the code size with the text size at each UI scale', () => {
+    const css = appearancePrefsToCss({ ...prefs, codeFontSize: 12 });
+    const sizes = Object.fromEntries(
+      [
+        ...css.matchAll(
+          /^((?:\[data-[a-z-]+='[a-z0-9]+'\])+) \{\s*--nx-typography-code-size: (\d+)px;/gm
+        ),
+      ].map(([, selector, px]) => [selector, Number(px)])
+    );
+    // 12px times 16/14 at the Default scale, times 16/14 × 18/14 at Larger,
+    // and never under 8px.
+    expect(sizes).toMatchObject({
+      "[data-text-size='16']": 14,
+      "[data-ui-scale='larger'][data-text-size='16']": 18,
+      "[data-ui-scale='small'][data-text-size='12']": 9,
+    });
+    // One block for each scale and text size except Default and 14.
+    expect(Object.keys(sizes)).toHaveLength(
+      UI_SCALE_OPTIONS.length * TEXT_SIZE_OPTIONS.length - 1
+    );
+  });
+
+  it('leaves the UI type scale to the [data-ui-scale] blocks', () => {
+    expect(appearancePrefsToCss(prefs)).not.toMatch(
+      /--nx-typography-(?:size-|line-height-)/
+    );
   });
 
   it('emits a chosen heading font in place of the UI font', () => {
@@ -453,7 +532,9 @@ describe('appearancePrefsToCss', () => {
       ([, list = '']) => list.split(',').map((selector) => selector.trim())
     );
     for (const selector of selectors) {
-      expect(selector, selector).toMatch(/^(@layer nx-runtime$|:root|\.nx\\:)/);
+      expect(selector, selector).toMatch(
+        /^(@layer nx-runtime|:root|(\[data-(ui-scale|text-size)='[a-z0-9]+'\])+)$/
+      );
     }
   });
 
@@ -472,14 +553,14 @@ describe('appearancePrefsToCss', () => {
     expect(off).not.toContain('font-smoothing');
   });
 
-  it('keeps default runtime typography variables in parity with generated tokens', () => {
+  it('keeps the default code size in parity with the generated token', () => {
     const generatedCss = readFileSync(
       resolve(process.cwd(), 'packages/tailwind/variables.css'),
       'utf8'
     );
 
-    expect(typographyDeclarations(appearancePrefsToCss(prefs))).toEqual(
-      typographyDeclarations(generatedCss)
+    expect(appearancePrefsToCss(prefs).match(codeSizePattern)?.[0]).toBe(
+      generatedCss.match(codeSizePattern)?.[0]
     );
   });
 

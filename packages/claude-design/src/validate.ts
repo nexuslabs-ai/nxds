@@ -7,9 +7,14 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import postcss from 'postcss';
 
+import { PRESETS } from './presets.ts';
 import { IDENTIFIER, isPageGenerated, validateIndex } from './system-index.ts';
 import { DYNAMIC_VARIABLE, variablesRead } from './token-reads.ts';
-import { familyVariable, type TokensFile } from './tokens.ts';
+import {
+  familyVariable,
+  type ScaledPreset,
+  type TokensFile,
+} from './tokens.ts';
 import { compileTokensCss, listFamilies } from './tokens-css.ts';
 
 const KB = 1024;
@@ -302,6 +307,54 @@ function checkFonts(tokens: TokensFile, errors: string[]) {
   }
 }
 
+// tokens.css declares each `meta.presets` entry as an `[attribute="value"]`
+// rule, so each must name a preset attribute, one of its values, and lengths
+// for tokens of the family that attribute swaps.
+function checkPresets(tokens: TokensFile, errors: string[]) {
+  const presets: unknown = tokens.meta?.presets;
+  if (presets === undefined) return;
+  if (!Array.isArray(presets)) {
+    errors.push('tokens.json meta.presets: must be a list.');
+    return;
+  }
+  const families = new Map(listFamilies(tokens));
+  for (const [index, preset] of (presets as unknown[]).entries()) {
+    const where = `tokens.json meta.presets[${index}]`;
+    if (typeof preset !== 'object' || preset === null) {
+      errors.push(`${where}: must be an object.`);
+      continue;
+    }
+    const {
+      attribute,
+      value,
+      tokens: lengths,
+    } = preset as Partial<ScaledPreset>;
+    const spec = Object.entries(PRESETS).find(
+      ([name]) => name === attribute
+    )?.[1];
+    if (!spec?.options.some((option) => option.value === value)) {
+      errors.push(`${where}: isn't a preset attribute and one of its values.`);
+      continue;
+    }
+    if (typeof lengths !== 'object' || lengths === null) {
+      errors.push(`${where}: needs a tokens map.`);
+      continue;
+    }
+    const names = new Set(
+      (families.get(spec.family) ?? []).map((token) => String(token.name))
+    );
+    for (const [name, length] of Object.entries(lengths)) {
+      if (!names.has(name)) {
+        errors.push(
+          `${where}: ${name} isn't a ${spec.family} token in tokens.json.`
+        );
+      } else if (typeof length !== 'string' || !LENGTH.test(length)) {
+        errors.push(`${where}: ${name}'s value "${length}" isn't a length.`);
+      }
+    }
+  }
+}
+
 function checkTokens(root: string, errors: string[]) {
   const tokens = readJson(root, 'tokens.json', errors) as
     | TokensFile
@@ -367,6 +420,7 @@ function checkTokenFiles(
   checkAliases(colors, errors);
   checkType(tokens.type, errors);
   checkFonts(tokens, errors);
+  checkPresets(tokens, errors);
 
   if (css === undefined) {
     errors.push('tokens.css: missing.');

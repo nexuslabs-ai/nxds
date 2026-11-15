@@ -48,10 +48,9 @@ const ConditionExample = defineComponent({
         @click="onValueClick?.()"
       >{{ value }}</FilterConditionSegment>
       <FilterConditionRemove
-        :aria-label="'Remove ' + field + ' filter'"
         :disabled="disabled"
         @click="onRemove?.()"
-      />
+      >Remove {{ field }} filter</FilterConditionRemove>
     </FilterCondition>
   `,
 });
@@ -99,7 +98,7 @@ export const Default: Story = {
         <FilterConditionField>Status</FilterConditionField>
         <FilterConditionSegment aria-label="Edit Status operator" class="nx:shrink-0 nx:text-muted-foreground">is</FilterConditionSegment>
         <FilterConditionSegment aria-label="Edit Status value: Paid" data-testid="condition-value">Paid</FilterConditionSegment>
-        <FilterConditionRemove aria-label="Remove Status filter" />
+        <FilterConditionRemove>Remove Status filter</FilterConditionRemove>
       </FilterCondition>
     `,
   }),

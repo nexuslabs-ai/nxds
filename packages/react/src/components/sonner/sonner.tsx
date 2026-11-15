@@ -18,6 +18,7 @@ import {
   IconCircleCheck,
   IconInfoCircle,
   IconLoader2,
+  IconX,
 } from '../../lib/icons';
 
 /**
@@ -52,19 +53,23 @@ function useToasterTheme(): 'light' | 'dark' {
 
 /** nxds's internal icons in place of sonner's bundled set. */
 const toasterIcons = {
-  success: <IconCircleCheck className="nx:size-4" />,
-  info: <IconInfoCircle className="nx:size-4" />,
-  warning: <IconAlertTriangle className="nx:size-4" />,
-  error: <IconAlertCircle className="nx:size-4" />,
-  loading: <IconLoader2 className="nx:size-4 nx:animate-spin" />,
+  success: <IconCircleCheck className="nx:size-icon-glyph-default" />,
+  info: <IconInfoCircle className="nx:size-icon-glyph-default" />,
+  warning: <IconAlertTriangle className="nx:size-icon-glyph-default" />,
+  error: <IconAlertCircle className="nx:size-icon-glyph-default" />,
+  loading: (
+    <IconLoader2 className="nx:size-icon-glyph-default nx:animate-spin" />
+  ),
+  close: <IconX className="nx:size-icon-glyph-xs" />,
 };
 
 /**
- * Sonner reads these custom properties off the toaster container to colour each
- * toast; map every one to its nxds semantic token. The `-bg`/`-text`/`-border`
+ * Sonner reads these custom properties off the toaster container to size and
+ * colour each toast; map every one to its nxds token. The `-bg`/`-text`/`-border`
  * triples for success/error/warning/info apply when `richColors` is enabled.
  */
 const toasterThemeVars = {
+  '--width': 'calc(356px*var(--nx-ui-scale))',
   '--normal-bg': 'var(--nx-color-container)',
   '--normal-text': 'var(--nx-color-foreground)',
   '--normal-border': 'var(--nx-color-border-default)',
@@ -143,18 +148,29 @@ function useNxdsToasts() {
 
 type ToasterProps = Omit<SonnerToasterProps, 'id'>;
 
+// Sonner hides the icon or draws its own for an empty entry, so only a real
+// icon replaces the nxds one.
+function withNxdsIcons(icons: ToasterProps['icons']) {
+  const entries = Object.entries(icons ?? {});
+  const setIcons = entries.filter(([, icon]) => Boolean(icon));
+  return { ...toasterIcons, ...Object.fromEntries(setIcons) };
+}
+
 /**
  * Renders toast notifications. Mount it once near your app root, then call
  * `toast()` from anywhere. It follows the `.dark` class, or `data-theme="dark"`,
  * on the document root for dark mode.
  */
-function Toaster({ style, ...props }: ToasterProps) {
+function Toaster({ style, icons, ...props }: ToasterProps) {
   const theme = useToasterTheme();
   return (
-    <div data-slot="toaster">
+    <div
+      data-slot="toaster"
+      className="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke"
+    >
       <Sonner
         theme={theme}
-        icons={toasterIcons}
+        icons={withNxdsIcons(icons)}
         style={
           {
             ...toasterThemeVars,

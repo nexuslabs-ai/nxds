@@ -7,6 +7,7 @@ import type {
   NxdsAppearanceState,
   TokenMap,
 } from '@nxds/core';
+import type { CatalogueControl } from '@nxds/core/catalogue';
 
 import {
   Accordion,
@@ -29,15 +30,17 @@ const FAMILIES: Record<ScaleFamily, string> = {
   shadow: 'Shadow',
   typography: 'Typography',
   motion: 'Motion',
+  icon: 'Icon',
   'z-index': 'Z-index',
   breakpoint: 'Breakpoints',
+  'ui-scale': 'UI scale',
+  width: 'Width',
 };
 
 const PREF_LABELS: Record<keyof NxdsAppearancePrefs, string> = {
   uiFont: 'UI font',
   headingFont: 'heading font',
   codeFont: 'code font',
-  uiFontSize: 'UI font size',
   codeFontSize: 'code font size',
   reduceMotion: 'reduce motion',
   pointerCursors: 'pointer cursors',
@@ -82,8 +85,17 @@ function isSigned({ family, group }: ScaleToken): boolean {
   return family === 'typography' && group === 'letterspacing';
 }
 
+/**
+ * The UI scale factor and the icon stroke ratio are fractions, which
+ * `z-index` rejects.
+ */
+function isFraction({ family, type }: ScaleToken): boolean {
+  return family === 'ui-scale' || (family === 'icon' && type === 'number');
+}
+
 function validationProperty(token: ScaleToken): string {
   if (token.type === 'dimension' && isSigned(token)) return 'outline-offset';
+  if (isFraction(token)) return 'flex-grow';
   const property = VALIDATION_PROPERTIES[token.type];
   if (property === undefined) {
     throw new Error(
@@ -127,14 +139,18 @@ export function ScaleLedger({
   );
   const values = useRootValues(runtimeNames, overrides);
 
-  function sourceLabel({ family, fixedValue, control }: ScaleToken): string {
+  function controlLabel(control: CatalogueControl): string {
+    if (control.kind === 'pref') {
+      return prefLabel(control.field, appearance.prefs);
+    }
+    return `${control.field}: ${appearance[control.field]}`;
+  }
+
+  function sourceLabel({ family, fixedValue, controls }: ScaleToken): string {
     if (family === 'breakpoint') return 'build time';
     if (fixedValue !== null) return 'composed';
-    if (control === null) return 'fixed';
-    if (control.kind === 'preset') {
-      return `${control.field}: ${appearance[control.field]}`;
-    }
-    return prefLabel(control.field, appearance.prefs);
+    if (controls.length === 0) return 'fixed';
+    return controls.map(controlLabel).join(', ');
   }
 
   return (

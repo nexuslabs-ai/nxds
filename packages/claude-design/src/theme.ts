@@ -16,9 +16,15 @@ import {
   NXDS_THEME_FIELDS,
   type NxdsAppearanceState,
   STROKE_OPTIONS,
+  UI_SCALE_OPTIONS,
 } from '@nxds/core';
 import { formatHex } from 'culori';
 
+import { withPresetTable } from './presets.ts';
+import {
+  SAMPLER_EXTRA_HEIGHT,
+  SAMPLER_STROKE_HEIGHT,
+} from './sampler-heights.ts';
 import type { CanvasBoards } from './setup.ts';
 import { fillTemplate } from './template.ts';
 import {
@@ -56,7 +62,7 @@ export interface ThemeInput {
   readme: string;
   /** SETUP.md, with this release's values in and `{{nxds:…}}` for the theme's. */
   guide: string;
-  /** The sampler's `canvas.json` entry at the default text size. */
+  /** The sampler's `canvas.json` entry at the Default UI scale and density, at normal stroke. */
   board: CanvasBoards;
 }
 
@@ -92,22 +98,48 @@ export interface RenderedTheme {
 
 const DEFAULT_TITLE = 'nxds';
 
-// How much the sampler's height changes for each px of UI text above and below
-// the default, from its height at the default, at 20px and at 8px
-// (scripts/smoke/sampler.ts). Each rounds the way that keeps the page inside
-// its board.
-const SAMPLER_PX_PER_LARGER_TEXT_PX = 50;
-const SAMPLER_PX_PER_SMALLER_TEXT_PX = 33;
+const PLAIN_TEXT_SIZE = DEFAULT_NXDS_APPEARANCE.textSize;
 
-/** The sampler's `canvas.json` entry with a height that fits its text size. */
-export function themedBoard(board: CanvasBoards, uiFontSize: number) {
-  const offset = uiFontSize - DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize;
-  const rate =
-    offset > 0 ? SAMPLER_PX_PER_LARGER_TEXT_PX : SAMPLER_PX_PER_SMALLER_TEXT_PX;
+/** The UI scale's factor, which `--nx-ui-scale` holds. */
+export function uiScaleFactor(tokens: TokensFile) {
+  const factor = Number(
+    tokens.uiScale?.tokens.find(({ name }) => name === 'nx-ui-scale')?.value
+  );
+  if (!Number.isFinite(factor)) {
+    throw new Error('tokens.json: no nx-ui-scale factor.');
+  }
+  return factor;
+}
+
+/**
+ * The sampler's `canvas.json` entry with a size that fits its UI scale, text
+ * size, density and stroke. The board is wider by the UI scale's `factor`,
+ * and by a text size over 14px. A smaller text size keeps the width.
+ */
+export function themedBoard(
+  board: CanvasBoards,
+  {
+    uiScale,
+    textSize,
+    density,
+    stroke,
+  }: Pick<NxdsAppearanceState, 'uiScale' | 'textSize' | 'density' | 'stroke'>,
+  factor: number
+) {
   return Object.fromEntries(
     Object.entries(board).map(([file, entry]) => [
       file,
-      { ...entry, h: entry.h + rate * offset },
+      {
+        ...entry,
+        w: Math.round(
+          (entry.w * factor * Math.max(textSize, PLAIN_TEXT_SIZE)) /
+            PLAIN_TEXT_SIZE
+        ),
+        h:
+          entry.h +
+          SAMPLER_EXTRA_HEIGHT[uiScale][textSize][density] +
+          SAMPLER_STROKE_HEIGHT[stroke],
+      },
     ])
   );
 }
@@ -220,12 +252,25 @@ function appearancePhrase(appearance: NxdsAppearanceState) {
   return [
     `a ${brandPhrase(appearance.brandColor)} brand colour`,
     ` on ${label(BASE_TONE_OPTIONS, appearance.surfaceTone)} surfaces`,
+    `, ${label(UI_SCALE_OPTIONS, appearance.uiScale)} UI scale`,
+    `, ${appearance.textSize}px text size`,
     `, ${label(DENSITY_OPTIONS, appearance.density)} density`,
     `, ${label(CORNER_OPTIONS, appearance.corners)} corners`,
     `, ${label(ELEVATION_OPTIONS, appearance.elevation)} shadows`,
     ` and ${label(STROKE_OPTIONS, appearance.stroke)} strokes`,
     contrast,
   ].join('');
+}
+
+/** The value of a step on the type scale. */
+function typeSize(tokens: TokensFile, name: string) {
+  const value = tokens.typeScale?.tokens.find(
+    (token) => token.name === name
+  )?.value;
+  if (typeof value !== 'string') {
+    throw new Error(`tokens.json: ${name} isn't on the type scale.`);
+  }
+  return value;
 }
 
 /** README.md's type sentence: the faces text, headings and code are set in. */
@@ -340,11 +385,11 @@ export function renderTheme(
     project: {
       'tokens.json': `${JSON.stringify(tokens, null, 2)}\n`,
       'tokens.css': compileTokensCss(tokens, typeStyleRules()),
-      'README.md': fillTemplate('README.md', input.readme, {
+      'README.md': fillTemplate('README.md', withPresetTable(input.readme), {
         appearance: `This system shows ${themed ? 'its own appearance' : 'the default nxds appearance'}: ${phrase}.`,
         typeFaces: typeFaces(fonts),
-        bodySize: `${appearance.prefs.uiFontSize}px`,
-        codeSize: `${appearance.prefs.codeFontSize}px`,
+        bodySize: typeSize(tokens, 'nx-typography-size-sm'),
+        codeSize: typeSize(tokens, 'nx-typography-code-size'),
       }),
     },
     index: { title, theme },
@@ -361,7 +406,7 @@ export function renderTheme(
           : '',
         themeChecks: themeChecks(theme, tokens, fonts),
         boardEntry: JSON.stringify(
-          themedBoard(input.board, appearance.prefs.uiFontSize)
+          themedBoard(input.board, appearance, uiScaleFactor(tokens))
         ),
       }),
   };

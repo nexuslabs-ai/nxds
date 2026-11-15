@@ -54,8 +54,13 @@ export function SiteMenu() {
   return (
     <Sheet open={open} onOpenChange={changeOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon-sm" aria-label="Open menu">
-          <SiteMenuIcon aria-hidden="true" />
+        <Button
+          variant="outline"
+          size="sm"
+          iconOnly
+          startIcon={<SiteMenuIcon />}
+        >
+          Open menu
         </Button>
       </SheetTrigger>
       <SheetContent
