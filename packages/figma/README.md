@@ -32,14 +32,14 @@ If Chromium doesn't start, run `npx playwright@1.64.1 install chromium`.
 
 ## What it builds
 
-| In Figma             | From                                                                                                                        |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Variables            | Semantic colours, spacing, radius, border width, icon sizes and typography. A palette colour only when a component binds it |
-| Text styles          | Each `typography-*` class, bound to the typography variables it declares                                                    |
-| Shadow styles        | Each shadow token                                                                                                           |
-| Icons page           | Every Phosphor icon the release ships, regular and fill, one component each                                                 |
-| A component per card | The card's README example, open when it's an overlay, in every variant and state                                            |
-| A component per part | Repeated parts, such as Menu item, Tab and Table row, which the components hold as instances                                |
+| In Figma             | From                                                                                                                                          |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Variables            | Semantic colours, spacing, radius, border width, icon sizes, container widths and typography. A palette colour only when a component binds it |
+| Text styles          | Each `typography-*` class, bound to the typography variables it declares                                                                      |
+| Shadow styles        | Each shadow token                                                                                                                             |
+| Icons page           | Every Phosphor icon the release ships, regular and fill, one component each                                                                   |
+| A component per card | The card's README example, open when it's an overlay, in every variant and state                                                              |
+| A component per part | Repeated parts, such as Menu item, Tab and Table row, which the components hold as instances                                                  |
 
 ## Check it
 

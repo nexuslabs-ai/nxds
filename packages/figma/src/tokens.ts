@@ -44,6 +44,7 @@ export interface TokensFile {
   shadow?: { tokens: ListToken[] };
   typeScale?: { tokens: ListToken[] };
   icon?: { tokens: ListToken[] };
+  width?: { tokens: ListToken[] };
 }
 
 const toRgb = converter('rgb');
@@ -153,12 +154,21 @@ function colorVariables(tokens: readonly ListToken[]): VariableSpec[] {
   });
 }
 
+/** The root font size `rem` is measured against: the browser default, since nxds sets none. */
+const ROOT_FONT_SIZE = 16;
+
+/** A token's value as a number, with `rem` in px, since Figma has no rem. */
+function numberValue(value: string) {
+  const parsed = Number.parseFloat(value);
+  return value.trim().endsWith('rem') ? parsed * ROOT_FONT_SIZE : parsed;
+}
+
 function floatVariables(
   tokens: readonly ListToken[],
   prefix: string
 ): VariableSpec[] {
   return tokens.flatMap((token): VariableSpec[] => {
-    const value = Number.parseFloat(light(token.value));
+    const value = numberValue(light(token.value));
     if (!Number.isFinite(value)) return [];
     return [
       {
@@ -233,6 +243,17 @@ export function collections(
       ),
     },
     {
+      name: 'Width',
+      themed: false,
+      // `nx-container-sm` → `container/sm`.
+      variables: floatVariables(tokens.width?.tokens ?? [], 'nx-').map(
+        (variable) => ({
+          ...variable,
+          name: variable.name.replace(/^([a-z]+)-/, '$1/'),
+        })
+      ),
+    },
+    {
       name: 'Typography',
       themed: false,
       variables: floatVariables(tokens.typeScale?.tokens ?? [], '').map(
@@ -255,6 +276,7 @@ export function tracedTokens(tokens: TokensFile): [string, Kind][] {
     ...list(tokens.radius, 'length'),
     ...list(tokens.borderWidth, 'length'),
     ...list(tokens.shadow, 'shadow'),
+    ...list(tokens.width, 'length'),
     // Only the icon tokens in px are sizes; the stroke ratio has no unit.
     ...(tokens.icon?.tokens ?? []).flatMap((token): [string, Kind][] =>
       light(token.value).endsWith('px') ? [[token.name, 'length']] : []
