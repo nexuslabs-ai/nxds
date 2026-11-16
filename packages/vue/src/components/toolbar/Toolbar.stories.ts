@@ -936,7 +936,7 @@ const AttachedExample = defineComponent({
       <div class="nx:rounded-lg nx:border-default nx:border-border-default nx:bg-container">
         <Toolbar
           aria-label="Note formatting"
-          class="nx:w-full nx:rounded-none nx:rounded-t-lg nx:border-0 nx:border-b-default nx:border-border-default nx:shadow-none nx:bg-background nx:p-2"
+          class="nx:w-full nx:rounded-none nx:rounded-t-lg nx:border-0 nx:border-b-default nx:border-border-default nx:shadow-none nx:bg-background nx:p-2 nx:nest-border-none nx:nest-padding-2"
         >
           <ToolbarToggleGroup v-model="formatting" type="multiple" aria-label="Note style">
             <Tooltip>
@@ -1584,4 +1584,99 @@ export const AllVariants: Story = {
       </div>
     `,
   }),
+};
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: () => ({
+    components: {
+      PhArrowUUpLeft,
+      PhCursor,
+      PhPencilSimple,
+      Toolbar,
+      ToolbarButton,
+      ToolbarSeparator,
+      ToolbarTool,
+      ToolbarToolGroup,
+    },
+    setup: () => ({ variants: ['default', 'floating'] as const }),
+    template: `
+      <div class="nx:flex nx:flex-wrap nx:items-start nx:gap-6">
+        <Toolbar
+          v-for="variant in variants"
+          :key="variant"
+          :variant="variant"
+          :aria-label="variant + ' bar'"
+        >
+          <ToolbarToolGroup aria-label="Tools" default-value="select">
+            <ToolbarTool value="select" icon-only>
+              <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+            <ToolbarTool value="draw" icon-only>
+              <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
+          </ToolbarToolGroup>
+          <ToolbarSeparator />
+          <ToolbarButton icon-only>
+            <template #start-icon><PhArrowUUpLeft /></template>Undo</ToolbarButton>
+        </Toolbar>
+        <Toolbar orientation="vertical" aria-label="vertical bar">
+          <ToolbarButton>Select</ToolbarButton>
+          <ToolbarButton>Draw</ToolbarButton>
+          <ToolbarSeparator />
+          <ToolbarButton>Erase</ToolbarButton>
+        </Toolbar>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    const bar = within(canvas.getByRole('toolbar', { name: 'default bar' }));
+    await expect(corners(bar.getByRole('button', { name: 'Select' }))).toEqual([
+      '12px',
+      '8px',
+      '8px',
+      '12px',
+    ]);
+    await expect(corners(bar.getByRole('button', { name: 'Draw' }))).toEqual([
+      '8px',
+      '8px',
+      '8px',
+      '8px',
+    ]);
+    await expect(corners(bar.getByRole('button', { name: 'Undo' }))).toEqual([
+      '8px',
+      '12px',
+      '12px',
+      '8px',
+    ]);
+
+    const floating = within(
+      canvas.getByRole('toolbar', { name: 'floating bar' })
+    );
+    await expect(
+      corners(floating.getByRole('button', { name: 'Select' }))
+    ).toEqual(['15px', '12px', '12px', '15px']);
+    await expect(
+      corners(floating.getByRole('button', { name: 'Draw' }))
+    ).toEqual(['12px', '12px', '12px', '12px']);
+
+    const vertical = within(
+      canvas.getByRole('toolbar', { name: 'vertical bar' })
+    );
+    await expect(
+      corners(vertical.getByRole('button', { name: 'Select' }))
+    ).toEqual(['12px', '12px', '8px', '8px']);
+    await expect(
+      corners(vertical.getByRole('button', { name: 'Erase' }))
+    ).toEqual(['8px', '8px', '12px', '12px']);
+  },
 };

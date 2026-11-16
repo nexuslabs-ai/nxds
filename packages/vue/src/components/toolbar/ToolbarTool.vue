@@ -84,6 +84,7 @@ function handleClick(event: MouseEvent) {
     :class="
       cn(
         buttonVariants({ variant: 'ghost', size, iconOnly }),
+        'nx:rounded-nest',
         'nx:data-[state=on]:bg-primary-background nx:data-[state=on]:text-primary-foreground nx:data-[state=on]:hover:bg-primary-background-hover nx:data-[state=on]:active:bg-primary-background-active',
         props.class
       )
