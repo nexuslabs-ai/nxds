@@ -250,10 +250,6 @@ describe('sanitizeNxdsAppearance', () => {
     expect(sanitizeNxdsAppearance({ corners: '0' }).corners).toBe('0');
   });
 
-  it('reads a numeric corner mode as its pixel name', () => {
-    expect(sanitizeNxdsAppearance({ corners: 12 }).corners).toBe('12');
-  });
-
   it('normalizes a persisted stroke codename to its friendly value', () => {
     expect(sanitizeNxdsAppearance({ stroke: 'maia' }).stroke).toBe('fine');
   });

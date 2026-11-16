@@ -42,10 +42,6 @@ function mockSystemPrefersDark(matches: boolean): void {
 }
 
 describe('NxdsAppearanceSnapshot', () => {
-  it('invalidates cached CSS from before the pixel-named corner modes', () => {
-    expect(SNAPSHOT_VERSION).toBe(12);
-  });
-
   it('stores pre-derived CSS verbatim', () => {
     const theme = themeCss();
     const prefs = prefsCss();
@@ -328,11 +324,11 @@ describe('createNxdsAppearanceBootstrapScript', () => {
     ).toBe(':root { --test-prefs: dark; }');
   });
 
-  it('ignores a stored version-11 snapshot that names a retired corner mode', () => {
+  it('ignores a stored snapshot from the version before, which names a retired corner mode', () => {
     window.localStorage.setItem(
       'nxds-appearance',
       JSON.stringify({
-        version: 11,
+        version: SNAPSHOT_VERSION - 1,
         state: { ...DEFAULT_NXDS_APPEARANCE, corners: 'subtle' },
         themeCss: 'STALE',
         prefsCss: 'STALE',

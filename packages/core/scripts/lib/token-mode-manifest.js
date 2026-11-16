@@ -1,6 +1,8 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { CORNER_MODES } from '../../src/token-source/radius.ts';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const TOKENS_DIR = path.resolve(__dirname, '..', '..', 'tokens');
@@ -20,17 +22,7 @@ export const CANONICAL_MODES = [
   'spacious',
   'tight',
 ];
-export const CANONICAL_RADIUS_MODES = [
-  '0',
-  '2',
-  '4',
-  '6',
-  '8',
-  '10',
-  '12',
-  '14',
-  '16',
-];
+export const CANONICAL_RADIUS_MODES = [...CORNER_MODES];
 export const CANONICAL_BORDERWIDTH_MODES = ['fine', 'normal', 'strong'];
 export const CANONICAL_SHADOW_MODES = [
   'flat',

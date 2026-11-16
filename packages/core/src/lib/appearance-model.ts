@@ -1,3 +1,4 @@
+import { CORNER_MODES, type CornerMode } from '../token-source/radius';
 import {
   MIN_TEXT_PX,
   scaleText,
@@ -28,16 +29,8 @@ export type NxdsDensity =
   | 'comfortable'
   | 'relaxed'
   | 'spacious';
-export type NxdsCorners =
-  | '0'
-  | '2'
-  | '4'
-  | '6'
-  | '8'
-  | '10'
-  | '12'
-  | '14'
-  | '16';
+/** The corner mode, named by its `md` radius in px at the Default UI scale. */
+export type NxdsCorners = CornerMode;
 export type NxdsElevation = 'flat' | 'quiet' | 'soft' | 'standard' | 'strong';
 export type NxdsStroke = 'fine' | 'normal' | 'strong';
 
@@ -132,17 +125,10 @@ export const DENSITY_OPTIONS = [
   { value: 'spacious', label: 'Spacious' },
 ] as const satisfies readonly { value: NxdsDensity; label: string }[];
 
-export const CORNER_OPTIONS = [
-  { value: '0', label: '0px' },
-  { value: '2', label: '2px' },
-  { value: '4', label: '4px' },
-  { value: '6', label: '6px' },
-  { value: '8', label: '8px' },
-  { value: '10', label: '10px' },
-  { value: '12', label: '12px' },
-  { value: '14', label: '14px' },
-  { value: '16', label: '16px' },
-] as const satisfies readonly { value: NxdsCorners; label: string }[];
+export const CORNER_OPTIONS: readonly {
+  readonly value: NxdsCorners;
+  readonly label: string;
+}[] = CORNER_MODES.map((value) => ({ value, label: `${value}px` }));
 
 export const ELEVATION_OPTIONS = [
   { value: 'flat', label: 'Flat' },
@@ -200,9 +186,7 @@ const TEXT_SIZE_VALUES = new Set<NxdsTextSize>(TEXT_SIZES);
 const DENSITIES = new Set<NxdsDensity>(
   DENSITY_OPTIONS.map((option) => option.value)
 );
-const CORNERS = new Set<NxdsCorners>(
-  CORNER_OPTIONS.map((option) => option.value)
-);
+const CORNERS = new Set<NxdsCorners>(CORNER_MODES);
 const ELEVATIONS = new Set<NxdsElevation>(
   ELEVATION_OPTIONS.map((option) => option.value)
 );
@@ -309,11 +293,7 @@ export function sanitizeNxdsAppearance(rawInput: unknown): NxdsAppearanceState {
     uiScale: enumOr(raw.uiScale, SCALES, d.uiScale),
     textSize: enumOr(raw.textSize, TEXT_SIZE_VALUES, d.textSize),
     density: enumOr(raw.density, DENSITIES, d.density),
-    corners: enumOr(
-      typeof raw.corners === 'number' ? String(raw.corners) : raw.corners,
-      CORNERS,
-      d.corners
-    ),
+    corners: enumOr(raw.corners, CORNERS, d.corners),
     elevation: enumOr(raw.elevation, ELEVATIONS, d.elevation),
     stroke: enumOr(raw.stroke, STROKES, d.stroke),
     prefs: sanitizeNxdsAppearancePrefs(raw.prefs),

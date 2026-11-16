@@ -13,6 +13,7 @@ import {
   inlineVariables,
   resolveValue,
 } from '../token-source/format';
+import { CORNER_MODES, exactRadii } from '../token-source/radius';
 import {
   SPACING_MODE_FILE_PATTERN,
   spacingRoleUtility,
@@ -622,14 +623,13 @@ function variantValue(variant: CatalogueVariant | undefined) {
   return variant?.declarations[0]?.value;
 }
 
-/** A moded family's scaled values, keyed by preset and token name. */
-function scaledPresets(
+/** Every density's spacing at a scale, keyed by preset and token name. */
+function scaledSpacing(
   tokens: readonly CatalogueToken[],
-  family: CatalogueFamily,
   factor: number
 ): [string, string][] {
   const modes = new Map<string, ModeToken[]>();
-  for (const token of tokens.filter((each) => each.family === family)) {
+  for (const token of tokens.filter((each) => each.family === 'spacing')) {
     for (const variant of token.variants) {
       const value = variantValue(variant);
       if (variant.preset === null || value === undefined) continue;
@@ -648,6 +648,18 @@ function scaledPresets(
       `${preset}/--nx-${cssName}`,
       value,
     ])
+  );
+}
+
+/** Every corner mode's radii at a scale, keyed by preset and token name. */
+function scaledRadii(factor: number): [string, string][] {
+  return CORNER_MODES.flatMap((mode) =>
+    scaleMode(exactRadii(mode), factor).map(
+      ({ cssName, value }): [string, string] => [
+        `${mode}/--nx-${cssName}`,
+        value,
+      ]
+    )
   );
 }
 
@@ -675,8 +687,8 @@ function sizeValues(
   const { spacing } = UI_SCALES[uiScale];
   return [
     ...values,
-    ...scaledPresets(tokens, 'spacing', spacing),
-    ...scaledPresets(tokens, 'radius', spacing),
+    ...scaledSpacing(tokens, spacing),
+    ...scaledRadii(spacing),
   ];
 }
 

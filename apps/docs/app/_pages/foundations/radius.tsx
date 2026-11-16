@@ -88,8 +88,9 @@ export default function Radius() {
         </div>
         <p className="nx:typography-body-default nx:text-muted-foreground nx:max-w-[64ch]">
           Each <code>corners</code> mode is named by its <code>md</code> radius
-          in pixels: {RADIUS_MODES.slice(0, -1).join(', ')} and{' '}
-          {RADIUS_MODES.at(-1)}. The other sizes scale with it.
+          in pixels at the Default UI scale:{' '}
+          {RADIUS_MODES.slice(0, -1).join(', ')} and {RADIUS_MODES.at(-1)}. The
+          other sizes scale with it.
         </p>
       </section>
 
