@@ -24,7 +24,7 @@ export const buttonVariants = cva(
       iconOnly: {
         false:
           'nx:min-w-16 nx:gap-2 nx:typography-label-default nx:tracking-[var(--nx-typography-letterspacing-wide)]',
-        true: 'nx:px-0',
+        true: 'nx:rounded-full nx:px-0',
       },
     },
     compoundVariants: [

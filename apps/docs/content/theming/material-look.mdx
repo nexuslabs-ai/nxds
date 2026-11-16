@@ -1,12 +1,12 @@
-import { MaterialLookPreview } from './_material-look/preview';
 import { LookSource } from './_look-source';
+import { MaterialLookPreview } from './_material-look/preview';
 
 export const description =
-  'A Material-style Button and text field built on nxds: your own colors, Material shadows, an edited Button and a rewritten Input.';
+  'A Material-style settings screen built from nxds parts: your own colors, Material shadows, an edited Card and Button, and a rewritten Switch and Input.';
 
 # Material look
 
-A Material-style Button and text field, built on nxds in four steps.
+A Material-style settings screen, built from nxds parts with your own colors.
 
 <MaterialLookPreview />
 
@@ -44,13 +44,12 @@ The
 has every color for light and dark. It sets them on a wrapper, so they reach
 only the preview on this page. Your app sets them on `:root` and `.dark`.
 
-nxds components take the new colors with no edit.
 [Your own colors](/theming/own-colors) covers the colors file.
 
 ## Add Material's shadows
 
-A Material button lifts on hover. Redefine the `standard` elevation in the
-colors file:
+Material lifts a card and a button off the page. Redefine the `standard`
+elevation in the colors file:
 
 ```css
 /* app/nxds-colors.css */
@@ -58,6 +57,9 @@ colors file:
   [data-shadow='standard'],
   .dark[data-shadow='standard'],
   .dark [data-shadow='standard'] {
+    --nx-shadow-xs:
+      0 2px 1px -1px rgb(0 0 0 / 0.2), 0 1px 1px 0 rgb(0 0 0 / 0.14),
+      0 1px 3px 0 rgb(0 0 0 / 0.12);
     --nx-shadow-sm:
       0 3px 1px -2px rgb(0 0 0 / 0.2), 0 2px 2px 0 rgb(0 0 0 / 0.14),
       0 1px 5px 0 rgb(0 0 0 / 0.12);
@@ -71,13 +73,39 @@ colors file:
 }
 ```
 
-## Edit the Button
-
-Add the Button, then replace its class recipe:
+## Add the parts
 
 ```bash
-npx nxds-cli@latest add button
+npx nxds-cli@latest add card button switch input label checkbox progress badge
 ```
+
+Each part needs a different amount of work:
+
+| Part                             | Change                                                      |
+| -------------------------------- | ----------------------------------------------------------- |
+| Checkbox, Progress, Badge, Label | None. They read the colors you set                          |
+| Card                             | A shadow in place of the border                             |
+| Button                           | `variant` and `color`, uppercase labels, round icon buttons |
+| Switch                           | A new class recipe: a thin track and a raised thumb         |
+| Input                            | A new file: the label sits inside the field                 |
+
+## Edit the Card
+
+A Material card has a shadow and no border. Change four class strings in the
+Card:
+
+<LookSource look="material" file="card/card.tsx" />
+
+| Material needs                       | Change                                        |
+| ------------------------------------ | --------------------------------------------- |
+| A shadow, and no border              | `nx:shadow-xs` in place of the border classes |
+| 4px corners                          | `nx:rounded-md`                               |
+| Tighter padding                      | `nx:p-4` on the header and the content        |
+| An action row that fits text buttons | `nx:p-2` on the footer                        |
+
+## Edit the Button
+
+Replace the Button's class recipe:
 
 <LookSource look="material" file="button/button-variants.ts" />
 
@@ -88,6 +116,7 @@ npx nxds-cli@latest add button
 | A shadow that grows on hover and press             | `nx:shadow-sm`, `nx:hover:shadow-md`, `nx:active:shadow-lg` |
 | A readable disabled button                         | `nx:disabled:text-disabled-foreground`, and no shadow       |
 | 36px tall with 16px side padding                   | `nx:min-h-9` and `nx:px-4`                                  |
+| Round icon buttons                                 | `nx:rounded-full` on the icon-only variant                  |
 
 The component takes the new `color` prop and passes it to the recipe:
 
@@ -95,14 +124,24 @@ The component takes the new `color` prop and passes it to the recipe:
 
 Loading, the icon slots, `asChild` and the focus ring are unchanged.
 
+## Rewrite the Switch
+
+A Material thumb is larger than its track, and casts a shadow. Replace the
+Switch's two class recipes. The component under them stays as it is:
+
+<LookSource look="material" file="switch/switch.tsx" />
+
+| Material needs                                  | Change in the recipe                           |
+| ----------------------------------------------- | ---------------------------------------------- |
+| A track thinner than the thumb                  | A 14px track, with a 20px thumb placed over it |
+| A raised thumb                                  | `nx:shadow-xs` on the thumb                    |
+| The primary color at half strength on the track | `nx:bg-primary-background/50`                  |
+| A darker track when the switch is off           | `nx:bg-muted-foreground-subtle`                |
+
 ## Rewrite the Input
 
 Material's label sits inside the field and rises into its border. No color or
 class change gives the nxds Input that shape, so replace the file:
-
-```bash
-npx nxds-cli@latest add input
-```
 
 <LookSource look="material" file="input/input.tsx" />
 
@@ -121,26 +160,37 @@ If you pass a `placeholder`, the label stays raised, so the two never overlap.
 ## Use the parts
 
 ```tsx
-// app/sign-up/page.tsx
+// app/settings/notifications.tsx
 import { Button } from '@/components/nxds/components/button/button';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/nxds/components/card/card';
 import { Input } from '@/components/nxds/components/input/input';
+import { Label } from '@/components/nxds/components/label/label';
+import { Switch } from '@/components/nxds/components/switch/switch';
 
-export default function SignUpPage() {
+export function Notifications() {
   return (
-    <form className="nx:flex nx:max-w-sm nx:flex-col nx:gap-6">
-      <Input label="Email" type="email" />
-      <Input
-        variant="filled"
-        label="Company"
-        helperText="We add it to your invoices."
-      />
-      <div className="nx:flex nx:gap-4">
-        <Button type="submit">Create account</Button>
-        <Button variant="text" color="secondary">
-          Cancel
-        </Button>
-      </div>
-    </form>
+    <Card>
+      <CardHeader>
+        <CardTitle>Notifications</CardTitle>
+      </CardHeader>
+      <CardContent className="nx:flex nx:flex-col nx:gap-6">
+        <Input label="Send to" type="email" />
+        <div className="nx:flex nx:items-center nx:justify-between">
+          <Label htmlFor="product-updates">Product updates</Label>
+          <Switch id="product-updates" defaultChecked />
+        </div>
+      </CardContent>
+      <CardFooter className="nx:justify-end">
+        <Button variant="text">Cancel</Button>
+        <Button>Save</Button>
+      </CardFooter>
+    </Card>
   );
 }
 ```
@@ -150,9 +200,10 @@ export default function SignUpPage() {
 | From nxds           | In this example                                                         |
 | ------------------- | ----------------------------------------------------------------------- |
 | Light and dark mode | The provider switches `.dark`, and the colors file has a value for each |
-| Density             | Button and Input size themselves from nxds spacing tokens               |
-| Corners and stroke  | Both parts read the nxds radius and border width tokens                 |
-| Color names         | Every class reads an nxds color, so one file recolors both parts        |
+| Density             | Every part sizes itself from nxds spacing tokens                        |
+| Corners and stroke  | The parts read the nxds radius and border width tokens                  |
+| Color names         | Every class reads an nxds color, so one file recolors every part        |
+| Behavior            | Switch and Checkbox keep their keyboard and screen reader support       |
 
 The preview on this page follows the page's mode, density and corners. Its
 colors come from the palette file, so the brand color in the theme picker
