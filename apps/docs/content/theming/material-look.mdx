@@ -1,5 +1,5 @@
 import { MaterialLookPreview } from './_material-look/preview';
-import { MaterialLookSource } from './_material-look/source';
+import { LookSource } from './_look-source';
 
 export const description =
   'A Material-style Button and text field built on nxds: your own colors, Material shadows, an edited Button and a rewritten Input.';
@@ -79,7 +79,7 @@ Add the Button, then replace its class recipe:
 npx nxds-cli@latest add button
 ```
 
-<MaterialLookSource file="button-variants.ts" />
+<LookSource look="material" file="button/button-variants.ts" />
 
 | Material needs                                     | Change in the recipe                                        |
 | -------------------------------------------------- | ----------------------------------------------------------- |
@@ -91,7 +91,7 @@ npx nxds-cli@latest add button
 
 The component takes the new `color` prop and passes it to the recipe:
 
-<MaterialLookSource file="button.tsx" />
+<LookSource look="material" file="button/button.tsx" />
 
 Loading, the icon slots, `asChild` and the focus ring are unchanged.
 
@@ -104,7 +104,7 @@ class change gives the nxds Input that shape, so replace the file:
 npx nxds-cli@latest add input
 ```
 
-<MaterialLookSource file="input.tsx" />
+<LookSource look="material" file="input/input.tsx" />
 
 | Part                        | Job                                                                                   |
 | --------------------------- | ------------------------------------------------------------------------------------- |

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-import { Button } from './button';
-import { Input } from './input';
+import { Button } from './button/button';
+import { Input } from './input/input';
 
 function Row({ children }: { children: ReactNode }) {
   return (
