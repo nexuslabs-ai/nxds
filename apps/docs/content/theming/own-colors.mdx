@@ -1,0 +1,228 @@
+export const description =
+  'Set every nxds color yourself in one CSS file. Dark mode, density and the other appearance settings keep working.';
+
+# Your own colors
+
+Set every nxds color yourself, in one CSS file, when your palette needs more
+than a brand color and a surface tone.
+
+## Create the colors file
+
+```bash
+npx nxds-cli@latest init --own-colors
+```
+
+`init` makes three changes:
+
+| Change                                                   | File                                                                   |
+| -------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Writes every nxds color, light and dark, from your theme | `nxds-colors.css`, beside `nxds.css`                                   |
+| Imports the colors file                                  | `nxds.css`                                                             |
+| Stops nxds deriving colors from your brand color         | `app/layout.tsx` on Next.js, `src/main.tsx` and `nxds.vite.ts` on Vite |
+
+`init` and `update` never change the colors file again.
+
+If `init` can't find your provider, it lists the prop to add by hand.
+
+## Change a color
+
+Each color has a light value under `:root` and a dark value under `.dark`:
+
+```css
+/* app/nxds-colors.css */
+@layer theme {
+  :root {
+    --nx-color-primary-background: #1976d2;
+    --nx-color-primary-background-hover: #1565c0;
+    --nx-color-primary-foreground: #fff;
+    /* The other colors */
+  }
+
+  .dark {
+    --nx-color-primary-background: #90caf9;
+    --nx-color-primary-background-hover: #42a5f5;
+    --nx-color-primary-foreground: rgb(0 0 0 / 0.87);
+    /* The other colors */
+  }
+}
+```
+
+Keep the `@layer theme` wrapper, so the density, corners and elevation settings
+keep working.
+
+[Color](/foundations/color) says what each color is for.
+
+nxds doesn't check the contrast of colors you set. Check each text color
+against its background.
+
+## Settings that keep working
+
+| Appearance field                            | With your own colors |
+| ------------------------------------------- | -------------------- |
+| `mode`                                      | Works                |
+| `density`, `corners`, `elevation`, `stroke` | Work                 |
+| `uiScale`, `textSize` and the fonts         | Work                 |
+| `brandColor`, `surfaceTone`, contrast       | No effect            |
+
+The provider saves the user's choices and applies them before the page paints.
+
+If your app has a settings screen, remove its brand color, surface tone and
+contrast controls.
+
+## Change shadows, corners or spacing
+
+`nxds.css` sets these tokens once for each value of a setting, such as
+`[data-shadow='standard']`. Redefine a value in the colors file, with the same
+selector:
+
+```css
+/* app/nxds-colors.css */
+@layer theme {
+  [data-shadow='standard'],
+  .dark[data-shadow='standard'],
+  .dark [data-shadow='standard'] {
+    --nx-shadow-sm:
+      0 3px 1px -2px rgb(0 0 0 / 0.2), 0 2px 2px 0 rgb(0 0 0 / 0.14),
+      0 1px 5px 0 rgb(0 0 0 / 0.12);
+  }
+}
+```
+
+The other elevation values keep their nxds shadows.
+
+| Tokens               | Selector                                             | Applies                      |
+| -------------------- | ---------------------------------------------------- | ---------------------------- |
+| `--nx-borderwidth-*` | `[data-borderwidth='normal']`                        | At every UI scale            |
+| `--nx-shadow-*`      | `[data-shadow='standard']` and its two `.dark` forms | At every UI scale            |
+| `--nx-radius-*`      | `[data-radius='subtle']`                             | At the Default UI scale only |
+| `--nx-spacing-*`     | `[data-density='default']`                           | At the Default UI scale only |
+
+To set a token for every value of a setting, use `:root`. That setting then
+stops changing the token.
+
+## Set it up by hand
+
+Follow these steps for a Vue app, or when you don't use the CLI.
+
+### Add the colors file
+
+Copy every `--nx-color-*` line from the `:root` and `.dark` blocks of `nxds.css`:
+
+```css
+/* app/nxds-colors.css */
+@layer theme {
+  :root {
+    /* Every --nx-color-* line from the :root block of nxds.css */
+  }
+
+  .dark {
+    /* Every --nx-color-* line from the .dark block of nxds.css */
+  }
+}
+```
+
+### Import the colors file
+
+Import the colors file after `nxds.css`:
+
+```css
+/* app/globals.css */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/preflight.css' layer(base);
+@import '../components/nxds/tailwind/nxds.css';
+@import 'tw-animate-css';
+@import './nxds-colors.css';
+```
+
+### Turn color derivation off
+
+<FrameworkTabs>
+<FrameworkPanel framework="react">
+
+Pass `deriveColors={false}` to the script and the provider:
+
+```tsx
+// app/layout.tsx
+import { NxdsAppearanceProvider } from '@/components/nxds/components/appearance/provider';
+import { NxdsAppearanceScript } from '@/components/nxds/components/appearance/provider/server';
+
+import { defaultAppearance } from './appearance-state';
+
+import './globals.css';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <NxdsAppearanceScript
+          storageKey="app-appearance"
+          defaultState={defaultAppearance}
+          deriveColors={false}
+        />
+      </head>
+      <body className="nx:bg-background nx:text-foreground nx:typography-body-default">
+        <NxdsAppearanceProvider
+          storageKey="app-appearance"
+          defaultState={defaultAppearance}
+          deriveColors={false}
+        >
+          {children}
+        </NxdsAppearanceProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+On Vite, pass `deriveColors: false` to `createNxdsAppearance`. In
+`vite.config.ts`, pass `{ deriveColors: false }` as the second argument of
+`createNxdsAppearanceSnapshotFromState`.
+
+</FrameworkPanel>
+<FrameworkPanel framework="vue">
+
+Pass `deriveColors: false` to the plugin:
+
+```ts
+// src/main.ts
+import { createApp } from 'vue';
+
+import App from './App.vue';
+import { defaultAppearance } from './appearance-state';
+import { createNxdsAppearance } from './components/appearance';
+
+import './style.css';
+
+createApp(App)
+  .use(
+    createNxdsAppearance({
+      storageKey: 'app-appearance',
+      defaultState: defaultAppearance,
+      deriveColors: false,
+    })
+  )
+  .mount('#app');
+```
+
+In `vite.config.ts`, pass `{ deriveColors: false }` as the second argument of
+`createNxdsAppearanceSnapshotFromState`.
+
+</FrameworkPanel>
+</FrameworkTabs>
+
+## Check your setup
+
+- [ ] `npx nxds-cli@latest doctor` prints `ok` for `colors`
+- [ ] A color you change in `nxds-colors.css` changes on the page
+- [ ] Dark mode switches between your `:root` and `.dark` colors
+
+## Next steps
+
+- **[Material look](/theming/material-look)**: a Material-style Button and
+  text field, built this way.
+- **[Overrides](/theming/overrides)**: change the theme inside one element.
+- **[Appearance](/theming/appearance)**: the settings that keep working.

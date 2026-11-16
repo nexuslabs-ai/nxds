@@ -1,0 +1,168 @@
+import { MaterialLookPreview } from './_material-look/preview';
+import { MaterialLookSource } from './_material-look/source';
+
+export const description =
+  'A Material-style Button and text field built on nxds: your own colors, Material shadows, an edited Button and a rewritten Input.';
+
+# Material look
+
+A Material-style Button and text field, built on nxds in four steps.
+
+<MaterialLookPreview />
+
+## Set your own colors
+
+Create the colors file, with Roboto and the `standard` elevation:
+
+```bash
+npx nxds-cli@latest init --own-colors --font roboto --elevation standard
+```
+
+Replace its values with Material's palette:
+
+```css
+/* app/nxds-colors.css */
+@layer theme {
+  :root {
+    --nx-color-primary-background: #1976d2;
+    --nx-color-primary-background-hover: #1565c0;
+    --nx-color-primary-foreground: #fff;
+    --nx-color-primary-disabled: rgb(0 0 0 / 0.12);
+    --nx-color-secondary-background: #9c27b0;
+    --nx-color-secondary-background-hover: #7b1fa2;
+    --nx-color-secondary-border: rgb(156 39 176 / 0.5);
+    --nx-color-error-background: #d32f2f;
+    --nx-color-foreground: rgb(0 0 0 / 0.87);
+    --nx-color-border-default: rgb(0 0 0 / 0.23);
+    /* The other colors */
+  }
+}
+```
+
+The
+[full palette](https://github.com/nexuslabs-ai/nxds/blob/main/apps/docs/content/theming/_material-look/material-look.css)
+has every color for light and dark. It sets them on a wrapper, so they reach
+only the preview on this page. Your app sets them on `:root` and `.dark`.
+
+nxds components take the new colors with no edit.
+[Your own colors](/theming/own-colors) covers the colors file.
+
+## Add Material's shadows
+
+A Material button lifts on hover. Redefine the `standard` elevation in the
+colors file:
+
+```css
+/* app/nxds-colors.css */
+@layer theme {
+  [data-shadow='standard'],
+  .dark[data-shadow='standard'],
+  .dark [data-shadow='standard'] {
+    --nx-shadow-sm:
+      0 3px 1px -2px rgb(0 0 0 / 0.2), 0 2px 2px 0 rgb(0 0 0 / 0.14),
+      0 1px 5px 0 rgb(0 0 0 / 0.12);
+    --nx-shadow-md:
+      0 2px 4px -1px rgb(0 0 0 / 0.2), 0 4px 5px 0 rgb(0 0 0 / 0.14),
+      0 1px 10px 0 rgb(0 0 0 / 0.12);
+    --nx-shadow-lg:
+      0 5px 5px -3px rgb(0 0 0 / 0.2), 0 8px 10px 1px rgb(0 0 0 / 0.14),
+      0 3px 14px 2px rgb(0 0 0 / 0.12);
+  }
+}
+```
+
+## Edit the Button
+
+Add the Button, then replace its class recipe:
+
+```bash
+npx nxds-cli@latest add button
+```
+
+<MaterialLookSource file="button-variants.ts" />
+
+| Material needs                                     | Change in the recipe                                        |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| Contained, outlined and text, each in three colors | `variant` and `color`, in place of the single `variant`     |
+| Uppercase labels with wider letter spacing         | `nx:uppercase` and a `nx:tracking-*` class                  |
+| A shadow that grows on hover and press             | `nx:shadow-sm`, `nx:hover:shadow-md`, `nx:active:shadow-lg` |
+| A readable disabled button                         | `nx:disabled:text-disabled-foreground`, and no shadow       |
+| 36px tall with 16px side padding                   | `nx:min-h-9` and `nx:px-4`                                  |
+
+The component takes the new `color` prop and passes it to the recipe:
+
+<MaterialLookSource file="button.tsx" />
+
+Loading, the icon slots, `asChild` and the focus ring are unchanged.
+
+## Rewrite the Input
+
+Material's label sits inside the field and rises into its border. No color or
+class change gives the nxds Input that shape, so replace the file:
+
+```bash
+npx nxds-cli@latest add input
+```
+
+<MaterialLookSource file="input.tsx" />
+
+| Part                        | Job                                                                                   |
+| --------------------------- | ------------------------------------------------------------------------------------- |
+| `<input>`                   | The native field. Its blank placeholder lets CSS tell an empty field from a full one  |
+| `<label>`                   | Rests on the text line. Rises to the top edge on focus, or when the field has a value |
+| `<fieldset>` and `<legend>` | Draw the outline. The legend opens a gap as wide as the label                         |
+| `<p>`                       | Helper or error text, linked to the field with `aria-describedby`                     |
+
+The field keeps no state in JavaScript. Its classes read `:focus` and
+`:placeholder-shown`.
+
+If you pass a `placeholder`, the label stays raised, so the two never overlap.
+
+## Use the parts
+
+```tsx
+// app/sign-up/page.tsx
+import { Button } from '@/components/nxds/components/button/button';
+import { Input } from '@/components/nxds/components/input/input';
+
+export default function SignUpPage() {
+  return (
+    <form className="nx:flex nx:max-w-sm nx:flex-col nx:gap-6">
+      <Input label="Email" type="email" />
+      <Input
+        variant="filled"
+        label="Company"
+        helperText="We add it to your invoices."
+      />
+      <div className="nx:flex nx:gap-4">
+        <Button type="submit">Create account</Button>
+        <Button variant="text" color="secondary">
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+}
+```
+
+## What nxds provides
+
+| From nxds           | In this example                                                         |
+| ------------------- | ----------------------------------------------------------------------- |
+| Light and dark mode | The provider switches `.dark`, and the colors file has a value for each |
+| Density             | Button and Input size themselves from nxds spacing tokens               |
+| Corners and stroke  | Both parts read the nxds radius and border width tokens                 |
+| Color names         | Every class reads an nxds color, so one file recolors both parts        |
+
+The preview on this page follows the page's mode, density and corners. Its
+colors come from the palette file, so the brand color in the theme picker
+doesn't change it.
+
+The example has no ripple. Material draws its ripple with JavaScript.
+
+## Next steps
+
+- **[Your own colors](/theming/own-colors)**: the colors file, and what keeps
+  working.
+- **[Button](/components/button)**: the stock Button and its props.
+- **[Install](/getting-started/install)**: set up nxds in your app.

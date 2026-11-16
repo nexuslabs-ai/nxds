@@ -51,8 +51,8 @@ export interface NxdsAppearanceOptions {
   /** Called with the next appearance on every `setState`. */
   onStateChange?: (state: NxdsAppearanceState) => void;
   /**
-   * `false` leaves every color to your own CSS. The plugin still switches
-   * the mode and presets, and saves the user's choices.
+   * `false` leaves every color to your own CSS. The plugin keeps switching
+   * the mode and presets, and saving the user's choices.
    */
   deriveColors?: boolean;
 }

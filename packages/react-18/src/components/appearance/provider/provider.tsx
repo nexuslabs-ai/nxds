@@ -55,8 +55,8 @@ export interface NxdsAppearanceProviderProps {
   cookieWriteKey?: string | false;
   cookieOptions?: NxdsAppearanceCookieOptions;
   /**
-   * `false` leaves every color to your own CSS. The provider still switches
-   * the mode and presets, and saves the user's choices.
+   * `false` leaves every color to your own CSS. The provider keeps switching
+   * the mode and presets, and saving the user's choices.
    */
   deriveColors?: boolean;
 }
