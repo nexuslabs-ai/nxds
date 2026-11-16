@@ -412,7 +412,7 @@ function storedTheme(index: Record<string, unknown>, file: string): ThemeFlags {
     !Object.values(theme).every((value) => typeof value === 'string')
   ) {
     throw new UsageError(
-      `${file}: "theme" must be an object of theme flag values, such as {"corners": "round"}. Fix it, or remove it to export the default theme.`
+      `${file}: "theme" must be an object of theme flag values, such as {"corners": "12"}. Fix it, or remove it to export the default theme.`
     );
   }
   return theme as ThemeFlags;

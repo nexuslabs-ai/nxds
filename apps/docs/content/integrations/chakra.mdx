@@ -219,7 +219,7 @@ export const defaultAppearance = {
   ...DEFAULT_NXDS_APPEARANCE,
   brandColor: '#2563eb',
   surfaceTone: 'zinc',
-  corners: 'subtle',
+  corners: '4',
   prefs: {
     ...DEFAULT_NXDS_APPEARANCE.prefs,
     uiFont: 'Inter, sans-serif',
@@ -227,16 +227,16 @@ export const defaultAppearance = {
 } satisfies NxdsAppearanceState;
 ```
 
-| Chakra theme                        | Appearance field | How to match                                                                                                                                    |
-| ----------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `colors.brand`, your `colorPalette` | `brandColor`     | Use the shade your `solid` buttons show. nxds builds the hover and pressed shades                                                               |
-| `colors.gray`                       | `surfaceTone`    | Chakra's default gray is the same scale as `zinc`                                                                                               |
-| `radii.l2`                          | `corners`        | `0` is `square`, `0.25rem` is `subtle`, `0.5rem` is `smooth`, `0.75rem` is `round`, `1rem` is `extra-round`. Chakra's default `l2` is `0.25rem` |
-| `spacing`                           | `density`        | Compare in the [Playground](/playground)                                                                                                        |
-| `shadows`                           | `elevation`      | Compare in the [Playground](/playground). `flat` turns shadows off                                                                              |
-| None                                | `stroke`         | Chakra has no border width setting, so keep `normal`                                                                                            |
-| `fonts.body`                        | `prefs.uiFont`   | Chakra's default is Inter                                                                                                                       |
-| The color mode                      | `mode`           | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                                                                  |
+| Chakra theme                        | Appearance field | How to match                                                                                                         |
+| ----------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `colors.brand`, your `colorPalette` | `brandColor`     | Use the shade your `solid` buttons show. nxds builds the hover and pressed shades                                    |
+| `colors.gray`                       | `surfaceTone`    | Chakra's default gray is the same scale as `zinc`                                                                    |
+| `radii.l2`                          | `corners`        | `0` is `0`, `0.25rem` is `4`, `0.5rem` is `8`, `0.75rem` is `12`, `1rem` is `16`. Chakra's default `l2` is `0.25rem` |
+| `spacing`                           | `density`        | Compare in the [Playground](/playground)                                                                             |
+| `shadows`                           | `elevation`      | Compare in the [Playground](/playground). `flat` turns shadows off                                                   |
+| None                                | `stroke`         | Chakra has no border width setting, so keep `normal`                                                                 |
+| `fonts.body`                        | `prefs.uiFont`   | Chakra's default is Inter                                                                                            |
+| The color mode                      | `mode`           | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                                       |
 
 ## Where nxds fits
 

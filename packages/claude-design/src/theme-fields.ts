@@ -21,7 +21,7 @@ function shellValue(value: string) {
   return `'${value.replaceAll("'", `'\\''`)}'`;
 }
 
-/** `flags` as command-line flags, such as `--brand-color '#e11d48' --corners round`. */
+/** `flags` as command-line flags, such as `--brand-color '#e11d48' --corners 12`. */
 export function formatThemeFlags(flags: readonly ThemeFlag[]) {
   return flags
     .map(({ flag, value }) => `--${flag} ${shellValue(value)}`)

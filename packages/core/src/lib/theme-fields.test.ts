@@ -28,7 +28,7 @@ const THEME: NxdsTheme = {
     uiScale: 'large',
     textSize: 15,
     density: 'compact',
-    corners: 'round',
+    corners: '12',
     elevation: 'soft',
     stroke: 'fine',
     prefs: {

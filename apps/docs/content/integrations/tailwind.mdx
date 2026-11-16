@@ -141,20 +141,20 @@ export const defaultAppearance = {
   ...DEFAULT_NXDS_APPEARANCE,
   brandColor: '#2563eb',
   surfaceTone: 'slate',
-  corners: 'smooth',
+  corners: '8',
 } satisfies NxdsAppearanceState;
 ```
 
-| Your Tailwind theme                                       | Appearance field | How to match                                                                                                                         |
-| --------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Your brand color, such as `--color-primary` or `blue-600` | `brandColor`     | Pass the same value. nxds builds the hover, pressed and dark shades                                                                  |
-| The gray you use for surfaces                             | `surfaceTone`    | Same names as Tailwind's grays: `slate`, `gray`, `zinc`, `neutral`, `stone`                                                          |
-| `rounded-*` on your controls                              | `corners`        | `rounded-none` is `square`, `rounded` is `subtle`, `rounded-lg` is `smooth`, `rounded-xl` is `round`, `rounded-2xl` is `extra-round` |
-| Your padding and gap scale                                | `density`        | Compare in the [Playground](/playground)                                                                                             |
-| `shadow-*` on cards and menus                             | `elevation`      | Compare in the [Playground](/playground). `flat` turns shadows off                                                                   |
-| `border`, `border-2`                                      | `stroke`         | `border` is `normal`, `border-2` is `strong`                                                                                         |
-| `--font-sans`                                             | `prefs.uiFont`   | Pass the same font stack                                                                                                             |
-| `dark:` classes                                           | `mode`           | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                                                       |
+| Your Tailwind theme                                       | Appearance field | How to match                                                                                                                                           |
+| --------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Your brand color, such as `--color-primary` or `blue-600` | `brandColor`     | Pass the same value. nxds builds the hover, pressed and dark shades                                                                                    |
+| The gray you use for surfaces                             | `surfaceTone`    | Same names as Tailwind's grays: `slate`, `gray`, `zinc`, `neutral`, `stone`                                                                            |
+| `rounded-*` on your controls                              | `corners`        | `rounded-none` is `0`, `rounded-xs` is `2`, `rounded-sm` is `4`, `rounded-md` is `6`, `rounded-lg` is `8`, `rounded-xl` is `12`, `rounded-2xl` is `16` |
+| Your padding and gap scale                                | `density`        | Compare in the [Playground](/playground)                                                                                                               |
+| `shadow-*` on cards and menus                             | `elevation`      | Compare in the [Playground](/playground). `flat` turns shadows off                                                                                     |
+| `border`, `border-2`                                      | `stroke`         | `border` is `normal`, `border-2` is `strong`                                                                                                           |
+| `--font-sans`                                             | `prefs.uiFont`   | Pass the same font stack                                                                                                                               |
+| `dark:` classes                                           | `mode`           | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                                                                         |
 
 ## Where nxds fits
 

@@ -8,7 +8,7 @@ export const FULL_THEME: ThemeFlags = {
   'light-contrast': '70',
   'dark-contrast': '30',
   density: 'compact',
-  corners: 'round',
+  corners: '12',
   elevation: 'strong',
   stroke: 'strong',
   font: 'inter',

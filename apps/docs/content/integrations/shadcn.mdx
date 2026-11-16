@@ -208,18 +208,18 @@ export const defaultAppearance = {
   ...DEFAULT_NXDS_APPEARANCE,
   brandColor: 'oklch(0.205 0 0)',
   surfaceTone: 'neutral',
-  corners: 'smooth',
+  corners: '8',
 } satisfies NxdsAppearanceState;
 ```
 
-| shadcn/ui                        | Appearance field                 | How to match                                                                                                |
-| -------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `--primary`                      | `brandColor`                     | Copy the light value from `globals.css`. nxds builds the dark and hover shades                              |
-| `baseColor` in `components.json` | `surfaceTone`                    | Same names: `neutral`, `stone`, `zinc`, `gray`, `slate`                                                     |
-| `--radius`                       | `corners`                        | `0` is `square`, `0.25rem` is `subtle`, `0.5rem` is `smooth`, `0.75rem` is `round`, `1rem` is `extra-round` |
-| `--font-sans`                    | `prefs.uiFont`                   | Pass the same font stack                                                                                    |
-| None                             | `density`, `elevation`, `stroke` | shadcn/ui has no setting for these, so keep the defaults                                                    |
-| `.dark` in `globals.css`         | `mode`                           | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                              |
+| shadcn/ui                        | Appearance field                 | How to match                                                                                         |
+| -------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `--primary`                      | `brandColor`                     | Copy the light value from `globals.css`. nxds builds the dark and hover shades                       |
+| `baseColor` in `components.json` | `surfaceTone`                    | Same names: `neutral`, `stone`, `zinc`, `gray`, `slate`                                              |
+| `--radius`                       | `corners`                        | `0` is `0`, `0.25rem` is `4`, `0.5rem` is `8`, `0.625rem` is `10`, `0.75rem` is `12`, `1rem` is `16` |
+| `--font-sans`                    | `prefs.uiFont`                   | Pass the same font stack                                                                             |
+| None                             | `density`, `elevation`, `stroke` | shadcn/ui has no setting for these, so keep the defaults                                             |
+| `.dark` in `globals.css`         | `mode`                           | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                       |
 
 nxds derives the dark palette from the same fields. You don't copy the `.dark`
 block.
