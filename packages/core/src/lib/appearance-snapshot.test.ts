@@ -42,8 +42,8 @@ function mockSystemPrefersDark(matches: boolean): void {
 }
 
 describe('NxdsAppearanceSnapshot', () => {
-  it('invalidates cached CSS from before the text size', () => {
-    expect(SNAPSHOT_VERSION).toBe(11);
+  it('invalidates cached CSS from before the secondary border colours', () => {
+    expect(SNAPSHOT_VERSION).toBe(12);
   });
 
   it('stores pre-derived CSS verbatim', () => {

@@ -129,6 +129,8 @@ export const BORDER_COLOR_ALIAS_TOKENS = {
   'information-active': 'border-information-active',
   primary: 'primary-border',
   'primary-active': 'primary-border-active',
+  secondary: 'secondary-border',
+  'secondary-active': 'secondary-border-active',
 } as const;
 
 export const BORDER_COLOR_ALIAS_NAMES = Object.keys(BORDER_COLOR_ALIAS_TOKENS);

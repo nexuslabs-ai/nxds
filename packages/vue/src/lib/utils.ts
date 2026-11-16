@@ -171,6 +171,8 @@ export const NXDS_CLASS_GROUPS = {
     'border-color-information-active',
     'border-color-primary',
     'border-color-primary-active',
+    'border-color-secondary',
+    'border-color-secondary-active',
   ],
   typography: [
     'typography-display-large',
