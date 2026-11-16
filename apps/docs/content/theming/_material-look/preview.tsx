@@ -1,31 +1,28 @@
 import { useId } from 'react';
 
-import { Badge } from '@/components/badge/badge';
-import { Checkbox } from '@/components/checkbox/checkbox';
 import { Label } from '@/components/label/label';
-import { Progress } from '@/components/progress/progress';
 import { IconPlus } from '@/lib/icons';
 
 import { Button } from './button/button';
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from './card/card';
+import { Checkbox } from './checkbox/checkbox';
 import { Input } from './input/input';
+import { Progress } from './progress/progress';
 import { Switch } from './switch/switch';
 
 const settingRowClass = 'nx:flex nx:items-center nx:justify-between nx:gap-4';
 
 /**
  * The Material look, live: a settings screen inside a wrapper that sets
- * Material's colors. Checkbox, Progress, Badge and Label are the stock nxds
- * parts. The preview follows the page's light or dark mode, density and
- * corners.
+ * Material's colors. Label is the stock nxds part. The preview follows the
+ * page's light or dark mode, density and corners.
  */
 export function MaterialLookPreview() {
   const id = useId();
@@ -74,9 +71,6 @@ export function MaterialLookPreview() {
           <CardHeader>
             <CardTitle>Notifications</CardTitle>
             <CardDescription>Choose what we email you.</CardDescription>
-            <CardAction>
-              <Badge fill="light">New</Badge>
-            </CardAction>
           </CardHeader>
           <CardContent className="nx:flex nx:flex-col nx:gap-5">
             <div className={settingRowClass}>

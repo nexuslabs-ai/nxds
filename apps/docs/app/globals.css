@@ -6,6 +6,8 @@
 @import '@nxds/tailwind';
 /* Animations used by Dialog / Dropdown / Select / Tooltip */
 @import 'tw-animate-css';
+/* The sweep an indeterminate Progress runs. */
+@import '../../../packages/react/src/components/progress/progress.css';
 /* The fonts the playground offers (FONT_OPTIONS in @nxds/core), self-hosted.
    A browser downloads a font only when the page uses it. */
 @import '@fontsource-variable/geist';

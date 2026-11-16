@@ -2,7 +2,7 @@ import { LookSource } from './_look-source';
 import { MaterialLookPreview } from './_material-look/preview';
 
 export const description =
-  'A Material-style settings screen built from nxds parts: your own colors, Material shadows, an edited Card and Button, and a rewritten Switch and Input.';
+  'A Material-style settings screen built from nxds parts: your own colors, Material shadows, an edited Card, Button and Progress, and a rewritten Switch, Checkbox and Input.';
 
 # Material look
 
@@ -76,18 +76,20 @@ elevation in the colors file:
 ## Add the parts
 
 ```bash
-npx nxds-cli@latest add card button switch input label checkbox progress badge
+npx nxds-cli@latest add card button progress switch checkbox input label
 ```
 
 Each part needs a different amount of work:
 
-| Part                             | Change                                                      |
-| -------------------------------- | ----------------------------------------------------------- |
-| Checkbox, Progress, Badge, Label | None. They read the colors you set                          |
-| Card                             | A shadow in place of the border                             |
-| Button                           | `variant` and `color`, uppercase labels, round icon buttons |
-| Switch                           | A new class recipe: a thin track and a raised thumb         |
-| Input                            | A new file: the label sits inside the field                 |
+| Part     | Change                                                              |
+| -------- | ------------------------------------------------------------------- |
+| Label    | None. It reads the colors you set                                   |
+| Card     | A shadow in place of the border                                     |
+| Button   | `variant` and `color`, uppercase labels, round icon buttons         |
+| Progress | A thin, square bar on a tinted track                                |
+| Switch   | A new class recipe: a thin track and a raised thumb                 |
+| Checkbox | A new class recipe and check mark: a bold outline, and a hover halo |
+| Input    | A new file: the label sits inside the field                         |
 
 ## Edit the Card
 
@@ -124,6 +126,18 @@ The component takes the new `color` prop and passes it to the recipe:
 
 Loading, the icon slots, `asChild` and the focus ring are unchanged.
 
+## Edit the Progress
+
+A Material progress bar is thin and square, on a track in a lighter shade of
+its own color. Change one class string in the Progress:
+
+<LookSource look="material" file="progress/progress.tsx" />
+
+| Material needs               | Change                                             |
+| ---------------------------- | -------------------------------------------------- |
+| A thin bar with square ends  | `nx:h-1`, and no corner class                      |
+| A track in a lighter primary | `nx:bg-primary-background/40` in place of the rail |
+
 ## Rewrite the Switch
 
 A Material thumb is larger than its track, and casts a shadow. Replace the
@@ -137,6 +151,22 @@ Switch's two class recipes. The component under them stays as it is:
 | A raised thumb                                  | `nx:shadow-xs` on the thumb                    |
 | The primary color at half strength on the track | `nx:bg-primary-background/50`                  |
 | A darker track when the switch is off           | `nx:bg-muted-foreground-subtle`                |
+
+## Rewrite the Checkbox
+
+A Material checkbox is a larger box with a bold outline, a bold check and a
+round halo on hover. Replace the Checkbox's class recipe and its two marks.
+The component under them stays as it is:
+
+<LookSource look="material" file="checkbox/checkbox.tsx" />
+
+| Material needs              | Change                                                          |
+| --------------------------- | --------------------------------------------------------------- |
+| An 18px box                 | The icon size plus 2px                                          |
+| A bold outline, and no fill | `nx:border-thick nx:border-muted-foreground nx:bg-transparent`  |
+| A bold check and dash       | Two inline SVG marks with a 2px line, in place of the icons     |
+| A round halo on hover       | An `nx:after:` circle that takes `nx:bg-background-hover-alpha` |
+| No color change on hover    | No hover or press fill classes                                  |
 
 ## Rewrite the Input
 
