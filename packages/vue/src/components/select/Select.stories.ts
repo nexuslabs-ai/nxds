@@ -904,3 +904,98 @@ export const AllVariants: Story = {
     layout: 'padded',
   },
 };
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: () => ({
+    components: {
+      Select,
+      SelectContent,
+      SelectItem,
+      SelectTrigger,
+      SelectValue,
+    },
+    template: `
+      <Select default-open>
+        <SelectTrigger aria-label="Fruit">
+          <SelectValue placeholder="Choose a fruit" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="apple">Apple</SelectItem>
+          <SelectItem value="banana">Banana</SelectItem>
+          <SelectItem value="cherry">Cherry</SelectItem>
+        </SelectContent>
+      </Select>
+    `,
+  }),
+  play: async () => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    const options = await within(document.body).findAllByRole('option');
+    await expect(corners(options[0]!)).toEqual(['7px', '7px', '6px', '6px']);
+    await expect(corners(options[1]!)).toEqual(['6px', '6px', '6px', '6px']);
+    await expect(corners(options[2]!)).toEqual(['6px', '6px', '7px', '7px']);
+
+    await userEvent.keyboard('{Escape}');
+    // Reka keeps the closing content mounted for its exit transition.
+    await waitForElementToBeRemoved(() =>
+      document.querySelector('[data-slot="select-content"]')
+    );
+  },
+};
+
+export const NestedCornersGrouped: Story = {
+  globals: { corners: '12' },
+  render: () => ({
+    components: {
+      Select,
+      SelectContent,
+      SelectGroup,
+      SelectItem,
+      SelectTrigger,
+      SelectValue,
+    },
+    template: `
+      <Select default-open>
+        <SelectTrigger aria-label="Fruit">
+          <SelectValue placeholder="Choose a fruit" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectItem value="apple">Apple</SelectItem>
+            <SelectItem value="banana">Banana</SelectItem>
+            <SelectItem value="cherry">Cherry</SelectItem>
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    `,
+  }),
+  play: async () => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    const options = await within(document.body).findAllByRole('option');
+    await expect(corners(options[0]!)).toEqual(['7px', '7px', '6px', '6px']);
+    await expect(corners(options[2]!)).toEqual(['6px', '6px', '7px', '7px']);
+    await userEvent.keyboard('{Escape}');
+    // Reka keeps the closing content mounted for its exit transition.
+    await waitForElementToBeRemoved(() =>
+      document.querySelector('[data-slot="select-content"]')
+    );
+  },
+};

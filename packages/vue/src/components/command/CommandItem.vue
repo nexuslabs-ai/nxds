@@ -88,7 +88,7 @@ const itemAttrs = computed(() => ({
   'data-highlighted': undefined,
   'data-state': undefined,
   class: cn(
-    'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:rounded-sm nx:typography-body-default nx:outline-none',
+    'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:rounded-nest nx:typography-body-default nx:outline-none',
     'nx:gap-3 nx:px-3 nx:py-2.5',
     'nx:data-[selected=true]:bg-popover-hover nx:data-[selected=true]:text-popover-foreground',
     'nx:data-[disabled=true]:pointer-events-none nx:data-[disabled=true]:text-disabled-foreground',

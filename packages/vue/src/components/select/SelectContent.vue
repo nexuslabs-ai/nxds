@@ -54,7 +54,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
       <SelectViewport
         :class="
           cn(
-            'nx:p-1',
+            'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:rounded-t-nest-corner nx:[&>:last-child]:rounded-b-nest-corner nx:[&>[role=group]:first-child>:first-child]:rounded-t-nest-corner nx:[&>[role=group]:last-child>:last-child]:rounded-b-nest-corner',
             position === 'popper' &&
               'nx:h-(--reka-select-trigger-height) nx:w-full nx:min-w-(--reka-select-trigger-width)'
           )

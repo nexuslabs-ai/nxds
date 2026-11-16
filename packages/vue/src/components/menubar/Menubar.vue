@@ -27,7 +27,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     data-slot="menubar"
     :class="
       cn(
-        'nx:flex nx:items-center nx:gap-1 nx:rounded-md nx:border-default nx:border-border-default nx:bg-container nx:p-1 nx:shadow-xs',
+        'nx:flex nx:items-center nx:gap-1 nx:rounded-md nx:border-default nx:border-border-default nx:bg-container nx:p-1 nx:shadow-xs nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:rounded-s-nest-corner nx:[&>:last-child]:rounded-e-nest-corner',
         props.class
       )
     "

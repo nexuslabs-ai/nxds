@@ -48,7 +48,7 @@ export const attachmentVariants = cva(
   [
     // isolate: AttachmentTrigger and AttachmentActions stack inside the card,
     // so the card must be their stacking context rather than the page.
-    'nx:group/attachment nx:relative nx:isolate nx:min-w-0',
+    'nx:group/attachment nx:relative nx:isolate nx:min-w-0 nx:nest-outer-md',
     'nx:data-[state=idle]:border-dashed',
     'nx:data-[state=error]:border-error-border',
   ],

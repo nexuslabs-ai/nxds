@@ -53,13 +53,20 @@ const forwarded = useForwardPropsEmits(delegated, emits);
   <DialogRoot v-bind="forwarded">
     <DialogContent
       :show-close-button="showCloseButton"
-      :class="cn('nx:overflow-hidden nx:p-0', props.class)"
+      :class="
+        cn(
+          'nx:overflow-hidden nx:p-0 nx:nest-outer-lg nx:nest-border-default nx:nest-padding-0',
+          props.class
+        )
+      "
     >
       <DialogTitle class="nx:sr-only">{{ title }}</DialogTitle>
       <DialogDescription class="nx:sr-only">
         {{ description }}
       </DialogDescription>
-      <Command :label="title"><slot /></Command>
+      <Command :label="title" class="nx:rounded-none nx:sm:rounded-nest-corner">
+        <slot />
+      </Command>
     </DialogContent>
   </DialogRoot>
 </template>

@@ -1150,3 +1150,33 @@ export const Flat: Story = {
     `,
   }),
 };
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: () => ({
+    components: { DemoInset, DemoSidebar, SidebarProvider },
+    template: `
+      <SidebarProvider>
+        <DemoSidebar variant="floating" />
+        <DemoInset>Content</DemoInset>
+      </SidebarProvider>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    const button = canvasElement.querySelector(
+      '[data-slot="sidebar-menu-button"]'
+    )!;
+    await expect(corners(button)).toEqual(['8px', '8px', '8px', '8px']);
+    await expect(button).toHaveClass('nx:[[data-narrow=true]_&]:rounded-nest');
+  },
+};

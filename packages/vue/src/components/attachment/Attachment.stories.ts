@@ -595,3 +595,35 @@ export const AllVariants: Story = {
     `,
   }),
 };
+
+export const NestedCorners: Story = {
+  render: () => ({
+    components: { ...attachmentComponents, PhFile },
+    template: `
+      <div data-radius="12" class="nx:w-80">
+        <Attachment>
+          <AttachmentMedia variant="icon"><PhFile /></AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle>report.pdf</AttachmentTitle>
+          </AttachmentContent>
+        </Attachment>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    function corners(element: Element) {
+      const style = getComputedStyle(element);
+      return [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomRightRadius,
+        style.borderBottomLeftRadius,
+      ];
+    }
+
+    const media = canvasElement.querySelector(
+      '[data-slot="attachment-media"]'
+    )!;
+    await expect(corners(media)).toEqual(['6px', '6px', '6px', '6px']);
+  },
+};

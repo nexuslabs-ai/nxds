@@ -90,7 +90,7 @@ const railWidth = computed(() =>
       :side="side"
       :class="
         cn(
-          'nx:inset-y-2 nx:h-auto nx:w-(--sidebar-width) nx:max-w-[calc(100vw-var(--nx-spacing-2)*2)] nx:rounded-lg nx:border-default nx:border-nav-border nx:bg-nav-background nx:p-0 nx:text-nav-foreground',
+          'nx:inset-y-2 nx:h-auto nx:w-(--sidebar-width) nx:max-w-[calc(100vw-var(--nx-spacing-2)*2)] nx:rounded-lg nx:nest-outer-lg nx:border-default nx:border-nav-border nx:bg-nav-background nx:p-0 nx:text-nav-foreground',
           side === 'left'
             ? 'nx:left-2 nx:data-[state=closed]:-translate-x-[calc(100%+var(--nx-spacing-2))]'
             : 'nx:right-2 nx:data-[state=closed]:translate-x-[calc(100%+var(--nx-spacing-2))]',
@@ -150,7 +150,7 @@ const railWidth = computed(() =>
     >
       <div
         data-slot="sidebar-inner"
-        class="nx:flex nx:h-full nx:w-full nx:flex-col nx:bg-nav-background nx:group-data-[variant=floating]:rounded-lg nx:group-data-[variant=floating]:border-default nx:group-data-[variant=floating]:border-nav-border nx:group-data-[variant=floating]:shadow-sm"
+        class="nx:flex nx:h-full nx:w-full nx:flex-col nx:bg-nav-background nx:group-data-[variant=floating]:rounded-lg nx:group-data-[variant=floating]:nest-outer-lg nx:group-data-[variant=floating]:border-default nx:group-data-[variant=floating]:border-nav-border nx:group-data-[variant=floating]:shadow-sm"
       >
         <slot />
       </div>
