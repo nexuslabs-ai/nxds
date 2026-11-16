@@ -560,7 +560,7 @@ export const NestedCorners: Story = {
     <div data-radius="12" className="nx:w-80">
       <Attachment>
         <AttachmentMedia variant="icon">
-          <IconFile />
+          <FileIcon />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>report.pdf</AttachmentTitle>
