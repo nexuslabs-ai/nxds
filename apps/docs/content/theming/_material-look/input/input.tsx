@@ -17,7 +17,7 @@ const controlVariants = cva('nx:relative nx:flex nx:w-full nx:items-center', {
 const inputVariants = cva(
   [
     'nx:peer nx:box-border nx:w-full nx:min-w-0 nx:border-0 nx:bg-transparent nx:outline-none',
-    'nx:typography-body-default nx:text-[length:var(--nx-typography-size-base)] nx:text-foreground',
+    'nx:typography-body-default nx:text-[length:var(--nx-typography-size-base)] nx:leading-[1.4375] nx:text-foreground',
     'nx:autofill-bg-transparent nx:autofill-text-foreground',
     'nx:placeholder:text-muted-foreground-subtle',
     'nx:disabled:cursor-not-allowed nx:disabled:text-disabled-foreground nx:disabled:autofill-text-disabled-foreground',
@@ -36,7 +36,7 @@ const inputVariants = cva(
       {
         variant: 'filled',
         size: 'default',
-        className: 'nx:min-h-14 nx:pt-6 nx:pb-2',
+        className: 'nx:min-h-14 nx:pt-[25px] nx:pb-2',
       },
       {
         variant: 'filled',
@@ -51,8 +51,8 @@ const inputVariants = cva(
 // input has focus or a value, which the blank placeholder lets CSS see.
 const labelVariants = cva(
   [
-    'nx:pointer-events-none nx:absolute nx:top-1/2 nx:origin-left nx:-translate-y-1/2',
-    'nx:typography-body-default nx:text-[length:var(--nx-typography-size-base)] nx:text-muted-foreground',
+    'nx:pointer-events-none nx:absolute nx:top-1/2 nx:-translate-y-1/2',
+    'nx:typography-body-default nx:text-[length:var(--nx-typography-size-base)] nx:leading-[1.4375] nx:text-muted-foreground',
     'nx:transition-[top,translate,scale,color] nx:duration-200 nx:ease-out',
     'nx:peer-focus:text-primary-subtle-foreground',
     'nx:peer-aria-invalid:text-error-subtle-foreground nx:peer-focus:peer-aria-invalid:text-error-subtle-foreground',
@@ -60,7 +60,10 @@ const labelVariants = cva(
   ],
   {
     variants: {
-      variant: { outlined: 'nx:left-3.5', filled: 'nx:left-3' },
+      variant: {
+        outlined: 'nx:left-3.5 nx:origin-left',
+        filled: 'nx:left-3 nx:origin-top-left',
+      },
       size: { default: '', sm: '' },
       raised: { true: 'nx:scale-75', false: '' },
     },
@@ -76,7 +79,7 @@ const labelVariants = cva(
         variant: 'filled',
         size: 'default',
         raised: true,
-        className: 'nx:top-1.5 nx:translate-y-0',
+        className: 'nx:top-[7px] nx:translate-y-0',
       },
       {
         variant: 'filled',
@@ -89,7 +92,7 @@ const labelVariants = cva(
         size: 'default',
         raised: false,
         className:
-          'nx:peer-[:is(:focus,:not(:placeholder-shown))]:top-1.5 nx:peer-[:is(:focus,:not(:placeholder-shown))]:translate-y-0 nx:peer-[:is(:focus,:not(:placeholder-shown))]:scale-75',
+          'nx:peer-[:is(:focus,:not(:placeholder-shown))]:top-[7px] nx:peer-[:is(:focus,:not(:placeholder-shown))]:translate-y-0 nx:peer-[:is(:focus,:not(:placeholder-shown))]:scale-75',
       },
       {
         variant: 'filled',
@@ -135,16 +138,19 @@ const underlineClass = [
   'nx:peer-focus:after:scale-x-100 nx:peer-aria-invalid:after:border-focus-error',
 ].join(' ');
 
-const helperVariants = cva('nx:m-0 nx:mt-1 nx:typography-body-small', {
-  variants: {
-    variant: { outlined: 'nx:mx-3.5', filled: 'nx:mx-3' },
-    tone: {
-      default: 'nx:text-muted-foreground',
-      invalid: 'nx:text-error-subtle-foreground',
-      disabled: 'nx:text-disabled-foreground',
+const helperVariants = cva(
+  'nx:m-0 nx:mt-[3px] nx:typography-body-small nx:leading-[1.66] nx:tracking-[var(--nx-typography-letterspacing-wide)]',
+  {
+    variants: {
+      variant: { outlined: 'nx:mx-3.5', filled: 'nx:mx-3' },
+      tone: {
+        default: 'nx:text-muted-foreground',
+        invalid: 'nx:text-error-subtle-foreground',
+        disabled: 'nx:text-disabled-foreground',
+      },
     },
-  },
-});
+  }
+);
 
 type InputProps = Omit<React.ComponentProps<'input'>, 'size'> &
   VariantProps<typeof inputVariants> & {

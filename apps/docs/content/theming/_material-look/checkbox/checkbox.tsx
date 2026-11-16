@@ -23,18 +23,19 @@ const markClassName = cn(
  * Selects one or more options, or toggles one setting.
  * Set `checked="indeterminate"` to show a dash for a partly selected group, such as "select all".
  *
- * The box is 18px at the Default UI scale, with a round halo on hover. Pair it
- * with a `Label`.
+ * The box is 18px at the Default UI scale, inside a 42px touch area that shows
+ * a round halo on hover. Pair it with a `Label`.
  */
 function Checkbox({ className, ...props }: CheckboxProps) {
   return (
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        'nx:group nx:peer nx:relative nx:isolate nx:target-24 nx:inline-flex nx:size-[calc(var(--nx-icon-glyph-default)_+_2px)] nx:shrink-0 nx:cursor-pointer nx:items-center nx:justify-center nx:p-0',
+        'nx:group nx:peer nx:relative nx:isolate nx:m-3 nx:inline-flex nx:size-[calc(var(--nx-icon-glyph-default)_+_2px)] nx:shrink-0 nx:cursor-pointer nx:items-center nx:justify-center nx:p-0',
         'nx:rounded-sm nx:border-thick nx:border-muted-foreground nx:bg-transparent nx:text-primary-foreground',
         'nx:transition-control',
-        'nx:after:absolute nx:after:-inset-3.5 nx:after:-z-10 nx:after:rounded-full nx:after:transition-colors nx:enabled:hover:after:bg-background-hover-alpha',
+        'nx:after:absolute nx:after:-inset-3.5 nx:after:-z-10 nx:after:rounded-full nx:after:transition-colors',
+        'nx:enabled:hover:after:bg-background-hover-alpha nx:enabled:hover:data-[state=checked]:after:bg-primary-background/4 nx:enabled:hover:data-[state=indeterminate]:after:bg-primary-background/4',
         'nx:focus-visible:outline-2 nx:focus-visible:outline-offset-2 nx:focus-visible:outline-focus-default',
         'nx:aria-invalid:border-border-error-active nx:aria-invalid:focus-visible:outline-focus-error',
         'nx:disabled:cursor-not-allowed nx:disabled:border-border-disabled',

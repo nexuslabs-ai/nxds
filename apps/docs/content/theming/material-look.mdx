@@ -10,6 +10,9 @@ A Material-style settings screen, built from nxds parts with your own colors.
 
 <MaterialLookPreview />
 
+The first screen is built with nxds parts. The second is the same screen built
+with Material UI, to compare.
+
 ## Set your own colors
 
 Create the colors file, with Roboto and the `standard` elevation:
@@ -63,12 +66,34 @@ elevation in the colors file:
     --nx-shadow-sm:
       0 3px 1px -2px rgb(0 0 0 / 0.2), 0 2px 2px 0 rgb(0 0 0 / 0.14),
       0 1px 5px 0 rgb(0 0 0 / 0.12);
-    --nx-shadow-md:
+    --nx-shadow-base:
       0 2px 4px -1px rgb(0 0 0 / 0.2), 0 4px 5px 0 rgb(0 0 0 / 0.14),
       0 1px 10px 0 rgb(0 0 0 / 0.12);
+    --nx-shadow-md:
+      0 3px 5px -1px rgb(0 0 0 / 0.2), 0 6px 10px 0 rgb(0 0 0 / 0.14),
+      0 1px 18px 0 rgb(0 0 0 / 0.12);
     --nx-shadow-lg:
       0 5px 5px -3px rgb(0 0 0 / 0.2), 0 8px 10px 1px rgb(0 0 0 / 0.14),
       0 3px 14px 2px rgb(0 0 0 / 0.12);
+    --nx-shadow-xl:
+      0 7px 8px -4px rgb(0 0 0 / 0.2), 0 12px 17px 2px rgb(0 0 0 / 0.14),
+      0 5px 22px 4px rgb(0 0 0 / 0.12);
+  }
+}
+```
+
+The six shadows are Material's elevations 1, 2, 4, 6, 8 and 12.
+
+## Set Material's letter spacing
+
+Material spaces its body text by 0.15px. Set the nxds letter spacing for body
+text in the colors file:
+
+```css
+/* app/nxds-colors.css */
+@layer theme {
+  :root {
+    --nx-typography-letterspacing-normal: 0.15px;
   }
 }
 ```
@@ -84,26 +109,28 @@ Each part needs a different amount of work:
 | Part     | Change                                                              |
 | -------- | ------------------------------------------------------------------- |
 | Label    | None. It reads the colors you set                                   |
-| Card     | A shadow in place of the border                                     |
+| Card     | A shadow in place of the border, and Material's title sizes         |
 | Button   | `variant` and `color`, uppercase labels, round icon buttons         |
 | Progress | A thin, square bar on a tinted track                                |
-| Switch   | A new class recipe: a thin track and a raised thumb                 |
+| Switch   | A new class recipe: a thin track, a raised thumb and a hover halo   |
 | Checkbox | A new class recipe and check mark: a bold outline, and a hover halo |
 | Input    | A new file: the label sits inside the field                         |
 
 ## Edit the Card
 
-A Material card has a shadow and no border. Change four class strings in the
-Card:
+A Material card has a shadow and no border, and a large title in regular
+weight. Change the Card's class strings:
 
 <LookSource look="material" file="card/card.tsx" />
 
-| Material needs                       | Change                                        |
-| ------------------------------------ | --------------------------------------------- |
-| A shadow, and no border              | `nx:shadow-xs` in place of the border classes |
-| 4px corners                          | `nx:rounded-md`                               |
-| Tighter padding                      | `nx:p-4` on the header and the content        |
-| An action row that fits text buttons | `nx:p-2` on the footer                        |
+| Material needs                       | Change                                                             |
+| ------------------------------------ | ------------------------------------------------------------------ |
+| A shadow, and no border              | `nx:shadow-xs` in place of the border classes                      |
+| 4px corners                          | `nx:rounded-md`                                                    |
+| Tighter padding                      | `nx:p-4` on the header and the content, and no gap under the title |
+| A 24px title in regular weight       | `nx:typography-heading-medium nx:font-normal nx:tracking-normal`   |
+| 16px supporting text                 | The `base` size and line height on the description                 |
+| An action row that fits text buttons | `nx:p-2` on the footer                                             |
 
 ## Edit the Button
 
@@ -111,14 +138,17 @@ Replace the Button's class recipe:
 
 <LookSource look="material" file="button/button-variants.ts" />
 
-| Material needs                                     | Change in the recipe                                        |
-| -------------------------------------------------- | ----------------------------------------------------------- |
-| Contained, outlined and text, each in three colors | `variant` and `color`, in place of the single `variant`     |
-| Uppercase labels with wider letter spacing         | `nx:uppercase` and a `nx:tracking-*` class                  |
-| A shadow that grows on hover and press             | `nx:shadow-sm`, `nx:hover:shadow-md`, `nx:active:shadow-lg` |
-| A readable disabled button                         | `nx:disabled:text-disabled-foreground`, and no shadow       |
-| 36px tall with 16px side padding                   | `nx:min-h-9` and `nx:px-4`                                  |
-| Round icon buttons                                 | `nx:rounded-full` on the icon-only variant                  |
+| Material needs                                     | Change in the recipe                                           |
+| -------------------------------------------------- | -------------------------------------------------------------- |
+| Contained, outlined and text, each in three colors | `variant` and `color`, in place of the single `variant`        |
+| Uppercase labels with wider letter spacing         | `nx:uppercase` and a `nx:tracking-*` class                     |
+| A shadow that grows on hover and press             | `nx:shadow-sm`, `nx:hover:shadow-base`, `nx:active:shadow-lg`  |
+| A readable disabled button                         | `nx:disabled:text-disabled-foreground`, and no shadow          |
+| 36.5px tall with 16px side padding                 | `nx:py-1.5`, `nx:px-4` and a line height of 1.75               |
+| 8px side padding on a text button                  | `nx:px-2` on the `text` variant                                |
+| An outline that takes no room                      | `nx:inset-ring-*` in place of a border                         |
+| A faint wash on hover                              | The button's color at 4%, such as `nx:bg-primary-background/4` |
+| Round icon buttons, 48px wide                      | `nx:rounded-full` and `nx:size-12` on the icon-only variant    |
 
 The component takes the new `color` prop and passes it to the recipe:
 
@@ -136,7 +166,7 @@ its own color. Change one class string in the Progress:
 | Material needs               | Change                                             |
 | ---------------------------- | -------------------------------------------------- |
 | A thin bar with square ends  | `nx:h-1`, and no corner class                      |
-| A track in a lighter primary | `nx:bg-primary-background/40` in place of the rail |
+| A track in a lighter primary | `nx:bg-primary-background/38` in place of the rail |
 
 ## Rewrite the Switch
 
@@ -145,12 +175,14 @@ Switch's two class recipes. The component under them stays as it is:
 
 <LookSource look="material" file="switch/switch.tsx" />
 
-| Material needs                                  | Change in the recipe                           |
-| ----------------------------------------------- | ---------------------------------------------- |
-| A track thinner than the thumb                  | A 14px track, with a 20px thumb placed over it |
-| A raised thumb                                  | `nx:shadow-xs` on the thumb                    |
-| The primary color at half strength on the track | `nx:bg-primary-background/50`                  |
-| A darker track when the switch is off           | `nx:bg-muted-foreground-subtle`                |
+| Material needs                                  | Change in the recipe                                           |
+| ----------------------------------------------- | -------------------------------------------------------------- |
+| A 58 by 38px touch area                         | The root's size. An `nx:before:` box draws the track inside it |
+| A track thinner than the thumb                  | A 14px track, with a 20px thumb placed over it                 |
+| A raised thumb                                  | `nx:shadow-xs` on the thumb                                    |
+| The primary color at half strength on the track | `nx:before:bg-primary-background/50`                           |
+| A darker track when the switch is off           | `nx:before:bg-muted-foreground-subtle`                         |
+| A round halo behind the thumb on hover          | An `nx:after:` circle that moves with the thumb                |
 
 ## Rewrite the Checkbox
 
@@ -166,6 +198,7 @@ The component under them stays as it is:
 | A bold outline, and no fill | `nx:border-thick nx:border-muted-foreground nx:bg-transparent`  |
 | A bold check and dash       | Two inline SVG marks with a 2px line, in place of the icons     |
 | A round halo on hover       | An `nx:after:` circle that takes `nx:bg-background-hover-alpha` |
+| A 42px touch area           | `nx:m-3` around the box                                         |
 | No color change on hover    | No hover or press fill classes                                  |
 
 ## Rewrite the Input
@@ -230,14 +263,14 @@ export function Notifications() {
 | From nxds           | In this example                                                         |
 | ------------------- | ----------------------------------------------------------------------- |
 | Light and dark mode | The provider switches `.dark`, and the colors file has a value for each |
-| Density             | Every part sizes itself from nxds spacing tokens                        |
+| Density             | Padding and gaps on the nxds scale read the nxds spacing tokens         |
 | Corners and stroke  | The parts read the nxds radius and border width tokens                  |
 | Color names         | Every class reads an nxds color, so one file recolors every part        |
 | Behavior            | Switch and Checkbox keep their keyboard and screen reader support       |
 
-The preview on this page follows the page's mode, density and corners. Its
+The nxds screen on this page follows the page's mode, density and corners. Its
 colors come from the palette file, so the brand color in the theme picker
-doesn't change it.
+doesn't change it. The Material UI screen follows the page's mode only.
 
 The example has no ripple. Material draws its ripple with JavaScript.
 

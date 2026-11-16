@@ -1,14 +1,14 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 
 export const buttonVariants = cva(
-  'nx:inline-flex nx:box-border nx:cursor-pointer nx:items-center nx:bg-transparent nx:py-0 nx:no-underline nx:justify-center nx:rounded-base nx:border-default nx:border-transparent nx:whitespace-nowrap nx:uppercase nx:transition-[color,background-color,border-color,box-shadow] nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:focus-visible:outline-offset-2 nx:disabled:pointer-events-none nx:disabled:cursor-default nx:disabled:opacity-100 nx:disabled:text-disabled-foreground nx:aria-disabled:pointer-events-none nx:aria-disabled:cursor-default nx:aria-disabled:opacity-100 nx:aria-disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:shrink-0 nx:[&_svg]:size-icon-glyph-default nx:icon-stroke',
+  'nx:inline-flex nx:box-border nx:cursor-pointer nx:items-center nx:justify-center nx:border-0 nx:bg-transparent nx:no-underline nx:whitespace-nowrap nx:uppercase nx:transition-[color,background-color,box-shadow] nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:focus-visible:outline-offset-2 nx:disabled:pointer-events-none nx:disabled:cursor-default nx:disabled:opacity-100 nx:disabled:text-disabled-foreground nx:aria-disabled:pointer-events-none nx:aria-disabled:cursor-default nx:aria-disabled:opacity-100 nx:aria-disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:shrink-0 nx:icon-stroke',
   {
     variants: {
       variant: {
         contained:
-          'nx:shadow-sm nx:hover:shadow-md nx:active:shadow-lg nx:disabled:shadow-none nx:aria-disabled:shadow-none',
+          'nx:shadow-sm nx:hover:shadow-base nx:active:shadow-lg nx:disabled:shadow-none nx:aria-disabled:shadow-none',
         outlined:
-          'nx:disabled:border-border-disabled nx:aria-disabled:border-border-disabled',
+          'nx:inset-ring-[length:var(--nx-borderwidth-default)] nx:disabled:inset-ring-disabled nx:aria-disabled:inset-ring-disabled',
         text: '',
       },
       color: {
@@ -17,14 +17,14 @@ export const buttonVariants = cva(
         error: '',
       },
       size: {
-        sm: 'nx:h-fit nx:min-h-8',
-        default: 'nx:h-fit nx:min-h-9',
-        lg: 'nx:h-fit nx:min-h-11',
+        sm: '',
+        default: '',
+        lg: '',
       },
       iconOnly: {
         false:
-          'nx:min-w-16 nx:gap-2 nx:typography-label-default nx:tracking-[var(--nx-typography-letterspacing-wide)]',
-        true: 'nx:rounded-full nx:px-0',
+          'nx:min-w-16 nx:gap-2 nx:rounded-base nx:typography-label-default nx:leading-[1.75] nx:tracking-[var(--nx-typography-letterspacing-wide)] nx:[&_svg]:size-5',
+        true: 'nx:rounded-full nx:p-0 nx:[&_svg]:size-6',
       },
     },
     compoundVariants: [
@@ -50,44 +50,77 @@ export const buttonVariants = cva(
         variant: 'outlined',
         color: 'primary',
         className:
-          'nx:border-primary-border nx:text-primary-subtle-foreground nx:hover:border-primary-border-active nx:hover:bg-primary-subtle-hover nx:active:bg-primary-subtle-active',
+          'nx:inset-ring-primary-border nx:text-primary-subtle-foreground nx:hover:inset-ring-primary-border-active nx:hover:bg-primary-background/4 nx:active:bg-primary-subtle-active',
       },
       {
         variant: 'outlined',
         color: 'secondary',
         className:
-          'nx:border-secondary-border nx:text-secondary-subtle-foreground nx:hover:border-secondary-border-active nx:hover:bg-secondary-subtle-hover nx:active:bg-secondary-subtle-active',
+          'nx:inset-ring-secondary-border nx:text-secondary-subtle-foreground nx:hover:inset-ring-secondary-border-active nx:hover:bg-secondary-background/4 nx:active:bg-secondary-subtle-active',
       },
       {
         variant: 'outlined',
         color: 'error',
         className:
-          'nx:border-error-border nx:text-error-subtle-foreground nx:hover:border-border-error-active nx:hover:bg-error-subtle-hover nx:active:bg-error-subtle-active',
+          'nx:inset-ring-error-border nx:text-error-subtle-foreground nx:hover:inset-ring-border-error-active nx:hover:bg-error-background/4 nx:active:bg-error-subtle-active',
       },
       {
         variant: 'text',
         color: 'primary',
         className:
-          'nx:text-primary-subtle-foreground nx:hover:bg-primary-subtle-hover nx:active:bg-primary-subtle-active',
+          'nx:text-primary-subtle-foreground nx:hover:bg-primary-background/4 nx:active:bg-primary-subtle-active',
       },
       {
         variant: 'text',
         color: 'secondary',
         className:
-          'nx:text-secondary-subtle-foreground nx:hover:bg-secondary-subtle-hover nx:active:bg-secondary-subtle-active',
+          'nx:text-secondary-subtle-foreground nx:hover:bg-secondary-background/4 nx:active:bg-secondary-subtle-active',
       },
       {
         variant: 'text',
         color: 'error',
         className:
-          'nx:text-error-subtle-foreground nx:hover:bg-error-subtle-hover nx:active:bg-error-subtle-active',
+          'nx:text-error-subtle-foreground nx:hover:bg-error-background/4 nx:active:bg-error-subtle-active',
       },
-      { iconOnly: false, size: 'sm', className: 'nx:px-2.5' },
-      { iconOnly: false, size: 'default', className: 'nx:px-4' },
-      { iconOnly: false, size: 'lg', className: 'nx:px-5' },
-      { iconOnly: true, size: 'sm', className: 'nx:w-8' },
-      { iconOnly: true, size: 'default', className: 'nx:w-9' },
-      { iconOnly: true, size: 'lg', className: 'nx:w-11' },
+      {
+        iconOnly: false,
+        size: 'sm',
+        className:
+          'nx:px-2.5 nx:py-1 nx:text-[length:calc(var(--nx-typography-size-sm)-1px)]',
+      },
+      { iconOnly: false, size: 'default', className: 'nx:px-4 nx:py-1.5' },
+      {
+        iconOnly: false,
+        size: 'lg',
+        className:
+          'nx:px-[22px] nx:py-2 nx:text-[length:calc(var(--nx-typography-size-sm)+1px)]',
+      },
+      {
+        variant: 'text',
+        iconOnly: false,
+        size: 'sm',
+        className: 'nx:px-[5px]',
+      },
+      {
+        variant: 'text',
+        iconOnly: false,
+        size: 'default',
+        className: 'nx:px-2',
+      },
+      {
+        variant: 'text',
+        iconOnly: false,
+        size: 'lg',
+        className: 'nx:px-[11px]',
+      },
+      { iconOnly: true, size: 'sm', className: 'nx:size-10' },
+      { iconOnly: true, size: 'default', className: 'nx:size-12' },
+      { iconOnly: true, size: 'lg', className: 'nx:size-14' },
+      {
+        variant: 'contained',
+        iconOnly: true,
+        className: 'nx:shadow-md nx:hover:shadow-md nx:active:shadow-xl',
+      },
     ],
     defaultVariants: {
       variant: 'contained',

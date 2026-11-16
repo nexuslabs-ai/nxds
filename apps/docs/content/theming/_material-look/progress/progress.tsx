@@ -19,7 +19,7 @@ function Progress({ className, value, ...props }: ProgressProps) {
       data-slot="progress"
       value={value}
       className={cn(
-        'nx:relative nx:h-1 nx:w-full nx:overflow-hidden nx:bg-primary-background/40',
+        'nx:relative nx:h-1 nx:w-full nx:overflow-hidden nx:bg-primary-background/38',
         className
       )}
       {...props}

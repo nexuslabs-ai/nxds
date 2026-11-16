@@ -44,7 +44,7 @@ function CardHeader({ className, ...props }: CardHeaderProps) {
     <div
       data-slot="card-header"
       className={cn(
-        'nx:grid nx:grid-cols-[minmax(0,1fr)_auto] nx:items-start nx:gap-y-1.5 nx:p-4',
+        'nx:grid nx:grid-cols-[minmax(0,1fr)_auto] nx:items-start nx:p-4',
         className
       )}
       {...props}
@@ -79,7 +79,7 @@ function CardTitle({
     <Comp
       data-slot="card-title"
       className={cn(
-        'nx:col-start-1 nx:m-0 nx:min-w-0 nx:typography-heading-xsmall',
+        'nx:col-start-1 nx:m-0 nx:min-w-0 nx:typography-heading-medium nx:font-normal nx:tracking-normal',
         className
       )}
       {...props}
@@ -104,7 +104,7 @@ function CardDescription({ className, ...props }: CardDescriptionProps) {
     <p
       data-slot="card-description"
       className={cn(
-        'nx:col-start-1 nx:m-0 nx:min-w-0 nx:typography-body-default nx:text-muted-foreground',
+        'nx:col-start-1 nx:m-0 nx:min-w-0 nx:typography-body-default nx:text-[length:var(--nx-typography-size-base)] nx:leading-[var(--nx-typography-line-height-base)] nx:text-muted-foreground',
         className
       )}
       {...props}
