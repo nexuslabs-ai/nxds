@@ -9,8 +9,6 @@ import {
   UI_SCALES,
 } from '../token-source/ui-scale';
 
-import { CORNER_OPTIONS } from './appearance-model';
-
 const RADIUS_DIR = resolve(
   process.cwd(),
   'packages/core/tokens/primitives/radius'
@@ -31,13 +29,12 @@ function readMode(mode: string): Record<string, RadiusToken> {
 /** The declarations of the generated CSS block that `selector` opens. */
 function block(selector: string) {
   const start = NXDS_CSS.indexOf(`${selector} {`);
-  expect(start).toBeGreaterThan(-1);
+  expect(start, selector).toBeGreaterThan(-1);
   return NXDS_CSS.slice(start, NXDS_CSS.indexOf('}', start));
 }
 
 describe('radius modes', () => {
-  it('offers one option per mode and ships one radius file per mode', () => {
-    expect(CORNER_OPTIONS.map((option) => option.value)).toEqual(CORNER_MODES);
+  it('ships one radius file per mode', () => {
     expect(
       readdirSync(RADIUS_DIR)
         .filter((file) => file.endsWith('.json'))

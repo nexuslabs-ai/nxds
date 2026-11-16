@@ -69,7 +69,8 @@ export interface ModeToken extends ScaleToken {
   step?: string;
 }
 
-const FULL_RADIUS = '9999px';
+/** The `full` radius, a pill. The UI scale leaves it as it is. */
+export const FULL_RADIUS = '9999px';
 
 /** No text scales below this size. */
 export const MIN_TEXT_PX = 8;

@@ -1,4 +1,4 @@
-import type { ModeToken } from './ui-scale.ts';
+import { FULL_RADIUS, type ModeToken } from './ui-scale.ts';
 
 /** The corner modes, each named by its `md` radius in px at the Default UI scale. */
 export const CORNER_MODES = [
@@ -34,6 +34,6 @@ export function exactRadii(mode: CornerMode): ModeToken[] {
       cssName: `radius-${step}`,
       value: `${Number(mode) * ratio}px`,
     })),
-    { cssName: 'radius-full', value: '9999px' },
+    { cssName: 'radius-full', value: FULL_RADIUS },
   ];
 }
