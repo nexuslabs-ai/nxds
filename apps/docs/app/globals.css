@@ -21,8 +21,9 @@
 @import '@fontsource-variable/jetbrains-mono';
 /* The homepage's own utilities (nx:home-section, …). */
 @import './_home/home.css';
-/* The Material look page's preview palette. */
+/* The palettes of the Theming look pages' previews. */
 @import '../content/theming/_material-look/material-look.css';
+@import '../content/theming/_ant-look/ant-look.css';
 
 /* Generate the nx: utilities used in MDX content and in the shipped
    @nxds/react components by scanning their source directly. We deliberately do

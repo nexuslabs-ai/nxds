@@ -4,7 +4,7 @@ import path from 'node:path';
 import { SourceFile } from '../../app/_components/ComponentInstallation';
 
 /** The looks with a page under Theming. Each keeps its files in `_{look}-look/`. */
-type Look = 'material';
+type Look = 'ant' | 'material';
 
 /**
  * A file of a look's example, as it sits in an app. A look keeps each part in

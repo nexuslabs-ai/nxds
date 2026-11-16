@@ -1,0 +1,292 @@
+/*
+ * The Ant Design look page's preview: Ant Design's default palette on the nxds
+ * color names, with Ant's corners, inside one wrapper. An app sets the colors
+ * on :root and .dark instead, in its nxds-colors.css.
+ */
+@layer theme {
+  [data-look='ant'] {
+    /* Ant's corners: 6px on controls, 8px on containers */
+    --nx-radius-sm: 4px;
+    --nx-radius-base: 6px;
+    --nx-radius-md: 6px;
+    --nx-radius-lg: 8px;
+
+    /* Surfaces */
+    --nx-color-background: #f5f5f5;
+    --nx-color-background-hover: #ebebeb;
+    --nx-color-background-active: #e0e0e0;
+    --nx-color-muted: #fafafa;
+    --nx-color-muted-extralight: #fafafa;
+    --nx-color-container: #fff;
+    --nx-color-container-hover: #f5f5f5;
+    --nx-color-container-active: #e6f4ff;
+    --nx-color-popover: #fff;
+    --nx-color-popover-hover: #f5f5f5;
+    --nx-color-popover-active: #e6f4ff;
+    --nx-color-control-background: rgb(0 0 0 / 0.04);
+    --nx-color-control-background-hover: rgb(0 0 0 / 0.06);
+    --nx-color-control-thumb: #fff;
+    --nx-color-disabled: rgb(0 0 0 / 0.04);
+
+    /* The dark sider */
+    --nx-color-nav-background: #001529;
+    --nx-color-nav-item-hover: rgb(255 255 255 / 0.08);
+    --nx-color-nav-item-active: #1677ff;
+    --nx-color-nav-border: rgb(255 255 255 / 0.12);
+    --nx-color-nav-foreground: #fff;
+    --nx-color-nav-muted-foreground: rgb(255 255 255 / 0.65);
+
+    /* Text */
+    --nx-color-foreground: rgb(0 0 0 / 0.88);
+    --nx-color-container-foreground: rgb(0 0 0 / 0.88);
+    --nx-color-popover-foreground: rgb(0 0 0 / 0.88);
+    --nx-color-muted-foreground: rgb(0 0 0 / 0.65);
+    --nx-color-muted-foreground-subtle: rgb(0 0 0 / 0.45);
+    --nx-color-disabled-foreground: rgb(0 0 0 / 0.25);
+
+    /* Borders and focus */
+    --nx-color-border-default: #d9d9d9;
+    --nx-color-border-disabled: #d9d9d9;
+    --nx-color-border-hairline: #f0f0f0;
+    --nx-color-border-focus: #1677ff;
+    --nx-color-focus-default: #1677ff;
+    --nx-color-focus-error: #ff4d4f;
+
+    /* Primary: blue */
+    --nx-color-primary-background: #1677ff;
+    --nx-color-primary-background-hover: #4096ff;
+    --nx-color-primary-background-active: #0958d9;
+    --nx-color-primary-foreground: #fff;
+    --nx-color-primary-disabled: #91caff;
+    --nx-color-primary-subtle: #e6f4ff;
+    --nx-color-primary-subtle-foreground: #1677ff;
+    --nx-color-primary-subtle-hover: #bae0ff;
+    --nx-color-primary-subtle-active: #91caff;
+    --nx-color-primary-border: #91caff;
+    --nx-color-primary-border-active: #1677ff;
+
+    /* Secondary: a neutral fill */
+    --nx-color-secondary-background: rgb(0 0 0 / 0.04);
+    --nx-color-secondary-background-hover: rgb(0 0 0 / 0.06);
+    --nx-color-secondary-background-active: rgb(0 0 0 / 0.15);
+    --nx-color-secondary-foreground: rgb(0 0 0 / 0.88);
+    --nx-color-secondary-disabled: rgb(0 0 0 / 0.04);
+    --nx-color-secondary-subtle: rgb(0 0 0 / 0.04);
+    --nx-color-secondary-subtle-foreground: rgb(0 0 0 / 0.88);
+    --nx-color-secondary-subtle-hover: rgb(0 0 0 / 0.06);
+    --nx-color-secondary-subtle-active: rgb(0 0 0 / 0.15);
+    --nx-color-secondary-border: #d9d9d9;
+    --nx-color-secondary-border-active: #1677ff;
+
+    /* Success: green */
+    --nx-color-success-background: #52c41a;
+    --nx-color-success-background-hover: #73d13d;
+    --nx-color-success-background-active: #389e0d;
+    --nx-color-success-foreground: #fff;
+    --nx-color-success-disabled: #b7eb8f;
+    --nx-color-success-subtle: #f6ffed;
+    --nx-color-success-subtle-foreground: #389e0d;
+    --nx-color-success-subtle-hover: #d9f7be;
+    --nx-color-success-subtle-active: #b7eb8f;
+    --nx-color-success-border: #b7eb8f;
+    --nx-color-border-success-active: #52c41a;
+
+    /* Warning: gold */
+    --nx-color-warning-background: #faad14;
+    --nx-color-warning-background-hover: #ffc53d;
+    --nx-color-warning-background-active: #d48806;
+    --nx-color-warning-foreground: #fff;
+    --nx-color-warning-disabled: #ffe58f;
+    --nx-color-warning-subtle: #fffbe6;
+    --nx-color-warning-subtle-foreground: #d48806;
+    --nx-color-warning-subtle-hover: #fff1b8;
+    --nx-color-warning-subtle-active: #ffe58f;
+    --nx-color-warning-border: #ffe58f;
+    --nx-color-border-warning-active: #faad14;
+
+    /* Error: red */
+    --nx-color-error-background: #ff4d4f;
+    --nx-color-error-background-hover: #ff7875;
+    --nx-color-error-background-active: #d9363e;
+    --nx-color-error-foreground: #fff;
+    --nx-color-error-disabled: #ffa39e;
+    --nx-color-error-subtle: #fff2f0;
+    --nx-color-error-subtle-foreground: #cf1322;
+    --nx-color-error-subtle-hover: #ffccc7;
+    --nx-color-error-subtle-active: #ffa39e;
+    --nx-color-error-border: #ffccc7;
+    --nx-color-border-error-active: #ff4d4f;
+
+    /* Information: blue */
+    --nx-color-information-background: #1677ff;
+    --nx-color-information-background-hover: #4096ff;
+    --nx-color-information-background-active: #0958d9;
+    --nx-color-information-foreground: #fff;
+    --nx-color-information-disabled: #91caff;
+    --nx-color-information-subtle: #e6f4ff;
+    --nx-color-information-subtle-foreground: #1677ff;
+    --nx-color-information-subtle-hover: #bae0ff;
+    --nx-color-information-subtle-active: #91caff;
+    --nx-color-information-border: #91caff;
+    --nx-color-border-information-active: #1677ff;
+
+    /* Charts and code */
+    --nx-color-chart-categorical-1: #1677ff;
+    --nx-color-chart-categorical-2: #52c41a;
+    --nx-color-chart-categorical-3: #faad14;
+    --nx-color-chart-categorical-4: #ff4d4f;
+    --nx-color-chart-categorical-5: #722ed1;
+    --nx-color-syntax-keyword: #722ed1;
+    --nx-color-syntax-string: #389e0d;
+    --nx-color-syntax-function: #1677ff;
+    --nx-color-syntax-type: #08979c;
+    --nx-color-syntax-constant: #d46b08;
+
+    /* Translucent layers */
+    --nx-color-background-hover-alpha: rgb(0 0 0 / 0.04);
+    --nx-color-border-default-alpha: rgb(5 5 5 / 0.06);
+    --nx-color-overlay: rgb(0 0 0 / 0.45);
+    --nx-color-popover-alpha: #fff;
+    --nx-color-popover-backdrop: rgb(0 0 0 / 0.45);
+  }
+
+  .dark [data-look='ant'] {
+    /* Surfaces */
+    --nx-color-background: #000;
+    --nx-color-background-hover: #141414;
+    --nx-color-background-active: #1f1f1f;
+    --nx-color-muted: #1d1d1d;
+    --nx-color-muted-extralight: #181818;
+    --nx-color-container: #141414;
+    --nx-color-container-hover: #272727;
+    --nx-color-container-active: #111a2c;
+    --nx-color-popover: #1f1f1f;
+    --nx-color-popover-hover: #313131;
+    --nx-color-popover-active: #111a2c;
+    --nx-color-control-background: rgb(255 255 255 / 0.08);
+    --nx-color-control-background-hover: rgb(255 255 255 / 0.12);
+    --nx-color-control-thumb: #fff;
+    --nx-color-disabled: rgb(255 255 255 / 0.08);
+
+    /* The dark sider */
+    --nx-color-nav-background: #001529;
+    --nx-color-nav-item-hover: rgb(255 255 255 / 0.08);
+    --nx-color-nav-item-active: #1668dc;
+    --nx-color-nav-border: rgb(255 255 255 / 0.12);
+    --nx-color-nav-foreground: #fff;
+    --nx-color-nav-muted-foreground: rgb(255 255 255 / 0.65);
+
+    /* Text */
+    --nx-color-foreground: rgb(255 255 255 / 0.85);
+    --nx-color-container-foreground: rgb(255 255 255 / 0.85);
+    --nx-color-popover-foreground: rgb(255 255 255 / 0.85);
+    --nx-color-muted-foreground: rgb(255 255 255 / 0.65);
+    --nx-color-muted-foreground-subtle: rgb(255 255 255 / 0.45);
+    --nx-color-disabled-foreground: rgb(255 255 255 / 0.25);
+
+    /* Borders and focus */
+    --nx-color-border-default: #424242;
+    --nx-color-border-disabled: #424242;
+    --nx-color-border-hairline: #303030;
+    --nx-color-border-focus: #1668dc;
+    --nx-color-focus-default: #1668dc;
+    --nx-color-focus-error: #dc4446;
+
+    /* Primary: blue */
+    --nx-color-primary-background: #1668dc;
+    --nx-color-primary-background-hover: #3c89e8;
+    --nx-color-primary-background-active: #1554ad;
+    --nx-color-primary-foreground: #fff;
+    --nx-color-primary-disabled: #15325b;
+    --nx-color-primary-subtle: #111a2c;
+    --nx-color-primary-subtle-foreground: #3c89e8;
+    --nx-color-primary-subtle-hover: #112545;
+    --nx-color-primary-subtle-active: #15325b;
+    --nx-color-primary-border: #15325b;
+    --nx-color-primary-border-active: #1668dc;
+
+    /* Secondary: a neutral fill */
+    --nx-color-secondary-background: rgb(255 255 255 / 0.08);
+    --nx-color-secondary-background-hover: rgb(255 255 255 / 0.12);
+    --nx-color-secondary-background-active: rgb(255 255 255 / 0.18);
+    --nx-color-secondary-foreground: rgb(255 255 255 / 0.85);
+    --nx-color-secondary-disabled: rgb(255 255 255 / 0.08);
+    --nx-color-secondary-subtle: rgb(255 255 255 / 0.08);
+    --nx-color-secondary-subtle-foreground: rgb(255 255 255 / 0.85);
+    --nx-color-secondary-subtle-hover: rgb(255 255 255 / 0.12);
+    --nx-color-secondary-subtle-active: rgb(255 255 255 / 0.18);
+    --nx-color-secondary-border: #424242;
+    --nx-color-secondary-border-active: #1668dc;
+
+    /* Success: green */
+    --nx-color-success-background: #49aa19;
+    --nx-color-success-background-hover: #6abe39;
+    --nx-color-success-background-active: #3c8618;
+    --nx-color-success-foreground: #fff;
+    --nx-color-success-disabled: #274916;
+    --nx-color-success-subtle: #162312;
+    --nx-color-success-subtle-foreground: #6abe39;
+    --nx-color-success-subtle-hover: #1d3712;
+    --nx-color-success-subtle-active: #274916;
+    --nx-color-success-border: #274916;
+    --nx-color-border-success-active: #49aa19;
+
+    /* Warning: gold */
+    --nx-color-warning-background: #d89614;
+    --nx-color-warning-background-hover: #e8b339;
+    --nx-color-warning-background-active: #aa7714;
+    --nx-color-warning-foreground: #fff;
+    --nx-color-warning-disabled: #594214;
+    --nx-color-warning-subtle: #2b2111;
+    --nx-color-warning-subtle-foreground: #e8b339;
+    --nx-color-warning-subtle-hover: #443111;
+    --nx-color-warning-subtle-active: #594214;
+    --nx-color-warning-border: #594214;
+    --nx-color-border-warning-active: #d89614;
+
+    /* Error: red */
+    --nx-color-error-background: #dc4446;
+    --nx-color-error-background-hover: #e86e6b;
+    --nx-color-error-background-active: #ad393a;
+    --nx-color-error-foreground: #fff;
+    --nx-color-error-disabled: #5b2526;
+    --nx-color-error-subtle: #2c1618;
+    --nx-color-error-subtle-foreground: #e86e6b;
+    --nx-color-error-subtle-hover: #451d1f;
+    --nx-color-error-subtle-active: #5b2526;
+    --nx-color-error-border: #5b2526;
+    --nx-color-border-error-active: #dc4446;
+
+    /* Information: blue */
+    --nx-color-information-background: #1668dc;
+    --nx-color-information-background-hover: #3c89e8;
+    --nx-color-information-background-active: #1554ad;
+    --nx-color-information-foreground: #fff;
+    --nx-color-information-disabled: #15325b;
+    --nx-color-information-subtle: #111a2c;
+    --nx-color-information-subtle-foreground: #3c89e8;
+    --nx-color-information-subtle-hover: #112545;
+    --nx-color-information-subtle-active: #15325b;
+    --nx-color-information-border: #15325b;
+    --nx-color-border-information-active: #1668dc;
+
+    /* Charts and code */
+    --nx-color-chart-categorical-1: #1668dc;
+    --nx-color-chart-categorical-2: #49aa19;
+    --nx-color-chart-categorical-3: #d89614;
+    --nx-color-chart-categorical-4: #dc4446;
+    --nx-color-chart-categorical-5: #642ab5;
+    --nx-color-syntax-keyword: #854eca;
+    --nx-color-syntax-string: #6abe39;
+    --nx-color-syntax-function: #3c89e8;
+    --nx-color-syntax-type: #33bcb7;
+    --nx-color-syntax-constant: #e89a3c;
+
+    /* Translucent layers */
+    --nx-color-background-hover-alpha: rgb(255 255 255 / 0.08);
+    --nx-color-border-default-alpha: rgb(253 253 253 / 0.12);
+    --nx-color-overlay: rgb(0 0 0 / 0.45);
+    --nx-color-popover-alpha: #1f1f1f;
+    --nx-color-popover-backdrop: rgb(0 0 0 / 0.45);
+  }
+}
