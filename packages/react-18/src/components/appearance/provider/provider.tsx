@@ -54,6 +54,11 @@ export interface NxdsAppearanceProviderProps {
    */
   cookieWriteKey?: string | false;
   cookieOptions?: NxdsAppearanceCookieOptions;
+  /**
+   * `false` leaves every color to your own CSS. The provider still switches
+   * the mode and presets, and saves the user's choices.
+   */
+  deriveColors?: boolean;
 }
 
 const NxdsAppearanceContext = createContext<NxdsAppearanceContextValue | null>(
@@ -84,6 +89,7 @@ export function NxdsAppearanceProvider({
   storageKey = DEFAULT_STORAGE_KEY,
   cookieWriteKey = false,
   cookieOptions,
+  deriveColors = true,
 }: NxdsAppearanceProviderProps) {
   const isControlled = state !== undefined;
   const initialState = useMemo(
@@ -139,11 +145,13 @@ export function NxdsAppearanceProvider({
       storageKey,
       cookieWriteKey,
       cookieOptions,
+      deriveColors,
     });
   }, [
     activeState,
     cookieWriteKey,
     cookieOptions,
+    deriveColors,
     isControlled,
     mounted,
     storageKey,
@@ -152,8 +160,8 @@ export function NxdsAppearanceProvider({
   useEffect(() => {
     if (!mounted) return;
 
-    applyNxdsAppearance(activeState, systemDark);
-  }, [activeState, mounted, systemDark]);
+    applyNxdsAppearance(activeState, systemDark, { deriveColors });
+  }, [activeState, deriveColors, mounted, systemDark]);
 
   useEffect(() => {
     if (!canUseDOM()) return;
