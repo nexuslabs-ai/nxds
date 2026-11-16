@@ -19,6 +19,7 @@ import {
   withIconLibrary,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
+import { colorsCss } from '../colors';
 import { type Config, readConfig, requireConfig, writeConfig } from '../config';
 import { CliError, UsageError } from '../errors';
 import { conflictedFiles } from '../files';
@@ -173,6 +174,8 @@ export async function init(
     icons?: string;
     /** The other theme flags, by flag name. */
     theme?: ThemeFlags;
+    /** Write `nxds-colors.css` from the theme, and turn color derivation off. */
+    ownColors?: boolean;
   }
 ): Promise<CommandResult> {
   const project = readProject(cwd);
@@ -199,6 +202,11 @@ export async function init(
     react
   );
   if (existing) assertFilesMatchReact(existing, react);
+  if (options.ownColors && !release.ownColors) {
+    throw new UsageError(
+      `nxds ${release.version} has no --own-colors. Run \`${CLI_COMMAND} update\` to move to a release that has it.`
+    );
+  }
   if (existing && dir && dir !== existing.dir) {
     throw new CliError(
       `nxds is already set up in ${existing.dir}. Run init without --dir, or move the folder and change "dir" in nxds.json.`
@@ -232,11 +240,14 @@ export async function init(
     existing !== null && icons !== undefined && icons !== previousLibrary;
 
   const setup = setupVariant(catalog, config);
-  const wiring = planWiring(project, config, addTailwind, setup.steps, {
-    source: nxdsThemeSource({ lines, fonts }),
-    fonts,
-    custom,
-  });
+  const wiring = planWiring(
+    project,
+    config,
+    addTailwind,
+    setup.steps,
+    { source: nxdsThemeSource({ lines, fonts }), fonts, custom },
+    options.ownColors ? colorsCss(release, flags) : null
+  );
 
   const tailwind = packagesToInstall(
     project,

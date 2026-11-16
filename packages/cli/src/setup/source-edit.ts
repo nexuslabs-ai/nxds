@@ -128,12 +128,15 @@ export function hasAttribute(element: JSXElement, name: string) {
   );
 }
 
-/** Inserts ` name` as the last attribute of an element's opening tag. */
+/**
+ * Inserts ` attribute`, such as `disabled` or `size="sm"`, as the last
+ * attribute of an element's opening tag.
+ */
 export function attributeInsertion(
   element: JSXElement,
-  name: string
+  attribute: string
 ): Insertion {
   const opening = element.openingElement;
-  const tagEnd = endOf(opening) - (opening.selfClosing ? 2 : 1);
-  return { at: tagEnd, text: ` ${name}` };
+  const last = opening.attributes.at(-1) ?? opening.name;
+  return { at: endOf(last), text: ` ${attribute}` };
 }

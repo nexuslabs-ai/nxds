@@ -18,6 +18,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import type { Font, SetupStep } from '../catalog';
+import { COLORS_FILE, COLORS_IMPORT, DERIVE_COLORS_OFF } from '../colors';
 import type { Config } from '../config';
 import { CliError } from '../errors';
 import { relativeImport } from '../files';
@@ -101,7 +102,8 @@ function read(project: Project, file: string) {
 export function cssEntry(
   config: Config,
   withPreflight: boolean,
-  fonts: Font[]
+  fonts: Font[],
+  ownColors: boolean
 ) {
   const tokens = relativeImport(config.css, `${config.dir}/tailwind/nxds.css`);
   return [
@@ -114,6 +116,7 @@ export function cssEntry(
     `@import '${tokens}';`,
     "@import 'tw-animate-css';",
     ...fonts.map(fontImportLine),
+    ...(ownColors ? [COLORS_IMPORT] : []),
     '',
   ].join('\n');
 }
@@ -145,17 +148,60 @@ const NO_CHANGES: WiringPlan = { changes: [], manual: [] };
 
 type Steps = ReadonlySet<SetupStep>;
 
-const PROVIDER_PROPS = `storageKey="${STORAGE_KEY}" defaultState={defaultAppearance}`;
-const SCRIPT_ELEMENT = `<NxdsAppearanceScript ${PROVIDER_PROPS} />`;
+/** The props the provider and the head script share. */
+function providerProps(ownColors: boolean) {
+  const props = `storageKey="${STORAGE_KEY}" defaultState={defaultAppearance}`;
+  return ownColors ? `${props} ${DERIVE_COLORS_OFF}` : props;
+}
+
+/**
+ * Adds `deriveColors={false}` to each of `names` a wired file renders. One it
+ * doesn't render, such as a provider in a file of its own, is a manual step.
+ */
+function turnDerivationOff(
+  source: string,
+  file: string,
+  names: string[]
+): WiringPlan {
+  const program = parseModule(source, file);
+  const elements = names.map((name) => ({
+    name,
+    element: findJsx(program, name),
+  }));
+  const insertions = elements.flatMap(({ element }) =>
+    element && !hasAttribute(element, 'deriveColors')
+      ? [attributeInsertion(element, DERIVE_COLORS_OFF)]
+      : []
+  );
+  return {
+    changes:
+      insertions.length > 0
+        ? [editedFile(file, applyInsertions(source, insertions))]
+        : [],
+    manual: elements.flatMap(({ name, element }) =>
+      element ? [] : [{ file, step: `Pass ${DERIVE_COLORS_OFF} to ${name}.` }]
+    ),
+  };
+}
 
 function wireNextLayout(
   project: Project,
   config: Config,
-  steps: Steps
+  steps: Steps,
+  ownColors: boolean
 ): WiringPlan {
   const layout = `${appDir(project)}/layout.tsx`;
   const source = read(project, layout);
-  if (/NxdsAppearance(Provider|Script)/.test(source)) return NO_CHANGES;
+  if (/NxdsAppearance(Provider|Script)/.test(source)) {
+    return ownColors
+      ? turnDerivationOff(source, layout, [
+          'NxdsAppearanceProvider',
+          'NxdsAppearanceScript',
+        ])
+      : NO_CHANGES;
+  }
+  const props = providerProps(ownColors);
+  const scriptElement = `<NxdsAppearanceScript ${props} />`;
 
   const program = parseModule(source, layout);
   const html = findJsx(program, 'html');
@@ -167,7 +213,7 @@ function wireNextLayout(
       manual: [
         {
           file: layout,
-          step: `Add ${SCRIPT_ELEMENT} inside <head>, and wrap the content of <body> in <NxdsAppearanceProvider ${PROVIDER_PROPS}>.`,
+          step: `Add ${scriptElement} inside <head>, and wrap the content of <body> in <NxdsAppearanceProvider ${props}>.`,
         },
       ],
     };
@@ -185,7 +231,7 @@ function wireNextLayout(
     insertions.push(
       {
         at: openingTagEnd(body),
-        text: `\n${bodyIndent}${step}<NxdsAppearanceProvider ${PROVIDER_PROPS}>`,
+        text: `\n${bodyIndent}${step}<NxdsAppearanceProvider ${props}>`,
       },
       {
         at: beforeWhitespace(source, startOf(body.closingElement)),
@@ -202,11 +248,11 @@ function wireNextLayout(
       head
         ? {
             at: openingTagEnd(head),
-            text: `\n${lineIndent(source, startOf(head))}${step}${SCRIPT_ELEMENT}`,
+            text: `\n${lineIndent(source, startOf(head))}${step}${scriptElement}`,
           }
         : {
             at: openingTagEnd(html),
-            text: `\n${htmlIndent}${step}<head>\n${htmlIndent}${step}${step}${SCRIPT_ELEMENT}\n${htmlIndent}${step}</head>`,
+            text: `\n${htmlIndent}${step}<head>\n${htmlIndent}${step}${step}${scriptElement}\n${htmlIndent}${step}</head>`,
           }
     );
     if (!hasAttribute(html, 'suppressHydrationWarning')) {
@@ -241,12 +287,18 @@ function renderedElement(program: Program) {
 function wireViteEntry(
   project: Project,
   config: Config,
-  steps: Steps
+  steps: Steps,
+  ownColors: boolean
 ): WiringPlan {
   const entry = findFile(project, VITE_ENTRIES);
   if (!entry) throw new CliError('No src/main.tsx found.');
   const source = read(project, entry);
-  if (source.includes('NxdsAppearanceProvider')) return NO_CHANGES;
+  if (source.includes('NxdsAppearanceProvider')) {
+    return ownColors
+      ? turnDerivationOff(source, entry, ['NxdsAppearanceProvider'])
+      : NO_CHANGES;
+  }
+  const props = providerProps(ownColors);
 
   const program = parseModule(source, entry);
   const imports: string[] = [];
@@ -260,7 +312,7 @@ function wireViteEntry(
         manual: [
           {
             file: entry,
-            step: `Wrap the element you render in <NxdsAppearanceProvider ${PROVIDER_PROPS}>.`,
+            step: `Wrap the element you render in <NxdsAppearanceProvider ${props}>.`,
           },
         ],
       };
@@ -273,7 +325,7 @@ function wireViteEntry(
     insertions.push(
       {
         at: startOf(app),
-        text: `<NxdsAppearanceProvider ${PROVIDER_PROPS}>\n${indent}`,
+        text: `<NxdsAppearanceProvider ${props}>\n${indent}`,
       },
       { at: endOf(app), text: `\n${indent}</NxdsAppearanceProvider>` }
     );
@@ -287,7 +339,15 @@ function wireViteEntry(
   };
 }
 
-const VITE_PLUGIN = `import {
+export const VITE_PLUGIN_FILE = 'nxds.vite.ts';
+const DERIVED_SNAPSHOT =
+  'createNxdsAppearanceSnapshotFromState(defaultAppearance)';
+const OWN_COLORS_SNAPSHOT = `createNxdsAppearanceSnapshotFromState(defaultAppearance, {
+      deriveColors: false,
+    })`;
+
+function vitePlugin(ownColors: boolean) {
+  return `import {
   createNxdsAppearanceBootstrapScript,
   createNxdsAppearanceSnapshotFromState,
 } from '@nxds/core';
@@ -299,7 +359,7 @@ import { defaultAppearance } from './src/appearance-state';
 export function nxdsAppearance(): Plugin {
   const script = createNxdsAppearanceBootstrapScript({
     storageKey: '${STORAGE_KEY}',
-    defaultSnapshot: createNxdsAppearanceSnapshotFromState(defaultAppearance),
+    defaultSnapshot: ${ownColors ? OWN_COLORS_SNAPSHOT : DERIVED_SNAPSHOT},
   });
   return {
     name: 'nxds-appearance',
@@ -308,6 +368,56 @@ export function nxdsAppearance(): Plugin {
   };
 }
 `;
+}
+
+/**
+ * The theme script file. `init` writes it once. For an app's own colors it
+ * also turns derivation off in the one it wrote earlier, and one the app
+ * rewrote is a manual step.
+ */
+function planViteScript(
+  project: Project,
+  steps: Steps,
+  ownColors: boolean
+): WiringPlan {
+  if (!existsSync(path.join(project.root, VITE_PLUGIN_FILE))) {
+    if (!steps.has('add-head-script')) return NO_CHANGES;
+    return {
+      changes: [
+        {
+          path: VITE_PLUGIN_FILE,
+          content: vitePlugin(ownColors),
+          created: true,
+        },
+      ],
+      manual: [],
+    };
+  }
+  if (!ownColors) return NO_CHANGES;
+
+  const source = read(project, VITE_PLUGIN_FILE);
+  if (source.includes('deriveColors')) return NO_CHANGES;
+  if (!source.includes(DERIVED_SNAPSHOT)) {
+    return {
+      changes: [],
+      manual: [
+        {
+          file: VITE_PLUGIN_FILE,
+          step: 'Pass { deriveColors: false } as the second argument of createNxdsAppearanceSnapshotFromState.',
+        },
+      ],
+    };
+  }
+  return {
+    changes: [
+      editedFile(
+        VITE_PLUGIN_FILE,
+        source.replace(DERIVED_SNAPSHOT, OWN_COLORS_SNAPSHOT)
+      ),
+    ],
+    manual: [],
+  };
+}
 
 /** The object a Vite config exports, directly or through `defineConfig(...)`. */
 function configObject(program: Program): ObjectExpression | undefined {
@@ -361,15 +471,12 @@ const VITE_ALIAS = "{ '@': '/src' }";
 function wireViteConfig(
   project: Project,
   addTailwind: boolean,
-  steps: Steps
+  steps: Steps,
+  ownColors: boolean
 ): WiringPlan {
   const configFile = findFile(project, VITE_CONFIGS) ?? 'vite.config.ts';
-  const addScript =
-    steps.has('add-head-script') &&
-    !existsSync(path.join(project.root, 'nxds.vite.ts'));
-  const changes: FileChange[] = addScript
-    ? [{ path: 'nxds.vite.ts', content: VITE_PLUGIN, created: true }]
-    : [];
+  const script = planViteScript(project, steps, ownColors);
+  const changes: FileChange[] = [...script.changes];
   const source = existsSync(path.join(project.root, configFile))
     ? read(project, configFile)
     : '';
@@ -384,7 +491,7 @@ function wireViteConfig(
       : []),
   ];
   const needsAlias = !/['"]@['"]/.test(source);
-  const manual: ManualStep[] = [];
+  const manual: ManualStep[] = [...script.manual];
   const insertions: Insertion[] = [];
   const imports: string[] = [];
 
@@ -600,37 +707,68 @@ function planTheme(project: Project, theme: ThemeSetup): WiringPlan {
   };
 }
 
+/** Where `nxds-colors.css` lives: beside the nxds CSS entry that imports it. */
+export function colorsPath(config: Config) {
+  return path.posix.join(path.posix.dirname(config.css), COLORS_FILE);
+}
+
+/**
+ * The app's own colors: `nxds-colors.css`, written once, and its import in a
+ * CSS entry that already exists. An entry `init` is about to create has it.
+ */
+function planColors(
+  project: Project,
+  config: Config,
+  colors: string
+): WiringPlan {
+  const plan = createdUnlessExists(project, colorsPath(config), colors);
+  if (!existsSync(path.join(project.root, config.css))) return plan;
+  const entry = read(project, config.css);
+  if (entry.includes(COLORS_IMPORT)) return plan;
+  return {
+    changes: [
+      ...plan.changes,
+      editedFile(config.css, `${entry.trimEnd()}\n${COLORS_IMPORT}\n`),
+    ],
+    manual: [],
+  };
+}
+
 /**
  * Every file `init` writes or edits, beside the nxds folder itself, for the
- * setup steps the catalog declares.
+ * setup steps the catalog declares. `colors` is `nxds-colors.css`'s content
+ * when the app sets its own colors, which also turns color derivation off.
  */
 export function planWiring(
   project: Project,
   config: Config,
   addTailwind: boolean,
   setupSteps: SetupStep[],
-  theme: ThemeSetup
+  theme: ThemeSetup,
+  colors: string | null
 ): WiringPlan {
   const steps: Steps = new Set(setupSteps);
+  const ownColors = colors !== null;
   const plans: WiringPlan[] = [wireTsconfigAlias(project)];
   if (steps.has('add-css-import')) {
     plans.push(
       createdUnlessExists(
         project,
         config.css,
-        cssEntry(config, addTailwind, theme.fonts)
+        cssEntry(config, addTailwind, theme.fonts, ownColors)
       )
     );
   }
+  if (colors !== null) plans.push(planColors(project, config, colors));
   if (steps.has('add-head-script') || steps.has('wrap-root-with-provider')) {
     plans.push(planTheme(project, theme));
   }
   if (project.setup === 'next-app') {
-    plans.push(wireNextLayout(project, config, steps));
+    plans.push(wireNextLayout(project, config, steps, ownColors));
     if (addTailwind) plans.push(wireNextTailwind(project));
   } else {
-    plans.push(wireViteEntry(project, config, steps));
-    plans.push(wireViteConfig(project, addTailwind, steps));
+    plans.push(wireViteEntry(project, config, steps, ownColors));
+    plans.push(wireViteConfig(project, addTailwind, steps, ownColors));
     plans.push(wireViteEslint(project, config));
   }
 

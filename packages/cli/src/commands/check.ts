@@ -16,6 +16,7 @@ import {
   withIconLibrary,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
+import { COLORS_FILE, COLORS_IMPORT, DERIVE_COLORS_OFF } from '../colors';
 import { type Config, readConfig, requireConfig } from '../config';
 import { CliError } from '../errors';
 import {
@@ -35,7 +36,7 @@ import {
   VITE_CONFIGS,
   VITE_ENTRIES,
 } from '../project';
-import { entryDir } from '../setup/react';
+import { entryDir, VITE_PLUGIN_FILE } from '../setup/react';
 import {
   fontImportLine,
   nxdsThemeSource,
@@ -136,6 +137,30 @@ function tailwindMessage(project: Project) {
 function read(root: string, file: string | undefined) {
   if (!file || !existsSync(path.join(root, file))) return '';
   return readFileSync(path.join(root, file), 'utf8');
+}
+
+/**
+ * The wiring files where the theme engine still derives colors, which would
+ * override the app's own: an entry that renders the provider or the head
+ * script without `deriveColors={false}`, and a Vite theme script without it.
+ */
+function filesDerivingColors(
+  root: string,
+  project: Project,
+  entry: string | undefined,
+  entrySource: string
+) {
+  const rendered =
+    entrySource.match(/<NxdsAppearance(?:Provider|Script)\b/g)?.length ?? 0;
+  const turnedOff = entrySource.split(DERIVE_COLORS_OFF).length - 1;
+  const files = entry && turnedOff < rendered ? [entry] : [];
+  if (
+    project.setup === 'vite-react' &&
+    !read(root, VITE_PLUGIN_FILE).includes('deriveColors: false')
+  ) {
+    files.push(VITE_PLUGIN_FILE);
+  }
+  return files;
 }
 
 /** Whether an `@source` in the CSS entry names the nxds folder or a folder above it. */
@@ -442,6 +467,17 @@ export async function doctor(
       ? 'The theme script runs before first paint'
       : `The theme script is missing, so the page can flash the wrong theme. Run \`${CLI_COMMAND} init\`.`
   );
+
+  if (css.includes(COLORS_IMPORT)) {
+    const deriving = filesDerivingColors(cwd, project, entry, entrySource);
+    check(
+      'colors',
+      deriving.length === 0,
+      deriving.length === 0
+        ? `${COLORS_FILE} sets your colors, and nothing overrides them`
+        : `${config.css} imports ${COLORS_FILE}, and the theme engine still derives colors in ${deriving.join(' and ')}, which override yours. Run \`${CLI_COMMAND} init --own-colors\`.`
+    );
+  }
 
   if (!catalog) return report(checks);
 
