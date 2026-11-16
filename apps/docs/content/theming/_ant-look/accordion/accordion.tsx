@@ -86,7 +86,7 @@ function AccordionTrigger({
         {...props}
       >
         <IconChevronRight
-          className="nx:size-icon-glyph-sm nx:shrink-0 nx:transition-transform nx:duration-default"
+          className="nx:size-3 nx:shrink-0 nx:transition-transform nx:duration-default"
           aria-hidden="true"
         />
         <span

@@ -5,6 +5,14 @@
  */
 @layer theme {
   [data-look='ant'] {
+    /* Ant's type: the system font, and a 22px line for 14px text */
+    --nx-typography-family-font-sans:
+      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+      Arial, 'Noto Sans', sans-serif;
+    --nx-typography-family-font-heading: var(--nx-typography-family-font-sans);
+    --nx-typography-line-height-xs: 20px;
+    --nx-typography-line-height-sm: 22px;
+
     /* Ant's corners: 6px on controls, 8px on containers */
     --nx-radius-sm: 4px;
     --nx-radius-base: 6px;
@@ -15,7 +23,7 @@
     --nx-color-background: #f5f5f5;
     --nx-color-background-hover: #ebebeb;
     --nx-color-background-active: #e0e0e0;
-    --nx-color-muted: #fafafa;
+    --nx-color-muted: rgb(0 0 0 / 0.02);
     --nx-color-muted-extralight: #fafafa;
     --nx-color-container: #fff;
     --nx-color-container-hover: #f5f5f5;
@@ -47,7 +55,7 @@
     /* Borders and focus */
     --nx-color-border-default: #d9d9d9;
     --nx-color-border-disabled: #d9d9d9;
-    --nx-color-border-hairline: #f0f0f0;
+    --nx-color-border-hairline: rgb(5 5 5 / 0.06);
     --nx-color-border-focus: #1677ff;
     --nx-color-focus-default: #1677ff;
     --nx-color-focus-error: #ff4d4f;
@@ -85,7 +93,7 @@
     --nx-color-success-foreground: #fff;
     --nx-color-success-disabled: #b7eb8f;
     --nx-color-success-subtle: #f6ffed;
-    --nx-color-success-subtle-foreground: #389e0d;
+    --nx-color-success-subtle-foreground: #52c41a;
     --nx-color-success-subtle-hover: #d9f7be;
     --nx-color-success-subtle-active: #b7eb8f;
     --nx-color-success-border: #b7eb8f;
@@ -98,7 +106,7 @@
     --nx-color-warning-foreground: #fff;
     --nx-color-warning-disabled: #ffe58f;
     --nx-color-warning-subtle: #fffbe6;
-    --nx-color-warning-subtle-foreground: #d48806;
+    --nx-color-warning-subtle-foreground: #faad14;
     --nx-color-warning-subtle-hover: #fff1b8;
     --nx-color-warning-subtle-active: #ffe58f;
     --nx-color-warning-border: #ffe58f;
@@ -111,7 +119,7 @@
     --nx-color-error-foreground: #fff;
     --nx-color-error-disabled: #ffa39e;
     --nx-color-error-subtle: #fff2f0;
-    --nx-color-error-subtle-foreground: #cf1322;
+    --nx-color-error-subtle-foreground: #ff4d4f;
     --nx-color-error-subtle-hover: #ffccc7;
     --nx-color-error-subtle-active: #ffa39e;
     --nx-color-error-border: #ffccc7;
@@ -155,7 +163,7 @@
     --nx-color-background: #000;
     --nx-color-background-hover: #141414;
     --nx-color-background-active: #1f1f1f;
-    --nx-color-muted: #1d1d1d;
+    --nx-color-muted: rgb(255 255 255 / 0.04);
     --nx-color-muted-extralight: #181818;
     --nx-color-container: #141414;
     --nx-color-container-hover: #272727;
@@ -187,7 +195,7 @@
     /* Borders and focus */
     --nx-color-border-default: #424242;
     --nx-color-border-disabled: #424242;
-    --nx-color-border-hairline: #303030;
+    --nx-color-border-hairline: rgb(253 253 253 / 0.12);
     --nx-color-border-focus: #1668dc;
     --nx-color-focus-default: #1668dc;
     --nx-color-focus-error: #dc4446;
@@ -225,7 +233,7 @@
     --nx-color-success-foreground: #fff;
     --nx-color-success-disabled: #274916;
     --nx-color-success-subtle: #162312;
-    --nx-color-success-subtle-foreground: #6abe39;
+    --nx-color-success-subtle-foreground: #49aa19;
     --nx-color-success-subtle-hover: #1d3712;
     --nx-color-success-subtle-active: #274916;
     --nx-color-success-border: #274916;
@@ -238,7 +246,7 @@
     --nx-color-warning-foreground: #fff;
     --nx-color-warning-disabled: #594214;
     --nx-color-warning-subtle: #2b2111;
-    --nx-color-warning-subtle-foreground: #e8b339;
+    --nx-color-warning-subtle-foreground: #d89614;
     --nx-color-warning-subtle-hover: #443111;
     --nx-color-warning-subtle-active: #594214;
     --nx-color-warning-border: #594214;
@@ -251,7 +259,7 @@
     --nx-color-error-foreground: #fff;
     --nx-color-error-disabled: #5b2526;
     --nx-color-error-subtle: #2c1618;
-    --nx-color-error-subtle-foreground: #e86e6b;
+    --nx-color-error-subtle-foreground: #dc4446;
     --nx-color-error-subtle-hover: #451d1f;
     --nx-color-error-subtle-active: #5b2526;
     --nx-color-error-border: #5b2526;

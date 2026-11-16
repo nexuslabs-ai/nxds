@@ -10,6 +10,9 @@ An Ant Design-style admin page, built from nxds parts with your own colors.
 
 <AntLookPreview />
 
+The first page is built with nxds parts. The second is the same page built with
+Ant Design, to compare.
+
 ## Set your own colors
 
 Create the colors file:
@@ -28,7 +31,7 @@ Replace its values with Ant Design's palette:
     --nx-color-container: #fff;
     --nx-color-foreground: rgb(0 0 0 / 0.88);
     --nx-color-border-default: #d9d9d9;
-    --nx-color-border-hairline: #f0f0f0;
+    --nx-color-border-hairline: rgb(5 5 5 / 0.06);
     --nx-color-primary-background: #1677ff;
     --nx-color-primary-background-hover: #4096ff;
     --nx-color-primary-background-active: #0958d9;
@@ -72,6 +75,23 @@ Ant rounds a control by 6px and a container by 8px. No `corners` value gives
 
 These corners apply at the Default UI scale.
 
+## Set Ant's line height
+
+Ant sets 14px text on a 22px line, and 12px text on a 20px line. Set the two
+line heights in the colors file:
+
+```css
+/* app/nxds-colors.css */
+@layer theme {
+  :root {
+    --nx-typography-line-height-xs: 20px;
+    --nx-typography-line-height-sm: 22px;
+  }
+}
+```
+
+The text size setting then stops changing these two line heights.
+
 ## Add the parts
 
 ```bash
@@ -82,21 +102,22 @@ Each part needs a different amount of work:
 
 | Part                          | Change                                                       |
 | ----------------------------- | ------------------------------------------------------------ |
-| Sidebar, Button, Badge, Label | None. They read the colors you set                           |
-| DescriptionList               | Borders and filled label cells                               |
+| Sidebar, Button, Badge, Label | Ant's sizes, as classes where you use them                   |
+| DescriptionList               | A bordered grid, two pairs to a row, and filled label cells  |
 | Accordion                     | One bordered box, tinted headers, the arrow before the label |
 | Slider                        | A new class recipe: a thin rail and a round handle           |
 
 ## Use the stock parts
 
-Four Ant parts are the stock nxds parts in Ant's colors:
+Four Ant parts are the stock nxds parts in Ant's colors. Pass Ant's sizes as
+classes where you use them:
 
-| Ant Design part      | nxds part                                 |
-| -------------------- | ----------------------------------------- |
-| Dark Menu in a Sider | `Sidebar`, which reads the `nav-*` colors |
-| Primary Button, 32px | `<Button size="sm">`                      |
-| Tag                  | `<Badge fill="outline">`                  |
-| Form label           | `Label`                                   |
+| Ant Design part      | nxds part                                 | Classes                                                                             |
+| -------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------- |
+| Dark Menu in a Sider | `Sidebar`, which reads the `nav-*` colors | `nx:h-10 nx:rounded-lg nx:px-6` on each `SidebarMenuButton`                         |
+| Primary Button, 32px | `<Button size="sm">`                      | `nx:px-[15px] nx:font-normal`                                                       |
+| Tag                  | `<Badge fill="outline">`                  | `nx:min-h-[22px] nx:rounded-sm nx:px-[7px] nx:typography-body-small nx:normal-case` |
+| Form label           | `Label`                                   | `nx:font-normal`                                                                    |
 
 ```tsx
 // components/order-header.tsx
@@ -106,11 +127,17 @@ import { Button } from '@/components/nxds/components/button/button';
 export function OrderHeader() {
   return (
     <div className="nx:flex nx:items-center nx:gap-3">
-      <p className="nx:m-0 nx:typography-heading-xsmall">Order 20418</p>
-      <Badge variant="success" fill="outline">
+      <p className="nx:m-0 nx:typography-heading-xxsmall nx:tracking-normal">
+        Order 20418
+      </p>
+      <Badge
+        variant="success"
+        fill="outline"
+        className="nx:min-h-[22px] nx:rounded-sm nx:px-[7px] nx:typography-body-small nx:normal-case"
+      >
         Paid
       </Badge>
-      <Button size="sm" className="nx:ms-auto">
+      <Button size="sm" className="nx:ms-auto nx:px-[15px] nx:font-normal">
         Edit order
       </Button>
     </div>
@@ -120,16 +147,17 @@ export function OrderHeader() {
 
 ## Edit the DescriptionList
 
-Ant's bordered Descriptions is a grid with filled label cells. Change the four
-class strings of the DescriptionList:
+Ant's bordered Descriptions is a grid with filled label cells, two pairs to a
+row. Change the DescriptionList's classes, and add a wrapper:
 
 <LookSource look="ant" file="description-list/description-list.tsx" />
 
-| Ant Design needs   | Change                                                      |
-| ------------------ | ----------------------------------------------------------- |
-| A bordered grid    | A border and corners on the list, and a line under each row |
-| Filled label cells | `nx:bg-muted` on the term, with a line on its trailing edge |
-| Padded cells       | `nx:px-6 nx:py-4` on the term and the description           |
+| Ant Design needs   | Change                                                            |
+| ------------------ | ----------------------------------------------------------------- |
+| A bordered grid    | A wrapper with the border and corners, and two lines on each cell |
+| Two pairs to a row | A four-column grid on the list, once the wrapper is 28rem wide    |
+| Filled label cells | `nx:bg-muted` on the term                                         |
+| Padded cells       | `nx:px-6 nx:py-4` on the term and the description                 |
 
 A narrow list stacks each label over its value, as the stock part does.
 
@@ -156,7 +184,7 @@ recipes. The component under them stays as it is:
 
 | Ant Design needs                    | Change in the recipe                                            |
 | ----------------------------------- | --------------------------------------------------------------- |
-| A thin rail                         | A 4px rail with no border                                       |
+| A thin rail                         | A 4px rail with 2px corners and no border                       |
 | A light track that darkens on hover | `nx:bg-primary-border`, then `nx:bg-primary-border-active`      |
 | A round handle with a ring          | A 10px dot with `nx:ring-2`, and `nx:ring-4` on hover and focus |
 | Ringed marks                        | 8px dots with a border                                          |
@@ -206,7 +234,9 @@ export function OrderDetails() {
       </Accordion>
 
       <div className="nx:flex nx:flex-col nx:gap-1">
-        <Label id="refund-share">Refund share</Label>
+        <Label id="refund-share" className="nx:font-normal">
+          Refund share
+        </Label>
         <Slider defaultValue={[30]} aria-labelledby="refund-share" />
       </div>
     </div>
@@ -223,8 +253,9 @@ export function OrderDetails() {
 | Color names         | Every class reads an nxds color, so one file recolors every part        |
 | Behavior            | Accordion and Slider keep their keyboard and screen reader support      |
 
-The preview on this page follows the page's mode and density. Its colors and
-corners come from the palette file, so the theme picker doesn't change them.
+The nxds page in the preview follows the page's mode and density. Its colors
+and corners come from the palette file, so the theme picker doesn't change
+them. The Ant Design page follows the page's mode only.
 
 ## Next steps
 

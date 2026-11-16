@@ -8,10 +8,10 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const sliderVariants =
-  'nx:group/slider nx:relative nx:flex nx:w-full nx:touch-none nx:select-none nx:data-disabled:pointer-events-none nx:data-[orientation=horizontal]:h-8 nx:data-[orientation=horizontal]:items-center nx:data-[orientation=vertical]:h-full nx:data-[orientation=vertical]:min-h-44 nx:data-[orientation=vertical]:w-8 nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:justify-center';
+  'nx:group/slider nx:relative nx:flex nx:w-full nx:touch-none nx:select-none nx:data-disabled:pointer-events-none nx:data-[orientation=horizontal]:h-3 nx:data-[orientation=horizontal]:items-center nx:data-[orientation=vertical]:h-full nx:data-[orientation=vertical]:min-h-44 nx:data-[orientation=vertical]:w-8 nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:justify-center';
 
 const sliderTrackVariants = cva(
-  'nx:relative nx:grow nx:rounded-full nx:bg-control-background nx:transition-colors nx:duration-fast nx:group-hover/slider:bg-control-background-hover nx:data-disabled:bg-disabled',
+  'nx:relative nx:grow nx:rounded-[2px] nx:bg-control-background nx:transition-colors nx:duration-fast nx:group-hover/slider:bg-control-background-hover nx:data-disabled:bg-disabled',
   {
     variants: {
       size: {
@@ -28,7 +28,7 @@ const sliderTrackVariants = cva(
 );
 
 const sliderRangeVariants =
-  'nx:absolute nx:rounded-full nx:bg-primary-border nx:transition-colors nx:duration-fast nx:group-hover/slider:bg-primary-border-active nx:data-disabled:bg-disabled-foreground nx:data-[orientation=horizontal]:top-0 nx:data-[orientation=horizontal]:h-full nx:data-[orientation=vertical]:left-0 nx:data-[orientation=vertical]:w-full';
+  'nx:absolute nx:rounded-[2px] nx:bg-primary-border nx:transition-colors nx:duration-fast nx:group-hover/slider:bg-primary-border-active nx:data-disabled:bg-disabled-foreground nx:data-[orientation=horizontal]:top-0 nx:data-[orientation=horizontal]:h-full nx:data-[orientation=vertical]:left-0 nx:data-[orientation=vertical]:w-full';
 
 // A white dot with a ring. The ring thickens and takes the full primary color
 // on hover and focus.
@@ -36,7 +36,7 @@ const sliderThumbClassName =
   'nx:relative nx:target-24 nx:block nx:size-2.5 nx:shrink-0 nx:cursor-pointer nx:rounded-full nx:bg-popover nx:ring-2 nx:ring-primary-border nx:transition-[box-shadow] nx:duration-fast nx:hover:ring-4 nx:hover:ring-primary-background nx:focus-visible:ring-4 nx:focus-visible:ring-primary-background nx:focus-visible:outline-2 nx:focus-visible:outline-offset-4 nx:focus-visible:outline-focus-default nx:aria-invalid:focus-visible:outline-focus-error nx:data-disabled:ring-disabled-foreground';
 
 const sliderMarkerClassName =
-  'nx:pointer-events-none nx:absolute nx:z-10 nx:box-border nx:size-2 nx:rounded-full nx:border-thick nx:border-border-default nx:bg-popover nx:transition-colors nx:duration-fast nx:data-[orientation=horizontal]:top-1/2 nx:data-[orientation=horizontal]:-translate-x-1/2 nx:data-[orientation=horizontal]:-translate-y-1/2 nx:data-[orientation=vertical]:left-1/2 nx:data-[orientation=vertical]:-translate-x-1/2 nx:data-[orientation=vertical]:translate-y-1/2';
+  'nx:pointer-events-none nx:absolute nx:z-10 nx:box-border nx:size-2 nx:rounded-full nx:border-thick nx:border-border-hairline nx:bg-popover nx:transition-colors nx:duration-fast nx:data-[orientation=horizontal]:top-1/2 nx:data-[orientation=horizontal]:-translate-x-1/2 nx:data-[orientation=horizontal]:-translate-y-1/2 nx:data-[orientation=vertical]:left-1/2 nx:data-[orientation=vertical]:-translate-x-1/2 nx:data-[orientation=vertical]:translate-y-1/2';
 
 const sliderFloatTolerance = 0.000001;
 type SliderSize = NonNullable<VariantProps<typeof sliderTrackVariants>['size']>;
