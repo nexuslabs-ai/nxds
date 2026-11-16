@@ -48,6 +48,14 @@ export interface NxdsFirstPaintResolution {
   prefsCss: string;
 }
 
+export interface NxdsAppearanceSnapshotOptions {
+  /**
+   * `false` leaves every colour to the app's own CSS. The snapshot then
+   * carries no theme CSS, and still carries the font preferences.
+   */
+  deriveColors?: boolean;
+}
+
 export interface NxdsAppearanceBootstrapScriptOptions {
   storageKey?: string | false;
   defaultSnapshot?: NxdsAppearanceSnapshot;
@@ -119,9 +127,19 @@ export function createNxdsAppearanceSnapshot(
 }
 
 export function createNxdsAppearanceSnapshotFromState(
-  state: NxdsAppearanceState
+  state: NxdsAppearanceState,
+  { deriveColors = true }: NxdsAppearanceSnapshotOptions = {}
 ): NxdsAppearanceSnapshot {
   const sanitizedState = sanitizeNxdsAppearance(state);
+
+  if (!deriveColors) {
+    return createNxdsAppearanceSnapshot(
+      sanitizedState,
+      '',
+      derivePrefsCss(sanitizedState)
+    );
+  }
+
   const cacheKey = cacheKeyForState(sanitizedState);
   const cachedSnapshot = cachedSnapshots.get(cacheKey);
 
@@ -180,10 +198,13 @@ export function parseNxdsAppearanceStateCookie(
 
 export function createNxdsAppearanceSnapshotFromCookie(
   raw: unknown,
-  fallbackState: NxdsAppearanceState = DEFAULT_NXDS_APPEARANCE
+  fallbackState: NxdsAppearanceState = DEFAULT_NXDS_APPEARANCE,
+  options?: NxdsAppearanceSnapshotOptions
 ): NxdsAppearanceSnapshot {
   return createNxdsAppearanceSnapshotFromState(
-    parseNxdsAppearanceStateCookie(raw) ?? sanitizeNxdsAppearance(fallbackState)
+    parseNxdsAppearanceStateCookie(raw) ??
+      sanitizeNxdsAppearance(fallbackState),
+    options
   );
 }
 

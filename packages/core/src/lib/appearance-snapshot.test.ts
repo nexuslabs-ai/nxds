@@ -199,6 +199,23 @@ describe('NxdsAppearanceSnapshot', () => {
     );
   });
 
+  it('carries no theme CSS when the app owns its colours', () => {
+    const state = {
+      ...DEFAULT_NXDS_APPEARANCE,
+      mode: 'dark' as const,
+      brandColor: '#1976d2',
+    };
+    const snapshot = createNxdsAppearanceSnapshotFromState(state, {
+      deriveColors: false,
+    });
+
+    expect(snapshot).toMatchObject({
+      state,
+      themeCss: '',
+      prefsCss: prefsCss(state),
+    });
+  });
+
   it('falls back when the state cookie is unreadable or stale', () => {
     expect(parseNxdsAppearanceStateCookie('%')).toBeNull();
     expect(
@@ -317,6 +334,26 @@ describe('createNxdsAppearanceBootstrapScript', () => {
     expect(
       document.querySelector('style[data-nxds-appearance-prefs]')?.textContent
     ).toBe(':root { --test-prefs: dark; }');
+  });
+
+  it('switches the mode and presets, and paints no colours, when the app owns its colours', () => {
+    const defaultSnapshot = createNxdsAppearanceSnapshotFromState(
+      { ...DEFAULT_NXDS_APPEARANCE, mode: 'dark', density: 'compact' },
+      { deriveColors: false }
+    );
+
+    new Function(createNxdsAppearanceBootstrapScript({ defaultSnapshot }))();
+
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.getAttribute('data-density')).toBe(
+      'compact'
+    );
+    expect(
+      document.querySelector('style[data-nxds-appearance-theme]')?.textContent
+    ).toBe('');
+    expect(
+      document.querySelector('style[data-nxds-appearance-prefs]')?.textContent
+    ).toBe(defaultSnapshot.prefsCss);
   });
 
   it('uses fresh cookie-derived CSS before hydration when storage contains v6 CSS', () => {

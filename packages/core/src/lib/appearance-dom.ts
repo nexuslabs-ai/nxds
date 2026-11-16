@@ -2,6 +2,7 @@ import type { NxdsAppearanceState } from './appearance-model';
 import {
   createNxdsAppearanceSnapshotFromState,
   NXDS_APPEARANCE_DATA_ATTRS,
+  type NxdsAppearanceSnapshotOptions,
   resolveFirstPaint,
   sanitizeNxdsAppearanceSnapshot,
   serializeNxdsAppearanceStateCookie,
@@ -18,7 +19,7 @@ export interface NxdsAppearanceCookieOptions {
   domain?: string;
 }
 
-export interface NxdsAppearancePersistOptions {
+export interface NxdsAppearancePersistOptions extends NxdsAppearanceSnapshotOptions {
   /** localStorage key the first-paint script reads. `false` skips it. */
   storageKey: string | false;
   /** Cookie a server reads to render the saved appearance. `false` skips it. */
@@ -91,10 +92,11 @@ function upsertStyle(attribute: string, css: string): void {
  */
 export function applyNxdsAppearance(
   state: NxdsAppearanceState,
-  systemPrefersDark: boolean
+  systemPrefersDark: boolean,
+  options?: NxdsAppearanceSnapshotOptions
 ): void {
   const firstPaint = resolveFirstPaint(
-    createNxdsAppearanceSnapshotFromState(state),
+    createNxdsAppearanceSnapshotFromState(state, options),
     systemPrefersDark
   );
   const root = document.documentElement;
@@ -146,13 +148,16 @@ export function persistNxdsAppearance(
     storageKey,
     cookieWriteKey = false,
     cookieOptions = {},
+    deriveColors,
   }: NxdsAppearancePersistOptions
 ): void {
   if (storageKey !== false) {
     try {
       window.localStorage.setItem(
         storageKey,
-        JSON.stringify(createNxdsAppearanceSnapshotFromState(state))
+        JSON.stringify(
+          createNxdsAppearanceSnapshotFromState(state, { deriveColors })
+        )
       );
     } catch {
       // Storage can fail in privacy modes or quota-constrained embeds.
