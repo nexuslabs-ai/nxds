@@ -1,9 +1,13 @@
 ---
 '@nxds/core': minor
+'@nxds/tailwind': minor
 '@nxds/react': minor
 '@nxds/vue': minor
 ---
 
-Items close to a rounded container share its corner. Tabs triggers, menu and select items, command items, input-group buttons, slider ranges and similar parts now take the container's radius minus its border and padding, and never less than half of that radius, in whole pixels. Only the corners that touch the container's corners use the full value; the others use the half.
+Items close to a rounded container share its corner. The corners that touch the container's corners are the container's radius minus its border and padding. The other corners are half the container's radius. No corner is less than half the radius, and all round to whole pixels.
 
-New utilities: a container declares its corner with `nest-outer-*`, `nest-border-*` (or `nest-border-none`) and `nest-padding-*`; its items use `rounded-nest`, `rounded-nest-corner` and `rounded-{s,e,t,b}-nest-corner`. They use CSS `round()`.
+- Tabs triggers, menu, context menu, menubar and select items, command items, multi-select and combobox lists, navigation menu links, input-group buttons, slider ranges, the checkbox in a choice row, the filter builder's option list, attachment media, floating sidebar items and Toolbar tools now follow their container. The menus and Select also round the first and last item of a group at the top or bottom of the list.
+- New utilities: a container declares its corner with `nest-outer-*`, `nest-border-*` (or `nest-border-none`) and `nest-padding-*`. Its items use `rounded-nest`, `rounded-nest-corner` and `rounded-{s,e,t,b}-nest-corner`. `cn()` merges them.
+- Toolbar: the default bar declares `nest-outer-lg nest-border-default nest-padding-0.5`, and the floating bar `nest-outer-2xl nest-border-default nest-padding-2`. If you change a toolbar's border or padding, set the matching `nest-border-*` and `nest-padding-*` too.
+- The utilities use CSS `round()`, which is Baseline widely available from 17 November 2026.
