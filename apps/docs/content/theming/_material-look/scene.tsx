@@ -63,11 +63,13 @@ export function MaterialScene() {
             />
           </CardContent>
           <CardFooter className="nx:justify-between">
-            <Button variant="ghost" color="error">
+            <Button variant="ghost" tone="error">
               Delete account
             </Button>
             <div className="nx:flex nx:gap-2">
-              <Button variant="ghost">Cancel</Button>
+              <Button variant="ghost" tone="primary">
+                Cancel
+              </Button>
               <Button>Save</Button>
             </div>
           </CardFooter>
@@ -109,7 +111,7 @@ export function MaterialScene() {
             <TextField variant="filled" label="Company" />
           </CardContent>
           <CardFooter className="nx:justify-between nx:p-4">
-            <Button variant="outline" color="secondary">
+            <Button variant="outline" tone="secondary">
               Mute all
             </Button>
             <Button iconOnly startIcon={<AddIcon />}>

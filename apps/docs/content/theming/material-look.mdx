@@ -110,7 +110,7 @@ Each part needs a different amount of work:
 | --------- | ------------------------------------------------------------------- |
 | Label     | None. It reads the colors you set                                   |
 | Card      | A shadow in place of the border, and Material's title sizes         |
-| Button    | Three restyled variants, a `color` prop, round icon buttons         |
+| Button    | Three restyled variants, a `tone` prop, round icon buttons          |
 | Progress  | A thin, square bar on a tinted track                                |
 | Switch    | A new class recipe: a thin track, a raised thumb and a hover halo   |
 | Checkbox  | A new class recipe and check mark: a bold outline, and a hover halo |
@@ -134,14 +134,14 @@ weight. Change the Card's class strings:
 
 ## Edit the Button
 
-Restyle three of the Button's variants, and add a `color` beside `variant`:
+Restyle three of the Button's variants, and add a `tone` beside `variant`:
 
 <LookSource look="material" file="button/button-variants.ts" />
 
 | Material needs                             | Change in the recipe                                           |
 | ------------------------------------------ | -------------------------------------------------------------- |
 | Contained, outlined and text buttons       | New classes on `default`, `outline` and `ghost`                |
-| Each in three colors                       | A `color` variant: `primary`, `secondary` or `error`           |
+| Each in three colors                       | A `tone` variant: `primary`, `secondary` or `error`            |
 | Uppercase labels with wider letter spacing | `nx:uppercase` and a `nx:tracking-*` class                     |
 | A shadow that grows on hover and press     | `nx:shadow-sm`, `nx:hover:shadow-base`, `nx:active:shadow-lg`  |
 | A readable disabled button                 | `nx:disabled:text-disabled-foreground`, and no shadow          |
@@ -152,9 +152,11 @@ Restyle three of the Button's variants, and add a `color` beside `variant`:
 | Round icon buttons, 48px wide              | `nx:rounded-full` and `nx:size-12` on the icon-only variant    |
 
 The variant names stay, so parts that build on Button, such as Pagination,
-still compile. The other variants keep their nxds classes.
+still compile. Without a `tone`, a button keeps its nxds colors, so those parts
+look as they did. The other variants keep their nxds classes.
 
-The component takes the new `color` prop and passes it to the recipe:
+The component takes the new `tone` prop and passes it to the recipe. `color`
+is already an HTML attribute, so the prop has another name:
 
 <LookSource look="material" file="button/button.tsx" />
 
@@ -257,7 +259,9 @@ export function Notifications() {
         </div>
       </CardContent>
       <CardFooter className="nx:justify-end">
-        <Button variant="ghost">Cancel</Button>
+        <Button variant="ghost" tone="primary">
+          Cancel
+        </Button>
         <Button>Save</Button>
       </CardFooter>
     </Card>

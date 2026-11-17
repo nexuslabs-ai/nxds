@@ -13,7 +13,7 @@ import { type ButtonVariants, buttonVariants } from './button-variants';
 /** Button's props without its label and icon props. */
 interface ButtonBaseProps
   extends
-    Omit<React.ComponentProps<'button'>, 'children' | 'color'>,
+    Omit<React.ComponentProps<'button'>, 'children'>,
     Omit<ButtonVariants, 'iconOnly'> {
   /**
    * Disables the button and shows a spinner in place of its content.
@@ -155,7 +155,7 @@ function Button({
   asChild = false,
   className,
   variant = 'default',
-  color = 'primary',
+  tone = 'default',
   size,
   iconOnly = false,
   loading = false,
@@ -178,14 +178,14 @@ function Button({
   const sharedProps = {
     'data-slot': 'button',
     'data-variant': variant,
-    'data-color': color,
+    'data-tone': tone,
     'data-size': semanticSize,
     'data-icon-only': iconOnly || undefined,
     'data-loading': loading || undefined,
     className: cn(
       buttonVariants({
         variant,
-        color,
+        tone,
         size: semanticSize,
         iconOnly,
         className,

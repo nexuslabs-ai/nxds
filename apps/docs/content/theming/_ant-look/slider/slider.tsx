@@ -32,7 +32,7 @@ const sliderRangeVariants =
 
 // A white dot with a ring. The ring thickens and takes the full primary color
 // on hover and focus.
-const sliderThumbClassName =
+const sliderThumbVariants =
   'nx:relative nx:target-24 nx:block nx:size-2.5 nx:shrink-0 nx:cursor-pointer nx:rounded-full nx:bg-popover nx:ring-2 nx:ring-primary-border nx:transition-[box-shadow] nx:duration-fast nx:hover:ring-4 nx:hover:ring-primary-background nx:focus-visible:ring-4 nx:focus-visible:ring-primary-background nx:focus-visible:outline-2 nx:focus-visible:outline-offset-4 nx:focus-visible:outline-focus-default nx:aria-invalid:focus-visible:outline-focus-error nx:data-disabled:ring-disabled-foreground';
 
 const sliderMarkerClassName =
@@ -198,7 +198,7 @@ function Slider({
           aria-invalid={ariaInvalid}
           data-orientation={orientation}
           data-size={size}
-          className={sliderThumbClassName}
+          className={sliderThumbVariants}
         />
       ))}
     </SliderPrimitive.Root>
@@ -210,7 +210,7 @@ export {
   sliderMarkerClassName,
   type SliderProps,
   sliderRangeVariants,
-  sliderThumbClassName,
+  sliderThumbVariants,
   sliderTrackVariants,
   sliderVariants,
 };

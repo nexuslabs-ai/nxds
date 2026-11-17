@@ -20,7 +20,8 @@ export const buttonVariants = cva(
         ghost: '',
         link: 'nx:border-0 nx:text-primary-subtle-foreground nx:underline-offset-4 nx:hover:underline nx:active:scale-100 nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
       },
-      color: {
+      tone: {
+        default: '',
         primary: '',
         secondary: '',
         error: '',
@@ -39,55 +40,67 @@ export const buttonVariants = cva(
     compoundVariants: [
       {
         variant: 'default',
-        color: 'primary',
+        tone: ['default', 'primary'],
         className:
           'nx:bg-primary-background nx:text-primary-foreground nx:hover:bg-primary-background-hover nx:active:bg-primary-background-active nx:disabled:bg-primary-disabled nx:aria-disabled:bg-primary-disabled',
       },
       {
         variant: 'default',
-        color: 'secondary',
+        tone: 'secondary',
         className:
           'nx:bg-secondary-background nx:text-secondary-foreground nx:hover:bg-secondary-background-hover nx:active:bg-secondary-background-active nx:disabled:bg-secondary-disabled nx:aria-disabled:bg-secondary-disabled',
       },
       {
         variant: 'default',
-        color: 'error',
+        tone: 'error',
         className:
           'nx:bg-error-background nx:text-error-foreground nx:hover:bg-error-background-hover nx:active:bg-error-background-active nx:disabled:bg-error-disabled nx:aria-disabled:bg-error-disabled',
       },
       {
         variant: 'outline',
-        color: 'primary',
+        tone: 'default',
+        className:
+          'nx:inset-ring-border-default nx:text-foreground nx:hover:bg-container-hover nx:active:bg-container-active',
+      },
+      {
+        variant: 'outline',
+        tone: 'primary',
         className:
           'nx:inset-ring-primary-border nx:text-primary-subtle-foreground nx:hover:inset-ring-primary-border-active nx:hover:bg-primary-background/4 nx:active:bg-primary-subtle-active',
       },
       {
         variant: 'outline',
-        color: 'secondary',
+        tone: 'secondary',
         className:
           'nx:inset-ring-secondary-border nx:text-secondary-subtle-foreground nx:hover:inset-ring-secondary-border-active nx:hover:bg-secondary-background/4 nx:active:bg-secondary-subtle-active',
       },
       {
         variant: 'outline',
-        color: 'error',
+        tone: 'error',
         className:
           'nx:inset-ring-error-border nx:text-error-subtle-foreground nx:hover:inset-ring-border-error-active nx:hover:bg-error-background/4 nx:active:bg-error-subtle-active',
       },
       {
         variant: 'ghost',
-        color: 'primary',
+        tone: 'default',
+        className:
+          'nx:text-foreground nx:hover:bg-container-hover nx:active:bg-container-active',
+      },
+      {
+        variant: 'ghost',
+        tone: 'primary',
         className:
           'nx:text-primary-subtle-foreground nx:hover:bg-primary-background/4 nx:active:bg-primary-subtle-active',
       },
       {
         variant: 'ghost',
-        color: 'secondary',
+        tone: 'secondary',
         className:
           'nx:text-secondary-subtle-foreground nx:hover:bg-secondary-background/4 nx:active:bg-secondary-subtle-active',
       },
       {
         variant: 'ghost',
-        color: 'error',
+        tone: 'error',
         className:
           'nx:text-error-subtle-foreground nx:hover:bg-error-background/4 nx:active:bg-error-subtle-active',
       },
@@ -138,7 +151,7 @@ export const buttonVariants = cva(
     ],
     defaultVariants: {
       variant: 'default',
-      color: 'primary',
+      tone: 'default',
       size: 'default',
       iconOnly: false,
     },
