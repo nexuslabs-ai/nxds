@@ -376,6 +376,25 @@ describe('createNxdsAppearanceBootstrapScript', () => {
     ).toBe('');
   });
 
+  it('paints the default colours once an app that owned its colours derives them again', () => {
+    const saved = createNxdsAppearanceSnapshotFromState(
+      { ...DEFAULT_NXDS_APPEARANCE, mode: 'dark' },
+      { deriveColors: false }
+    );
+    window.localStorage.setItem('nxds-appearance', JSON.stringify(saved));
+    const defaultSnapshot = createNxdsAppearanceSnapshotFromState(
+      DEFAULT_NXDS_APPEARANCE
+    );
+
+    new Function(createNxdsAppearanceBootstrapScript({ defaultSnapshot }))();
+
+    expect(saved.themeCss).toBe('');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(
+      document.querySelector('style[data-nxds-appearance-theme]')?.textContent
+    ).toBe(defaultSnapshot.themeCss);
+  });
+
   it('uses fresh cookie-derived CSS before hydration when storage contains v6 CSS', () => {
     const state = {
       ...DEFAULT_NXDS_APPEARANCE,
