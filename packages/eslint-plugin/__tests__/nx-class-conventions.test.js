@@ -32,6 +32,10 @@ ruleTester.run('nx-class-conventions', rule, {
     "const c = 'nx:group-data-[variant=floating]:rounded-lg nx:group-data-[variant=floating]:nest-outer-lg';",
     // Each variant string is checked on its own.
     "const c = cva('nx:flex', { variants: { variant: { default: 'nx:p-0.5 nx:nest-padding-0.5', floating: 'nx:p-2 nx:nest-padding-2' } } });",
+    // `!` is the important modifier, at either end.
+    "const c = 'nx:p-0! nx:nest-padding-0';",
+    // Each variant chain that sets one class of a pair sets both.
+    "const c = 'nx:p-1 nx:nest-padding-1 nx:sm:p-2 nx:sm:nest-padding-2';",
     // The twin can sit on another element, so one class alone passes.
     "const c = 'nx:p-2 nx:pr-2.5 nx:nest-outer-md';",
     // Each element in a template is its own class list.
@@ -184,6 +188,28 @@ ruleTester.run('nx-class-conventions', rule, {
     },
     {
       code: 'const t = `<div class="nx:p-2 nx:nest-padding-1"></div>`;',
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: 'const t = `nx:p-2 ${x} nx:nest-padding-1`;',
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const c = 'nx:!p-2 nx:nest-padding-1';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    // Bare `border` is 1px, which no nest step names.
+    {
+      code: "const c = 'nx:border nx:nest-border-none';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const c = 'nx:rounded-[10px] nx:nest-outer-md';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    // A variant that sets one class of a pair sets the other too.
+    {
+      code: "const c = 'nx:p-1 nx:nest-padding-1 nx:sm:p-2';",
       errors: [{ messageId: 'nestStepMismatch' }],
     },
     {

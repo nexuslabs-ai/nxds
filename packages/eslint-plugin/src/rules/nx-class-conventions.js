@@ -113,41 +113,68 @@ function sizesFromSpacing(raw) {
   );
 }
 
-// Each box class with its `nest-*` twin, which the inner corners read. Each
-// regex captures the step the class names.
+// Each box class with its `nest-*` twin, which the inner corners read, as
+// functions that return the step a class names. Bare `border` is 1px, which no
+// nest step names, and `border-0` pairs with `nest-border-none`.
+const BORDER_STEPS = new Map([
+  ['border', '1px'],
+  ['border-0', 'none'],
+  ['border-thin', 'thin'],
+  ['border-default', 'default'],
+  ['border-thick', 'thick'],
+]);
 const NEST_TWINS = [
-  [/^p-(.+)$/, /^nest-padding-(.+)$/],
-  [/^border-(0|thin|default|thick)$/, /^nest-border-(0|thin|default|thick)$/],
-  [/^rounded-(base|sm|md|lg|xl|2xl|3xl|4xl|full)$/, /^nest-outer-(.+)$/],
+  {
+    box: (utility) => /^p-(.+)$/.exec(utility)?.[1],
+    nest: (utility) => /^nest-padding-(.+)$/.exec(utility)?.[1],
+  },
+  {
+    box: (utility) => BORDER_STEPS.get(utility),
+    nest: (utility) =>
+      /^nest-border-(none|thin|default|thick)$/.exec(utility)?.[1],
+  },
+  {
+    box: (utility) =>
+      /^rounded-(none|base|sm|md|lg|xl|2xl|3xl|4xl|full|\[.+\]|\(.+\))$/.exec(
+        utility
+      )?.[1],
+    nest: (utility) => /^nest-outer-(.+)$/.exec(utility)?.[1],
+  },
 ];
 
-// A class string whose box class and `nest-*` twin name different steps
-// under the same variants, such as `nx:p-2 nx:nest-padding-1`. A string with
-// only one of the two passes: the other can sit on another element.
-function nestStepMismatch(raw) {
-  // A template, such as a Vue story's, holds several elements. Each quoted
-  // value is its own class list.
-  return raw.split(/["'`]/).some(classListNestMismatch);
+// A class string whose box class and `nest-*` twin name different steps, such
+// as `nx:p-2 nx:nest-padding-1`. A template, such as a Vue story's, holds
+// several elements, so each quoted value is its own class list.
+function nestStepMismatch(text) {
+  return text.split(/["'`]/).some(classListNestMismatch);
 }
 
+// A list with only one class of a pair passes, because the other can sit on
+// another element. Once the list pairs a twin, every variant chain that sets
+// either class must set both, to the same step.
 function classListNestMismatch(classList) {
-  // The box step and the nest step of each twin, per variant chain.
-  const pairs = new Map();
-  for (const token of nxClasses(classList)) {
+  const classes = nxClasses(classList).map((token) => {
     const parts = splitVariants(token.slice('nx:'.length));
-    // `nest-border-none` is `border-0`'s twin.
-    const utility = parts.pop().replace(/^nest-border-none$/, 'nest-border-0');
-    NEST_TWINS.forEach(([box, nest], index) => {
-      const key = `${index} ${parts.join(':')}`;
-      const pair = pairs.get(key) ?? {};
-      pair.box ??= box.exec(utility)?.[1];
-      pair.nest ??= nest.exec(utility)?.[1];
-      pairs.set(key, pair);
-    });
-  }
-  return [...pairs.values()].some(
-    ({ box, nest }) => box !== undefined && nest !== undefined && box !== nest
-  );
+    // `!` is the important modifier, at either end.
+    const utility = parts.pop().replace(/^!|!$/g, '');
+    return { chain: parts.join(':'), utility };
+  });
+  return NEST_TWINS.some(({ box, nest }) => {
+    const chains = new Map();
+    for (const { chain, utility } of classes) {
+      const steps = chains.get(chain) ?? {};
+      steps.box ??= box(utility);
+      steps.nest ??= nest(utility);
+      chains.set(chain, steps);
+    }
+    const set = [...chains.values()].filter(
+      (steps) => steps.box !== undefined || steps.nest !== undefined
+    );
+    const paired = set.some(
+      (steps) => steps.box !== undefined && steps.nest !== undefined
+    );
+    return paired && set.some((steps) => steps.box !== steps.nest);
+  });
 }
 
 function isIconElement(name) {
@@ -205,10 +232,6 @@ const CHECKS = [
     test: sizesSvgFromSpacing,
     // Stories are checked: the docs pages copy their code into apps.
     skipFile: isDocsFile,
-  },
-  {
-    messageId: 'nestStepMismatch',
-    test: nestStepMismatch,
   },
   {
     messageId: 'rawLetterSpacing',
@@ -426,7 +449,7 @@ export default {
       densityIconSize:
         'Icon size from spacing — a numeric `size-*`, `h-*` or `w-*`, or one that reads a `--nx-spacing-*` variable, on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm`, `-default`, `-lg` or `-xl` (12, 14, 16, 24 or 32px at the Default UI scale).',
       nestStepMismatch:
-        'Nest step mismatch — this class string gives a box a padding, border width or radius (`p-*`, `border-*`, `rounded-*`) that differs from its `nest-padding-*`, `nest-border-*` or `nest-outer-*` class, so its inner corners use the wrong value. Set both to the same step.',
+        'Nest step mismatch — this class string sets a box padding, border width or radius (`p-*`, `border-*`, `rounded-*`) and its `nest-padding-*`, `nest-border-*` or `nest-outer-*` twin to different steps, or sets one without the other under a variant, so the inner corners use the wrong value. Set both to the same step under the same variants.',
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
       unstrokedIcon:
@@ -442,6 +465,12 @@ export default {
     function report(node, raw) {
       for (const messageId of matchedMessageIds(raw, filename)) {
         context.report({ node, messageId });
+      }
+    }
+
+    function reportNestMismatch(node, text) {
+      if (nestStepMismatch(text)) {
+        context.report({ node, messageId: 'nestStepMismatch' });
       }
     }
 
@@ -470,6 +499,7 @@ export default {
           return;
         }
         report(node, node.value);
+        reportNestMismatch(node, node.value);
         reportScope(node);
       },
       TemplateLiteral(node) {
@@ -483,6 +513,13 @@ export default {
         for (const messageId of matched) {
           context.report({ node, messageId });
         }
+        // One class list can run across a `${}`, so the quasis are read together.
+        reportNestMismatch(
+          node,
+          node.quasis
+            .map((quasi) => quasi.value.cooked ?? quasi.value.raw)
+            .join(' ')
+        );
         reportScope(node);
       },
       CallExpression(node) {

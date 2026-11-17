@@ -98,7 +98,7 @@ export default function Radius() {
           radius minus its border and padding. The other corners are half its
           radius. A radius token override, such as <code>--nx-radius-md</code>,
           reaches them too. If you change a container&apos;s radius, border or
-          padding with a class, add the matching <code>nest-*</code> class. The
+          padding with a class, add the matching <code>nest-*</code> class. The{' '}
           <code>nx-class-conventions</code> lint rule reports a class string
           where the two name different steps.
         </p>

@@ -16,4 +16,4 @@ Items close to a rounded container share its corner. The corners that touch the 
 - A Slider with `inverted` rounds the range at its min end.
 - Claude Design: nested corners on the canvas match the page, also for items inside a group.
 - The utilities use CSS `round()`, which is Baseline widely available from 17 November 2026.
-- `nx-class-conventions` reports a class string where `p-*`, a border width or `rounded-*` names another step than its `nest-padding-*`, `nest-border-*` or `nest-outer-*` class, such as `nx:p-2 nx:nest-padding-1`.
+- `nx-class-conventions` reports a class string where `p-*`, a border width or `rounded-*` names a different step from its `nest-padding-*`, `nest-border-*` or `nest-outer-*` twin. An example is `nx:p-2 nx:nest-padding-1`.
