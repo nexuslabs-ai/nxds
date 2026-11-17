@@ -113,6 +113,43 @@ function sizesFromSpacing(raw) {
   );
 }
 
+// Each box class with its `nest-*` twin, which the inner corners read. Each
+// regex captures the step the class names.
+const NEST_TWINS = [
+  [/^p-(.+)$/, /^nest-padding-(.+)$/],
+  [/^border-(0|thin|default|thick)$/, /^nest-border-(0|thin|default|thick)$/],
+  [/^rounded-(base|sm|md|lg|xl|2xl|3xl|4xl|full)$/, /^nest-outer-(.+)$/],
+];
+
+// A class string whose box class and `nest-*` twin name different steps
+// under the same variants, such as `nx:p-2 nx:nest-padding-1`. A string with
+// only one of the two passes: the other can sit on another element.
+function nestStepMismatch(raw) {
+  // A template, such as a Vue story's, holds several elements. Each quoted
+  // value is its own class list.
+  return raw.split(/["'`]/).some(classListNestMismatch);
+}
+
+function classListNestMismatch(classList) {
+  // The box step and the nest step of each twin, per variant chain.
+  const pairs = new Map();
+  for (const token of nxClasses(classList)) {
+    const parts = splitVariants(token.slice('nx:'.length));
+    // `nest-border-none` is `border-0`'s twin.
+    const utility = parts.pop().replace(/^nest-border-none$/, 'nest-border-0');
+    NEST_TWINS.forEach(([box, nest], index) => {
+      const key = `${index} ${parts.join(':')}`;
+      const pair = pairs.get(key) ?? {};
+      pair.box ??= box.exec(utility)?.[1];
+      pair.nest ??= nest.exec(utility)?.[1];
+      pairs.set(key, pair);
+    });
+  }
+  return [...pairs.values()].some(
+    ({ box, nest }) => box !== undefined && nest !== undefined && box !== nest
+  );
+}
+
 function isIconElement(name) {
   return name.type === 'JSXIdentifier' && ICON_ELEMENT_NAME.test(name.name);
 }
@@ -168,6 +205,10 @@ const CHECKS = [
     test: sizesSvgFromSpacing,
     // Stories are checked: the docs pages copy their code into apps.
     skipFile: isDocsFile,
+  },
+  {
+    messageId: 'nestStepMismatch',
+    test: nestStepMismatch,
   },
   {
     messageId: 'rawLetterSpacing',
@@ -362,7 +403,7 @@ export default {
     type: 'problem',
     docs: {
       description:
-        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, no icon sized from spacing, no ring-fading `transition-colors` on a focus-ring surface, and no sized `svg` children without `nx:icon-stroke`.',
+        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, no icon sized from spacing, no `nest-*` class out of step with its box, no ring-fading `transition-colors` on a focus-ring surface, and no sized `svg` children without `nx:icon-stroke`.',
     },
     schema: [],
     messages: {
@@ -384,6 +425,8 @@ export default {
         'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
       densityIconSize:
         'Icon size from spacing — a numeric `size-*`, `h-*` or `w-*`, or one that reads a `--nx-spacing-*` variable, on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm`, `-default`, `-lg` or `-xl` (12, 14, 16, 24 or 32px at the Default UI scale).',
+      nestStepMismatch:
+        'Nest step mismatch — this class string gives a box a padding, border width or radius (`p-*`, `border-*`, `rounded-*`) that differs from its `nest-padding-*`, `nest-border-*` or `nest-outer-*` class, so its inner corners use the wrong value. Set both to the same step.',
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
       unstrokedIcon:

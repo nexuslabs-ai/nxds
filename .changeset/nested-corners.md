@@ -4,6 +4,7 @@
 '@nxds/react': minor
 '@nxds/vue': minor
 '@nxds/claude-design': minor
+'@nxds/eslint-plugin': minor
 ---
 
 Items close to a rounded container share its corner. The corners that touch the container's corners are the container's radius minus its border and padding. The other corners are half the container's radius. No corner is less than half the radius, and all round to whole pixels.
@@ -15,3 +16,4 @@ Items close to a rounded container share its corner. The corners that touch the 
 - A Slider with `inverted` rounds the range at its min end.
 - Claude Design: nested corners on the canvas match the page, also for items inside a group.
 - The utilities use CSS `round()`, which is Baseline widely available from 17 November 2026.
+- `nx-class-conventions` reports a class string where `p-*`, a border width or `rounded-*` names another step than its `nest-padding-*`, `nest-border-*` or `nest-outer-*` class, such as `nx:p-2 nx:nest-padding-1`.
