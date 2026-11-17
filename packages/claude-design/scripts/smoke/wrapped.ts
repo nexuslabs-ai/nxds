@@ -279,6 +279,64 @@ export const WRAPPED_CASES: { name: string; markup: string; reads: Read[] }[] =
       ],
     },
     {
+      name: 'a Toolbar rounds a group inside a plain wrapper at its start',
+      markup: el(
+        'div',
+        'data-radius="12"',
+        x(
+          'Toolbar',
+          'aria-label="Formatting"',
+          el(
+            'div',
+            'class="nx:flex"',
+            x('ToolbarButton', '', 'Cut'),
+            x(
+              'ToolbarToggleGroup',
+              'type="multiple" aria-label="Style"',
+              x('ToolbarToggleItem', 'value="bold"', 'Bold'),
+              x('ToolbarToggleItem', 'value="italic"', 'Italic')
+            )
+          ),
+          x('ToolbarButton', '', 'Undo')
+        )
+      ),
+      reads: [
+        { target: 'button', index: 0, property: 'border-top-left-radius' },
+        { target: 'button', index: 1, property: 'border-top-left-radius' },
+        { target: 'button', index: 2, property: 'border-top-right-radius' },
+        { target: 'button', index: 3, property: 'border-top-right-radius' },
+      ],
+    },
+    {
+      name: 'a Toolbar rounds a group inside a plain wrapper at its end',
+      markup: el(
+        'div',
+        'data-radius="12"',
+        x(
+          'Toolbar',
+          'aria-label="Formatting"',
+          x('ToolbarButton', '', 'Undo'),
+          el(
+            'div',
+            'class="nx:flex"',
+            x(
+              'ToolbarToggleGroup',
+              'type="multiple" aria-label="Style"',
+              x('ToolbarToggleItem', 'value="bold"', 'Bold'),
+              x('ToolbarToggleItem', 'value="italic"', 'Italic')
+            ),
+            x('ToolbarButton', '', 'Share')
+          )
+        )
+      ),
+      reads: [
+        { target: 'button', index: 0, property: 'border-top-left-radius' },
+        { target: 'button', index: 1, property: 'border-top-left-radius' },
+        { target: 'button', index: 2, property: 'border-top-right-radius' },
+        { target: 'button', index: 3, property: 'border-top-right-radius' },
+      ],
+    },
+    {
       name: 'Accordion drops the last divider',
       markup: x(
         'Accordion',

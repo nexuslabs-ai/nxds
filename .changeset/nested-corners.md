@@ -3,6 +3,7 @@
 '@nxds/tailwind': minor
 '@nxds/react': minor
 '@nxds/vue': minor
+'@nxds/claude-design': minor
 ---
 
 Items close to a rounded container share its corner. The corners that touch the container's corners are the container's radius minus its border and padding. The other corners are half the container's radius. No corner is less than half the radius, and all round to whole pixels.
@@ -12,4 +13,5 @@ Items close to a rounded container share its corner. The corners that touch the 
 - Toolbar: the default bar declares `nest-outer-lg nest-border-default nest-padding-0.5`, and the floating bar `nest-outer-2xl nest-border-default nest-padding-2`. If you change a toolbar's border or padding, set the matching `nest-border-*` and `nest-padding-*` too.
 - DropdownMenu, ContextMenu and Menubar render their submenus through a portal, like their menus.
 - A Slider with `inverted` rounds the range at its min end.
+- Claude Design: a rule that only sets `--nx-*` variables also matches the canvas wrapper that holds a part, so nested corners hold on the canvas.
 - The utilities use CSS `round()`, which is Baseline widely available from 17 November 2026.

@@ -3145,14 +3145,6 @@
     --nx-nest-b: initial;
     --nx-nest-e: initial;
   }
-  & :is([role='group'], [role='radiogroup']) > :not(:first-child) {
-    --nx-nest-t: initial;
-    --nx-nest-s: initial;
-  }
-  & :is([role='group'], [role='radiogroup']) > :not(:last-child) {
-    --nx-nest-b: initial;
-    --nx-nest-e: initial;
-  }
 }
 
 @utility nest-edges-x {
@@ -3195,14 +3187,6 @@
     --nx-nest-s: initial;
   }
   & * > :not(:last-child) {
-    --nx-nest-b: initial;
-    --nx-nest-e: initial;
-  }
-  & :is([role='group'], [role='radiogroup']) > :not(:first-child) {
-    --nx-nest-t: initial;
-    --nx-nest-s: initial;
-  }
-  & :is([role='group'], [role='radiogroup']) > :not(:last-child) {
     --nx-nest-b: initial;
     --nx-nest-e: initial;
   }

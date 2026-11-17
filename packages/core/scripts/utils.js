@@ -1570,14 +1570,11 @@ export function generateTargetUtilitiesCSS() {
 const NEST_OUTER = 'var(--nx-nest-outer, var(--nx-radius-md))';
 const NEST_MINIMUM = `round(calc(${NEST_OUTER} / 2), 1px)`;
 const NEST_CORNER = `max(round(calc(${NEST_OUTER} - var(--nx-nest-border) - var(--nx-nest-padding)), 1px), ${NEST_MINIMUM})`;
-const NEST_GROUP = `:is([role='group'], [role='radiogroup'])`;
-
 /**
  * A list's edge rules: its first child gets the corner value for the `start`
  * edge and its last child for the `end` edge. Every element inside the list
  * that is not at its own parent's edge gets none, so a value never reaches
- * past the item it is for. The group rules repeat this for the canvas wrappers
- * of `@nxds/claude-design`, which the general rules cannot reach through.
+ * past the item it is for.
  */
 function nestEdgesRules(start, end, ...across) {
   const unset = (...edges) =>
@@ -1590,8 +1587,6 @@ function nestEdgesRules(start, end, ...across) {
     `  & > :not(:last-child) { ${unset(end)} }`,
     `  & * > :not(:first-child) { ${unset('t', 's')} }`,
     `  & * > :not(:last-child) { ${unset('b', 'e')} }`,
-    `  & ${NEST_GROUP} > :not(:first-child) { ${unset('t', 's')} }`,
-    `  & ${NEST_GROUP} > :not(:last-child) { ${unset('b', 'e')} }`,
     '',
   ].join('\n');
 }
