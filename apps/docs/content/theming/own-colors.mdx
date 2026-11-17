@@ -20,7 +20,8 @@ npx nxds-cli@latest init --own-colors
 | Imports the colors file                                  | `nxds.css`                                                             |
 | Stops nxds deriving colors from your brand color         | `app/layout.tsx` on Next.js, `src/main.tsx` and `nxds.vite.ts` on Vite |
 
-`init` and `update` never change the colors file again.
+`init` and `update` never change the colors file again. After an update,
+`doctor` names each color the new release added, so you can set it.
 
 If `init` can't find your provider, it lists the prop to add by hand.
 
@@ -66,8 +67,9 @@ against its background.
 
 The provider saves the user's choices and applies them before the page paints.
 
-If your app has a settings screen, remove its brand color, surface tone and
-contrast controls.
+`NxdsAppearanceSettings` and `NxdsThemeQuickControl` hide their brand color,
+surface tone and contrast controls. In a settings screen of your own, hide them
+when `deriveColors` from `useNxdsAppearance` is `false`.
 
 ## Change shadows, corners or spacing
 

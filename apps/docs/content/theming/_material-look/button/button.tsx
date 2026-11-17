@@ -154,7 +154,7 @@ function ButtonContent({
 function Button({
   asChild = false,
   className,
-  variant = 'contained',
+  variant = 'default',
   color = 'primary',
   size,
   iconOnly = false,

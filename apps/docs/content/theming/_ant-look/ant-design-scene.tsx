@@ -98,7 +98,7 @@ function AdminPage() {
               <Slider
                 defaultValue={30}
                 marks={sliderMarks}
-                aria-labelledby={`${id}-refund`}
+                ariaLabelledByForHandle={`${id}-refund`}
                 style={{ margin: 0 }}
               />
             </Flex>

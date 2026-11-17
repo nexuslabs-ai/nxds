@@ -16,7 +16,7 @@ function DescriptionList({ className, ...props }: React.ComponentProps<'dl'>) {
       <dl
         data-slot="description-list"
         className={cn(
-          'nx:m-0 nx:-mr-px nx:-mb-px nx:grid nx:grid-cols-1 nx:@md/description-list:grid-cols-[repeat(4,auto)]',
+          'nx:m-0 nx:-me-(--nx-borderwidth-default) nx:-mb-(--nx-borderwidth-default) nx:grid nx:grid-cols-1 nx:@md/description-list:grid-cols-[repeat(4,auto)]',
           className
         )}
         {...props}

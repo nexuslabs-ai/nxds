@@ -152,7 +152,7 @@ const helperVariants = cva(
   }
 );
 
-type InputProps = Omit<React.ComponentProps<'input'>, 'size'> &
+type TextFieldProps = Omit<React.ComponentProps<'input'>, 'size'> &
   VariantProps<typeof inputVariants> & {
     /**
      * The field's name. It sits inside the field, and moves to the top edge
@@ -173,7 +173,7 @@ type InputProps = Omit<React.ComponentProps<'input'>, 'size'> &
  *
  * With a `placeholder`, the label stays raised so the two never overlap.
  */
-function Input({
+function TextField({
   className,
   label,
   helperText,
@@ -185,7 +185,7 @@ function Input({
   'aria-invalid': ariaInvalid,
   'aria-describedby': ariaDescribedBy,
   ...props
-}: InputProps) {
+}: TextFieldProps) {
   const variant = variantProp ?? 'outlined';
   const size = sizeProp ?? 'default';
   const generatedId = React.useId();
@@ -200,15 +200,18 @@ function Input({
 
   return (
     <div
-      data-slot="input-root"
+      data-slot="text-field"
       data-variant={variant}
       data-size={size}
       className={cn('nx:inline-flex nx:w-full nx:flex-col', className)}
     >
-      <div data-slot="input-control" className={controlVariants({ variant })}>
+      <div
+        data-slot="text-field-control"
+        className={controlVariants({ variant })}
+      >
         <input
           id={inputId}
-          data-slot="input"
+          data-slot="text-field-input"
           placeholder={placeholder ?? ' '}
           disabled={disabled}
           aria-invalid={ariaInvalid}
@@ -223,7 +226,7 @@ function Input({
         {label ? (
           <label
             htmlFor={inputId}
-            data-slot="input-label"
+            data-slot="text-field-label"
             className={cn(labelVariants({ variant, size, raised }))}
           >
             {label}
@@ -232,7 +235,7 @@ function Input({
         {variant === 'outlined' ? (
           <fieldset
             aria-hidden="true"
-            data-slot="input-outline"
+            data-slot="text-field-outline"
             className={outlineVariants({ raised })}
           >
             <legend>
@@ -246,7 +249,7 @@ function Input({
         ) : (
           <span
             aria-hidden="true"
-            data-slot="input-underline"
+            data-slot="text-field-underline"
             className={underlineClass}
           />
         )}
@@ -254,7 +257,7 @@ function Input({
       {helperText ? (
         <p
           id={helperId}
-          data-slot="input-helper"
+          data-slot="text-field-helper"
           className={helperVariants({ variant, tone })}
         >
           {helperText}
@@ -264,4 +267,4 @@ function Input({
   );
 }
 
-export { Input, type InputProps, inputVariants };
+export { TextField, type TextFieldProps };

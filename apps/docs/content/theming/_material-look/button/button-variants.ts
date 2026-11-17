@@ -5,11 +5,20 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        contained:
+        default:
           'nx:shadow-sm nx:hover:shadow-base nx:active:shadow-lg nx:disabled:shadow-none nx:aria-disabled:shadow-none',
-        outlined:
+        error:
+          'nx:text-error-subtle-foreground nx:hover:bg-error-subtle-hover nx:active:bg-error-subtle-active nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
+        destructive:
+          'nx:bg-error-background nx:text-error-foreground nx:hover:bg-error-background-hover nx:active:bg-error-background-active nx:disabled:bg-error-disabled nx:aria-disabled:bg-error-disabled',
+        outline:
           'nx:inset-ring-[length:var(--nx-borderwidth-default)] nx:disabled:inset-ring-disabled nx:aria-disabled:inset-ring-disabled',
-        text: '',
+        dashed:
+          'nx:border-default nx:border-dashed nx:border-border-default nx:bg-container nx:text-foreground nx:hover:bg-container-hover nx:active:bg-container-active nx:disabled:border-border-disabled nx:disabled:bg-disabled nx:disabled:text-disabled-foreground nx:aria-disabled:border-border-disabled nx:aria-disabled:bg-disabled nx:aria-disabled:text-disabled-foreground',
+        secondary:
+          'nx:bg-secondary-background nx:text-secondary-foreground nx:hover:bg-secondary-background-hover nx:active:bg-secondary-background-active nx:disabled:bg-secondary-disabled nx:disabled:text-disabled-foreground nx:aria-disabled:bg-secondary-disabled nx:aria-disabled:text-disabled-foreground',
+        ghost: '',
+        link: 'nx:border-0 nx:text-primary-subtle-foreground nx:underline-offset-4 nx:hover:underline nx:active:scale-100 nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
       },
       color: {
         primary: '',
@@ -29,55 +38,55 @@ export const buttonVariants = cva(
     },
     compoundVariants: [
       {
-        variant: 'contained',
+        variant: 'default',
         color: 'primary',
         className:
           'nx:bg-primary-background nx:text-primary-foreground nx:hover:bg-primary-background-hover nx:active:bg-primary-background-active nx:disabled:bg-primary-disabled nx:aria-disabled:bg-primary-disabled',
       },
       {
-        variant: 'contained',
+        variant: 'default',
         color: 'secondary',
         className:
           'nx:bg-secondary-background nx:text-secondary-foreground nx:hover:bg-secondary-background-hover nx:active:bg-secondary-background-active nx:disabled:bg-secondary-disabled nx:aria-disabled:bg-secondary-disabled',
       },
       {
-        variant: 'contained',
+        variant: 'default',
         color: 'error',
         className:
           'nx:bg-error-background nx:text-error-foreground nx:hover:bg-error-background-hover nx:active:bg-error-background-active nx:disabled:bg-error-disabled nx:aria-disabled:bg-error-disabled',
       },
       {
-        variant: 'outlined',
+        variant: 'outline',
         color: 'primary',
         className:
           'nx:inset-ring-primary-border nx:text-primary-subtle-foreground nx:hover:inset-ring-primary-border-active nx:hover:bg-primary-background/4 nx:active:bg-primary-subtle-active',
       },
       {
-        variant: 'outlined',
+        variant: 'outline',
         color: 'secondary',
         className:
           'nx:inset-ring-secondary-border nx:text-secondary-subtle-foreground nx:hover:inset-ring-secondary-border-active nx:hover:bg-secondary-background/4 nx:active:bg-secondary-subtle-active',
       },
       {
-        variant: 'outlined',
+        variant: 'outline',
         color: 'error',
         className:
           'nx:inset-ring-error-border nx:text-error-subtle-foreground nx:hover:inset-ring-border-error-active nx:hover:bg-error-background/4 nx:active:bg-error-subtle-active',
       },
       {
-        variant: 'text',
+        variant: 'ghost',
         color: 'primary',
         className:
           'nx:text-primary-subtle-foreground nx:hover:bg-primary-background/4 nx:active:bg-primary-subtle-active',
       },
       {
-        variant: 'text',
+        variant: 'ghost',
         color: 'secondary',
         className:
           'nx:text-secondary-subtle-foreground nx:hover:bg-secondary-background/4 nx:active:bg-secondary-subtle-active',
       },
       {
-        variant: 'text',
+        variant: 'ghost',
         color: 'error',
         className:
           'nx:text-error-subtle-foreground nx:hover:bg-error-background/4 nx:active:bg-error-subtle-active',
@@ -96,19 +105,19 @@ export const buttonVariants = cva(
           'nx:px-[22px] nx:py-2 nx:text-[length:calc(var(--nx-typography-size-sm)+1px)]',
       },
       {
-        variant: 'text',
+        variant: 'ghost',
         iconOnly: false,
         size: 'sm',
         className: 'nx:px-[5px]',
       },
       {
-        variant: 'text',
+        variant: 'ghost',
         iconOnly: false,
         size: 'default',
         className: 'nx:px-2',
       },
       {
-        variant: 'text',
+        variant: 'ghost',
         iconOnly: false,
         size: 'lg',
         className: 'nx:px-[11px]',
@@ -117,13 +126,18 @@ export const buttonVariants = cva(
       { iconOnly: true, size: 'default', className: 'nx:size-12' },
       { iconOnly: true, size: 'lg', className: 'nx:size-14' },
       {
-        variant: 'contained',
+        variant: 'default',
         iconOnly: true,
         className: 'nx:shadow-md nx:hover:shadow-md nx:active:shadow-xl',
       },
+      {
+        variant: 'link',
+        iconOnly: false,
+        className: 'nx:h-auto nx:min-h-0 nx:p-0!',
+      },
     ],
     defaultVariants: {
-      variant: 'contained',
+      variant: 'default',
       color: 'primary',
       size: 'default',
       iconOnly: false,

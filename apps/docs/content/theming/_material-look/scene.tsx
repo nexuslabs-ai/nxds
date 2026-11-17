@@ -10,9 +10,9 @@ import {
   CardTitle,
 } from './card/card';
 import { Checkbox } from './checkbox/checkbox';
-import { Input } from './input/input';
 import { Progress } from './progress/progress';
 import { Switch } from './switch/switch';
+import { TextField } from './text-field/text-field';
 
 /** Material's Add icon. Material's icons are filled shapes, not lines. */
 function AddIcon() {
@@ -53,8 +53,8 @@ export function MaterialScene() {
                 3 of 5 details added
               </p>
             </div>
-            <Input label="Full name" defaultValue="Ada Lovelace" />
-            <Input
+            <TextField label="Full name" defaultValue="Ada Lovelace" />
+            <TextField
               label="Email"
               type="email"
               defaultValue="ada@"
@@ -63,11 +63,11 @@ export function MaterialScene() {
             />
           </CardContent>
           <CardFooter className="nx:justify-between">
-            <Button variant="text" color="error">
+            <Button variant="ghost" color="error">
               Delete account
             </Button>
             <div className="nx:flex nx:gap-2">
-              <Button variant="text">Cancel</Button>
+              <Button variant="ghost">Cancel</Button>
               <Button>Save</Button>
             </div>
           </CardFooter>
@@ -106,10 +106,10 @@ export function MaterialScene() {
                 Send a copy to my team
               </label>
             </div>
-            <Input variant="filled" label="Company" />
+            <TextField variant="filled" label="Company" />
           </CardContent>
           <CardFooter className="nx:justify-between nx:p-4">
-            <Button variant="outlined" color="secondary">
+            <Button variant="outline" color="secondary">
               Mute all
             </Button>
             <Button iconOnly startIcon={<AddIcon />}>

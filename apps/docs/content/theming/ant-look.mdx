@@ -178,7 +178,8 @@ the Accordion's classes, and move its icon:
 ## Rewrite the Slider
 
 Ant's Slider is a thin rail with a round handle. Replace the Slider's class
-recipes. The component under them stays as it is:
+recipes, and remove the code that rounds the range at each end of the rail.
+The props and behavior stay as they are:
 
 <LookSource look="ant" file="slider/slider.tsx" />
 
@@ -260,7 +261,7 @@ them. The Ant Design page follows the page's mode only.
 ## Next steps
 
 - **[Material look](/theming/material-look)**: a settings screen with a
-  rewritten Switch and Input.
+  rewritten Switch and a new TextField.
 - **[Your own colors](/theming/own-colors)**: the colors file, and what keeps
   working.
 - **[Sidebar](/components/sidebar)**: the stock Sidebar and its parts.

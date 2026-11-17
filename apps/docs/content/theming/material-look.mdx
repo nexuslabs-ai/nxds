@@ -2,7 +2,7 @@ import { LookSource } from './_look-source';
 import { MaterialLookPreview } from './_material-look/preview';
 
 export const description =
-  'A Material-style settings screen built from nxds parts: your own colors, Material shadows, an edited Card, Button and Progress, and a rewritten Switch, Checkbox and Input.';
+  'A Material-style settings screen built from nxds parts: your own colors, Material shadows, an edited Card, Button and Progress, a rewritten Switch and Checkbox, and a new TextField.';
 
 # Material look
 
@@ -101,20 +101,20 @@ text in the colors file:
 ## Add the parts
 
 ```bash
-npx nxds-cli@latest add card button progress switch checkbox input label
+npx nxds-cli@latest add card button progress switch checkbox label
 ```
 
 Each part needs a different amount of work:
 
-| Part     | Change                                                              |
-| -------- | ------------------------------------------------------------------- |
-| Label    | None. It reads the colors you set                                   |
-| Card     | A shadow in place of the border, and Material's title sizes         |
-| Button   | `variant` and `color`, uppercase labels, round icon buttons         |
-| Progress | A thin, square bar on a tinted track                                |
-| Switch   | A new class recipe: a thin track, a raised thumb and a hover halo   |
-| Checkbox | A new class recipe and check mark: a bold outline, and a hover halo |
-| Input    | A new file: the label sits inside the field                         |
+| Part      | Change                                                              |
+| --------- | ------------------------------------------------------------------- |
+| Label     | None. It reads the colors you set                                   |
+| Card      | A shadow in place of the border, and Material's title sizes         |
+| Button    | Three restyled variants, a `color` prop, round icon buttons         |
+| Progress  | A thin, square bar on a tinted track                                |
+| Switch    | A new class recipe: a thin track, a raised thumb and a hover halo   |
+| Checkbox  | A new class recipe and check mark: a bold outline, and a hover halo |
+| TextField | A new part: the label sits inside the field                         |
 
 ## Edit the Card
 
@@ -134,21 +134,25 @@ weight. Change the Card's class strings:
 
 ## Edit the Button
 
-Replace the Button's class recipe:
+Restyle three of the Button's variants, and add a `color` beside `variant`:
 
 <LookSource look="material" file="button/button-variants.ts" />
 
-| Material needs                                     | Change in the recipe                                           |
-| -------------------------------------------------- | -------------------------------------------------------------- |
-| Contained, outlined and text, each in three colors | `variant` and `color`, in place of the single `variant`        |
-| Uppercase labels with wider letter spacing         | `nx:uppercase` and a `nx:tracking-*` class                     |
-| A shadow that grows on hover and press             | `nx:shadow-sm`, `nx:hover:shadow-base`, `nx:active:shadow-lg`  |
-| A readable disabled button                         | `nx:disabled:text-disabled-foreground`, and no shadow          |
-| 36.5px tall with 16px side padding                 | `nx:py-1.5`, `nx:px-4` and a line height of 1.75               |
-| 8px side padding on a text button                  | `nx:px-2` on the `text` variant                                |
-| An outline that takes no room                      | `nx:inset-ring-*` in place of a border                         |
-| A faint wash on hover                              | The button's color at 4%, such as `nx:bg-primary-background/4` |
-| Round icon buttons, 48px wide                      | `nx:rounded-full` and `nx:size-12` on the icon-only variant    |
+| Material needs                             | Change in the recipe                                           |
+| ------------------------------------------ | -------------------------------------------------------------- |
+| Contained, outlined and text buttons       | New classes on `default`, `outline` and `ghost`                |
+| Each in three colors                       | A `color` variant: `primary`, `secondary` or `error`           |
+| Uppercase labels with wider letter spacing | `nx:uppercase` and a `nx:tracking-*` class                     |
+| A shadow that grows on hover and press     | `nx:shadow-sm`, `nx:hover:shadow-base`, `nx:active:shadow-lg`  |
+| A readable disabled button                 | `nx:disabled:text-disabled-foreground`, and no shadow          |
+| 36.5px tall with 16px side padding         | `nx:py-1.5`, `nx:px-4` and a line height of 1.75               |
+| 8px side padding on a text button          | `nx:px-2` on the `ghost` variant                               |
+| An outline that takes no room              | `nx:inset-ring-*` in place of a border                         |
+| A faint wash on hover                      | The button's color at 4%, such as `nx:bg-primary-background/4` |
+| Round icon buttons, 48px wide              | `nx:rounded-full` and `nx:size-12` on the icon-only variant    |
+
+The variant names stay, so parts that build on Button, such as Pagination,
+still compile. The other variants keep their nxds classes.
 
 The component takes the new `color` prop and passes it to the recipe:
 
@@ -201,12 +205,12 @@ The component under them stays as it is:
 | A 42px touch area           | `nx:m-3` around the box                                         |
 | No color change on hover    | No hover or press fill classes                                  |
 
-## Rewrite the Input
+## Add a TextField
 
 Material's label sits inside the field and rises into its border. No color or
-class change gives the nxds Input that shape, so replace the file:
+class change gives the nxds Input that shape, so add a part of your own:
 
-<LookSource look="material" file="input/input.tsx" />
+<LookSource look="material" file="text-field/text-field.tsx" />
 
 | Part                        | Job                                                                                   |
 | --------------------------- | ------------------------------------------------------------------------------------- |
@@ -220,6 +224,9 @@ The field keeps no state in JavaScript. Its classes read `:focus` and
 
 If you pass a `placeholder`, the label stays raised, so the two never overlap.
 
+TextField is a new file. The nxds Input, and the parts that build on it, stay
+as they are.
+
 ## Use the parts
 
 ```tsx
@@ -232,9 +239,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/nxds/components/card/card';
-import { Input } from '@/components/nxds/components/input/input';
 import { Label } from '@/components/nxds/components/label/label';
 import { Switch } from '@/components/nxds/components/switch/switch';
+import { TextField } from '@/components/nxds/components/text-field/text-field';
 
 export function Notifications() {
   return (
@@ -243,14 +250,14 @@ export function Notifications() {
         <CardTitle>Notifications</CardTitle>
       </CardHeader>
       <CardContent className="nx:flex nx:flex-col nx:gap-6">
-        <Input label="Send to" type="email" />
+        <TextField label="Send to" type="email" />
         <div className="nx:flex nx:items-center nx:justify-between">
           <Label htmlFor="product-updates">Product updates</Label>
           <Switch id="product-updates" defaultChecked />
         </div>
       </CardContent>
       <CardFooter className="nx:justify-end">
-        <Button variant="text">Cancel</Button>
+        <Button variant="ghost">Cancel</Button>
         <Button>Save</Button>
       </CardFooter>
     </Card>
