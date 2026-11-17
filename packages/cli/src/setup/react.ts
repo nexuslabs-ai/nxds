@@ -18,7 +18,13 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import type { Font, SetupStep } from '../catalog';
-import { COLORS_FILE, COLORS_IMPORT, DERIVE_COLORS_OFF } from '../colors';
+import {
+  COLORS_FILE,
+  COLORS_IMPORT,
+  DERIVE_COLORS_OFF,
+  DERIVE_COLORS_OFF_OPTION,
+  importsColors,
+} from '../colors';
 import type { Config } from '../config';
 import { CliError } from '../errors';
 import { relativeImport } from '../files';
@@ -40,6 +46,7 @@ import {
   findJsx,
   findNode,
   hasAttribute,
+  hasFalseAttribute,
   importInsertion,
   type Insertion,
   lineIndent,
@@ -154,9 +161,30 @@ function providerProps(ownColors: boolean) {
   return ownColors ? `${props} ${DERIVE_COLORS_OFF}` : props;
 }
 
+/** The elements that take `deriveColors`: the provider and the head script. */
+const APPEARANCE_ELEMENTS = ['NxdsAppearanceProvider', 'NxdsAppearanceScript'];
+
+/** Whether an element leaves color derivation on: it has no `deriveColors={false}`. */
+function derivesColors(element: JSXElement) {
+  return !hasFalseAttribute(element, 'deriveColors');
+}
+
+/**
+ * Whether a wired file renders the provider or the head script with color
+ * derivation on, which overrides an app's own colors.
+ */
+export function rendersDerivedColors(source: string, file: string) {
+  const program = parseModule(source, file);
+  return APPEARANCE_ELEMENTS.some((name) => {
+    const element = findJsx(program, name);
+    return element !== undefined && derivesColors(element);
+  });
+}
+
 /**
  * Adds `deriveColors={false}` to each of `names` a wired file renders. One it
  * doesn't render, such as a provider in a file of its own, is a manual step.
+ * So is one that sets `deriveColors` to something else.
  */
 function turnDerivationOff(
   source: string,
@@ -164,23 +192,28 @@ function turnDerivationOff(
   names: string[]
 ): WiringPlan {
   const program = parseModule(source, file);
-  const elements = names.map((name) => ({
-    name,
-    element: findJsx(program, name),
-  }));
-  const insertions = elements.flatMap(({ element }) =>
-    element && !hasAttribute(element, 'deriveColors')
-      ? [attributeInsertion(element, DERIVE_COLORS_OFF)]
-      : []
-  );
+  const insertions: Insertion[] = [];
+  const manual: ManualStep[] = [];
+  for (const name of names) {
+    const element = findJsx(program, name);
+    if (element && !derivesColors(element)) continue;
+    if (element && !hasAttribute(element, 'deriveColors')) {
+      insertions.push(attributeInsertion(element, DERIVE_COLORS_OFF));
+      continue;
+    }
+    manual.push({
+      file,
+      step: element
+        ? `Change deriveColors to ${DERIVE_COLORS_OFF} on ${name}.`
+        : `Pass ${DERIVE_COLORS_OFF} to ${name}.`,
+    });
+  }
   return {
     changes:
       insertions.length > 0
         ? [editedFile(file, applyInsertions(source, insertions))]
         : [],
-    manual: elements.flatMap(({ name, element }) =>
-      element ? [] : [{ file, step: `Pass ${DERIVE_COLORS_OFF} to ${name}.` }]
-    ),
+    manual,
   };
 }
 
@@ -194,10 +227,7 @@ function wireNextLayout(
   const source = read(project, layout);
   if (/NxdsAppearance(Provider|Script)/.test(source)) {
     return ownColors
-      ? turnDerivationOff(source, layout, [
-          'NxdsAppearanceProvider',
-          'NxdsAppearanceScript',
-        ])
+      ? turnDerivationOff(source, layout, APPEARANCE_ELEMENTS)
       : NO_CHANGES;
   }
   const props = providerProps(ownColors);
@@ -343,7 +373,7 @@ export const VITE_PLUGIN_FILE = 'nxds.vite.ts';
 const DERIVED_SNAPSHOT =
   'createNxdsAppearanceSnapshotFromState(defaultAppearance)';
 const OWN_COLORS_SNAPSHOT = `createNxdsAppearanceSnapshotFromState(defaultAppearance, {
-      deriveColors: false,
+      ${DERIVE_COLORS_OFF_OPTION},
     })`;
 
 function vitePlugin(ownColors: boolean) {
@@ -396,14 +426,14 @@ function planViteScript(
   if (!ownColors) return NO_CHANGES;
 
   const source = read(project, VITE_PLUGIN_FILE);
-  if (source.includes('deriveColors')) return NO_CHANGES;
+  if (source.includes(DERIVE_COLORS_OFF_OPTION)) return NO_CHANGES;
   if (!source.includes(DERIVED_SNAPSHOT)) {
     return {
       changes: [],
       manual: [
         {
           file: VITE_PLUGIN_FILE,
-          step: 'Pass { deriveColors: false } as the second argument of createNxdsAppearanceSnapshotFromState.',
+          step: `Pass { ${DERIVE_COLORS_OFF_OPTION} } as the second argument of createNxdsAppearanceSnapshotFromState.`,
         },
       ],
     };
@@ -712,6 +742,14 @@ export function colorsPath(config: Config) {
   return path.posix.join(path.posix.dirname(config.css), COLORS_FILE);
 }
 
+/** Whether the app's CSS entry already loads its own colors file. */
+export function ownsColors(project: Project, config: Config) {
+  return (
+    existsSync(path.join(project.root, config.css)) &&
+    importsColors(read(project, config.css))
+  );
+}
+
 /**
  * The app's own colors: `nxds-colors.css`, written once, and its import in a
  * CSS entry that already exists. An entry `init` is about to create has it.
@@ -724,7 +762,7 @@ function planColors(
   const plan = createdUnlessExists(project, colorsPath(config), colors);
   if (!existsSync(path.join(project.root, config.css))) return plan;
   const entry = read(project, config.css);
-  if (entry.includes(COLORS_IMPORT)) return plan;
+  if (importsColors(entry)) return plan;
   return {
     changes: [
       ...plan.changes,

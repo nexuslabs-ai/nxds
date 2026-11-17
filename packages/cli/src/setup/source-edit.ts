@@ -1,9 +1,12 @@
 import { parse } from '@babel/parser';
 import {
+  isBooleanLiteral,
   isImportDeclaration,
   isJSXAttribute,
   isJSXElement,
+  isJSXExpressionContainer,
   isJSXIdentifier,
+  type JSXAttribute,
   type JSXElement,
   type Node,
   type Program,
@@ -119,12 +122,25 @@ export function openingTagEnd(element: JSXElement) {
   return endOf(element.openingElement);
 }
 
-export function hasAttribute(element: JSXElement, name: string) {
-  return element.openingElement.attributes.some(
-    (attribute) =>
+function findAttribute(element: JSXElement, name: string) {
+  return element.openingElement.attributes.find(
+    (attribute): attribute is JSXAttribute =>
       isJSXAttribute(attribute) &&
       isJSXIdentifier(attribute.name) &&
       attribute.name.name === name
+  );
+}
+
+export function hasAttribute(element: JSXElement, name: string) {
+  return findAttribute(element, name) !== undefined;
+}
+
+/** Whether an element sets the attribute `name` to the literal `false`. */
+export function hasFalseAttribute(element: JSXElement, name: string) {
+  const value = findAttribute(element, name)?.value;
+  return (
+    isJSXExpressionContainer(value) &&
+    isBooleanLiteral(value.expression, { value: false })
   );
 }
 

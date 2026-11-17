@@ -19,7 +19,7 @@ import {
   withIconLibrary,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
-import { colorsCss } from '../colors';
+import { colorFields, colorsCss } from '../colors';
 import { type Config, readConfig, requireConfig, writeConfig } from '../config';
 import { CliError, UsageError } from '../errors';
 import { conflictedFiles } from '../files';
@@ -37,9 +37,11 @@ import {
   readProject,
 } from '../project';
 import {
+  colorsPath,
   cssEntryPath,
   defaultDir,
   type ManualStep,
+  ownsColors,
   planWiring,
   tailwindPackages,
 } from '../setup/react';
@@ -230,6 +232,12 @@ export async function init(
     config.theme ?? {},
     options.theme
   );
+  const inert = colorFields(release, options.theme ?? {});
+  if (inert.length > 0 && ownsColors(project, config)) {
+    throw new UsageError(
+      `${colorsPath(config)} sets your colors, so ${inert.map((field) => `--${field.flag}`).join(' and ')} would change nothing. Edit the colors in that file.`
+    );
+  }
   const custom = lines.length > 0;
   if (custom) config.theme = flags;
   else delete config.theme;

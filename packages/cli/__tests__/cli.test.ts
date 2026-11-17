@@ -1153,6 +1153,7 @@ function ownColorsRelease(version: string): Catalog {
   return { ...choicesRelease(version), ownColors: true };
 }
 
+const NXDS_ENTRY = 'app/nxds.css';
 const NXDS_COLORS = 'app/nxds-colors.css';
 const COLORS_IMPORT = "@import './nxds-colors.css';";
 const DERIVE_COLORS_OFF = 'deriveColors={false}';
@@ -1172,6 +1173,13 @@ function colorValue(css: string, name: string) {
   return new RegExp(`--nx-color-${name}: ([^;]+);`).exec(css)?.[1];
 }
 
+/** Rewrites the nxds CSS entry with double quotes, as a formatter does. */
+function requoteEntry(app: string) {
+  const requoted = readApp(app, NXDS_ENTRY).replaceAll("'", '"');
+  writeApp(app, NXDS_ENTRY, requoted);
+  return requoted;
+}
+
 describe('own colors', () => {
   it('writes every color and turns derivation off, in one step', async () => {
     const context = setup([ownColorsRelease('0.4.7')]);
@@ -1184,7 +1192,7 @@ describe('own colors', () => {
       everyColor,
       everyColor,
     ]);
-    expect(readApp(context.app, 'app/nxds.css')).toContain(COLORS_IMPORT);
+    expect(readApp(context.app, NXDS_ENTRY)).toContain(COLORS_IMPORT);
     const layout = readApp(context.app, NEXT_LAYOUT_FILE);
     expect(layout).toContain(`<NxdsAppearanceProvider ${OWN_COLORS_PROPS}>`);
     expect(layout).toContain(`<NxdsAppearanceScript ${OWN_COLORS_PROPS} />`);
@@ -1216,7 +1224,7 @@ describe('own colors', () => {
     const layout = readApp(context.app, NEXT_LAYOUT_FILE);
     expect(layout).toContain(`<NxdsAppearanceProvider ${OWN_COLORS_PROPS}>`);
     expect(layout).toContain(`<NxdsAppearanceScript ${OWN_COLORS_PROPS} />`);
-    expect(readApp(context.app, 'app/nxds.css')).toContain(COLORS_IMPORT);
+    expect(readApp(context.app, NXDS_ENTRY)).toContain(COLORS_IMPORT);
     expect(
       colorValue(readApp(context.app, NXDS_COLORS), 'primary-background')
     ).toBeDefined();
@@ -1315,6 +1323,99 @@ describe('own colors', () => {
     );
   });
 
+  it('fails the doctor colors check when the colors file lacks a color nxds.css sets', async () => {
+    const context = setup([ownColorsRelease('0.4.7')]);
+    await cli(['init', '--own-colors'], context);
+    writeApp(
+      context.app,
+      NXDS_COLORS,
+      readApp(context.app, NXDS_COLORS).replaceAll(
+        /\n *--nx-color-primary-background-hover: [^;]+;/g,
+        ''
+      )
+    );
+
+    const { exitCode, body } = await cliJson(['doctor'], context);
+
+    expect(exitCode).toBe(EXIT_CODES.attention);
+    expect(body.data.checks).toContainEqual(
+      expect.objectContaining({
+        name: 'colors',
+        ok: false,
+        message: expect.stringMatching(
+          /no value for these nxds colors: primary-background-hover\./
+        ),
+      })
+    );
+  });
+
+  it('adds no second import when a formatter requoted the first', async () => {
+    const context = setup([ownColorsRelease('0.4.7')]);
+    await cli(['init', '--own-colors'], context);
+    const requoted = requoteEntry(context.app);
+
+    const again = await cli(['init', '--own-colors'], context);
+
+    expect(again.exitCode, again.stdout + again.stderr).toBe(EXIT_CODES.ok);
+    expect(readApp(context.app, NXDS_ENTRY)).toBe(requoted);
+  });
+
+  it('runs the doctor colors check on a requoted import', async () => {
+    const context = setup([ownColorsRelease('0.4.7')]);
+    await cli(['init', '--own-colors'], context);
+    requoteEntry(context.app);
+
+    const { body } = await cliJson(['doctor'], context);
+
+    expect(body.data.checks).toContainEqual(
+      expect.objectContaining({ name: 'colors', ok: true })
+    );
+  });
+
+  it('exits 2 on a color flag once the app owns its colors', async () => {
+    const context = setup([ownColorsRelease('0.4.7')]);
+    await cli(['init', '--own-colors'], context);
+    const before = readTree(context.app);
+
+    const run = await cli(['init', '--brand-color', '#1976d2'], context);
+
+    expect(run.exitCode).toBe(EXIT_CODES.usage);
+    expect(run.stderr).toContain(
+      `${NXDS_COLORS} sets your colors, so --brand-color would change nothing`
+    );
+    expect(readTree(context.app)).toEqual(before);
+  });
+
+  it('leaves a provider that sets deriveColors itself as a step for you, and fails doctor on it', async () => {
+    const context = setup([ownColorsRelease('0.4.7')]);
+    await cli(['init'], context);
+    writeApp(
+      context.app,
+      NEXT_LAYOUT_FILE,
+      readApp(context.app, NEXT_LAYOUT_FILE).replace(
+        /(<NxdsAppearanceProvider [^>]*)>/,
+        '$1 deriveColors={derive}>'
+      )
+    );
+
+    const run = await cli(['init', '--own-colors'], context);
+    const { body } = await cliJson(['doctor'], context);
+
+    expect(run.exitCode).toBe(EXIT_CODES.attention);
+    expect(run.stdout).toContain(
+      `${NEXT_LAYOUT_FILE}: Change deriveColors to ${DERIVE_COLORS_OFF} on NxdsAppearanceProvider.`
+    );
+    expect(body.data.checks).toContainEqual(
+      expect.objectContaining({
+        name: 'colors',
+        ok: false,
+        message: expect.stringMatching(
+          /still derives colors in app\/layout\.tsx/
+        ),
+      })
+    );
+  });
+
   it('wires a new Vite app, theme script included', async () => {
     const context = setupVite([ownColorsRelease('0.4.7')]);
 
@@ -1349,6 +1450,26 @@ describe('own colors', () => {
     );
     expect(readApp(context.app, 'src/main.tsx')).toContain(
       `<NxdsAppearanceProvider ${OWN_COLORS_PROPS}>`
+    );
+  });
+
+  it('leaves a Vite theme script that sets deriveColors itself as a step for you', async () => {
+    const context = setupVite([ownColorsRelease('0.4.7')]);
+    await cli(['init'], context);
+    writeApp(
+      context.app,
+      'nxds.vite.ts',
+      readApp(context.app, 'nxds.vite.ts').replace(
+        'createNxdsAppearanceSnapshotFromState(defaultAppearance)',
+        'createNxdsAppearanceSnapshotFromState(defaultAppearance, { deriveColors: true })'
+      )
+    );
+
+    const run = await cli(['init', '--own-colors'], context);
+
+    expect(run.exitCode).toBe(EXIT_CODES.attention);
+    expect(run.stdout).toContain(
+      'nxds.vite.ts: Pass { deriveColors: false } as the second argument of createNxdsAppearanceSnapshotFromState.'
     );
   });
 });

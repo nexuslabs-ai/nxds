@@ -16,7 +16,12 @@ import {
   withIconLibrary,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
-import { COLORS_FILE, COLORS_IMPORT, DERIVE_COLORS_OFF } from '../colors';
+import {
+  colorNames,
+  COLORS_FILE,
+  DERIVE_COLORS_OFF_OPTION,
+  importsColors,
+} from '../colors';
 import { type Config, readConfig, requireConfig } from '../config';
 import { CliError } from '../errors';
 import {
@@ -36,7 +41,12 @@ import {
   VITE_CONFIGS,
   VITE_ENTRIES,
 } from '../project';
-import { entryDir, VITE_PLUGIN_FILE } from '../setup/react';
+import {
+  colorsPath,
+  entryDir,
+  rendersDerivedColors,
+  VITE_PLUGIN_FILE,
+} from '../setup/react';
 import {
   fontImportLine,
   nxdsThemeSource,
@@ -150,17 +160,45 @@ function filesDerivingColors(
   entry: string | undefined,
   entrySource: string
 ) {
-  const rendered =
-    entrySource.match(/<NxdsAppearance(?:Provider|Script)\b/g)?.length ?? 0;
-  const turnedOff = entrySource.split(DERIVE_COLORS_OFF).length - 1;
-  const files = entry && turnedOff < rendered ? [entry] : [];
+  const files =
+    entry && rendersDerivedColors(entrySource, entry) ? [entry] : [];
   if (
     project.setup === 'vite-react' &&
-    !read(root, VITE_PLUGIN_FILE).includes('deriveColors: false')
+    !read(root, VITE_PLUGIN_FILE).includes(DERIVE_COLORS_OFF_OPTION)
   ) {
     files.push(VITE_PLUGIN_FILE);
   }
   return files;
+}
+
+/**
+ * Why the app's own colors don't reach the page as written, or null. The theme
+ * engine still derives colors over them, or the colors file has no value for
+ * a color the app's `nxds.css` sets, such as one a later release added.
+ */
+function ownColorsProblem(
+  root: string,
+  project: Project,
+  config: Config,
+  entry: string | undefined,
+  entrySource: string
+) {
+  const deriving = filesDerivingColors(root, project, entry, entrySource);
+  if (deriving.length > 0) {
+    return `${config.css} imports ${COLORS_FILE}, and the theme engine still derives colors in ${deriving.join(' and ')}, which override yours. Run \`${CLI_COMMAND} init --own-colors\`.`;
+  }
+  const colorsFile = colorsPath(config);
+  if (!existsSync(path.join(root, colorsFile))) {
+    return `${config.css} imports ${COLORS_FILE}, and ${colorsFile} is missing. Run \`${CLI_COMMAND} init --own-colors\` to write it.`;
+  }
+  const own = new Set(colorNames(read(root, colorsFile)));
+  const missing = colorNames(
+    read(root, `${config.dir}/tailwind/nxds.css`)
+  ).filter((name) => !own.has(name));
+  if (missing.length > 0) {
+    return `${colorsFile} has no value for these nxds colors: ${missing.join(', ')}. Each keeps its nxds default until you add it under :root and .dark.`;
+  }
+  return null;
 }
 
 /** Whether an `@source` in the CSS entry names the nxds folder or a folder above it. */
@@ -468,14 +506,13 @@ export async function doctor(
       : `The theme script is missing, so the page can flash the wrong theme. Run \`${CLI_COMMAND} init\`.`
   );
 
-  if (css.includes(COLORS_IMPORT)) {
-    const deriving = filesDerivingColors(cwd, project, entry, entrySource);
+  if (importsColors(css)) {
+    const problem = ownColorsProblem(cwd, project, config, entry, entrySource);
     check(
       'colors',
-      deriving.length === 0,
-      deriving.length === 0
-        ? `${COLORS_FILE} sets your colors, and nothing overrides them`
-        : `${config.css} imports ${COLORS_FILE}, and the theme engine still derives colors in ${deriving.join(' and ')}, which override yours. Run \`${CLI_COMMAND} init --own-colors\`.`
+      problem === null,
+      problem ??
+        `${COLORS_FILE} sets every nxds color, and nothing overrides them`
     );
   }
 

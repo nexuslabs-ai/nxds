@@ -1,6 +1,7 @@
 import {
   createNxdsThemeContract,
   DEFAULT_NXDS_APPEARANCE,
+  NXDS_COLOR_APPEARANCE_KEYS,
   sanitizeNxdsAppearance,
 } from '@nxds/core/source/lib/appearance-model.ts';
 import {
@@ -21,16 +22,36 @@ export const COLORS_FILE = 'nxds-colors.css';
 /** The line that loads it, in the nxds CSS entry. */
 export const COLORS_IMPORT = `@import './${COLORS_FILE}';`;
 
+/** Whether a CSS entry loads the colors file, however its import is quoted. */
+export function importsColors(css: string) {
+  return css.includes(COLORS_FILE);
+}
+
 /** The prop that stops the theme engine deriving colors, in JSX. */
 export const DERIVE_COLORS_OFF = 'deriveColors={false}';
 
-/** The appearance fields the engine derives every color from. */
-const COLOR_INPUTS = new Set([
-  'brandColor',
-  'surfaceTone',
-  'lightContrast',
-  'darkContrast',
-]);
+/** The same choice, as an option of the snapshot a Vite theme script builds. */
+export const DERIVE_COLORS_OFF_OPTION = 'deriveColors: false';
+
+/** The nxds colors a stylesheet sets, by name, each once. */
+export function colorNames(css: string) {
+  return [
+    ...new Set(
+      [...css.matchAll(/--nx-color-([a-z0-9-]+):/g)].flatMap(([, name]) =>
+        name ? [name] : []
+      )
+    ),
+  ];
+}
+
+/** The theme fields `flags` set that the engine derives colors from. */
+export function colorFields(release: Catalog, flags: ThemeFlags) {
+  return release.themeFields.filter(
+    (field) =>
+      field.flag in flags &&
+      (NXDS_COLOR_APPEARANCE_KEYS as readonly string[]).includes(field.key)
+  );
+}
 
 const CATEGORY_LABELS: Record<TokenCategory, string> = {
   surface: 'Surfaces',
@@ -47,10 +68,12 @@ const CATEGORY_LABELS: Record<TokenCategory, string> = {
 /** The color inputs the theme's flags set, by appearance field. */
 function colorInputs(release: Catalog, flags: ThemeFlags) {
   return Object.fromEntries(
-    release.themeFields.flatMap((field) => {
+    colorFields(release, flags).map((field) => {
       const value = flags[field.flag];
-      if (value === undefined || !COLOR_INPUTS.has(field.key)) return [];
-      return [[field.key, field.kind === 'integer' ? Number(value) : value]];
+      return [
+        field.key,
+        field.kind === 'integer' ? Number(value) : value,
+      ] as const;
     })
   );
 }
