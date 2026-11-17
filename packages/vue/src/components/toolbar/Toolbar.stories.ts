@@ -1719,6 +1719,17 @@ export const NestedCornersThroughWrappers: Story = {
             <ToolbarButton>Undo</ToolbarButton>
           </ToolbarGroup>
         </Toolbar>
+        <Toolbar aria-label="Plain wrapper">
+          <ToolbarButton>Cut</ToolbarButton>
+          <div class="nx:ms-auto nx:flex nx:gap-[inherit]">
+            <span class="nx:inline-flex">
+              <ToolbarButton>Copy</ToolbarButton>
+            </span>
+            <span class="nx:inline-flex">
+              <ToolbarButton>Paste</ToolbarButton>
+            </span>
+          </div>
+        </Toolbar>
       </div>
     `,
   }),
@@ -1763,6 +1774,28 @@ export const NestedCornersThroughWrappers: Story = {
       '8px',
     ]);
     await expectCorners(nested.getByRole('button', { name: 'Undo' }), [
+      '8px',
+      '12px',
+      '12px',
+      '8px',
+    ]);
+
+    const plain = within(
+      canvas.getByRole('toolbar', { name: 'Plain wrapper' })
+    );
+    await expectCorners(plain.getByRole('button', { name: 'Cut' }), [
+      '12px',
+      '8px',
+      '8px',
+      '12px',
+    ]);
+    await expectCorners(plain.getByRole('button', { name: 'Copy' }), [
+      '8px',
+      '8px',
+      '8px',
+      '8px',
+    ]);
+    await expectCorners(plain.getByRole('button', { name: 'Paste' }), [
       '8px',
       '12px',
       '12px',

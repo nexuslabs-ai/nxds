@@ -249,6 +249,33 @@ export const WRAPPED_CASES: { name: string; markup: string; reads: Read[] }[] =
       ],
     },
     {
+      name: 'a Toolbar rounds the tools at its edges, also inside a group',
+      markup: el(
+        'div',
+        'data-radius="12"',
+        x(
+          'Toolbar',
+          'aria-label="Formatting"',
+          x(
+            'ToolbarToggleGroup',
+            'type="multiple" aria-label="Style"',
+            x('ToolbarToggleItem', 'value="bold"', 'Bold'),
+            x('ToolbarToggleItem', 'value="italic"', 'Italic'),
+            x('ToolbarToggleItem', 'value="underline"', 'Underline')
+          ),
+          x('ToolbarButton', '', 'Undo')
+        )
+      ),
+      reads: [
+        { target: 'button', index: 0, property: 'border-top-left-radius' },
+        { target: 'button', index: 0, property: 'border-top-right-radius' },
+        { target: 'button', index: 1, property: 'border-top-left-radius' },
+        { target: 'button', index: 2, property: 'border-top-right-radius' },
+        { target: 'button', index: 3, property: 'border-top-left-radius' },
+        { target: 'button', index: 3, property: 'border-top-right-radius' },
+      ],
+    },
+    {
       name: 'Accordion drops the last divider',
       markup: x(
         'Accordion',

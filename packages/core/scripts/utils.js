@@ -1574,9 +1574,10 @@ const NEST_GROUP = `:is([role='group'], [role='radiogroup'])`;
 
 /**
  * A list's edge rules: its first child gets the corner value for the `start`
- * edge and its last child for the `end` edge. Every other child, and every
- * child of a group inside the list that is not at the group's own edge, gets
- * none, so a value never reaches past the item it is for.
+ * edge and its last child for the `end` edge. Every element inside the list
+ * that is not at its own parent's edge gets none, so a value never reaches
+ * past the item it is for. The group rules repeat this for the canvas wrappers
+ * of `@nxds/claude-design`, which the general rules cannot reach through.
  */
 function nestEdgesRules(start, end, ...across) {
   const unset = (...edges) =>
@@ -1587,6 +1588,8 @@ function nestEdgesRules(start, end, ...across) {
     `  & > :not(:first-child) { ${unset(start)} }`,
     `  & > :last-child { --nx-nest-${end}: ${NEST_CORNER}; }`,
     `  & > :not(:last-child) { ${unset(end)} }`,
+    `  & * > :not(:first-child) { ${unset('t', 's')} }`,
+    `  & * > :not(:last-child) { ${unset('b', 'e')} }`,
     `  & ${NEST_GROUP} > :not(:first-child) { ${unset('t', 's')} }`,
     `  & ${NEST_GROUP} > :not(:last-child) { ${unset('b', 'e')} }`,
     '',
@@ -1644,7 +1647,7 @@ export function generateNestUtilitiesCSS() {
 }
 
 @utility rounded-half-nest {
-  border-radius: round(calc(${NEST_OUTER} / 4), 1px);
+  border-radius: round(calc(${NEST_MINIMUM} / 2), 1px);
 }
 
 @utility rounded-nest-corner {

@@ -2992,7 +2992,7 @@
 
 @utility rounded-half-nest {
   border-radius: round(
-    calc(var(--nx-nest-outer, var(--nx-radius-md)) / 4),
+    calc(round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px) / 2),
     1px
   );
 }
@@ -3137,6 +3137,14 @@
   & > :not(:last-child) {
     --nx-nest-b: initial;
   }
+  & * > :not(:first-child) {
+    --nx-nest-t: initial;
+    --nx-nest-s: initial;
+  }
+  & * > :not(:last-child) {
+    --nx-nest-b: initial;
+    --nx-nest-e: initial;
+  }
   & :is([role='group'], [role='radiogroup']) > :not(:first-child) {
     --nx-nest-t: initial;
     --nx-nest-s: initial;
@@ -3180,6 +3188,14 @@
     );
   }
   & > :not(:last-child) {
+    --nx-nest-e: initial;
+  }
+  & * > :not(:first-child) {
+    --nx-nest-t: initial;
+    --nx-nest-s: initial;
+  }
+  & * > :not(:last-child) {
+    --nx-nest-b: initial;
     --nx-nest-e: initial;
   }
   & :is([role='group'], [role='radiogroup']) > :not(:first-child) {
