@@ -144,7 +144,7 @@ const MenubarSubTrigger = React.forwardRef<
       data-inset={inset}
       className={cn(
         'nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2',
-        'nx:rounded-nest nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none',
+        'nx:rounded-nest-edges nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-[state=open]:bg-popover-hover nx:data-[state=open]:text-popover-foreground',
         'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
@@ -188,7 +188,7 @@ const MenubarSubContent = React.forwardRef<
       className={cn(
         'nx:z-popover nx:min-w-32 nx:overflow-hidden',
         popoverSurfaceClassName,
-        'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:rounded-t-nest-corner nx:[&>:last-child]:rounded-b-nest-corner nx:[&>[role=group]:first-child>:first-child]:rounded-t-nest-corner nx:[&>[role=group]:last-child>:last-child]:rounded-b-nest-corner',
+        'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:nest-edge-t nx:[&>:last-child]:nest-edge-b',
         overlayFloatingTransitionClassName,
         className
       )}
@@ -232,7 +232,7 @@ const MenubarContent = React.forwardRef<
         className={cn(
           'nx:z-popover nx:min-w-48 nx:overflow-hidden',
           popoverSurfaceClassName,
-          'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:rounded-t-nest-corner nx:[&>:last-child]:rounded-b-nest-corner nx:[&>[role=group]:first-child>:first-child]:rounded-t-nest-corner nx:[&>[role=group]:last-child>:last-child]:rounded-b-nest-corner',
+          'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:nest-edge-t nx:[&>:last-child]:nest-edge-b',
           overlayFloatingTransitionClassName,
           className
         )}
@@ -243,7 +243,7 @@ const MenubarContent = React.forwardRef<
 });
 
 const menubarItemVariants = cva(
-  'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2 nx:rounded-nest nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none nx:transition-colors nx:focus:bg-popover-hover nx:focus:text-popover-foreground nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
+  'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2 nx:rounded-nest-edges nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none nx:transition-colors nx:focus:bg-popover-hover nx:focus:text-popover-foreground nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
   {
     variants: {
       variant: {
@@ -333,7 +333,7 @@ const MenubarCheckboxItem = React.forwardRef<
       data-slot="menubar-checkbox-item"
       className={cn(
         'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
-        'nx:rounded-nest nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
+        'nx:rounded-nest-edges nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
         menuItemInsetClassName,
         'nx:transition-colors',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
@@ -394,7 +394,7 @@ const MenubarRadioItem = React.forwardRef<
       data-slot="menubar-radio-item"
       className={cn(
         'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
-        'nx:rounded-nest nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
+        'nx:rounded-nest-edges nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
         menuItemInsetClassName,
         'nx:transition-colors',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',

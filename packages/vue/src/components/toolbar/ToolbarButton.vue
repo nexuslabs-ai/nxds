@@ -48,7 +48,7 @@ const delegated = reactiveOmit(props, 'class', 'variant', 'size', 'iconOnly');
     :class="
       cn(
         buttonVariants({ variant, size, iconOnly }),
-        'nx:rounded-nest',
+        'nx:rounded-nest-edges',
         props.class
       )
     "

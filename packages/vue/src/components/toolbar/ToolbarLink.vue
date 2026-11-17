@@ -31,7 +31,11 @@ const delegated = reactiveOmit(props, 'class', 'variant', 'size');
     :data-variant="variant"
     :data-size="size"
     :class="
-      cn(buttonVariants({ variant, size }), 'nx:rounded-nest', props.class)
+      cn(
+        buttonVariants({ variant, size }),
+        'nx:rounded-nest-edges',
+        props.class
+      )
     "
   >
     <slot />

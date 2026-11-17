@@ -23,8 +23,8 @@ type ToolbarVariant = 'default' | 'floating';
 const toolbarVariants = cva(
   [
     'nx:group/toolbar nx:flex nx:w-fit nx:max-w-full nx:min-w-0 nx:flex-wrap nx:items-center nx:border-default nx:border-border-default nx:bg-container nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
-    'nx:data-[orientation=horizontal]:[&>:first-child]:rounded-s-nest-corner nx:data-[orientation=horizontal]:[&>:last-child]:rounded-e-nest-corner nx:data-[orientation=horizontal]:[&>[data-slot$=group]:first-child>:first-child]:rounded-s-nest-corner nx:data-[orientation=horizontal]:[&>[data-slot$=group]:last-child>:last-child]:rounded-e-nest-corner',
-    'nx:data-[orientation=vertical]:[&>:first-child]:rounded-t-nest-corner nx:data-[orientation=vertical]:[&>:last-child]:rounded-b-nest-corner nx:data-[orientation=vertical]:[&>[data-slot$=group]:first-child>:first-child]:rounded-t-nest-corner nx:data-[orientation=vertical]:[&>[data-slot$=group]:last-child>:last-child]:rounded-b-nest-corner',
+    'nx:data-[orientation=horizontal]:[&>:first-child]:nest-edge-s nx:data-[orientation=horizontal]:[&>:last-child]:nest-edge-e',
+    'nx:data-[orientation=vertical]:[&>:first-child]:nest-edge-t nx:data-[orientation=vertical]:[&>:last-child]:nest-edge-b',
   ],
   {
     variants: {
@@ -149,7 +149,7 @@ function ToolbarButton({
       data-icon-only={iconOnly || undefined}
       className={cn(
         buttonVariants({ variant, size, iconOnly }),
-        'nx:rounded-nest',
+        'nx:rounded-nest-edges',
         className
       )}
       asChild={asChild}
@@ -182,7 +182,7 @@ function ToolbarLink({
       data-size={size}
       className={cn(
         buttonVariants({ variant, size }),
-        'nx:rounded-nest',
+        'nx:rounded-nest-edges',
         className
       )}
       {...props}
@@ -237,7 +237,7 @@ function ToolbarToggleItem({
       data-icon-only={iconOnly || undefined}
       className={cn(
         buttonVariants({ variant: 'ghost', size, iconOnly }),
-        'nx:rounded-nest',
+        'nx:rounded-nest-edges',
         'nx:data-[state=on]:bg-primary-subtle nx:data-[state=on]:text-primary-subtle-foreground nx:data-[state=on]:hover:bg-primary-subtle-hover nx:data-[state=on]:active:bg-primary-subtle-active',
         className
       )}
@@ -468,7 +468,7 @@ function ToolbarTool({
       id={id}
       className={cn(
         buttonVariants({ variant: 'ghost', size, iconOnly }),
-        'nx:rounded-nest',
+        'nx:rounded-nest-edges',
         'nx:data-[state=on]:bg-primary-background nx:data-[state=on]:text-primary-foreground nx:data-[state=on]:hover:bg-primary-background-hover nx:data-[state=on]:active:bg-primary-background-active',
         className
       )}

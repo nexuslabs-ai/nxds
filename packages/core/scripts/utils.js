@@ -1570,6 +1570,12 @@ export function generateTargetUtilitiesCSS() {
 const NEST_OUTER = 'var(--nx-nest-outer, var(--nx-radius-md))';
 const NEST_MINIMUM = `round(calc(${NEST_OUTER} / 2), 1px)`;
 const NEST_CORNER = `max(round(calc(${NEST_OUTER} - var(--nx-nest-border) - var(--nx-nest-padding)), 1px), ${NEST_MINIMUM})`;
+/** The corner value a container's edge marker passed down, or the minimum. */
+const nestEdge = (...edges) =>
+  edges.reduceRight(
+    (fallback, edge) => `var(--nx-nest-${edge}, ${fallback})`,
+    NEST_MINIMUM
+  );
 
 /**
  * Nested corners. A container declares the corner its items share with
@@ -1579,6 +1585,11 @@ const NEST_CORNER = `max(round(calc(${NEST_OUTER} - var(--nx-nest-border) - var(
  * (half the outer radius), and `rounded-{side}-nest-corner` on the corners
  * that touch the container's corners: outer − border − padding, never below
  * the minimum. Both round to whole pixels.
+ *
+ * When a container's items can sit inside groups, the container marks its
+ * first and last child with `nest-edge-{t,b,s,e}` (the edge it touches), and
+ * the items use `rounded-nest-edges`: the first and last item of their own
+ * parent take the corner value of every edge their parent was marked with.
  *
  * @returns {string} CSS @utility declarations
  */
@@ -1627,6 +1638,42 @@ export function generateNestUtilitiesCSS() {
 @utility rounded-b-nest-corner {
   border-bottom-right-radius: ${NEST_CORNER};
   border-bottom-left-radius: ${NEST_CORNER};
+}
+
+@utility nest-edge-t {
+  --nx-nest-t: ${NEST_CORNER};
+}
+
+@utility nest-edge-b {
+  --nx-nest-b: ${NEST_CORNER};
+}
+
+@utility nest-edge-s {
+  --nx-nest-s: ${NEST_CORNER};
+}
+
+@utility nest-edge-e {
+  --nx-nest-e: ${NEST_CORNER};
+}
+
+@utility rounded-nest-edges {
+  border-radius: ${NEST_MINIMUM};
+  &:first-child {
+    border-start-start-radius: ${nestEdge('t', 's')};
+    border-start-end-radius: ${nestEdge('t')};
+    border-end-start-radius: ${nestEdge('s')};
+  }
+  &:last-child {
+    border-end-end-radius: ${nestEdge('b', 'e')};
+    border-end-start-radius: ${nestEdge('b')};
+    border-start-end-radius: ${nestEdge('e')};
+  }
+  &:first-child:last-child {
+    border-start-start-radius: ${nestEdge('t', 's')};
+    border-start-end-radius: ${nestEdge('t', 'e')};
+    border-end-start-radius: ${nestEdge('b', 's')};
+    border-end-end-radius: ${nestEdge('b', 'e')};
+  }
 }
 `;
 }
