@@ -18,6 +18,26 @@ make setup        # install all workspace deps + the Playwright browser (for sto
 
 That's the whole first-time setup. It also wires the Husky pre-commit hook, which formats and `nx:`-lints your staged files on every commit.
 
+## Workspace layout
+
+| Path                     | Purpose                                                                                         |
+| ------------------------ | ----------------------------------------------------------------------------------------------- |
+| `packages/core`          | `@nxds/core`: the theme engine, its DTCG tokens and the token CSS emitters                      |
+| `packages/tailwind`      | The generated Tailwind theme with the `nx:` prefix (copied into apps, not published)            |
+| `packages/react`         | React components on Radix UI. The reference for every component                                 |
+| `packages/react-18`      | The React components for React 18, generated from `packages/react`. Never edit by hand          |
+| `packages/vue`           | Vue components on Reka UI, held to `packages/react` by the parity tests                         |
+| `packages/cli`           | `nxds-cli`, which copies nxds into an app and updates it                                        |
+| `packages/catalog`       | The install catalog the docs and `nxds-cli` read, built from the React and Vue sources          |
+| `packages/source-model`  | Reads the components, props and stories for the docs generators, the catalog and parity tests   |
+| `packages/eslint-plugin` | `@nxds/eslint-plugin`: the rules that enforce nxds conventions                                  |
+| `packages/claude-design` | nxds as a Claude Design System, built on every release                                          |
+| `apps/docs`              | The docs site at [nxds.dev](https://nxds.dev) (Next.js)                                         |
+| `plugins/nxds`           | The nxds skills for Claude Code and other AI agents                                             |
+| `parity`                 | The tests that hold each Vue component to its React reference                                   |
+| `examples`               | Standalone apps that adopt nxds through the CLI. See [`examples/README.md`](examples/README.md) |
+| `docs-mcp`               | The docs-MCP server image (see [AI Documentation MCP](#ai-documentation-mcp-nxds-docs-mcp))     |
+
 ## Day-to-day
 
 Pick the surface you're working on — each is one `make` command that turbo orchestrates (parallel servers, prefixed logs, one Ctrl-C stops all):
