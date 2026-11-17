@@ -3144,72 +3144,43 @@
 }
 
 @utility rounded-nest-edges {
-  border-radius: round(
+  --nx-nest-min: round(
     calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2),
     1px
   );
+  border-radius: var(--nx-nest-min);
   &:first-child {
     border-start-start-radius: var(
       --nx-nest-t,
-      var(
-        --nx-nest-s,
-        round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
-      )
+      var(--nx-nest-s, var(--nx-nest-min))
     );
-    border-start-end-radius: var(
-      --nx-nest-t,
-      round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
-    );
-    border-end-start-radius: var(
-      --nx-nest-s,
-      round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
-    );
+    border-start-end-radius: var(--nx-nest-t, var(--nx-nest-min));
+    border-end-start-radius: var(--nx-nest-s, var(--nx-nest-min));
   }
   &:last-child {
     border-end-end-radius: var(
       --nx-nest-b,
-      var(
-        --nx-nest-e,
-        round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
-      )
+      var(--nx-nest-e, var(--nx-nest-min))
     );
-    border-end-start-radius: var(
-      --nx-nest-b,
-      round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
-    );
-    border-start-end-radius: var(
-      --nx-nest-e,
-      round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
-    );
+    border-end-start-radius: var(--nx-nest-b, var(--nx-nest-min));
+    border-start-end-radius: var(--nx-nest-e, var(--nx-nest-min));
   }
   &:first-child:last-child {
     border-start-start-radius: var(
       --nx-nest-t,
-      var(
-        --nx-nest-s,
-        round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
-      )
+      var(--nx-nest-s, var(--nx-nest-min))
     );
     border-start-end-radius: var(
       --nx-nest-t,
-      var(
-        --nx-nest-e,
-        round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
-      )
+      var(--nx-nest-e, var(--nx-nest-min))
     );
     border-end-start-radius: var(
       --nx-nest-b,
-      var(
-        --nx-nest-s,
-        round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
-      )
+      var(--nx-nest-s, var(--nx-nest-min))
     );
     border-end-end-radius: var(
       --nx-nest-b,
-      var(
-        --nx-nest-e,
-        round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
-      )
+      var(--nx-nest-e, var(--nx-nest-min))
     );
   }
 }

@@ -1574,7 +1574,7 @@ const NEST_CORNER = `max(round(calc(${NEST_OUTER} - var(--nx-nest-border) - var(
 const nestEdge = (...edges) =>
   edges.reduceRight(
     (fallback, edge) => `var(--nx-nest-${edge}, ${fallback})`,
-    NEST_MINIMUM
+    'var(--nx-nest-min)'
   );
 
 /**
@@ -1657,7 +1657,8 @@ export function generateNestUtilitiesCSS() {
 }
 
 @utility rounded-nest-edges {
-  border-radius: ${NEST_MINIMUM};
+  --nx-nest-min: ${NEST_MINIMUM};
+  border-radius: var(--nx-nest-min);
   &:first-child {
     border-start-start-radius: ${nestEdge('t', 's')};
     border-start-end-radius: ${nestEdge('t')};
