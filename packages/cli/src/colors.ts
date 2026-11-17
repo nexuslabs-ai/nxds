@@ -33,23 +33,43 @@ export const DERIVE_COLORS_OFF = 'deriveColors={false}';
 /** The same choice, as an option of the snapshot a Vite theme script builds. */
 export const DERIVE_COLORS_OFF_OPTION = 'deriveColors: false';
 
+/** The `.dark` class in a selector, and not a longer name such as `.darker`. */
+const DARK_CLASS = /\.dark(?![\w-])/;
+
+/**
+ * The modes a block's selectors reach: dark when one names the `.dark` class,
+ * light when one doesn't. A `:not(.dark)` doesn't name it.
+ */
+function blockModes(prelude: string) {
+  const selectors = prelude.replace(/:not\([^)]*\)/g, '').split(',');
+  return {
+    light: selectors.some((selector) => !DARK_CLASS.test(selector)),
+    dark: selectors.some((selector) => DARK_CLASS.test(selector)),
+  };
+}
+
 /**
  * The nxds colors a stylesheet sets, by name: in light, under `:root`, and in
- * dark, under `.dark`. A rule for both selectors counts in both.
+ * dark, under `.dark`. A rule for both selectors counts in both. A nested rule
+ * is dark when it or a rule around it names `.dark`.
  */
 export function colorNames(css: string) {
   const names = { light: new Set<string>(), dark: new Set<string>() };
-  const rules = css
+  // The blocks open at this point, outermost first.
+  const open: { light: boolean; dark: boolean }[] = [];
+  // Each piece is some text and the `{`, `}` or `;` that ends it.
+  const pieces = css
     .replace(/\/\*[\s\S]*?\*\//g, '')
-    .matchAll(/([^{}]+)\{([^{}]*)\}/g);
-  for (const [, selectors = '', declarations = ''] of rules) {
-    const declared = [
-      ...declarations.matchAll(/--nx-color-([a-z0-9-]+):/g),
-    ].flatMap(([, name]) => (name ? [name] : []));
-    for (const selector of selectors.split(',')) {
-      const mode = selector.includes('.dark') ? names.dark : names.light;
-      for (const name of declared) mode.add(name);
+    .matchAll(/([^{};]*)([{};])/g);
+  for (const [, text = '', end] of pieces) {
+    if (end === '{') {
+      open.push(blockModes(text));
+      continue;
     }
+    const name = /^\s*--nx-color-([a-z0-9-]+)\s*:/.exec(text)?.[1];
+    if (name && open.every((block) => block.light)) names.light.add(name);
+    if (name && open.some((block) => block.dark)) names.dark.add(name);
+    if (end === '}') open.pop();
   }
   return names;
 }

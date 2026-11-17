@@ -1375,6 +1375,40 @@ describe('own colors', () => {
     );
   });
 
+  it.each([
+    {
+      edit: 'a statement above :root names .dark',
+      rewrite: (css: string) =>
+        css.replace(
+          '  :root {',
+          '  @custom-variant dark (&:where(.dark, .dark *));\n  :root {'
+        ),
+    },
+    {
+      edit: 'the light rule is :root:not(.dark)',
+      rewrite: (css: string) =>
+        css.replace('  :root {', '  :root:not(.dark) {'),
+    },
+    {
+      edit: 'the dark rule is nested in :root',
+      rewrite: (css: string) =>
+        `${css.replace('  }\n\n  .dark {', '  &.dark {')}}\n`,
+    },
+  ])('passes the doctor colors check when $edit', async ({ rewrite }) => {
+    const context = setup([ownColorsRelease('0.4.7')]);
+    await cli(['init', '--own-colors'], context);
+    const written = readApp(context.app, NXDS_COLORS);
+    const edited = rewrite(written);
+    expect(edited).not.toBe(written);
+    writeApp(context.app, NXDS_COLORS, edited);
+
+    const { body } = await cliJson(['doctor'], context);
+
+    expect(body.data.checks).toContainEqual(
+      expect.objectContaining({ name: 'colors', ok: true })
+    );
+  });
+
   it('fails the doctor colors check, and runs the rest, when the layout does not parse', async () => {
     const context = setup([ownColorsRelease('0.4.7')]);
     await cli(['init', '--own-colors'], context);
