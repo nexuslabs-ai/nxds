@@ -171,10 +171,23 @@ function filesDerivingColors(
   return files;
 }
 
+/** The step that adds the colors `nxds` sets under `selector` and `own` doesn't, if any. */
+function missingColorsStep(
+  selector: string,
+  nxds: Set<string>,
+  own: Set<string>
+) {
+  const missing = [...nxds].filter((name) => !own.has(name));
+  return missing.length > 0
+    ? [`Add ${missing.join(', ')} under ${selector}.`]
+    : [];
+}
+
 /**
- * Why the app's own colors don't reach the page as written, or null. The theme
- * engine still derives colors over them, or the colors file has no value for
- * a color the app's `nxds.css` sets, such as one a later release added.
+ * Why the app's own colors don't reach the page as written, or null. The entry
+ * doesn't parse, the theme engine still derives colors over them, or the colors
+ * file has no value in light or in dark for a color the app's `nxds.css` sets
+ * there, such as one a later release added.
  */
 function ownColorsProblem(
   root: string,
@@ -183,7 +196,13 @@ function ownColorsProblem(
   entry: string | undefined,
   entrySource: string
 ) {
-  const deriving = filesDerivingColors(root, project, entry, entrySource);
+  let deriving: string[];
+  try {
+    deriving = filesDerivingColors(root, project, entry, entrySource);
+  } catch (error) {
+    if (!(error instanceof CliError)) throw error;
+    return error.message;
+  }
   if (deriving.length > 0) {
     return `${config.css} imports ${COLORS_FILE}, and the theme engine still derives colors in ${deriving.join(' and ')}, which override yours. Run \`${CLI_COMMAND} init --own-colors\`.`;
   }
@@ -191,12 +210,14 @@ function ownColorsProblem(
   if (!existsSync(path.join(root, colorsFile))) {
     return `${config.css} imports ${COLORS_FILE}, and ${colorsFile} is missing. Run \`${CLI_COMMAND} init --own-colors\` to write it.`;
   }
-  const own = new Set(colorNames(read(root, colorsFile)));
-  const missing = colorNames(
-    read(root, `${config.dir}/tailwind/nxds.css`)
-  ).filter((name) => !own.has(name));
-  if (missing.length > 0) {
-    return `${colorsFile} has no value for these nxds colors: ${missing.join(', ')}. Each keeps its nxds default until you add it under :root and .dark.`;
+  const own = colorNames(read(root, colorsFile));
+  const nxds = colorNames(read(root, `${config.dir}/tailwind/nxds.css`));
+  const steps = [
+    ...missingColorsStep(':root', nxds.light, own.light),
+    ...missingColorsStep('.dark', nxds.dark, own.dark),
+  ];
+  if (steps.length > 0) {
+    return `${colorsFile} has no value for some nxds colors. ${steps.join(' ')}`;
   }
   return null;
 }

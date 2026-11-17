@@ -33,15 +33,25 @@ export const DERIVE_COLORS_OFF = 'deriveColors={false}';
 /** The same choice, as an option of the snapshot a Vite theme script builds. */
 export const DERIVE_COLORS_OFF_OPTION = 'deriveColors: false';
 
-/** The nxds colors a stylesheet sets, by name, each once. */
+/**
+ * The nxds colors a stylesheet sets, by name: in light, under `:root`, and in
+ * dark, under `.dark`. A rule for both selectors counts in both.
+ */
 export function colorNames(css: string) {
-  return [
-    ...new Set(
-      [...css.matchAll(/--nx-color-([a-z0-9-]+):/g)].flatMap(([, name]) =>
-        name ? [name] : []
-      )
-    ),
-  ];
+  const names = { light: new Set<string>(), dark: new Set<string>() };
+  const rules = css
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .matchAll(/([^{}]+)\{([^{}]*)\}/g);
+  for (const [, selectors = '', declarations = ''] of rules) {
+    const declared = [
+      ...declarations.matchAll(/--nx-color-([a-z0-9-]+):/g),
+    ].flatMap(([, name]) => (name ? [name] : []));
+    for (const selector of selectors.split(',')) {
+      const mode = selector.includes('.dark') ? names.dark : names.light;
+      for (const name of declared) mode.add(name);
+    }
+  }
+  return names;
 }
 
 /** The theme fields `flags` set that the engine derives colors from. */

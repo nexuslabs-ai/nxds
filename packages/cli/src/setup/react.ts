@@ -164,20 +164,16 @@ function providerProps(ownColors: boolean) {
 /** The elements that take `deriveColors`: the provider and the head script. */
 const APPEARANCE_ELEMENTS = ['NxdsAppearanceProvider', 'NxdsAppearanceScript'];
 
-/** Whether an element leaves color derivation on: it has no `deriveColors={false}`. */
-function derivesColors(element: JSXElement) {
-  return !hasFalseAttribute(element, 'deriveColors');
-}
-
 /**
- * Whether a wired file renders the provider or the head script with color
- * derivation on, which overrides an app's own colors.
+ * Whether a wired file renders the provider or the head script without
+ * `deriveColors={false}`. Color derivation is then on, which overrides an
+ * app's own colors.
  */
 export function rendersDerivedColors(source: string, file: string) {
   const program = parseModule(source, file);
   return APPEARANCE_ELEMENTS.some((name) => {
     const element = findJsx(program, name);
-    return element !== undefined && derivesColors(element);
+    return element !== undefined && !hasFalseAttribute(element, 'deriveColors');
   });
 }
 
@@ -196,17 +192,19 @@ function turnDerivationOff(
   const manual: ManualStep[] = [];
   for (const name of names) {
     const element = findJsx(program, name);
-    if (element && !derivesColors(element)) continue;
-    if (element && !hasAttribute(element, 'deriveColors')) {
-      insertions.push(attributeInsertion(element, DERIVE_COLORS_OFF));
+    if (!element) {
+      manual.push({ file, step: `Pass ${DERIVE_COLORS_OFF} to ${name}.` });
       continue;
     }
-    manual.push({
-      file,
-      step: element
-        ? `Change deriveColors to ${DERIVE_COLORS_OFF} on ${name}.`
-        : `Pass ${DERIVE_COLORS_OFF} to ${name}.`,
-    });
+    if (hasFalseAttribute(element, 'deriveColors')) continue;
+    if (hasAttribute(element, 'deriveColors')) {
+      manual.push({
+        file,
+        step: `Change deriveColors to ${DERIVE_COLORS_OFF} on ${name}.`,
+      });
+      continue;
+    }
+    insertions.push(attributeInsertion(element, DERIVE_COLORS_OFF));
   }
   return {
     changes:

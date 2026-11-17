@@ -1343,9 +1343,59 @@ describe('own colors', () => {
         name: 'colors',
         ok: false,
         message: expect.stringMatching(
-          /no value for these nxds colors: primary-background-hover\./
+          /nxds colors\. Add primary-background-hover under :root\. Add primary-background-hover under \.dark\.$/
         ),
       })
+    );
+  });
+
+  it('fails the doctor colors check when only the dark block lacks a color', async () => {
+    const context = setup([ownColorsRelease('0.4.7')]);
+    await cli(['init', '--own-colors'], context);
+    writeApp(
+      context.app,
+      NXDS_COLORS,
+      readApp(context.app, NXDS_COLORS).replace(
+        /(\.dark \{[\s\S]*?)\n *--nx-color-primary-background-hover: [^;]+;/,
+        '$1'
+      )
+    );
+
+    const { exitCode, body } = await cliJson(['doctor'], context);
+
+    expect(exitCode).toBe(EXIT_CODES.attention);
+    expect(body.data.checks).toContainEqual(
+      expect.objectContaining({
+        name: 'colors',
+        ok: false,
+        message: expect.stringMatching(
+          /nxds colors\. Add primary-background-hover under \.dark\.$/
+        ),
+      })
+    );
+  });
+
+  it('fails the doctor colors check, and runs the rest, when the layout does not parse', async () => {
+    const context = setup([ownColorsRelease('0.4.7')]);
+    await cli(['init', '--own-colors'], context);
+    writeApp(
+      context.app,
+      NEXT_LAYOUT_FILE,
+      readApp(context.app, NEXT_LAYOUT_FILE).replace('</body>', '')
+    );
+
+    const { exitCode, body } = await cliJson(['doctor'], context);
+
+    expect(exitCode).toBe(EXIT_CODES.attention);
+    expect(body.data.checks).toContainEqual(
+      expect.objectContaining({
+        name: 'colors',
+        ok: false,
+        message: expect.stringMatching(/Could not parse app\/layout\.tsx/),
+      })
+    );
+    expect(body.data.checks).toContainEqual(
+      expect.objectContaining({ name: 'files' })
     );
   });
 
