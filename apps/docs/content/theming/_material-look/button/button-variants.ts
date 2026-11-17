@@ -60,7 +60,7 @@ export const buttonVariants = cva(
         variant: 'outline',
         tone: 'default',
         className:
-          'nx:inset-ring-border-default nx:text-foreground nx:hover:bg-container-hover nx:active:bg-container-active',
+          'nx:inset-ring-border-default nx:bg-container nx:text-foreground nx:hover:bg-container-hover nx:active:bg-container-active nx:disabled:bg-secondary-disabled nx:aria-disabled:bg-secondary-disabled',
       },
       {
         variant: 'outline',
