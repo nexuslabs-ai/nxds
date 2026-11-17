@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
 import { formatTokenValue, resolveValue } from '../src/token-source/format.ts';
+import { CORNER_MODES, exactRadii } from '../src/token-source/radius.ts';
 import {
   SPACING_MODE_FILE_PATTERN,
   splitSpacingTokens,
@@ -464,7 +465,9 @@ function generateNxdsCSS(
   css += generateUiScaleCSS({
     spacingModes,
     spacingDefault,
-    radiusModes: runtimeModes.radiusModes,
+    radiusModes: Object.fromEntries(
+      CORNER_MODES.map((mode) => [mode, exactRadii(mode)])
+    ),
     radiusDefault: usedModes.radius,
     base: uiScaleBase(
       readTokenFile(typographyFilePath),

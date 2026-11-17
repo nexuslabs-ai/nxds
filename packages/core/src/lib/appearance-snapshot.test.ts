@@ -42,10 +42,6 @@ function mockSystemPrefersDark(matches: boolean): void {
 }
 
 describe('NxdsAppearanceSnapshot', () => {
-  it('invalidates cached CSS from before the text size', () => {
-    expect(SNAPSHOT_VERSION).toBe(11);
-  });
-
   it('stores pre-derived CSS verbatim', () => {
     const theme = themeCss();
     const prefs = prefsCss();
@@ -235,10 +231,19 @@ describe('resolveFirstPaint', () => {
       'data-ui-scale': 'default',
       'data-text-size': '14',
       'data-density': 'default',
-      'data-radius': 'subtle',
+      'data-radius': '4',
       'data-shadow': 'quiet',
       'data-borderwidth': 'normal',
     });
+  });
+
+  it('keeps the 0px corner mode', () => {
+    const result = resolveFirstPaint(
+      snapshotFor({ ...DEFAULT_NXDS_APPEARANCE, corners: '0' }),
+      false
+    );
+
+    expect(result.dataAttrs['data-radius']).toBe('0');
   });
 
   it('resolves system mode from the OS preference', () => {
@@ -307,7 +312,7 @@ describe('createNxdsAppearanceBootstrapScript', () => {
       'large'
     );
     expect(document.documentElement.getAttribute('data-text-size')).toBe('16');
-    expect(document.documentElement.getAttribute('data-radius')).toBe('subtle');
+    expect(document.documentElement.getAttribute('data-radius')).toBe('4');
     // The host page's own color-scheme is left alone; `.dark` CSS covers it.
     expect(document.documentElement.style.colorScheme).toBe('');
     expect(document.querySelector('meta[name="color-scheme"]')).toBeNull();
@@ -317,6 +322,22 @@ describe('createNxdsAppearanceBootstrapScript', () => {
     expect(
       document.querySelector('style[data-nxds-appearance-prefs]')?.textContent
     ).toBe(':root { --test-prefs: dark; }');
+  });
+
+  it('ignores a stored snapshot from the version before, which names a retired corner mode', () => {
+    window.localStorage.setItem(
+      'nxds-appearance',
+      JSON.stringify({
+        version: SNAPSHOT_VERSION - 1,
+        state: { ...DEFAULT_NXDS_APPEARANCE, corners: 'subtle' },
+        themeCss: 'STALE',
+        prefsCss: 'STALE',
+      })
+    );
+
+    new Function(createNxdsAppearanceBootstrapScript())();
+
+    expect(document.documentElement.getAttribute('data-radius')).toBe('4');
   });
 
   it('uses fresh cookie-derived CSS before hydration when storage contains v6 CSS', () => {

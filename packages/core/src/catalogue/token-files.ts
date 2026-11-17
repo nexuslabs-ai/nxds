@@ -4,11 +4,15 @@ import borderwidthStrong from '../../tokens/primitives/borderwidth/borderwidth-s
 import color from '../../tokens/primitives/color.json';
 import icon from '../../tokens/primitives/icon.json';
 import motionSnappy from '../../tokens/primitives/motion/motion-snappy.json';
-import radiusExtraRound from '../../tokens/primitives/radius/radius-extra-round.json';
-import radiusRound from '../../tokens/primitives/radius/radius-round.json';
-import radiusSmooth from '../../tokens/primitives/radius/radius-smooth.json';
-import radiusSquare from '../../tokens/primitives/radius/radius-square.json';
-import radiusSubtle from '../../tokens/primitives/radius/radius-subtle.json';
+import radius0 from '../../tokens/primitives/radius/radius-0.json';
+import radius2 from '../../tokens/primitives/radius/radius-2.json';
+import radius4 from '../../tokens/primitives/radius/radius-4.json';
+import radius6 from '../../tokens/primitives/radius/radius-6.json';
+import radius8 from '../../tokens/primitives/radius/radius-8.json';
+import radius10 from '../../tokens/primitives/radius/radius-10.json';
+import radius12 from '../../tokens/primitives/radius/radius-12.json';
+import radius14 from '../../tokens/primitives/radius/radius-14.json';
+import radius16 from '../../tokens/primitives/radius/radius-16.json';
 import shadowFlatDark from '../../tokens/primitives/shadow/shadow-flat-dark.json';
 import shadowFlatLight from '../../tokens/primitives/shadow/shadow-flat-light.json';
 import shadowQuietDark from '../../tokens/primitives/shadow/shadow-quiet-dark.json';
@@ -42,11 +46,15 @@ export const TOKEN_FILES = {
   'primitives/color.json': color,
   'primitives/icon.json': icon,
   'primitives/motion/motion-snappy.json': motionSnappy,
-  'primitives/radius/radius-extra-round.json': radiusExtraRound,
-  'primitives/radius/radius-round.json': radiusRound,
-  'primitives/radius/radius-smooth.json': radiusSmooth,
-  'primitives/radius/radius-square.json': radiusSquare,
-  'primitives/radius/radius-subtle.json': radiusSubtle,
+  'primitives/radius/radius-0.json': radius0,
+  'primitives/radius/radius-2.json': radius2,
+  'primitives/radius/radius-4.json': radius4,
+  'primitives/radius/radius-6.json': radius6,
+  'primitives/radius/radius-8.json': radius8,
+  'primitives/radius/radius-10.json': radius10,
+  'primitives/radius/radius-12.json': radius12,
+  'primitives/radius/radius-14.json': radius14,
+  'primitives/radius/radius-16.json': radius16,
   'primitives/shadow/shadow-flat-dark.json': shadowFlatDark,
   'primitives/shadow/shadow-flat-light.json': shadowFlatLight,
   'primitives/shadow/shadow-quiet-dark.json': shadowQuietDark,

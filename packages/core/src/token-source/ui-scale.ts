@@ -69,7 +69,8 @@ export interface ModeToken extends ScaleToken {
   step?: string;
 }
 
-const FULL_RADIUS = '9999px';
+/** The `full` radius, a pill. The UI scale leaves it as it is. */
+export const FULL_RADIUS = '9999px';
 
 /** No text scales below this size. */
 export const MIN_TEXT_PX = 8;
@@ -177,7 +178,7 @@ export function scaledModeBlocks(
     ...entries.filter(([mode]) => mode === defaultMode),
     ...entries
       .filter(([mode]) => mode !== defaultMode)
-      .sort(([a], [b]) => a.localeCompare(b)),
+      .sort(([a], [b]) => a.localeCompare(b, 'en', { numeric: true })),
   ];
   return NON_DEFAULT_UI_SCALES.flatMap((scale) =>
     modes.map(([mode, tokens]) => {

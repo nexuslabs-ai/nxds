@@ -1,56 +1,56 @@
 {
   "base": {
     "$value": {
-      "value": 4,
+      "value": 14,
       "unit": "px"
     },
     "$type": "dimension"
   },
   "sm": {
     "$value": {
-      "value": 2,
+      "value": 11,
       "unit": "px"
     },
     "$type": "dimension"
   },
   "md": {
     "$value": {
-      "value": 4,
+      "value": 14,
       "unit": "px"
     },
     "$type": "dimension"
   },
   "lg": {
     "$value": {
-      "value": 6,
+      "value": 18,
       "unit": "px"
     },
     "$type": "dimension"
   },
   "xl": {
     "$value": {
-      "value": 8,
+      "value": 21,
       "unit": "px"
     },
     "$type": "dimension"
   },
   "2xl": {
     "$value": {
-      "value": 12,
+      "value": 28,
       "unit": "px"
     },
     "$type": "dimension"
   },
   "3xl": {
     "$value": {
-      "value": 20,
+      "value": 42,
       "unit": "px"
     },
     "$type": "dimension"
   },
   "4xl": {
     "$value": {
-      "value": 28,
+      "value": 56,
       "unit": "px"
     },
     "$type": "dimension"

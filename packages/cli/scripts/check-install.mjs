@@ -96,7 +96,7 @@ const APPS = {
       '--density',
       'compact',
       '--corners',
-      'round',
+      '12',
       '--font',
       'inter',
       '--heading-font',

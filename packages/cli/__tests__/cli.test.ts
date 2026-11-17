@@ -800,16 +800,16 @@ describe('theme', () => {
     const context = setup([choicesRelease('0.4.7')]);
     await cli(['init', '--density', 'compact', '--font', 'inter'], context);
 
-    const run = await cli(['init', '--corners', 'round'], context);
+    const run = await cli(['init', '--corners', '12'], context);
 
     expect(run.exitCode, run.stdout + run.stderr).toBe(EXIT_CODES.ok);
     const theme = readApp(context.app, NXDS_THEME);
     expect(theme).toContain("density: 'compact',");
-    expect(theme).toContain("corners: 'round',");
+    expect(theme).toContain("corners: '12',");
     expect(theme).toContain(`uiFont: '${INTER.family}',`);
     expect(nxdsJson(context.app)['theme']).toEqual({
       density: 'compact',
-      corners: 'round',
+      corners: '12',
       font: 'inter',
     });
   });

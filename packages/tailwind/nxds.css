@@ -745,43 +745,55 @@
   /* ===== PER-MODE RADIUS (mode swap via [data-radius="X"] on any ancestor) ===== */
 
   :root,
-  [data-radius='subtle'] {
+  [data-radius='4'] {
     --nx-radius-base: 4px;
-    --nx-radius-sm: 2px;
+    --nx-radius-sm: 3px;
     --nx-radius-md: 4px;
-    --nx-radius-lg: 6px;
-    --nx-radius-xl: 8px;
+    --nx-radius-lg: 5px;
+    --nx-radius-xl: 6px;
+    --nx-radius-2xl: 8px;
+    --nx-radius-3xl: 12px;
+    --nx-radius-4xl: 16px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-radius='0'] {
+    --nx-radius-base: 0px;
+    --nx-radius-sm: 0px;
+    --nx-radius-md: 0px;
+    --nx-radius-lg: 0px;
+    --nx-radius-xl: 0px;
+    --nx-radius-2xl: 0px;
+    --nx-radius-3xl: 0px;
+    --nx-radius-4xl: 0px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-radius='2'] {
+    --nx-radius-base: 2px;
+    --nx-radius-sm: 2px;
+    --nx-radius-md: 2px;
+    --nx-radius-lg: 3px;
+    --nx-radius-xl: 3px;
+    --nx-radius-2xl: 4px;
+    --nx-radius-3xl: 6px;
+    --nx-radius-4xl: 8px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-radius='6'] {
+    --nx-radius-base: 6px;
+    --nx-radius-sm: 5px;
+    --nx-radius-md: 6px;
+    --nx-radius-lg: 8px;
+    --nx-radius-xl: 9px;
     --nx-radius-2xl: 12px;
-    --nx-radius-3xl: 20px;
-    --nx-radius-4xl: 28px;
+    --nx-radius-3xl: 18px;
+    --nx-radius-4xl: 24px;
     --nx-radius-full: 9999px;
   }
 
-  [data-radius='extra-round'] {
-    --nx-radius-base: 16px;
-    --nx-radius-sm: 14px;
-    --nx-radius-md: 16px;
-    --nx-radius-lg: 18px;
-    --nx-radius-xl: 20px;
-    --nx-radius-2xl: 24px;
-    --nx-radius-3xl: 32px;
-    --nx-radius-4xl: 40px;
-    --nx-radius-full: 9999px;
-  }
-
-  [data-radius='round'] {
-    --nx-radius-base: 12px;
-    --nx-radius-sm: 10px;
-    --nx-radius-md: 12px;
-    --nx-radius-lg: 14px;
-    --nx-radius-xl: 16px;
-    --nx-radius-2xl: 20px;
-    --nx-radius-3xl: 28px;
-    --nx-radius-4xl: 36px;
-    --nx-radius-full: 9999px;
-  }
-
-  [data-radius='smooth'] {
+  [data-radius='8'] {
     --nx-radius-base: 8px;
     --nx-radius-sm: 6px;
     --nx-radius-md: 8px;
@@ -793,15 +805,51 @@
     --nx-radius-full: 9999px;
   }
 
-  [data-radius='square'] {
-    --nx-radius-base: 0px;
-    --nx-radius-sm: 0px;
-    --nx-radius-md: 0px;
-    --nx-radius-lg: 0px;
-    --nx-radius-xl: 0px;
-    --nx-radius-2xl: 0px;
-    --nx-radius-3xl: 0px;
-    --nx-radius-4xl: 0px;
+  [data-radius='10'] {
+    --nx-radius-base: 10px;
+    --nx-radius-sm: 8px;
+    --nx-radius-md: 10px;
+    --nx-radius-lg: 13px;
+    --nx-radius-xl: 15px;
+    --nx-radius-2xl: 20px;
+    --nx-radius-3xl: 30px;
+    --nx-radius-4xl: 40px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-radius='12'] {
+    --nx-radius-base: 12px;
+    --nx-radius-sm: 9px;
+    --nx-radius-md: 12px;
+    --nx-radius-lg: 15px;
+    --nx-radius-xl: 18px;
+    --nx-radius-2xl: 24px;
+    --nx-radius-3xl: 36px;
+    --nx-radius-4xl: 48px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-radius='14'] {
+    --nx-radius-base: 14px;
+    --nx-radius-sm: 11px;
+    --nx-radius-md: 14px;
+    --nx-radius-lg: 18px;
+    --nx-radius-xl: 21px;
+    --nx-radius-2xl: 28px;
+    --nx-radius-3xl: 42px;
+    --nx-radius-4xl: 56px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-radius='16'] {
+    --nx-radius-base: 16px;
+    --nx-radius-sm: 12px;
+    --nx-radius-md: 16px;
+    --nx-radius-lg: 20px;
+    --nx-radius-xl: 24px;
+    --nx-radius-2xl: 32px;
+    --nx-radius-3xl: 48px;
+    --nx-radius-4xl: 64px;
     --nx-radius-full: 9999px;
   }
 
@@ -2498,47 +2546,60 @@
   }
 
   [data-ui-scale='small'],
-  [data-ui-scale='small'][data-radius='subtle'],
-  [data-ui-scale='small'] [data-radius='subtle'] {
+  [data-ui-scale='small'][data-radius='4'],
+  [data-ui-scale='small'] [data-radius='4'] {
     --nx-radius-base: 4px;
-    --nx-radius-sm: 2px;
+    --nx-radius-sm: 3px;
     --nx-radius-md: 4px;
     --nx-radius-lg: 5px;
-    --nx-radius-xl: 7px;
+    --nx-radius-xl: 5px;
+    --nx-radius-2xl: 7px;
+    --nx-radius-3xl: 11px;
+    --nx-radius-4xl: 14px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='small'][data-radius='0'],
+  [data-ui-scale='small'] [data-radius='0'] {
+    --nx-radius-base: 0px;
+    --nx-radius-sm: 0px;
+    --nx-radius-md: 0px;
+    --nx-radius-lg: 0px;
+    --nx-radius-xl: 0px;
+    --nx-radius-2xl: 0px;
+    --nx-radius-3xl: 0px;
+    --nx-radius-4xl: 0px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='small'][data-radius='2'],
+  [data-ui-scale='small'] [data-radius='2'] {
+    --nx-radius-base: 2px;
+    --nx-radius-sm: 1px;
+    --nx-radius-md: 2px;
+    --nx-radius-lg: 2px;
+    --nx-radius-xl: 3px;
+    --nx-radius-2xl: 4px;
+    --nx-radius-3xl: 5px;
+    --nx-radius-4xl: 7px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='small'][data-radius='6'],
+  [data-ui-scale='small'] [data-radius='6'] {
+    --nx-radius-base: 5px;
+    --nx-radius-sm: 4px;
+    --nx-radius-md: 5px;
+    --nx-radius-lg: 7px;
+    --nx-radius-xl: 8px;
     --nx-radius-2xl: 11px;
-    --nx-radius-3xl: 18px;
-    --nx-radius-4xl: 26px;
+    --nx-radius-3xl: 16px;
+    --nx-radius-4xl: 22px;
     --nx-radius-full: 9999px;
   }
 
-  [data-ui-scale='small'][data-radius='extra-round'],
-  [data-ui-scale='small'] [data-radius='extra-round'] {
-    --nx-radius-base: 14px;
-    --nx-radius-sm: 13px;
-    --nx-radius-md: 14px;
-    --nx-radius-lg: 16px;
-    --nx-radius-xl: 18px;
-    --nx-radius-2xl: 22px;
-    --nx-radius-3xl: 28px;
-    --nx-radius-4xl: 36px;
-    --nx-radius-full: 9999px;
-  }
-
-  [data-ui-scale='small'][data-radius='round'],
-  [data-ui-scale='small'] [data-radius='round'] {
-    --nx-radius-base: 11px;
-    --nx-radius-sm: 9px;
-    --nx-radius-md: 11px;
-    --nx-radius-lg: 13px;
-    --nx-radius-xl: 14px;
-    --nx-radius-2xl: 18px;
-    --nx-radius-3xl: 26px;
-    --nx-radius-4xl: 32px;
-    --nx-radius-full: 9999px;
-  }
-
-  [data-ui-scale='small'][data-radius='smooth'],
-  [data-ui-scale='small'] [data-radius='smooth'] {
+  [data-ui-scale='small'][data-radius='8'],
+  [data-ui-scale='small'] [data-radius='8'] {
     --nx-radius-base: 7px;
     --nx-radius-sm: 5px;
     --nx-radius-md: 7px;
@@ -2550,8 +2611,74 @@
     --nx-radius-full: 9999px;
   }
 
-  [data-ui-scale='small'][data-radius='square'],
-  [data-ui-scale='small'] [data-radius='square'] {
+  [data-ui-scale='small'][data-radius='10'],
+  [data-ui-scale='small'] [data-radius='10'] {
+    --nx-radius-base: 9px;
+    --nx-radius-sm: 7px;
+    --nx-radius-md: 9px;
+    --nx-radius-lg: 11px;
+    --nx-radius-xl: 14px;
+    --nx-radius-2xl: 18px;
+    --nx-radius-3xl: 28px;
+    --nx-radius-4xl: 36px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='small'][data-radius='12'],
+  [data-ui-scale='small'] [data-radius='12'] {
+    --nx-radius-base: 11px;
+    --nx-radius-sm: 8px;
+    --nx-radius-md: 11px;
+    --nx-radius-lg: 14px;
+    --nx-radius-xl: 16px;
+    --nx-radius-2xl: 22px;
+    --nx-radius-3xl: 32px;
+    --nx-radius-4xl: 44px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='small'][data-radius='14'],
+  [data-ui-scale='small'] [data-radius='14'] {
+    --nx-radius-base: 13px;
+    --nx-radius-sm: 9px;
+    --nx-radius-md: 13px;
+    --nx-radius-lg: 16px;
+    --nx-radius-xl: 18px;
+    --nx-radius-2xl: 26px;
+    --nx-radius-3xl: 38px;
+    --nx-radius-4xl: 50px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='small'][data-radius='16'],
+  [data-ui-scale='small'] [data-radius='16'] {
+    --nx-radius-base: 14px;
+    --nx-radius-sm: 11px;
+    --nx-radius-md: 14px;
+    --nx-radius-lg: 18px;
+    --nx-radius-xl: 22px;
+    --nx-radius-2xl: 28px;
+    --nx-radius-3xl: 44px;
+    --nx-radius-4xl: 58px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='large'],
+  [data-ui-scale='large'][data-radius='4'],
+  [data-ui-scale='large'] [data-radius='4'] {
+    --nx-radius-base: 4px;
+    --nx-radius-sm: 3px;
+    --nx-radius-md: 4px;
+    --nx-radius-lg: 6px;
+    --nx-radius-xl: 7px;
+    --nx-radius-2xl: 9px;
+    --nx-radius-3xl: 13px;
+    --nx-radius-4xl: 18px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='large'][data-radius='0'],
+  [data-ui-scale='large'] [data-radius='0'] {
     --nx-radius-base: 0px;
     --nx-radius-sm: 0px;
     --nx-radius-md: 0px;
@@ -2563,48 +2690,34 @@
     --nx-radius-full: 9999px;
   }
 
-  [data-ui-scale='large'],
-  [data-ui-scale='large'][data-radius='subtle'],
-  [data-ui-scale='large'] [data-radius='subtle'] {
-    --nx-radius-base: 4px;
+  [data-ui-scale='large'][data-radius='2'],
+  [data-ui-scale='large'] [data-radius='2'] {
+    --nx-radius-base: 2px;
     --nx-radius-sm: 2px;
-    --nx-radius-md: 4px;
-    --nx-radius-lg: 7px;
-    --nx-radius-xl: 9px;
+    --nx-radius-md: 2px;
+    --nx-radius-lg: 3px;
+    --nx-radius-xl: 3px;
+    --nx-radius-2xl: 4px;
+    --nx-radius-3xl: 7px;
+    --nx-radius-4xl: 9px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='large'][data-radius='6'],
+  [data-ui-scale='large'] [data-radius='6'] {
+    --nx-radius-base: 7px;
+    --nx-radius-sm: 5px;
+    --nx-radius-md: 7px;
+    --nx-radius-lg: 8px;
+    --nx-radius-xl: 10px;
     --nx-radius-2xl: 13px;
-    --nx-radius-3xl: 22px;
-    --nx-radius-4xl: 30px;
+    --nx-radius-3xl: 20px;
+    --nx-radius-4xl: 26px;
     --nx-radius-full: 9999px;
   }
 
-  [data-ui-scale='large'][data-radius='extra-round'],
-  [data-ui-scale='large'] [data-radius='extra-round'] {
-    --nx-radius-base: 18px;
-    --nx-radius-sm: 15px;
-    --nx-radius-md: 18px;
-    --nx-radius-lg: 20px;
-    --nx-radius-xl: 22px;
-    --nx-radius-2xl: 26px;
-    --nx-radius-3xl: 36px;
-    --nx-radius-4xl: 44px;
-    --nx-radius-full: 9999px;
-  }
-
-  [data-ui-scale='large'][data-radius='round'],
-  [data-ui-scale='large'] [data-radius='round'] {
-    --nx-radius-base: 13px;
-    --nx-radius-sm: 11px;
-    --nx-radius-md: 13px;
-    --nx-radius-lg: 15px;
-    --nx-radius-xl: 18px;
-    --nx-radius-2xl: 22px;
-    --nx-radius-3xl: 30px;
-    --nx-radius-4xl: 40px;
-    --nx-radius-full: 9999px;
-  }
-
-  [data-ui-scale='large'][data-radius='smooth'],
-  [data-ui-scale='large'] [data-radius='smooth'] {
+  [data-ui-scale='large'][data-radius='8'],
+  [data-ui-scale='large'] [data-radius='8'] {
     --nx-radius-base: 9px;
     --nx-radius-sm: 7px;
     --nx-radius-md: 9px;
@@ -2616,8 +2729,74 @@
     --nx-radius-full: 9999px;
   }
 
-  [data-ui-scale='large'][data-radius='square'],
-  [data-ui-scale='large'] [data-radius='square'] {
+  [data-ui-scale='large'][data-radius='10'],
+  [data-ui-scale='large'] [data-radius='10'] {
+    --nx-radius-base: 11px;
+    --nx-radius-sm: 8px;
+    --nx-radius-md: 11px;
+    --nx-radius-lg: 14px;
+    --nx-radius-xl: 16px;
+    --nx-radius-2xl: 22px;
+    --nx-radius-3xl: 34px;
+    --nx-radius-4xl: 44px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='large'][data-radius='12'],
+  [data-ui-scale='large'] [data-radius='12'] {
+    --nx-radius-base: 13px;
+    --nx-radius-sm: 10px;
+    --nx-radius-md: 13px;
+    --nx-radius-lg: 16px;
+    --nx-radius-xl: 20px;
+    --nx-radius-2xl: 26px;
+    --nx-radius-3xl: 40px;
+    --nx-radius-4xl: 52px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='large'][data-radius='14'],
+  [data-ui-scale='large'] [data-radius='14'] {
+    --nx-radius-base: 15px;
+    --nx-radius-sm: 12px;
+    --nx-radius-md: 15px;
+    --nx-radius-lg: 20px;
+    --nx-radius-xl: 24px;
+    --nx-radius-2xl: 30px;
+    --nx-radius-3xl: 46px;
+    --nx-radius-4xl: 62px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='large'][data-radius='16'],
+  [data-ui-scale='large'] [data-radius='16'] {
+    --nx-radius-base: 18px;
+    --nx-radius-sm: 13px;
+    --nx-radius-md: 18px;
+    --nx-radius-lg: 22px;
+    --nx-radius-xl: 26px;
+    --nx-radius-2xl: 36px;
+    --nx-radius-3xl: 52px;
+    --nx-radius-4xl: 70px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='larger'],
+  [data-ui-scale='larger'][data-radius='4'],
+  [data-ui-scale='larger'] [data-radius='4'] {
+    --nx-radius-base: 5px;
+    --nx-radius-sm: 4px;
+    --nx-radius-md: 5px;
+    --nx-radius-lg: 6px;
+    --nx-radius-xl: 8px;
+    --nx-radius-2xl: 10px;
+    --nx-radius-3xl: 15px;
+    --nx-radius-4xl: 20px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='larger'][data-radius='0'],
+  [data-ui-scale='larger'] [data-radius='0'] {
     --nx-radius-base: 0px;
     --nx-radius-sm: 0px;
     --nx-radius-md: 0px;
@@ -2629,48 +2808,34 @@
     --nx-radius-full: 9999px;
   }
 
-  [data-ui-scale='larger'],
-  [data-ui-scale='larger'][data-radius='subtle'],
-  [data-ui-scale='larger'] [data-radius='subtle'] {
-    --nx-radius-base: 5px;
-    --nx-radius-sm: 3px;
-    --nx-radius-md: 5px;
-    --nx-radius-lg: 8px;
-    --nx-radius-xl: 10px;
+  [data-ui-scale='larger'][data-radius='2'],
+  [data-ui-scale='larger'] [data-radius='2'] {
+    --nx-radius-base: 3px;
+    --nx-radius-sm: 2px;
+    --nx-radius-md: 3px;
+    --nx-radius-lg: 3px;
+    --nx-radius-xl: 4px;
+    --nx-radius-2xl: 5px;
+    --nx-radius-3xl: 8px;
+    --nx-radius-4xl: 10px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='larger'][data-radius='6'],
+  [data-ui-scale='larger'] [data-radius='6'] {
+    --nx-radius-base: 8px;
+    --nx-radius-sm: 6px;
+    --nx-radius-md: 8px;
+    --nx-radius-lg: 9px;
+    --nx-radius-xl: 11px;
     --nx-radius-2xl: 15px;
-    --nx-radius-3xl: 26px;
-    --nx-radius-4xl: 36px;
+    --nx-radius-3xl: 22px;
+    --nx-radius-4xl: 30px;
     --nx-radius-full: 9999px;
   }
 
-  [data-ui-scale='larger'][data-radius='extra-round'],
-  [data-ui-scale='larger'] [data-radius='extra-round'] {
-    --nx-radius-base: 20px;
-    --nx-radius-sm: 18px;
-    --nx-radius-md: 20px;
-    --nx-radius-lg: 22px;
-    --nx-radius-xl: 26px;
-    --nx-radius-2xl: 30px;
-    --nx-radius-3xl: 40px;
-    --nx-radius-4xl: 50px;
-    --nx-radius-full: 9999px;
-  }
-
-  [data-ui-scale='larger'][data-radius='round'],
-  [data-ui-scale='larger'] [data-radius='round'] {
-    --nx-radius-base: 15px;
-    --nx-radius-sm: 13px;
-    --nx-radius-md: 15px;
-    --nx-radius-lg: 18px;
-    --nx-radius-xl: 20px;
-    --nx-radius-2xl: 26px;
-    --nx-radius-3xl: 36px;
-    --nx-radius-4xl: 46px;
-    --nx-radius-full: 9999px;
-  }
-
-  [data-ui-scale='larger'][data-radius='smooth'],
-  [data-ui-scale='larger'] [data-radius='smooth'] {
+  [data-ui-scale='larger'][data-radius='8'],
+  [data-ui-scale='larger'] [data-radius='8'] {
     --nx-radius-base: 10px;
     --nx-radius-sm: 8px;
     --nx-radius-md: 10px;
@@ -2682,16 +2847,55 @@
     --nx-radius-full: 9999px;
   }
 
-  [data-ui-scale='larger'][data-radius='square'],
-  [data-ui-scale='larger'] [data-radius='square'] {
-    --nx-radius-base: 0px;
-    --nx-radius-sm: 0px;
-    --nx-radius-md: 0px;
-    --nx-radius-lg: 0px;
-    --nx-radius-xl: 0px;
-    --nx-radius-2xl: 0px;
-    --nx-radius-3xl: 0px;
-    --nx-radius-4xl: 0px;
+  [data-ui-scale='larger'][data-radius='10'],
+  [data-ui-scale='larger'] [data-radius='10'] {
+    --nx-radius-base: 13px;
+    --nx-radius-sm: 9px;
+    --nx-radius-md: 13px;
+    --nx-radius-lg: 16px;
+    --nx-radius-xl: 18px;
+    --nx-radius-2xl: 26px;
+    --nx-radius-3xl: 38px;
+    --nx-radius-4xl: 50px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='larger'][data-radius='12'],
+  [data-ui-scale='larger'] [data-radius='12'] {
+    --nx-radius-base: 15px;
+    --nx-radius-sm: 11px;
+    --nx-radius-md: 15px;
+    --nx-radius-lg: 18px;
+    --nx-radius-xl: 22px;
+    --nx-radius-2xl: 30px;
+    --nx-radius-3xl: 46px;
+    --nx-radius-4xl: 60px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='larger'][data-radius='14'],
+  [data-ui-scale='larger'] [data-radius='14'] {
+    --nx-radius-base: 18px;
+    --nx-radius-sm: 13px;
+    --nx-radius-md: 18px;
+    --nx-radius-lg: 22px;
+    --nx-radius-xl: 26px;
+    --nx-radius-2xl: 36px;
+    --nx-radius-3xl: 52px;
+    --nx-radius-4xl: 70px;
+    --nx-radius-full: 9999px;
+  }
+
+  [data-ui-scale='larger'][data-radius='16'],
+  [data-ui-scale='larger'] [data-radius='16'] {
+    --nx-radius-base: 20px;
+    --nx-radius-sm: 15px;
+    --nx-radius-md: 20px;
+    --nx-radius-lg: 26px;
+    --nx-radius-xl: 30px;
+    --nx-radius-2xl: 40px;
+    --nx-radius-3xl: 60px;
+    --nx-radius-4xl: 80px;
     --nx-radius-full: 9999px;
   }
 }

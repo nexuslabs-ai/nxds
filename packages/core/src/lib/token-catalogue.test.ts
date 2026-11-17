@@ -759,7 +759,7 @@ describe.each(['small', 'large', 'larger'] as const)(
     it.each([
       ['type, icons and page widths', scale, '\\s*', null],
       ['density', `${scale}[data-density='tight']`, '[^{]*', 'tight'],
-      ['corners', `${scale}[data-radius='round']`, '[^{]*', 'round'],
+      ['corners', `${scale}[data-radius='12']`, '[^{]*', '12'],
     ])(
       'writes the same %s as the generated CSS',
       (_, selector, tail, preset) => {

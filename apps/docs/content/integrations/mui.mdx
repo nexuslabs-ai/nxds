@@ -261,7 +261,7 @@ export const defaultAppearance = {
   ...DEFAULT_NXDS_APPEARANCE,
   brandColor: brand.color,
   surfaceTone: 'neutral',
-  corners: 'subtle',
+  corners: '4',
   prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs, uiFont: brand.font },
 } satisfies NxdsAppearanceState;
 ```
@@ -273,7 +273,7 @@ theme. MUI's Next.js guide marks `theme.ts` `'use client'`.
 | ------------------------------------ | ------------------------------- | -------------------------------------------------------------------------------------------- |
 | `palette.primary.main`               | `brandColor`                    | Pass it as is. nxds builds the hover and pressed shades                                      |
 | `palette.grey`, `palette.background` | `surfaceTone`                   | `neutral` matches MUI's pure grey                                                            |
-| `shape.borderRadius`                 | `corners`                       | `0` is `square`, `4` is `subtle`, `8` is `smooth`, `12` is `round`, `16` is `extra-round`    |
+| `shape.borderRadius`                 | `corners`                       | Use the same number, rounded to an even number from `0` to `16`. MUI's default is `4`        |
 | `spacing`                            | `density`                       | Compare in the [Playground](/playground). `compact` and `tight` suit dense MUI themes        |
 | `shadows`                            | `elevation`                     | Compare in the [Playground](/playground). `flat` turns shadows off                           |
 | None                                 | `stroke`                        | MUI has no border width setting, so keep `normal`                                            |

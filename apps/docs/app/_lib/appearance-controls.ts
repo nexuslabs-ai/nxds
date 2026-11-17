@@ -17,7 +17,7 @@ if (!dmSans) throw new Error('FONT_OPTIONS no longer offers DM Sans.');
 export const DOCS_APPEARANCE_DEFAULT_STATE = {
   ...DEFAULT_NXDS_APPEARANCE,
   mode: 'system',
-  corners: 'smooth',
+  corners: '8',
   prefs: { ...DEFAULT_NXDS_APPEARANCE.prefs, uiFont: dmSans.family },
 } satisfies NxdsAppearanceState;
 
