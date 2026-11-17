@@ -51,20 +51,36 @@ One appearance object sets your whole theme. Change one setting, and every compo
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/readme-themes-dark.png">
-  <img src=".github/assets/readme-themes-light.png" alt="The same create-project card in three themes: the default black theme, an indigo theme with extra-round corners and comfortable spacing, and a teal theme with square corners and compact spacing">
+  <img src=".github/assets/readme-themes-light.png" alt="The same create-project card in three themes. Dense: black, Geist, small UI scale, compact spacing. Friendly: indigo, Figtree, comfortable spacing, extra-round corners. Editorial: amber, Lora with Playfair Display headings, large UI scale, relaxed spacing, square corners.">
 </picture>
 
-<p align="center"><sub>One card, three appearance objects. The middle one is the object below.</sub></p>
+<p align="center"><sub>One card, three appearance objects. Nothing else changed.</sub></p>
+
+|                        | Dense         | Friendly       | Editorial                            |
+| ---------------------- | ------------- | -------------- | ------------------------------------ |
+| Brand color            | `#0a0a0a`     | `#4f46e5`      | `#b45309`                            |
+| Font                   | Geist         | Figtree        | Lora, with Playfair Display headings |
+| UI scale and text size | Small, 14 px  | Default, 14 px | Large, 15 px                         |
+| Density                | Compact       | Comfortable    | Relaxed                              |
+| Corners                | Subtle        | Extra round    | Square                               |
+| Elevation and stroke   | Quiet, normal | Soft, normal   | Flat, strong                         |
+| Surface tone           | Zinc          | Slate          | Stone                                |
+
+Each theme is one `init` command. This one sets up the editorial theme:
+
+```bash
+npx nxds-cli@latest init --brand-color "#b45309" --surface-tone stone \
+  --ui-scale large --text-size 15 --density relaxed --corners square \
+  --elevation flat --stroke strong --font lora --heading-font playfair-display
+```
+
+`init` writes the theme to `nxds-theme.ts` and installs its fonts. Your appearance object spreads that theme, so change any field there:
 
 ```ts
 // app/appearance-state.ts
 export const defaultAppearance = {
   ...nxdsTheme,
-  brandColor: '#4f46e5',
-  surfaceTone: 'slate',
-  corners: 'extra-round',
-  density: 'comfortable',
-  elevation: 'soft',
+  density: 'compact',
 } satisfies NxdsAppearanceState;
 ```
 
