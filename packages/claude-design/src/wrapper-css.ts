@@ -187,9 +187,9 @@ function rewriteArguments(compound: Node[], whole: string): Node[] {
 }
 
 // `A > B` → it, or B behind wrappers only. A position on B moves to the
-// outermost wrapper, which holds B's place among A's children. A rule that
-// only sets nxds variables may match that wrapper itself: the wrapper passes
-// the variables on to the part inside it.
+// outermost wrapper, which holds B's place among A's children. When a rule
+// that only sets nxds variables selects B by its place alone, B may be that
+// wrapper itself: the wrapper passes the variables on to the part inside it.
 function childBranches(
   complex: Complex,
   index: number,
@@ -202,8 +202,10 @@ function childBranches(
   const guard = `:where(:not(${parent} > ${IS_W} :not(${W}) ${target}))`;
   const head = join(complex, 0, index + 1);
   const tail = join(complex, index + 2);
+  const wrapperStandsIn =
+    variablesOnly && !tail && withoutPositions(child) === '*';
   return [
-    `${head} > ${text(child)}${variablesOnly ? '' : NOT_W}${tail}`,
+    `${head} > ${text(child)}${wrapperStandsIn ? '' : NOT_W}${tail}`,
     `${head} > ${outer} ${target}${guard}${tail}`,
   ];
 }
@@ -380,8 +382,6 @@ function inNxdsRule(rule: postcss.Rule) {
   return false;
 }
 
-// A rule whose declarations are all `--nx-*` variables, such as the nested
-// corner edge rules.
 function setsOnlyNxdsVariables(rule: postcss.Rule) {
   const declarations = rule.nodes.filter((node) => node.type !== 'comment');
   return (
