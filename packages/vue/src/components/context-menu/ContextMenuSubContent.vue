@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
 import {
+  ContextMenuPortal,
   ContextMenuSubContent,
   type ContextMenuSubContentEmits,
   type ContextMenuSubContentProps as RekaContextMenuSubContentProps,
@@ -10,6 +11,7 @@ import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
 import {
+  menuListClassName,
   overlayFloatingTransitionClassName,
   popoverSurfaceClassName,
 } from '../overlay-layout/overlay-layout';
@@ -21,24 +23,28 @@ export interface ContextMenuSubContentProps extends RekaContextMenuSubContentPro
 const props = defineProps<ContextMenuSubContentProps>();
 const emits = defineEmits<ContextMenuSubContentEmits>();
 
+defineOptions({ inheritAttrs: false });
+
 const delegated = reactiveOmit(props, 'class');
 const forwarded = useForwardPropsEmits(delegated, emits);
 </script>
 
 <template>
-  <ContextMenuSubContent
-    v-bind="forwarded"
-    data-slot="context-menu-sub-content"
-    :class="
-      cn(
-        'nx:z-popover nx:min-w-32 nx:overflow-hidden',
-        popoverSurfaceClassName,
-        'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:nest-edge-t nx:[&>:last-child]:nest-edge-b',
-        overlayFloatingTransitionClassName,
-        props.class
-      )
-    "
-  >
-    <slot />
-  </ContextMenuSubContent>
+  <ContextMenuPortal>
+    <ContextMenuSubContent
+      v-bind="{ ...$attrs, ...forwarded }"
+      data-slot="context-menu-sub-content"
+      :class="
+        cn(
+          'nx:z-popover nx:min-w-32 nx:overflow-hidden',
+          popoverSurfaceClassName,
+          menuListClassName,
+          overlayFloatingTransitionClassName,
+          props.class
+        )
+      "
+    >
+      <slot />
+    </ContextMenuSubContent>
+  </ContextMenuPortal>
 </template>

@@ -4,6 +4,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, type Mock, userEvent, within } from 'storybook/test';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import {
   expectInsideBorder,
   expectTextFits,
@@ -822,19 +823,9 @@ export const NestedCorners: Story = {
     `,
   }),
   play: async ({ canvasElement }) => {
-    function corners(element: Element) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
-
     const button = within(canvasElement).getByRole('button', { name: 'Send' });
-    await expect(corners(button)).toEqual(['6px', '6px', '6px', '6px']);
-    await expect(corners(canvasElement.querySelector('kbd')!)).toEqual([
+    await expectCorners(button, ['6px', '6px', '6px', '6px']);
+    await expectCorners(canvasElement.querySelector('kbd')!, [
       '6px',
       '6px',
       '6px',

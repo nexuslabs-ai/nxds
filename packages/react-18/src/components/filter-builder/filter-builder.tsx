@@ -224,12 +224,12 @@ function MultipleValues({
             onChange={(event) => setSearch(event.target.value)}
           />
         </div>
-        <div className="nx:max-h-48 nx:overflow-y-auto nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:rounded-t-nest-corner nx:[&>:last-child]:rounded-b-nest-corner">
+        <div className="nx:max-h-48 nx:overflow-y-auto nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:last-child]:rounded-b-nest-corner">
           {options.map((option, index) => (
             <ChoiceRow
               key={option.value}
               htmlFor={`${id}-${index}`}
-              className="nx:rounded-nest nx:not-has-[:disabled]:hover:bg-popover-hover"
+              className="nx:rounded-nest nx:[&>[data-slot=checkbox]]:rounded-half-nest nx:not-has-[:disabled]:hover:bg-popover-hover"
             >
               <Checkbox
                 id={`${id}-${index}`}

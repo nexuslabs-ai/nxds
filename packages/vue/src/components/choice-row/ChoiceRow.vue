@@ -21,7 +21,7 @@ const delegated = reactiveOmit(props, 'class');
     data-slot="choice-row"
     :class="
       cn(
-        'nx:group/choice-row nx:[&>[data-slot=checkbox]]:rounded-[round(calc(var(--nx-radius-sm)/2),1px)] nx:box-border nx:flex nx:min-h-8 nx:min-w-0 nx:w-full nx:cursor-pointer nx:items-center nx:justify-start nx:gap-2 nx:rounded-sm nx:px-2 nx:py-1.5 nx:transition-colors',
+        'nx:group/choice-row nx:[&>[data-slot=checkbox]]:rounded-half-sm nx:box-border nx:flex nx:min-h-8 nx:min-w-0 nx:w-full nx:cursor-pointer nx:items-center nx:justify-start nx:gap-2 nx:rounded-sm nx:px-2 nx:py-1.5 nx:transition-colors',
         'nx:not-has-[:disabled]:hover:bg-background-hover nx:not-has-[:disabled]:active:bg-background-active',
         'nx:has-[:disabled]:cursor-not-allowed nx:has-[:disabled]:text-disabled-foreground',
         props.class

@@ -8,6 +8,7 @@ import { selectionIndicatorMotionClassName } from '../../lib/motion';
 import { cn } from '../../lib/utils';
 import {
   menuItemInsetClassName,
+  menuListClassName,
   overlayFloatingTransitionClassName,
   popoverSurfaceClassName,
 } from '../overlay-layout/overlay-layout';
@@ -25,7 +26,7 @@ function Menubar({ className, ...props }: MenubarProps) {
     <MenubarPrimitive.Root
       data-slot="menubar"
       className={cn(
-        'nx:flex nx:items-center nx:gap-1 nx:rounded-md nx:border-default nx:border-border-default nx:bg-container nx:p-1 nx:shadow-xs nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:rounded-s-nest-corner nx:[&>:last-child]:rounded-e-nest-corner',
+        'nx:flex nx:items-center nx:gap-1 nx:rounded-md nx:border-default nx:border-border-default nx:bg-container nx:p-1 nx:shadow-xs nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:nest-edges-x',
         className
       )}
       {...props}
@@ -73,7 +74,7 @@ function MenubarTrigger({ className, ...props }: MenubarTriggerProps) {
     <MenubarPrimitive.Trigger
       data-slot="menubar-trigger"
       className={cn(
-        'nx:flex nx:select-none nx:items-center nx:rounded-nest nx:border-0 nx:bg-transparent nx:px-2 nx:py-1 nx:text-inherit',
+        'nx:flex nx:select-none nx:items-center nx:rounded-nest-edges nx:border-0 nx:bg-transparent nx:px-2 nx:py-1 nx:text-inherit',
         'nx:typography-label-default nx:outline-none',
         'nx:focus:bg-container-hover nx:focus:text-foreground',
         'nx:data-[state=open]:bg-container-hover nx:data-[state=open]:text-foreground',
@@ -138,17 +139,19 @@ type MenubarSubContentProps = React.ComponentProps<
  */
 function MenubarSubContent({ className, ...props }: MenubarSubContentProps) {
   return (
-    <MenubarPrimitive.SubContent
-      data-slot="menubar-sub-content"
-      className={cn(
-        'nx:z-popover nx:min-w-32 nx:overflow-hidden',
-        popoverSurfaceClassName,
-        'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:nest-edge-t nx:[&>:last-child]:nest-edge-b',
-        overlayFloatingTransitionClassName,
-        className
-      )}
-      {...props}
-    />
+    <MenubarPrimitive.Portal>
+      <MenubarPrimitive.SubContent
+        data-slot="menubar-sub-content"
+        className={cn(
+          'nx:z-popover nx:min-w-32 nx:overflow-hidden',
+          popoverSurfaceClassName,
+          menuListClassName,
+          overlayFloatingTransitionClassName,
+          className
+        )}
+        {...props}
+      />
+    </MenubarPrimitive.Portal>
   );
 }
 
@@ -179,7 +182,7 @@ function MenubarContent({
         className={cn(
           'nx:z-popover nx:min-w-48 nx:overflow-hidden',
           popoverSurfaceClassName,
-          'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:nest-edge-t nx:[&>:last-child]:nest-edge-b',
+          menuListClassName,
           overlayFloatingTransitionClassName,
           className
         )}

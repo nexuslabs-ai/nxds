@@ -8,6 +8,7 @@ import { selectionIndicatorMotionClassName } from '../../lib/motion';
 import { cn } from '../../lib/utils';
 import {
   menuItemInsetClassName,
+  menuListClassName,
   overlayFloatingTransitionClassName,
   popoverSurfaceClassName,
 } from '../overlay-layout/overlay-layout';
@@ -103,17 +104,19 @@ function DropdownMenuSubContent({
   ...props
 }: DropdownMenuSubContentProps) {
   return (
-    <DropdownMenuPrimitive.SubContent
-      data-slot="dropdown-menu-sub-content"
-      className={cn(
-        'nx:z-popover nx:min-w-32 nx:overflow-hidden',
-        popoverSurfaceClassName,
-        'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:nest-edge-t nx:[&>:last-child]:nest-edge-b',
-        overlayFloatingTransitionClassName,
-        className
-      )}
-      {...props}
-    />
+    <DropdownMenuPrimitive.Portal>
+      <DropdownMenuPrimitive.SubContent
+        data-slot="dropdown-menu-sub-content"
+        className={cn(
+          'nx:z-popover nx:min-w-32 nx:overflow-hidden',
+          popoverSurfaceClassName,
+          menuListClassName,
+          overlayFloatingTransitionClassName,
+          className
+        )}
+        {...props}
+      />
+    </DropdownMenuPrimitive.Portal>
   );
 }
 
@@ -143,7 +146,7 @@ function DropdownMenuContent({
           'nx:z-popover nx:max-h-(--radix-dropdown-menu-content-available-height)',
           'nx:min-w-32 nx:overflow-x-hidden nx:overflow-y-auto',
           popoverSurfaceClassName,
-          'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:nest-edge-t nx:[&>:last-child]:nest-edge-b',
+          menuListClassName,
           overlayFloatingTransitionClassName,
           className
         )}

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { expectInterruptibleOverlayMotion } from '../../stories/support/overlay-motion-test-utils';
 
 import {
@@ -460,23 +461,13 @@ export const NestedCorners: Story = {
   globals: { corners: '12' },
   render: Default.render,
   play: async ({ canvasElement }) => {
-    function corners(element: Element) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
-
     await userEvent.click(
       within(canvasElement).getByRole('button', { name: 'Products' })
     );
     const link = await within(document.body).findByRole('link', {
       name: 'Analytics',
     });
-    await expect(corners(link)).toEqual(['6px', '6px', '6px', '6px']);
+    await expectCorners(link, ['6px', '6px', '6px', '6px']);
     await userEvent.keyboard('{Escape}');
   },
 };
@@ -504,23 +495,13 @@ export const NestedCornersInsideContainer: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
-    function corners(element: Element) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
-
     await userEvent.click(
       within(canvasElement).getByRole('button', { name: 'Products' })
     );
     const link = await within(document.body).findByRole('link', {
       name: 'Analytics',
     });
-    await expect(corners(link)).toEqual(['6px', '6px', '6px', '6px']);
+    await expectCorners(link, ['6px', '6px', '6px', '6px']);
     await userEvent.keyboard('{Escape}');
   },
 };

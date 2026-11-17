@@ -12,6 +12,7 @@ import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
 import {
+  menuListClassName,
   overlayFloatingTransitionClassName,
   popoverSurfaceClassName,
 } from '../overlay-layout/overlay-layout';
@@ -54,7 +55,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
       <SelectViewport
         :class="
           cn(
-            'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:nest-edge-t nx:[&>:last-child]:nest-edge-b',
+            menuListClassName,
             position === 'popper' &&
               'nx:h-(--reka-select-trigger-height) nx:w-full nx:min-w-(--reka-select-trigger-width)'
           )

@@ -14,6 +14,7 @@ import {
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { Button } from '../button/button';
 import { Spinner } from '../spinner/spinner';
 import {
@@ -569,19 +570,9 @@ export const NestedCorners: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
-    function corners(element: Element) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
-
     const media = canvasElement.querySelector(
       '[data-slot="attachment-media"]'
     )!;
-    await expect(corners(media)).toEqual(['6px', '6px', '6px', '6px']);
+    await expectCorners(media, ['6px', '6px', '6px', '6px']);
   },
 };

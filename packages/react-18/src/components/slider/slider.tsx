@@ -170,6 +170,17 @@ const Slider = React.forwardRef<
   const rangeStartsAtMin =
     isSingleValue || isRangeBoundary(rangeStartValue, min);
   const rangeEndsAtMax = isRangeBoundary(rangeEndValue, max);
+  const isVertical = orientation === 'vertical';
+  const startCorner = isVertical
+    ? 'nx:rounded-b-nest-corner'
+    : 'nx:rounded-s-nest-corner';
+  const endCorner = isVertical
+    ? 'nx:rounded-t-nest-corner'
+    : 'nx:rounded-e-nest-corner';
+  // `inverted` puts the min end where the max end usually is.
+  const [minCorner, maxCorner] = props.inverted
+    ? [endCorner, startCorner]
+    : [startCorner, endCorner];
 
   function handleValueChange(nextValue: number[]) {
     if (!isControlled) setUncontrolledValue(nextValue);
@@ -204,14 +215,8 @@ const Slider = React.forwardRef<
           data-size={size}
           className={cn(
             sliderRangeVariants,
-            rangeStartsAtMin &&
-              (orientation === 'vertical'
-                ? 'nx:rounded-b-nest-corner'
-                : 'nx:rounded-s-nest-corner'),
-            rangeEndsAtMax &&
-              (orientation === 'vertical'
-                ? 'nx:rounded-t-nest-corner'
-                : 'nx:rounded-e-nest-corner')
+            rangeStartsAtMin && minCorner,
+            rangeEndsAtMax && maxCorner
           )}
         />
         {markerPositions.map((position, index) => (

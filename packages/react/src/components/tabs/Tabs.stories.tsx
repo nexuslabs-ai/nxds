@@ -3,6 +3,7 @@ import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import {
   Card,
   CardContent,
@@ -788,35 +789,29 @@ export const NestedCorners: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    function corners(element: Element) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
 
     const horizontal = canvas.getByRole('tablist', { name: 'Horizontal' });
     const [first, middle, last] = within(horizontal).getAllByRole('tab');
-    await expect(corners(first!)).toEqual(['8px', '6px', '6px', '8px']);
-    await expect(corners(middle!)).toEqual(['6px', '6px', '6px', '6px']);
-    await expect(corners(last!)).toEqual(['6px', '8px', '8px', '6px']);
+    await expectCorners(first!, ['8px', '6px', '6px', '8px']);
+    await expectCorners(middle!, ['6px', '6px', '6px', '6px']);
+    await expectCorners(last!, ['6px', '8px', '8px', '6px']);
     await waitFor(() =>
-      expect(
-        corners(horizontal.querySelector('[data-slot="tabs-indicator"]')!)
-      ).toEqual(['8px', '6px', '6px', '8px'])
+      expectCorners(horizontal.querySelector('[data-slot="tabs-indicator"]')!, [
+        '8px',
+        '6px',
+        '6px',
+        '8px',
+      ])
     );
 
     const [verticalFirst] = within(
       canvas.getByRole('tablist', { name: 'Vertical' })
     ).getAllByRole('tab');
-    await expect(corners(verticalFirst!)).toEqual(['8px', '8px', '6px', '6px']);
+    await expectCorners(verticalFirst!, ['8px', '8px', '6px', '6px']);
 
     const [rtlFirst] = within(
       canvas.getByRole('tablist', { name: 'Right to left' })
     ).getAllByRole('tab');
-    await expect(corners(rtlFirst!)).toEqual(['6px', '8px', '8px', '6px']);
+    await expectCorners(rtlFirst!, ['6px', '8px', '8px', '6px']);
   },
 };

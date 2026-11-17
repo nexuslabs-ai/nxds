@@ -3,6 +3,7 @@ import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import {
   expectMenuItemInsetAtEveryDensity,
   expectRadioDotInsetAtEveryUiScale,
@@ -769,20 +770,10 @@ export const NestedCorners: Story = {
     </ContextMenu>
   ),
   play: async ({ canvasElement }) => {
-    function corners(element: Element) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
-
     fireEvent.contextMenu(within(canvasElement).getByText('Right-click here'));
     const items = await within(document.body).findAllByRole('menuitem');
-    await expect(corners(items[0]!)).toEqual(['7px', '7px', '6px', '6px']);
-    await expect(corners(items[1]!)).toEqual(['6px', '6px', '6px', '6px']);
-    await expect(corners(items[2]!)).toEqual(['6px', '6px', '7px', '7px']);
+    await expectCorners(items[0]!, ['7px', '7px', '6px', '6px']);
+    await expectCorners(items[1]!, ['6px', '6px', '6px', '6px']);
+    await expectCorners(items[2]!, ['6px', '6px', '7px', '7px']);
   },
 };

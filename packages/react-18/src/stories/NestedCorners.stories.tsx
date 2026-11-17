@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, within } from 'storybook/test';
+import { within } from 'storybook/test';
+
+import { expectCorners } from './support/corner-test-utils';
 
 const meta = {
   title: 'Tokens/Nested corners',
@@ -7,7 +9,7 @@ const meta = {
     docs: {
       description: {
         component:
-          'A container sets nest-outer-*, nest-border-* and nest-padding-*. Its items use rounded-nest; the corners that touch the container corners add rounded-{side}-nest-corner. Corner = outer − border − padding, at least half the outer radius, in whole pixels.',
+          "A container sets `nest-outer-*`, `nest-border-*` and `nest-padding-*`. Its items use `rounded-nest`. The corners that touch the container's corners add `rounded-{side}-nest-corner`. A list whose items can sit in groups uses `nest-edges-y` or `nest-edges-x`, and its items use `rounded-nest-edges`. The corner is the outer radius minus the border and padding, at least half the outer radius, in whole pixels.",
       },
     },
   },
@@ -34,16 +36,6 @@ function Row({ name }: { name: string }) {
   );
 }
 
-function corners(element: HTMLElement) {
-  const style = getComputedStyle(element);
-  return [
-    style.borderTopLeftRadius,
-    style.borderTopRightRadius,
-    style.borderBottomRightRadius,
-    style.borderBottomLeftRadius,
-  ];
-}
-
 export const FormulaAndMinimum: Story = {
   render: () => (
     <div className="nx:grid nx:gap-4">
@@ -63,14 +55,48 @@ export const FormulaAndMinimum: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const at = (id: string) => corners(canvas.getByTestId(id));
 
-    await expect(at('mode-12-first')).toEqual(['7px', '6px', '6px', '7px']);
-    await expect(at('mode-12-middle')).toEqual(['6px', '6px', '6px', '6px']);
-    await expect(at('mode-12-last')).toEqual(['6px', '7px', '7px', '6px']);
-    await expect(at('mode-4-first')).toEqual(['2px', '2px', '2px', '2px']);
-    await expect(at('mode-4-last')).toEqual(['2px', '2px', '2px', '2px']);
-    await expect(at('fine-stroke-first')).toEqual(['8px', '6px', '6px', '8px']);
-    await expect(at('outside')).toEqual(['6px', '6px', '6px', '6px']);
+    await expectCorners(canvas.getByTestId('mode-12-first'), [
+      '7px',
+      '6px',
+      '6px',
+      '7px',
+    ]);
+    await expectCorners(canvas.getByTestId('mode-12-middle'), [
+      '6px',
+      '6px',
+      '6px',
+      '6px',
+    ]);
+    await expectCorners(canvas.getByTestId('mode-12-last'), [
+      '6px',
+      '7px',
+      '7px',
+      '6px',
+    ]);
+    await expectCorners(canvas.getByTestId('mode-4-first'), [
+      '2px',
+      '2px',
+      '2px',
+      '2px',
+    ]);
+    await expectCorners(canvas.getByTestId('mode-4-last'), [
+      '2px',
+      '2px',
+      '2px',
+      '2px',
+    ]);
+    await expectCorners(canvas.getByTestId('fine-stroke-first'), [
+      '8px',
+      '6px',
+      '6px',
+      '8px',
+    ]);
+    await expectCorners(canvas.getByTestId('outside'), [
+      '6px',
+      '6px',
+      '6px',
+      '6px',
+    ]);
   },
 };

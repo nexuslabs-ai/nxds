@@ -94,9 +94,11 @@ export default function Radius() {
         </p>
         <p className="nx:typography-body-default nx:text-muted-foreground nx:mt-3 nx:max-w-[64ch]">
           Items close to a rounded container, such as tabs and menu items, share
-          its corner. Their corner is the container&apos;s radius minus its
-          border and padding, and never less than half of that radius. A radius
-          override on the container reaches them too.
+          its corner. The corners that face the container&apos;s corners are its
+          radius minus its border and padding. The other corners are half its
+          radius. A radius token override, such as <code>--nx-radius-md</code>,
+          reaches them too. If you change a container&apos;s radius, border or
+          padding with a class, add the matching <code>nest-*</code> class.
         </p>
       </section>
 

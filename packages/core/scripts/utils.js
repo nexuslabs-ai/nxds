@@ -1570,7 +1570,30 @@ export function generateTargetUtilitiesCSS() {
 const NEST_OUTER = 'var(--nx-nest-outer, var(--nx-radius-md))';
 const NEST_MINIMUM = `round(calc(${NEST_OUTER} / 2), 1px)`;
 const NEST_CORNER = `max(round(calc(${NEST_OUTER} - var(--nx-nest-border) - var(--nx-nest-padding)), 1px), ${NEST_MINIMUM})`;
-/** The corner value a container's edge marker passed down, or the minimum. */
+const NEST_GROUP = `:is([role='group'], [role='radiogroup'])`;
+
+/**
+ * A list's edge rules: its first child gets the corner value for the `start`
+ * edge and its last child for the `end` edge. Every other child, and every
+ * child of a group inside the list that is not at the group's own edge, gets
+ * none, so a value never reaches past the item it is for.
+ */
+function nestEdgesRules(start, end, ...across) {
+  const unset = (...edges) =>
+    edges.map((edge) => `--nx-nest-${edge}: initial;`).join(' ');
+  return [
+    `  & > * { ${unset(...across)} }`,
+    `  & > :first-child { --nx-nest-${start}: ${NEST_CORNER}; }`,
+    `  & > :not(:first-child) { ${unset(start)} }`,
+    `  & > :last-child { --nx-nest-${end}: ${NEST_CORNER}; }`,
+    `  & > :not(:last-child) { ${unset(end)} }`,
+    `  & ${NEST_GROUP} > :not(:first-child) { ${unset('t', 's')} }`,
+    `  & ${NEST_GROUP} > :not(:last-child) { ${unset('b', 'e')} }`,
+    '',
+  ].join('\n');
+}
+
+/** The corner value a container's edge rules passed down, or the minimum. */
 const nestEdge = (...edges) =>
   edges.reduceRight(
     (fallback, edge) => `var(--nx-nest-${edge}, ${fallback})`,
@@ -1578,18 +1601,18 @@ const nestEdge = (...edges) =>
   );
 
 /**
- * Nested corners. A container declares the corner its items share with
- * `nest-outer-*` (its radius), `nest-border-*` (its border width) and
- * `nest-padding-*` (the space to its items); it sets all three, so an outer
- * container's values never leak in. Its items use `rounded-nest`, the minimum
- * (half the outer radius), and `rounded-{side}-nest-corner` on the corners
- * that touch the container's corners: outer − border − padding, never below
- * the minimum. Both round to whole pixels.
+ * Nested corners. A container declares its radius with `nest-outer-*`. Its
+ * items use `rounded-nest`, the minimum (half that radius). When its items
+ * also use the corner value, the container declares `nest-border-*` and
+ * `nest-padding-*` too, and the items use `rounded-{side}-nest-corner` on the
+ * corners that touch the container's corners: outer − border − padding, never
+ * below the minimum. Both round to whole pixels. `rounded-half-*` is half a
+ * radius step, and `rounded-half-nest` half the minimum, for a part inside an
+ * item.
  *
- * When a container's items can sit inside groups, the container marks its
- * first and last child with `nest-edge-{t,b,s,e}` (the edge it touches), and
- * the items use `rounded-nest-edges`: the first and last item of their own
- * parent take the corner value of every edge their parent was marked with.
+ * A vertical list uses `nest-edges-y` and a horizontal one `nest-edges-x`, and
+ * its items use `rounded-nest-edges`: the first and last item of the list, or
+ * of a group at its edge, take the corner value of that edge.
  *
  * @returns {string} CSS @utility declarations
  */
@@ -1616,6 +1639,14 @@ export function generateNestUtilitiesCSS() {
   border-radius: ${NEST_MINIMUM};
 }
 
+@utility rounded-half-* {
+  border-radius: round(calc(--value(--radius-*) / 2), 1px);
+}
+
+@utility rounded-half-nest {
+  border-radius: round(calc(${NEST_OUTER} / 4), 1px);
+}
+
 @utility rounded-nest-corner {
   border-radius: ${NEST_CORNER};
 }
@@ -1640,21 +1671,11 @@ export function generateNestUtilitiesCSS() {
   border-bottom-left-radius: ${NEST_CORNER};
 }
 
-@utility nest-edge-t {
-  --nx-nest-t: ${NEST_CORNER};
-}
+@utility nest-edges-y {
+${nestEdgesRules('t', 'b', 's', 'e')}}
 
-@utility nest-edge-b {
-  --nx-nest-b: ${NEST_CORNER};
-}
-
-@utility nest-edge-s {
-  --nx-nest-s: ${NEST_CORNER};
-}
-
-@utility nest-edge-e {
-  --nx-nest-e: ${NEST_CORNER};
-}
+@utility nest-edges-x {
+${nestEdgesRules('s', 'e', 't', 'b')}}
 
 @utility rounded-nest-edges {
   --nx-nest-min: ${NEST_MINIMUM};

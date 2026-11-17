@@ -58,16 +58,18 @@ export const NXDS_CLASS_GROUPS = {
   'nest-border': [{ 'nest-border': [validators.isAny] }],
   'nest-padding': [{ 'nest-padding': [validators.isAny] }],
   // Nested corners: the minimum, and the formula on the corners that touch.
-  rounded: ['rounded-nest', 'rounded-nest-corner', 'rounded-nest-edges'],
+  rounded: [
+    'rounded-nest',
+    'rounded-nest-corner',
+    'rounded-nest-edges',
+    { 'rounded-half': [validators.isAny] },
+  ],
   'rounded-s': ['rounded-s-nest-corner'],
   'rounded-e': ['rounded-e-nest-corner'],
   'rounded-t': ['rounded-t-nest-corner'],
   'rounded-b': ['rounded-b-nest-corner'],
-  // Edge markers a container puts on its first and last child.
-  'nest-edge-t': ['nest-edge-t'],
-  'nest-edge-b': ['nest-edge-b'],
-  'nest-edge-s': ['nest-edge-s'],
-  'nest-edge-e': ['nest-edge-e'],
+  // A list's edge rules, which pass the corner value to its first and last item.
+  'nest-edges': ['nest-edges-x', 'nest-edges-y'],
   'ring-color': ['ring-surface'],
   'ring-offset-color': ['ring-offset-surface'],
   z: ['z-overlay', 'z-sticky', 'z-modal', 'z-popover', 'z-toast', 'z-max'],
@@ -218,10 +220,7 @@ export const NXDS_CLASS_GROUPS = {
     | 'nest-outer'
     | 'nest-border'
     | 'nest-padding'
-    | 'nest-edge-t'
-    | 'nest-edge-b'
-    | 'nest-edge-s'
-    | 'nest-edge-e',
+    | 'nest-edges',
     (string | Record<string, ClassValidator[]>)[]
   >
 >;

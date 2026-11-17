@@ -125,6 +125,19 @@ const rangeStartsAtMin = computed(
 const rangeEndsAtMax = computed(() =>
   isRangeBoundary(sortedValues.value[sortedValues.value.length - 1], props.max)
 );
+const rangeCorners = computed(() => {
+  const isVertical = props.orientation === 'vertical';
+  const startCorner = isVertical
+    ? 'nx:rounded-b-nest-corner'
+    : 'nx:rounded-s-nest-corner';
+  const endCorner = isVertical
+    ? 'nx:rounded-t-nest-corner'
+    : 'nx:rounded-e-nest-corner';
+  // `inverted` puts the min end where the max end usually is.
+  return props.inverted
+    ? { min: endCorner, max: startCorner }
+    : { min: startCorner, max: endCorner };
+});
 
 // Reka puts role="slider" on each thumb, not the role-less root, so the
 // thumb-owned ARIA (naming and invalid state) goes there.
@@ -176,14 +189,8 @@ const forwarded = useForwardProps(delegated);
         :class="
           cn(
             sliderRangeVariants,
-            rangeStartsAtMin &&
-              (orientation === 'vertical'
-                ? 'nx:rounded-b-nest-corner'
-                : 'nx:rounded-s-nest-corner'),
-            rangeEndsAtMax &&
-              (orientation === 'vertical'
-                ? 'nx:rounded-t-nest-corner'
-                : 'nx:rounded-e-nest-corner')
+            rangeStartsAtMin && rangeCorners.min,
+            rangeEndsAtMax && rangeCorners.max
           )
         "
       />

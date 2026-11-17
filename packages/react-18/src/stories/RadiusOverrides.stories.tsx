@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, within } from 'storybook/test';
+import { within } from 'storybook/test';
 
 import { Button } from '../components/button/button';
 import { ButtonGroup } from '../components/button-group/button-group';
@@ -11,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/select/select';
+
+import { expectCorners } from './support/corner-test-utils';
 
 type RadiusStyle = CSSProperties & { '--nx-radius-base': string };
 
@@ -79,43 +81,37 @@ export const ScopeAndPrecedence: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const uniform = (radius: string) => [radius, radius, radius, radius];
-    function corners(element: HTMLElement) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
 
-    await expect(
-      corners(canvas.getByRole('button', { name: 'Outside override' }))
-    ).toEqual(uniform('12px'));
+    await expectCorners(
+      canvas.getByRole('button', { name: 'Outside override' }),
+      uniform('12px')
+    );
     for (const name of [
       'Pill button',
       'Inherited pill',
       'Inline beats preset',
     ]) {
-      await expect(corners(canvas.getByRole('button', { name }))).toEqual(
+      await expectCorners(
+        canvas.getByRole('button', { name }),
         uniform('9999px')
       );
     }
     for (const name of ['Unchanged input', 'Preset medium']) {
-      await expect(corners(canvas.getByRole('textbox', { name }))).toEqual(
+      await expectCorners(
+        canvas.getByRole('textbox', { name }),
         uniform('12px')
       );
     }
-    await expect(corners(canvas.getByRole('combobox'))).toEqual(
-      uniform('12px')
+    await expectCorners(canvas.getByRole('combobox'), uniform('12px'));
+    await expectCorners(canvas.getByRole('link'), uniform('9999px'));
+    await expectCorners(
+      canvas.getByRole('button', { name: 'Nested override' }),
+      uniform('24px')
     );
-    await expect(corners(canvas.getByRole('link'))).toEqual(uniform('9999px'));
-    await expect(
-      corners(canvas.getByRole('button', { name: 'Nested override' }))
-    ).toEqual(uniform('24px'));
-    await expect(
-      corners(canvas.getByRole('button', { name: 'Nested preset' }))
-    ).toEqual(uniform('8px'));
+    await expectCorners(
+      canvas.getByRole('button', { name: 'Nested preset' }),
+      uniform('8px')
+    );
 
     const expectedEdges = [
       ['Horizontal first', ['9999px', '0px', '0px', '9999px']],
@@ -126,9 +122,7 @@ export const ScopeAndPrecedence: Story = {
       ['Vertical last', ['0px', '0px', '9999px', '9999px']],
     ] as const;
     for (const [name, expected] of expectedEdges) {
-      await expect(corners(canvas.getByRole('button', { name }))).toEqual(
-        expected
-      );
+      await expectCorners(canvas.getByRole('button', { name }), expected);
     }
   },
 };
@@ -154,23 +148,14 @@ export const OverrideReachesNestedCorners: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    function corners(element: HTMLElement) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
 
-    await expect(corners(canvas.getByTestId('override-first'))).toEqual([
+    await expectCorners(canvas.getByTestId('override-first'), [
       '15px',
       '10px',
       '10px',
       '15px',
     ]);
-    await expect(corners(canvas.getByTestId('override-middle'))).toEqual([
+    await expectCorners(canvas.getByTestId('override-middle'), [
       '10px',
       '10px',
       '10px',

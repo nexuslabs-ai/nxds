@@ -17,6 +17,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { defineComponent, ref, useId } from 'vue';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { Button } from '../button';
 import { Checkbox } from '../checkbox';
 import {
@@ -1629,30 +1630,21 @@ export const NestedCorners: Story = {
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    function corners(element: Element) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
 
     const bar = within(canvas.getByRole('toolbar', { name: 'default bar' }));
-    await expect(corners(bar.getByRole('button', { name: 'Select' }))).toEqual([
+    await expectCorners(bar.getByRole('button', { name: 'Select' }), [
       '12px',
       '8px',
       '8px',
       '12px',
     ]);
-    await expect(corners(bar.getByRole('button', { name: 'Draw' }))).toEqual([
+    await expectCorners(bar.getByRole('button', { name: 'Draw' }), [
       '8px',
       '8px',
       '8px',
       '8px',
     ]);
-    await expect(corners(bar.getByRole('button', { name: 'Undo' }))).toEqual([
+    await expectCorners(bar.getByRole('button', { name: 'Undo' }), [
       '8px',
       '12px',
       '12px',
@@ -1662,21 +1654,119 @@ export const NestedCorners: Story = {
     const floating = within(
       canvas.getByRole('toolbar', { name: 'floating bar' })
     );
-    await expect(
-      corners(floating.getByRole('button', { name: 'Select' }))
-    ).toEqual(['15px', '12px', '12px', '15px']);
-    await expect(
-      corners(floating.getByRole('button', { name: 'Draw' }))
-    ).toEqual(['12px', '12px', '12px', '12px']);
+    await expectCorners(floating.getByRole('button', { name: 'Select' }), [
+      '15px',
+      '12px',
+      '12px',
+      '15px',
+    ]);
+    await expectCorners(floating.getByRole('button', { name: 'Draw' }), [
+      '12px',
+      '12px',
+      '12px',
+      '12px',
+    ]);
 
     const vertical = within(
       canvas.getByRole('toolbar', { name: 'vertical bar' })
     );
-    await expect(
-      corners(vertical.getByRole('button', { name: 'Select' }))
-    ).toEqual(['12px', '12px', '8px', '8px']);
-    await expect(
-      corners(vertical.getByRole('button', { name: 'Erase' }))
-    ).toEqual(['8px', '8px', '12px', '12px']);
+    await expectCorners(vertical.getByRole('button', { name: 'Select' }), [
+      '12px',
+      '12px',
+      '8px',
+      '8px',
+    ]);
+    await expectCorners(vertical.getByRole('button', { name: 'Erase' }), [
+      '8px',
+      '8px',
+      '12px',
+      '12px',
+    ]);
+  },
+};
+
+export const NestedCornersThroughWrappers: Story = {
+  globals: { corners: '12' },
+  render: () => ({
+    components: {
+      Toolbar,
+      ToolbarButton,
+      ToolbarGroup,
+      ToolbarToggleGroup,
+      ToolbarToggleItem,
+    },
+    template: `
+      <div class="nx:flex nx:flex-wrap nx:items-start nx:gap-6">
+        <Toolbar aria-label="Wrapped tools">
+          <ToolbarToggleGroup type="multiple" aria-label="Style">
+            <span class="nx:inline-flex">
+              <ToolbarToggleItem value="bold">Bold</ToolbarToggleItem>
+            </span>
+            <span class="nx:inline-flex">
+              <ToolbarToggleItem value="italic">Italic</ToolbarToggleItem>
+            </span>
+            <span class="nx:inline-flex">
+              <ToolbarToggleItem value="underline">Underline</ToolbarToggleItem>
+            </span>
+          </ToolbarToggleGroup>
+        </Toolbar>
+        <Toolbar aria-label="Nested groups">
+          <ToolbarGroup aria-label="Edit">
+            <ToolbarToggleGroup type="multiple" aria-label="Style">
+              <ToolbarToggleItem value="bold">Bold</ToolbarToggleItem>
+              <ToolbarToggleItem value="italic">Italic</ToolbarToggleItem>
+            </ToolbarToggleGroup>
+            <ToolbarButton>Undo</ToolbarButton>
+          </ToolbarGroup>
+        </Toolbar>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const wrapped = within(
+      canvas.getByRole('toolbar', { name: 'Wrapped tools' })
+    );
+    await expectCorners(wrapped.getByRole('button', { name: 'Bold' }), [
+      '12px',
+      '8px',
+      '8px',
+      '12px',
+    ]);
+    await expectCorners(wrapped.getByRole('button', { name: 'Italic' }), [
+      '8px',
+      '8px',
+      '8px',
+      '8px',
+    ]);
+    await expectCorners(wrapped.getByRole('button', { name: 'Underline' }), [
+      '8px',
+      '12px',
+      '12px',
+      '8px',
+    ]);
+
+    const nested = within(
+      canvas.getByRole('toolbar', { name: 'Nested groups' })
+    );
+    await expectCorners(nested.getByRole('button', { name: 'Bold' }), [
+      '12px',
+      '8px',
+      '8px',
+      '12px',
+    ]);
+    await expectCorners(nested.getByRole('button', { name: 'Italic' }), [
+      '8px',
+      '8px',
+      '8px',
+      '8px',
+    ]);
+    await expectCorners(nested.getByRole('button', { name: 'Undo' }), [
+      '8px',
+      '12px',
+      '12px',
+      '8px',
+    ]);
   },
 };

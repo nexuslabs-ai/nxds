@@ -3,6 +3,7 @@ import { expect, fn, type Mock, userEvent, within } from 'storybook/test';
 import { computed, defineComponent, type PropType, ref } from 'vue';
 
 import { cn } from '../../lib/utils';
+import { expectCorners } from '../../stories/support/corner-test-utils';
 
 import { Slider } from '.';
 
@@ -643,6 +644,12 @@ export const NestedCorners: Story = {
     template: `
       <div data-radius="12" class="nx:w-64">
         <Slider aria-label="Volume" :default-value="[40]" />
+        <Slider
+          aria-label="Inverted volume"
+          :default-value="[40]"
+          inverted
+          class="nx:mt-4"
+        />
         <div data-radius="4" class="nx:mt-4">
           <Slider aria-label="Balance" :default-value="[40]" />
         </div>
@@ -650,20 +657,11 @@ export const NestedCorners: Story = {
     `,
   }),
   play: async ({ canvasElement }) => {
-    function corners(element: Element) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
-
-    const [range12, range4] = canvasElement.querySelectorAll(
+    const [range12, rangeInverted, range4] = canvasElement.querySelectorAll(
       '[data-slot="slider-range"]'
     );
-    await expect(corners(range12!)).toEqual(['9px', '0px', '0px', '9px']);
-    await expect(corners(range4!)).toEqual(['2px', '0px', '0px', '2px']);
+    await expectCorners(range12!, ['9px', '0px', '0px', '9px']);
+    await expectCorners(rangeInverted!, ['0px', '9px', '9px', '0px']);
+    await expectCorners(range4!, ['2px', '0px', '0px', '2px']);
   },
 };

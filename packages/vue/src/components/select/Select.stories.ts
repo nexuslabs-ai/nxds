@@ -7,6 +7,7 @@ import {
   within,
 } from 'storybook/test';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { expectMenuItemInsetAtEveryDensity } from '../../stories/support/menu-item-inset-test-utils';
 import { expectInterruptibleOverlayMotion } from '../../stories/support/overlay-motion-test-utils';
 import { Input } from '../input';
@@ -929,20 +930,10 @@ export const NestedCorners: Story = {
     `,
   }),
   play: async () => {
-    function corners(element: Element) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
-
     const options = await within(document.body).findAllByRole('option');
-    await expect(corners(options[0]!)).toEqual(['7px', '7px', '6px', '6px']);
-    await expect(corners(options[1]!)).toEqual(['6px', '6px', '6px', '6px']);
-    await expect(corners(options[2]!)).toEqual(['6px', '6px', '7px', '7px']);
+    await expectCorners(options[0]!, ['7px', '7px', '6px', '6px']);
+    await expectCorners(options[1]!, ['6px', '6px', '6px', '6px']);
+    await expectCorners(options[2]!, ['6px', '6px', '7px', '7px']);
 
     await userEvent.keyboard('{Escape}');
     // Reka keeps the closing content mounted for its exit transition.
@@ -979,19 +970,9 @@ export const NestedCornersGrouped: Story = {
     `,
   }),
   play: async () => {
-    function corners(element: Element) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
-
     const options = await within(document.body).findAllByRole('option');
-    await expect(corners(options[0]!)).toEqual(['7px', '7px', '6px', '6px']);
-    await expect(corners(options[2]!)).toEqual(['6px', '6px', '7px', '7px']);
+    await expectCorners(options[0]!, ['7px', '7px', '6px', '6px']);
+    await expectCorners(options[2]!, ['6px', '6px', '7px', '7px']);
     await userEvent.keyboard('{Escape}');
     // Reka keeps the closing content mounted for its exit transition.
     await waitForElementToBeRemoved(() =>

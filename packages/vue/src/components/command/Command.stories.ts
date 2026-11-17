@@ -10,6 +10,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { Button } from '../button';
 import { Spinner } from '../spinner';
 
@@ -716,18 +717,8 @@ export const NestedCorners: Story = {
     `,
   }),
   play: async ({ canvasElement }) => {
-    function corners(element: Element) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
-
     for (const item of within(canvasElement).getAllByRole('option')) {
-      await expect(corners(item)).toEqual(['6px', '6px', '6px', '6px']);
+      await expectCorners(item, ['6px', '6px', '6px', '6px']);
     }
   },
 };
@@ -736,16 +727,6 @@ export const DialogNestedCorners: Story = {
   globals: { corners: '12' },
   render: WithDialog.render,
   play: async ({ canvasElement }) => {
-    function corners(element: Element) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
-
     await userEvent.click(
       within(canvasElement).getByRole('button', {
         name: 'Open Command Palette',
@@ -757,7 +738,7 @@ export const DialogNestedCorners: Story = {
       'nx:rounded-none',
       'nx:sm:rounded-nest-corner'
     );
-    await expect(corners(command)).toEqual(['14px', '14px', '14px', '14px']);
+    await expectCorners(command, ['14px', '14px', '14px', '14px']);
 
     await userEvent.click(within(dialog).getByRole('combobox'));
     await userEvent.keyboard('{Escape}');

@@ -11,6 +11,7 @@ import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
 import {
+  menuListClassName,
   overlayFloatingTransitionClassName,
   popoverSurfaceClassName,
 } from '../overlay-layout/overlay-layout';
@@ -41,7 +42,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
         cn(
           'nx:z-popover nx:min-w-48 nx:overflow-hidden',
           popoverSurfaceClassName,
-          'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:first-child]:nest-edge-t nx:[&>:last-child]:nest-edge-b',
+          menuListClassName,
           overlayFloatingTransitionClassName,
           props.class
         )

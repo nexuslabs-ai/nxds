@@ -19,6 +19,7 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { defineComponent } from 'vue';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { expectTextFits } from '../../stories/support/story-height-test-utils';
 
 import {
@@ -1163,20 +1164,38 @@ export const NestedCorners: Story = {
     `,
   }),
   play: async ({ canvasElement }) => {
-    function corners(element: Element) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
-
     const button = canvasElement.querySelector(
       '[data-slot="sidebar-menu-button"]'
     )!;
-    await expect(corners(button)).toEqual(['8px', '8px', '8px', '8px']);
-    await expect(button).toHaveClass('nx:[[data-narrow=true]_&]:rounded-nest');
+    await expectCorners(button, ['8px', '8px', '8px', '8px']);
+  },
+};
+
+export const NestedCornersNarrow: Story = {
+  globals: {
+    corners: '12',
+    viewport: { value: 'mobile', isRotated: false },
+  },
+  render: () => ({
+    components: { DemoInset, DemoSidebar, SidebarProvider },
+    template: `
+      <SidebarProvider>
+        <DemoSidebar />
+        <DemoInset>Content</DemoInset>
+      </SidebarProvider>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      canvasElement.querySelector<HTMLElement>('[data-slot="sidebar-trigger"]')!
+    );
+    const drawer = await within(canvasElement.ownerDocument.body).findByRole(
+      'dialog'
+    );
+    await expectCorners(
+      drawer.querySelector('[data-slot="sidebar-menu-button"]')!,
+      ['8px', '8px', '8px', '8px']
+    );
+    await userEvent.keyboard('{Escape}');
   },
 };

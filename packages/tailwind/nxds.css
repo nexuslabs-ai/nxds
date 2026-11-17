@@ -2986,6 +2986,17 @@
   );
 }
 
+@utility rounded-half-* {
+  border-radius: round(calc(--value(--radius-*) / 2), 1px);
+}
+
+@utility rounded-half-nest {
+  border-radius: round(
+    calc(var(--nx-nest-outer, var(--nx-radius-md)) / 4),
+    1px
+  );
+}
+
 @utility rounded-nest-corner {
   border-radius: max(
     round(
@@ -3091,56 +3102,94 @@
   );
 }
 
-@utility nest-edge-t {
-  --nx-nest-t: max(
-    round(
-      calc(
-        var(--nx-nest-outer, var(--nx-radius-md)) - var(--nx-nest-border) -
-          var(--nx-nest-padding)
+@utility nest-edges-y {
+  & > * {
+    --nx-nest-s: initial;
+    --nx-nest-e: initial;
+  }
+  & > :first-child {
+    --nx-nest-t: max(
+      round(
+        calc(
+          var(--nx-nest-outer, var(--nx-radius-md)) - var(--nx-nest-border) -
+            var(--nx-nest-padding)
+        ),
+        1px
       ),
-      1px
-    ),
-    round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
-  );
+      round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
+    );
+  }
+  & > :not(:first-child) {
+    --nx-nest-t: initial;
+  }
+  & > :last-child {
+    --nx-nest-b: max(
+      round(
+        calc(
+          var(--nx-nest-outer, var(--nx-radius-md)) - var(--nx-nest-border) -
+            var(--nx-nest-padding)
+        ),
+        1px
+      ),
+      round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
+    );
+  }
+  & > :not(:last-child) {
+    --nx-nest-b: initial;
+  }
+  & :is([role='group'], [role='radiogroup']) > :not(:first-child) {
+    --nx-nest-t: initial;
+    --nx-nest-s: initial;
+  }
+  & :is([role='group'], [role='radiogroup']) > :not(:last-child) {
+    --nx-nest-b: initial;
+    --nx-nest-e: initial;
+  }
 }
 
-@utility nest-edge-b {
-  --nx-nest-b: max(
-    round(
-      calc(
-        var(--nx-nest-outer, var(--nx-radius-md)) - var(--nx-nest-border) -
-          var(--nx-nest-padding)
+@utility nest-edges-x {
+  & > * {
+    --nx-nest-t: initial;
+    --nx-nest-b: initial;
+  }
+  & > :first-child {
+    --nx-nest-s: max(
+      round(
+        calc(
+          var(--nx-nest-outer, var(--nx-radius-md)) - var(--nx-nest-border) -
+            var(--nx-nest-padding)
+        ),
+        1px
       ),
-      1px
-    ),
-    round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
-  );
-}
-
-@utility nest-edge-s {
-  --nx-nest-s: max(
-    round(
-      calc(
-        var(--nx-nest-outer, var(--nx-radius-md)) - var(--nx-nest-border) -
-          var(--nx-nest-padding)
+      round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
+    );
+  }
+  & > :not(:first-child) {
+    --nx-nest-s: initial;
+  }
+  & > :last-child {
+    --nx-nest-e: max(
+      round(
+        calc(
+          var(--nx-nest-outer, var(--nx-radius-md)) - var(--nx-nest-border) -
+            var(--nx-nest-padding)
+        ),
+        1px
       ),
-      1px
-    ),
-    round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
-  );
-}
-
-@utility nest-edge-e {
-  --nx-nest-e: max(
-    round(
-      calc(
-        var(--nx-nest-outer, var(--nx-radius-md)) - var(--nx-nest-border) -
-          var(--nx-nest-padding)
-      ),
-      1px
-    ),
-    round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
-  );
+      round(calc(var(--nx-nest-outer, var(--nx-radius-md)) / 2), 1px)
+    );
+  }
+  & > :not(:last-child) {
+    --nx-nest-e: initial;
+  }
+  & :is([role='group'], [role='radiogroup']) > :not(:first-child) {
+    --nx-nest-t: initial;
+    --nx-nest-s: initial;
+  }
+  & :is([role='group'], [role='radiogroup']) > :not(:last-child) {
+    --nx-nest-b: initial;
+    --nx-nest-e: initial;
+  }
 }
 
 @utility rounded-nest-edges {

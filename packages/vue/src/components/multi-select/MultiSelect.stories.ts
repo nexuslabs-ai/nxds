@@ -7,6 +7,7 @@ import {
   ref,
 } from 'vue';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { expectImmediateItemMotion } from '../../stories/support/motion-test-utils';
 import { Checkbox } from '../checkbox';
 import { Field, FieldDescription, FieldError, FieldLabel } from '../field';
@@ -657,16 +658,6 @@ export const NestedCorners: Story = {
   globals: { corners: '12' },
   render: Default.render,
   play: async ({ canvasElement }) => {
-    function corners(element: Element) {
-      const style = getComputedStyle(element);
-      return [
-        style.borderTopLeftRadius,
-        style.borderTopRightRadius,
-        style.borderBottomRightRadius,
-        style.borderBottomLeftRadius,
-      ];
-    }
-
     await userEvent.click(
       canvasElement.querySelector<HTMLElement>(
         '[data-slot="multi-select-trigger"]'
@@ -676,7 +667,7 @@ export const NestedCorners: Story = {
     const command = document.querySelector(
       '[data-slot="multi-select-content"] [data-slot="command"]'
     )!;
-    await expect(corners(command)).toEqual(['11px', '11px', '11px', '11px']);
+    await expectCorners(command, ['11px', '11px', '11px', '11px']);
     await userEvent.keyboard('{Escape}');
   },
 };
