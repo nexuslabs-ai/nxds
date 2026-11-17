@@ -68,6 +68,11 @@ export interface NxdsAppearance {
       | ((previous: NxdsAppearanceState) => NxdsAppearanceState)
   ) => void;
   reset: () => void;
+  /**
+   * `false` when the app sets its own colors. The brand color, surface tone
+   * and contrast then have no effect.
+   */
+  deriveColors: boolean;
 }
 
 const NxdsAppearanceKey: InjectionKey<NxdsAppearance> =
@@ -116,6 +121,7 @@ export function createNxdsAppearance({
         mounted: readonly(mounted),
         setState,
         reset: () => setState(initialState),
+        deriveColors,
       });
 
       const mount = app.mount;

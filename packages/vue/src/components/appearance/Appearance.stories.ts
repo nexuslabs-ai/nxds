@@ -143,7 +143,11 @@ export const OwnColors: Story = {
     const host = within(canvasElement).getByTestId('second-app');
     const root = document.documentElement;
     const app = createApp(AppearanceControls).use(
-      createNxdsAppearance({ storageKey: false, deriveColors: false })
+      createNxdsAppearance({
+        storageKey: false,
+        defaultState: { ...DEFAULT_NXDS_APPEARANCE, density: 'compact' },
+        deriveColors: false,
+      })
     );
     app.mount(host);
     const controls = within(host);
@@ -154,7 +158,7 @@ export const OwnColors: Story = {
       await userEvent.click(controls.getByRole('button', { name: 'Dark' }));
       await waitFor(() => expect(root).toHaveClass('dark'));
       await expect(controls.getByText('Resolved mode: dark')).toBeVisible();
-      await expect(root).toHaveAttribute('data-density', 'default');
+      await expect(root).toHaveAttribute('data-density', 'compact');
       await expect(themeCss()).toBe('');
     } finally {
       app.unmount();

@@ -146,8 +146,76 @@ function FontSizeInput({
   );
 }
 
-export function NxdsAppearanceSettings() {
+/**
+ * The settings nxds derives its colors from: brand color, surface tone and
+ * contrast.
+ */
+function DerivedColorSettings() {
   const { state, setState, resolvedMode } = useNxdsAppearance();
+  const contrastKey =
+    resolvedMode === 'dark' ? 'darkContrast' : 'lightContrast';
+
+  const setContrast = (values: number[]) => {
+    const value = values[0];
+    if (value === undefined) return;
+    setState((current) => ({ ...current, [contrastKey]: value }));
+  };
+
+  return (
+    <>
+      <NxdsAppearanceSettingRow
+        label="Brand color"
+        description="Primary actions, selected states, and highlights"
+      >
+        <NxdsAppearanceBrandColorField
+          label="Brand color"
+          value={state.brandColor}
+          onChange={(brandColor) =>
+            setState((current) => ({ ...current, brandColor }))
+          }
+        />
+      </NxdsAppearanceSettingRow>
+
+      <NxdsAppearanceSettingRow
+        label="Surface tone"
+        description="Neutral surfaces, borders, and muted UI"
+      >
+        <AxisSelect<NxdsSurfaceTone>
+          value={state.surfaceTone}
+          options={BASE_TONE_OPTIONS}
+          onValueChange={(surfaceTone) =>
+            setState((current) => ({ ...current, surfaceTone }))
+          }
+          ariaLabel="Surface tone"
+        />
+      </NxdsAppearanceSettingRow>
+
+      <p
+        className="nx:m-0 nx:typography-body-small nx:text-muted-foreground"
+        role="status"
+      >
+        Editing {resolvedMode} appearance
+      </p>
+      <NxdsAppearanceSettingRow
+        label="Contrast"
+        description={`Text and surface definition · ${state[contrastKey]}`}
+      >
+        <Slider
+          value={[state[contrastKey]]}
+          onValueChange={setContrast}
+          min={0}
+          max={100}
+          step={1}
+          aria-label="Contrast"
+          className="nx:w-48"
+        />
+      </NxdsAppearanceSettingRow>
+    </>
+  );
+}
+
+export function NxdsAppearanceSettings() {
+  const { state, setState, resolvedMode, deriveColors } = useNxdsAppearance();
 
   const updatePrefs = (patch: Partial<NxdsAppearancePrefs>) => {
     setState((current) => ({
@@ -174,22 +242,15 @@ export function NxdsAppearanceSettings() {
     label,
   }));
 
-  const contrastKey =
-    resolvedMode === 'dark' ? 'darkContrast' : 'lightContrast';
-
-  const setContrast = (values: number[]) => {
-    const value = values[0];
-    if (value === undefined) return;
-    setState((current) => ({ ...current, [contrastKey]: value }));
-  };
-
   return (
     <div data-slot="appearance-settings" className="nx:space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Theme</CardTitle>
           <CardDescription>
-            Choose your mode, brand color, surface tone, and contrast.
+            {deriveColors
+              ? 'Choose your mode, brand color, surface tone, and contrast.'
+              : 'Choose your mode.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="nx:space-y-4">
@@ -210,53 +271,7 @@ export function NxdsAppearanceSettings() {
             </ToggleGroup>
           </NxdsAppearanceSettingRow>
 
-          <NxdsAppearanceSettingRow
-            label="Brand color"
-            description="Primary actions, selected states, and highlights"
-          >
-            <NxdsAppearanceBrandColorField
-              label="Brand color"
-              value={state.brandColor}
-              onChange={(brandColor) =>
-                setState((current) => ({ ...current, brandColor }))
-              }
-            />
-          </NxdsAppearanceSettingRow>
-
-          <NxdsAppearanceSettingRow
-            label="Surface tone"
-            description="Neutral surfaces, borders, and muted UI"
-          >
-            <AxisSelect<NxdsSurfaceTone>
-              value={state.surfaceTone}
-              options={BASE_TONE_OPTIONS}
-              onValueChange={(surfaceTone) =>
-                setState((current) => ({ ...current, surfaceTone }))
-              }
-              ariaLabel="Surface tone"
-            />
-          </NxdsAppearanceSettingRow>
-
-          <p
-            className="nx:m-0 nx:typography-body-small nx:text-muted-foreground"
-            role="status"
-          >
-            Editing {resolvedMode} appearance
-          </p>
-          <NxdsAppearanceSettingRow
-            label="Contrast"
-            description={`Text and surface definition · ${state[contrastKey]}`}
-          >
-            <Slider
-              value={[state[contrastKey]]}
-              onValueChange={setContrast}
-              min={0}
-              max={100}
-              step={1}
-              aria-label="Contrast"
-              className="nx:w-48"
-            />
-          </NxdsAppearanceSettingRow>
+          {deriveColors ? <DerivedColorSettings /> : null}
 
           <NxdsAppearanceConfigPreview
             state={state}

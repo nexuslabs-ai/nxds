@@ -1,3 +1,4 @@
+import { DEFAULT_NXDS_APPEARANCE } from '@nxds/core';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
@@ -37,6 +38,7 @@ const themeCss = () =>
 export const OwnColors: Story = {
   args: {
     storageKey: false,
+    defaultState: { ...DEFAULT_NXDS_APPEARANCE, density: 'compact' },
     deriveColors: false,
     children: <ModeControls />,
   },
@@ -47,7 +49,7 @@ export const OwnColors: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Dark' }));
     await waitFor(() => expect(root).toHaveClass('dark'));
     await expect(canvas.getByText('Resolved mode: dark')).toBeVisible();
-    await expect(root).toHaveAttribute('data-density', 'default');
+    await expect(root).toHaveAttribute('data-density', 'compact');
     await expect(themeCss()).toBe('');
   },
 };

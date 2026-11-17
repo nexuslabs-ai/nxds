@@ -36,6 +36,11 @@ export interface NxdsAppearanceContextValue {
   resolvedMode: NxdsResolvedAppearanceMode;
   mounted: boolean;
   reset: () => void;
+  /**
+   * `false` when the app sets its own colors. The brand color, surface tone
+   * and contrast then have no effect.
+   */
+  deriveColors: boolean;
 }
 
 export interface NxdsAppearanceProviderProps {
@@ -170,8 +175,15 @@ export function NxdsAppearanceProvider({
   }, []);
 
   const value = useMemo<NxdsAppearanceContextValue>(
-    () => ({ state: activeState, setState, resolvedMode, mounted, reset }),
-    [activeState, mounted, reset, resolvedMode, setState]
+    () => ({
+      state: activeState,
+      setState,
+      resolvedMode,
+      mounted,
+      reset,
+      deriveColors,
+    }),
+    [activeState, deriveColors, mounted, reset, resolvedMode, setState]
   );
 
   return (
