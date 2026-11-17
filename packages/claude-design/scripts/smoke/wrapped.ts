@@ -257,22 +257,25 @@ export const WRAPPED_CASES: { name: string; markup: string; reads: Read[] }[] =
           'Toolbar',
           'aria-label="Formatting"',
           x(
-            'ToolbarToggleGroup',
-            'type="multiple" aria-label="Style"',
-            x('ToolbarToggleItem', 'value="bold"', 'Bold'),
-            x('ToolbarToggleItem', 'value="italic"', 'Italic'),
-            x('ToolbarToggleItem', 'value="underline"', 'Underline')
-          ),
-          x('ToolbarButton', '', 'Undo')
+            'ToolbarGroup',
+            'aria-label="Edit"',
+            x(
+              'ToolbarToggleGroup',
+              'type="multiple" aria-label="Style"',
+              x('ToolbarToggleItem', 'value="bold"', 'Bold'),
+              x('ToolbarToggleItem', 'value="italic"', 'Italic')
+            ),
+            x('ToolbarButton', '', 'Undo')
+          )
         )
       ),
       reads: [
         { target: 'button', index: 0, property: 'border-top-left-radius' },
         { target: 'button', index: 0, property: 'border-top-right-radius' },
         { target: 'button', index: 1, property: 'border-top-left-radius' },
+        { target: 'button', index: 1, property: 'border-top-right-radius' },
+        { target: 'button', index: 2, property: 'border-top-left-radius' },
         { target: 'button', index: 2, property: 'border-top-right-radius' },
-        { target: 'button', index: 3, property: 'border-top-left-radius' },
-        { target: 'button', index: 3, property: 'border-top-right-radius' },
       ],
     },
     {
