@@ -276,6 +276,7 @@ export function NxdsAppearanceSettings() {
           <NxdsAppearanceConfigPreview
             state={state}
             resolvedMode={resolvedMode}
+            deriveColors={deriveColors}
           />
         </CardContent>
       </Card>
