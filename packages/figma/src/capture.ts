@@ -3,11 +3,13 @@
 // converts the record into capture.json's layers. Components come from the
 // recipes, and every other card in the release gets a default one, so a new
 // nxds component lands in Figma without a recipe.
-import { mkdirSync } from 'node:fs';
+import type { CanvasSchema } from '@nxds/claude-design/attribute';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { type CDPSession, chromium, type Page } from 'playwright-core';
 
+import { convertMarkup } from './attributes.ts';
 import {
   convertVariant,
   fingerprint,
@@ -17,8 +19,11 @@ import {
 } from './convert.ts';
 import {
   installHelpers,
+  type MarkupNode,
+  missingParts,
   type MountInput,
   type Override,
+  parseMarkup,
   readTokenValues,
   readTypography,
   recordIcons,
@@ -56,21 +61,32 @@ import {
 export interface CaptureInput {
   release: string;
   theme: Record<string, string>;
-  /** The release's files, with tokens.css and tokens.json already themed. */
   files: {
-    bundleJs: string;
-    bundleCss: string;
-    tokensCss: string;
+    /**
+     * The page's stylesheets, in order, each with the path it's served at:
+     * the release's themed tokens.css, its bundle.css and an app's own
+     * colours file, or an app's compiled CSS entry.
+     */
+    styles: { path: string; css: string }[];
+    /**
+     * The page's scripts, in order. Together they set `window.React`,
+     * `window.ReactDOM` and `window.Nxds`, as the release's bundle expects
+     * and an app's bundle provides.
+     */
+    scripts: { path: string; js: string }[];
+    /** The release's tokens.json, themed: the tokens that become variables. */
     tokensJson: string;
     indexDts: string;
-    /** An app's own colours file, such as nxds-colors.css, loaded after the release's CSS so it wins. */
-    colorsCss?: string;
     /** Each card's README.md, by card name. */
     readmes: Readonly<Record<string, string>>;
   };
-  /** React 18 and ReactDOM 18 UMD builds, which the bundle expects as page globals. */
-  react: string;
-  reactDom: string;
+  /**
+   * The page draws an app rather than the release: it serves the files the
+   * app's CSS points at, such as fonts, takes the icon set from the app's
+   * bundle, lets the app set text in the system font, and converts each
+   * example's attributes by the app's own props.
+   */
+  app?: { schema: CanvasSchema };
   /** Screenshots go in `<outDir>/screenshots/<Component>/`. */
   outDir: string;
   progress(line: string): void;
@@ -82,7 +98,12 @@ export interface CaptureResult {
   capture: CaptureFile;
   /** Components that couldn't be captured, and why. */
   problems: string[];
+  /** Components an app doesn't have, because their example uses a part it didn't install. */
+  notInstalled: string[];
 }
+
+/** An example uses parts the page doesn't have. */
+class MissingParts extends Error {}
 
 const ORIGIN = 'https://capture.nxds.invalid';
 const DEFAULT_WIDTH = 400;
@@ -99,13 +120,42 @@ const NOT_VISUAL = new Set([
 /** A string union longer than this is a list of names, such as icons, not a variant property. */
 const MAX_VALUES = 12;
 
-const PAGE = `<!doctype html>
+/**
+ * The capture page's stylesheets and scripts for the release: its themed
+ * tokens.css and bundle.css, an app's own colours file after them in the same
+ * theme layer so it wins, then React 18, ReactDOM 18 and bundle.js.
+ */
+export function releasePage(release: {
+  tokensCss: string;
+  bundleCss: string;
+  bundleJs: string;
+  react: string;
+  reactDom: string;
+  colorsCss?: string;
+}): Pick<CaptureInput['files'], 'styles' | 'scripts'> {
+  return {
+    styles: [
+      { path: '/tokens.css', css: release.tokensCss },
+      { path: '/bundle.css', css: release.bundleCss },
+      ...(release.colorsCss === undefined
+        ? []
+        : [{ path: '/colors.css', css: release.colorsCss }]),
+    ],
+    scripts: [
+      { path: '/react.js', js: release.react },
+      { path: '/react-dom.js', js: release.reactDom },
+      { path: '/bundle.js', js: release.bundleJs },
+    ],
+  };
+}
+
+/** The capture page: the stylesheets, then the capture's own rules, then the scripts. */
+function pageHtml(files: CaptureInput['files']) {
+  return `<!doctype html>
 <html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
-<link rel="stylesheet" href="/tokens.css">
-<link rel="stylesheet" href="/bundle.css">
-<link rel="stylesheet" href="/colors.css">
+${files.styles.map((style) => `<link rel="stylesheet" href="${style.path}">`).join('\n')}
 <style>
   *, *::before, *::after { transition: none !important; animation: none !important; }
   body {
@@ -115,12 +165,29 @@ const PAGE = `<!doctype html>
     font-family: var(--nx-typography-family-font-sans);
   }
 </style>
-<script src="/react.js"></script>
-<script src="/react-dom.js"></script>
-<script src="/bundle.js"></script>
+${files.scripts.map((script) => `<script src="${script.path}"></script>`).join('\n')}
 </head>
 <body></body>
 </html>`;
+}
+
+const CONTENT_TYPES: Record<string, string> = {
+  '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
+  '.ttf': 'font/ttf',
+  '.css': 'text/css',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+};
+
+/** A file the page asks for at `/fs/<path>`, when it is one a stylesheet can point at. */
+function servedFile(urlPath: string) {
+  if (!urlPath.startsWith('/fs/')) return undefined;
+  const file = decodeURIComponent(urlPath.slice('/fs'.length));
+  const type = CONTENT_TYPES[path.extname(file)];
+  if (!type || !existsSync(file)) return undefined;
+  return { type, body: readFileSync(file) };
+}
 
 async function launch() {
   try {
@@ -420,6 +487,75 @@ function allRecipes(readmes: Readonly<Record<string, string>>) {
   return [...RECIPES, ...extra];
 }
 
+/** Every part `nodes` draw, such as `Card` and `Button`. */
+function partsIn(nodes: readonly MarkupNode[], found = new Set<string>()) {
+  for (const node of nodes) {
+    if (typeof node === 'string') continue;
+    if (node.part !== null) found.add(node.part);
+    partsIn(node.children, found);
+  }
+  return found;
+}
+
+/** Each `{ __icon: name }` in `value`, however deep. */
+function iconsIn(value: unknown, found: Set<string>) {
+  if (Array.isArray(value))
+    return value.forEach((item) => iconsIn(item, found));
+  if (!value || typeof value !== 'object') return;
+  if ('__icon' in value && typeof value.__icon === 'string')
+    found.add(value.__icon);
+  for (const item of Object.values(value)) iconsIn(item, found);
+}
+
+/**
+ * Every example the capture renders, in every variant, and the icon names
+ * they use, so an app's Tailwind compiles their classes and its bundle draws
+ * their icons.
+ */
+export function examples(
+  readmes: Readonly<Record<string, string>>,
+  indexDts: string
+) {
+  const markup: string[] = [];
+  const icons = new Set<string>();
+  for (const recipe of allRecipes(readmes)) {
+    const base =
+      typeof recipe.markup === 'string'
+        ? recipe.markup
+        : example(readmes[recipe.card ?? recipe.name]);
+    let properties: Property[] = [];
+    try {
+      properties = variantProperties(
+        recipe,
+        recipe.part ?? recipe.name,
+        indexDts
+      );
+    } catch {
+      // The capture reports a part the release lacks.
+    }
+    for (const values of combinations(properties)) {
+      const text =
+        typeof recipe.markup === 'function' ? recipe.markup(values) : base;
+      if (text) markup.push(text);
+      iconsIn([recipe.rootProps, recipe.full?.(values)], icons);
+      for (const property of properties) {
+        const value = values[property.name];
+        if (property.axis?.set && value !== undefined)
+          iconsIn(property.axis.set(value, values), icons);
+      }
+    }
+  }
+  const text = [...new Set(markup)].join('\n');
+  // Nxds.Icon's `name`, and an icon prop such as Button's `start-icon`.
+  for (const match of text.matchAll(
+    /Nxds\.Icon"[^>]*\sname="([a-z0-9-]+)"|\s(?:[a-z]+-)?icon="([a-z0-9-]+)"/g
+  )) {
+    const name = match[1] ?? match[2];
+    if (name) icons.add(name);
+  }
+  return { markup: text, icons: [...icons].sort() };
+}
+
 /** The icon set, with each icon's markup ready for Figma's SVG import. */
 function iconSet(icons: readonly IconSpec[]) {
   return icons.map((icon) => ({
@@ -484,32 +620,45 @@ export async function captureComponents(
     const page = await context.newPage();
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
-    const served: Record<string, [string, string]> = {
-      '/': ['text/html', PAGE],
-      '/tokens.css': ['text/css', input.files.tokensCss],
-      '/bundle.css': ['text/css', input.files.bundleCss],
-      '/colors.css': ['text/css', input.files.colorsCss ?? ''],
-      '/bundle.js': ['text/javascript', input.files.bundleJs],
-      '/react.js': ['text/javascript', input.react],
-      '/react-dom.js': ['text/javascript', input.reactDom],
-    };
+    const served = new Map<string, [string, string]>([
+      ['/', ['text/html', pageHtml(input.files)]],
+      ...input.files.styles.map((style): [string, [string, string]] => [
+        style.path,
+        ['text/css', style.css],
+      ]),
+      ...input.files.scripts.map((script): [string, [string, string]] => [
+        script.path,
+        ['text/javascript', script.js],
+      ]),
+    ]);
     await page.route(`${ORIGIN}/**`, (route) => {
-      const file = served[new URL(route.request().url()).pathname];
-      return file
-        ? route.fulfill({ contentType: file[0], body: file[1] })
+      const urlPath = new URL(route.request().url()).pathname;
+      const file = served.get(urlPath);
+      if (file) return route.fulfill({ contentType: file[0], body: file[1] });
+      const asset = input.app ? servedFile(urlPath) : undefined;
+      return asset
+        ? route.fulfill({ contentType: asset.type, body: asset.body })
         : route.fulfill({ status: 404 });
     });
     await page.goto(`${ORIGIN}/`);
     await page.mouse.move(1399, 999);
     await page.evaluate(installHelpers);
+    // An app's provider applies its appearance when it first mounts, so the values are read after.
+    await mountOn(page, { nodes: [], overrides: [], width: DEFAULT_WIDTH });
+    await page.evaluate(settle);
     const values = await page.evaluate(readTokenValues, valueProbes(tokens));
     const effects = effectStyles(tokens, values);
     const cdp = await context.newCDPSession(page);
     await cdp.send('DOM.enable');
     await cdp.send('CSS.enable');
 
+    const appIcons = await page.evaluate(
+      () =>
+        (window as { Nxds?: { __figma?: { icons?: string[] } } }).Nxds?.__figma
+          ?.icons
+    );
     const iconNames =
-      partProp(input.files.indexDts, 'Icon', 'name').literals ?? [];
+      appIcons ?? partProp(input.files.indexDts, 'Icon', 'name').literals ?? [];
     const icons = await page.evaluate(recordIcons, iconNames);
     const iconsByShape = new Map<string, string>();
     for (const icon of icons) {
@@ -529,6 +678,24 @@ export async function captureComponents(
     const sources = new Map<string, InstanceSource>();
     const components: ComponentSpec[] = [];
     const problems: string[] = [];
+    const notInstalled: string[] = [];
+
+    // Each example parsed once, with an app's attributes converted.
+    const parsed = new Map<string, MarkupNode[]>();
+    const nodesOf = async (markup: string) => {
+      const known = parsed.get(markup);
+      if (known) return known;
+      const nodes = await page.evaluate(parseMarkup, markup);
+      const missing = await page.evaluate(missingParts, [...partsIn(nodes)]);
+      if (missing.length > 0) {
+        throw new MissingParts(
+          `the page has no ${missing.map((part) => `Nxds.${part}`).join(', ')}`
+        );
+      }
+      const result = input.app ? convertMarkup(nodes, input.app.schema) : nodes;
+      parsed.set(markup, result);
+      return result;
+    };
 
     const captureRecipe = async (recipe: Recipe): Promise<ComponentSpec> => {
       const card = recipe.card ?? recipe.name;
@@ -558,8 +725,9 @@ export async function captureComponents(
           typeof recipe.markup === 'function'
             ? recipe.markup(values)
             : (base ?? '');
+        const nodes = await nodesOf(markup);
         const mount = (full: boolean): MountInput => ({
-          markup,
+          nodes,
           overrides: overridesFor(
             recipe,
             properties,
@@ -675,12 +843,17 @@ export async function captureComponents(
       try {
         components.push(await captureRecipe(recipe));
       } catch (error) {
-        problems.push(`${recipe.name}: ${(error as Error).message}`);
-        input.progress(`Skipped ${recipe.name}: ${(error as Error).message}`);
+        const message = (error as Error).message;
+        if (input.app && error instanceof MissingParts) {
+          notInstalled.push(recipe.name);
+        } else {
+          problems.push(`${recipe.name}: ${message}`);
+          input.progress(`Skipped ${recipe.name}: ${message}`);
+        }
       }
       errors.length = 0;
     }
-    await assertFontsLoaded(page, tokens);
+    await assertFontsLoaded(page, tokens, input.app !== undefined);
     return {
       capture: {
         format: CAPTURE_FORMAT,
@@ -694,6 +867,7 @@ export async function captureComponents(
         components,
       },
       problems,
+      notInstalled,
     };
   } finally {
     await browser.close();
@@ -701,19 +875,20 @@ export async function captureComponents(
 }
 
 /** Fails when the theme's text font fell back, so the screenshots wouldn't match Figma. */
-async function assertFontsLoaded(page: Page, tokens: TokensFile) {
+async function assertFontsLoaded(page: Page, tokens: TokensFile, app: boolean) {
   const family = firstFamily(tokens.type.families['sans'] ?? '');
-  const loaded = await page.evaluate(
-    (name) =>
-      [...document.fonts].some(
-        (face) =>
-          face.family.replace(/["']/g, '') === name && face.status === 'loaded'
-      ),
-    family
-  );
-  if (!loaded) {
-    throw new Error(
-      `${family} didn't load from Google Fonts, so the screenshots would show a fallback font. Check your connection, then run the command again.`
+  const { faces, loaded } = await page.evaluate((name) => {
+    const named = [...document.fonts].filter(
+      (face) => face.family.replace(/["']/g, '') === name
     );
-  }
+    return {
+      faces: named.length,
+      loaded: named.some((face) => face.status === 'loaded'),
+    };
+  }, family);
+  // An app may set text in the system font, which declares no face; Figma's report names its replacement.
+  if (loaded || (app && faces === 0)) return;
+  throw new Error(
+    `${family} didn't load, so the screenshots would show a fallback font. Check your connection, then run the command again.`
+  );
 }

@@ -1,6 +1,13 @@
 import { NXDS_COLOR_APPEARANCE_KEYS } from '@nxds/core/source/lib/appearance-model.ts';
 import { NXDS_THEME_FIELDS } from '@nxds/core/source/lib/theme-fields.ts';
-import { captureComponents } from '@nxds/figma/capture';
+import { type AppSetup, buildAppPage } from '@nxds/figma/app';
+import { type AppProps, appProps } from '@nxds/figma/app-props';
+import {
+  captureComponents,
+  type CaptureInput,
+  examples,
+  releasePage,
+} from '@nxds/figma/capture';
 import { openLink, PortInUseError } from '@nxds/figma/link';
 import { LINK_PORT } from '@nxds/figma/port';
 import type { BuildReport } from '@nxds/figma/spec';
@@ -14,6 +21,8 @@ import {
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { importsColors } from '../colors';
+import { CONFIG_FILE, readConfig } from '../config';
 import { CliError, UsageError } from '../errors';
 
 import {
@@ -119,6 +128,23 @@ function reportLines(report: BuildReport, relative: string) {
   return lines;
 }
 
+/** Inside an app, the export draws the app's own theme and colours, so it takes neither from flags. */
+function assertAppTakesNoTheme(
+  options: FigmaExportOptions,
+  passed: Record<string, string>
+) {
+  const flag = Object.keys(passed)[0];
+  const given = flag
+    ? `--${flag}`
+    : options.colors !== undefined
+      ? '--colors'
+      : undefined;
+  if (!given) return;
+  throw new UsageError(
+    `${given} doesn't apply inside an app: the export draws the app's own components, theme and colours, from ${CONFIG_FILE}'s nxds folder and CSS entry. Change them in the app, or run the export outside it.`
+  );
+}
+
 export async function exportFigma(
   cwd: string,
   options: FigmaExportOptions,
@@ -129,17 +155,21 @@ export async function exportFigma(
   const passed = Object.fromEntries(
     Object.entries(options.theme).filter(([, value]) => value !== '')
   );
+  // Inside an app, Figma gets the app: its own components, CSS and provider.
+  const app = readConfig(cwd);
+  if (app) assertAppTakesNoTheme(options, passed);
   const colorsCss =
-    options.colors === undefined
+    app || options.colors === undefined
       ? undefined
       : readColors(cwd, options.colors, passed);
   const registry = options.npmRegistry ?? DEFAULT_NPM_REGISTRY;
+  // The release's README examples and prop types match the app's parts when it's the app's own release.
   const pkg = options.source
     ? localPackage(path.resolve(cwd, options.source))
     : await fetchPackage(
         registry,
         CLAUDE_DESIGN_PACKAGE,
-        options.release ?? 'latest'
+        options.release ?? app?.version ?? 'latest'
       );
 
   let files: Map<string, Buffer>;
@@ -151,13 +181,19 @@ export async function exportFigma(
   }
   if (!themeModule) {
     throw new UsageError(
-      `nxds ${pkg.version} can't theme an export, and the Figma export sets its font through the theme. Pass --release latest.`
+      `nxds ${pkg.version} can't theme an export, and the Figma export reads its tokens through the theme. Pass --release latest.`
     );
   }
-  const theme = { ...passed };
-  if (theme['font'] === undefined) theme['font'] = DEFAULT_FONT;
-  const source: ThemeSource = { passed, version: pkg.version };
   const module = await importTheme(themeModule, pkg.version);
+  // An app's theme names its tokens; the page, with the app's provider, gives their values.
+  const theme = app
+    ? Object.fromEntries(
+        Object.entries(app.theme ?? {}).filter(([flag]) =>
+          module.flags.includes(flag)
+        )
+      )
+    : { font: DEFAULT_FONT, ...passed };
+  const source: ThemeSource = { passed, version: pkg.version };
   assertThemeFlags(theme, module.flags, source);
   const rendered = renderTheme(module, theme, source);
   const file = (name: string) => {
@@ -165,39 +201,72 @@ export async function exportFigma(
     if (!bytes) throw new CliError(`The release has no project/${name}.`);
     return bytes.toString('utf8');
   };
-  const { react, reactDom } = await reactSources(registry);
-
-  mkdirSync(out, { recursive: true });
-  rmSync(path.join(out, 'screenshots'), { recursive: true, force: true });
-  rmSync(path.join(out, 'report.json'), { force: true });
   const readmes: Record<string, string> = {};
   for (const [name, bytes] of files) {
     const card = /^components\/([^/]+)\/README\.md$/.exec(name)?.[1];
     if (card) readmes[card] = bytes.toString('utf8');
   }
+  let indexDts = file('components/index.d.ts');
+
+  let page: Pick<CaptureInput['files'], 'styles' | 'scripts'>;
+  let missingIcons: string[] = [];
+  let ownColors = false;
+  let props: AppProps | undefined;
+  if (app) {
+    ownColors = importsColors(readFileSync(path.join(cwd, app.css), 'utf8'));
+    const setup: AppSetup = {
+      root: cwd,
+      dir: app.dir,
+      css: app.css,
+      iconLibrary: app.iconLibrary ?? 'phosphor',
+      ownColors,
+    };
+    try {
+      props = appProps(setup, indexDts);
+      indexDts = props.indexDts;
+      const { markup, icons } = examples(readmes, indexDts);
+      const built = await buildAppPage(setup, markup, icons);
+      page = { styles: [built.css], scripts: [built.script] };
+      missingIcons = built.missingIcons;
+    } catch (error) {
+      throw new CliError(
+        `The app's nxds components didn't build: ${(error as Error).message}`
+      );
+    }
+  } else {
+    const { react, reactDom } = await reactSources(registry);
+    page = releasePage({
+      tokensCss: rendered.project['tokens.css'],
+      bundleCss: file('components/bundle.css'),
+      bundleJs: file('components/bundle.js'),
+      react,
+      reactDom,
+      colorsCss,
+    });
+  }
+
+  mkdirSync(out, { recursive: true });
+  rmSync(path.join(out, 'screenshots'), { recursive: true, force: true });
+  rmSync(path.join(out, 'report.json'), { force: true });
   let result: Awaited<ReturnType<typeof captureComponents>>;
   try {
     result = await captureComponents({
       release: pkg.version,
       theme,
       files: {
-        bundleJs: file('components/bundle.js'),
-        bundleCss: file('components/bundle.css'),
-        tokensCss: rendered.project['tokens.css'],
+        ...page,
         tokensJson: rendered.project['tokens.json'],
-        indexDts: file('components/index.d.ts'),
+        indexDts,
         readmes,
-        colorsCss,
       },
-      react,
-      reactDom,
+      app: props && { schema: props.schema },
       outDir: out,
       progress,
     });
   } catch (error) {
     throw new CliError((error as Error).message);
   }
-  const { capture, problems } = result;
+  const { capture, problems, notInstalled } = result;
   const json = JSON.stringify(capture, null, 2);
   writeFileSync(path.join(out, 'capture.json'), `${json}\n`);
 
@@ -207,13 +276,33 @@ export async function exportFigma(
     0
   );
   const captured = [
-    `Captured ${plural(variants, 'variant')} of ${plural(capture.components.length, 'component')} and ${plural(capture.icons.length, 'icon')} from nxds ${pkg.version} in ${path.join(relative, 'capture.json')}, with a screenshot of each variant in ${path.join(relative, 'screenshots')}.`,
+    `Captured ${plural(variants, 'variant')} of ${plural(capture.components.length, 'component')} and ${plural(capture.icons.length, 'icon')} ${app ? `from the app's own components in ${app.dir}` : `from nxds ${pkg.version}`} in ${path.join(relative, 'capture.json')}, with a screenshot of each variant in ${path.join(relative, 'screenshots')}.`,
     ...problems.map((problem) => `Couldn't capture ${problem}`),
   ];
+  if (app) {
+    captured.push(
+      `The components use the app's CSS entry ${app.css}${ownColors ? ', with its own colours,' : ''} and its appearance provider.`
+    );
+  }
+  if (notInstalled.length > 0) {
+    captured.push(
+      `The app hasn't added ${notInstalled.join(', ')}, or a part their examples use, so Figma doesn't get them.`
+    );
+  }
+  if (props && props.newParts.length > 0) {
+    captured.push(
+      `${props.newParts.join(', ')} ${props.newParts.length === 1 ? "isn't" : "aren't"} in nxds ${pkg.version}, so no example draws ${props.newParts.length === 1 ? 'it' : 'them'} and Figma doesn't get ${props.newParts.length === 1 ? 'it' : 'them'}.`
+    );
+  }
+  if (missingIcons.length > 0) {
+    captured.push(
+      `The app's icon library has no icon for ${missingIcons.join(', ')}, so the examples that use them draw without them.`
+    );
+  }
   if (options.colors !== undefined) {
     captured.push(`Colours come from ${options.colors}.`);
   }
-  if (passed['font'] === undefined) {
+  if (!app && passed['font'] === undefined) {
     captured.push(
       `Text is set in Inter, because Figma can't draw the system UI font. Pass --font to choose another.`
     );
@@ -255,11 +344,15 @@ export async function exportFigma(
     ],
     data: {
       version: pkg.version,
+      app: app !== null,
       theme,
       out,
       variants,
       components: capture.components.map((component) => component.name),
       problems,
+      notInstalled,
+      newParts: props?.newParts ?? [],
+      missingIcons,
       report,
     },
   };

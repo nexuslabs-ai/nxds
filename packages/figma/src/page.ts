@@ -55,9 +55,22 @@ export interface Override {
   props: Record<string, unknown>;
 }
 
+/** An element of canvas markup, with its attributes as props. */
+export interface MarkupElement {
+  /** The HTML tag, or the component's path in Nxds for an `<x-import>`, such as `Button`. */
+  tag: string;
+  /** The part an `<x-import>` draws, or null for an HTML element. */
+  part: string | null;
+  /** The attributes by prop name: strings, until an app's conversion types a part's. */
+  props: Record<string, unknown>;
+  children: MarkupNode[];
+}
+
+export type MarkupNode = MarkupElement | string;
+
 export interface MountInput {
-  /** Canvas markup: `<x-import component-from-global-scope="Nxds.Button">`. */
-  markup: string;
+  /** Parsed canvas markup, from `parseMarkup`. */
+  nodes: MarkupNode[];
   overrides: Override[];
   /** The container's width. Block-level components fill it. */
   width: number;
@@ -93,15 +106,12 @@ interface PageGlobals {
 }
 
 /**
- * Defines `__figmaMount(input)` and `__figmaUnmount()`. A mount renders canvas
- * markup into a fresh `[data-capture-root]` container, `width` px wide with
- * 8px of room around it, and sets each override's props on the first element
- * of its part. Attribute values stay strings, as a canvas passes them; the
- * bundle reads them the way a canvas needs. Overrides keep their real values.
+ * Canvas markup, such as `<x-import component-from-global-scope="Nxds.Button">`,
+ * as a tree. Each attribute is named as its prop, and its value stays the
+ * string a canvas passes, which the release's bundle converts. Text keeps
+ * one space for each run of whitespace.
  */
-export function installHelpers() {
-  const page = window as unknown as PageGlobals;
-  const { React, ReactDOM, Nxds } = page;
+export function parseMarkup(markup: string): MarkupNode[] {
   const NAMES: Record<string, string> = {
     class: 'className',
     for: 'htmlFor',
@@ -114,26 +124,6 @@ export function installHelpers() {
     /^(?:aria|data)-/.test(name)
       ? name
       : name.replace(/-([a-z])/g, (_, char: string) => char.toUpperCase());
-  const component = (name: string) =>
-    name
-      .replace(/^Nxds\./, '')
-      .split('.')
-      .reduce<unknown>(
-        (scope, key) => (scope as Record<string, unknown> | undefined)?.[key],
-        Nxds
-      ) as ReactModule.ElementType | undefined;
-  const revive = (value: unknown): unknown => {
-    if (Array.isArray(value)) return value.map(revive);
-    if (!value || typeof value !== 'object') return value;
-    if ('__icon' in value) {
-      return React.createElement(Nxds['Icon'] as ReactModule.ElementType, {
-        name: value.__icon,
-      });
-    }
-    return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [key, revive(item)])
-    );
-  };
   const styleObject = (text: string) =>
     Object.fromEntries(
       text
@@ -145,51 +135,115 @@ export function installHelpers() {
           value,
         ])
     );
+  const parse = (node: ChildNode): MarkupNode | null => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = (node.textContent ?? '').replace(/\s+/g, ' ').trim();
+      return text === '' ? null : text;
+    }
+    if (!(node instanceof Element)) return null;
+    const children = [...node.childNodes]
+      .map(parse)
+      .filter((child) => child !== null);
+    const tag = node.tagName.toLowerCase();
+    const props: Record<string, unknown> = {};
+    if (tag === 'x-import') {
+      const part = (
+        node.getAttribute('component-from-global-scope') ?? ''
+      ).replace(/^Nxds\./, '');
+      for (const attribute of node.attributes) {
+        if (attribute.name === 'component-from-global-scope') continue;
+        props[camel(attribute.name)] = attribute.value;
+      }
+      return { tag: part, part, props, children };
+    }
+    for (const attribute of node.attributes) {
+      const name = NAMES[attribute.name] ?? attribute.name;
+      props[name] =
+        name === 'style' ? styleObject(attribute.value) : attribute.value;
+    }
+    return { tag, part: null, props, children };
+  };
+  const template = document.createElement('template');
+  template.innerHTML = markup.trim();
+  return [...template.content.childNodes]
+    .map(parse)
+    .filter((node) => node !== null);
+}
+
+/** The parts, such as `Button` or `Chart.Bar`, that the page's `Nxds` doesn't have. */
+export function missingParts(parts: string[]) {
+  const { Nxds } = window as unknown as PageGlobals;
+  return parts.filter(
+    (part) =>
+      part
+        .split('.')
+        .reduce<unknown>(
+          (scope, key) => (scope as Record<string, unknown> | undefined)?.[key],
+          Nxds
+        ) === undefined
+  );
+}
+
+/**
+ * Defines `__figmaMount(input)` and `__figmaUnmount()`. A mount renders parsed
+ * canvas markup into a fresh `[data-capture-root]` container, `width` px wide
+ * with 8px of room around it, and sets each override's props on the first
+ * element of its part. `{ __icon: name }` draws that icon and
+ * `{ __handler: true }` is a function that does nothing.
+ */
+export function installHelpers() {
+  const page = window as unknown as PageGlobals;
+  const { React, ReactDOM, Nxds } = page;
+  const component = (name: string) =>
+    name
+      .split('.')
+      .reduce<unknown>(
+        (scope, key) => (scope as Record<string, unknown> | undefined)?.[key],
+        Nxds
+      ) as ReactModule.ElementType | undefined;
+  const revive = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(revive);
+    if (!value || typeof value !== 'object' || value instanceof Date) {
+      return value;
+    }
+    if ('__icon' in value) {
+      return React.createElement(Nxds['Icon'] as ReactModule.ElementType, {
+        name: value.__icon,
+      });
+    }
+    if ('__handler' in value) return () => undefined;
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, revive(item)])
+    );
+  };
   let root: ReturnType<PageGlobals['ReactDOM']['createRoot']> | null = null;
   page.__figmaUnmount = () => {
     root?.unmount();
     root = null;
     document.body.replaceChildren();
   };
-  page.__figmaMount = ({ markup, overrides, width }) => {
+  page.__figmaMount = ({ nodes, overrides, width }) => {
     page.__figmaUnmount();
     const pending = new Map(
       overrides.map((override) => [override.part, override.props])
     );
-    const convert = (node: ChildNode, key: number): ReactModule.ReactNode => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const text = (node.textContent ?? '').replace(/\s+/g, ' ');
-        return text.trim() === '' ? null : text.trim();
-      }
-      if (!(node instanceof Element)) return null;
-      const children = [...node.childNodes]
-        .map((child, index) => convert(child, index))
-        .filter((child) => child !== null);
-      const tag = node.tagName.toLowerCase();
-      const props: Record<string, unknown> = { key };
+    const render = (node: MarkupNode, key: number): ReactModule.ReactNode => {
+      if (typeof node === 'string') return node;
+      const children = node.children.map(render);
+      const props: Record<string, unknown> = {
+        key,
+        ...(revive(node.props) as Record<string, unknown>),
+      };
       let type: ReactModule.ElementType =
-        tag as keyof ReactModule.JSX.IntrinsicElements;
-      if (tag === 'x-import') {
-        const name = (
-          node.getAttribute('component-from-global-scope') ?? ''
-        ).replace(/^Nxds\./, '');
-        const found = component(name);
-        if (!found) throw new Error(`The release has no Nxds.${name}.`);
+        node.tag as keyof ReactModule.JSX.IntrinsicElements;
+      if (node.part !== null) {
+        const found = component(node.part);
+        if (!found) throw new Error(`The page has no Nxds.${node.part}.`);
         type = found;
-        for (const attribute of node.attributes) {
-          if (attribute.name === 'component-from-global-scope') continue;
-          props[camel(attribute.name)] = attribute.value;
-        }
-        const extra = pending.get(name);
+        const extra = pending.get(node.part);
         if (extra) {
           Object.assign(props, revive(extra));
-          pending.delete(name);
-        }
-      } else {
-        for (const attribute of node.attributes) {
-          const name = NAMES[attribute.name] ?? attribute.name;
-          props[name] =
-            name === 'style' ? styleObject(attribute.value) : attribute.value;
+          pending.delete(node.part);
         }
       }
       // A void element such as <input> throws on any `children` prop.
@@ -197,25 +251,39 @@ export function installHelpers() {
         ? React.createElement(type, props, ...children)
         : React.createElement(type, props);
     };
-    const template = document.createElement('template');
-    template.innerHTML = markup.trim();
-    const nodes = [...template.content.childNodes]
-      .map((node, index) => convert(node, index))
-      .filter((node) => node !== null);
+    const elements = nodes.map(render);
     if (pending.size > 0) {
       throw new Error(
         `The markup has no ${[...pending.keys()].join(', ')} to set props on.`
       );
     }
+    // An app's bundle hands over its appearance provider, so each mount gets the app's colours, density and corners.
+    const app = Nxds['__figma'] as
+      | {
+          Provider: ReactModule.ElementType;
+          defaultState: unknown;
+          deriveColors: boolean;
+        }
+      | undefined;
+    const tree = React.createElement(React.Fragment, null, ...elements);
+    const content = app
+      ? React.createElement(
+          app.Provider,
+          {
+            defaultState: app.defaultState,
+            deriveColors: app.deriveColors,
+            storageKey: 'nxds-figma-capture',
+          },
+          tree
+        )
+      : tree;
     const wrapper = document.createElement('div');
     wrapper.setAttribute('data-capture-root', '');
     wrapper.style.cssText = `display: flow-root; width: ${width + 16}px; padding: 8px`;
     document.body.append(wrapper);
     const mounted = ReactDOM.createRoot(wrapper);
     root = mounted;
-    ReactDOM.flushSync(() =>
-      mounted.render(React.createElement(React.Fragment, null, ...nodes))
-    );
+    ReactDOM.flushSync(() => mounted.render(content));
   };
 }
 

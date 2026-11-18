@@ -78,3 +78,6 @@ apps/docs/__generated__/
 apps/docs/public/avatars/
 apps/docs/public/vue-demos/
 apps/docs/app/_lib/*.generated.ts
+
+# The Figma smoke's generated fixture app
+packages/figma/.fixture

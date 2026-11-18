@@ -19,7 +19,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { captureComponents } from '../src/capture.ts';
+import { captureComponents, releasePage } from '../src/capture.ts';
 import { openLink } from '../src/link.ts';
 import { SKIPPED_CARDS } from '../src/recipes.ts';
 import {
@@ -74,19 +74,21 @@ for (const card of readdirSync(path.join(project, 'components'))) {
   if (existsSync(file)) readmes[card] = readFileSync(file, 'utf8');
 }
 const started = Date.now();
+const releaseFiles = {
+  tokensCss: themed['tokens.css'] ?? '',
+  bundleCss: readFileSync(
+    path.join(project, 'components', 'bundle.css'),
+    'utf8'
+  ),
+  bundleJs: readFileSync(path.join(project, 'components', 'bundle.js'), 'utf8'),
+  react: umd('react', 'react.production.min.js'),
+  reactDom: umd('react-dom', 'react-dom.production.min.js'),
+};
 const input = {
   release: 'smoke',
   theme,
   files: {
-    bundleJs: readFileSync(
-      path.join(project, 'components', 'bundle.js'),
-      'utf8'
-    ),
-    bundleCss: readFileSync(
-      path.join(project, 'components', 'bundle.css'),
-      'utf8'
-    ),
-    tokensCss: themed['tokens.css'] ?? '',
+    ...releasePage(releaseFiles),
     tokensJson: themed['tokens.json'] ?? '',
     indexDts: readFileSync(
       path.join(project, 'components', 'index.d.ts'),
@@ -94,8 +96,6 @@ const input = {
     ),
     readmes,
   },
-  react: umd('react', 'react.production.min.js'),
-  reactDom: umd('react-dom', 'react-dom.production.min.js'),
   outDir,
   progress: (line: string) => console.log(line),
 };
@@ -472,7 +472,10 @@ const OWN_COLORS = `@layer theme {
 }`;
 const own = await captureComponents({
   ...input,
-  files: { ...input.files, colorsCss: OWN_COLORS },
+  files: {
+    ...input.files,
+    ...releasePage({ ...releaseFiles, colorsCss: OWN_COLORS }),
+  },
   outDir: mkdtempSync(path.join(tmpdir(), 'nxds-figma-own-')),
   only: ['Button', 'Card'],
   progress: () => {},

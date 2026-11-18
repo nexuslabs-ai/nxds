@@ -123,7 +123,9 @@ async function fontLoader(report: BuildReport) {
     const key = `${family} ${weight}`;
     const cached = loaded.get(key);
     if (cached) return cached;
-    const exact = pick(family, weight);
+    // Fontsource names a variable font "Inter Variable"; Figma lists the same typeface as "Inter".
+    const exact =
+      pick(family, weight) ?? pick(family.replace(/ Variable$/, ''), weight);
     const font = exact ??
       pick('Inter', weight) ?? { family: 'Inter', style: 'Regular' };
     if (!exact)
