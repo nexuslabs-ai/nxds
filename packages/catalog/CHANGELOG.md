@@ -1,5 +1,15 @@
 # @nxds/catalog
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies [236929a]
+- Updated dependencies [236929a]
+- Updated dependencies [236929a]
+- Updated dependencies [236929a]
+  - @nxds/core@0.15.0
+
 ## 0.0.3
 
 ### Patch Changes
