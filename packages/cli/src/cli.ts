@@ -238,6 +238,10 @@ function program(
     )
     .option('--overwrite', 'replace the export in --out', false)
     .option(
+      '--colors <path>',
+      "figma: an app's own colours file, such as nxds-colors.css, in place of the theme's colours"
+    )
+    .option(
       '--source <path>',
       'a built @nxds/claude-design dist folder, instead of the npm release'
     )
@@ -265,6 +269,7 @@ function program(
     );
     const { out, release, source, npmRegistry, index, existing, overwrite } =
       command.opts<Omit<ExportOptions, 'theme'>>();
+    const { colors } = command.opts<{ colors?: string }>();
     if (target === 'figma') {
       if (index !== undefined || existing !== undefined) {
         throw new UsageError(
@@ -274,11 +279,16 @@ function program(
       done(
         await exportFigma(
           cwdOf(command),
-          { out, release, source, npmRegistry, overwrite, theme },
+          { out, colors, release, source, npmRegistry, overwrite, theme },
           progress
         )
       );
       return;
+    }
+    if (colors !== undefined) {
+      throw new UsageError(
+        '--colors is for the Figma export. A Claude Design System takes its colours from the theme flags.'
+      );
     }
     done(
       await exportClaudeDesign(cwdOf(command), {

@@ -1,3 +1,5 @@
+import { NXDS_COLOR_APPEARANCE_KEYS } from '@nxds/core/source/lib/appearance-model.ts';
+import { NXDS_THEME_FIELDS } from '@nxds/core/source/lib/theme-fields.ts';
 import { captureComponents } from '@nxds/figma/capture';
 import { openLink, PortInUseError } from '@nxds/figma/link';
 import { LINK_PORT } from '@nxds/figma/port';
@@ -38,6 +40,8 @@ const DEFAULT_FONT = 'inter';
 
 export type FigmaExportOptions = {
   out?: string;
+  /** An app's own colours file, such as nxds-colors.css. */
+  colors?: string;
   release?: string;
   source?: string;
   npmRegistry?: string;
@@ -45,6 +49,30 @@ export type FigmaExportOptions = {
   /** The theme flags passed, by name. */
   theme: Record<string, string>;
 };
+
+/** The theme flags that set a colour, which an app's own colours file replaces. */
+const COLOR_FLAGS = NXDS_THEME_FIELDS.filter(
+  (field) =>
+    field.key !== undefined &&
+    (NXDS_COLOR_APPEARANCE_KEYS as readonly string[]).includes(field.key)
+).map((field) => field.flag);
+
+/** The app's own colours file. A colour flag beside it is refused, as `init` refuses one once an app sets its own colours. */
+function readColors(cwd: string, file: string, passed: Record<string, string>) {
+  const colors = path.resolve(cwd, file);
+  if (!existsSync(colors)) {
+    throw new UsageError(
+      `${file} doesn't exist. Pass the app's colours file, such as nxds-colors.css.`
+    );
+  }
+  const flag = COLOR_FLAGS.find((name) => name in passed);
+  if (flag) {
+    throw new UsageError(
+      `--${flag} sets a colour, and ${file} sets every colour. Change the colour in ${file}, or leave out --${flag}.`
+    );
+  }
+  return readFileSync(colors, 'utf8');
+}
 
 /** The plugin's manifest, when this CLI runs from the nxds repo. */
 function pluginManifest() {
@@ -98,6 +126,13 @@ export async function exportFigma(
 ): Promise<CommandResult> {
   const out = path.resolve(cwd, options.out ?? DEFAULT_FIGMA_DIR);
   assertWritable(out, options.overwrite);
+  const passed = Object.fromEntries(
+    Object.entries(options.theme).filter(([, value]) => value !== '')
+  );
+  const colorsCss =
+    options.colors === undefined
+      ? undefined
+      : readColors(cwd, options.colors, passed);
   const registry = options.npmRegistry ?? DEFAULT_NPM_REGISTRY;
   const pkg = options.source
     ? localPackage(path.resolve(cwd, options.source))
@@ -119,9 +154,6 @@ export async function exportFigma(
       `nxds ${pkg.version} can't theme an export, and the Figma export sets its font through the theme. Pass --release latest.`
     );
   }
-  const passed = Object.fromEntries(
-    Object.entries(options.theme).filter(([, value]) => value !== '')
-  );
   const theme = { ...passed };
   if (theme['font'] === undefined) theme['font'] = DEFAULT_FONT;
   const source: ThemeSource = { passed, version: pkg.version };
@@ -155,6 +187,7 @@ export async function exportFigma(
         tokensJson: rendered.project['tokens.json'],
         indexDts: file('components/index.d.ts'),
         readmes,
+        colorsCss,
       },
       react,
       reactDom,
@@ -177,6 +210,9 @@ export async function exportFigma(
     `Captured ${plural(variants, 'variant')} of ${plural(capture.components.length, 'component')} and ${plural(capture.icons.length, 'icon')} from nxds ${pkg.version} in ${path.join(relative, 'capture.json')}, with a screenshot of each variant in ${path.join(relative, 'screenshots')}.`,
     ...problems.map((problem) => `Couldn't capture ${problem}`),
   ];
+  if (options.colors !== undefined) {
+    captured.push(`Colours come from ${options.colors}.`);
+  }
   if (passed['font'] === undefined) {
     captured.push(
       `Text is set in Inter, because Figma can't draw the system UI font. Pass --font to choose another.`
