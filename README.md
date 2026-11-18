@@ -123,7 +123,7 @@ Ask questions, suggest ideas and share what you built in [GitHub Discussions](ht
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) to set up the repo and run the tests.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) to set up the repo, run the tests and [add a component or block](CONTRIBUTING.md#add-a-component-or-block).
 
 ## License
 

@@ -128,6 +128,44 @@ The first storybook-project run launches Storybook in the background — the col
 
 ---
 
+## Add a component or block
+
+Build it in React first. The Vue port is its own issue, picked up later.
+
+A **block** composes existing components into a ready-made piece of UI, such as a sign-in form. It adds no tokens and no behaviour of its own. A **component** is a new building block with its own API, styling and behaviour.
+
+### Add a block
+
+Create `packages/react/src/blocks/{family}/{slug}/` with three files. [`inline-edit`](packages/react/src/blocks/editing/inline-edit) is the one to copy.
+
+| File                 | Holds                                                                                                    |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
+| `{slug}.tsx`         | The block                                                                                                |
+| `{slug}-example.tsx` | One realistic use of the block, with its state. This is the code the docs page shows.                    |
+| `{Slug}.stories.tsx` | A `Default` story tagged `docs` that renders the example and passes its source, plus interaction stories |
+
+The docs page at `nxds.dev/blocks/{slug}` is generated from the folder. Blocks have no Vue twin yet, so the parity tests skip them.
+
+### Add a component
+
+1. Find the closest shipped component and copy its shape: [`switch.tsx`](packages/react/src/components/switch/switch.tsx) for a form control, [`dialog.tsx`](packages/react/src/components/dialog/dialog.tsx) for an overlay, [`select.tsx`](packages/react/src/components/select/select.tsx) for a list, [`button.tsx`](packages/react/src/components/button/button.tsx) for variants and sizes.
+2. Create `packages/react/src/components/{name}/{name}.tsx` and `{Name}.stories.tsx`. A component folder has no `index.ts`.
+3. Export it from `packages/react/src/index.ts`.
+4. Add its slug to `planned` in [`parity/parity.ts`](parity/parity.ts), so the parity tests expect Vue to follow.
+5. Tag at least one story `docs`. The component's page at `nxds.dev/components/{name}` is generated from those stories.
+
+Style it with semantic tokens and the `nx:` prefix, and put `data-slot` on every element. To port a shadcn/ui component, map its classes with [`shadcn-divergences.md`](.claude/rules/shadcn-divergences.md). `pnpm lint` catches most mistakes.
+
+### Before you open the PR
+
+1. Run `pnpm --filter @nxds/react-18 generate` and commit what it writes. CI fails if `packages/react-18` doesn't match.
+2. Run `pnpm changeset` and pick `@nxds/react` with a `minor` bump.
+3. Run `make verify`.
+
+The stories a component ships are listed in [`testing-react.md`](.claude/rules/testing-react.md). Read it before you write the stories.
+
+---
+
 ## AI Documentation MCP (nxds-docs-mcp)
 
 A local documentation server keeps Claude Code on the exact library versions used here (React 19, Tailwind v4, Storybook 10, Vitest 4, Radix, recharts 3, TanStack Form, …) instead of stale training data. It ships as a pre-indexed Docker image, so there's nothing to scrape locally.
