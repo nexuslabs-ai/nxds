@@ -6,6 +6,8 @@
 @import '@nxds/tailwind';
 /* Animations used by Dialog / Dropdown / Select / Tooltip */
 @import 'tw-animate-css';
+/* The sweep an indeterminate Progress runs. */
+@import '../../../packages/react/src/components/progress/progress.css';
 /* The fonts the playground offers (FONT_OPTIONS in @nxds/core), self-hosted.
    A browser downloads a font only when the page uses it. */
 @import '@fontsource-variable/geist';
@@ -14,12 +16,16 @@
 @import '@fontsource-variable/dm-sans';
 @import '@fontsource-variable/manrope';
 @import '@fontsource-variable/ibm-plex-sans';
+@import '@fontsource-variable/roboto';
 @import '@fontsource-variable/lora';
 @import '@fontsource-variable/playfair-display';
 @import '@fontsource-variable/geist-mono';
 @import '@fontsource-variable/jetbrains-mono';
 /* The homepage's own utilities (nx:home-section, …). */
 @import './_home/home.css';
+/* The palettes of the Theming look pages' previews. */
+@import '../content/theming/_material-look/material-look.css';
+@import '../content/theming/_ant-look/ant-look.css';
 
 /* Generate the nx: utilities used in MDX content and in the shipped
    @nxds/react components by scanning their source directly. We deliberately do

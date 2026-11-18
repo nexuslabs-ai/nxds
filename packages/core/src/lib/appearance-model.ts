@@ -310,9 +310,16 @@ export function sanitizeNxdsAppearance(rawInput: unknown): NxdsAppearanceState {
 }
 
 /** The appearance fields runtime colours derive from. */
+export const NXDS_COLOR_APPEARANCE_KEYS = [
+  'brandColor',
+  'surfaceTone',
+  'lightContrast',
+  'darkContrast',
+] as const satisfies readonly (keyof NxdsAppearanceState)[];
+
 export type NxdsColorAppearance = Pick<
   NxdsAppearanceState,
-  'brandColor' | 'surfaceTone' | 'lightContrast' | 'darkContrast'
+  (typeof NXDS_COLOR_APPEARANCE_KEYS)[number]
 >;
 
 export function createNxdsThemeContract(

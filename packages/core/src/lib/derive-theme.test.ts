@@ -39,7 +39,7 @@ function hOf(oklchStr: string | undefined): number {
 const toRgb = converter('rgb');
 const oklabDelta = differenceEuclidean('oklab');
 const COLORBLIND_DELTA_E = 0.02;
-const RUNTIME_SEMANTIC_COLOR_COUNT = 112;
+const RUNTIME_SEMANTIC_COLOR_COUNT = 114;
 const VISION_TYPES = [
   'normal',
   'deuteranopia',
@@ -572,7 +572,26 @@ describe('deriveSecondary', () => {
           TIER_THRESHOLDS[pair.tier]
         );
       }
-      expect(theme[mode]['--nx-color-border-secondary']).toBeUndefined();
+    }
+  });
+
+  it('gives secondary a border that stands out more while active', () => {
+    const theme = deriveTheme({
+      ...SURFACE_TONE_SEEDS,
+    });
+    for (const mode of ['light', 'dark'] as const) {
+      const onPage = (token: string) =>
+        Math.abs(
+          apcaLc(
+            theme[mode][`--nx-color-${token}`]!,
+            theme[mode]['--nx-color-background']!
+          )
+        );
+
+      expect(onPage('secondary-border')).toBeGreaterThan(0);
+      expect(onPage('secondary-border-active')).toBeGreaterThan(
+        onPage('secondary-border')
+      );
     }
   });
 });

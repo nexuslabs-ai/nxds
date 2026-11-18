@@ -51,6 +51,19 @@ export const Default: Story = {
     ]);
     for (const script of scripts) {
       await expect(script.textContent).toContain('data-nxds-appearance-theme');
+      await expect(script.textContent).toContain('--nx-color-');
     }
+  },
+};
+
+export const OwnColors: Story = {
+  args: { deriveColors: false },
+  play: async ({ canvasElement }) => {
+    const script = canvasElement.querySelector<HTMLScriptElement>(
+      'script[data-nxds-appearance-script]'
+    );
+
+    await expect(script?.textContent).toContain('data-nxds-appearance-theme');
+    await expect(script?.textContent).not.toContain('--nx-color-');
   },
 };
