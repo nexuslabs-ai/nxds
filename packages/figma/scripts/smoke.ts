@@ -74,7 +74,7 @@ for (const card of readdirSync(path.join(project, 'components'))) {
   if (existsSync(file)) readmes[card] = readFileSync(file, 'utf8');
 }
 const started = Date.now();
-const { capture, problems } = await captureComponents({
+const input = {
   release: 'smoke',
   theme,
   files: {
@@ -97,8 +97,9 @@ const { capture, problems } = await captureComponents({
   react: umd('react', 'react.production.min.js'),
   reactDom: umd('react-dom', 'react-dom.production.min.js'),
   outDir,
-  progress: (line) => console.log(line),
-});
+  progress: (line: string) => console.log(line),
+};
+const { capture, problems } = await captureComponents(input);
 const json = JSON.stringify(capture, null, 2);
 writeFileSync(path.join(outDir, 'capture.json'), json);
 const variantCount = capture.components.reduce(
@@ -441,6 +442,92 @@ const distinct = new Set(
 );
 console.log(
   `${unbound.length} unbound values, ${distinct.size} distinct. ${colors.filter((entry) => isPrimitiveColor(entry.token)).length} palette colours in use.`
+);
+
+// A theme the engine derives declares literal colours, so no variable is an alias.
+for (const collection of capture.collections) {
+  for (const entry of collection.variables) {
+    check(
+      entry.lightAlias === undefined && entry.darkAlias === undefined,
+      `${entry.token} is an alias in a derived theme.`
+    );
+  }
+}
+
+// An app's own colours file: components draw in its colours, a reference to
+// another nxds token becomes an alias, an app's own variable resolves to its
+// value, and a redefined shadow reaches its style.
+const OWN_COLORS = `@layer theme {
+  :root {
+    --app-accent: #e11d48;
+    --nx-color-primary-background: var(--nx-color-blue-600);
+    --nx-color-primary-background-hover: color-mix(in oklab, var(--nx-color-blue-600) 80%, black);
+    --nx-color-primary-foreground: var(--app-accent);
+    --nx-color-border-default: var(--nx-color-foreground);
+    --nx-shadow-sm: 0px 2px 6px 0px rgb(0 0 0 / 0.3);
+  }
+  .dark {
+    --nx-color-primary-background: var(--nx-color-blue-400);
+  }
+}`;
+const own = await captureComponents({
+  ...input,
+  files: { ...input.files, colorsCss: OWN_COLORS },
+  outDir: mkdtempSync(path.join(tmpdir(), 'nxds-figma-own-')),
+  only: ['Button', 'Card'],
+  progress: () => {},
+});
+const ownVariable = (token: string) =>
+  own.capture.collections
+    .flatMap((collection) => collection.variables)
+    .find((entry) => entry.token === token);
+const ownButton = own.capture.components
+  .find((spec) => spec.name === 'Button')
+  ?.variants.find((entry) => entry.values['State'] === 'default')?.root;
+const blue600 = ownVariable('nx-color-blue-600');
+check(own.problems.length === 0, `Own colours: ${own.problems.join('; ')}`);
+check(
+  ownButton?.fills[0]?.token === 'nx-color-primary-background',
+  "Own colours: Button's fill isn't bound to primary-background."
+);
+check(
+  JSON.stringify(ownButton?.fills[0]?.color) === JSON.stringify(blue600?.light),
+  "Own colours: Button doesn't draw in the colours file's blue-600."
+);
+check(
+  ownVariable('nx-color-primary-background')?.lightAlias ===
+    'nx-color-blue-600' &&
+    ownVariable('nx-color-primary-background')?.darkAlias ===
+      'nx-color-blue-400',
+  'Own colours: primary/background is not an alias of blue-600 in light and blue-400 in dark.'
+);
+check(
+  ownVariable('nx-color-border-default')?.lightAlias === 'nx-color-foreground',
+  'Own colours: border/default is not an alias of foreground.'
+);
+const foreground = ownVariable('nx-color-primary-foreground');
+check(
+  foreground?.lightAlias === undefined &&
+    typeof foreground?.light === 'object' &&
+    Math.abs(foreground.light.r - 225 / 255) < 0.01,
+  "Own colours: primary/foreground isn't the app's #e11d48."
+);
+check(
+  ownVariable('nx-color-primary-background-hover')?.lightAlias === undefined,
+  'Own colours: a color-mix() became an alias.'
+);
+check(
+  blue600 !== undefined &&
+    ownVariable('nx-color-blue-400') !== undefined &&
+    ownVariable('nx-color-red-600') === undefined,
+  'Own colours: the referenced palette colours, and only those, are exported.'
+);
+const ownShadow = own.capture.effectStyles.find(
+  (style) => style.token === 'nx-shadow-sm'
+);
+check(
+  ownShadow?.effects.length === 1 && ownShadow.effects[0]?.blur === 6,
+  "Own colours: shadow/sm isn't the colours file's shadow."
 );
 
 // The link: the plugin's UI fetches the capture with CORS, and posts its report.

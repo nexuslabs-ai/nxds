@@ -143,6 +143,7 @@ const variableValue = (value: Rgba | number): VariableValue =>
     : { r: value.r, g: value.g, b: value.b, a: value.a };
 
 async function createVariables(capture: CaptureFile, ctx: Context) {
+  const references: { variable: Variable; mode: string; token: string }[] = [];
   for (const spec of capture.collections) {
     if (spec.variables.length === 0) continue;
     ctx.where = `collection ${spec.name}`;
@@ -177,9 +178,34 @@ async function createVariables(capture: CaptureFile, ctx: Context) {
           );
         ctx.variables.set(entry.token, variable);
         ctx.report.created.variables += 1;
+        if (entry.lightAlias)
+          references.push({
+            variable,
+            mode: first.modeId,
+            token: entry.lightAlias,
+          });
+        const darkAlias = entry.darkAlias ?? entry.lightAlias;
+        if (dark !== undefined && darkAlias)
+          references.push({ variable, mode: dark, token: darkAlias });
       } catch (error) {
         fail(ctx, entry.name, error);
       }
+    }
+  }
+  // A variable declared as a reference to another, such as a colour an app's
+  // colours file sets to var(--nx-color-blue-600), aliases it. Every variable
+  // exists by now, so a reference can cross collections.
+  ctx.where = 'aliases';
+  for (const { variable, mode, token } of references) {
+    const target = variableFor(token, ctx, `${variable.name} alias`);
+    if (!target) continue;
+    try {
+      variable.setValueForMode(
+        mode,
+        figma.variables.createVariableAlias(target)
+      );
+    } catch (error) {
+      fail(ctx, `${variable.name} alias`, error);
     }
   }
 }

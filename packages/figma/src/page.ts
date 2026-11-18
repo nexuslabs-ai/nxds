@@ -311,6 +311,95 @@ export function recordIcons(names: string[]) {
   return icons.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/** How a token's value is read: as a colour, a length, a shadow, or a bare number such as a font weight. */
+export type ValueKind = 'color' | 'length' | 'shadow' | 'number';
+
+/** A token's value as the page resolves it, in light and in dark, and the token it references in each, if it's declared as one. */
+export interface TokenValue {
+  light?: string;
+  dark?: string;
+  lightAlias?: string;
+  darkAlias?: string;
+}
+
+/**
+ * Every token's value as the page resolves it, in light on the root and in
+ * dark inside a `.dark` element, whatever declared it: tokens.css, an app's
+ * own colours file or a preset. A probe element reads it through a property,
+ * so the browser computes `color-mix()`, `var()` and `rem` the way it would
+ * for a component.
+ *
+ * Then which token each one is declared as a reference to, such as
+ * `var(--nx-color-blue-600)`: every other token gets a unique stand-in, and
+ * if a token's own value comes out as one, its declaration names that token.
+ */
+export function readTokenValues(probes: [string, ValueKind][]) {
+  const html = document.documentElement;
+  const dark = document.createElement('div');
+  dark.className = 'dark';
+  dark.setAttribute('data-theme', 'dark');
+  const lightProbe = document.createElement('div');
+  const darkProbe = document.createElement('div');
+  dark.append(darkProbe);
+  document.body.append(lightProbe, dark);
+  const PROPERTY: Record<ValueKind, string> = {
+    color: 'color',
+    length: 'margin-left',
+    shadow: 'box-shadow',
+    number: '',
+  };
+  const read = (probe: HTMLElement, name: string, kind: ValueKind) => {
+    const raw = getComputedStyle(probe).getPropertyValue(`--${name}`).trim();
+    if (raw === '') return undefined;
+    const property = PROPERTY[kind];
+    if (!property) return raw;
+    probe.style.setProperty(property, `var(--${name})`);
+    const value =
+      kind === 'length'
+        ? String(probe.computedStyleMap().get(property) ?? '')
+        : getComputedStyle(probe).getPropertyValue(property);
+    probe.style.removeProperty(property);
+    return value;
+  };
+  const values: Record<string, TokenValue> = {};
+  for (const [name, kind] of probes) {
+    values[name] = {
+      light: read(lightProbe, name, kind),
+      dark: read(darkProbe, name, kind),
+    };
+  }
+
+  const standIn = (index: number) => `figma-reference-${index}`;
+  const byStandIn = new Map(
+    probes.map(([name], index) => [standIn(index), name])
+  );
+  const setAll = () =>
+    probes.forEach(([name], index) => {
+      html.style.setProperty(`--${name}`, standIn(index));
+      dark.style.setProperty(`--${name}`, standIn(index));
+    });
+  setAll();
+  probes.forEach(([name], index) => {
+    html.style.removeProperty(`--${name}`);
+    dark.style.removeProperty(`--${name}`);
+    const entry = values[name] ?? {};
+    const lightAlias = byStandIn.get(
+      getComputedStyle(html).getPropertyValue(`--${name}`).trim()
+    );
+    const darkAlias = byStandIn.get(
+      getComputedStyle(dark).getPropertyValue(`--${name}`).trim()
+    );
+    if (lightAlias) entry.lightAlias = lightAlias;
+    if (darkAlias) entry.darkAlias = darkAlias;
+    html.style.setProperty(`--${name}`, standIn(index));
+    dark.style.setProperty(`--${name}`, standIn(index));
+  });
+  for (const [name] of probes) html.style.removeProperty(`--${name}`);
+  lightProbe.remove();
+  dark.remove();
+  return values;
+}
+
 /** The token each `nx:typography-*` class declares for its size, line height and letter spacing, by class. */
 export function readTypography() {
   const found: Record<string, Record<string, string>> = {};

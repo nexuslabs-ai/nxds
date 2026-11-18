@@ -19,6 +19,7 @@ import {
   installHelpers,
   type MountInput,
   type Override,
+  readTokenValues,
   readTypography,
   recordIcons,
   type RecordInput,
@@ -49,6 +50,7 @@ import {
   textStyles,
   type TokensFile,
   tracedTokens,
+  valueProbes,
 } from './tokens.ts';
 
 export interface CaptureInput {
@@ -61,6 +63,8 @@ export interface CaptureInput {
     tokensCss: string;
     tokensJson: string;
     indexDts: string;
+    /** An app's own colours file, such as nxds-colors.css, loaded after the release's CSS so it wins. */
+    colorsCss?: string;
     /** Each card's README.md, by card name. */
     readmes: Readonly<Record<string, string>>;
   };
@@ -101,6 +105,7 @@ const PAGE = `<!doctype html>
 <meta charset="utf-8">
 <link rel="stylesheet" href="/tokens.css">
 <link rel="stylesheet" href="/bundle.css">
+<link rel="stylesheet" href="/colors.css">
 <style>
   *, *::before, *::after { transition: none !important; animation: none !important; }
   body {
@@ -461,7 +466,6 @@ export async function captureComponents(
   input: CaptureInput
 ): Promise<CaptureResult> {
   const tokens = JSON.parse(input.files.tokensJson) as TokensFile;
-  const effects = effectStyles(tokens);
   const traced = tracedTokens(tokens);
   const recipes = allRecipes(input.files.readmes).filter(
     (recipe) => !input.only || input.only.includes(recipe.name)
@@ -484,6 +488,7 @@ export async function captureComponents(
       '/': ['text/html', PAGE],
       '/tokens.css': ['text/css', input.files.tokensCss],
       '/bundle.css': ['text/css', input.files.bundleCss],
+      '/colors.css': ['text/css', input.files.colorsCss ?? ''],
       '/bundle.js': ['text/javascript', input.files.bundleJs],
       '/react.js': ['text/javascript', input.react],
       '/react-dom.js': ['text/javascript', input.reactDom],
@@ -497,6 +502,8 @@ export async function captureComponents(
     await page.goto(`${ORIGIN}/`);
     await page.mouse.move(1399, 999);
     await page.evaluate(installHelpers);
+    const values = await page.evaluate(readTokenValues, valueProbes(tokens));
+    const effects = effectStyles(tokens, values);
     const cdp = await context.newCDPSession(page);
     await cdp.send('DOM.enable');
     await cdp.send('CSS.enable');
@@ -679,7 +686,7 @@ export async function captureComponents(
         format: CAPTURE_FORMAT,
         version: 2,
         nxds: { release: input.release, theme: input.theme },
-        collections: collections(tokens, usedTokens(components)),
+        collections: collections(tokens, usedTokens(components), values),
         textStyles: styles,
         effectStyles: effects,
         icons: iconSet(icons),

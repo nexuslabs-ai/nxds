@@ -2,7 +2,7 @@
 // colour and shadow parsing the converter shares.
 import { clampRgb, converter, parse } from 'culori';
 
-import type { Kind } from './page.ts';
+import type { Kind, TokenValue, ValueKind } from './page.ts';
 import type {
   CollectionSpec,
   EffectStyleSpec,
@@ -135,11 +135,24 @@ function colorName(token: string) {
   return rest.length > 0 ? `${group}/${rest.join('-')}` : (group ?? token);
 }
 
-function colorVariables(tokens: readonly ListToken[]): VariableSpec[] {
+/** Each token's value as the page resolves it, by token name. */
+export type TokenValues = Readonly<Record<string, TokenValue>>;
+
+/** A variable's references to other tokens, in light and dark. */
+const aliases = (value: TokenValue | undefined) => ({
+  ...(value?.lightAlias ? { lightAlias: value.lightAlias } : {}),
+  ...(value?.darkAlias ? { darkAlias: value.darkAlias } : {}),
+});
+
+function colorVariables(
+  tokens: readonly ListToken[],
+  values: TokenValues
+): VariableSpec[] {
   return tokens.flatMap((token): VariableSpec[] => {
-    const lightValue = rgba(light(token.value));
+    const page = values[token.name];
+    const lightValue = rgba(page?.light ?? light(token.value));
     if (!lightValue) return [];
-    const darkText = dark(token.value);
+    const darkText = page?.dark ?? dark(token.value);
     const darkValue = darkText === undefined ? undefined : rgba(darkText);
     return [
       {
@@ -148,6 +161,7 @@ function colorVariables(tokens: readonly ListToken[]): VariableSpec[] {
         type: 'COLOR',
         light: lightValue,
         ...(darkValue ? { dark: darkValue } : {}),
+        ...aliases(page),
         description: token.usage,
       },
     ];
@@ -165,10 +179,12 @@ function numberValue(value: string) {
 
 function floatVariables(
   tokens: readonly ListToken[],
-  prefix: string
+  prefix: string,
+  values: TokenValues
 ): VariableSpec[] {
   return tokens.flatMap((token): VariableSpec[] => {
-    const value = numberValue(light(token.value));
+    const page = values[token.name];
+    const value = numberValue(page?.light ?? light(token.value));
     if (!Number.isFinite(value)) return [];
     return [
       {
@@ -176,6 +192,7 @@ function floatVariables(
         name: token.name.replace(prefix, ''),
         type: 'FLOAT',
         light: value,
+        ...aliases(page),
         description: token.usage,
       },
     ];
@@ -195,58 +212,112 @@ function typographyName(token: string) {
   return match ? `${match[1]}/${match[2]}` : short;
 }
 
+/** The families that become variables, after Color, with each one's name prefix. */
+const FLOAT_FAMILIES = [
+  'spacing',
+  'radius',
+  'borderWidth',
+  'icon',
+  'width',
+  'typeScale',
+] as const;
+
+/** Every token the page reads a value for: each variable, and each shadow for its effect style. */
+export function valueProbes(tokens: TokensFile): [string, ValueKind][] {
+  const unit = (token: ListToken): ValueKind =>
+    /(px|rem|em)$/.test(light(token.value).trim()) ? 'length' : 'number';
+  return [
+    ...tokens.color.tokens.map((token): [string, ValueKind] => [
+      token.name,
+      'color',
+    ]),
+    ...FLOAT_FAMILIES.flatMap((family) =>
+      (tokens[family]?.tokens ?? []).map((token): [string, ValueKind] => [
+        token.name,
+        unit(token),
+      ])
+    ),
+    ...(tokens.shadow?.tokens ?? []).map((token): [string, ValueKind] => [
+      token.name,
+      'shadow',
+    ]),
+  ];
+}
+
 /**
- * The variable collections. A palette colour is left out unless a layer in
- * `used` binds it, since components read semantic colours.
+ * The variable collections, with the values the page resolved. A palette
+ * colour is left out unless a layer in `used` binds it, or another token is
+ * declared as a reference to it.
  */
 export function collections(
   tokens: TokensFile,
-  used: ReadonlySet<string>
+  used: ReadonlySet<string>,
+  values: TokenValues
 ): CollectionSpec[] {
+  const referenced = new Set(
+    Object.values(values).flatMap((value) =>
+      [value.lightAlias, value.darkAlias].filter((name) => name !== undefined)
+    )
+  );
   return [
     {
       name: 'Color',
       themed: true,
       variables: colorVariables(
         tokens.color.tokens.filter(
-          (token) => !isPrimitiveColor(token.name) || used.has(token.name)
-        )
+          (token) =>
+            !isPrimitiveColor(token.name) ||
+            used.has(token.name) ||
+            referenced.has(token.name)
+        ),
+        values
       ),
     },
     {
       name: 'Spacing',
       themed: false,
-      variables: floatVariables(tokens.spacing?.tokens ?? [], 'nx-spacing-'),
+      variables: floatVariables(
+        tokens.spacing?.tokens ?? [],
+        'nx-spacing-',
+        values
+      ),
     },
     {
       name: 'Radius',
       themed: false,
-      variables: floatVariables(tokens.radius?.tokens ?? [], 'nx-radius-'),
+      variables: floatVariables(
+        tokens.radius?.tokens ?? [],
+        'nx-radius-',
+        values
+      ),
     },
     {
       name: 'Border width',
       themed: false,
       variables: floatVariables(
         tokens.borderWidth?.tokens ?? [],
-        'nx-borderwidth-'
+        'nx-borderwidth-',
+        values
       ),
     },
     {
       name: 'Icon',
       themed: false,
       // `nx-icon-glyph-default` → `glyph/default`.
-      variables: floatVariables(tokens.icon?.tokens ?? [], 'nx-icon-').map(
-        (variable) => ({
-          ...variable,
-          name: variable.name.replace(/^([a-z]+)-/, '$1/'),
-        })
-      ),
+      variables: floatVariables(
+        tokens.icon?.tokens ?? [],
+        'nx-icon-',
+        values
+      ).map((variable) => ({
+        ...variable,
+        name: variable.name.replace(/^([a-z]+)-/, '$1/'),
+      })),
     },
     {
       name: 'Width',
       themed: false,
       // `nx-container-sm` → `container/sm`.
-      variables: floatVariables(tokens.width?.tokens ?? [], 'nx-').map(
+      variables: floatVariables(tokens.width?.tokens ?? [], 'nx-', values).map(
         (variable) => ({
           ...variable,
           name: variable.name.replace(/^([a-z]+)-/, '$1/'),
@@ -256,7 +327,7 @@ export function collections(
     {
       name: 'Typography',
       themed: false,
-      variables: floatVariables(tokens.typeScale?.tokens ?? [], '').map(
+      variables: floatVariables(tokens.typeScale?.tokens ?? [], '', values).map(
         (variable) => ({
           ...variable,
           name: typographyName(variable.token),
@@ -326,11 +397,15 @@ export function textStyles(
   );
 }
 
-export function effectStyles(tokens: TokensFile): EffectStyleSpec[] {
+/** The shadow styles, with the values the page resolved, such as an app's redefined shadows. */
+export function effectStyles(
+  tokens: TokensFile,
+  values: TokenValues
+): EffectStyleSpec[] {
   return (tokens.shadow?.tokens ?? []).map((token) => ({
     name: `shadow/${token.name.replace(/^nx-shadow-/, '')}`,
     token: token.name,
-    effects: parseShadows(light(token.value)),
+    effects: parseShadows(values[token.name]?.light ?? light(token.value)),
     description: token.usage,
   }));
 }

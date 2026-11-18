@@ -184,6 +184,9 @@ export interface VariableSpec {
   light: Rgba | number;
   /** Set for colours that differ in the dark theme. */
   dark?: Rgba | number;
+  /** The token this one is declared as a reference to, in light and in dark, which Figma makes an alias. */
+  lightAlias?: string;
+  darkAlias?: string;
   description: string;
 }
 
