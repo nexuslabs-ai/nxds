@@ -286,17 +286,17 @@ export async function exportFigma(
   }
   if (notInstalled.length > 0) {
     captured.push(
-      `The app hasn't added ${notInstalled.join(', ')}, or a part their examples use, so Figma doesn't get them.`
+      `Components the app didn't add, or whose example uses a part it didn't add, aren't exported: ${notInstalled.join(', ')}.`
     );
   }
   if (props && props.newParts.length > 0) {
     captured.push(
-      `${props.newParts.join(', ')} ${props.newParts.length === 1 ? "isn't" : "aren't"} in nxds ${pkg.version}, so no example draws ${props.newParts.length === 1 ? 'it' : 'them'} and Figma doesn't get ${props.newParts.length === 1 ? 'it' : 'them'}.`
+      `The app's own parts have no example in nxds ${pkg.version}, so they aren't exported: ${props.newParts.join(', ')}.`
     );
   }
   if (missingIcons.length > 0) {
     captured.push(
-      `The app's icon library has no icon for ${missingIcons.join(', ')}, so the examples that use them draw without them.`
+      `The app's icon library doesn't have these icons, so the examples draw without them: ${missingIcons.join(', ')}.`
     );
   }
   if (options.colors !== undefined) {
