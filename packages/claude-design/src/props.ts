@@ -4,7 +4,6 @@
 // coverage report lists the props that get no control, and why.
 import { publicComponents } from '@nxds/source-model/props-contract.mjs';
 import { componentDefaults } from '@nxds/source-model/props-entries.ts';
-import { reactProgram } from '@nxds/source-model/react-props.mjs';
 import { componentsRoot } from '@nxds/source-model/roots.mjs';
 import path from 'node:path';
 import ts from 'typescript';
@@ -206,8 +205,8 @@ const PRINT_FLAGS =
   ts.TypeFormatFlags.NoTruncation |
   ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope;
 
-function slugOf(fileName: string) {
-  return path.relative(componentsRoot, fileName).split(path.sep)[0] ?? '';
+function slugOf(fileName: string, root: string) {
+  return path.relative(root, fileName).split(path.sep)[0] ?? '';
 }
 
 function declaringPackage(symbol: ts.Symbol) {
@@ -729,10 +728,12 @@ function flatComponent(
   checker: ts.TypeChecker,
   name: string,
   symbol: ts.Symbol,
+  root: string,
   listed: (prop: ts.Symbol) => boolean = isListedProp
 ): Omit<FlatComponent, 'unwraps'> {
   const fileName = symbol.declarations?.[0]?.getSourceFile().fileName ?? '';
-  const defaults = componentDefaults(checker, symbol);
+  // The folder that holds components/ and lib/, whose types a default may come from.
+  const defaults = componentDefaults(checker, symbol, path.dirname(root));
   const resolved = propsType(checker, symbol);
   const props: FlatProp[] = [];
   if (resolved) {
@@ -776,24 +777,41 @@ function flatComponent(
   }
   return {
     name,
-    slug: slugOf(fileName),
+    slug: slugOf(fileName, root),
     description: documentation(checker, symbol),
     props,
   };
 }
 
-/** Every component part the bundle exports, in name order. */
-export function flatComponents(): FlatComponent[] {
-  const { checker, exported } = reactProgram();
-  const parts = publicComponents(checker, exported, componentsRoot);
+/**
+ * The component parts `exported` declares in `root`, a components folder, in
+ * name order: @nxds/react's, or an app's own copy of them.
+ */
+export function componentParts(
+  checker: ts.TypeChecker,
+  exported: ReadonlyMap<string, ts.Symbol>,
+  root: string
+): FlatComponent[] {
+  const parts = publicComponents(checker, exported, root);
   const unwrapping = unwrappingParts(checker, parts);
+  return [...parts]
+    .map(([name, symbol]) => ({
+      ...flatComponent(checker, name, symbol, root),
+      unwraps: unwrapping.has(name),
+    }))
+    .filter((component) => component.slug !== 'appearance');
+}
+
+/** Every component part the bundle exports, read from @nxds/react's `reactProgram()`. */
+export function flatComponents({
+  checker,
+  exported,
+}: {
+  checker: ts.TypeChecker;
+  exported: ReadonlyMap<string, ts.Symbol>;
+}): FlatComponent[] {
   return [
-    ...[...parts]
-      .map(([name, symbol]) => ({
-        ...flatComponent(checker, name, symbol),
-        unwraps: unwrapping.has(name),
-      }))
-      .filter((component) => component.slug !== 'appearance'),
+    ...componentParts(checker, exported, componentsRoot),
     ...canvasParts(),
     ...rechartsParts(checker, exported),
   ];
@@ -867,8 +885,12 @@ function rechartsParts(
     );
     const symbol = recharts.get(name);
     if (!symbol) throw new Error(`index.d.ts: recharts exports no ${name}.`);
-    const part = flatComponent(checker, `Recharts${name}`, symbol, (prop) =>
-      specs.has(prop.name)
+    const part = flatComponent(
+      checker,
+      `Recharts${name}`,
+      symbol,
+      componentsRoot,
+      (prop) => specs.has(prop.name)
     );
     const props = [...specs].flatMap(([prop, to]) => {
       const found = part.props.find((candidate) => candidate.name === prop);
