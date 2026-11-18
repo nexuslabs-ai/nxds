@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { PAGE_MANIFEST } from '../_lib/manifest';
 import {
   DISCORD_URL,
+  DISCUSSIONS_URL,
   LICENSE_URL,
   NPM_CORE_URL,
   REPO_URL,
@@ -40,6 +41,7 @@ const footerGroups: { title: string; links: FooterLink[] }[] = [
     title: 'Community',
     links: [
       { label: 'GitHub', href: REPO_URL },
+      { label: 'Discussions', href: DISCUSSIONS_URL },
       { label: 'Discord', href: DISCORD_URL },
       { label: 'X', href: X_URL },
     ],

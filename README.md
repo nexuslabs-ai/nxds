@@ -119,7 +119,7 @@ Every docs page is also Markdown, listed in [llms.txt](https://nxds.dev/llms.txt
 
 ## Community
 
-[Discord](https://discord.gg/PTT5JFyhHw) · [X](https://x.com/nxdsdev) · [GitHub issues](https://github.com/nexuslabs-ai/nxds/issues)
+Ask questions, suggest ideas and share what you built in [GitHub Discussions](https://github.com/nexuslabs-ai/nxds/discussions). Chat on [Discord](https://discord.gg/PTT5JFyhHw). Report bugs in [GitHub issues](https://github.com/nexuslabs-ai/nxds/issues). Follow [@nxdsdev on X](https://x.com/nxdsdev) for news.
 
 ## Contributing
 
