@@ -3,8 +3,10 @@
 // Figma: every component captured, every colour bound, palette colours only
 // when used, text styles bound to the typography variables, icons as
 // swappable instances, repeated parts as instances of their own components,
-// and the local link the plugin talks to. Build @nxds/claude-design first.
-// Pass a folder to keep the capture and its screenshots.
+// an app's own colours and edited components, and the local link the plugin
+// talks to. Build @nxds/claude-design and nxds-cli first. Pass a folder to
+// keep the capture and its screenshots.
+import { execFileSync } from 'node:child_process';
 import {
   existsSync,
   mkdirSync,
@@ -19,7 +21,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { captureComponents, releasePage } from '../src/capture.ts';
+import { type AppSetup, buildAppPage } from '../src/app.ts';
+import { appProps } from '../src/app-props.ts';
+import { captureComponents, examples, releasePage } from '../src/capture.ts';
 import { openLink } from '../src/link.ts';
 import { SKIPPED_CARDS } from '../src/recipes.ts';
 import {
@@ -533,6 +537,184 @@ check(
   "Own colours: shadow/sm isn't the colours file's shadow."
 );
 
+// An app: a Vite app gets nxds through `init --own-colors` and `add` from a
+// local registry of this release, leaving out Kbd, then edits it as a team
+// would. Inside the repo, its packages resolve from the repo's.
+const fixture = path.join(packages, 'figma', '.fixture');
+const appRoot = path.join(fixture, 'app');
+const registry = path.join(fixture, 'registry');
+rmSync(fixture, { recursive: true, force: true });
+const version = (
+  JSON.parse(readFileSync(path.join(release, 'package.json'), 'utf8')) as {
+    version: string;
+  }
+).version;
+// The registry nxds-cli reads: the release's catalog, as <version>.json and latest.json.
+const catalogFile = path.join(
+  packages,
+  'catalog',
+  'releases',
+  `${version}.json`
+);
+const catalog = JSON.parse(readFileSync(catalogFile, 'utf8')) as {
+  items: { name: string; kind: string }[];
+};
+mkdirSync(registry, { recursive: true });
+for (const name of [`${version}.json`, 'latest.json']) {
+  writeFileSync(path.join(registry, name), readFileSync(catalogFile));
+}
+const skeleton: Record<string, string> = {
+  'package.json': JSON.stringify({
+    name: 'acme',
+    type: 'module',
+    dependencies: { react: '^19.2.0', 'react-dom': '^19.2.0' },
+    devDependencies: {
+      vite: '^7.3.0',
+      tailwindcss: '^4.1.0',
+      '@tailwindcss/vite': '^4.1.0',
+      typescript: '^5.9.0',
+    },
+  }),
+  'tsconfig.json': JSON.stringify({ compilerOptions: { jsx: 'react-jsx' } }),
+  'vite.config.ts': `import react from '@vitejs/plugin-react';\nimport { defineConfig } from 'vite';\nexport default defineConfig({ plugins: [react()] });\n`,
+  'src/main.tsx': `import { createRoot } from 'react-dom/client';\nimport App from './App';\ncreateRoot(document.getElementById('root')!).render(<App />);\n`,
+  'src/App.tsx': 'export default function App() { return null; }\n',
+};
+for (const [file, content] of Object.entries(skeleton)) {
+  mkdirSync(path.dirname(path.join(appRoot, file)), { recursive: true });
+  writeFileSync(path.join(appRoot, file), content);
+}
+const cli = (...args: string[]) =>
+  execFileSync(
+    process.execPath,
+    [
+      path.join(packages, 'cli', 'dist', 'index.js'),
+      ...args,
+      '--cwd',
+      appRoot,
+      '--registry',
+      registry,
+      '--no-install',
+    ],
+    { stdio: 'pipe' }
+  );
+cli('init', '--own-colors', '--font', 'inter');
+cli(
+  'add',
+  ...catalog.items
+    .filter((item) => item.kind === 'component' && item.name !== 'kbd')
+    .map((item) => item.name)
+);
+const config = JSON.parse(
+  readFileSync(path.join(appRoot, 'nxds.json'), 'utf8')
+) as { dir: string; css: string; iconLibrary: string };
+const edit = (file: string, from: RegExp | string, to: string) => {
+  const full = path.join(appRoot, file);
+  const text = readFileSync(full, 'utf8');
+  const edited = text.replace(from, to);
+  if (edited === text) throw new Error(`The fixture's ${file} changed shape.`);
+  writeFileSync(full, edited);
+};
+// A new Button variant, a new part the release lacks, and a changed colour.
+edit(
+  path.join(config.dir, 'components/button/button-variants.ts'),
+  "        link: 'nx:border-0",
+  "        brand: 'nx:bg-information-background nx:text-information-foreground',\n        link: 'nx:border-0"
+);
+mkdirSync(path.join(appRoot, config.dir, 'components/rating'));
+writeFileSync(
+  path.join(appRoot, config.dir, 'components/rating/rating.tsx'),
+  '/** A row of stars. */\nexport function Rating({ value }: { value: number }) {\n  return <span data-slot="rating">{\'★\'.repeat(value)}</span>;\n}\n'
+);
+edit(
+  path.join(path.dirname(config.css), 'nxds-colors.css'),
+  /--nx-color-primary-background: [^;]+;/,
+  '--nx-color-primary-background: #7c3aed;'
+);
+const setup: AppSetup = {
+  root: appRoot,
+  dir: config.dir,
+  css: config.css,
+  iconLibrary: config.iconLibrary,
+  ownColors: true,
+};
+const appTypes = appProps(setup, input.files.indexDts);
+const appExamples = examples(readmes, appTypes.indexDts);
+const appPage = await buildAppPage(
+  setup,
+  appExamples.markup,
+  appExamples.icons
+);
+const app = await captureComponents({
+  ...input,
+  files: {
+    ...input.files,
+    styles: [appPage.css],
+    scripts: [appPage.script],
+    indexDts: appTypes.indexDts,
+  },
+  app: { schema: appTypes.schema },
+  outDir: mkdtempSync(path.join(tmpdir(), 'nxds-figma-app-')),
+  only: [
+    'Button',
+    'Card',
+    'BarChart',
+    'Slider',
+    'MultiSelect',
+    'FilterBuilder',
+    'Toast',
+    'Kbd',
+  ],
+  progress: () => {},
+});
+const appComponent = (name: string) =>
+  app.capture.components.find((spec) => spec.name === name);
+const appButton = appComponent('Button');
+const appVariant = (values: Record<string, string>) =>
+  appButton?.variants.find((entry) =>
+    Object.entries(values).every(([key, value]) => entry.values[key] === value)
+  )?.root;
+check(app.problems.length === 0, `App: ${app.problems.join('; ')}`);
+for (const name of [
+  'BarChart',
+  'Slider',
+  'MultiSelect',
+  'FilterBuilder',
+  'Toast',
+]) {
+  check(
+    (appComponent(name)?.variants.length ?? 0) > 0,
+    `App: ${name}'s example didn't draw from its converted attributes.`
+  );
+}
+check(
+  appButton?.variantProperties
+    .find((property) => property.name === 'Variant')
+    ?.values.includes('brand') === true,
+  "App: Button's Variant has no brand, the app's new variant."
+);
+check(
+  appVariant({ Variant: 'brand', State: 'default' })?.fills[0]?.token ===
+    'nx-color-information-background',
+  "App: Button's brand variant isn't bound to information-background."
+);
+const violet = appVariant({ Variant: 'default', State: 'default' })?.fills[0]
+  ?.color;
+check(
+  violet !== undefined &&
+    Math.abs(violet.r - 124 / 255) < 0.01 &&
+    Math.abs(violet.b - 237 / 255) < 0.01,
+  "App: Button doesn't draw in the app's edited primary/background."
+);
+check(
+  app.notInstalled.includes('Kbd'),
+  "App: Kbd, which the app didn't add, isn't listed as not installed."
+);
+check(
+  appTypes.newParts.includes('Rating'),
+  "App: Rating, the app's own part, isn't listed as new."
+);
+
 // The link: the plugin's UI fetches the capture with CORS, and posts its report.
 const link = await openLink(json, 0);
 const base = `http://localhost:${link.port}`;
@@ -600,5 +782,5 @@ if (failures.length > 0) {
 }
 if (!kept) rmSync(outDir, { recursive: true, force: true });
 console.log(
-  `Figma smoke test passed: ${variantCount} variants of ${capture.components.length} components and ${capture.icons.length} icons, their bindings, sizing, instances, properties and variables, and the link.`
+  `Figma smoke test passed: ${variantCount} variants of ${capture.components.length} components and ${capture.icons.length} icons, their bindings, sizing, instances, properties and variables, an app's own colours and edited components, and the link.`
 );
