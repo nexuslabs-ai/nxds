@@ -132,7 +132,9 @@ const NEST_TWINS = [
         utility
       )?.[1],
     nest: (utility) =>
-      /^nest-outer-(base|sm|md|lg|xl|2xl|3xl|4xl|full)$/.exec(utility)?.[1],
+      /^nest-outer-(none|base|sm|md|lg|xl|2xl|3xl|4xl|full)$/.exec(
+        utility
+      )?.[1],
   },
 ];
 
@@ -144,15 +146,19 @@ const BORDER_STEPS = new Map([
 ]);
 
 // A box's border width: a theme step, with `border-0` as `none`, or a width
-// no nest step names, such as bare `border`, `border-2` or `border-[3px]`.
+// no nest step names, such as bare `border`, `border-2`, `border-[3px]` or
+// `border-(length:--w)`.
 function borderStep(utility) {
   if (BORDER_STEPS.has(utility)) return BORDER_STEPS.get(utility);
   if (utility === 'border') return '1px';
-  return /^border-(\d+|\[(?:length:)?[\d.]+(?:px|r?em)\])$/.exec(utility)?.[1];
+  return /^border-(\d+|\[(?:length:)?[\d.]+(?:px|r?em)\]|[[(]length:.+[\])])$/.exec(
+    utility
+  )?.[1];
 }
 
-// Variants that style another element than the box: a pseudo-element or a
-// child, such as `after:`, `*:` or `[&_tr:last-child]:`.
+// Variants that style another element than the box: a pseudo-element, or a
+// child after the last `&`, such as `after:`, `*:` or `[&_tr:last-child]:`. An
+// ancestor before the `&`, such as `[.dark_&]:`, still styles the box.
 const OTHER_ELEMENT_VARIANTS = new Set([
   '*',
   '**',
@@ -171,7 +177,7 @@ const OTHER_ELEMENT_VARIANTS = new Set([
 function stylesAnotherElement(variant) {
   if (OTHER_ELEMENT_VARIANTS.has(variant)) return true;
   if (!variant.startsWith('[') || !variant.endsWith(']')) return false;
-  return /[_>+~]|::/.test(withoutGroups(variant.slice(1, -1)));
+  return /[_>+~][^&]*$|::/.test(withoutGroups(variant.slice(1, -1)));
 }
 
 // A class string whose box class and `nest-*` twin name different steps, such

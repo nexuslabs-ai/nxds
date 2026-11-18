@@ -1621,6 +1621,10 @@ export function generateNestUtilitiesCSS() {
   --nx-nest-outer: --value(--radius-*);
 }
 
+@utility nest-outer-none {
+  --nx-nest-outer: 0px;
+}
+
 @utility nest-border-* {
   --nx-nest-border: --value(--border-width-*);
 }

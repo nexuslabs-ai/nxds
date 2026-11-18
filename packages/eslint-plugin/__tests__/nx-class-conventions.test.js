@@ -36,6 +36,8 @@ ruleTester.run('nx-class-conventions', rule, {
     "const c = 'nx:p-0! nx:nest-padding-0';",
     // Each variant chain that sets one class of a pair sets both.
     "const c = 'nx:p-1 nx:nest-padding-1 nx:sm:p-2 nx:sm:nest-padding-2';",
+    // `rounded-none` pairs with `nest-outer-none`.
+    "const c = 'nx:rounded-lg nx:nest-outer-lg nx:sm:rounded-none nx:sm:nest-outer-none';",
     // A pseudo-element or child variant styles another element.
     "const c = 'nx:rounded-sm nx:nest-outer-sm nx:after:rounded-[inherit]';",
     "const c = 'nx:border-default nx:nest-border-default nx:[&_tr:last-child]:border-0';",
@@ -202,17 +204,26 @@ ruleTester.run('nx-class-conventions', rule, {
       code: "const c = 'nx:!p-2 nx:nest-padding-1';",
       errors: [{ messageId: 'nestStepMismatch' }],
     },
-    // A nest class with no theme step, such as `nest-outer-none`, is no twin.
-    {
-      code: "const c = 'nx:rounded-none nx:nest-outer-none nx:sm:rounded-lg nx:sm:nest-outer-lg';",
-      errors: [{ messageId: 'nestStepMismatch' }],
-    },
     {
       code: "const c = 'nx:border-2 nx:nest-border-thin';",
       errors: [{ messageId: 'nestStepMismatch' }],
     },
     {
       code: "const c = 'nx:border-[3px] nx:nest-border-thick';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    // An ancestor before the `&` still styles the box.
+    {
+      code: "const c = 'nx:p-1 nx:nest-padding-1 nx:[.dark_&]:p-4';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    // A nest step must be a theme step, so `nest-padding-px` is no twin.
+    {
+      code: "const c = 'nx:p-px nx:nest-padding-px nx:sm:p-2 nx:sm:nest-padding-2';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const c = 'nx:border-(length:--nx-hairline) nx:nest-border-thick';",
       errors: [{ messageId: 'nestStepMismatch' }],
     },
     // Bare `border` is 1px, which no nest step names.
