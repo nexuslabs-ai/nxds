@@ -1,5 +1,28 @@
 # @nxds/react
 
+## 0.18.0
+
+### Minor Changes
+
+- 236929a: Add `deriveColors` to the appearance provider. `<NxdsAppearanceProvider deriveColors={false}>` and `<NxdsAppearanceScript deriveColors={false}>` in React, and `createNxdsAppearance({ deriveColors: false })` in React and Vue, leave every color to your own CSS. The provider still switches the mode and presets, saves the choice and paints it before the app loads.
+
+  `useNxdsAppearance` returns `deriveColors`. `NxdsAppearanceSettings` and `NxdsThemeQuickControl` hide their brand color, surface tone and contrast controls when it is `false`. `NxdsAppearanceConfigPreview` takes `deriveColors`, and leaves those fields out when it is `false`.
+
+  The first-paint script paints no saved theme CSS when its default snapshot has none. A user who saved a derived theme before you turned derivation off does not see those colors on the next load. A user who saved their choices while derivation was off sees your default colors on the first load after you turn it back on.
+
+- 236929a: Add the `secondary-border` and `secondary-border-active` colours, for an outlined secondary control. The engine derives them from the neutral ramp, with the shades every other family's border uses. Use them as `nx:border-secondary-border` and `nx:border-secondary-border-active`, or through the `nx:border-color-secondary` and `nx:border-color-secondary-active` aliases, which `cn()` knows.
+
+  A snapshot saved by an earlier release has no value for these colours. The snapshot version is now 12, so the next load derives the saved theme again.
+
+### Patch Changes
+
+- Updated dependencies [236929a]
+- Updated dependencies [236929a]
+- Updated dependencies [236929a]
+- Updated dependencies [236929a]
+  - @nxds/core@0.15.0
+  - @nxds/tailwind@0.5.0
+
 ## 0.17.0
 
 ### Minor Changes

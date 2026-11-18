@@ -115,8 +115,13 @@ function program(
     initCommand.addOption(option);
     return { flag: field.flag, key: option.attributeName() };
   });
+  initCommand.option(
+    '--own-colors',
+    'set every color yourself: write nxds-colors.css from your theme, and stop the theme engine deriving colors'
+  );
   withInstallFlags(initCommand).action(async (_options, command: Command) => {
     const { cwd, registry } = context(command);
+    const { ownColors } = command.opts<{ ownColors?: boolean }>();
     const options = command.opts<Record<string, string | undefined>>();
     const theme = Object.fromEntries(
       themeOptions.flatMap(({ flag, key }) => {
@@ -132,6 +137,7 @@ function program(
         dir: options['dir'],
         icons: options[ICONS_FLAG],
         theme,
+        ownColors,
       })
     );
   });

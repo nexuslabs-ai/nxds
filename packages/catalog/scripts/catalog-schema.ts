@@ -319,6 +319,8 @@ export const catalogSchema = z.object({
     )
     .pipe(z.array(themeFieldSchema))
     .default([]),
+  /** Whether an app on this release can set its own colors: its provider takes `deriveColors`. Releases from before own colors leave it out. */
+  ownColors: z.boolean().default(false),
 });
 
 export type Catalog = z.infer<typeof catalogSchema>;
