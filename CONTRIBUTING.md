@@ -68,7 +68,7 @@ Pick the surface you're working on — each is one `make` command that turbo orc
 
 > **The docs site's generated inputs come from the turbo graph**, not from its package scripts, and none of them are committed: `apps/docs/turbo.json` puts `generate:manifest` (the page manifest and its loader map), `generate:demos` (the docs code generated from every story tagged `docs`, under `__generated__/`), `@nxds/catalog#generate:catalog` (the install catalog the docs and the `nxds` CLI share) and `generate:props` (the per-component props JSON that `PropsTable` reads) ahead of both `build` and `dev`, and the two the TypeScript graph imports — `generate:manifest` and `generate:demos` — ahead of `typecheck`. `make build`, `make docs` and `make typecheck` get them. `PropsTable` reads the props JSON on each request, so after changing a component's props or JSDoc during `make docs`, rerun `pnpm --filter @nxds/docs generate:props` and reload — no restart. A bare `pnpm --filter @nxds/docs dev` runs only the docs-story watcher: on a clean checkout there is no page manifest, demo index or install catalog, so start the docs with `make docs`.
 
-If you use Claude Code, leave **`make up`** running in another terminal so the docs-MCP is available to it (see [AI Documentation MCP](#ai-documentation-mcp-nxds-docs-mcp)).
+If you use Claude Code, run **`make up`** so the docs-MCP is available to it (see [AI Documentation MCP](#ai-documentation-mcp-nxds-docs-mcp)).
 
 ## Before you push
 

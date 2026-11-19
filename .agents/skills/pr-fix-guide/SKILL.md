@@ -59,10 +59,12 @@ Two reflexes specific to fixing (root-cause and don't-over-fix) live below in Pa
 
 Extract all issues from reviews and categorize:
 
-| Category | Indicator                           | Priority   |
-| -------- | ----------------------------------- | ---------- |
-| Blocking | ❌, "must", "required", "blocking"  | Fix first  |
-| Minor    | ⚠️, "consider", "suggestion", "nit" | Fix second |
+| Category | Indicator                                     | Priority   |
+| -------- | --------------------------------------------- | ---------- |
+| Blocking | `❌ Blocking`, "must", "required", "blocking" | Fix first  |
+| Minor    | `⚠️ Minor`, "consider", "suggestion", "nit"   | Fix second |
+
+A follow-up review also marks status with ❌ and ⚠️ (`❌ Still Present`, `⚠️ Partial`). An unresolved issue keeps the severity it had in the earlier review.
 
 ### Step 3: Analyze Root Causes
 
