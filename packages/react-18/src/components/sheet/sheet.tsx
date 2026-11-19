@@ -283,7 +283,10 @@ const SheetTitle = React.forwardRef<
   return (
     <DialogPrimitive.Title
       data-slot="sheet-title"
-      className={cn('nx:m-0 nx:typography-heading-xsmall', className)}
+      className={cn(
+        'nx:m-0 nx:typography-heading-xsmall nx:text-balance',
+        className
+      )}
       {...props}
     />
   );

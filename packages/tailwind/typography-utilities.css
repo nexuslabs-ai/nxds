@@ -6,7 +6,6 @@
   font-weight: var(--nx-typography-weight-semibold);
   line-height: var(--nx-typography-line-height-5xl);
   letter-spacing: var(--nx-typography-letterspacing-tighter);
-  text-wrap: balance;
 }
 
 @utility typography-display-medium {
@@ -15,7 +14,6 @@
   font-weight: var(--nx-typography-weight-semibold);
   line-height: var(--nx-typography-line-height-4xl);
   letter-spacing: var(--nx-typography-letterspacing-tighter);
-  text-wrap: balance;
 }
 
 @utility typography-display-small {
@@ -24,7 +22,6 @@
   font-weight: var(--nx-typography-weight-semibold);
   line-height: var(--nx-typography-line-height-3xl);
   letter-spacing: var(--nx-typography-letterspacing-tighter);
-  text-wrap: balance;
 }
 
 @utility typography-heading-large {
@@ -33,7 +30,6 @@
   font-weight: var(--nx-typography-weight-bold);
   line-height: var(--nx-typography-line-height-3xl);
   letter-spacing: var(--nx-typography-letterspacing-tighter);
-  text-wrap: balance;
 }
 
 @utility typography-heading-medium {
@@ -42,7 +38,6 @@
   font-weight: var(--nx-typography-weight-bold);
   line-height: var(--nx-typography-line-height-2xl);
   letter-spacing: var(--nx-typography-letterspacing-tight);
-  text-wrap: balance;
 }
 
 @utility typography-heading-small {
@@ -51,7 +46,6 @@
   font-weight: var(--nx-typography-weight-bold);
   line-height: var(--nx-typography-line-height-xl);
   letter-spacing: var(--nx-typography-letterspacing-tight);
-  text-wrap: balance;
 }
 
 @utility typography-heading-xsmall {
@@ -60,7 +54,6 @@
   font-weight: var(--nx-typography-weight-bold);
   line-height: var(--nx-typography-line-height-lg);
   letter-spacing: var(--nx-typography-letterspacing-tight);
-  text-wrap: balance;
 }
 
 @utility typography-heading-xxsmall {
@@ -69,7 +62,6 @@
   font-weight: var(--nx-typography-weight-semibold);
   line-height: var(--nx-typography-line-height-base);
   letter-spacing: var(--nx-typography-letterspacing-tight);
-  text-wrap: balance;
 }
 
 @utility typography-body-default {
@@ -78,7 +70,6 @@
   font-weight: var(--nx-typography-weight-normal);
   line-height: var(--nx-typography-line-height-sm);
   letter-spacing: var(--nx-typography-letterspacing-normal);
-  text-wrap: pretty;
 }
 
 @utility typography-body-small {
@@ -87,7 +78,6 @@
   font-weight: var(--nx-typography-weight-normal);
   line-height: var(--nx-typography-line-height-xs);
   letter-spacing: var(--nx-typography-letterspacing-normal);
-  text-wrap: pretty;
 }
 
 @utility typography-shortcut {

@@ -454,7 +454,7 @@ function typographyStyleEntry(lookup: ReferenceLookup) {
     return {
       name: `--nx-${key}`,
       aliases: [utility(key)],
-      declarations: formatTypographyDeclarations(leaf.path, leaf.value, lookup),
+      declarations: formatTypographyDeclarations(leaf.value, lookup),
     };
   };
 }
