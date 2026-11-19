@@ -42,10 +42,14 @@ ruleTester.run('nx-class-conventions', rule, {
     "const c = 'nx:rounded-sm nx:nest-outer-sm nx:after:rounded-[inherit]';",
     "const c = 'nx:border-default nx:nest-border-default nx:[&_tr:last-child]:border-0';",
     "const c = 'nx:p-2 nx:nest-padding-2 nx:*:p-0';",
-    // The `&` can sit in a group: the last compound is still another element.
+    // Every arbitrary variant but one compound on `&` is left out, even one
+    // that styles the box, such as `[.dark_&]:`.
     "const c = 'nx:p-2 nx:nest-padding-2 nx:[:is(.dark_&)_svg]:p-0';",
-    "const c = 'nx:p-2 nx:nest-padding-2 nx:[:where(&)>li]:p-0';",
-    "const c = 'nx:p-2 nx:nest-padding-2 nx:[&_.row:not(&)]:p-0';",
+    "const c = 'nx:p-2 nx:nest-padding-2 nx:[:where(&>li)]:p-0';",
+    "const c = 'nx:p-2 nx:nest-padding-2 nx:[&_.row:not(:is(&))]:p-0';",
+    "const c = 'nx:p-2 nx:nest-padding-2 nx:[&::after]:p-0';",
+    "const c = 'nx:p-1 nx:nest-padding-1 nx:[.dark_&]:p-4';",
+    "const c = 'nx:p-1 nx:nest-padding-1 nx:[@media_(min-width:40rem)]:p-4';",
     // The twin can sit on another element, so one class alone passes.
     "const c = 'nx:p-2 nx:pr-2.5 nx:nest-outer-md';",
     // Each element in a template is its own class list.
@@ -220,18 +224,13 @@ ruleTester.run('nx-class-conventions', rule, {
       code: "const c = 'nx:border-(length:--nx-hairline) nx:nest-border-thick';",
       errors: [{ messageId: 'nestStepMismatch' }],
     },
-    // An ancestor before the `&` still styles the box, and so does a variant
-    // with no `&`.
+    // One compound on `&` is the box.
     {
-      code: "const c = 'nx:p-1 nx:nest-padding-1 nx:[.dark_&]:p-4';",
+      code: "const c = 'nx:p-1 nx:nest-padding-1 nx:[&[data-open]]:p-4';",
       errors: [{ messageId: 'nestStepMismatch' }],
     },
     {
-      code: "const c = 'nx:p-1 nx:nest-padding-1 nx:[@media_(min-width:40rem)]:p-4';",
-      errors: [{ messageId: 'nestStepMismatch' }],
-    },
-    {
-      code: "const c = 'nx:p-1 nx:nest-padding-1 nx:[.dark_:is(&)]:p-4';",
+      code: "const c = 'nx:p-1 nx:nest-padding-1 nx:[&:hover]:p-4';",
       errors: [{ messageId: 'nestStepMismatch' }],
     },
     // A nest step must be a theme step, so `nest-padding-px` is no twin.

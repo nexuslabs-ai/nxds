@@ -156,11 +156,11 @@ function borderStep(utility) {
   )?.[1];
 }
 
-// Variants that style another element than the box: a pseudo-element, or an
-// arbitrary variant whose last compound, the element it styles, has no `&`,
-// such as `after:`, `*:`, `[&_tr:last-child]:` or `[:is(.dark_&)_svg]:`. An
-// ancestor, such as `[.dark_&]:` or `[.dark_:is(&)]:`, still styles the box,
-// and so does a variant with no `&`, which Tailwind applies to the box.
+// Variants the check leaves out, because they can style another element than
+// the box: a pseudo-element or child variant, such as `after:` or `*:`, and
+// every arbitrary variant but one compound on `&`, such as `[&:hover]:` or
+// `[&[data-open]]:`. So the check never reads another element's class as the
+// box's, and it skips rare forms such as `[.dark_&]:`.
 const OTHER_ELEMENT_VARIANTS = new Set([
   '*',
   '**',
@@ -179,27 +179,8 @@ const OTHER_ELEMENT_VARIANTS = new Set([
 function stylesAnotherElement(variant) {
   if (OTHER_ELEMENT_VARIANTS.has(variant)) return true;
   if (!variant.startsWith('[') || !variant.endsWith(']')) return false;
-  const selector = variant.slice(1, -1);
-  if (selector.includes('::')) return true;
-  if (!selector.includes('&')) return false;
-  // `:not(&)` and `:has(&)` name the box without being it.
-  const subject = topLevelCompounds(selector)
-    .at(-1)
-    .replace(/:(?:not|has)\([^()]*\)/g, '');
-  return !subject.includes('&');
-}
-
-/** A selector's compounds, split at the combinators outside `[…]` and `(…)`. */
-function topLevelCompounds(selector) {
-  const compounds = [''];
-  let depth = 0;
-  for (const char of selector) {
-    if (char === '[' || char === '(') depth++;
-    else if (char === ']' || char === ')') depth--;
-    if (depth === 0 && /[_>+~]/.test(char)) compounds.push('');
-    else compounds[compounds.length - 1] += char;
-  }
-  return compounds;
+  const selector = withoutGroups(variant.slice(1, -1));
+  return !/^&[^_>+~]*$/.test(selector) || selector.includes('::');
 }
 
 // A class string whose box class and `nest-*` twin name different steps, such
