@@ -9,6 +9,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import {
   expectInsideBorder,
   expectTextFits,
@@ -697,4 +698,33 @@ export const AllVariants: Story = {
       </InputGroup>
     </div>
   ),
+};
+
+export const NestedCorners: Story = {
+  render: () => (
+    <div data-radius="12" className="nx:grid nx:w-80 nx:gap-3">
+      <InputGroup>
+        <InputGroupInput aria-label="Email" placeholder="you@example.com" />
+        <InputGroupAddon align="inline-end">
+          <InputGroupButton size="xs">Send</InputGroupButton>
+        </InputGroupAddon>
+      </InputGroup>
+      <InputGroup>
+        <InputGroupInput aria-label="Search" placeholder="Search" />
+        <InputGroupAddon align="inline-end">
+          <kbd>K</kbd>
+        </InputGroupAddon>
+      </InputGroup>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const button = within(canvasElement).getByRole('button', { name: 'Send' });
+    await expectCorners(button, ['6px', '6px', '6px', '6px']);
+    await expectCorners(canvasElement.querySelector('kbd')!, [
+      '6px',
+      '6px',
+      '6px',
+      '6px',
+    ]);
+  },
 };

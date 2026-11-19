@@ -113,6 +113,112 @@ function sizesFromSpacing(raw) {
   );
 }
 
+// Each box class with its `nest-*` twin, which the inner corners read, as
+// functions that return the step a class names. A nest class reads a theme
+// step, so a nest side matches only those.
+const NEST_TWINS = [
+  {
+    box: (utility) => /^p-(.+)$/.exec(utility)?.[1],
+    nest: (utility) => /^nest-padding-(\d+(?:\.5)?)$/.exec(utility)?.[1],
+  },
+  {
+    box: borderStep,
+    nest: (utility) =>
+      /^nest-border-(none|thin|default|thick)$/.exec(utility)?.[1],
+  },
+  {
+    box: (utility) =>
+      /^rounded-(none|\[.+\]|\(.+\)|base|sm|md|lg|xl|2xl|3xl|4xl|full)$/.exec(
+        utility
+      )?.[1],
+    nest: (utility) =>
+      /^nest-outer-(none|base|sm|md|lg|xl|2xl|3xl|4xl|full)$/.exec(
+        utility
+      )?.[1],
+  },
+];
+
+const BORDER_STEPS = new Map([
+  ['border-0', 'none'],
+  ['border-thin', 'thin'],
+  ['border-default', 'default'],
+  ['border-thick', 'thick'],
+]);
+
+// A box's border width: a theme step, with `border-0` as `none`, or a width
+// no nest step names, such as bare `border`, `border-2`, `border-[3px]` or
+// `border-(length:--w)`.
+function borderStep(utility) {
+  if (BORDER_STEPS.has(utility)) return BORDER_STEPS.get(utility);
+  if (utility === 'border') return '1px';
+  return /^border-(\d+|\[(?:length:)?[\d.]+(?:px|r?em)\]|[[(]length:.+[\])])$/.exec(
+    utility
+  )?.[1];
+}
+
+// Variants the check leaves out, because they can style another element than
+// the box: a pseudo-element or child variant, such as `after:` or `*:`, and
+// every arbitrary variant but one compound on `&`, such as `[&:hover]:` or
+// `[&[data-open]]:`. So the check never reads another element's class as the
+// box's, and it skips rare forms such as `[.dark_&]:`.
+const OTHER_ELEMENT_VARIANTS = new Set([
+  '*',
+  '**',
+  'after',
+  'backdrop',
+  'before',
+  'details-content',
+  'file',
+  'first-letter',
+  'first-line',
+  'marker',
+  'placeholder',
+  'selection',
+]);
+
+function stylesAnotherElement(variant) {
+  if (OTHER_ELEMENT_VARIANTS.has(variant)) return true;
+  if (!variant.startsWith('[') || !variant.endsWith(']')) return false;
+  const selector = withoutGroups(variant.slice(1, -1));
+  return !/^&[^_>+~]*$/.test(selector) || selector.includes('::');
+}
+
+// A class string whose box class and `nest-*` twin name different steps, such
+// as `nx:p-2 nx:nest-padding-1`. A template, such as a Vue story's, holds
+// several elements, so each quoted value is its own class list.
+function nestStepMismatch(text) {
+  return text.split(/["'`]/).some(classListNestMismatch);
+}
+
+// A list with only one class of a pair passes, because the other can sit on
+// another element. Once the list pairs a twin, every variant chain that sets
+// either class must set both, to the same step.
+function classListNestMismatch(classList) {
+  const classes = nxClasses(classList).flatMap((token) => {
+    const parts = splitVariants(token.slice('nx:'.length));
+    // `!` is the important modifier, at either end.
+    const utility = parts.pop().replace(/^!|!$/g, '');
+    if (parts.some(stylesAnotherElement)) return [];
+    return [{ chain: parts.join(':'), utility }];
+  });
+  return NEST_TWINS.some(({ box, nest }) => {
+    const chains = new Map();
+    for (const { chain, utility } of classes) {
+      const steps = chains.get(chain) ?? {};
+      steps.box ??= box(utility);
+      steps.nest ??= nest(utility);
+      chains.set(chain, steps);
+    }
+    const set = [...chains.values()].filter(
+      (steps) => steps.box !== undefined || steps.nest !== undefined
+    );
+    const paired = set.some(
+      (steps) => steps.box !== undefined && steps.nest !== undefined
+    );
+    return paired && set.some((steps) => steps.box !== steps.nest);
+  });
+}
+
 function isIconElement(name) {
   return name.type === 'JSXIdentifier' && ICON_ELEMENT_NAME.test(name.name);
 }
@@ -168,6 +274,10 @@ const CHECKS = [
     test: sizesSvgFromSpacing,
     // Stories are checked: the docs pages copy their code into apps.
     skipFile: isDocsFile,
+  },
+  {
+    messageId: 'nestStepMismatch',
+    test: nestStepMismatch,
   },
   {
     messageId: 'rawLetterSpacing',
@@ -362,7 +472,7 @@ export default {
     type: 'problem',
     docs: {
       description:
-        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, no icon sized from spacing, no ring-fading `transition-colors` on a focus-ring surface, and no sized `svg` children without `nx:icon-stroke`.',
+        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, no icon sized from spacing, no `nest-*` class out of step with its box, no ring-fading `transition-colors` on a focus-ring surface, and no sized `svg` children without `nx:icon-stroke`.',
     },
     schema: [],
     messages: {
@@ -384,6 +494,8 @@ export default {
         'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
       densityIconSize:
         'Icon size from spacing — a numeric `size-*`, `h-*` or `w-*`, or one that reads a `--nx-spacing-*` variable, on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm`, `-default`, `-lg` or `-xl` (12, 14, 16, 24 or 32px at the Default UI scale).',
+      nestStepMismatch:
+        'Nest step mismatch — this class string sets a box padding, border width or radius (`p-*`, `border-*`, `rounded-*`) and its `nest-padding-*`, `nest-border-*` or `nest-outer-*` twin to different steps, or sets one without the other under a variant, so the inner corners use the wrong value. Set both to the same step under the same variants.',
       ringFadingTransition:
         'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
       unstrokedIcon:
@@ -430,16 +542,11 @@ export default {
         reportScope(node);
       },
       TemplateLiteral(node) {
-        const matched = new Set();
-        for (const quasi of node.quasis) {
-          const raw = quasi.value.cooked ?? quasi.value.raw;
-          for (const id of matchedMessageIds(raw, filename)) {
-            matched.add(id);
-          }
-        }
-        for (const messageId of matched) {
-          context.report({ node, messageId });
-        }
+        // One class list can run across a `${}`, so the quasis are read together.
+        const text = node.quasis
+          .map((quasi) => quasi.value.cooked ?? quasi.value.raw)
+          .join(' ');
+        report(node, text);
         reportScope(node);
       },
       CallExpression(node) {

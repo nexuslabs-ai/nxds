@@ -4,6 +4,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { cn } from '../../lib/utils';
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { expectImmediateItemMotion } from '../../stories/support/motion-test-utils';
 import {
   Field,
@@ -484,4 +485,19 @@ export const AllVariants: Story = {
       />
     </div>
   ),
+};
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: Controlled.render,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      canvasElement.querySelector<HTMLElement>(
+        '[data-slot="combobox-trigger"]'
+      )!
+    );
+    const [first] = await within(document.body).findAllByRole('option');
+    await expectCorners(first!, ['6px', '6px', '6px', '6px']);
+    await userEvent.keyboard('{Escape}');
+  },
 };

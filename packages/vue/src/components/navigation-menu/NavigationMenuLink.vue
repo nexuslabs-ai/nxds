@@ -27,7 +27,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     data-slot="navigation-menu-link"
     :class="
       cn(
-        'nx:flex nx:flex-col nx:gap-1 nx:rounded-sm nx:p-2 nx:text-inherit nx:no-underline nx:typography-body-default nx:transition-control',
+        'nx:flex nx:flex-col nx:gap-1 nx:rounded-nest nx:p-2 nx:text-inherit nx:no-underline nx:typography-body-default nx:transition-control',
         'nx:hover:bg-popover-hover nx:hover:text-popover-foreground',
         'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
         'nx:data-[active=true]:bg-popover-hover nx:data-[active=true]:text-popover-foreground',

@@ -93,6 +93,13 @@ const TabsList = React.forwardRef<
         return;
       }
 
+      const triggers = list.querySelectorAll('[data-slot="tabs-trigger"]');
+      indicator.toggleAttribute('data-first', active === triggers[0]);
+      indicator.toggleAttribute(
+        'data-last',
+        active === triggers[triggers.length - 1]
+      );
+
       const isUnderline = variant === 'underline';
       const isVertical = list.dataset.orientation === 'vertical';
       const isVerticalBar = isUnderline && isVertical;
@@ -149,7 +156,7 @@ const TabsList = React.forwardRef<
         'nx:relative nx:isolate nx:inline-flex nx:items-center nx:justify-center',
         'nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
         variant === 'default' &&
-          'nx:rounded-md nx:bg-control-background nx:p-1',
+          'nx:rounded-md nx:bg-control-background nx:p-1 nx:nest-outer-md nx:nest-border-none nx:nest-padding-1',
         className
       )}
       {...props}
@@ -161,8 +168,11 @@ const TabsList = React.forwardRef<
         data-variant={variant}
         className={cn(
           'nx:pointer-events-none nx:absolute nx:z-0 nx:opacity-0',
-          variant === 'default' &&
-            'nx:top-0 nx:left-0 nx:rounded-sm nx:border-default nx:border-border-default nx:bg-background',
+          variant === 'default' && [
+            'nx:top-0 nx:left-0 nx:rounded-nest nx:border-default nx:border-border-default nx:bg-background',
+            'nx:[[data-orientation=horizontal]>&]:data-first:rounded-s-nest-corner nx:[[data-orientation=horizontal]>&]:data-last:rounded-e-nest-corner',
+            'nx:[[data-orientation=vertical]>&]:data-first:rounded-t-nest-corner nx:[[data-orientation=vertical]>&]:data-last:rounded-b-nest-corner',
+          ],
           variant === 'underline' && [
             'nx:bg-primary-background',
             'nx:[[data-orientation=horizontal]>&]:bottom-0 nx:[[data-orientation=horizontal]>&]:left-0 nx:[[data-orientation=horizontal]>&]:h-(--nx-borderwidth-thick)',
@@ -200,7 +210,9 @@ const tabsTriggerVariants = cva(
        */
       variant: {
         default: [
-          'nx:rounded-sm nx:border-default nx:border-transparent',
+          'nx:rounded-nest nx:border-default nx:border-transparent',
+          'nx:data-[orientation=horizontal]:first:rounded-s-nest-corner nx:data-[orientation=horizontal]:[[data-slot=tabs-indicator]+&]:rounded-s-nest-corner nx:data-[orientation=horizontal]:last:rounded-e-nest-corner',
+          'nx:data-[orientation=vertical]:first:rounded-t-nest-corner nx:data-[orientation=vertical]:[[data-slot=tabs-indicator]+&]:rounded-t-nest-corner nx:data-[orientation=vertical]:last:rounded-b-nest-corner',
           'nx:data-[state=inactive]:hover:bg-control-background-hover',
           'nx:data-[state=active]:text-foreground',
         ],

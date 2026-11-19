@@ -37,6 +37,7 @@ import {
   generateIconUtilitiesCSS,
   generateMotionUtilitiesCSS,
   generateNativeBrowserUIThemeCSS,
+  generateNestUtilitiesCSS,
   generateSpacingModesCSS,
   generateSpacingRoleUtilitiesCSS,
   generateSurfaceUtilitiesCSS,
@@ -480,6 +481,7 @@ function generateNxdsCSS(
   css += generateAutofillUtilitiesCSS();
   css += generateSurfaceUtilitiesCSS();
   css += generateTargetUtilitiesCSS();
+  css += generateNestUtilitiesCSS();
 
   return css;
 }

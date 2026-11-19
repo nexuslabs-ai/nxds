@@ -66,23 +66,26 @@ const summary = computed(() =>
     <PopoverContent
       align="start"
       :aria-label="`${field.label} values`"
-      class="nx:w-64 nx:max-w-(--reka-popover-content-available-width) nx:overflow-hidden nx:p-0"
+      class="nx:w-64 nx:max-w-(--reka-popover-content-available-width) nx:overflow-hidden nx:p-0 nx:nest-outer-md"
     >
       <div class="nx:border-b nx:border-border-default nx:p-2">
         <Input
           v-model="search"
           size="sm"
+          class="nx:rounded-nest"
           :aria-label="`Search ${field.label} options`"
           placeholder="Search options…"
           :disabled="disabled"
         />
       </div>
-      <div class="nx:max-h-48 nx:overflow-y-auto nx:p-1">
+      <div
+        class="nx:max-h-48 nx:overflow-y-auto nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:[&>:last-child]:rounded-b-nest-corner"
+      >
         <ChoiceRow
           v-for="(option, index) in options"
           :key="option.value"
           :for="`${id}-${index}`"
-          class="nx:not-has-[:disabled]:hover:bg-popover-hover"
+          class="nx:rounded-nest nx:[&>[data-slot=checkbox]]:rounded-half-nest nx:not-has-[:disabled]:hover:bg-popover-hover"
         >
           <Checkbox
             :id="`${id}-${index}`"

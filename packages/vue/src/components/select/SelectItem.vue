@@ -32,7 +32,7 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     :class="
       cn(
         'nx:group nx:relative nx:flex nx:w-full nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
-        'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
+        'nx:rounded-nest-edges nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
         menuItemInsetClassName,
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',

@@ -3,6 +3,7 @@ import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import {
   expectMenuItemInsetAtEveryDensity,
   expectRadioDotInsetAtEveryUiScale,
@@ -731,3 +732,79 @@ export const AllVariants: Story = {
 // A11Y is tested automatically on ALL stories
 // via addon-a11y with test: 'error'
 // ============================================
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: () => (
+    <DropdownMenu defaultOpen modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">Actions</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuItem>Rename</DropdownMenuItem>
+        <DropdownMenuItem>Duplicate</DropdownMenuItem>
+        <DropdownMenuItem>Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ),
+  play: async () => {
+    const items = await within(document.body).findAllByRole('menuitem');
+    await expectCorners(items[0]!, ['7px', '7px', '6px', '6px']);
+    await expectCorners(items[1]!, ['6px', '6px', '6px', '6px']);
+    await expectCorners(items[2]!, ['6px', '6px', '7px', '7px']);
+
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+export const NestedCornersAfterLabel: Story = {
+  globals: { corners: '12' },
+  render: () => (
+    <DropdownMenu defaultOpen modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">Actions</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuLabel>Document</DropdownMenuLabel>
+        <DropdownMenuItem>Rename</DropdownMenuItem>
+        <DropdownMenuItem>Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ),
+  play: async () => {
+    const items = await within(document.body).findAllByRole('menuitem');
+    await expectCorners(items[0]!, ['6px', '6px', '6px', '6px']);
+    await expectCorners(items[1]!, ['6px', '6px', '7px', '7px']);
+
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+export const NestedCornersGrouped: Story = {
+  globals: { corners: '12' },
+  render: () => (
+    <DropdownMenu defaultOpen modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">Actions</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuGroup>
+          <DropdownMenuItem>Rename</DropdownMenuItem>
+          <DropdownMenuItem>Duplicate</DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem>Archive</DropdownMenuItem>
+          <DropdownMenuItem>Delete</DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ),
+  play: async () => {
+    const items = await within(document.body).findAllByRole('menuitem');
+    await expectCorners(items[0]!, ['7px', '7px', '6px', '6px']);
+    await expectCorners(items[1]!, ['6px', '6px', '6px', '6px']);
+    await expectCorners(items[3]!, ['6px', '6px', '7px', '7px']);
+    await userEvent.keyboard('{Escape}');
+  },
+};

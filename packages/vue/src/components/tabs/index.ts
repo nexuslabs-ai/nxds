@@ -34,7 +34,9 @@ export const tabsTriggerVariants = cva(
       /** Visual style. */
       variant: {
         default: [
-          'nx:rounded-sm nx:border-default nx:border-transparent',
+          'nx:rounded-nest nx:border-default nx:border-transparent',
+          'nx:data-[orientation=horizontal]:first:rounded-s-nest-corner nx:data-[orientation=horizontal]:[[data-slot=tabs-indicator]+&]:rounded-s-nest-corner nx:data-[orientation=horizontal]:last:rounded-e-nest-corner',
+          'nx:data-[orientation=vertical]:first:rounded-t-nest-corner nx:data-[orientation=vertical]:[[data-slot=tabs-indicator]+&]:rounded-t-nest-corner nx:data-[orientation=vertical]:last:rounded-b-nest-corner',
           'nx:data-[state=inactive]:hover:bg-control-background-hover',
           'nx:data-[state=active]:text-foreground',
         ],

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { expectMenuItemInsetAtEveryDensity } from '../../stories/support/menu-item-inset-test-utils';
 import { expectInterruptibleOverlayMotion } from '../../stories/support/overlay-motion-test-utils';
 import { Input } from '../input/input';
@@ -851,3 +852,51 @@ export const AllVariants: Story = {
 // A11Y is tested automatically on ALL stories
 // via addon-a11y with test: 'error'
 // ============================================
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: () => (
+    <Select defaultOpen>
+      <SelectTrigger aria-label="Fruit">
+        <SelectValue placeholder="Choose a fruit" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="apple">Apple</SelectItem>
+        <SelectItem value="banana">Banana</SelectItem>
+        <SelectItem value="cherry">Cherry</SelectItem>
+      </SelectContent>
+    </Select>
+  ),
+  play: async () => {
+    const options = await within(document.body).findAllByRole('option');
+    await expectCorners(options[0]!, ['7px', '7px', '6px', '6px']);
+    await expectCorners(options[1]!, ['6px', '6px', '6px', '6px']);
+    await expectCorners(options[2]!, ['6px', '6px', '7px', '7px']);
+
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+export const NestedCornersGrouped: Story = {
+  globals: { corners: '12' },
+  render: () => (
+    <Select defaultOpen>
+      <SelectTrigger aria-label="Fruit">
+        <SelectValue placeholder="Choose a fruit" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectItem value="apple">Apple</SelectItem>
+          <SelectItem value="banana">Banana</SelectItem>
+          <SelectItem value="cherry">Cherry</SelectItem>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  ),
+  play: async () => {
+    const options = await within(document.body).findAllByRole('option');
+    await expectCorners(options[0]!, ['7px', '7px', '6px', '6px']);
+    await expectCorners(options[2]!, ['6px', '6px', '7px', '7px']);
+    await userEvent.keyboard('{Escape}');
+  },
+};

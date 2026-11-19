@@ -8,6 +8,7 @@ import { selectionIndicatorMotionClassName } from '../../lib/motion';
 import { cn } from '../../lib/utils';
 import {
   menuItemInsetClassName,
+  menuListClassName,
   overlayFloatingTransitionClassName,
   popoverSurfaceClassName,
 } from '../overlay-layout/overlay-layout';
@@ -84,7 +85,7 @@ function ContextMenuSubTrigger({
       data-inset={inset}
       className={cn(
         'nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2',
-        'nx:rounded-sm nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none',
+        'nx:rounded-nest-edges nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-[state=open]:bg-popover-hover nx:data-[state=open]:text-popover-foreground',
         'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
@@ -116,17 +117,19 @@ function ContextMenuSubContent({
   ...props
 }: ContextMenuSubContentProps) {
   return (
-    <ContextMenuPrimitive.SubContent
-      data-slot="context-menu-sub-content"
-      className={cn(
-        'nx:z-popover nx:min-w-32 nx:overflow-hidden',
-        popoverSurfaceClassName,
-        'nx:p-1',
-        overlayFloatingTransitionClassName,
-        className
-      )}
-      {...props}
-    />
+    <ContextMenuPrimitive.Portal>
+      <ContextMenuPrimitive.SubContent
+        data-slot="context-menu-sub-content"
+        className={cn(
+          'nx:z-popover nx:min-w-32 nx:overflow-hidden',
+          popoverSurfaceClassName,
+          menuListClassName,
+          overlayFloatingTransitionClassName,
+          className
+        )}
+        {...props}
+      />
+    </ContextMenuPrimitive.Portal>
   );
 }
 
@@ -151,7 +154,7 @@ function ContextMenuContent({ className, ...props }: ContextMenuContentProps) {
           'nx:z-popover nx:max-h-(--radix-context-menu-content-available-height)',
           'nx:min-w-32 nx:overflow-x-hidden nx:overflow-y-auto',
           popoverSurfaceClassName,
-          'nx:p-1',
+          menuListClassName,
           overlayFloatingTransitionClassName,
           className
         )}
@@ -162,7 +165,7 @@ function ContextMenuContent({ className, ...props }: ContextMenuContentProps) {
 }
 
 const contextMenuItemVariants = cva(
-  'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2 nx:rounded-sm nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none nx:transition-colors nx:focus:bg-popover-hover nx:focus:text-popover-foreground nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
+  'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2 nx:rounded-nest-edges nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none nx:transition-colors nx:focus:bg-popover-hover nx:focus:text-popover-foreground nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
   {
     variants: {
       variant: {
@@ -239,7 +242,7 @@ function ContextMenuCheckboxItem({
       data-slot="context-menu-checkbox-item"
       className={cn(
         'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
-        'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
+        'nx:rounded-nest-edges nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
         menuItemInsetClassName,
         'nx:transition-colors',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
@@ -293,7 +296,7 @@ function ContextMenuRadioItem({
       data-slot="context-menu-radio-item"
       className={cn(
         'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
-        'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
+        'nx:rounded-nest-edges nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
         menuItemInsetClassName,
         'nx:transition-colors',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',

@@ -10,6 +10,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { Button } from '../button';
 import { Spinner } from '../spinner';
 
@@ -695,5 +696,55 @@ export const WithDataAttributes: Story = {
     );
     await expect(shortcut).toHaveClass('nx:typography-shortcut');
     await expect(shortcut).not.toHaveClass('nx:tracking-widest');
+  },
+};
+
+export const NestedCorners: Story = {
+  render: () => ({
+    components: { Command, CommandGroup, CommandItem, CommandList },
+    template: `
+      <div data-radius="12" class="nx:w-72">
+        <Command class="nx:border-default nx:border-border-default">
+          <CommandList>
+            <CommandGroup heading="Pages">
+              <CommandItem>Home</CommandItem>
+              <CommandItem>Settings</CommandItem>
+              <CommandItem>Billing</CommandItem>
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    for (const item of within(canvasElement).getAllByRole('option')) {
+      await expectCorners(item, ['6px', '6px', '6px', '6px']);
+    }
+  },
+};
+
+export const DialogNestedCorners: Story = {
+  globals: { corners: '12' },
+  render: WithDialog.render,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', {
+        name: 'Open Command Palette',
+      })
+    );
+    const dialog = await within(document.body).findByRole('dialog');
+    const command = dialog.querySelector('[data-slot="command"]')!;
+    await expect(command).toHaveClass(
+      'nx:rounded-none',
+      'nx:sm:rounded-nest-corner'
+    );
+    await expectCorners(command, ['14px', '14px', '14px', '14px']);
+
+    await userEvent.click(within(dialog).getByRole('combobox'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      const open = document.querySelector('[role="dialog"]');
+      expect(open?.getAttribute('data-state') ?? 'closed').toBe('closed');
+    });
   },
 };

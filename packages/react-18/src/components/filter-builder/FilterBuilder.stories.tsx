@@ -8,6 +8,7 @@ import {
   type FilterGroup,
   getFilterErrors,
 } from '../../lib/filter-model';
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { Button } from '../button/button';
 
 import { FilterBuilder } from './filter-builder';
@@ -618,6 +619,33 @@ export const RestrictedOperators: Story = {
       canvas.getByRole('combobox', { name: 'Status operator' })
     );
     await expect(page.getAllByRole('option')).toHaveLength(2);
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: MultipleChoices.render,
+  play: async ({ canvasElement }) => {
+    const page = within(canvasElement.ownerDocument.body);
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: 'Team values' })
+    );
+    const rows = page
+      .getAllByRole('checkbox')
+      .map((checkbox) => checkbox.closest('[data-slot="choice-row"]')!);
+    await expectCorners(rows[0]!, ['6px', '6px', '6px', '6px']);
+    await expectCorners(rows[0]!.querySelector('[data-slot="checkbox"]')!, [
+      '3px',
+      '3px',
+      '3px',
+      '3px',
+    ]);
+    await expectCorners(rows[rows.length - 1]!, ['6px', '6px', '7px', '7px']);
+    await expectCorners(
+      page.getByRole('textbox', { name: 'Search Team options' }),
+      ['6px', '6px', '6px', '6px']
+    );
     await userEvent.keyboard('{Escape}');
   },
 };

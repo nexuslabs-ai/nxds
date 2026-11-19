@@ -24,7 +24,7 @@ const props = withDefaults(defineProps<SidebarInputProps>(), {
     :variant="variant"
     :class="
       cn(
-        'nx:min-h-8 nx:w-full nx:bg-background nx:autofill-bg-background',
+        'nx:min-h-8 nx:w-full nx:bg-background nx:autofill-bg-background nx:group-data-[variant=floating]:rounded-nest nx:[[data-narrow=true]_&]:rounded-nest',
         props.class
       )
     "

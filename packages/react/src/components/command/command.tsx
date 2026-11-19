@@ -77,13 +77,21 @@ function CommandDialog({
     <Dialog {...props}>
       <DialogContent
         showCloseButton={showCloseButton}
-        className={cn('nx:overflow-hidden nx:p-0', className)}
+        className={cn(
+          'nx:overflow-hidden nx:p-0 nx:nest-outer-lg nx:nest-border-default nx:nest-padding-0',
+          className
+        )}
       >
         <DialogTitle className="nx:sr-only">{title}</DialogTitle>
         <DialogDescription className="nx:sr-only">
           {description}
         </DialogDescription>
-        <Command label={title}>{children}</Command>
+        <Command
+          label={title}
+          className="nx:rounded-none nx:sm:rounded-nest-corner"
+        >
+          {children}
+        </Command>
       </DialogContent>
     </Dialog>
   );
@@ -135,7 +143,7 @@ function CommandList({ className, ...props }: CommandListProps) {
     <CommandPrimitive.List
       data-slot="command-list"
       className={cn(
-        'nx:max-h-[calc(300px*var(--nx-ui-scale))] nx:overflow-y-auto nx:overflow-x-hidden nx:scroll-py-2',
+        'nx:max-h-[calc(300px*var(--nx-ui-scale))] nx:overflow-y-auto nx:overflow-x-hidden nx:scroll-py-2 nx:nest-outer-md nx:nest-border-none nx:nest-padding-2',
         className
       )}
       {...props}
@@ -263,7 +271,7 @@ function CommandItem({ className, ...props }: CommandItemProps) {
     <CommandPrimitive.Item
       data-slot="command-item"
       className={cn(
-        'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:rounded-sm nx:typography-body-default nx:outline-none',
+        'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:rounded-nest nx:typography-body-default nx:outline-none',
         'nx:gap-3 nx:px-3 nx:py-2.5',
         'nx:data-[selected=true]:bg-popover-hover nx:data-[selected=true]:text-popover-foreground',
         'nx:data-[disabled=true]:pointer-events-none nx:data-[disabled=true]:text-disabled-foreground',

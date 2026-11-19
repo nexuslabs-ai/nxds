@@ -3,6 +3,7 @@ import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import {
   expectMenuItemInsetAtEveryDensity,
   expectRadioDotInsetAtEveryUiScale,
@@ -684,3 +685,35 @@ export const AllVariants: Story = {
 // A11Y is tested automatically on ALL stories
 // via addon-a11y with test: 'error'
 // ============================================
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: () => (
+    <Menubar>
+      <MenubarMenu>
+        <MenubarTrigger>File</MenubarTrigger>
+        <MenubarContent>
+          <MenubarItem>New tab</MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+      <MenubarMenu>
+        <MenubarTrigger>Edit</MenubarTrigger>
+        <MenubarContent>
+          <MenubarItem>Undo</MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+      <MenubarMenu>
+        <MenubarTrigger>View</MenubarTrigger>
+        <MenubarContent>
+          <MenubarItem>Zoom in</MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+    </Menubar>
+  ),
+  play: async ({ canvasElement }) => {
+    const triggers = within(canvasElement).getAllByRole('menuitem');
+    await expectCorners(triggers[0]!, ['7px', '6px', '6px', '7px']);
+    await expectCorners(triggers[1]!, ['6px', '6px', '6px', '6px']);
+    await expectCorners(triggers[2]!, ['6px', '7px', '7px', '6px']);
+  },
+};

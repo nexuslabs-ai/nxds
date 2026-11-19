@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactiveOmit } from '@vueuse/core';
+import { reactiveOmit, unrefElement, useMutationObserver } from '@vueuse/core';
 import {
   injectTabsRootContext,
   TabsIndicator,
@@ -7,7 +7,14 @@ import {
   type TabsListProps as RekaTabsListProps,
   useForwardProps,
 } from 'reka-ui';
-import { computed, type HTMLAttributes, provide } from 'vue';
+import {
+  computed,
+  type HTMLAttributes,
+  onMounted,
+  provide,
+  ref,
+  useTemplateRef,
+} from 'vue';
 
 import { cn } from '../../lib/utils';
 
@@ -33,10 +40,35 @@ const forwarded = useForwardProps(delegated);
 
 const { orientation } = injectTabsRootContext();
 const isVertical = computed(() => orientation.value === 'vertical');
+
+const list = useTemplateRef('list');
+const activeIsFirst = ref(false);
+const activeIsLast = ref(false);
+
+function markEdges() {
+  const element = unrefElement(list);
+  if (!element) return;
+  const triggers = element.querySelectorAll('[data-slot="tabs-trigger"]');
+  const active = element.querySelector(
+    '[data-slot="tabs-trigger"][data-state="active"]'
+  );
+  activeIsFirst.value = active !== null && active === triggers[0];
+  activeIsLast.value =
+    active !== null && active === triggers[triggers.length - 1];
+}
+
+onMounted(markEdges);
+useMutationObserver(list, markEdges, {
+  attributes: true,
+  attributeFilter: ['data-state', 'data-orientation'],
+  childList: true,
+  subtree: true,
+});
 </script>
 
 <template>
   <TabsList
+    ref="list"
     v-bind="forwarded"
     data-slot="tabs-list"
     :data-variant="variant"
@@ -46,7 +78,7 @@ const isVertical = computed(() => orientation.value === 'vertical');
         'nx:relative nx:isolate nx:inline-flex nx:items-center nx:justify-center',
         'nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
         variant === 'default' &&
-          'nx:rounded-md nx:bg-control-background nx:p-1',
+          'nx:rounded-md nx:bg-control-background nx:p-1 nx:nest-outer-md nx:nest-border-none nx:nest-padding-1',
         props.class
       )
     "
@@ -55,6 +87,8 @@ const isVertical = computed(() => orientation.value === 'vertical');
       aria-hidden="true"
       data-slot="tabs-indicator"
       :data-variant="variant"
+      :data-first="activeIsFirst || undefined"
+      :data-last="activeIsLast || undefined"
       :class="
         cn(
           'nx:pointer-events-none nx:absolute nx:z-0',
@@ -63,7 +97,9 @@ const isVertical = computed(() => orientation.value === 'vertical');
             ? 'nx:top-0 nx:h-(--reka-tabs-indicator-size) nx:translate-y-(--reka-tabs-indicator-position)'
             : 'nx:left-0 nx:w-(--reka-tabs-indicator-size) nx:translate-x-(--reka-tabs-indicator-position)',
           variant === 'default' && [
-            'nx:rounded-sm nx:border-default nx:border-border-default nx:bg-background',
+            'nx:rounded-nest nx:border-default nx:border-border-default nx:bg-background',
+            'nx:[[data-orientation=horizontal]>&]:data-first:rounded-s-nest-corner nx:[[data-orientation=horizontal]>&]:data-last:rounded-e-nest-corner',
+            'nx:[[data-orientation=vertical]>&]:data-first:rounded-t-nest-corner nx:[[data-orientation=vertical]>&]:data-last:rounded-b-nest-corner',
             isVertical ? 'nx:inset-x-1' : 'nx:inset-y-1',
           ],
           variant === 'underline' && [

@@ -30,7 +30,13 @@ const delegated = reactiveOmit(props, 'class', 'variant', 'size');
     data-slot="toolbar-link"
     :data-variant="variant"
     :data-size="size"
-    :class="cn(buttonVariants({ variant, size }), props.class)"
+    :class="
+      cn(
+        buttonVariants({ variant, size }),
+        'nx:rounded-nest-edges',
+        props.class
+      )
+    "
   >
     <slot />
   </ToolbarLink>

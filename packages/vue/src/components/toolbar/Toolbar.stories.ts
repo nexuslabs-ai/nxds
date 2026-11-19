@@ -17,6 +17,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { defineComponent, ref, useId } from 'vue';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { Button } from '../button';
 import { Checkbox } from '../checkbox';
 import {
@@ -936,7 +937,7 @@ const AttachedExample = defineComponent({
       <div class="nx:rounded-lg nx:border-default nx:border-border-default nx:bg-container">
         <Toolbar
           aria-label="Note formatting"
-          class="nx:w-full nx:rounded-none nx:rounded-t-lg nx:border-0 nx:border-b-default nx:border-border-default nx:shadow-none nx:bg-background nx:p-2"
+          class="nx:w-full nx:rounded-none nx:rounded-t-lg nx:border-0 nx:border-b-default nx:border-border-default nx:shadow-none nx:bg-background nx:p-2 nx:nest-border-none nx:nest-padding-2"
         >
           <ToolbarToggleGroup v-model="formatting" type="multiple" aria-label="Note style">
             <Tooltip>
@@ -1584,4 +1585,221 @@ export const AllVariants: Story = {
       </div>
     `,
   }),
+};
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: () => ({
+    components: {
+      PhArrowUUpLeft,
+      PhCursor,
+      PhPencilSimple,
+      Toolbar,
+      ToolbarButton,
+      ToolbarSeparator,
+      ToolbarTool,
+      ToolbarToolGroup,
+    },
+    setup: () => ({ variants: ['default', 'floating'] as const }),
+    template: `
+      <div class="nx:flex nx:flex-wrap nx:items-start nx:gap-6">
+        <Toolbar
+          v-for="variant in variants"
+          :key="variant"
+          :variant="variant"
+          :aria-label="variant + ' bar'"
+        >
+          <ToolbarToolGroup aria-label="Tools" default-value="select">
+            <ToolbarTool value="select" icon-only>
+              <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+            <ToolbarTool value="draw" icon-only>
+              <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
+          </ToolbarToolGroup>
+          <ToolbarSeparator />
+          <ToolbarButton icon-only>
+            <template #start-icon><PhArrowUUpLeft /></template>Undo</ToolbarButton>
+        </Toolbar>
+        <Toolbar orientation="vertical" aria-label="vertical bar">
+          <ToolbarButton>Select</ToolbarButton>
+          <ToolbarButton>Draw</ToolbarButton>
+          <ToolbarSeparator />
+          <ToolbarButton>Erase</ToolbarButton>
+        </Toolbar>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const bar = within(canvas.getByRole('toolbar', { name: 'default bar' }));
+    await expectCorners(bar.getByRole('button', { name: 'Select' }), [
+      '12px',
+      '8px',
+      '8px',
+      '12px',
+    ]);
+    await expectCorners(bar.getByRole('button', { name: 'Draw' }), [
+      '8px',
+      '8px',
+      '8px',
+      '8px',
+    ]);
+    await expectCorners(bar.getByRole('button', { name: 'Undo' }), [
+      '8px',
+      '12px',
+      '12px',
+      '8px',
+    ]);
+
+    const floating = within(
+      canvas.getByRole('toolbar', { name: 'floating bar' })
+    );
+    await expectCorners(floating.getByRole('button', { name: 'Select' }), [
+      '15px',
+      '12px',
+      '12px',
+      '15px',
+    ]);
+    await expectCorners(floating.getByRole('button', { name: 'Draw' }), [
+      '12px',
+      '12px',
+      '12px',
+      '12px',
+    ]);
+
+    const vertical = within(
+      canvas.getByRole('toolbar', { name: 'vertical bar' })
+    );
+    await expectCorners(vertical.getByRole('button', { name: 'Select' }), [
+      '12px',
+      '12px',
+      '8px',
+      '8px',
+    ]);
+    await expectCorners(vertical.getByRole('button', { name: 'Erase' }), [
+      '8px',
+      '8px',
+      '12px',
+      '12px',
+    ]);
+  },
+};
+
+export const NestedCornersThroughWrappers: Story = {
+  globals: { corners: '12' },
+  render: () => ({
+    components: {
+      Toolbar,
+      ToolbarButton,
+      ToolbarGroup,
+      ToolbarToggleGroup,
+      ToolbarToggleItem,
+    },
+    template: `
+      <div class="nx:flex nx:flex-wrap nx:items-start nx:gap-6">
+        <Toolbar aria-label="Wrapped tools">
+          <ToolbarToggleGroup type="multiple" aria-label="Style">
+            <span class="nx:inline-flex">
+              <ToolbarToggleItem value="bold">Bold</ToolbarToggleItem>
+            </span>
+            <span class="nx:inline-flex">
+              <ToolbarToggleItem value="italic">Italic</ToolbarToggleItem>
+            </span>
+            <span class="nx:inline-flex">
+              <ToolbarToggleItem value="underline">Underline</ToolbarToggleItem>
+            </span>
+          </ToolbarToggleGroup>
+        </Toolbar>
+        <Toolbar aria-label="Nested groups">
+          <ToolbarGroup aria-label="Edit">
+            <ToolbarToggleGroup type="multiple" aria-label="Style">
+              <ToolbarToggleItem value="bold">Bold</ToolbarToggleItem>
+              <ToolbarToggleItem value="italic">Italic</ToolbarToggleItem>
+            </ToolbarToggleGroup>
+            <ToolbarButton>Undo</ToolbarButton>
+          </ToolbarGroup>
+        </Toolbar>
+        <Toolbar aria-label="Plain wrapper">
+          <ToolbarButton>Cut</ToolbarButton>
+          <div class="nx:ms-auto nx:flex nx:gap-[inherit]">
+            <span class="nx:inline-flex">
+              <ToolbarButton>Copy</ToolbarButton>
+            </span>
+            <span class="nx:inline-flex">
+              <ToolbarButton>Paste</ToolbarButton>
+            </span>
+          </div>
+        </Toolbar>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const wrapped = within(
+      canvas.getByRole('toolbar', { name: 'Wrapped tools' })
+    );
+    await expectCorners(wrapped.getByRole('button', { name: 'Bold' }), [
+      '12px',
+      '8px',
+      '8px',
+      '12px',
+    ]);
+    await expectCorners(wrapped.getByRole('button', { name: 'Italic' }), [
+      '8px',
+      '8px',
+      '8px',
+      '8px',
+    ]);
+    await expectCorners(wrapped.getByRole('button', { name: 'Underline' }), [
+      '8px',
+      '12px',
+      '12px',
+      '8px',
+    ]);
+
+    const nested = within(
+      canvas.getByRole('toolbar', { name: 'Nested groups' })
+    );
+    await expectCorners(nested.getByRole('button', { name: 'Bold' }), [
+      '12px',
+      '8px',
+      '8px',
+      '12px',
+    ]);
+    await expectCorners(nested.getByRole('button', { name: 'Italic' }), [
+      '8px',
+      '8px',
+      '8px',
+      '8px',
+    ]);
+    await expectCorners(nested.getByRole('button', { name: 'Undo' }), [
+      '8px',
+      '12px',
+      '12px',
+      '8px',
+    ]);
+
+    const plain = within(
+      canvas.getByRole('toolbar', { name: 'Plain wrapper' })
+    );
+    await expectCorners(plain.getByRole('button', { name: 'Cut' }), [
+      '12px',
+      '8px',
+      '8px',
+      '12px',
+    ]);
+    await expectCorners(plain.getByRole('button', { name: 'Copy' }), [
+      '8px',
+      '8px',
+      '8px',
+      '8px',
+    ]);
+    await expectCorners(plain.getByRole('button', { name: 'Paste' }), [
+      '8px',
+      '12px',
+      '12px',
+      '8px',
+    ]);
+  },
 };

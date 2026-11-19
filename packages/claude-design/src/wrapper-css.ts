@@ -187,8 +187,14 @@ function rewriteArguments(compound: Node[], whole: string): Node[] {
 }
 
 // `A > B` → it, or B behind wrappers only. A position on B moves to the
-// outermost wrapper, which holds B's place among A's children.
-function childBranches(complex: Complex, index: number) {
+// outermost wrapper, which holds B's place among A's children. When a rule
+// that only sets nxds variables selects B by its place alone, B may be that
+// wrapper itself: the wrapper passes the variables on to the part inside it.
+function childBranches(
+  complex: Complex,
+  index: number,
+  variablesOnly: boolean
+) {
   const parent = text(complex.compounds[index] ?? []);
   const child = complex.compounds[index + 1] ?? [];
   const target = `${withoutPositions(child)}${NOT_W}`;
@@ -196,8 +202,10 @@ function childBranches(complex: Complex, index: number) {
   const guard = `:where(:not(${parent} > ${IS_W} :not(${W}) ${target}))`;
   const head = join(complex, 0, index + 1);
   const tail = join(complex, index + 2);
+  const wrapperStandsIn =
+    variablesOnly && !tail && withoutPositions(child) === '*';
   return [
-    `${head} > ${text(child)}${NOT_W}${tail}`,
+    `${head} > ${text(child)}${wrapperStandsIn ? '' : NOT_W}${tail}`,
     `${head} > ${outer} ${target}${guard}${tail}`,
   ];
 }
@@ -242,7 +250,8 @@ function siblingBranches(complex: Complex, whole: string) {
 /** `selector` and the branches that reach its element through wrappers. */
 function alternatives(
   selector: selectorParser.Selector,
-  whole: string
+  whole: string,
+  variablesOnly = false
 ): string[] {
   const parts = split(selector);
   const complex: Complex = {
@@ -279,7 +288,7 @@ function alternatives(
     if (positioned.some((index) => index !== child + 1)) {
       fail(whole, 'a position away from the `>` child');
     }
-    return childBranches(complex, child);
+    return childBranches(complex, child, variablesOnly);
   }
   const [own, ...others] = positioned;
   if (own === undefined) return [join(complex)];
@@ -332,11 +341,11 @@ function assertSupported(selector: selectorParser.Selector, whole: string) {
   });
 }
 
-function rewriteSelector(selector: string) {
+function rewriteSelector(selector: string, variablesOnly: boolean) {
   return parse(selector).flatMap((parsed) => {
     assertSupported(parsed, selector);
     const expected = specificityOf(parsed.nodes);
-    return alternatives(parsed, selector).map((branch) => {
+    return alternatives(parsed, selector, variablesOnly).map((branch) => {
       const [rewritten] = parse(branch);
       if (compare(specificityOf(rewritten?.nodes ?? []), expected) !== 0) {
         fail(selector, `\`${branch}\` changes its specificity`);
@@ -373,13 +382,26 @@ function inNxdsRule(rule: postcss.Rule) {
   return false;
 }
 
+function setsOnlyNxdsVariables(rule: postcss.Rule) {
+  const declarations = rule.nodes.filter((node) => node.type !== 'comment');
+  return (
+    declarations.length > 0 &&
+    declarations.every(
+      (node) => node.type === 'decl' && node.prop.startsWith('--nx-')
+    )
+  );
+}
+
 /** bundle.css with every structural nxds selector reaching through canvas wrappers. */
 export function tolerateCanvasWrappers(css: string) {
   const root = postcss.parse(css);
   root.walkRules((rule) => {
     if (insideKeyframes(rule) || !inNxdsRule(rule)) return;
     if (!STRUCTURAL.test(rule.selector)) return;
-    rule.selectors = rule.selectors.flatMap(rewriteSelector);
+    const variablesOnly = setsOnlyNxdsVariables(rule);
+    rule.selectors = rule.selectors.flatMap((selector) =>
+      rewriteSelector(selector, variablesOnly)
+    );
   });
   root.append(postcss.parse(WRAPPER_RULE));
   return root.toString();
