@@ -1,44 +1,112 @@
 # @nxds/eslint-plugin
 
-Custom ESLint rules for the nxds design system. They split into two groups: **token-layer** rules that backfill what the deleted `--nx-size-*` primitive layer used to enforce, and **component-authoring** rules that machine-enforce conventions documented in `.claude/rules/` (so they fail `pnpm lint` and the pre-commit hook for every contributor, not just code review).
+ESLint rules that keep copied nxds components following nxds conventions.
+
+```bash
+npm install -D @nxds/eslint-plugin
+```
+
+```js
+// eslint.config.mjs
+import { nxdsComponentConfig } from '@nxds/eslint-plugin/config';
+
+const eslintConfig = [
+  // ...your existing config
+  nxdsComponentConfig({ files: ['components/**/*.tsx'] }),
+];
+
+export default eslintConfig;
+```
+
+The rules need a TypeScript parser. `create-next-app` sets one up through
+`next/core-web-vitals`. If your config has none, install `typescript-eslint` and
+add `languageOptions: { parser: tseslint.parser }` to the entry.
 
 ## Rules
 
-### `@nxds/canonical-spacing-steps`
+| Rule                             | In `nxdsComponentConfig` | Reports                                                           |
+| -------------------------------- | ------------------------ | ----------------------------------------------------------------- |
+| `nx-class-conventions`           | Yes                      | `nx:` classes that break nxds token and styling conventions       |
+| `no-render-prop-types`           | Yes                      | Props that inject what a component renders, instead of `children` |
+| `no-multi-statement-jsx-handler` | Yes                      | Long inline JSX handlers that should be named functions           |
+| `no-jsdoc-data-tags`             | No                       | `@default` and `@example` JSDoc tags                              |
+| `no-react-19-only`               | No                       | React 19-only APIs in code that must also run on React 18         |
+| `canonical-spacing-steps`        | No                       | Spacing values outside the nxds step set, in token JSON files     |
 
-Flags any px value in `packages/core/tokens/semantic/spacing-*.json` that is not in the canonical step set. The canonical set is the union of every px value currently shipped across the 7 mode files; see `src/canonical-step-set.json`. Refresh that file when a mode file legitimately introduces a new value.
+To turn on a rule the config leaves off, add it for the same files:
 
-Requires `jsonc-eslint-parser`. Wired in the root `eslint.config.js` to target spacing mode files only.
+```js
+// eslint.config.mjs
+import { nxdsComponentConfig } from '@nxds/eslint-plugin/config';
 
-### `@nxds/nx-class-conventions`
+const eslintConfig = [
+  nxdsComponentConfig({ files: ['components/**/*.tsx'] }),
+  {
+    files: ['components/**/*.tsx'],
+    rules: { '@nxds/no-react-19-only': 'error' },
+  },
+];
 
-Enforces the `nx:` Tailwind-class conventions from `.claude/rules/shadcn-divergences.md` on class strings (string + single-quasi template literals): correct prefix order (`nx:` before every modifier, not `hover:nx:…`), no banned `accent` token, complete semantic token paths (`-background` / `-foreground` / `-subtle`), and no raw primitive colors (`nx:bg-blue-500`). Ported from the former `.claude/hooks/lint-nx-prefix.mjs` so the checks run in `pnpm lint` and the pre-commit hook. Wired for `packages/react/src/**` and `apps/**` `.tsx`.
+export default eslintConfig;
+```
 
-Icons keep one size at every density, so the rule reports an icon sized from spacing. That is a numeric spacing step (`size-4`, `h-3`, `w-3`) or a value that reads a spacing variable, such as `size-[var(--nx-spacing-8)]`. It checks a variant whose subject is the `svg`, such as `[&_svg]:size-4` or `[&>svg:not(…)]:h-3`, and the `className` of an `Icon*` or `*Icon` JSX element. `has-[>svg]:size-8` and `[&:has(svg)]:size-9` size the box around the icon, so they pass. Use `size-icon-glyph-xs`, `-sm`, `-default`, `-lg` or `-xl`. They follow the UI scale. Stories are checked, because the docs pages copy their code. The docs app is not checked, and neither are Vue template `class` attributes.
+### nx-class-conventions
 
-One check reads a whole class-string scope rather than a single literal: `nx:transition-colors` beside a ring-painting `focus-visible:outline-*` class fades the focus ring in, because Tailwind expands `transition-colors` to a list carrying `outline-color`. Only a width or a colour paints a ring, so `outline-none`, `outline-hidden`, `outline-0`, `outline-offset-*` and the style keywords (`outline-solid` / `dashed` / `dotted` / `double`) are exempt. Use `nx:transition-control` / `nx:transition-field` instead — see `/foundations/focus`.
+`nx-class-conventions` reads every class string, and reports:
 
-**What counts as one scope.** One class string; one call to `cva`, `cn`, `clsx` or `cx` — base, array elements and `variants` values together; or one `[…].join(' ')`, which collapses an array literal into a single attribute. That **over-approximates**: two sibling `variants` values of the same key are mutually exclusive and never share an element, and the rule reports the pair anyway. Over-reporting is the safe direction here, and the shape every field surface is written in — a base string plus a ring in a later array element — needs the call-wide scope to be caught at all.
+| Problem                    | Example                                                  | Write instead                                                |
+| -------------------------- | -------------------------------------------------------- | ------------------------------------------------------------ |
+| Prefix after a modifier    | `hover:nx:bg-…`                                          | `nx:hover:bg-…`                                              |
+| The removed `accent` token | `nx:bg-accent`                                           | `nx:bg-background-hover` or `nx:bg-container-hover`          |
+| A token without its role   | `nx:bg-primary`                                          | `nx:bg-primary-background`                                   |
+| A raw palette color        | `nx:bg-blue-500`                                         | A semantic token, such as `nx:bg-primary-background`         |
+| Raw typography             | `nx:text-sm`, `nx:font-medium`                           | A composite, such as `nx:typography-body-default`            |
+| An icon sized from spacing | `nx:[&_svg]:size-4`                                      | `nx:[&_svg]:size-icon-glyph-default`                         |
+| An unstroked icon size     | `nx:[&_svg]:size-icon-glyph-sm` alone                    | Add `nx:icon-stroke` to the same class list                  |
+| A focus ring that fades in | `nx:transition-colors` with `nx:focus-visible:outline-2` | `nx:transition-control`, or `nx:transition-field` on a field |
 
-Two things fall outside a scope and pass: an array that is never joined, whose elements are per-item class strings; and a string that only meets the rest at a call site — a shared `const`, an argument handed to another function, or a callback body the enclosing call takes with it. The four composer names must be written plainly, and `join` is the one member expression the walk reads, on an array literal receiver — so an aliased or chained composer (`twMerge`, `utils.cn`, a renamed import, `[…].filter(Boolean).join(' ')`) is invisible to it. Specimen surfaces are exempt from this check: the docs pages under `apps/docs/app/_pages`, where a pairing is the subject of the prose. Stories and the rest of the docs app are checked.
+The icon and focus ring checks read a whole class list: one `cva`, `cn`, `clsx`
+or `cx` call, or one `[…].join(' ')`. Two variants of one key share that list,
+so a ring in one variant and `nx:transition-colors` in another still report.
 
-A second scope check covers icon line width. A class list that sizes `svg` children, such as `[&_svg]:size-…` or `[&>svg]:h-…`, must also include `nx:icon-stroke`, so every stroked icon draws the line for its size, from `--nx-icon-stroke-base` and `--nx-icon-stroke-ratio`. It must size them with a `size-icon-glyph-*` class, because `size-*`, `h-*` and `w-*` leave `--nx-icon-size` unset. Stories and the docs app are not checked.
+Story files (`*.stories.*`) skip the icon-stroke check and every typography
+check except font size, because stories quote utilities as examples.
 
-### `@nxds/no-render-prop-types`
+### no-render-prop-types
 
-Enforces `.claude/rules/composition-over-render-props.md`: component props must not be typed as render callbacks (`(...) => ReactNode`) or component references (`ComponentType` / `FC` / `ElementType`). Event-handler-named props (`on*`) are exempt. Use `children` / named `ReactNode` slots or per-mode components instead. Third-party-mandated shapes (e.g. recharts) opt out with a scoped `eslint-disable` + reason.
+`no-render-prop-types` reports a prop typed as a render callback
+(`(...) => ReactNode`) or a component reference (`ComponentType`, `FC`,
+`ElementType`). Props named `on*` pass. Use `children`, a named `ReactNode`
+prop, or one component per mode.
 
-### `@nxds/no-multi-statement-jsx-handler`
+If a third-party API needs the shape, add a `@thirdPartyShape` tag with a
+reason to the prop's JSDoc:
 
-Enforces `.claude/rules/extract-inline-handlers.md`: inline JSX handler props (`onClick`, `onChange`, …) with 3+ statements, or containing a nested callback-object argument, must be extracted to a named function above `return`. One- and two-statement handlers stay inline.
+```tsx
+// components/chart.tsx
+import type { ReactNode } from 'react';
 
-### `@nxds/no-jsdoc-data-tags`
+type ChartTooltipProps = {
+  /** @thirdPartyShape Recharts calls this with the hovered point. */
+  formatter?: (value: number) => ReactNode;
+};
+```
 
-Enforces `.claude/rules/code-comments.md`: JSDoc blocks must not carry `@default` or `@example` tags. The docs read prop defaults from code and usage from `docs` stories, so a tag is a second copy that can drift. Line comments and plain block comments are not checked. Wired in the root `eslint.config.js` for `packages/react/src` and `packages/vue/src`.
+### no-multi-statement-jsx-handler
 
-### `@nxds/no-react-19-only`
+`no-multi-statement-jsx-handler` reports an inline JSX handler with three or
+more statements, or one that passes a callback object. Move it to a named
+function above the `return`. Handlers with one or two statements stay inline.
 
-Reports React 19-only APIs in `packages/react`, the source `packages/react-18` is generated from. The generator adds `forwardRef` and changes nothing else, so a React 19-only call would compile there and then break on React 18. It reports:
+### no-jsdoc-data-tags
+
+`no-jsdoc-data-tags` reports `@default` and `@example` in JSDoc blocks. Set a
+default in code, and show usage in a story.
+
+### no-react-19-only
+
+`no-react-19-only` reports React 19-only APIs, for code that must also run on
+React 18:
 
 | Pattern                                                                                                   | Use instead                                             |
 | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
@@ -50,26 +118,53 @@ Reports React 19-only APIs in `packages/react`, the source `packages/react-18` i
 | A function passed to `action` or `formAction`                                                             | `onSubmit` or `onClick`                                 |
 | `<title>` outside an `<svg>`, `<meta>`, `<link>`, `<style precedence>`                                    | Metadata the app's framework renders                    |
 
-Wired in the root `eslint.config.js` for `packages/react/src` only. It is not in `nxdsComponentConfig`, because a React 19 app may use these APIs.
+### canonical-spacing-steps
 
-## Source of truth
+`canonical-spacing-steps` reports a px value in a spacing token file that isn't
+an nxds spacing step. Turn it on with `nxdsSpacingTokenConfig`, and pass
+`jsonc-eslint-parser` as the parser:
 
-The token-layer rules are self-contained: the canonical step set is `src/canonical-step-set.json`. The component rules map 1:1 to the `.claude/rules/*.md` cited above — the rule code plus those docs are the spec. Every rule has RuleTester coverage in `__tests__/`.
+```js
+// eslint.config.mjs
+import { nxdsSpacingTokenConfig } from '@nxds/eslint-plugin/config';
+import jsoncParser from 'jsonc-eslint-parser';
 
-## Shareable config
+const eslintConfig = [
+  nxdsSpacingTokenConfig({
+    files: ['tokens/semantic/spacing-*.json'],
+    parser: jsoncParser,
+  }),
+];
 
-`@nxds/eslint-plugin/config` exports small flat-config helpers for consumers
-that want the nxds rules without copying this monorepo's full lint setup:
+export default eslintConfig;
+```
 
-- `nxdsComponentConfig({ files })` wires the component-authoring rules.
-- `nxdsSpacingTokenConfig({ files, parser })` wires the spacing-token rule; pass
-  `jsonc-eslint-parser` when linting JSON token files.
+## Catch unknown classes
 
-`@nxds/eslint-plugin/tailwind` exports `nxdsTailwindClassesConfig({ files,
-entryPoint })`, which wires `eslint-plugin-better-tailwindcss`'s
-`no-unknown-classes` against the stylesheet that builds `files`. Under
-`prefix(nx)` it reports a bare utility, a typo, and any class the theme no
-longer emits. `eslint-plugin-better-tailwindcss` is an optional peer dependency:
-install it only if you import this subpath. `entryPoint` must be an absolute
-path — tools such as `next build` lint from their own directory — and a
-relative one throws.
+`nxdsTailwindClassesConfig` reports a class your nxds stylesheet doesn't build,
+such as a bare utility or a typo. It runs `eslint-plugin-better-tailwindcss`, so
+install that first:
+
+```bash
+npm install -D eslint-plugin-better-tailwindcss
+```
+
+```js
+// eslint.config.mjs
+import { nxdsTailwindClassesConfig } from '@nxds/eslint-plugin/tailwind';
+import path from 'node:path';
+
+const eslintConfig = [
+  nxdsTailwindClassesConfig({
+    files: ['components/**/*.tsx'],
+    entryPoint: path.resolve(import.meta.dirname, 'app/globals.css'),
+  }),
+];
+
+export default eslintConfig;
+```
+
+`entryPoint` is the CSS file that imports nxds. It must be an absolute path,
+because tools such as `next build` run ESLint from their own folder.
+
+Docs: <https://nxds.dev/getting-started/install#optional-add-lint-rules>
