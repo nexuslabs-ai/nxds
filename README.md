@@ -11,6 +11,8 @@
 
 **nxds** is a theme engine and design system. Set one appearance object, and every component follows your brand, density and corners.
 
+**Alpha:** APIs may change before 1.0. Your copied components change only when you run `npx nxds-cli@latest update`.
+
 [![@nxds/core on npm](https://img.shields.io/npm/v/@nxds/core?label=%40nxds%2Fcore)](https://www.npmjs.com/package/@nxds/core)
 [![nxds-cli on npm](https://img.shields.io/npm/v/nxds-cli?label=nxds-cli)](https://www.npmjs.com/package/nxds-cli)
 [![CI](https://github.com/nexuslabs-ai/nxds/actions/workflows/ci.yml/badge.svg)](https://github.com/nexuslabs-ai/nxds/actions/workflows/ci.yml)
@@ -119,11 +121,13 @@ Every docs page is also Markdown, listed in [llms.txt](https://nxds.dev/llms.txt
 
 ## Community
 
-[Discord](https://discord.gg/PTT5JFyhHw) · [X](https://x.com/nxdsdev) · [GitHub issues](https://github.com/nexuslabs-ai/nxds/issues)
+Ask questions, suggest ideas and share what you built in [GitHub Discussions](https://github.com/nexuslabs-ai/nxds/discussions). Chat on [Discord](https://discord.gg/PTT5JFyhHw). Report bugs in [GitHub issues](https://github.com/nexuslabs-ai/nxds/issues). Follow [@nxdsdev on X](https://x.com/nxdsdev) for news.
+
+Everyone in the nxds community follows the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) to set up the repo and run the tests.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) to set up the repo, run the tests and [add a component or block](CONTRIBUTING.md#add-a-component-or-block).
 
 ## License
 

@@ -11,6 +11,7 @@ import {
   File01Icon,
   GithubIcon,
   Menu01Icon,
+  MessageMultiple01Icon,
   Moon02Icon,
   NewTwitterIcon,
   Sent02Icon,
@@ -20,6 +21,7 @@ import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 import type { NxdsIconLibrary } from '@nxds/core';
 import {
   ArrowUpRightIcon,
+  ChatsIcon,
   DiscordLogoIcon,
   FileIcon,
   GithubLogoIcon,
@@ -32,6 +34,7 @@ import {
 import {
   RiArrowRightUpLine,
   RiDiscordLine,
+  RiDiscussLine,
   RiFileLine,
   RiGithubLine,
   RiMenuLine,
@@ -47,11 +50,20 @@ import {
   IconBrandX,
   IconFile,
   IconMenu2,
+  IconMessages,
   IconMoon,
   IconSend,
   IconSun,
 } from '@tabler/icons-react';
-import { ArrowUpRight, LucideFile, Menu, Moon, Send, Sun } from 'lucide-react';
+import {
+  ArrowUpRight,
+  LucideFile,
+  Menu,
+  MessagesSquare,
+  Moon,
+  Send,
+  Sun,
+} from 'lucide-react';
 
 import { useIconLibrary } from './icon-library';
 
@@ -124,6 +136,14 @@ export const SiteFileIcon = siteIcon('SiteFileIcon', {
   tabler: IconFile,
   hugeicons: hugeicon(File01Icon),
   remix: RiFileLine,
+});
+
+export const SiteDiscussionsIcon = siteIcon('SiteDiscussionsIcon', {
+  phosphor: ChatsIcon,
+  lucide: MessagesSquare,
+  tabler: IconMessages,
+  hugeicons: hugeicon(MessageMultiple01Icon),
+  remix: RiDiscussLine,
 });
 
 export const DiscordMark = siteIcon('DiscordMark', {

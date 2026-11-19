@@ -4,11 +4,27 @@ Project overview lives in [`README.md`](README.md). This is the day-to-day handb
 
 **Everything routes through `make`.** Run `make help` for the full list. Prefer the `make` targets over raw `pnpm` / `turbo`: they wrap the flags everyone should be using (turbo filters, the docs-MCP lifecycle, the pre-push gate) so the workflow stays consistent across the team.
 
+## Your first contribution
+
+1. Fork the repo, clone your fork and run `make setup`.
+2. Run `make dev`. Storybook opens at http://localhost:6006.
+3. Pick an issue labelled [good first issue](https://github.com/nexuslabs-ai/nxds/labels/good%20first%20issue). Comment on it, and wait for a maintainer to assign you before you start.
+4. Make your change. To run one story file's tests, pass its path: `pnpm exec vitest run --project=storybook packages/react/src/components/button/Button.stories.tsx`.
+5. Run `make verify`, then open a pull request. The template asks what changed, which issue it closes and how you tested it.
+
+## AI tools
+
+AI tools are welcome. nxds ships skills for them. You're responsible for everything you submit, so read it, run it and be ready to explain it in review.
+
+- A person stands behind every PR, issue and comment. Don't let an agent open or post anything on its own.
+- For a `good first issue`, comment first and wait to be assigned. We close PRs for issues assigned to someone else.
+- We close PRs, issues and security reports that look generated and unchecked, without a review. If it keeps happening, we block the account.
+
 ## Prerequisites
 
 - **Node** ≥ 22.18 (see `.nvmrc`)
 - **pnpm** — pinned via `packageManager` in `package.json` (`pnpm@10.12.1`)
-- **Docker Desktop** — for the docs-MCP server only (recommended, not required to build the library)
+- **Docker Desktop** — optional, for the docs-MCP server only
 
 ## Setup
 
@@ -52,12 +68,12 @@ Pick the surface you're working on — each is one `make` command that turbo orc
 
 > **The docs site's generated inputs come from the turbo graph**, not from its package scripts, and none of them are committed: `apps/docs/turbo.json` puts `generate:manifest` (the page manifest and its loader map), `generate:demos` (the docs code generated from every story tagged `docs`, under `__generated__/`), `@nxds/catalog#generate:catalog` (the install catalog the docs and the `nxds` CLI share) and `generate:props` (the per-component props JSON that `PropsTable` reads) ahead of both `build` and `dev`, and the two the TypeScript graph imports — `generate:manifest` and `generate:demos` — ahead of `typecheck`. `make build`, `make docs` and `make typecheck` get them. `PropsTable` reads the props JSON on each request, so after changing a component's props or JSDoc during `make docs`, rerun `pnpm --filter @nxds/docs generate:props` and reload — no restart. A bare `pnpm --filter @nxds/docs dev` runs only the docs-story watcher: on a clean checkout there is no page manifest, demo index or install catalog, so start the docs with `make docs`.
 
-Leave **`make up`** running in another terminal so the docs-MCP is available to Claude Code (see [AI Documentation MCP](#ai-documentation-mcp-nxds-docs-mcp)).
+If you use Claude Code or Codex, run **`make up`** so the docs-MCP is available to them (see [AI Documentation MCP](#ai-documentation-mcp-nxds-docs-mcp)).
 
 ## Before you push
 
 ```bash
-make verify       # the full gate: lint + format check + typecheck + tests + token/a11y/browser audits
+make verify       # the full gate: lint + react-18 sync + format check + typecheck + tests + token/a11y/browser audits
 ```
 
 `make verify` is what CI gates on, run locally. For the fast inner loop:
@@ -128,9 +144,47 @@ The first storybook-project run launches Storybook in the background — the col
 
 ---
 
+## Add a component or block
+
+Build it in React first. The Vue port is its own issue, picked up later.
+
+A **block** composes existing components into a ready-made piece of UI, such as a sign-in form. It adds no tokens and no behaviour of its own. A **component** is a new building block with its own API, styling and behaviour.
+
+### Add a block
+
+Create `packages/react/src/blocks/{family}/{slug}/` with three files. [`inline-edit`](packages/react/src/blocks/editing/inline-edit) is the one to copy.
+
+| File                 | Holds                                                                                                    |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
+| `{slug}.tsx`         | The block                                                                                                |
+| `{slug}-example.tsx` | One realistic use of the block, with its state. This is the code the docs page shows.                    |
+| `{Slug}.stories.tsx` | A `Default` story tagged `docs` that renders the example and passes its source, plus interaction stories |
+
+The docs page at `nxds.dev/blocks/{slug}` is generated from the folder. Blocks have no Vue twin yet, so the parity tests skip them.
+
+### Add a component
+
+1. Find the closest shipped component and copy its shape: [`switch.tsx`](packages/react/src/components/switch/switch.tsx) for a form control, [`dialog.tsx`](packages/react/src/components/dialog/dialog.tsx) for an overlay, [`select.tsx`](packages/react/src/components/select/select.tsx) for a list, [`button.tsx`](packages/react/src/components/button/button.tsx) for variants and sizes.
+2. Create `packages/react/src/components/{name}/{name}.tsx` and `{Name}.stories.tsx`. A component folder has no `index.ts`.
+3. Export it from `packages/react/src/index.ts`.
+4. Add its slug to `planned` in [`parity/parity.ts`](parity/parity.ts), so the parity tests expect Vue to follow.
+5. Tag at least one story `docs`. The component's page at `nxds.dev/components/{name}` is generated from those stories.
+
+Style it with semantic tokens and the `nx:` prefix, and put `data-slot` on every element. To port a shadcn/ui component, map its classes with [`shadcn-divergences.md`](.claude/rules/shadcn-divergences.md). `pnpm lint` catches most mistakes.
+
+### Before you open the PR
+
+1. Run `pnpm --filter @nxds/react-18 generate` and commit what it writes. CI fails if `packages/react-18` doesn't match.
+2. Run `pnpm changeset` and pick `@nxds/react` with a `minor` bump.
+3. Run `make verify`.
+
+The stories a component ships are listed in [`testing-react.md`](.claude/rules/testing-react.md). Read it before you write the stories.
+
+---
+
 ## AI Documentation MCP (nxds-docs-mcp)
 
-A local documentation server keeps Claude Code on the exact library versions used here (React 19, Tailwind v4, Storybook 10, Vitest 4, Radix, recharts 3, TanStack Form, …) instead of stale training data. It ships as a pre-indexed Docker image, so there's nothing to scrape locally.
+A local documentation server keeps Claude Code and Codex on the exact library versions used here (React 19, Tailwind v4, Storybook 10, Vitest 4, Radix, recharts 3, TanStack Form, …) instead of stale training data. It ships as a pre-indexed Docker image, so there's nothing to scrape locally.
 
 ### Teammates — use it
 
@@ -140,11 +194,13 @@ Requires Docker. One command brings it up:
 make up           # pull the published image + run it at http://localhost:6282
 ```
 
-`.mcp.json` connects Claude Code automatically — no further setup. Stop it with `make down`. After a maintainer publishes an update: `make down && make up`.
+`.mcp.json` connects Claude Code and `.codex/config.toml` connects Codex automatically — no further setup. Stop it with `make down`. After a maintainer publishes an update, rerun `make up`.
 
 > The image is public (read-only), so `make up` pulls it anonymously — no auth needed. Registry login (`pnpm docs:login`, with the bot credentials) is only for maintainers **publishing** an update; see below.
 
 ### Maintainers — update it
+
+`make publish` pushes the image as `nexuslabs-ai-bot`. Add that account to `gh` once: run `gh auth login --scopes write:packages` with the bot's credentials (ask a maintainer), then `gh auth switch --user <your-account>` so your own account stays active.
 
 ```bash
 make serve        # local docs-mcp server + web dashboard at :6282 for indexing
@@ -224,7 +280,7 @@ Any PR that changes `@nxds/core`, `@nxds/eslint-plugin`, `nxds-cli` or what `@nx
 pnpm changeset        # pick packages + semver bump, write a summary
 ```
 
-Commit the generated `.changeset/*.md` file with your PR. Semver is a contract: `major` for a breaking change to core's runtime surface or the plugin's rule API, `minor` for additive, `patch` for fixes.
+Commit the generated `.changeset/*.md` file with your PR. Until 1.0, use `minor` for a new feature or a breaking change, and `patch` for a fix. Never pick `major`: it releases 1.0.
 
 ### Cutting a release
 
@@ -248,4 +304,4 @@ To version locally without publishing (e.g. to preview the bump): `pnpm version-
 This handbook is the on-ramp. The canonical conventions live in [`.claude/rules/`](.claude/rules/) — there is no root `CLAUDE.md`. When this doc and a rule file disagree, the rule file wins.
 
 - [`testing-react.md`](.claude/rules/testing-react.md) — testing patterns and required stories
-- [`github.md`](.claude/rules/github.md) — branch naming, PR title/body conventions, the review-bot flow
+- [`github.md`](.claude/rules/github.md) — branch naming, PR title/body conventions, posting reviews

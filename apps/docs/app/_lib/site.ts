@@ -14,6 +14,7 @@ export const SITE_DESCRIPTION =
   'nxds is a framework-agnostic theme engine and design system. Set one appearance object, and every component follows your brand, density and corners.';
 
 export const REPO_URL = 'https://github.com/nexuslabs-ai/nxds';
+export const DISCUSSIONS_URL = `${REPO_URL}/discussions`;
 export const STORYBOOK_URL = 'https://storybook.nxds.dev';
 export const NPM_CORE_URL = 'https://www.npmjs.com/package/@nxds/core';
 export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;

@@ -6,4 +6,4 @@ args = ["chrome-devtools-mcp@latest"]
 url = "https://mcp.figma.com/mcp"
 
 [mcp_servers.nxds-docs-mcp]
-url = "http://localhost:6282/sse"
+url = "http://localhost:6282/mcp"
