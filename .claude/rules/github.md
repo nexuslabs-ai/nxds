@@ -118,18 +118,9 @@ All GitHub interactions use the `gh` CLI. Authenticate with `gh auth login`.
 
 ### Accounts
 
-Each developer's `gh` CLI is logged in to two accounts:
+Use your own GitHub account for everything, including posting reviews.
 
-| Account                    | Role          | Used For                                                           |
-| -------------------------- | ------------- | ------------------------------------------------------------------ |
-| Your personal GitHub login | Main (active) | Everything except posting reviews — PRs, issues, commits, fetching |
-| `nexuslabs-ai-bot`         | Shared bot    | **Posting** PR reviews only (`POST /pulls/{n}/reviews`)            |
-
-**First-time setup:** run `gh auth login` to add the `nexuslabs-ai-bot` bot (ask a teammate for credentials), then `gh auth switch --user <your-personal-account>` so your own account stays active.
-
-When posting a PR review, prefix the command with `GH_TOKEN=$(gh auth token --user nexuslabs-ai-bot)` to post from the bot. This keeps review comments attributed to the bot and avoids GitHub's self-authored-PR rejection of `APPROVE` / `REQUEST_CHANGES`, since the bot is never the PR author.
-
-Every other `gh` command — fetching reviews, reading comments, creating PRs, etc. — uses your personal account as-is, no prefix.
+`nexuslabs-ai-bot` belongs to CI: it holds the release workflow's `RELEASE_TOKEN` and the docs-MCP image. Nobody posts as it.
 
 ### Fetching Issues
 
@@ -186,11 +177,8 @@ gh pr view {pr_number} --json files
 
 ### Creating PR Reviews
 
-Posted from the `nexuslabs-ai-bot` bot account (see [Accounts](#accounts)):
-
 ```bash
-GH_TOKEN=$(gh auth token --user nexuslabs-ai-bot) \
-  gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
+gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
   --method POST \
   --input - <<'EOF'
 {
@@ -223,6 +211,8 @@ gh api repos/{owner}/{repo}/pulls/{pr_number}/commits
 | No issues found   | `APPROVE`         |
 | Minor issues only | `COMMENT`         |
 | Blocking issues   | `REQUEST_CHANGES` |
+
+On your own PR, always use `COMMENT`. GitHub rejects `APPROVE` and `REQUEST_CHANGES` from the PR's author. `main` needs the `CI Status` check, not an approval, so a `COMMENT` review doesn't block the merge.
 
 ## Commit Message Format
 
@@ -287,4 +277,3 @@ _Review performed against: `.claude/rules/` guidelines_
 - Forget `Closes #123` in PR body (breaks auto-close on merge)
 - Use `Fixes` inconsistently (prefer `Closes` for consistency)
 - Skip the Test Plan section
-- Post PR reviews without the `GH_TOKEN=$(gh auth token --user nexuslabs-ai-bot)` prefix (reviews must come from the bot)

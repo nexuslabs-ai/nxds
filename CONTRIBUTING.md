@@ -4,11 +4,21 @@ Project overview lives in [`README.md`](README.md). This is the day-to-day handb
 
 **Everything routes through `make`.** Run `make help` for the full list. Prefer the `make` targets over raw `pnpm` / `turbo`: they wrap the flags everyone should be using (turbo filters, the docs-MCP lifecycle, the pre-push gate) so the workflow stays consistent across the team.
 
+## Your first contribution
+
+1. Fork the repo, clone your fork and run `make setup`.
+2. Run `make dev`. Storybook opens at http://localhost:6006.
+3. Pick an issue labelled [good first issue](https://github.com/nexuslabs-ai/nxds/labels/good%20first%20issue). Comment on it to say you're taking it.
+4. Make your change. To run one story file's tests, run `pnpm exec vitest run --project=storybook Button.stories`, with your file's name in place of `Button`.
+5. Run `make verify`, then open a pull request. The template asks what changed, which issue it closes and how you tested it.
+
+You don't need Docker. It runs the docs MCP server, an optional helper for AI coding agents. Publishing that image and cutting releases are maintainer jobs.
+
 ## Prerequisites
 
 - **Node** ≥ 22.18 (see `.nvmrc`)
 - **pnpm** — pinned via `packageManager` in `package.json` (`pnpm@10.12.1`)
-- **Docker Desktop** — for the docs-MCP server only (recommended, not required to build the library)
+- **Docker Desktop** — optional, for the docs-MCP server only
 
 ## Setup
 
@@ -286,4 +296,4 @@ To version locally without publishing (e.g. to preview the bump): `pnpm version-
 This handbook is the on-ramp. The canonical conventions live in [`.claude/rules/`](.claude/rules/) — there is no root `CLAUDE.md`. When this doc and a rule file disagree, the rule file wins.
 
 - [`testing-react.md`](.claude/rules/testing-react.md) — testing patterns and required stories
-- [`github.md`](.claude/rules/github.md) — branch naming, PR title/body conventions, the review-bot flow
+- [`github.md`](.claude/rules/github.md) — branch naming, PR title/body conventions, posting reviews
