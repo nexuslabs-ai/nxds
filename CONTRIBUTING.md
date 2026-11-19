@@ -8,11 +8,19 @@ Project overview lives in [`README.md`](README.md). This is the day-to-day handb
 
 1. Fork the repo, clone your fork and run `make setup`.
 2. Run `make dev`. Storybook opens at http://localhost:6006.
-3. Pick an issue labelled [good first issue](https://github.com/nexuslabs-ai/nxds/labels/good%20first%20issue). Comment on it to say you're taking it.
+3. Pick an issue labelled [good first issue](https://github.com/nexuslabs-ai/nxds/labels/good%20first%20issue). Comment on it, and wait for a maintainer to assign you before you start.
 4. Make your change. To run one story file's tests, run `pnpm exec vitest run --project=storybook Button.stories`, with your file's name in place of `Button`.
 5. Run `make verify`, then open a pull request. The template asks what changed, which issue it closes and how you tested it.
 
 You don't need Docker. It runs the docs MCP server, an optional helper for AI coding agents. Publishing that image and cutting releases are maintainer jobs.
+
+## AI tools
+
+AI tools are welcome. nxds ships skills for them. You're responsible for everything you submit, so read it, run it and be ready to explain it in review.
+
+- A person stands behind every PR, issue and comment. Don't let an agent open or post anything on its own.
+- For a `good first issue`, comment first and wait to be assigned. We close PRs for issues assigned to someone else.
+- We close PRs, issues and security reports that look generated and unchecked, without a review. If it keeps happening, we block the account.
 
 ## Prerequisites
 

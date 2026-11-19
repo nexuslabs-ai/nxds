@@ -4,7 +4,7 @@
 
 Don't open a public issue for a security problem. Report it privately instead, with GitHub's [Report a vulnerability](https://github.com/nexuslabs-ai/nxds/security/advisories/new) form.
 
-Say what's affected, how to reproduce it, and what an attacker could do with it.
+Say what's affected and what an attacker could do with it. Include a working reproduction. We close reports without one.
 
 ## Supported versions
 
