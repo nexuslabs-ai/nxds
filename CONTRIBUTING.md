@@ -180,6 +180,21 @@ Style it with semantic tokens and the `nx:` prefix, and put `data-slot` on every
 
 The stories a component ships are listed in [`testing-react.md`](.claude/rules/testing-react.md). Read it before you write the stories.
 
+## Change a token
+
+Edit the token's source in `packages/core`, then run `make tokens`. It regenerates `packages/core/src/lib/token-scales.generated.ts` and the CSS in `packages/tailwind`.
+
+| Token                                                  | Source                                                                                                                                                                  |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Color                                                  | The engine derives it: `packages/core/src/lib/derive-theme.ts` and `surface-ladder.ts`. The palettes it starts from are in `packages/core/tokens/primitives/color.json` |
+| Spacing                                                | `packages/core/tokens/semantic/spacing-{density}.json`, one file of px steps and roles per density                                                                      |
+| Breakpoints, z-index                                   | `packages/core/tokens/semantic/`                                                                                                                                        |
+| Radius, shadow, border width, motion, typography, icon | The DTCG files in `packages/core/tokens/primitives/`                                                                                                                    |
+
+A new or renamed token file needs an import in `packages/core/src/catalogue/token-files.ts`. `pnpm test:unit` fails until that list matches the files on disk.
+
+A spacing value outside the canonical step set fails `pnpm lint`. If a density file needs a new step, run `pnpm --filter @nxds/eslint-plugin refresh:canonical-set` and commit the `canonical-step-set.json` it writes.
+
 ---
 
 ## AI Documentation MCP (nxds-docs-mcp)
