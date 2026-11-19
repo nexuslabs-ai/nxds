@@ -120,7 +120,7 @@ All GitHub interactions use the `gh` CLI. Authenticate with `gh auth login`.
 
 Use your own GitHub account for everything, including posting reviews.
 
-`nexuslabs-ai-bot` belongs to CI: it holds the release workflow's `RELEASE_TOKEN` and the docs-MCP image. Nobody posts as it.
+`nexuslabs-ai-bot` is a machine account. Its PAT is the release workflow's `RELEASE_TOKEN`, and `make publish` pushes the docs-MCP image as it. Nobody posts as it.
 
 ### Fetching Issues
 

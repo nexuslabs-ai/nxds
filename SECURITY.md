@@ -8,7 +8,7 @@ Say what's affected and what an attacker could do with it. Include a working rep
 
 ## Supported versions
 
-nxds is pre-1.0, so fixes go into the latest release only. That covers `@nxds/core`, `nxds-cli`, `@nxds/eslint-plugin`, `@nxds/claude-design` and the components `nxds-cli` installs.
+nxds is pre-1.0, so fixes go into the latest release only. That covers `@nxds/core`, `nxds-cli`, `@nxds/eslint-plugin`, `@nxds/claude-design` and the components `nxds-cli` installs. It also covers nxds.dev, including the `nxds.dev/r` registry that `nxds-cli` installs from.
 
 ## What happens next
 

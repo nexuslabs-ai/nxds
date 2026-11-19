@@ -73,7 +73,7 @@ export function SiteMenu() {
         <SheetHeader>
           <div className="nx:flex nx:items-center nx:gap-2">
             <SheetTitle>{SITE_BRAND}</SheetTitle>
-            <AlphaBadge onClick={close} />
+            <AlphaBadge onNavigate={close} />
           </div>
         </SheetHeader>
         <SheetBody className="nx:pb-6">

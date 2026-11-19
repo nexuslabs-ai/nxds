@@ -11,7 +11,7 @@
 
 **nxds** is a theme engine and design system. Set one appearance object, and every component follows your brand, density and corners.
 
-**Alpha:** APIs may change before 1.0. Your copied components change only when you run `nxds-cli update`.
+**Alpha:** APIs may change before 1.0. Your copied components change only when you run `npx nxds-cli@latest update`.
 
 [![@nxds/core on npm](https://img.shields.io/npm/v/@nxds/core?label=%40nxds%2Fcore)](https://www.npmjs.com/package/@nxds/core)
 [![nxds-cli on npm](https://img.shields.io/npm/v/nxds-cli?label=nxds-cli)](https://www.npmjs.com/package/nxds-cli)

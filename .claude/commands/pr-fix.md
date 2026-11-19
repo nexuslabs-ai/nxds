@@ -198,8 +198,8 @@ Fix issues in this order:
 
 | Priority | Type     | Indicators                          |
 | -------- | -------- | ----------------------------------- |
-| 1st      | Blocking | "must", "required", REQUEST_CHANGES |
-| 2nd      | Minor    | "consider", "suggestion", "nit"     |
+| 1st      | Blocking | ❌, "must", "required"              |
+| 2nd      | Minor    | ⚠️, "consider", "suggestion", "nit" |
 
 ## Error Handling
 

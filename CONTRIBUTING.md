@@ -9,10 +9,8 @@ Project overview lives in [`README.md`](README.md). This is the day-to-day handb
 1. Fork the repo, clone your fork and run `make setup`.
 2. Run `make dev`. Storybook opens at http://localhost:6006.
 3. Pick an issue labelled [good first issue](https://github.com/nexuslabs-ai/nxds/labels/good%20first%20issue). Comment on it, and wait for a maintainer to assign you before you start.
-4. Make your change. To run one story file's tests, run `pnpm exec vitest run --project=storybook Button.stories`, with your file's name in place of `Button`.
+4. Make your change. To run one story file's tests, pass its path: `pnpm exec vitest run --project=storybook packages/react/src/components/button/Button.stories.tsx`.
 5. Run `make verify`, then open a pull request. The template asks what changed, which issue it closes and how you tested it.
-
-You don't need Docker. It runs the docs MCP server, an optional helper for AI coding agents. Publishing that image and cutting releases are maintainer jobs.
 
 ## AI tools
 
@@ -70,12 +68,12 @@ Pick the surface you're working on — each is one `make` command that turbo orc
 
 > **The docs site's generated inputs come from the turbo graph**, not from its package scripts, and none of them are committed: `apps/docs/turbo.json` puts `generate:manifest` (the page manifest and its loader map), `generate:demos` (the docs code generated from every story tagged `docs`, under `__generated__/`), `@nxds/catalog#generate:catalog` (the install catalog the docs and the `nxds` CLI share) and `generate:props` (the per-component props JSON that `PropsTable` reads) ahead of both `build` and `dev`, and the two the TypeScript graph imports — `generate:manifest` and `generate:demos` — ahead of `typecheck`. `make build`, `make docs` and `make typecheck` get them. `PropsTable` reads the props JSON on each request, so after changing a component's props or JSDoc during `make docs`, rerun `pnpm --filter @nxds/docs generate:props` and reload — no restart. A bare `pnpm --filter @nxds/docs dev` runs only the docs-story watcher: on a clean checkout there is no page manifest, demo index or install catalog, so start the docs with `make docs`.
 
-Leave **`make up`** running in another terminal so the docs-MCP is available to Claude Code (see [AI Documentation MCP](#ai-documentation-mcp-nxds-docs-mcp)).
+If you use Claude Code, leave **`make up`** running in another terminal so the docs-MCP is available to it (see [AI Documentation MCP](#ai-documentation-mcp-nxds-docs-mcp)).
 
 ## Before you push
 
 ```bash
-make verify       # the full gate: lint + format check + typecheck + tests + token/a11y/browser audits
+make verify       # the full gate: lint + react-18 sync + format check + typecheck + tests + token/a11y/browser audits
 ```
 
 `make verify` is what CI gates on, run locally. For the fast inner loop:
@@ -201,6 +199,8 @@ make up           # pull the published image + run it at http://localhost:6282
 > The image is public (read-only), so `make up` pulls it anonymously — no auth needed. Registry login (`pnpm docs:login`, with the bot credentials) is only for maintainers **publishing** an update; see below.
 
 ### Maintainers — update it
+
+`make publish` pushes the image as `nexuslabs-ai-bot`. Add that account to `gh` once: run `gh auth login --scopes write:packages` with the bot's credentials (ask a maintainer), then `gh auth switch --user <your-account>` so your own account stays active.
 
 ```bash
 make serve        # local docs-mcp server + web dashboard at :6282 for indexing

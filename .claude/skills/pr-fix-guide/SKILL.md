@@ -59,10 +59,10 @@ Two reflexes specific to fixing (root-cause and don't-over-fix) live below in Pa
 
 Extract all issues from reviews and categorize:
 
-| Category | Indicator                                       | Priority   |
-| -------- | ----------------------------------------------- | ---------- |
-| Blocking | "must", "required", "blocking", REQUEST_CHANGES | Fix first  |
-| Minor    | "consider", "suggestion", "nit", COMMENT        | Fix second |
+| Category | Indicator                           | Priority   |
+| -------- | ----------------------------------- | ---------- |
+| Blocking | ❌, "must", "required", "blocking"  | Fix first  |
+| Minor    | ⚠️, "consider", "suggestion", "nit" | Fix second |
 
 ### Step 3: Analyze Root Causes
 

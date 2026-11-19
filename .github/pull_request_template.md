@@ -8,4 +8,4 @@
 
 ## Test Plan
 
-- [ ]
+- [ ] `make verify` passes

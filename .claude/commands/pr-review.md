@@ -239,7 +239,7 @@ Review against:
 
 Use `architect_final_comments` and `sde2_final_comments` from Phase 4 — never the raw agent output directly.
 
-**Reviews are posted from your own account.** If you wrote the PR, post every review as `COMMENT`: GitHub rejects `APPROVE` and `REQUEST_CHANGES` from the PR's author.
+**Reviews are posted from your own account.** If you wrote the PR, post every review as `COMMENT`: GitHub rejects `APPROVE` and `REQUEST_CHANGES` from the PR's author. You wrote it when Phase 1's `author.login` matches `gh api user --jq .login`.
 
 1. **Post Principal Architect review:**
 
@@ -272,6 +272,7 @@ Use `architect_final_comments` and `sde2_final_comments` from Phase 4 — never 
    **Verdict logic** (based on combined findings from both agents):
    | Condition | Event |
    |-----------|-------|
+   | You wrote the PR | `COMMENT` |
    | No blocking issues in either review | `APPROVE` |
    | Only minor issues (⚠️) | `COMMENT` |
    | Any blocking issues (❌) | `REQUEST_CHANGES` |
@@ -462,6 +463,7 @@ EOF
 
 | Condition                                            | Event             |
 | ---------------------------------------------------- | ----------------- |
+| You wrote the PR                                     | `COMMENT`         |
 | All blocking issues fixed, no new issues             | `APPROVE`         |
 | Some issues fixed, only minor remaining              | `COMMENT`         |
 | Blocking issues still present OR new blocking issues | `REQUEST_CHANGES` |
