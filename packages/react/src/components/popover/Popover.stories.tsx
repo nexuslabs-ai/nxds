@@ -242,6 +242,41 @@ export const OutsideClickInteraction: StoryObj<typeof PopoverContent> = {
   },
 };
 
+export const ModalOutsideClickInteraction: StoryObj<typeof PopoverContent> = {
+  args: {
+    onPointerDownOutside: fn(),
+    onInteractOutside: fn(),
+    onCloseAutoFocus: fn(),
+  },
+  render: (args) => (
+    <div className="nx:flex nx:flex-col nx:items-start nx:gap-4">
+      <p className="nx:typography-body-default">Outside the popover</p>
+      <Popover modal>
+        <PopoverTrigger asChild>
+          <Button variant="outline">Open popover</Button>
+        </PopoverTrigger>
+        <PopoverContent {...args}>
+          <p className="nx:typography-body-default">Popover content</p>
+        </PopoverContent>
+      </Popover>
+    </div>
+  ),
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Open popover' }));
+    await page.findByText('Popover content');
+    const outside = canvas.getByText('Outside the popover');
+    await waitFor(() => expect(outside).toHaveStyle({ pointerEvents: 'none' }));
+    await userEvent.click(outside, { pointerEventsCheck: 0 });
+
+    await waitFor(() => expect(args.onCloseAutoFocus).toHaveBeenCalledTimes(1));
+    await expect(args.onPointerDownOutside).toHaveBeenCalledTimes(1);
+    await expect(args.onInteractOutside).toHaveBeenCalledTimes(1);
+  },
+};
+
 export const WithDataAttributes: Story = {
   render: (_args) => (
     <Popover>

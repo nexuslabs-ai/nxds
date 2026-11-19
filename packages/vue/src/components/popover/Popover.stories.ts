@@ -215,12 +215,14 @@ const onPointerDownOutside = fn();
 const onInteractOutside = fn();
 const onCloseAutoFocus = fn();
 
+function clearOutsideSpies() {
+  onPointerDownOutside.mockClear();
+  onInteractOutside.mockClear();
+  onCloseAutoFocus.mockClear();
+}
+
 export const OutsideClickInteraction: Story = {
-  beforeEach: () => {
-    onPointerDownOutside.mockClear();
-    onInteractOutside.mockClear();
-    onCloseAutoFocus.mockClear();
-  },
+  beforeEach: clearOutsideSpies,
   render: () => ({
     components: { Button, Popover, PopoverContent, PopoverTrigger },
     setup: () => ({
@@ -253,6 +255,49 @@ export const OutsideClickInteraction: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Open popover' }));
     await page.findByText('Popover content');
     await userEvent.click(canvas.getByText('Outside the popover'));
+
+    await waitFor(() => expect(onCloseAutoFocus).toHaveBeenCalledTimes(1));
+    await expect(onPointerDownOutside).toHaveBeenCalledTimes(1);
+    await expect(onInteractOutside).toHaveBeenCalledTimes(1);
+  },
+};
+
+export const ModalOutsideClickInteraction: Story = {
+  beforeEach: clearOutsideSpies,
+  render: () => ({
+    components: { Button, Popover, PopoverContent, PopoverTrigger },
+    setup: () => ({
+      onPointerDownOutside,
+      onInteractOutside,
+      onCloseAutoFocus,
+    }),
+    template: `
+      <div class="nx:flex nx:flex-col nx:items-start nx:gap-4">
+        <p class="nx:typography-body-default">Outside the popover</p>
+        <Popover modal>
+          <PopoverTrigger as-child>
+            <Button variant="outline">Open popover</Button>
+          </PopoverTrigger>
+          <PopoverContent
+            @pointer-down-outside="onPointerDownOutside"
+            @interact-outside="onInteractOutside"
+            @close-auto-focus="onCloseAutoFocus"
+          >
+            <p class="nx:typography-body-default">Popover content</p>
+          </PopoverContent>
+        </Popover>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Open popover' }));
+    await page.findByText('Popover content');
+    const outside = canvas.getByText('Outside the popover');
+    await waitFor(() => expect(outside).toHaveStyle({ pointerEvents: 'none' }));
+    await userEvent.click(outside, { pointerEventsCheck: 0 });
 
     await waitFor(() => expect(onCloseAutoFocus).toHaveBeenCalledTimes(1));
     await expect(onPointerDownOutside).toHaveBeenCalledTimes(1);
