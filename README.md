@@ -121,6 +121,8 @@ Every docs page is also Markdown, listed in [llms.txt](https://nxds.dev/llms.txt
 
 Ask questions, suggest ideas and share what you built in [GitHub Discussions](https://github.com/nexuslabs-ai/nxds/discussions). Chat on [Discord](https://discord.gg/PTT5JFyhHw). Report bugs in [GitHub issues](https://github.com/nexuslabs-ai/nxds/issues). Follow [@nxdsdev on X](https://x.com/nxdsdev) for news.
 
+Everyone in the nxds community follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Contributing
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) to set up the repo, run the tests and [add a component or block](CONTRIBUTING.md#add-a-component-or-block).
