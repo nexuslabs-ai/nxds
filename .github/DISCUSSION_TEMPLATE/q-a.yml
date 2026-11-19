@@ -1,49 +1,8 @@
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Ask how to use nxds. Mark the reply that answers you, so the next person finds it.
-
-        To report a bug, [open an issue](https://github.com/nexuslabs-ai/nxds/issues/new) instead. For quick chat, join [Discord](https://discord.gg/PTT5JFyhHw).
   - type: textarea
     id: question
     attributes:
       label: Question
-      description: What are you trying to do, and what happens instead?
+      description: What you're trying to do, and your framework and nxds version.
     validations:
       required: true
-  - type: dropdown
-    id: area
-    attributes:
-      label: Area
-      options:
-        - Components
-        - Theme and appearance (@nxds/core)
-        - CLI (nxds-cli)
-        - Lint rules (@nxds/eslint-plugin)
-        - Claude Design (@nxds/claude-design)
-        - AI agent skills
-        - Docs or Playground
-    validations:
-      required: true
-  - type: dropdown
-    id: framework
-    attributes:
-      label: Framework
-      options:
-        - React 19
-        - React 18
-        - Vue
-        - None
-    validations:
-      required: true
-  - type: input
-    id: version
-    attributes:
-      label: Version
-      description: The `nxds-cli` or `@nxds/core` version in your package.json.
-  - type: textarea
-    id: code
-    attributes:
-      label: Code
-      description: The smallest snippet that shows the problem, or a link to a repo.

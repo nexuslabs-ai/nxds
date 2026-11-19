@@ -1,0 +1,26 @@
+name: Bug report
+description: Something in nxds doesn't work as documented.
+type: Bug
+labels: ['bug', 'status: needs triage']
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you saw and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How to reproduce
+      description: Steps, or a link to a repo that shows the bug.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The `version` in your `nxds.json`, and your framework.
+    validations:
+      required: true
