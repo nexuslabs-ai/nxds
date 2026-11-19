@@ -22,6 +22,7 @@ import { isActive, NAV_LINKS } from '../_lib/nav-links';
 import { REPO_URL, SITE_BRAND } from '../_lib/site';
 import { GitHubMark, SiteMenuIcon } from '../_lib/site-icons';
 
+import { AlphaBadge } from './AlphaBadge';
 import { SectionPageList } from './SectionPageList';
 
 const ROW_BASE =
@@ -70,7 +71,10 @@ export function SiteMenu() {
         onOpenAutoFocus={focusCurrentPage}
       >
         <SheetHeader>
-          <SheetTitle>{SITE_BRAND}</SheetTitle>
+          <div className="nx:flex nx:items-center nx:gap-2">
+            <SheetTitle>{SITE_BRAND}</SheetTitle>
+            <AlphaBadge onClick={close} />
+          </div>
         </SheetHeader>
         <SheetBody className="nx:pb-6">
           <nav aria-label="Main navigation">
