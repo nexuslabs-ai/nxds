@@ -157,8 +157,10 @@ function borderStep(utility) {
 }
 
 // Variants that style another element than the box: a pseudo-element, or a
-// child after the last `&`, such as `after:`, `*:` or `[&_tr:last-child]:`. An
-// ancestor before the `&`, such as `[.dark_&]:`, still styles the box.
+// child or sibling after the last `&`, such as `after:`, `*:` or
+// `[&_tr:last-child]:`. An ancestor before the `&`, such as `[.dark_&]:`, still
+// styles the box, and so does a variant with no `&`, which Tailwind applies
+// to the box.
 const OTHER_ELEMENT_VARIANTS = new Set([
   '*',
   '**',
@@ -177,7 +179,7 @@ const OTHER_ELEMENT_VARIANTS = new Set([
 function stylesAnotherElement(variant) {
   if (OTHER_ELEMENT_VARIANTS.has(variant)) return true;
   if (!variant.startsWith('[') || !variant.endsWith(']')) return false;
-  return /[_>+~][^&]*$|::/.test(withoutGroups(variant.slice(1, -1)));
+  return /&[^&]*[_>+~][^&]*$|::/.test(withoutGroups(variant.slice(1, -1)));
 }
 
 // A class string whose box class and `nest-*` twin name different steps, such

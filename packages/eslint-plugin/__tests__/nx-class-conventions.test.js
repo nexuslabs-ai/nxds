@@ -212,18 +212,23 @@ ruleTester.run('nx-class-conventions', rule, {
       code: "const c = 'nx:border-[3px] nx:nest-border-thick';",
       errors: [{ messageId: 'nestStepMismatch' }],
     },
-    // An ancestor before the `&` still styles the box.
+    {
+      code: "const c = 'nx:border-(length:--nx-hairline) nx:nest-border-thick';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    // An ancestor before the `&` still styles the box, and so does a variant
+    // with no `&`.
     {
       code: "const c = 'nx:p-1 nx:nest-padding-1 nx:[.dark_&]:p-4';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const c = 'nx:p-1 nx:nest-padding-1 nx:[@media_(min-width:40rem)]:p-4';",
       errors: [{ messageId: 'nestStepMismatch' }],
     },
     // A nest step must be a theme step, so `nest-padding-px` is no twin.
     {
       code: "const c = 'nx:p-px nx:nest-padding-px nx:sm:p-2 nx:sm:nest-padding-2';",
-      errors: [{ messageId: 'nestStepMismatch' }],
-    },
-    {
-      code: "const c = 'nx:border-(length:--nx-hairline) nx:nest-border-thick';",
       errors: [{ messageId: 'nestStepMismatch' }],
     },
     // Bare `border` is 1px, which no nest step names.
