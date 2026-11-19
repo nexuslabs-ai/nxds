@@ -272,7 +272,7 @@ Any PR that changes `@nxds/core`, `@nxds/eslint-plugin`, `nxds-cli` or what `@nx
 pnpm changeset        # pick packages + semver bump, write a summary
 ```
 
-Commit the generated `.changeset/*.md` file with your PR. Semver is a contract: `major` for a breaking change to core's runtime surface or the plugin's rule API, `minor` for additive, `patch` for fixes.
+Commit the generated `.changeset/*.md` file with your PR. Until 1.0, use `minor` for a new feature or a breaking change, and `patch` for a fix. Never pick `major`: it releases 1.0.
 
 ### Cutting a release
 
