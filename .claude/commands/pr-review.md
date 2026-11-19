@@ -505,10 +505,10 @@ EOF
 
 ### Unresolved Issues
 
-| #   | Original Issue | File         | Status           | Notes                |
-| --- | -------------- | ------------ | ---------------- | -------------------- |
-| 1   | {description}  | `file.ts:42` | ❌ Still Present | {what's still wrong} |
-| 2   | {description}  | `file.ts:15` | ⚠️ Partial       | {what's missing}     |
+| #   | Severity    | Original Issue | File         | Status           | Notes                |
+| --- | ----------- | -------------- | ------------ | ---------------- | -------------------- |
+| 1   | ❌ Blocking | {description}  | `file.ts:42` | ❌ Still Present | {what's still wrong} |
+| 2   | ⚠️ Minor    | {description}  | `file.ts:15` | ⚠️ Partial       | {what's missing}     |
 
 {If all resolved: "All previous issues resolved."}
 

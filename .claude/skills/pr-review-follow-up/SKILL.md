@@ -122,10 +122,10 @@ The template below **is the entire review body**. No preamble, no trailing summa
 
 ### Unresolved Issues
 
-| #   | Original Issue | File         | Status           | Notes                |
-| --- | -------------- | ------------ | ---------------- | -------------------- |
-| 1   | {description}  | `file.ts:42` | ❌ Still Present | {what's still wrong} |
-| 2   | {description}  | `file.ts:15` | ⚠️ Partial       | {what's missing}     |
+| #   | Severity    | Original Issue | File         | Status           | Notes                |
+| --- | ----------- | -------------- | ------------ | ---------------- | -------------------- |
+| 1   | ❌ Blocking | {description}  | `file.ts:42` | ❌ Still Present | {what's still wrong} |
+| 2   | ⚠️ Minor    | {description}  | `file.ts:15` | ⚠️ Partial       | {what's missing}     |
 
 ### New Issues
 
@@ -137,6 +137,7 @@ The template below **is the entire review body**. No preamble, no trailing summa
 **Rules:**
 
 - `Unresolved Issues`: only include rows for issues that are ❌ Still Present or ⚠️ Partial. No ✅ Fixed rows.
+- `Severity` in `Unresolved Issues` is the severity the issue had when it was first raised.
 - If all previous issues are resolved, replace the table with: _All previous issues resolved._
 - `New Issues`: omit section entirely if no new issues found
 - **No preamble or trailing paragraph.** The verdict line is the only body prose above the Unresolved Issues table
