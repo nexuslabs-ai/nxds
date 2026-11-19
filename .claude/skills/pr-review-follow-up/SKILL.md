@@ -173,8 +173,8 @@ REVIEW_BODY:
 
 INLINE_COMMENTS:
 [
-  {"path": "src/utils/format.ts", "line": 15, "body": "❌ **Still Present:** The null check is still missing."},
-  {"path": "src/components/button.tsx", "line": 42, "body": "⚠️ **New Issue:** Consider using optional chaining here."}
+  {"path": "src/utils/format.ts", "line": 15, "body": "**❌ Still Present:** The null check is still missing."},
+  {"path": "src/components/button.tsx", "line": 42, "body": "**⚠️ New:** Consider using optional chaining here."}
 ]
 
 VERDICT: APPROVE | COMMENT | REQUEST_CHANGES

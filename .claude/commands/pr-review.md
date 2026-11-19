@@ -302,7 +302,7 @@ Both agents always run. Each agent covers the same focus lane as in the full rev
    ```
 
 4. **Parse previous review data:**
-   - Extract issues raised (blocking ❌ and minor ⚠️), separated by agent (Architect vs SDE2)
+   - Extract issues raised, with the severity from each row's Severity column (`❌ Blocking` / `⚠️ Minor`), separated by agent (Architect vs SDE2)
    - Note which files had comments
    - Get timestamp of last review
 
@@ -358,7 +358,7 @@ Agent(
   - Commits since last review: {commit list}
 
   ## Previous Architectural Issues
-  {list of Architect issues from previous review with file:line}
+  {list of Architect issues from previous review with severity and file:line}
 
   ## Files Modified Since Last Review
   {list of changed files}
@@ -400,7 +400,7 @@ Agent(
   - Commits since last review: {commit list}
 
   ## Previous SDE2 Issues
-  {list of SDE2 issues from previous review with file:line}
+  {list of SDE2 issues from previous review with severity and file:line}
 
   ## Files Modified Since Last Review
   {list of changed files}

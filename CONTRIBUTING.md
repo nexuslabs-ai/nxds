@@ -184,7 +184,7 @@ The stories a component ships are listed in [`testing-react.md`](.claude/rules/t
 
 ## AI Documentation MCP (nxds-docs-mcp)
 
-A local documentation server keeps Claude Code on the exact library versions used here (React 19, Tailwind v4, Storybook 10, Vitest 4, Radix, recharts 3, TanStack Form, …) instead of stale training data. It ships as a pre-indexed Docker image, so there's nothing to scrape locally.
+A local documentation server keeps Claude Code and Codex on the exact library versions used here (React 19, Tailwind v4, Storybook 10, Vitest 4, Radix, recharts 3, TanStack Form, …) instead of stale training data. It ships as a pre-indexed Docker image, so there's nothing to scrape locally.
 
 ### Teammates — use it
 
