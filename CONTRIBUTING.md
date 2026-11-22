@@ -190,6 +190,8 @@ Edit the token's source in `packages/core`, then run `make tokens`. It regenerat
 | Spacing                                                | `packages/core/tokens/semantic/spacing-{density}.json`, one file of px steps and roles per density                                                                      |
 | Breakpoints, z-index                                   | `packages/core/tokens/semantic/`                                                                                                                                        |
 | Radius, shadow, border width, motion, typography, icon | The DTCG files in `packages/core/tokens/primitives/`                                                                                                                    |
+| Typography and shadow composites                       | `packages/core/tokens/styles/typography.json` and `shadows.json`                                                                                                        |
+| UI scale factors                                       | `packages/core/src/token-source/ui-scale.ts`                                                                                                                            |
 
 A new or renamed token file needs an import in `packages/core/src/catalogue/token-files.ts`. `pnpm test:unit` fails until that list matches the files on disk.
 

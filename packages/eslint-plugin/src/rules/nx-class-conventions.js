@@ -369,7 +369,7 @@ export default {
       prefixOrder:
         'Wrong nx: prefix order — `nx:` must come BEFORE all modifiers (e.g. `nx:hover:bg-*`, not `hover:nx:bg-*`).',
       bannedAccent:
-        'Banned `accent` token — nxds has no `accent`; use `background-hover` / `container-hover` / `popover-hover` (see shadcn-divergences.md).',
+        'Banned `accent` token — nxds has no `accent`; use `background-hover` / `container-hover` / `popover-hover`.',
       incompletePath:
         'Incomplete semantic token path — add a `-background`, `-foreground`, or `-subtle` suffix (e.g. `nx:bg-primary-background`).',
       rawPrimitive:

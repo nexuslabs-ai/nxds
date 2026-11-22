@@ -13,6 +13,9 @@ TypeScript and React 18.3 or 19. It copies the token CSS and the appearance
 provider into your app, wires them into your layout and installs `@nxds/core`.
 `add` copies a component, the components it uses and the packages it needs.
 
+`init` needs Tailwind CSS 4. If your app doesn't have Tailwind yet, `init`
+installs it.
+
 The CLI needs Node 20.19 or later. For a Vue app, follow
 [Install by hand](https://nxds.dev/getting-started/install#install-by-hand).
 
@@ -33,52 +36,8 @@ The CLI needs Node 20.19 or later. For a Vue app, follow
 
 Run `npx nxds-cli@latest <command> --help` for one command's options.
 
-## Set your theme
+## Docs
 
-```bash
-npx nxds-cli@latest init --brand-color "#4f46e5" --density compact --font inter --icons lucide
-```
-
-Each flag sets one part of the theme. A flag you leave out keeps its value. An
-empty flag, such as `--density=`, resets that part to the default.
-
-To build the command, pick a theme in the [Playground](https://nxds.dev/playground)
-and open **Use this theme**. [Install](https://nxds.dev/getting-started/install#optional-set-your-theme)
-lists every flag and its values.
-
-## Update components
-
-```bash
-npx nxds-cli@latest diff
-npx nxds-cli@latest update
-```
-
-`update` replaces each file you haven't edited. If you edited a file, `update`
-merges the release's changes into it. If you and the release changed the same
-lines, `update` marks them like a git conflict. Resolve them, then run `update`
-again.
-
-## Options
-
-| Option                   | Commands                    | What it does                                                             |
-| ------------------------ | --------------------------- | ------------------------------------------------------------------------ |
-| `--dry-run`              | `init`, `add`, `update`     | Shows what would change, without changing anything                       |
-| `--overwrite`            | `init`, `add`, `update`     | Replaces files that differ from the release's copy                       |
-| `--no-install`           | `init`, `add`, `update`     | Skips installing npm packages                                            |
-| `--json`                 | All                         | Prints `{ ok, exitCode, data }`, or `{ ok, exitCode, error }` on failure |
-| `--cwd <path>`           | All                         | Runs in another folder                                                   |
-| `--registry <url\|path>` | All but `info` and `export` | Installs from another registry. `NXDS_REGISTRY_URL` sets it too          |
-
-Behind a proxy, set `HTTPS_PROXY`. The CLI also reads `HTTP_PROXY` and
-`NO_PROXY`.
-
-## Exit codes
-
-| Code | Meaning                                                                                 |
-| ---- | --------------------------------------------------------------------------------------- |
-| `0`  | Done                                                                                    |
-| `1`  | Error, such as no network or an invalid release                                         |
-| `2`  | Usage error, such as an unknown option or item                                          |
-| `3`  | Done, with something left for you: conflicts, kept files, manual steps or failed checks |
-
-Docs: <https://nxds.dev/getting-started/install>
+- **[Set your theme](https://nxds.dev/getting-started/install#optional-set-your-theme)**: every `init` theme flag and its values.
+- **[Update components](https://nxds.dev/getting-started/install#update-components)**: how `update` merges a release into files you edited.
+- **[Options](https://nxds.dev/getting-started/install#options)**: the options every command takes, proxy settings and exit codes.

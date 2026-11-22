@@ -129,11 +129,11 @@ export default {
     type: 'problem',
     docs: {
       description:
-        'Disallow React 19-only APIs in source that packages/react-18 is generated from.',
+        'Disallow React 19-only APIs in code that must also run on React 18.',
     },
     schema: [],
     messages: {
-      api: '`{{name}}` is React 19 only, so the generated packages/react-18 breaks. Use an API React 18.3 has.',
+      api: '`{{name}}` is React 19 only, so it breaks on React 18. Use an API React 18.3 has.',
       contextProvider:
         'Rendering a context as a provider is React 19 only. Render `<{{name}}.Provider value={…}>`.',
       refCleanup:
