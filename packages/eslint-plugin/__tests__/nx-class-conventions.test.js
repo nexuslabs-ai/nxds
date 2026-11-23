@@ -48,6 +48,7 @@ ruleTester.run('nx-class-conventions', rule, {
     "const c = 'nx:p-2 nx:nest-padding-2 nx:[:where(&>li)]:p-0';",
     "const c = 'nx:p-2 nx:nest-padding-2 nx:[&_.row:not(:is(&))]:p-0';",
     "const c = 'nx:p-2 nx:nest-padding-2 nx:[&::after]:p-0';",
+    "const c = 'nx:p-2 nx:nest-padding-2 nx:[&:before]:p-0';",
     "const c = 'nx:p-1 nx:nest-padding-1 nx:[.dark_&]:p-4';",
     "const c = 'nx:p-1 nx:nest-padding-1 nx:[@media_(min-width:40rem)]:p-4';",
     // The twin can sit on another element, so one class alone passes.

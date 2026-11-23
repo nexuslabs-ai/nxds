@@ -156,11 +156,12 @@ function borderStep(utility) {
   )?.[1];
 }
 
-// Variants the check leaves out, because they can style another element than
-// the box: a pseudo-element or child variant, such as `after:` or `*:`, and
-// every arbitrary variant but one compound on `&`, such as `[&:hover]:` or
-// `[&[data-open]]:`. So the check never reads another element's class as the
-// box's, and it skips rare forms such as `[.dark_&]:`.
+// Variants under which the check reads a class as the box's: a named variant
+// other than a pseudo-element or child variant, such as `after:` or `*:`, and
+// an arbitrary variant that is one compound on `&` with no pseudo-element,
+// such as `[&:hover]:` or `[&[data-open]]:`. The check leaves every other
+// class out, so it never reads another element's class as the box's, and it
+// skips rare box forms such as `[.dark_&]:`.
 const OTHER_ELEMENT_VARIANTS = new Set([
   '*',
   '**',
@@ -176,11 +177,14 @@ const OTHER_ELEMENT_VARIANTS = new Set([
   'selection',
 ]);
 
-function stylesAnotherElement(variant) {
-  if (OTHER_ELEMENT_VARIANTS.has(variant)) return true;
-  if (!variant.startsWith('[') || !variant.endsWith(']')) return false;
+// A pseudo-element, with `::` or the one-colon form CSS2 allows.
+const PSEUDO_ELEMENT = /::|:(?:before|after|first-line|first-letter)(?![\w-])/;
+
+function stylesTheBox(variant) {
+  if (OTHER_ELEMENT_VARIANTS.has(variant)) return false;
+  if (!variant.startsWith('[') || !variant.endsWith(']')) return true;
   const selector = withoutGroups(variant.slice(1, -1));
-  return !/^&[^_>+~]*$/.test(selector) || selector.includes('::');
+  return /^&[^_>+~]*$/.test(selector) && !PSEUDO_ELEMENT.test(selector);
 }
 
 // A class string whose box class and `nest-*` twin name different steps, such
@@ -198,7 +202,7 @@ function classListNestMismatch(classList) {
     const parts = splitVariants(token.slice('nx:'.length));
     // `!` is the important modifier, at either end.
     const utility = parts.pop().replace(/^!|!$/g, '');
-    if (parts.some(stylesAnotherElement)) return [];
+    if (!parts.every(stylesTheBox)) return [];
     return [{ chain: parts.join(':'), utility }];
   });
   return NEST_TWINS.some(({ box, nest }) => {
