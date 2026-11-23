@@ -23,6 +23,7 @@ const props = withDefaults(defineProps<AttachmentMediaProps>(), {
       cn(
         'nx:group-data-[orientation=vertical]/attachment:size-auto nx:group-data-[orientation=vertical]/attachment:aspect-square nx:group-data-[orientation=vertical]/attachment:w-full nx:group-data-[orientation=vertical]/attachment:translate-y-0 nx:group-data-[orientation=vertical]/attachment:self-auto',
         'nx:group-data-[orientation=vertical]/attachment:[&_svg]:size-icon-glyph-xl nx:icon-stroke',
+        'nx:rounded-nest',
         'nx:group-data-[state=error]/attachment:border-error-border nx:group-data-[state=error]/attachment:bg-error-subtle nx:group-data-[state=error]/attachment:text-error-subtle-foreground',
         props.class
       )

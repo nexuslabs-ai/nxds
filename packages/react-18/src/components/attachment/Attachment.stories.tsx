@@ -14,6 +14,7 @@ import {
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { Button } from '../button/button';
 import { Spinner } from '../spinner/spinner';
 import {
@@ -553,4 +554,25 @@ export const AllVariants: Story = {
       </AttachmentGroup>
     </div>
   ),
+};
+
+export const NestedCorners: Story = {
+  render: () => (
+    <div data-radius="12" className="nx:w-80">
+      <Attachment>
+        <AttachmentMedia variant="icon">
+          <FileIcon />
+        </AttachmentMedia>
+        <AttachmentContent>
+          <AttachmentTitle>report.pdf</AttachmentTitle>
+        </AttachmentContent>
+      </Attachment>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const media = canvasElement.querySelector(
+      '[data-slot="attachment-media"]'
+    )!;
+    await expectCorners(media, ['6px', '6px', '6px', '6px']);
+  },
 };

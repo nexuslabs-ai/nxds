@@ -9,6 +9,7 @@ import { selectionIndicatorMotionClassName } from '../../lib/motion';
 import { cn } from '../../lib/utils';
 import {
   menuItemInsetClassName,
+  menuListClassName,
   overlayFloatingTransitionClassName,
   popoverSurfaceClassName,
 } from '../overlay-layout/overlay-layout';
@@ -205,7 +206,7 @@ const SelectContent = React.forwardRef<
         <SelectScrollUpButton />
         <SelectPrimitive.Viewport
           className={cn(
-            'nx:p-1',
+            menuListClassName,
             position === 'popper' &&
               'nx:h-(--radix-select-trigger-height) nx:w-full nx:min-w-(--radix-select-trigger-width)'
           )}
@@ -275,7 +276,7 @@ const SelectItem = React.forwardRef<
       data-slot="select-item"
       className={cn(
         'nx:group nx:relative nx:flex nx:w-full nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
-        'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
+        'nx:rounded-nest-edges nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
         menuItemInsetClassName,
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground',

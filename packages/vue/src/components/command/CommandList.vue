@@ -29,7 +29,7 @@ const command = injectCommand();
       :data-orientation="undefined"
       :class="
         cn(
-          'nx:max-h-[calc(300px*var(--nx-ui-scale))] nx:overflow-y-auto nx:overflow-x-hidden nx:scroll-py-2',
+          'nx:max-h-[calc(300px*var(--nx-ui-scale))] nx:overflow-y-auto nx:overflow-x-hidden nx:scroll-py-2 nx:nest-outer-md nx:nest-border-none nx:nest-padding-2',
           props.class
         )
       "

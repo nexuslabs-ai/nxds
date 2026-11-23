@@ -3,6 +3,7 @@ import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import {
   Card,
   CardContent,
@@ -747,3 +748,70 @@ export const AllVariants: Story = {
 // A11Y is tested automatically on ALL stories
 // via addon-a11y with test: 'error'
 // ============================================
+
+export const NestedCorners: Story = {
+  render: () => (
+    <div
+      data-radius="12"
+      className="nx:flex nx:flex-wrap nx:items-start nx:gap-6"
+    >
+      <Tabs defaultValue="all">
+        <TabsList aria-label="Horizontal">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="active">Active</TabsTrigger>
+          <TabsTrigger value="done">Done</TabsTrigger>
+        </TabsList>
+        <TabsContent value="all">All tasks</TabsContent>
+        <TabsContent value="active">Active tasks</TabsContent>
+        <TabsContent value="done">Done tasks</TabsContent>
+      </Tabs>
+      <Tabs defaultValue="all" orientation="vertical">
+        <TabsList aria-label="Vertical">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="active">Active</TabsTrigger>
+          <TabsTrigger value="done">Done</TabsTrigger>
+        </TabsList>
+        <TabsContent value="all">All tasks</TabsContent>
+        <TabsContent value="active">Active tasks</TabsContent>
+        <TabsContent value="done">Done tasks</TabsContent>
+      </Tabs>
+      <Tabs defaultValue="all" dir="rtl">
+        <TabsList aria-label="Right to left">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="active">Active</TabsTrigger>
+          <TabsTrigger value="done">Done</TabsTrigger>
+        </TabsList>
+        <TabsContent value="all">All tasks</TabsContent>
+        <TabsContent value="active">Active tasks</TabsContent>
+        <TabsContent value="done">Done tasks</TabsContent>
+      </Tabs>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const horizontal = canvas.getByRole('tablist', { name: 'Horizontal' });
+    const [first, middle, last] = within(horizontal).getAllByRole('tab');
+    await expectCorners(first!, ['8px', '6px', '6px', '8px']);
+    await expectCorners(middle!, ['6px', '6px', '6px', '6px']);
+    await expectCorners(last!, ['6px', '8px', '8px', '6px']);
+    await waitFor(() =>
+      expectCorners(horizontal.querySelector('[data-slot="tabs-indicator"]')!, [
+        '8px',
+        '6px',
+        '6px',
+        '8px',
+      ])
+    );
+
+    const [verticalFirst] = within(
+      canvas.getByRole('tablist', { name: 'Vertical' })
+    ).getAllByRole('tab');
+    await expectCorners(verticalFirst!, ['8px', '8px', '6px', '6px']);
+
+    const [rtlFirst] = within(
+      canvas.getByRole('tablist', { name: 'Right to left' })
+    ).getAllByRole('tab');
+    await expectCorners(rtlFirst!, ['6px', '8px', '8px', '6px']);
+  },
+};

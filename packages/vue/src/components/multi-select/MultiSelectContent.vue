@@ -42,10 +42,13 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     data-slot="multi-select-content"
     aria-label="Options"
     :class="
-      cn('nx:w-(--reka-popover-trigger-width) nx:min-w-56 nx:p-0', props.class)
+      cn(
+        'nx:w-(--reka-popover-trigger-width) nx:min-w-56 nx:p-0 nx:nest-outer-md nx:nest-border-default nx:nest-padding-0',
+        props.class
+      )
     "
   >
-    <Command>
+    <Command class="nx:rounded-nest-corner">
       <CommandInput :placeholder="searchPlaceholder" />
       <CommandList>
         <CommandEmpty>

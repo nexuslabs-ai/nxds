@@ -25,6 +25,36 @@ const rule = plugin.rules['nx-class-conventions'];
 
 ruleTester.run('nx-class-conventions', rule, {
   valid: [
+    // A box class and its `nest-*` twin name the same step.
+    "const c = 'nx:rounded-md nx:p-1 nx:nest-outer-md nx:nest-border-none nx:nest-padding-1';",
+    "const c = 'nx:border-0 nx:nest-border-none';",
+    "const c = 'nx:border-default nx:border-border-default nx:nest-border-default';",
+    "const c = 'nx:group-data-[variant=floating]:rounded-lg nx:group-data-[variant=floating]:nest-outer-lg';",
+    // Each variant string is checked on its own.
+    "const c = cva('nx:flex', { variants: { variant: { default: 'nx:p-0.5 nx:nest-padding-0.5', floating: 'nx:p-2 nx:nest-padding-2' } } });",
+    // `!` is the important modifier, at either end.
+    "const c = 'nx:p-0! nx:nest-padding-0';",
+    // Each variant chain that sets one class of a pair sets both.
+    "const c = 'nx:p-1 nx:nest-padding-1 nx:sm:p-2 nx:sm:nest-padding-2';",
+    // `rounded-none` pairs with `nest-outer-none`.
+    "const c = 'nx:rounded-lg nx:nest-outer-lg nx:sm:rounded-none nx:sm:nest-outer-none';",
+    // A pseudo-element or child variant styles another element.
+    "const c = 'nx:rounded-sm nx:nest-outer-sm nx:after:rounded-[inherit]';",
+    "const c = 'nx:border-default nx:nest-border-default nx:[&_tr:last-child]:border-0';",
+    "const c = 'nx:p-2 nx:nest-padding-2 nx:*:p-0';",
+    // Every arbitrary variant but one compound on `&` is left out, even one
+    // that styles the box, such as `[.dark_&]:`.
+    "const c = 'nx:p-2 nx:nest-padding-2 nx:[:is(.dark_&)_svg]:p-0';",
+    "const c = 'nx:p-2 nx:nest-padding-2 nx:[:where(&>li)]:p-0';",
+    "const c = 'nx:p-2 nx:nest-padding-2 nx:[&_.row:not(:is(&))]:p-0';",
+    "const c = 'nx:p-2 nx:nest-padding-2 nx:[&::after]:p-0';",
+    "const c = 'nx:p-2 nx:nest-padding-2 nx:[&:before]:p-0';",
+    "const c = 'nx:p-1 nx:nest-padding-1 nx:[.dark_&]:p-4';",
+    "const c = 'nx:p-1 nx:nest-padding-1 nx:[@media_(min-width:40rem)]:p-4';",
+    // The twin can sit on another element, so one class alone passes.
+    "const c = 'nx:p-2 nx:pr-2.5 nx:nest-outer-md';",
+    // Each element in a template is its own class list.
+    'const t = `<div class="nx:border-default"><Toolbar class="nx:border-0 nx:nest-border-none" /></div>`;',
     // Icon sizes from glyph tokens or arbitrary values, and box sizes, stay legal.
     "const c = 'nx:[&_svg]:size-icon-glyph-default nx:icon-stroke';",
     "const c = 'nx:[&>svg]:size-icon-glyph-sm nx:text-muted-foreground nx:icon-stroke';",
@@ -146,6 +176,83 @@ ruleTester.run('nx-class-conventions', rule, {
     },
   ],
   invalid: [
+    // A box class and its `nest-*` twin name different steps.
+    {
+      code: "const c = 'nx:p-2 nx:nest-padding-1';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const c = 'nx:border-0 nx:nest-border-default';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const c = 'nx:border-default nx:nest-border-none';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const c = 'nx:rounded-lg nx:nest-outer-md';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const c = 'nx:sm:p-2 nx:sm:nest-padding-1';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const x = <div className='nx:p-3 nx:nest-padding-1' />;",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: 'const t = `<div class="nx:p-2 nx:nest-padding-1"></div>`;',
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: 'const t = `nx:p-2 ${x} nx:nest-padding-1`;',
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const c = 'nx:!p-2 nx:nest-padding-1';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const c = 'nx:border-2 nx:nest-border-thin';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const c = 'nx:border-[3px] nx:nest-border-thick';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const c = 'nx:border-(length:--nx-hairline) nx:nest-border-thick';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    // One compound on `&` is the box.
+    {
+      code: "const c = 'nx:p-1 nx:nest-padding-1 nx:[&[data-open]]:p-4';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const c = 'nx:p-1 nx:nest-padding-1 nx:[&:hover]:p-4';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    // A nest step must be a theme step, so `nest-padding-px` is no twin.
+    {
+      code: "const c = 'nx:p-px nx:nest-padding-px nx:sm:p-2 nx:sm:nest-padding-2';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    // Bare `border` is 1px, which no nest step names.
+    {
+      code: "const c = 'nx:border nx:nest-border-none';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    {
+      code: "const c = 'nx:rounded-[10px] nx:nest-outer-md';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
+    // A variant that sets one class of a pair sets the other too.
+    {
+      code: "const c = 'nx:p-1 nx:nest-padding-1 nx:sm:p-2';",
+      errors: [{ messageId: 'nestStepMismatch' }],
+    },
     {
       code: "const c = 'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-4 nx:icon-stroke';",
       errors: [{ messageId: 'densityIconSize' }],

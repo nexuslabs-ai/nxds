@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { ref } from 'vue';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import {
   expectMenuItemInsetAtEveryDensity,
   expectRadioDotInsetAtEveryUiScale,
@@ -776,5 +777,46 @@ export const AllVariants: Story = {
   }),
   parameters: {
     layout: 'padded',
+  },
+};
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: () => ({
+    components: {
+      Menubar,
+      MenubarContent,
+      MenubarItem,
+      MenubarMenu,
+      MenubarTrigger,
+    },
+    template: `
+      <Menubar>
+        <MenubarMenu>
+          <MenubarTrigger>File</MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem>New tab</MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger>Edit</MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem>Undo</MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger>View</MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem>Zoom in</MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+      </Menubar>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const triggers = within(canvasElement).getAllByRole('menuitem');
+    await expectCorners(triggers[0]!, ['7px', '6px', '6px', '7px']);
+    await expectCorners(triggers[1]!, ['6px', '6px', '6px', '6px']);
+    await expectCorners(triggers[2]!, ['6px', '7px', '7px', '6px']);
   },
 };

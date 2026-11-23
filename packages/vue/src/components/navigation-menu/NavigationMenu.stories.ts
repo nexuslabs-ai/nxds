@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { expectInterruptibleOverlayMotion } from '../../stories/support/overlay-motion-test-utils';
 
 import {
@@ -483,5 +484,62 @@ export const AllVariants: Story = {
   }),
   parameters: {
     layout: 'padded',
+  },
+};
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: Default.render,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: 'Products' })
+    );
+    const link = await within(document.body).findByRole('link', {
+      name: 'Analytics',
+    });
+    await expectCorners(link, ['6px', '6px', '6px', '6px']);
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+export const NestedCornersInsideContainer: Story = {
+  globals: { corners: '12' },
+  render: () => ({
+    components: {
+      NavigationMenu,
+      NavigationMenuContent,
+      NavigationMenuItem,
+      NavigationMenuLink,
+      NavigationMenuList,
+      NavigationMenuTrigger,
+    },
+    template: `
+      <div class="nx:nest-outer-lg">
+        <NavigationMenu>
+          <NavigationMenuList>
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>Products</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <ul class="nx:grid nx:w-[320px] nx:gap-1 nx:p-2">
+                  <li>
+                    <NavigationMenuLink href="#analytics">Analytics</NavigationMenuLink>
+                  </li>
+                </ul>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: 'Products' })
+    );
+    const link = await within(document.body).findByRole('link', {
+      name: 'Analytics',
+    });
+    await expectCorners(link, ['6px', '6px', '6px', '6px']);
+    await userEvent.keyboard('{Escape}');
   },
 };

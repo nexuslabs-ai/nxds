@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { ref } from 'vue';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import {
   expectMenuItemInsetAtEveryDensity,
   expectRadioDotInsetAtEveryUiScale,
@@ -794,5 +795,37 @@ export const AllVariants: Story = {
   }),
   parameters: {
     layout: 'padded',
+  },
+};
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: () => ({
+    components: {
+      ContextMenu,
+      ContextMenuContent,
+      ContextMenuItem,
+      ContextMenuTrigger,
+    },
+    template: `
+      <ContextMenu>
+        <ContextMenuTrigger class="nx:flex nx:h-24 nx:w-60 nx:items-center nx:justify-center nx:rounded-md nx:border-default nx:border-dashed nx:border-border-default">Right-click here</ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem>Back</ContextMenuItem>
+          <ContextMenuItem>Forward</ContextMenuItem>
+          <ContextMenuItem>Reload</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    await fireEvent.contextMenu(
+      within(canvasElement).getByText('Right-click here'),
+      { clientX: 20, clientY: 20 }
+    );
+    const items = await within(document.body).findAllByRole('menuitem');
+    await expectCorners(items[0]!, ['7px', '7px', '6px', '6px']);
+    await expectCorners(items[1]!, ['6px', '6px', '6px', '6px']);
+    await expectCorners(items[2]!, ['6px', '6px', '7px', '7px']);
   },
 };

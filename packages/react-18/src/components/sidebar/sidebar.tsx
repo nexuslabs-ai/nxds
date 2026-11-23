@@ -276,7 +276,7 @@ const Sidebar = React.forwardRef<
           onOpenAutoFocus={rememberFocus}
           onCloseAutoFocus={restoreFocus}
           className={cn(
-            'nx:inset-y-2 nx:h-auto nx:w-(--sidebar-width) nx:max-w-[calc(100vw-var(--nx-spacing-2)*2)] nx:rounded-lg nx:border-default nx:border-nav-border nx:bg-nav-background nx:p-0 nx:text-nav-foreground',
+            'nx:inset-y-2 nx:h-auto nx:w-(--sidebar-width) nx:max-w-[calc(100vw-var(--nx-spacing-2)*2)] nx:rounded-lg nx:nest-outer-lg nx:border-default nx:border-nav-border nx:bg-nav-background nx:p-0 nx:text-nav-foreground',
             side === 'left'
               ? 'nx:left-2 nx:data-[state=closed]:-translate-x-[calc(100%+var(--nx-spacing-2))]'
               : 'nx:right-2 nx:data-[state=closed]:translate-x-[calc(100%+var(--nx-spacing-2))]',
@@ -349,7 +349,7 @@ const Sidebar = React.forwardRef<
       >
         <div
           data-slot="sidebar-inner"
-          className="nx:flex nx:h-full nx:w-full nx:flex-col nx:bg-nav-background nx:group-data-[variant=floating]:rounded-lg nx:group-data-[variant=floating]:border-default nx:group-data-[variant=floating]:border-nav-border nx:group-data-[variant=floating]:shadow-sm"
+          className="nx:flex nx:h-full nx:w-full nx:flex-col nx:bg-nav-background nx:group-data-[variant=floating]:rounded-lg nx:group-data-[variant=floating]:nest-outer-lg nx:group-data-[variant=floating]:border-default nx:group-data-[variant=floating]:border-nav-border nx:group-data-[variant=floating]:shadow-sm"
         >
           {children}
         </div>
@@ -510,7 +510,7 @@ const SidebarInput = React.forwardRef<
     <Input
       data-slot="sidebar-input"
       className={cn(
-        'nx:min-h-8 nx:w-full nx:bg-background nx:autofill-bg-background',
+        'nx:min-h-8 nx:w-full nx:bg-background nx:autofill-bg-background nx:group-data-[variant=floating]:rounded-nest nx:[[data-narrow=true]_&]:rounded-nest',
         className
       )}
       {...props}
@@ -861,7 +861,7 @@ const SidebarMenuItem = React.forwardRef<
 
 const sidebarMenuButtonVariants = cva(
   cn(
-    'nx:peer/menu-button nx:flex nx:w-full nx:items-center nx:gap-2 nx:overflow-hidden nx:rounded-md nx:border-0 nx:bg-transparent nx:p-2 nx:text-left nx:text-nav-muted-foreground nx:no-underline nx:transition-[width,height,padding] nx:duration-fast',
+    'nx:peer/menu-button nx:flex nx:w-full nx:items-center nx:gap-2 nx:overflow-hidden nx:rounded-md nx:group-data-[variant=floating]:rounded-nest nx:[[data-narrow=true]_&]:rounded-nest nx:border-0 nx:bg-transparent nx:p-2 nx:text-left nx:text-nav-muted-foreground nx:no-underline nx:transition-[width,height,padding] nx:duration-fast',
     'nx:group-has-data-[slot=sidebar-menu-action]/menu-item:pr-8 nx:group-data-[collapsible=icon]:size-8',
     'nx:group-data-[collapsible=icon]:justify-center nx:group-data-[collapsible=icon]:[&>span]:sr-only nx:group-data-[collapsible=icon]:[&>svg:not(:first-child)]:hidden',
     'nx:hover:bg-nav-item-hover nx:active:bg-nav-item-active',

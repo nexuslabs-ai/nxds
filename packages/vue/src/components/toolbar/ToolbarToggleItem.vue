@@ -61,6 +61,7 @@ const forwarded = useForwardProps(delegated);
     :class="
       cn(
         buttonVariants({ variant: 'ghost', size, iconOnly }),
+        'nx:rounded-nest-edges',
         'nx:data-[state=on]:bg-primary-subtle nx:data-[state=on]:text-primary-subtle-foreground nx:data-[state=on]:hover:bg-primary-subtle-hover nx:data-[state=on]:active:bg-primary-subtle-active',
         props.class
       )

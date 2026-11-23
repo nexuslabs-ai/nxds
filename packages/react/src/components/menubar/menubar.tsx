@@ -8,6 +8,7 @@ import { selectionIndicatorMotionClassName } from '../../lib/motion';
 import { cn } from '../../lib/utils';
 import {
   menuItemInsetClassName,
+  menuListClassName,
   overlayFloatingTransitionClassName,
   popoverSurfaceClassName,
 } from '../overlay-layout/overlay-layout';
@@ -25,7 +26,7 @@ function Menubar({ className, ...props }: MenubarProps) {
     <MenubarPrimitive.Root
       data-slot="menubar"
       className={cn(
-        'nx:flex nx:items-center nx:gap-1 nx:rounded-md nx:border-default nx:border-border-default nx:bg-container nx:p-1 nx:shadow-xs',
+        'nx:flex nx:items-center nx:gap-1 nx:rounded-md nx:border-default nx:border-border-default nx:bg-container nx:p-1 nx:shadow-xs nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:nest-edges-x',
         className
       )}
       {...props}
@@ -73,7 +74,7 @@ function MenubarTrigger({ className, ...props }: MenubarTriggerProps) {
     <MenubarPrimitive.Trigger
       data-slot="menubar-trigger"
       className={cn(
-        'nx:flex nx:select-none nx:items-center nx:rounded-sm nx:border-0 nx:bg-transparent nx:px-2 nx:py-1 nx:text-inherit',
+        'nx:flex nx:select-none nx:items-center nx:rounded-nest-edges nx:border-0 nx:bg-transparent nx:px-2 nx:py-1 nx:text-inherit',
         'nx:typography-label-default nx:outline-none',
         'nx:focus:bg-container-hover nx:focus:text-foreground',
         'nx:data-[state=open]:bg-container-hover nx:data-[state=open]:text-foreground',
@@ -111,7 +112,7 @@ function MenubarSubTrigger({
       data-inset={inset}
       className={cn(
         'nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2',
-        'nx:rounded-sm nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none',
+        'nx:rounded-nest-edges nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-[state=open]:bg-popover-hover nx:data-[state=open]:text-popover-foreground',
         'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
@@ -138,17 +139,19 @@ type MenubarSubContentProps = React.ComponentProps<
  */
 function MenubarSubContent({ className, ...props }: MenubarSubContentProps) {
   return (
-    <MenubarPrimitive.SubContent
-      data-slot="menubar-sub-content"
-      className={cn(
-        'nx:z-popover nx:min-w-32 nx:overflow-hidden',
-        popoverSurfaceClassName,
-        'nx:p-1',
-        overlayFloatingTransitionClassName,
-        className
-      )}
-      {...props}
-    />
+    <MenubarPrimitive.Portal>
+      <MenubarPrimitive.SubContent
+        data-slot="menubar-sub-content"
+        className={cn(
+          'nx:z-popover nx:min-w-32 nx:overflow-hidden',
+          popoverSurfaceClassName,
+          menuListClassName,
+          overlayFloatingTransitionClassName,
+          className
+        )}
+        {...props}
+      />
+    </MenubarPrimitive.Portal>
   );
 }
 
@@ -179,7 +182,7 @@ function MenubarContent({
         className={cn(
           'nx:z-popover nx:min-w-48 nx:overflow-hidden',
           popoverSurfaceClassName,
-          'nx:p-1',
+          menuListClassName,
           overlayFloatingTransitionClassName,
           className
         )}
@@ -190,7 +193,7 @@ function MenubarContent({
 }
 
 const menubarItemVariants = cva(
-  'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2 nx:rounded-sm nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none nx:transition-colors nx:focus:bg-popover-hover nx:focus:text-popover-foreground nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
+  'nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:gap-2 nx:rounded-nest-edges nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none nx:transition-colors nx:focus:bg-popover-hover nx:focus:text-popover-foreground nx:data-disabled:pointer-events-none nx:data-disabled:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
   {
     variants: {
       variant: {
@@ -263,7 +266,7 @@ function MenubarCheckboxItem({
       data-slot="menubar-checkbox-item"
       className={cn(
         'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
-        'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
+        'nx:rounded-nest-edges nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
         menuItemInsetClassName,
         'nx:transition-colors',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
@@ -315,7 +318,7 @@ function MenubarRadioItem({
       data-slot="menubar-radio-item"
       className={cn(
         'nx:group nx:relative nx:flex nx:cursor-default nx:select-none nx:items-center nx:icon-stroke',
-        'nx:rounded-sm nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
+        'nx:rounded-nest-edges nx:py-1.5 nx:pr-2 nx:typography-body-default nx:outline-none',
         menuItemInsetClassName,
         'nx:transition-colors',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',

@@ -31,6 +31,10 @@ const tooltipSurfaceClassName = [
 const menuItemInsetClassName =
   'nx:pl-[calc(var(--nx-icon-glyph-default)_+_var(--nx-spacing-2)*2)]';
 
+/** A menu or listbox list: its padding, and the corners its items share. */
+const menuListClassName =
+  'nx:p-1 nx:nest-outer-md nx:nest-border-default nx:nest-padding-1 nx:nest-edges-y';
+
 const navigationMenuInlinePopoverSurfaceClassName = [
   'nx:group-data-[viewport=false]/navigation-menu:rounded-md',
   'nx:group-data-[viewport=false]/navigation-menu:border-default',
@@ -202,6 +206,7 @@ export {
   containsComposedSlot,
   defaultOverlayLayout,
   menuItemInsetClassName,
+  menuListClassName,
   navigationMenuInlinePopoverSurfaceClassName,
   navigationMenuInlinePopoverTransitionClassName,
   overlayBodyClassName,

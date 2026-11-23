@@ -3,6 +3,7 @@ import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { Checkbox } from '../checkbox/checkbox';
 import { FieldLegend, FieldSet } from '../field/field';
 import { RadioGroup, RadioGroupItem } from '../radio-group/radio-group';
@@ -401,4 +402,21 @@ export const AllVariants: Story = {
       </ChoiceRow>
     </div>
   ),
+};
+
+export const NestedCorners: Story = {
+  render: () => (
+    <div data-radius="12" className="nx:w-72">
+      <ChoiceRow htmlFor="nested-corners-terms">
+        <Checkbox id="nested-corners-terms" />
+        <ChoiceRowContent>
+          <ChoiceRowTitle>Accept the terms</ChoiceRowTitle>
+        </ChoiceRowContent>
+      </ChoiceRow>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const checkbox = within(canvasElement).getByRole('checkbox');
+    await expectCorners(checkbox, ['5px', '5px', '5px', '5px']);
+  },
 };

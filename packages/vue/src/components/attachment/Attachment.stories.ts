@@ -14,6 +14,7 @@ import {
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { Button } from '../button';
 import { Spinner } from '../spinner';
 import {
@@ -594,4 +595,26 @@ export const AllVariants: Story = {
       </div>
     `,
   }),
+};
+
+export const NestedCorners: Story = {
+  render: () => ({
+    components: { ...attachmentComponents, PhFile },
+    template: `
+      <div data-radius="12" class="nx:w-80">
+        <Attachment>
+          <AttachmentMedia variant="icon"><PhFile /></AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle>report.pdf</AttachmentTitle>
+          </AttachmentContent>
+        </Attachment>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const media = canvasElement.querySelector(
+      '[data-slot="attachment-media"]'
+    )!;
+    await expectCorners(media, ['6px', '6px', '6px', '6px']);
+  },
 };

@@ -386,12 +386,12 @@ function MultiSelectContent({
       align={align}
       sideOffset={sideOffset}
       className={cn(
-        'nx:w-(--radix-popover-trigger-width) nx:min-w-56 nx:p-0',
+        'nx:w-(--radix-popover-trigger-width) nx:min-w-56 nx:p-0 nx:nest-outer-md nx:nest-border-default nx:nest-padding-0',
         className
       )}
       {...props}
     >
-      <Command>
+      <Command className="nx:rounded-nest-corner">
         <CommandInput placeholder={searchPlaceholder} />
         <CommandList>
           <CommandEmpty>{emptyMessage}</CommandEmpty>

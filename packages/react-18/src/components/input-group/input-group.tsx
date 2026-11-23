@@ -9,7 +9,7 @@ import { Textarea } from '../textarea/textarea';
 
 const inputGroupVariants = cva(
   [
-    'nx:group/input-group nx:relative nx:flex nx:box-border nx:w-full nx:min-w-0 nx:items-center nx:rounded-md nx:border-default nx:transition-field',
+    'nx:group/input-group nx:relative nx:flex nx:box-border nx:w-full nx:min-w-0 nx:items-center nx:rounded-md nx:nest-outer-md nx:border-default nx:transition-field',
     // Size: an inline group matches standalone Input's height for the
     // control's data-size. `not-has-[>[data-align^=block]]` scopes this to
     // non-stacked layouts (no block addon) so the fixed-height rule and the
@@ -90,7 +90,7 @@ const InputGroup = React.forwardRef<
 });
 
 const inputGroupAddonVariants = cva(
-  'nx:flex nx:h-auto nx:cursor-text nx:items-center nx:justify-start nx:gap-2 nx:py-1.5 nx:typography-label-default nx:text-muted-foreground nx:select-none nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:[&>kbd]:rounded-sm nx:[&>svg]:size-icon-glyph-default nx:icon-stroke',
+  'nx:flex nx:h-auto nx:cursor-text nx:items-center nx:justify-start nx:gap-2 nx:py-1.5 nx:typography-label-default nx:text-muted-foreground nx:select-none nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:[&>kbd]:rounded-nest nx:[&>svg]:size-icon-glyph-default nx:icon-stroke',
   {
     variants: {
       align: {
@@ -147,8 +147,8 @@ const inputGroupButtonVariants = cva(
   {
     variants: {
       size: {
-        xs: 'nx:h-auto nx:min-h-6 nx:rounded-sm',
-        sm: 'nx:h-fit nx:min-h-8',
+        xs: 'nx:h-auto nx:min-h-6 nx:rounded-nest',
+        sm: 'nx:h-fit nx:min-h-8 nx:rounded-nest',
       },
       iconOnly: {
         false: '',
@@ -165,7 +165,7 @@ const inputGroupButtonVariants = cva(
       {
         iconOnly: false,
         size: 'sm',
-        className: 'nx:gap-1.5 nx:rounded-md nx:px-2.5 nx:has-[>svg]:px-2.5',
+        className: 'nx:gap-1.5 nx:px-2.5 nx:has-[>svg]:px-2.5',
       },
       { iconOnly: true, size: 'xs', className: 'nx:w-6' },
       { iconOnly: true, size: 'sm', className: 'nx:w-8' },

@@ -39,12 +39,17 @@ export {
 } from './ToolbarToolPanel.vue';
 
 export const toolbarVariants = cva(
-  'nx:group/toolbar nx:flex nx:w-fit nx:max-w-full nx:min-w-0 nx:flex-wrap nx:items-center nx:border-default nx:border-border-default nx:bg-container nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
+  [
+    'nx:group/toolbar nx:flex nx:w-fit nx:max-w-full nx:min-w-0 nx:flex-wrap nx:items-center nx:border-default nx:nest-border-default nx:border-border-default nx:bg-container nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
+    'nx:data-[orientation=horizontal]:nest-edges-x nx:data-[orientation=vertical]:nest-edges-y',
+  ],
   {
     variants: {
       variant: {
-        default: 'nx:gap-0.5 nx:rounded-lg nx:p-0.5 nx:shadow-sm',
-        floating: 'nx:gap-2 nx:rounded-2xl nx:p-2 nx:shadow-lg',
+        default:
+          'nx:gap-0.5 nx:rounded-lg nx:p-0.5 nx:shadow-sm nx:nest-outer-lg nx:nest-padding-0.5',
+        floating:
+          'nx:gap-2 nx:rounded-2xl nx:p-2 nx:shadow-lg nx:nest-outer-2xl nx:nest-padding-2',
       },
     },
     defaultVariants: { variant: 'default' },

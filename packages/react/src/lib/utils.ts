@@ -53,6 +53,23 @@ export const NXDS_CLASS_GROUPS = {
   'autofill-text': [{ 'autofill-text': [validators.isAny] }],
   surface: [{ surface: [validators.isAny] }],
   target: ['target-24'],
+  // A container's nested-corner geometry: any radius, border-width or spacing token.
+  'nest-outer': [{ 'nest-outer': [validators.isAny] }],
+  'nest-border': [{ 'nest-border': [validators.isAny] }],
+  'nest-padding': [{ 'nest-padding': [validators.isAny] }],
+  // Nested corners: the minimum, and the formula on the corners that touch.
+  rounded: [
+    'rounded-nest',
+    'rounded-nest-corner',
+    'rounded-nest-edges',
+    { 'rounded-half': [validators.isAny] },
+  ],
+  'rounded-s': ['rounded-s-nest-corner'],
+  'rounded-e': ['rounded-e-nest-corner'],
+  'rounded-t': ['rounded-t-nest-corner'],
+  'rounded-b': ['rounded-b-nest-corner'],
+  // A list's edge rules, which pass the corner value to its first and last item.
+  'nest-edges': ['nest-edges-x', 'nest-edges-y'],
   'ring-color': ['ring-surface'],
   'ring-offset-color': ['ring-offset-surface'],
   z: ['z-overlay', 'z-sticky', 'z-modal', 'z-popover', 'z-toast', 'z-max'],
@@ -201,7 +218,11 @@ export const NXDS_CLASS_GROUPS = {
     | 'autofill-bg'
     | 'autofill-text'
     | 'surface'
-    | 'target',
+    | 'target'
+    | 'nest-outer'
+    | 'nest-border'
+    | 'nest-padding'
+    | 'nest-edges',
     (string | Record<string, ClassValidator[]>)[]
   >
 >;

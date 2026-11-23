@@ -3,6 +3,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { computed, defineComponent, type PropType, reactive, ref } from 'vue';
 
 import { cn } from '../../lib/utils';
+import { expectCorners } from '../../stories/support/corner-test-utils';
 import { expectImmediateItemMotion } from '../../stories/support/motion-test-utils';
 import { Field, FieldDescription, FieldError, FieldLabel } from '../field';
 
@@ -682,6 +683,21 @@ export const WithDataAttributes: Story = {
       within(listbox).getByRole('option', { name: 'Next.js' })
     ).toHaveAttribute('data-slot', 'combobox-item');
 
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+export const NestedCorners: Story = {
+  globals: { corners: '12' },
+  render: Controlled.render,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      canvasElement.querySelector<HTMLElement>(
+        '[data-slot="combobox-trigger"]'
+      )!
+    );
+    const [first] = await within(document.body).findAllByRole('option');
+    await expectCorners(first!, ['6px', '6px', '6px', '6px']);
     await userEvent.keyboard('{Escape}');
   },
 };

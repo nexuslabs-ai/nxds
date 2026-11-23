@@ -25,7 +25,7 @@ const forwarded = useForwardProps(delegated);
     data-slot="menubar-trigger"
     :class="
       cn(
-        'nx:flex nx:select-none nx:items-center nx:rounded-sm nx:border-0 nx:bg-transparent nx:px-2 nx:py-1 nx:text-inherit',
+        'nx:flex nx:select-none nx:items-center nx:rounded-nest-edges nx:border-0 nx:bg-transparent nx:px-2 nx:py-1 nx:text-inherit',
         'nx:typography-label-default nx:outline-none',
         'nx:focus:bg-container-hover nx:focus:text-foreground',
         'nx:data-[state=open]:bg-container-hover nx:data-[state=open]:text-foreground',

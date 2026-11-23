@@ -21,12 +21,17 @@ import { TooltipGroupContext } from '../tooltip/tooltip-group';
 type ToolbarVariant = 'default' | 'floating';
 
 const toolbarVariants = cva(
-  'nx:group/toolbar nx:flex nx:w-fit nx:max-w-full nx:min-w-0 nx:flex-wrap nx:items-center nx:border-default nx:border-border-default nx:bg-container nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
+  [
+    'nx:group/toolbar nx:flex nx:w-fit nx:max-w-full nx:min-w-0 nx:flex-wrap nx:items-center nx:border-default nx:nest-border-default nx:border-border-default nx:bg-container nx:data-[orientation=vertical]:flex-col nx:data-[orientation=vertical]:items-stretch',
+    'nx:data-[orientation=horizontal]:nest-edges-x nx:data-[orientation=vertical]:nest-edges-y',
+  ],
   {
     variants: {
       variant: {
-        default: 'nx:gap-0.5 nx:rounded-lg nx:p-0.5 nx:shadow-sm',
-        floating: 'nx:gap-2 nx:rounded-2xl nx:p-2 nx:shadow-lg',
+        default:
+          'nx:gap-0.5 nx:rounded-lg nx:p-0.5 nx:shadow-sm nx:nest-outer-lg nx:nest-padding-0.5',
+        floating:
+          'nx:gap-2 nx:rounded-2xl nx:p-2 nx:shadow-lg nx:nest-outer-2xl nx:nest-padding-2',
       },
     },
     defaultVariants: { variant: 'default' },
@@ -161,7 +166,11 @@ const ToolbarButton = React.forwardRef<
       data-variant={variant}
       data-size={size}
       data-icon-only={iconOnly || undefined}
-      className={cn(buttonVariants({ variant, size, iconOnly }), className)}
+      className={cn(
+        buttonVariants({ variant, size, iconOnly }),
+        'nx:rounded-nest-edges',
+        className
+      )}
       asChild={asChild}
       {...props}
     >
@@ -198,7 +207,11 @@ const ToolbarLink = React.forwardRef<
       data-slot="toolbar-link"
       data-variant={variant}
       data-size={size}
-      className={cn(buttonVariants({ variant, size }), className)}
+      className={cn(
+        buttonVariants({ variant, size }),
+        'nx:rounded-nest-edges',
+        className
+      )}
       {...props}
     />
   );
@@ -283,6 +296,7 @@ const ToolbarToggleItem = React.forwardRef<
       data-icon-only={iconOnly || undefined}
       className={cn(
         buttonVariants({ variant: 'ghost', size, iconOnly }),
+        'nx:rounded-nest-edges',
         'nx:data-[state=on]:bg-primary-subtle nx:data-[state=on]:text-primary-subtle-foreground nx:data-[state=on]:hover:bg-primary-subtle-hover nx:data-[state=on]:active:bg-primary-subtle-active',
         className
       )}
@@ -529,6 +543,7 @@ const ToolbarTool = React.forwardRef<
       id={id}
       className={cn(
         buttonVariants({ variant: 'ghost', size, iconOnly }),
+        'nx:rounded-nest-edges',
         'nx:data-[state=on]:bg-primary-background nx:data-[state=on]:text-primary-foreground nx:data-[state=on]:hover:bg-primary-background-hover nx:data-[state=on]:active:bg-primary-background-active',
         className
       )}
