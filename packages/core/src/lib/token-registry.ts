@@ -76,6 +76,8 @@ const BRAND_TOKEN_NAMES = [
   'secondary-subtle-foreground',
   'secondary-subtle-hover',
   'secondary-subtle-active',
+  'secondary-border',
+  'secondary-border-active',
 ] as const;
 
 const STATUS_TOKEN_NAMES = [

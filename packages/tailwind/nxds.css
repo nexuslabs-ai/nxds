@@ -184,6 +184,8 @@
   );
   --color-secondary-subtle-hover: var(--nx-color-secondary-subtle-hover);
   --color-secondary-subtle-active: var(--nx-color-secondary-subtle-active);
+  --color-secondary-border: var(--nx-color-secondary-border);
+  --color-secondary-border-active: var(--nx-color-secondary-border-active);
   --color-success-background: var(--nx-color-success-background);
   --color-success-background-hover: var(--nx-color-success-background-hover);
   --color-success-background-active: var(--nx-color-success-background-active);
@@ -313,6 +315,8 @@
     --nx-color-secondary-subtle-foreground: oklch(0.0532 0 0);
     --nx-color-secondary-subtle-hover: oklch(0.87 0 0);
     --nx-color-secondary-subtle-active: oklch(0.765 0 0);
+    --nx-color-secondary-border: oklch(0.87 0 0);
+    --nx-color-secondary-border-active: oklch(0.66 0 0);
     --nx-color-success-background: oklch(0.62 0.2233 140.055);
     --nx-color-success-background-hover: oklch(0.52 0.1871 140.022);
     --nx-color-success-background-active: oklch(0.43 0.1534 139.623);
@@ -428,6 +432,8 @@
     --nx-color-secondary-subtle-foreground: oklch(0.8962 0 0);
     --nx-color-secondary-subtle-hover: oklch(0.385 0 0);
     --nx-color-secondary-subtle-active: oklch(0.46 0 0);
+    --nx-color-secondary-border: oklch(0.385 0 0);
+    --nx-color-secondary-border-active: oklch(0.553 0 0);
     --nx-color-success-background: oklch(0.62 0.2233 140.055);
     --nx-color-success-background-hover: oklch(0.52 0.1871 140.022);
     --nx-color-success-background-active: oklch(0.43 0.1534 139.623);

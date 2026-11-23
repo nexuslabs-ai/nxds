@@ -74,7 +74,7 @@ function SwatchRow({ label, value, onSelect }: SwatchRowProps) {
 export function NxdsThemeQuickControl({
   onCustomize,
 }: NxdsThemeQuickControlProps) {
-  const { state, setState } = useNxdsAppearance();
+  const { state, setState, deriveColors } = useNxdsAppearance();
   const [open, setOpen] = useState(false);
 
   const openCustomize = () => {
@@ -145,25 +145,29 @@ export function NxdsThemeQuickControl({
             ))}
           </ToggleGroup>
         </div>
-        <SwatchRow
-          label="Surface tone"
-          value={state.surfaceTone}
-          onSelect={(surfaceTone) =>
-            setState((current) => ({ ...current, surfaceTone }))
-          }
-        />
-        <div className="nx:space-y-1.5">
-          <p className="nx:m-0 nx:typography-label-small nx:text-muted-foreground">
-            Brand color
-          </p>
-          <NxdsAppearanceColorField
-            label="Brand color"
-            value={state.brandColor}
-            onChange={(brandColor) =>
-              setState((current) => ({ ...current, brandColor }))
-            }
-          />
-        </div>
+        {deriveColors ? (
+          <>
+            <SwatchRow
+              label="Surface tone"
+              value={state.surfaceTone}
+              onSelect={(surfaceTone) =>
+                setState((current) => ({ ...current, surfaceTone }))
+              }
+            />
+            <div className="nx:space-y-1.5">
+              <p className="nx:m-0 nx:typography-label-small nx:text-muted-foreground">
+                Brand color
+              </p>
+              <NxdsAppearanceColorField
+                label="Brand color"
+                value={state.brandColor}
+                onChange={(brandColor) =>
+                  setState((current) => ({ ...current, brandColor }))
+                }
+              />
+            </div>
+          </>
+        ) : null}
         {onCustomize ? (
           <>
             <Separator />

@@ -443,6 +443,7 @@ export function buildCatalog() {
     iconLibraries: libraries,
     fonts: fonts(),
     themeFields: themeFields(),
+    ownColors: true,
   };
   // Checked, not parsed: parsing would reorder keys in the written JSON.
   const checked = catalogSchema.safeParse(catalog);

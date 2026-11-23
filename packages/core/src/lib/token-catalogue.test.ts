@@ -228,6 +228,7 @@ describe('token catalogue', () => {
   it('keeps family border utilities while exposing the renamed focus alias', () => {
     for (const family of [
       'primary',
+      'secondary',
       'error',
       'information',
       'success',

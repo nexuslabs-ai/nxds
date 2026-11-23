@@ -55,3 +55,11 @@
 @utility border-color-primary-active {
   border-color: var(--nx-color-primary-border-active);
 }
+
+@utility border-color-secondary {
+  border-color: var(--nx-color-secondary-border);
+}
+
+@utility border-color-secondary-active {
+  border-color: var(--nx-color-secondary-border-active);
+}

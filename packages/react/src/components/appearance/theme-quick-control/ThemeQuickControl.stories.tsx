@@ -174,3 +174,21 @@ export const WithDataAttributes: Story = {
     );
   },
 };
+
+export const OwnColors: Story = {
+  decorators: [
+    (Story) => (
+      <NxdsAppearanceProvider storageKey={false} deriveColors={false}>
+        <Story />
+      </NxdsAppearanceProvider>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const control = within(await openControl(canvasElement));
+
+    await expect(control.getByRole('radio', { name: 'Dark' })).toBeVisible();
+    await expect(control.queryByText('Brand color')).toBeNull();
+    await expect(control.queryByText('Surface tone')).toBeNull();
+    await closeControl(canvasElement);
+  },
+};

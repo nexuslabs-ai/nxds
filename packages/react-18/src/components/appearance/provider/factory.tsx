@@ -15,11 +15,16 @@ export interface CreateNxdsAppearanceOptions {
   cookieWriteKey?: string | false;
   cookieOptions?: NxdsAppearanceCookieOptions;
   defaultState?: NxdsAppearanceState;
+  deriveColors?: boolean;
 }
 
 type ConfiguredProviderProps = Omit<
   NxdsAppearanceProviderProps,
-  'storageKey' | 'cookieWriteKey' | 'cookieOptions' | 'defaultState'
+  | 'storageKey'
+  | 'cookieWriteKey'
+  | 'cookieOptions'
+  | 'defaultState'
+  | 'deriveColors'
 >;
 
 export function createNxdsAppearance({
@@ -27,6 +32,7 @@ export function createNxdsAppearance({
   cookieWriteKey,
   cookieOptions,
   defaultState,
+  deriveColors,
 }: CreateNxdsAppearanceOptions = {}) {
   function ConfiguredNxdsAppearanceProvider({
     children,
@@ -39,6 +45,7 @@ export function createNxdsAppearance({
         cookieWriteKey={cookieWriteKey}
         cookieOptions={cookieOptions}
         defaultState={defaultState}
+        deriveColors={deriveColors}
       >
         {children}
       </NxdsAppearanceProvider>
