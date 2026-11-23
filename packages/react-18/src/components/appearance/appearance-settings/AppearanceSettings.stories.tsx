@@ -417,3 +417,22 @@ export const SystemContrast: Story = {
     await expect(slider).toHaveAttribute('aria-valuenow', '100');
   },
 };
+
+export const OwnColors: Story = {
+  render: () => (
+    <NxdsAppearanceProvider storageKey={false} deriveColors={false}>
+      <NxdsAppearanceSettings />
+    </NxdsAppearanceProvider>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByRole('radio', { name: 'Dark' })).toBeVisible();
+    await expect(canvas.queryByText('Brand color')).toBeNull();
+    await expect(canvas.queryByText('Surface tone')).toBeNull();
+    await expect(canvas.queryByRole('slider', { name: 'Contrast' })).toBeNull();
+    await expect(canvas.getByText(/density:/)).toBeVisible();
+    await expect(canvas.queryByText(/brandColor:/)).toBeNull();
+    await expect(canvas.queryByText(/Contrast:/)).toBeNull();
+  },
+};

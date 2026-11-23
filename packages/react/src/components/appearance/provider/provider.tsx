@@ -36,6 +36,11 @@ export interface NxdsAppearanceContextValue {
   resolvedMode: NxdsResolvedAppearanceMode;
   mounted: boolean;
   reset: () => void;
+  /**
+   * `false` when the app sets its own colors. The brand color, surface tone
+   * and contrast then have no effect.
+   */
+  deriveColors: boolean;
 }
 
 export interface NxdsAppearanceProviderProps {
@@ -54,6 +59,11 @@ export interface NxdsAppearanceProviderProps {
    */
   cookieWriteKey?: string | false;
   cookieOptions?: NxdsAppearanceCookieOptions;
+  /**
+   * `false` leaves every color to your own CSS. The provider keeps switching
+   * the mode and presets, and saving the user's choices.
+   */
+  deriveColors?: boolean;
 }
 
 const NxdsAppearanceContext = createContext<NxdsAppearanceContextValue | null>(
@@ -84,6 +94,7 @@ export function NxdsAppearanceProvider({
   storageKey = DEFAULT_STORAGE_KEY,
   cookieWriteKey = false,
   cookieOptions,
+  deriveColors = true,
 }: NxdsAppearanceProviderProps) {
   const isControlled = state !== undefined;
   const initialState = useMemo(
@@ -139,11 +150,13 @@ export function NxdsAppearanceProvider({
       storageKey,
       cookieWriteKey,
       cookieOptions,
+      deriveColors,
     });
   }, [
     activeState,
     cookieWriteKey,
     cookieOptions,
+    deriveColors,
     isControlled,
     mounted,
     storageKey,
@@ -152,8 +165,8 @@ export function NxdsAppearanceProvider({
   useEffect(() => {
     if (!mounted) return;
 
-    applyNxdsAppearance(activeState, systemDark);
-  }, [activeState, mounted, systemDark]);
+    applyNxdsAppearance(activeState, systemDark, { deriveColors });
+  }, [activeState, deriveColors, mounted, systemDark]);
 
   useEffect(() => {
     if (!canUseDOM()) return;
@@ -162,8 +175,15 @@ export function NxdsAppearanceProvider({
   }, []);
 
   const value = useMemo<NxdsAppearanceContextValue>(
-    () => ({ state: activeState, setState, resolvedMode, mounted, reset }),
-    [activeState, mounted, reset, resolvedMode, setState]
+    () => ({
+      state: activeState,
+      setState,
+      resolvedMode,
+      mounted,
+      reset,
+      deriveColors,
+    }),
+    [activeState, deriveColors, mounted, reset, resolvedMode, setState]
   );
 
   return (

@@ -239,13 +239,12 @@ Review against:
 
 Use `architect_final_comments` and `sde2_final_comments` from Phase 4 — never the raw agent output directly.
 
-**Reviews are posted from the `nexuslabs-ai-bot` bot account.** Prefix every `gh api .../reviews --method POST` call with `GH_TOKEN=$(gh auth token --user nexuslabs-ai-bot)`. This keeps review comments attributed to the bot and avoids GitHub's self-authored-PR rejection of `APPROVE` / `REQUEST_CHANGES` (since the bot is never the PR author).
+**Reviews are posted from your own account.** If you wrote the PR, post every review as `COMMENT`: GitHub rejects `APPROVE` and `REQUEST_CHANGES` from the PR's author. You wrote it when Phase 1's `author.login` matches `gh api user --jq .login`.
 
 1. **Post Principal Architect review:**
 
    ```bash
-   GH_TOKEN=$(gh auth token --user nexuslabs-ai-bot) \
-     gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
+   gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
      --method POST \
      --input - <<'EOF'
    {
@@ -259,8 +258,7 @@ Use `architect_final_comments` and `sde2_final_comments` from Phase 4 — never 
 2. **Post SDE2 review:**
 
    ```bash
-   GH_TOKEN=$(gh auth token --user nexuslabs-ai-bot) \
-     gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
+   gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
      --method POST \
      --input - <<'EOF'
    {
@@ -274,6 +272,7 @@ Use `architect_final_comments` and `sde2_final_comments` from Phase 4 — never 
    **Verdict logic** (based on combined findings from both agents):
    | Condition | Event |
    |-----------|-------|
+   | You wrote the PR | `COMMENT` |
    | No blocking issues in either review | `APPROVE` |
    | Only minor issues (⚠️) | `COMMENT` |
    | Any blocking issues (❌) | `REQUEST_CHANGES` |
@@ -303,7 +302,7 @@ Both agents always run. Each agent covers the same focus lane as in the full rev
    ```
 
 4. **Parse previous review data:**
-   - Extract issues raised (blocking ❌ and minor ⚠️), separated by agent (Architect vs SDE2)
+   - Extract issues raised, with the severity from each row's Severity column (`❌ Blocking` / `⚠️ Minor`), separated by agent (Architect vs SDE2)
    - Note which files had comments
    - Get timestamp of last review
 
@@ -359,7 +358,7 @@ Agent(
   - Commits since last review: {commit list}
 
   ## Previous Architectural Issues
-  {list of Architect issues from previous review with file:line}
+  {list of Architect issues from previous review with severity and file:line}
 
   ## Files Modified Since Last Review
   {list of changed files}
@@ -401,7 +400,7 @@ Agent(
   - Commits since last review: {commit list}
 
   ## Previous SDE2 Issues
-  {list of SDE2 issues from previous review with file:line}
+  {list of SDE2 issues from previous review with severity and file:line}
 
   ## Files Modified Since Last Review
   {list of changed files}
@@ -444,11 +443,10 @@ Deduplicate inline comments across both agents (same as Phase 4 in full review m
 
 ### Phase F6: Post Follow-up Review
 
-Post from the `nexuslabs-ai-bot` bot account (same pattern as Phase 6):
+Post from your own account, as in Phase 6:
 
 ```bash
-GH_TOKEN=$(gh auth token --user nexuslabs-ai-bot) \
-  gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
+gh api repos/{owner}/{repo}/pulls/{pr_number}/reviews \
   --method POST \
   --input - <<'EOF'
 {
@@ -465,6 +463,7 @@ EOF
 
 | Condition                                            | Event             |
 | ---------------------------------------------------- | ----------------- |
+| You wrote the PR                                     | `COMMENT`         |
 | All blocking issues fixed, no new issues             | `APPROVE`         |
 | Some issues fixed, only minor remaining              | `COMMENT`         |
 | Blocking issues still present OR new blocking issues | `REQUEST_CHANGES` |
@@ -506,10 +505,10 @@ EOF
 
 ### Unresolved Issues
 
-| #   | Original Issue | File         | Status           | Notes                |
-| --- | -------------- | ------------ | ---------------- | -------------------- |
-| 1   | {description}  | `file.ts:42` | ❌ Still Present | {what's still wrong} |
-| 2   | {description}  | `file.ts:15` | ⚠️ Partial       | {what's missing}     |
+| #   | Severity    | Original Issue | File         | Status           | Notes                |
+| --- | ----------- | -------------- | ------------ | ---------------- | -------------------- |
+| 1   | ❌ Blocking | {description}  | `file.ts:42` | ❌ Still Present | {what's still wrong} |
+| 2   | ⚠️ Minor    | {description}  | `file.ts:15` | ⚠️ Partial       | {what's missing}     |
 
 {If all resolved: "All previous issues resolved."}
 

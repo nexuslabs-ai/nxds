@@ -83,21 +83,26 @@ const CONTROLLED_STORAGE_KEY = 'nxds-appearance-controlled-story';
 // Unmounting the second app removes it from the document, so the play re-applies it.
 let previewAppearance: NxdsAppearance | undefined;
 
+/** An empty host for a play's second app, which keeps the preview's appearance. */
+const SecondAppHost = {
+  setup() {
+    previewAppearance = useNxdsAppearance();
+  },
+  template: '<div data-testid="second-app" />',
+};
+
+function requirePreviewAppearance(): NxdsAppearance {
+  if (!previewAppearance) {
+    throw new Error('The story did not capture the preview appearance.');
+  }
+  return previewAppearance;
+}
+
 export const ControlledState: Story = {
-  render: () => ({
-    setup() {
-      previewAppearance = useNxdsAppearance();
-    },
-    template: '<div data-testid="controlled-app" />',
-  }),
+  render: () => SecondAppHost,
   play: async ({ canvasElement }) => {
-    const preview = previewAppearance;
-    if (!preview) {
-      throw new Error(
-        'ControlledState render did not capture the preview appearance.'
-      );
-    }
-    const host = within(canvasElement).getByTestId('controlled-app');
+    const preview = requirePreviewAppearance();
+    const host = within(canvasElement).getByTestId('second-app');
     const state = ref<NxdsAppearanceState>(DEFAULT_NXDS_APPEARANCE);
     const onStateChange = fn();
     const app = createApp(AppearanceControls).use(
@@ -122,6 +127,37 @@ export const ControlledState: Story = {
       await waitFor(() =>
         expect(controls.getByText('Resolved mode: dark')).toBeVisible()
       );
+    } finally {
+      app.unmount();
+      preview.setState(preview.state.value);
+    }
+  },
+};
+
+export const OwnColors: Story = {
+  render: () => SecondAppHost,
+  play: async ({ canvasElement }) => {
+    const preview = requirePreviewAppearance();
+    const host = within(canvasElement).getByTestId('second-app');
+    const root = document.documentElement;
+    const app = createApp(AppearanceControls).use(
+      createNxdsAppearance({
+        storageKey: false,
+        defaultState: { ...DEFAULT_NXDS_APPEARANCE, density: 'compact' },
+        deriveColors: false,
+      })
+    );
+    app.mount(host);
+    const controls = within(host);
+
+    try {
+      await waitFor(() => expect(themeCss()).toBe(''));
+
+      await userEvent.click(controls.getByRole('button', { name: 'Dark' }));
+      await waitFor(() => expect(root).toHaveClass('dark'));
+      await expect(controls.getByText('Resolved mode: dark')).toBeVisible();
+      await expect(root).toHaveAttribute('data-density', 'compact');
+      await expect(themeCss()).toBe('');
     } finally {
       app.unmount();
       preview.setState(preview.state.value);

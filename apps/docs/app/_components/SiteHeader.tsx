@@ -13,6 +13,7 @@ import { REPO_URL, SITE_BRAND } from '../_lib/site';
 import { GitHubMark, SiteMoonIcon, SiteSunIcon } from '../_lib/site-icons';
 import { brandLinkClassName, navLinkClassName } from '../_lib/site-links';
 
+import { AlphaBadge } from './AlphaBadge';
 import { SiteMenu } from './SiteMenu';
 import { SiteSearch } from './SiteSearch';
 
@@ -37,21 +38,31 @@ export function SiteHeader() {
         <a href="#main">Skip to main content</a>
       </Button>
       <div className="nx:site-column nx:flex nx:h-full nx:items-center nx:justify-between nx:gap-4">
-        <Button asChild variant="link" size="sm" className={brandLinkClassName}>
-          <Link href="/" aria-label={`${SITE_BRAND} home`}>
-            <img
-              src="/brand/nx-icon-light.svg"
-              alt=""
-              className="nx:size-6 nx:dark:hidden"
-            />
-            <img
-              src="/brand/nx-icon-dark.svg"
-              alt=""
-              className="nx:hidden nx:size-6 nx:dark:block"
-            />
-            {SITE_BRAND}
-          </Link>
-        </Button>
+        <div className="nx:flex nx:items-center nx:gap-2">
+          <Button
+            asChild
+            variant="link"
+            size="sm"
+            className={brandLinkClassName}
+          >
+            <Link href="/" aria-label={`${SITE_BRAND} home`}>
+              <img
+                src="/brand/nx-icon-light.svg"
+                alt=""
+                className="nx:size-6 nx:dark:hidden"
+              />
+              <img
+                src="/brand/nx-icon-dark.svg"
+                alt=""
+                className="nx:hidden nx:size-6 nx:dark:block"
+              />
+              {SITE_BRAND}
+            </Link>
+          </Button>
+          <Show above="sm">
+            <AlphaBadge />
+          </Show>
+        </div>
         <Show above="lg" as="div">
           <nav aria-label="Main navigation" className="nx:flex nx:gap-6">
             {HEADER_LINKS.map(({ label, href }) => (

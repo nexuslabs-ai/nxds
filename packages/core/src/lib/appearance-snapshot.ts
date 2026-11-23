@@ -13,7 +13,7 @@ import {
 } from './derive-theme';
 import type { Mode } from './palette';
 
-export const SNAPSHOT_VERSION = 12;
+export const SNAPSHOT_VERSION = 13;
 const STATE_COOKIE_VERSION = 6;
 const SNAPSHOT_CACHE_LIMIT = 50;
 
@@ -46,6 +46,14 @@ export interface NxdsFirstPaintResolution {
   dataAttrs: Record<NxdsAppearanceDataAttr, string>;
   themeCss: string;
   prefsCss: string;
+}
+
+export interface NxdsAppearanceSnapshotOptions {
+  /**
+   * `false` leaves every colour to the app's own CSS. The snapshot then
+   * carries no theme CSS, and still carries the font preferences.
+   */
+  deriveColors?: boolean;
 }
 
 export interface NxdsAppearanceBootstrapScriptOptions {
@@ -119,9 +127,19 @@ export function createNxdsAppearanceSnapshot(
 }
 
 export function createNxdsAppearanceSnapshotFromState(
-  state: NxdsAppearanceState
+  state: NxdsAppearanceState,
+  { deriveColors = true }: NxdsAppearanceSnapshotOptions = {}
 ): NxdsAppearanceSnapshot {
   const sanitizedState = sanitizeNxdsAppearance(state);
+
+  if (!deriveColors) {
+    return createNxdsAppearanceSnapshot(
+      sanitizedState,
+      '',
+      derivePrefsCss(sanitizedState)
+    );
+  }
+
   const cacheKey = cacheKeyForState(sanitizedState);
   const cachedSnapshot = cachedSnapshots.get(cacheKey);
 
@@ -180,10 +198,13 @@ export function parseNxdsAppearanceStateCookie(
 
 export function createNxdsAppearanceSnapshotFromCookie(
   raw: unknown,
-  fallbackState: NxdsAppearanceState = DEFAULT_NXDS_APPEARANCE
+  fallbackState: NxdsAppearanceState = DEFAULT_NXDS_APPEARANCE,
+  options?: NxdsAppearanceSnapshotOptions
 ): NxdsAppearanceSnapshot {
   return createNxdsAppearanceSnapshotFromState(
-    parseNxdsAppearanceStateCookie(raw) ?? sanitizeNxdsAppearance(fallbackState)
+    parseNxdsAppearanceStateCookie(raw) ??
+      sanitizeNxdsAppearance(fallbackState),
+    options
   );
 }
 
@@ -246,6 +267,10 @@ function escapeInlineScriptJson(value: unknown): string {
     .replace(/\u2029/g, '\\u2029');
 }
 
+// A default snapshot without theme CSS means the app sets its own colours, so
+// the script paints no theme CSS a snapshot saved before that still carries.
+// A snapshot saved without theme CSS, in an app that derives colours again,
+// paints the default snapshot's.
 export function createNxdsAppearanceBootstrapScript(
   options: NxdsAppearanceBootstrapScriptOptions = {}
 ): string {
@@ -254,5 +279,5 @@ export function createNxdsAppearanceBootstrapScript(
     ? sanitizeNxdsAppearanceSnapshot(options.defaultSnapshot)
     : createDefaultNxdsAppearanceSnapshot();
 
-  return `(function(){try{var k=${escapeInlineScriptJson(storageKey)};var f=${escapeInlineScriptJson(defaultSnapshot)};var s=f;try{if(k!==false){var r=window.localStorage&&window.localStorage.getItem(k);if(r){var p=JSON.parse(r);if(p&&p.version===f.version&&p.state&&typeof p.themeCss==="string"&&typeof p.prefsCss==="string"){s=p;}}}}catch(e){}var st=s.state||f.state;var m=st.mode==="dark"||st.mode==="light"||st.mode==="system"?st.mode:f.state.mode;var sys=false;try{sys=m==="system"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;}catch(e){}var dark=m==="dark"||sys===true;var root=document.documentElement;root.classList.toggle("dark",dark);root.setAttribute("data-ui-scale",typeof st.uiScale==="string"?st.uiScale:f.state.uiScale);root.setAttribute("data-text-size",String(typeof st.textSize==="number"?st.textSize:f.state.textSize));root.setAttribute("data-density",typeof st.density==="string"?st.density:f.state.density);root.setAttribute("data-radius",typeof st.corners==="string"?st.corners:f.state.corners);root.setAttribute("data-shadow",typeof st.elevation==="string"?st.elevation:f.state.elevation);root.setAttribute("data-borderwidth",typeof st.stroke==="string"?st.stroke:f.state.stroke);function upsert(attr,css){var list=document.querySelectorAll("style["+attr+"]");var el=list[0]||document.createElement("style");for(var i=1;i<list.length;i++){list[i].remove();}el.setAttribute(attr,"");el.textContent=css||"";if(!el.parentNode){document.head.appendChild(el);}}upsert("data-nxds-appearance-theme",s.themeCss);upsert("data-nxds-appearance-prefs",s.prefsCss);}catch(e){}})();`;
+  return `(function(){try{var k=${escapeInlineScriptJson(storageKey)};var f=${escapeInlineScriptJson(defaultSnapshot)};var s=f;try{if(k!==false){var r=window.localStorage&&window.localStorage.getItem(k);if(r){var p=JSON.parse(r);if(p&&p.version===f.version&&p.state&&typeof p.themeCss==="string"&&typeof p.prefsCss==="string"){s=p;}}}}catch(e){}var st=s.state||f.state;var m=st.mode==="dark"||st.mode==="light"||st.mode==="system"?st.mode:f.state.mode;var sys=false;try{sys=m==="system"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;}catch(e){}var dark=m==="dark"||sys===true;var root=document.documentElement;root.classList.toggle("dark",dark);root.setAttribute("data-ui-scale",typeof st.uiScale==="string"?st.uiScale:f.state.uiScale);root.setAttribute("data-text-size",String(typeof st.textSize==="number"?st.textSize:f.state.textSize));root.setAttribute("data-density",typeof st.density==="string"?st.density:f.state.density);root.setAttribute("data-radius",typeof st.corners==="string"?st.corners:f.state.corners);root.setAttribute("data-shadow",typeof st.elevation==="string"?st.elevation:f.state.elevation);root.setAttribute("data-borderwidth",typeof st.stroke==="string"?st.stroke:f.state.stroke);function upsert(attr,css){var list=document.querySelectorAll("style["+attr+"]");var el=list[0]||document.createElement("style");for(var i=1;i<list.length;i++){list[i].remove();}el.setAttribute(attr,"");el.textContent=css||"";if(!el.parentNode){document.head.appendChild(el);}}upsert("data-nxds-appearance-theme",f.themeCss===""?"":s.themeCss||f.themeCss);upsert("data-nxds-appearance-prefs",s.prefsCss);}catch(e){}})();`;
 }

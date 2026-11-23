@@ -15,6 +15,7 @@ pnpm add @nxds/core
 - `createNxdsThemeContract`, `deriveTheme`, `themeToCss`: derive a full token set from appearance state and render it to CSS.
 - `measureThemeContrast`, `ThemeContrastCheck`, `Mode`, `Tier`: measure a derived theme against every registered APCA pair. See [Contrast report](#contrast-report).
 - `createNxdsAppearanceSnapshotFromState`, `createNxdsAppearanceBootstrapScript`, `resolveFirstPaint`, `DEFAULT_STORAGE_KEY`: first-paint, no-flash bootstrap.
+- `deriveColors: false`, an option of `createNxdsAppearanceSnapshotFromState`, `applyNxdsAppearance` and `persistNxdsAppearance`: leaves every colour to the app's own CSS. The mode, the preset attributes and the font preferences still apply.
 
 ## Advanced / Engine Exports
 

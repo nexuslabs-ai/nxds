@@ -1,0 +1,269 @@
+import { AntLookPreview } from './_ant-look/preview';
+import { LookSource } from './_look-source';
+
+export const description =
+  'An Ant Design-style admin page built from nxds parts: your own colors with a dark sider, Ant corners, an edited DescriptionList and Accordion, and a rewritten Slider.';
+
+# Ant Design look
+
+An Ant Design-style admin page, built from nxds parts with your own colors.
+
+<AntLookPreview />
+
+The first page is built with nxds parts. The second is the same page built with
+Ant Design, to compare.
+
+## Set your own colors
+
+Create the colors file:
+
+```bash
+npx nxds-cli@latest init --own-colors
+```
+
+Replace its values with Ant Design's palette:
+
+```css
+/* app/nxds-colors.css */
+@layer theme {
+  :root {
+    --nx-color-background: #f5f5f5;
+    --nx-color-container: #fff;
+    --nx-color-foreground: rgb(0 0 0 / 0.88);
+    --nx-color-border-default: #d9d9d9;
+    --nx-color-border-hairline: rgb(5 5 5 / 0.06);
+    --nx-color-primary-background: #1677ff;
+    --nx-color-primary-background-hover: #4096ff;
+    --nx-color-primary-background-active: #0958d9;
+
+    /* The dark sider */
+    --nx-color-nav-background: #001529;
+    --nx-color-nav-foreground: #fff;
+    --nx-color-nav-muted-foreground: rgb(255 255 255 / 0.65);
+    --nx-color-nav-item-active: #1677ff;
+    /* The other colors */
+  }
+}
+```
+
+The `nav-*` colors belong to the Sidebar alone, so the sider is navy while the
+page is light.
+
+The
+[full palette](https://github.com/nexuslabs-ai/nxds/blob/main/apps/docs/content/theming/_ant-look/ant-look.css)
+has every color for light and dark. It sets them on a wrapper, so they reach
+only the preview on this page. Your app sets them on `:root` and `.dark`.
+
+[Your own colors](/theming/own-colors) covers the colors file.
+
+## Set Ant's corners
+
+Ant rounds a control by 6px and a container by 8px. The `6` corner mode comes
+close, but its `sm` step is 5px, where Ant uses 4px. So redefine the default
+mode, `4`, in the colors file:
+
+```css
+/* app/nxds-colors.css */
+@layer theme {
+  [data-radius='4'] {
+    --nx-radius-sm: 4px;
+    --nx-radius-base: 6px;
+    --nx-radius-md: 6px;
+    --nx-radius-lg: 8px;
+  }
+}
+```
+
+These corners apply at the Default UI scale.
+
+## Set Ant's line height
+
+Ant sets 14px text on a 22px line, and 12px text on a 20px line. Set the two
+line heights in the colors file:
+
+```css
+/* app/nxds-colors.css */
+@layer theme {
+  :root {
+    --nx-typography-line-height-xs: 20px;
+    --nx-typography-line-height-sm: 22px;
+  }
+}
+```
+
+The text size setting then stops changing these two line heights.
+
+## Add the parts
+
+```bash
+npx nxds-cli@latest add sidebar button badge label description-list accordion slider
+```
+
+Each part needs a different amount of work:
+
+| Part                          | Change                                                       |
+| ----------------------------- | ------------------------------------------------------------ |
+| Sidebar, Button, Badge, Label | Ant's sizes, as classes where you use them                   |
+| DescriptionList               | A bordered grid, two pairs to a row, and filled label cells  |
+| Accordion                     | One bordered box, tinted headers, the arrow before the label |
+| Slider                        | A new class recipe: a thin rail and a round handle           |
+
+## Use the stock parts
+
+Four Ant parts are the stock nxds parts in Ant's colors. Pass Ant's sizes as
+classes where you use them:
+
+| Ant Design part      | nxds part                                 | Classes                                                                             |
+| -------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------- |
+| Dark Menu in a Sider | `Sidebar`, which reads the `nav-*` colors | `nx:h-10 nx:rounded-lg nx:px-6` on each `SidebarMenuButton`                         |
+| Primary Button, 32px | `<Button size="sm">`                      | `nx:px-[15px] nx:font-normal`                                                       |
+| Tag                  | `<Badge fill="outline">`                  | `nx:min-h-[22px] nx:rounded-sm nx:px-[7px] nx:typography-body-small nx:normal-case` |
+| Form label           | `Label`                                   | `nx:font-normal`                                                                    |
+
+```tsx
+// components/order-header.tsx
+import { Badge } from '@/components/nxds/components/badge/badge';
+import { Button } from '@/components/nxds/components/button/button';
+
+export function OrderHeader() {
+  return (
+    <div className="nx:flex nx:items-center nx:gap-3">
+      <p className="nx:m-0 nx:typography-heading-xxsmall nx:tracking-normal">
+        Order 20418
+      </p>
+      <Badge
+        variant="success"
+        fill="outline"
+        className="nx:min-h-[22px] nx:rounded-sm nx:px-[7px] nx:typography-body-small nx:normal-case"
+      >
+        Paid
+      </Badge>
+      <Button size="sm" className="nx:ms-auto nx:px-[15px] nx:font-normal">
+        Edit order
+      </Button>
+    </div>
+  );
+}
+```
+
+## Edit the DescriptionList
+
+Ant's bordered Descriptions is a grid with filled label cells, two pairs to a
+row. Change the DescriptionList's classes, and add a wrapper:
+
+<LookSource look="ant" file="description-list/description-list.tsx" />
+
+| Ant Design needs   | Change                                                            |
+| ------------------ | ----------------------------------------------------------------- |
+| A bordered grid    | A wrapper with the border and corners, and two lines on each cell |
+| Two pairs to a row | A four-column grid on the list, once the wrapper is 28rem wide    |
+| Filled label cells | `nx:bg-muted` on the term                                         |
+| Padded cells       | `nx:px-6 nx:py-4` on the term and the description                 |
+
+A narrow list stacks each label over its value, as the stock part does.
+
+## Edit the Accordion
+
+Ant's Collapse is one bordered box, with the arrow before each label. Change
+the Accordion's classes, and move its icon:
+
+<LookSource look="ant" file="accordion/accordion.tsx" />
+
+| Ant Design needs              | Change                                                |
+| ----------------------------- | ----------------------------------------------------- |
+| One bordered box              | A border and corners on the root                      |
+| Tinted headers                | `nx:bg-muted` on each item                            |
+| The arrow before the label    | `IconChevronRight` ahead of the label, turning by 90° |
+| Plain content under a divider | `nx:bg-container` and a top border on the content     |
+
+## Rewrite the Slider
+
+Ant's Slider is a thin rail with a round handle. Replace the Slider's class
+recipes, and remove the code that rounds the range at each end of the rail.
+The props and behavior stay as they are:
+
+<LookSource look="ant" file="slider/slider.tsx" />
+
+| Ant Design needs                    | Change in the recipe                                            |
+| ----------------------------------- | --------------------------------------------------------------- |
+| A thin rail                         | A 4px rail with 2px corners and no border                       |
+| A light track that darkens on hover | `nx:bg-primary-border`, then `nx:bg-primary-border-active`      |
+| A round handle with a ring          | A 10px dot with `nx:ring-2`, and `nx:ring-4` on hover and focus |
+| The same handle in both directions  | `sliderThumbVariants` as one string, with no `orientation`      |
+| Ringed marks                        | 8px dots with a border                                          |
+
+## Use the parts
+
+```tsx
+// components/order-details.tsx
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/nxds/components/accordion/accordion';
+import {
+  DescriptionList,
+  DescriptionListDescription,
+  DescriptionListItem,
+  DescriptionListTerm,
+} from '@/components/nxds/components/description-list/description-list';
+import { Label } from '@/components/nxds/components/label/label';
+import { Slider } from '@/components/nxds/components/slider/slider';
+
+export function OrderDetails() {
+  return (
+    <div className="nx:flex nx:flex-col nx:gap-6">
+      <DescriptionList>
+        <DescriptionListItem>
+          <DescriptionListTerm>Customer</DescriptionListTerm>
+          <DescriptionListDescription>Ada Lovelace</DescriptionListDescription>
+        </DescriptionListItem>
+        <DescriptionListItem>
+          <DescriptionListTerm>Total</DescriptionListTerm>
+          <DescriptionListDescription>$1,280.00</DescriptionListDescription>
+        </DescriptionListItem>
+      </DescriptionList>
+
+      <Accordion type="single" collapsible defaultValue="shipping">
+        <AccordionItem value="shipping">
+          <AccordionTrigger>Shipping</AccordionTrigger>
+          <AccordionContent>Express, two business days.</AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="payment">
+          <AccordionTrigger>Payment</AccordionTrigger>
+          <AccordionContent>Card ending 4242.</AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      <div className="nx:flex nx:flex-col nx:gap-1">
+        <Label id="refund-share" className="nx:font-normal">
+          Refund share
+        </Label>
+        <Slider defaultValue={[30]} aria-labelledby="refund-share" />
+      </div>
+    </div>
+  );
+}
+```
+
+## What nxds provides
+
+| From nxds           | In this example                                                         |
+| ------------------- | ----------------------------------------------------------------------- |
+| Light and dark mode | The provider switches `.dark`, and the colors file has a value for each |
+| Density             | Every part sizes itself from nxds spacing tokens                        |
+| Color names         | Every class reads an nxds color, so one file recolors every part        |
+| Behavior            | Accordion and Slider keep their keyboard and screen reader support      |
+
+The nxds page in the preview follows the page's mode and density. Its colors
+and corners come from the palette file, so the theme picker doesn't change
+them. The Ant Design page follows the page's mode only.
+
+## Next steps
+
+- **[Material look](/theming/material-look)**: a settings screen with a
+  rewritten Switch and a new TextField.
+- **[Your own colors](/theming/own-colors)**: the colors file, and what keeps
+  working.
+- **[Sidebar](/components/sidebar)**: the stock Sidebar and its parts.

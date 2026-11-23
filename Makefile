@@ -68,8 +68,9 @@ audit: ## Token / a11y / agent-mirror audits
 	pnpm audit:contrast
 	pnpm audit:agent-drift
 
-verify: ## Full pre-push gate: lint + format + typecheck + test + audits
+verify: ## Full pre-push gate: lint + react-18 sync + format + typecheck + test + audits
 	pnpm lint
+	pnpm --filter @nxds/react-18 check
 	pnpm format:check
 	pnpm typecheck
 	pnpm test
