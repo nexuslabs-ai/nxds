@@ -156,12 +156,6 @@ function borderStep(utility) {
   )?.[1];
 }
 
-// Variants under which the check reads a class as the box's: a named variant
-// other than a pseudo-element or child variant, such as `after:` or `*:`, and
-// an arbitrary variant that is one compound on `&` with no pseudo-element,
-// such as `[&:hover]:` or `[&[data-open]]:`. The check leaves every other
-// class out, so it never reads another element's class as the box's, and it
-// skips rare box forms such as `[.dark_&]:`.
 const OTHER_ELEMENT_VARIANTS = new Set([
   '*',
   '**',
@@ -180,6 +174,12 @@ const OTHER_ELEMENT_VARIANTS = new Set([
 // A pseudo-element, with `::` or the one-colon form CSS2 allows.
 const PSEUDO_ELEMENT = /::|:(?:before|after|first-line|first-letter)(?![\w-])/;
 
+// Whether the check reads a class under `variant` as the box's. It does for a
+// named variant, but not `after:`, `*:` or another pseudo-element or child
+// variant, and for an arbitrary variant that is one compound on `&` with no
+// pseudo-element, such as `[&:hover]:` or `[&[data-open]]:`. Every other
+// class is left out, so the check never reads another element's class as the
+// box's, and it skips rare box forms such as `[.dark_&]:`.
 function stylesTheBox(variant) {
   if (OTHER_ELEMENT_VARIANTS.has(variant)) return false;
   if (!variant.startsWith('[') || !variant.endsWith(']')) return true;
