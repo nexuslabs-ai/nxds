@@ -27,8 +27,10 @@ import { firstFamily, hex, parseShadows, rgba } from './tokens.ts';
 export interface SourceVariant {
   name: string;
   values: Record<string, string>;
-  /** How its root looks, to check an element really is this variant. */
-  fingerprint: string;
+  /** How its root looks, to check an element really is this variant. A part's variant can stand for several looks its whole gives it that draw the same in Figma. */
+  fingerprints: readonly string[];
+  /** How it and every element in it look, to tell apart variants whose roots look the same. */
+  deeps: readonly string[];
 }
 
 /** A component built earlier, which later components hold instances of. */
@@ -41,6 +43,8 @@ export interface InstanceSource {
   booleanProperties: readonly string[];
   /** Its instance-swap properties, in the order its icons appear. */
   swapProperties: readonly string[];
+  /** Its root holds a slot, so an element of it matches on its own box and its children fill the slot. */
+  slot: boolean;
   /** The variant an element of this component is, read from the element and its ancestors. */
   variant(
     element: ElementFacts,
@@ -52,6 +56,8 @@ export interface ConvertContext {
   component: string;
   /** The root's `data-slot`. */
   slot: string;
+  /** The root renders `children`, which become a slot. */
+  rootSlot: boolean;
   /** The card's slot prefix, such as `dropdown-menu`, which part names drop. */
   prefix: string;
   /** Text property names by the `data-slot` of the element holding the text. */
@@ -148,28 +154,61 @@ export function svgSignature(svg: string) {
 }
 
 /** How an element's box looks: the computed values a component's variants differ by. */
+/** What a holder can't restyle on an instance: its size, spacing and type. */
+const SHAPE = [
+  'color',
+  'padding-top',
+  'padding-right',
+  'padding-bottom',
+  'padding-left',
+  'font-size',
+  'opacity',
+];
+/** What a holder can restyle on an instance, as an override: its fill, border and corners. */
+const SKIN = [
+  'background-color',
+  'border-top-width',
+  'border-top-color',
+  'border-bottom-width',
+  'border-left-width',
+  'border-top-left-radius',
+];
+
+/** How an element looks: its shape, then after `#` its skin. */
 export function fingerprint(el: ElementFacts) {
-  const properties = [
-    'background-color',
-    'color',
-    'border-top-width',
-    'border-top-color',
-    'border-bottom-width',
-    'border-left-width',
-    'padding-top',
-    'padding-right',
-    'padding-bottom',
-    'padding-left',
-    'border-top-left-radius',
-    'font-size',
-    'opacity',
-  ];
   return [
     el.tag,
     Math.round(el.rect.height),
-    ...properties.map((property) => el.style[property]),
+    ...SHAPE.map((property) => el.style[property]),
+    '#',
+    ...SKIN.map((property) => el.style[property]),
   ].join('|');
 }
+
+const shapeOf = (print: string) => print.split('|#|')[0] ?? print;
+/** A deep fingerprint without its root's own look: what the element holds. */
+const insideOf = (deep: string) => deep.slice(deep.indexOf('('));
+const FIELDS = ['tag', 'height', ...SHAPE, '#', ...SKIN];
+/** What a slot part's box doesn't decide: its content sets its height, and its colour and type size only pass down to that content. */
+const SLOT_FREE = new Set(['height', 'color', 'font-size']);
+/** A fingerprint as `source` compares it. */
+const lookOf = (print: string, source: InstanceSource) =>
+  source.slot
+    ? print
+        .split('|')
+        .filter((_, index) => !SLOT_FREE.has(FIELDS[index] ?? ''))
+        .join('|')
+    : print;
+
+export function deepFingerprint(el: ElementFacts): string {
+  const children = el.children
+    .filter((child): child is ElementFacts => child.kind === 'element')
+    .map(deepFingerprint);
+  return `${fingerprint(el)}(${children.join(',')})`;
+}
+
+const isAbsolute = (el: ElementFacts) =>
+  el.style['position'] === 'absolute' || el.style['position'] === 'fixed';
 
 const visible = (el: ElementFacts | TextFacts) => {
   if (el.kind === 'text') return true;
@@ -178,15 +217,8 @@ const visible = (el: ElementFacts | TextFacts) => {
     return false;
   // Screen-reader-only text, such as AlertClose's "Dismiss alert".
   if (style['clip-path'] === 'inset(50%)') return false;
-  return !(
-    style['position'] === 'absolute' &&
-    rect.width <= 1 &&
-    rect.height <= 1
-  );
+  return !(isAbsolute(el) && rect.width <= 1 && rect.height <= 1);
 };
-
-const isAbsolute = (el: ElementFacts) =>
-  el.style['position'] === 'absolute' || el.style['position'] === 'fixed';
 
 function translateOf(el: ElementFacts) {
   if (el.style['translate'] === 'none') return { x: 0, y: 0 };
@@ -479,31 +511,67 @@ function contents(el: ElementFacts) {
 
 /** The variant of `source` an element is: the one its attributes name, if it looks like it, or the variant that does. */
 function matchVariant(el: ElementFacts, source: InstanceSource, ctx: Walk) {
-  const wanted = source.variant(el, ctx.ancestors);
-  const looks = fingerprint(el);
+  // A part keeps only the properties that change its look, so its whole's others are left out.
+  const known = new Set(source.variantProperties.map(({ name }) => name));
+  const wanted = Object.fromEntries(
+    Object.entries(source.variant(el, ctx.ancestors)).filter(([name]) =>
+      known.has(name)
+    )
+  );
+  const looks = lookOf(fingerprint(el), source);
+  const deep = deepFingerprint(el);
+  const looksLike = (entry: SourceVariant) =>
+    entry.fingerprints.some((print) => lookOf(print, source) === looks);
+  // A slot's content is the element's own, so only the box has to match.
+  const holdsSame = (entry: SourceVariant) =>
+    source.slot || entry.deeps.includes(deep);
   const named = source.variants.find((entry) =>
     Object.entries(wanted).every(
       ([name, value]) => entry.values[name] === value
     )
   );
-  if (named?.fingerprint === looks) return named;
-  const lookalikes = source.variants.filter(
-    (entry) => entry.fingerprint === looks
-  );
+  if (named && looksLike(named) && holdsSame(named)) return named;
+  const lookalikes = source.variants.filter(looksLike);
   const agreement = (entry: SourceVariant) =>
     Object.entries(wanted).filter(
       ([name, value]) => entry.values[name] === value
     ).length;
-  return lookalikes.sort((a, b) => agreement(b) - agreement(a))[0];
+  const alike = (entry: SourceVariant) => (holdsSame(entry) ? 1 : 0);
+  return lookalikes.sort(
+    (a, b) => alike(b) - alike(a) || agreement(b) - agreement(a)
+  )[0];
+}
+
+/** The variant `el` is once its holder's restyling is set aside: the same shape, with another fill, border or corners. One that also holds the same elements comes first. */
+function restyledVariant(el: ElementFacts, source: InstanceSource, ctx: Walk) {
+  const shape = lookOf(shapeOf(fingerprint(el)), source);
+  const inside = insideOf(deepFingerprint(el));
+  const wanted = source.variant(el, ctx.ancestors);
+  const agreement = (entry: SourceVariant) =>
+    Object.entries(wanted).filter(
+      ([name, value]) => entry.values[name] === value
+    ).length;
+  const holdsSame = (entry: SourceVariant) =>
+    entry.deeps.some((deep) => insideOf(deep) === inside) ? 1 : 0;
+  return source.variants
+    .filter((entry) =>
+      entry.fingerprints.some(
+        (print) => lookOf(shapeOf(print), source) === shape
+      )
+    )
+    .sort(
+      (a, b) => holdsSame(b) - holdsSame(a) || agreement(b) - agreement(a)
+    )[0];
 }
 
 function instanceLayer(
   el: ElementFacts,
   source: InstanceSource,
-  parent: Parent,
+  parent: Parent | null,
   ctx: Walk
 ): InstanceLayer | null {
-  const variant = matchVariant(el, source, ctx);
+  const exact = matchVariant(el, source, ctx);
+  const variant = exact ?? restyledVariant(el, source, ctx);
   if (!variant) {
     ctx.notes.push(
       `${layerName(el, ctx)}: no ${source.name} variant looks like it, so it's drawn as layers.`
@@ -541,6 +609,15 @@ function instanceLayer(
     sizing: sizingOf(el, parent, true),
     opacity: 1,
   };
+  if (!exact) {
+    const { fills, stroke, radius } = boxOf(el, ctx);
+    layer.restyle = { fills, stroke, radius };
+  }
+  // Placed children are the component's own, such as a dialog's close button.
+  if (source.slot)
+    layer.slotContent = frameChildren(el, ctx).children.filter(
+      (child) => !child.absolute
+    );
   if (el.part) layer.visibleProperty = el.part;
   return layer;
 }
@@ -1069,7 +1146,7 @@ function elementLayer(
   if (!isRoot && !visible(el)) return null;
   const source =
     isRoot || el.slot === null ? undefined : ctx.instances.get(el.slot);
-  if (source && parent) {
+  if (source) {
     const instance = instanceLayer(el, source, parent, ctx);
     if (instance) return instance;
   }
@@ -1119,7 +1196,8 @@ function elementLayer(
   };
   if (layout) frame.layout = layout;
   if (hasOutline(el)) frame.children.push(focusRing(el));
-  if (el.part) frame.visibleProperty = el.part;
+  // A component can't hide its own root, so a part's root that's optional in its whole stays shown.
+  if (el.part && !isRoot) frame.visibleProperty = el.part;
   return frame;
 }
 
@@ -1162,6 +1240,68 @@ function svgRoot(svg: ElementFacts, ctx: Walk): FrameLayer {
   };
 }
 
+/** A layer with the component properties it carried taken off, since a slot's content is edited directly. */
+function withoutProperties(layer: Layer): Layer {
+  const plain = { ...layer };
+  delete plain.visibleProperty;
+  if (plain.type === 'TEXT') delete plain.textProperty;
+  if (plain.type === 'ICON') delete plain.swapProperty;
+  if (plain.type === 'FRAME')
+    plain.children = plain.children.map(withoutProperties);
+  return plain;
+}
+
+/** The root with its in-flow children moved into a Content slot filling its padding box. Placed children stay on the root. */
+function withSlot(root: FrameLayer): FrameLayer {
+  const layout: AutoLayout = root.layout ?? {
+    mode: 'VERTICAL',
+    wrap: false,
+    gap: zero(),
+    lineGap: zero(),
+    padding: { top: zero(), right: zero(), bottom: zero(), left: zero() },
+    primaryAlign: 'MIN',
+    counterAlign: 'MIN',
+  };
+  const { padding } = layout;
+  const inside = (outer: Bound, start: Bound, end: Bound) => ({
+    value: Math.max(0, outer.value - start.value - end.value),
+  });
+  const fills = (sizing: Sizing): Sizing => (sizing === 'HUG' ? 'HUG' : 'FILL');
+  const slot: FrameLayer = {
+    type: 'FRAME',
+    name: 'Content',
+    source: root.source,
+    width: inside(root.width, padding.left, padding.right),
+    height: inside(root.height, padding.top, padding.bottom),
+    sizing: {
+      horizontal: fills(root.sizing.horizontal),
+      vertical: fills(root.sizing.vertical),
+    },
+    opacity: 1,
+    fills: [],
+    radius: {
+      topLeft: zero(),
+      topRight: zero(),
+      bottomRight: zero(),
+      bottomLeft: zero(),
+    },
+    clips: false,
+    layout: {
+      ...layout,
+      padding: { top: zero(), right: zero(), bottom: zero(), left: zero() },
+    },
+    children: root.children
+      .filter((child) => !child.absolute)
+      .map(withoutProperties),
+    slotProperty: 'Content',
+  };
+  return {
+    ...root,
+    layout: { ...layout, wrap: false, gap: zero() },
+    children: [slot, ...root.children.filter((child) => child.absolute)],
+  };
+}
+
 /** The variant's root frame, which the plugin turns into a component. */
 export function convertVariant(
   recorded: Recorded,
@@ -1187,5 +1327,5 @@ export function convertVariant(
   // A repeated part repeats its note.
   const notes = [...new Set(ctx.notes)];
   ctx.notes.splice(0, ctx.notes.length, ...notes);
-  return root;
+  return ctx.rootSlot ? withSlot(root) : root;
 }

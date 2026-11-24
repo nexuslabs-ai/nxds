@@ -129,10 +129,12 @@ const variant = (spec: ComponentSpec, values: Record<string, string> = {}) => {
     throw new Error(`${spec.name} has no variant ${JSON.stringify(values)}.`);
   return found.root;
 };
-const layers = (root: Layer): Layer[] => [
-  root,
-  ...(root.type === 'FRAME' ? root.children.flatMap(layers) : []),
-];
+const layers = (root: Layer): Layer[] => {
+  if (root.type === 'FRAME') return [root, ...root.children.flatMap(layers)];
+  if (root.type === 'INSTANCE')
+    return [root, ...(root.slotContent ?? []).flatMap(layers)];
+  return [root];
+};
 const named = (root: Layer, name: string) =>
   layers(root).filter((layer) => layer.name === name);
 const instancesOf = (root: Layer, name: string) =>
@@ -143,15 +145,25 @@ const instancesOf = (root: Layer, name: string) =>
 
 // Every card is captured: by its own recipe, as a part, or by a default recipe.
 for (const problem of problems) fail(`Not captured: ${problem}`);
-const captured = new Set(capture.components.map((spec) => spec.name));
+const captured = new Set(capture.components.map((spec) => spec.card));
 for (const card of Object.keys(readmes).filter(
   (name) => !SKIPPED_CARDS.includes(name)
 )) {
-  check(
-    captured.has(card) || (card === 'Chart' && captured.has('BarChart')),
-    `${card} has no Figma component.`
-  );
+  check(captured.has(card), `${card} has no Figma component.`);
 }
+check(
+  JSON.stringify(component('Button').grid) ===
+    JSON.stringify({
+      blocks: ['Variant'],
+      rows: ['State'],
+      columns: ['Size', 'Icon only'],
+    }),
+  `Button: its grid is ${JSON.stringify(component('Button').grid)}.`
+);
+check(
+  component('Tabs/Tab').card === 'Tabs',
+  `Tabs/Tab: its page is ${component('Tabs/Tab').card}, expected Tabs.`
+);
 check(
   component('Button').variants.length === 288,
   `Button: ${component('Button').variants.length} variants, expected 288.`
@@ -235,14 +247,21 @@ for (const spec of capture.components) {
 }
 
 // The binding comes from the declared token, not the value.
-const card = variant(component('Card'));
+const cardTitleRoot = variant(component('Card/Title'));
 const alert = variant(component('Alert'), {
   Variant: 'default',
   Presentation: 'card',
   Layout: 'stack',
 });
-const cardTitle = named(card, 'Title')[0];
-const alertTitle = named(alert, 'Title').find((layer) => layer.type === 'TEXT');
+const cardTitle = named(cardTitleRoot, 'Label')[0];
+const alertTitle = named(
+  variant(component('Alert/Title'), {
+    Variant: 'default',
+    Presentation: 'card',
+    Layout: 'stack',
+  }),
+  'Label'
+)[0];
 check(
   cardTitle?.type === 'TEXT' &&
     cardTitle.fill.token === 'nx-color-container-foreground',
@@ -261,36 +280,127 @@ check(
 );
 check(
   alert.layout?.mode === 'HORIZONTAL' &&
-    alert.children.map((child) => child.name).join(',') === 'Icon,Body',
+    alert.children.map((child) => child.name).join(',') === 'Alert/Icon,Body',
   'Alert: its grid is not a row of Icon and Body.'
 );
 check(
-  cardTitle?.sizing.horizontal === 'FILL',
+  instancesOf(variant(component('Card/Header')), 'Card/Title')[0]?.sizing
+    .horizontal === 'FILL',
   'Card: its title does not fill.'
+);
+// A part keeps only the properties of its whole that change how it looks.
+const keptBy = (name: string) =>
+  component(name)
+    .variantProperties.map((property) => property.name)
+    .join(',');
+check(
+  keptBy('Alert/Icon') === 'Variant' && keptBy('Sidebar/Header') === '',
+  `Parts: Alert/Icon keeps ${keptBy('Alert/Icon')}, Sidebar/Header keeps ${keptBy('Sidebar/Header')}.`
+);
+// A Button a group restyles is still a Button, with its corners overridden.
+const grouped = instancesOf(variant(component('ButtonGroup')), 'Button');
+check(
+  grouped.length >= 2 &&
+    grouped.some((layer) => layer.restyle?.radius.topLeft.value === 0),
+  `ButtonGroup: ${grouped.length} Button instances, none with its corners squared.`
+);
+check(
+  component('Card/Header')
+    .booleanProperties.map((property) => property.name)
+    .join(',') === 'Description,Action',
+  "Card/Header: its Description and Action toggles aren't its own."
 );
 
 // Nested components and repeated parts are instances.
 const nesting: [string, Record<string, string>, string, number][] = [
-  [
-    'Alert',
-    { Variant: 'default', Presentation: 'card', Layout: 'stack' },
-    'Button',
-    1,
-  ],
-  ['Card', {}, 'Button', 3],
-  ['DropdownMenu', {}, 'Menu item', 4],
-  ['ContextMenu', {}, 'Menu item', 1],
-  ['Select content', {}, 'Select item', 4],
-  ['Command', {}, 'Command item', 1],
-  ['Tabs', {}, 'Tab', 2],
-  ['Accordion', {}, 'Accordion item', 3],
-  ['RadioGroup', {}, 'Radio', 3],
-  ['ToggleGroup', {}, 'Toggle group item', 3],
-  ['Table', {}, 'Table row', 3],
-  ['Sidebar', {}, 'Sidebar menu button', 3],
-  ['Breadcrumb', {}, 'Breadcrumb link', 1],
-  ['Pagination', {}, 'Pagination link', 1],
+  ['Alert/Actions', { Presentation: 'card', Layout: 'stack' }, 'Button', 1],
+  ['Card/Footer', {}, 'Button', 2],
+  ['Card', {}, 'Card/Footer', 1],
+  ['DropdownMenu/Content', {}, 'DropdownMenu/Item', 4],
+  ['DropdownMenu', {}, 'DropdownMenu/Content', 1],
+  ['ContextMenu/Content', {}, 'DropdownMenu/Item', 1],
+  ['ContextMenu', {}, 'ContextMenu/Content', 1],
+  ['Select', {}, 'Select/Trigger', 1],
+  ['Select', {}, 'Select/Content', 1],
+  ['Menubar', {}, 'Menubar/Content', 1],
+  ['Menubar', {}, 'Menubar/Trigger', 3],
+  ['MultiSelect', {}, 'MultiSelect/Content', 1],
+  ['NavigationMenu', {}, 'NavigationMenu/Trigger', 2],
+  ['Popover', {}, 'Popover/Content', 1],
+  ['Tooltip', {}, 'Tooltip/Content', 1],
+  ['AlertDialog', {}, 'AlertDialog/Content', 1],
+  ['Sheet', { Side: 'top' }, 'Sheet/Content', 1],
+  ['Sheet/Content', { Side: 'top' }, 'Sheet/Body', 1],
+  ['Drawer', { Direction: 'left' }, 'Drawer/Content', 1],
+  ['Drawer/Content', { Direction: 'left' }, 'Drawer/Body', 1],
+  ['InputOTP/Group', {}, 'InputOTP/Slot', 3],
+  ['EmptyState/Header', {}, 'EmptyState/Title', 1],
+  ['DescriptionList', {}, 'DescriptionList/Item', 3],
+  ['Select/Content', {}, 'Select/Item', 4],
+  ['Command', {}, 'Command/Item', 1],
+  ['Tabs', {}, 'Tabs/List', 1],
+  ['Accordion', {}, 'Accordion/Item', 3],
+  ['RadioGroup', {}, 'RadioGroup/Item', 3],
+  ['ToggleGroup', {}, 'ToggleGroup/Item', 3],
+  ['Table', {}, 'Table/Body', 1],
+  ['Table/Body', {}, 'Table/Row', 3],
+  ['Table/Row', {}, 'Table/Cell', 3],
+  ['Table/Body', { Striped: 'true' }, 'Table/Row', 3],
+  ['Alert', { Variant: 'destructive' }, 'Alert/Actions', 1],
+  ['Alert', { Layout: 'inline' }, 'Alert/Content', 1],
+  ['Card/Header', {}, 'Card/Title', 1],
+  ['Card', {}, 'Card/Header', 1],
+  ['Accordion/Item', {}, 'Accordion/Trigger', 1],
+  ['Tabs/List', {}, 'Tabs/Tab', 2],
+  ['Sidebar/Group', {}, 'Sidebar/Group label', 1],
+  ['Item', {}, 'Item/Content', 1],
+  ['Attachment', {}, 'Attachment/Media', 1],
+  ['Sidebar', {}, 'Sidebar/Content', 1],
+  ['Sidebar/Group', {}, 'Sidebar/Menu button', 3],
+  ['Breadcrumb', {}, 'Breadcrumb/Link', 1],
+  ['Pagination', {}, 'Pagination/Link', 6],
+  ['Sidebar/Header', {}, 'Sidebar/Menu button', 1],
+  ['Dialog/Header', {}, 'Dialog/Title', 1],
+  ['Dialog/Header', {}, 'Dialog/Description', 1],
+  ['Dialog/Footer', {}, 'Button', 2],
+  ['Dialog/Content', {}, 'Dialog/Header', 1],
+  ['Dialog/Content', {}, 'Dialog/Body', 1],
+  ['Dialog/Content', {}, 'Dialog/Footer', 1],
+  ['Dialog/Content', {}, 'Dialog/Close', 1],
+  ['Dialog', {}, 'Dialog/Overlay', 1],
+  ['Dialog', {}, 'Dialog/Content', 1],
 ];
+// A part that renders `children` is a slot, which what holds it fills with its own content.
+check(
+  component('Card/Content')
+    .slotProperties.map(({ name }) => name)
+    .join(',') === 'Content',
+  'Card/Content: it has no Content slot.'
+);
+const filled: [string, Record<string, string>, string, number][] = [
+  ['Card', {}, 'Card/Content', 1],
+  ['Carousel', {}, 'Card', 1],
+  ['MultiSelect/Content', {}, 'Command', 1],
+  ['MessageScroller', {}, 'EmptyState', 1],
+  ['Resizable', {}, 'Resizable/Panel', 2],
+];
+for (const [name, values, part, least] of filled) {
+  const found = instancesOf(variant(component(name), values), part).filter(
+    (layer) => layer.slotContent
+  ).length;
+  check(
+    found >= least,
+    `${name}: ${found} ${part} instances fill a slot, expected at least ${least}.`
+  );
+}
+
+const dialog = variant(component('Dialog'), {});
+check(
+  dialog.width.value === 1280 &&
+    dialog.height.value === 800 &&
+    dialog.sizing.vertical === 'FIXED',
+  `Dialog: the screen is ${dialog.width.value}x${dialog.height.value} ${dialog.sizing.vertical}, expected a fixed 1280x800.`
+);
 for (const [name, values, part, least] of nesting) {
   const found = instancesOf(variant(component(name), values), part).length;
   check(
@@ -350,8 +460,8 @@ check(
   `Button texts: ${props('Button').texts}.`
 );
 check(
-  props('Menu item').booleans.includes('Show shortcut:true'),
-  `Menu item booleans: ${props('Menu item').booleans}.`
+  props('DropdownMenu/Item').booleans.includes('Show shortcut:true'),
+  `DropdownMenu/Item booleans: ${props('DropdownMenu/Item').booleans}.`
 );
 check(
   ['Show icon:true', 'Description:true', 'Actions:true'].every((entry) =>
@@ -481,7 +591,7 @@ const own = await captureComponents({
     ...releasePage({ ...releaseFiles, colorsCss: OWN_COLORS }),
   },
   outDir: mkdtempSync(path.join(tmpdir(), 'nxds-figma-own-')),
-  only: ['Button', 'Card'],
+  only: ['Card'],
   progress: () => {},
 });
 const ownVariable = (token: string) =>
@@ -493,6 +603,21 @@ const ownButton = own.capture.components
   ?.variants.find((entry) => entry.values['State'] === 'default')?.root;
 const blue600 = ownVariable('nx-color-blue-600');
 check(own.problems.length === 0, `Own colours: ${own.problems.join('; ')}`);
+check(
+  !capture.partial && own.capture.partial,
+  'Capture: partial is not set by --only alone.'
+);
+const ownFooter = own.capture.components.find(
+  (spec) => spec.name === 'Card/Footer'
+);
+check(
+  ownButton !== undefined &&
+    ownFooter !== undefined &&
+    ownFooter.variants.some(
+      (variant) => instancesOf(variant.root, 'Button').length > 0
+    ),
+  'Only: capturing Card alone did not bring in its parts and the Buttons they hold as instances.'
+);
 check(
   ownButton?.fills[0]?.token === 'nx-color-primary-background',
   "Own colours: Button's fill isn't bound to primary-background."
@@ -658,7 +783,7 @@ const app = await captureComponents({
   only: [
     'Button',
     'Card',
-    'BarChart',
+    'Chart/Bar',
     'Slider',
     'MultiSelect',
     'FilterBuilder',
@@ -676,7 +801,7 @@ const appVariant = (values: Record<string, string>) =>
   )?.root;
 check(app.problems.length === 0, `App: ${app.problems.join('; ')}`);
 for (const name of [
-  'BarChart',
+  'Chart/Bar',
   'Slider',
   'MultiSelect',
   'FilterBuilder',
@@ -742,8 +867,9 @@ const junk = await fetch(`${base}/report`, {
 check(junk.status === 400, 'Link: it took a body that is not a report.');
 const sent: BuildReport = {
   format: REPORT_FORMAT,
-  version: 2,
-  created: {
+  version: 4,
+  written: {
+    pages: 2,
     collections: 5,
     variables: 1,
     textStyles: 1,
@@ -753,6 +879,8 @@ const sent: BuildReport = {
     components: 1,
     instances: 1,
   },
+  swapped: 1,
+  removed: ['page Kbd'],
   modes: ['Light'],
   darkModeError: 'in addMode: Limited to 1 modes only',
   unbound: [],

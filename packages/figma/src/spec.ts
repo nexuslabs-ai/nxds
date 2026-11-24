@@ -92,6 +92,8 @@ export interface FrameLayer extends LayerBase {
   shadow?: { style?: string; effects: Shadow[] };
   clips: boolean;
   children: Layer[];
+  /** The slot component property this frame is, which holds what the part's `children` were. */
+  slotProperty?: string;
 }
 
 export interface TextLayer extends LayerBase {
@@ -146,6 +148,10 @@ export interface InstanceLayer extends LayerBase {
   booleans: Record<string, boolean>;
   /** Instance-swap overrides, by property name: the icon each shows. */
   swaps: Record<string, string>;
+  /** Its fill, stroke and corners when what holds it restyles it, such as a ButtonGroup squaring its buttons' inner corners. */
+  restyle?: Pick<FrameLayer, 'fills' | 'stroke' | 'radius'>;
+  /** What goes in its slot, when its component has one: the element's own children. */
+  slotContent?: Layer[];
 }
 
 export type Layer =
@@ -167,13 +173,28 @@ export interface VariantSpec {
   notes: string[];
 }
 
+/** How a component set lays out its variants, by variant property name. Each property is in exactly one list. */
+export interface GridSpec {
+  /** Each combination is a titled block, stacked down the page. */
+  blocks: string[];
+  /** Each combination is a labelled row in every block. */
+  rows: string[];
+  /** Each combination is a labelled column in every block. */
+  columns: string[];
+}
+
 export interface ComponentSpec {
   name: string;
+  /** The release card it belongs to, such as `Tabs` for Tab. Each card gets its own Figma page. */
+  card: string;
   variantProperties: { name: string; values: string[] }[];
+  grid: GridSpec;
   booleanProperties: { name: string; default: boolean }[];
   textProperties: { name: string; default: string }[];
   /** Instance-swap properties, with the icon each shows by default. */
   swapProperties: { name: string; default: string }[];
+  /** Slot properties, each filled with its variant's captured content by default. */
+  slotProperties: { name: string }[];
   variants: VariantSpec[];
 }
 
@@ -225,7 +246,9 @@ export interface IconSpec {
 
 export interface CaptureFile {
   format: typeof CAPTURE_FORMAT;
-  version: 2;
+  version: 5;
+  /** True when it holds only some components, so the plugin leaves every other part of the file alone. */
+  partial: boolean;
   nxds: { release: string; theme: Record<string, string> };
   collections: CollectionSpec[];
   textStyles: TextStyleSpec[];
@@ -249,8 +272,10 @@ export interface UnboundValue {
 
 export interface BuildReport {
   format: typeof REPORT_FORMAT;
-  version: 2;
-  created: {
+  version: 4;
+  /** What the run created, or updated when the file already had it. An unchanged icon isn't counted. */
+  written: {
+    pages: number;
     collections: number;
     variables: number;
     textStyles: number;
@@ -260,6 +285,10 @@ export interface BuildReport {
     components: number;
     instances: number;
   };
+  /** Instances elsewhere in the file moved over to a rebuilt component. */
+  swapped: number;
+  /** What a full run deleted because the capture no longer has it, such as `page Kbd`. */
+  removed: string[];
   /** The modes the themed collection ended with. */
   modes: string[];
   /** Figma's exact message when it refused the Dark mode. */
@@ -307,7 +336,11 @@ export function unboundValues(component: string, variant: VariantSpec) {
     const path = [...parent, layer.name];
     // An instance takes its size from its component, which reports its own,
     // and a layer drawn at opacity 0, such as an unchecked tick, shows no value.
-    if (layer.type === 'INSTANCE' || layer.opacity === 0) return;
+    if (layer.opacity === 0) return;
+    if (layer.type === 'INSTANCE') {
+      for (const child of layer.slotContent ?? []) visit(child, path);
+      return;
+    }
     // A stretched layer, such as a focus ring, takes its size from its parent.
     if (!layer.absolute?.stretch) {
       if (layer.sizing.horizontal === 'FIXED')

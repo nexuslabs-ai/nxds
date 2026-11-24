@@ -12,12 +12,14 @@ import { type CDPSession, chromium, type Page } from 'playwright-core';
 import { convertMarkup } from './attributes.ts';
 import {
   convertVariant,
+  deepFingerprint,
   fingerprint,
   type InstanceSource,
   type SourceVariant,
   svgSignature,
 } from './convert.ts';
 import {
+  type ElementFacts,
   installHelpers,
   type MarkupNode,
   missingParts,
@@ -30,10 +32,13 @@ import {
   type RecordInput,
   recordVariant,
   settle,
+  type TextFacts,
 } from './page.ts';
 import { defaultFirst, partProp, partProps } from './props.ts';
 import {
   type Axis,
+  cardOf,
+  kebab,
   type Recipe,
   RECIPES,
   SKIPPED_CARDS,
@@ -43,6 +48,7 @@ import {
   CAPTURE_FORMAT,
   type CaptureFile,
   type ComponentSpec,
+  type GridSpec,
   type IconSpec,
   type Layer,
   variantName,
@@ -90,7 +96,7 @@ export interface CaptureInput {
   /** Screenshots go in `<outDir>/screenshots/<Component>/`. */
   outDir: string;
   progress(line: string): void;
-  /** Only these components, by name, for a quicker run. */
+  /** Only these components, by name, for a quicker run. A card's name also takes its parts, such as `Dialog/Header` for `Dialog`. */
   only?: readonly string[];
 }
 
@@ -107,6 +113,7 @@ class MissingParts extends Error {}
 
 const ORIGIN = 'https://capture.nxds.invalid';
 const DEFAULT_WIDTH = 400;
+const VIEWPORT = { width: 1400, height: 1000 };
 /** The colour the icon set is drawn in, before an instance recolours it. */
 const ICON_COLOR = 'nx-color-foreground';
 /** Props no variant property comes from: they change behaviour, not looks. */
@@ -160,6 +167,7 @@ ${files.styles.map((style) => `<link rel="stylesheet" href="${style.path}">`).jo
   *, *::before, *::after { transition: none !important; animation: none !important; }
   body {
     margin: 0;
+    min-height: 100vh;
     background: var(--nx-color-background);
     color: var(--nx-color-foreground);
     font-family: var(--nx-typography-family-font-sans);
@@ -201,12 +209,6 @@ async function launch() {
     );
   }
 }
-
-const kebab = (name: string) =>
-  name
-    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-    .replace(/\s+/g, '-')
-    .toLowerCase();
 
 /** `isCaps` → `Caps`, `closeButton` → `Close button`. */
 const title = (prop: string) => {
@@ -250,8 +252,11 @@ function variantProperties(
   part: string,
   indexDts: string
 ): Property[] {
+  // The part whose props they are: the recipe's, or its whole's.
+  const owner = recipe.axesFrom ?? part;
   if (recipe.axes) {
-    return recipe.axes.map((axis): Property => {
+    return recipe.axes.map((given): Property => {
+      const axis = { ...given, part: given.part ?? owner };
       if (axis.values)
         return {
           name: axis.name,
@@ -259,11 +264,9 @@ function variantProperties(
           axis,
           boolean: false,
         };
-      const prop = partProp(indexDts, axis.part ?? part, axis.prop ?? '');
+      const prop = partProp(indexDts, axis.part, axis.prop ?? '');
       if (!prop.literals)
-        throw new Error(
-          `${axis.part ?? part}.${axis.prop} isn't a union of strings.`
-        );
+        throw new Error(`${axis.part}.${axis.prop} isn't a union of strings.`);
       return {
         name: axis.name,
         values: defaultFirst(prop.literals, prop.default),
@@ -274,7 +277,7 @@ function variantProperties(
   }
   let props: ReturnType<typeof partProps> = [];
   try {
-    props = partProps(indexDts, part);
+    props = partProps(indexDts, owner);
   } catch {
     return [];
   }
@@ -294,7 +297,7 @@ function variantProperties(
       (prop): Property => ({
         name: title(prop.name),
         values: defaultFirst(prop.literals ?? [], prop.default),
-        axis: { name: title(prop.name), prop: prop.name },
+        axis: { name: title(prop.name), prop: prop.name, part: owner },
         boolean: false,
       })
     ),
@@ -302,7 +305,7 @@ function variantProperties(
       (prop): Property => ({
         name: title(prop.name),
         values: defaultFirst(['false', 'true'], prop.default),
-        axis: { name: title(prop.name), prop: prop.name },
+        axis: { name: title(prop.name), prop: prop.name, part: owner },
         boolean: true,
       })
     ),
@@ -351,7 +354,25 @@ const mountOn = (page: Page, input: MountInput) =>
     );
   }, input);
 
-/** Mounts, opens, applies the state, and settles. Returns the target's box in page coordinates. */
+/** Mounts the example and opens what the recipe opens with a click or a key. */
+async function mountOpen(page: Page, mount: MountInput, recipe: Recipe) {
+  await mountOn(page, mount);
+  if (!recipe.open) return;
+  await page.evaluate(settle);
+  if ('click' in recipe.open) {
+    await page.click(recipe.open.click, {
+      button: recipe.open.button ?? 'left',
+    });
+    // The pointer leaves, so it hovers nothing later components draw.
+    await page.mouse.move(0, 0);
+  } else {
+    await page.focus(recipe.open.press);
+    await page.keyboard.press(recipe.open.key);
+  }
+  await page.evaluate(settle);
+}
+
+/** Mounts, opens, applies the state, and settles. Returns the target's box in page coordinates, or null when nothing matches it. */
 async function show(
   page: Page,
   cdp: CDPSession,
@@ -360,23 +381,8 @@ async function show(
   target: string,
   state: StateSpec
 ) {
-  await mountOn(page, mount);
-  if (recipe.open) {
-    await page.evaluate(settle);
-    if ('click' in recipe.open) {
-      await page.click(recipe.open.click, {
-        button: recipe.open.button ?? 'left',
-      });
-      // The pointer leaves, so it hovers nothing later components draw.
-      await page.mouse.move(1399, 999);
-    } else {
-      await page.focus(recipe.open.press);
-      await page.keyboard.press(recipe.open.key);
-    }
-    await page.evaluate(settle);
-  }
-  if (!(await exists(page, target)))
-    throw new Error(`nothing matches ${target}`);
+  await mountOpen(page, mount, recipe);
+  if (!(await exists(page, target))) return null;
   if (state.blur) {
     await page.evaluate(() =>
       (document.activeElement as HTMLElement | null)?.blur()
@@ -434,8 +440,11 @@ function propertyLayers(variants: readonly VariantSpec[]) {
   const visible = new Set<string>();
   const texts = new Map<string, string>();
   const swaps = new Map<string, string>();
+  const slots = new Set<string>();
   const visit = (layer: Layer) => {
     if (layer.visibleProperty) visible.add(layer.visibleProperty);
+    if (layer.type === 'FRAME' && layer.slotProperty)
+      slots.add(layer.slotProperty);
     if (
       layer.type === 'TEXT' &&
       layer.textProperty &&
@@ -453,10 +462,37 @@ function propertyLayers(variants: readonly VariantSpec[]) {
     if (layer.type === 'FRAME') layer.children.forEach(visit);
   };
   for (const variant of variants) visit(variant.root);
-  return { visible, texts, swaps };
+  return { visible, texts, swaps, slots };
 }
 
 /** Every token a layer binds, to keep only the palette colours components use. */
+/** The recipe's grid, checked against its properties, or State in rows, Size in columns and the rest in blocks. */
+function gridFor(
+  recipe: Recipe,
+  properties: readonly { name: string }[]
+): GridSpec {
+  const names = properties.map(({ name }) => name);
+  if (recipe.grid) {
+    const placed = [
+      ...recipe.grid.blocks,
+      ...recipe.grid.rows,
+      ...recipe.grid.columns,
+    ];
+    if (
+      placed.length !== names.length ||
+      names.some((name) => !placed.includes(name))
+    )
+      throw new Error(
+        `its grid places ${placed.join(', ')}, but its properties are ${names.join(', ')}`
+      );
+    return recipe.grid;
+  }
+  const rest = names.filter((name) => name !== 'State' && name !== 'Size');
+  const columns = names.includes('Size') ? ['Size'] : rest.splice(-1);
+  const rows = names.includes('State') ? ['State'] : rest.splice(-1);
+  return { blocks: rest, rows, columns };
+}
+
 function usedTokens(components: readonly ComponentSpec[]) {
   const used = new Set<string>([ICON_COLOR]);
   const collect = (value: unknown) => {
@@ -477,7 +513,7 @@ function usedTokens(components: readonly ComponentSpec[]) {
 /** The recipes to run: every recipe, then a default one for each card no recipe draws. */
 function allRecipes(readmes: Readonly<Record<string, string>>) {
   const drawn = new Set([
-    ...RECIPES.map((recipe) => recipe.card ?? recipe.name),
+    ...RECIPES.map((recipe) => cardOf(recipe.name)),
     ...SKIPPED_CARDS,
   ]);
   const extra = Object.keys(readmes)
@@ -485,6 +521,25 @@ function allRecipes(readmes: Readonly<Record<string, string>>) {
     .sort()
     .map((card): Recipe => ({ name: card }));
   return [...RECIPES, ...extra];
+}
+
+/** The slot a recipe's component is drawn with, plus the other slots it also draws. */
+function slotsOf(recipe: Recipe) {
+  const target =
+    typeof recipe.target === 'string'
+      ? /\[data-slot=([\w-]+)\]$/.exec(recipe.target)?.[1]
+      : undefined;
+  return [
+    target ?? kebab(recipe.part ?? recipe.name),
+    ...(recipe.alsoSlots ?? []),
+  ];
+}
+
+/** Every `data-slot` in a recorded tree. */
+function slotsIn(node: ElementFacts | TextFacts, found: Set<string>) {
+  if (node.kind === 'text') return;
+  if (node.slot) found.add(node.slot);
+  for (const child of node.children) slotsIn(child, found);
 }
 
 /** Every part `nodes` draw, such as `Card` and `Button`. */
@@ -522,7 +577,7 @@ export function examples(
     const base =
       typeof recipe.markup === 'string'
         ? recipe.markup
-        : example(readmes[recipe.card ?? recipe.name]);
+        : example(readmes[cardOf(recipe.name)]);
     let properties: Property[] = [];
     try {
       properties = variantProperties(
@@ -566,21 +621,82 @@ function iconSet(icons: readonly IconSpec[]) {
   }));
 }
 
+/**
+ * Leaves out each property that doesn't change how a part looks, keeping the
+ * variants of its first value. A part takes every property of its whole, and
+ * keeps only the ones that restyle it. `looks` pairs with `variants`.
+ */
+function lookChanging(
+  component: string,
+  properties: readonly Property[],
+  variants: readonly VariantSpec[],
+  looks: readonly SourceVariant[]
+) {
+  const drawn = variants.map((entry) => JSON.stringify(entry.root));
+  let kept = [...properties];
+  let left = variants.map((_, index) => index);
+  for (const property of properties) {
+    const others = kept.filter((each) => each !== property);
+    const groups = new Map<string, Set<string>>();
+    for (const index of left) {
+      const values = variants[index]?.values ?? {};
+      const key = others.map(({ name }) => values[name]).join('|');
+      groups.set(key, (groups.get(key) ?? new Set()).add(drawn[index] ?? ''));
+    }
+    if ([...groups.values()].some((group) => group.size > 1)) continue;
+    kept = others;
+    const first = variants[left[0] ?? 0]?.values[property.name];
+    left = left.filter(
+      (index) => variants[index]?.values[property.name] === first
+    );
+  }
+  const named = (values: Record<string, string>) => {
+    const own = Object.fromEntries(
+      kept.map(({ name }) => [name, values[name] ?? ''])
+    );
+    return { values: own, name: variantName(kept, own) || component };
+  };
+  return {
+    properties: kept,
+    variants: left.map((index): VariantSpec => {
+      const entry = variants[index] as VariantSpec;
+      return { ...entry, ...named(entry.values) };
+    }),
+    // Each kept variant also stands for the looks of the variants it replaced.
+    looks: left.map((index): SourceVariant => {
+      const entry = looks[index] as SourceVariant;
+      const same = looks.filter((other) =>
+        kept.every(({ name }) => other.values[name] === entry.values[name])
+      );
+      return {
+        ...named(entry.values),
+        fingerprints: [...new Set(same.flatMap((other) => other.fingerprints))],
+        deeps: [...new Set(same.flatMap((other) => other.deeps))],
+      };
+    }),
+  };
+}
+
 /** The `data-slot` a variant's root was captured from. */
 function rootSlot(variant: VariantSpec) {
   return /\[data-slot=([^\]]+)\]/.exec(variant.root.source)?.[1];
 }
 
-/** An instance's variant from its own attributes: each prop's `data-*` attribute, and disabled for State. */
+/** An instance's variant from attributes: each prop's `data-*` attribute on the element, or on the ancestor its prop is set on, and disabled for State. */
 function attributeVariant(
   properties: readonly Property[]
 ): InstanceSource['variant'] {
-  return (element) =>
+  return (element, ancestors) =>
     Object.fromEntries(
       properties.map((property) => {
         const prop = property.axis?.prop;
+        const slot = property.axis?.part ? kebab(property.axis.part) : null;
+        const holder =
+          slot === null || element.slot === slot
+            ? element
+            : [...ancestors].reverse().find((facts) => facts.slot === slot);
         const attribute = prop
-          ? element.attributes[`data-${kebab(prop)}`]
+          ? holder?.attributes[`data-${kebab(prop)}`]
           : undefined;
         if (attribute !== undefined && property.values.includes(attribute))
           return [property.name, attribute];
@@ -603,8 +719,21 @@ export async function captureComponents(
 ): Promise<CaptureResult> {
   const tokens = JSON.parse(input.files.tokensJson) as TokensFile;
   const traced = tracedTokens(tokens);
-  const recipes = allRecipes(input.files.readmes).filter(
-    (recipe) => !input.only || input.only.includes(recipe.name)
+  const every = allRecipes(input.files.readmes);
+  const names = every.map((recipe) => recipe.name);
+  const unknown = input.only?.filter((name) => !names.includes(name)) ?? [];
+  if (unknown.length > 0)
+    throw new Error(
+      `There's no component named ${unknown.join(', ')}. The components are ${names.join(', ')}.`
+    );
+  // A card's name also takes its parts: Dialog brings Dialog/Header.
+  const only = input.only;
+  const wanted = new Set(
+    only
+      ? names.filter(
+          (name) => only.includes(name) || only.includes(cardOf(name))
+        )
+      : names
   );
   const allParts = RECIPES.flatMap((recipe) => recipe.parts ?? []).map(
     ({ selector, name }) => ({ selector, name })
@@ -613,7 +742,7 @@ export async function captureComponents(
   try {
     // Recharts skips its entrance animation for reduced motion, so a chart draws at once.
     const context = await browser.newContext({
-      viewport: { width: 1400, height: 1000 },
+      viewport: VIEWPORT,
       deviceScaleFactor: 2,
       reducedMotion: 'reduce',
     });
@@ -679,6 +808,8 @@ export async function captureComponents(
     const components: ComponentSpec[] = [];
     const problems: string[] = [];
     const notInstalled: string[] = [];
+    /** Every slot the captured components draw, to find the components they hold. */
+    const seen = new Set<string>();
 
     // Each example parsed once, with an app's attributes converted.
     const parsed = new Map<string, MarkupNode[]>();
@@ -698,7 +829,8 @@ export async function captureComponents(
     };
 
     const captureRecipe = async (recipe: Recipe): Promise<ComponentSpec> => {
-      const card = recipe.card ?? recipe.name;
+      await page.setViewportSize(recipe.viewport ?? recipe.screen ?? VIEWPORT);
+      const card = cardOf(recipe.name);
       const base =
         typeof recipe.markup === 'string'
           ? recipe.markup
@@ -708,7 +840,7 @@ export async function captureComponents(
       const part = recipe.part ?? recipe.name;
       const axes = variantProperties(recipe, part, input.files.indexDts);
       const stateNames = Object.keys(recipe.states ?? {});
-      const properties: Property[] =
+      let properties: Property[] =
         stateNames.length > 0
           ? [...axes, { name: 'State', values: stateNames, boolean: false }]
           : axes;
@@ -716,11 +848,15 @@ export async function captureComponents(
       mkdirSync(path.join(input.outDir, folder), { recursive: true });
       const hasOffParts =
         recipe.parts?.some((entry) => !entry.default) ?? false;
-      const variants: VariantSpec[] = [];
-      const looks: SourceVariant[] = [];
+      let variants: VariantSpec[] = [];
+      let looks: SourceVariant[] = [];
       let target: string | undefined;
       for (const values of combinations(properties)) {
-        const state = recipe.states?.[values['State'] ?? 'default'] ?? {};
+        if (recipe.skip?.(values)) continue;
+        const state: StateSpec = {
+          blur: recipe.blur,
+          ...recipe.states?.[values['State'] ?? 'default'],
+        };
         const markup =
           typeof recipe.markup === 'function'
             ? recipe.markup(values)
@@ -747,9 +883,8 @@ export async function captureComponents(
             : recipe.target;
         if (explicit) target = explicit;
         if (!target) {
-          await mountOn(page, mount(false));
+          await mountOpen(page, mount(false), recipe);
           for (const candidate of [
-            `[data-slot=${kebab(recipe.name)}]`,
             `[data-slot=${kebab(part)}]`,
             '[data-capture-root] > *',
           ]) {
@@ -762,7 +897,9 @@ export async function captureComponents(
         if (!target)
           throw new Error('nothing to capture: the example renders nothing');
         const box = await show(page, cdp, mount(false), recipe, target, state);
-        if (!box) throw new Error(`${target} has no box`);
+        // A part only some of its whole's variants draw, such as an inline Alert's close button.
+        if (!box && recipe.axesFrom) continue;
+        if (!box) throw new Error(`nothing matches ${target}`);
         await page.screenshot({
           path: path.join(input.outDir, screenshot),
           clip: {
@@ -784,7 +921,8 @@ export async function captureComponents(
         const notes: string[] = [];
         const root = convertVariant(recorded, {
           component: recipe.name,
-          slot: recorded.tree.slot ?? kebab(recipe.name),
+          slot: recorded.tree.slot ?? kebab(part),
+          rootSlot: recipe.slot ?? false,
           prefix: kebab(card),
           textNames: recipe.textNames ?? {},
           instances: sources,
@@ -793,19 +931,39 @@ export async function captureComponents(
           effectStyles: effectStylesByToken,
           notes,
         });
+        // A screen keeps its size, though only its page content is in flow.
+        if (recipe.screen) {
+          root.name = recipe.name;
+          root.sizing = { horizontal: 'FIXED', vertical: 'FIXED' };
+        }
+        slotsIn(recorded.tree, seen);
         variants.push({ values, name, screenshot, root, notes });
-        looks.push({ name, values, fingerprint: fingerprint(recorded.tree) });
+        looks.push({
+          name,
+          values,
+          fingerprints: [fingerprint(recorded.tree)],
+          deeps: [deepFingerprint(recorded.tree)],
+        });
       }
-      const { visible, texts, swaps } = propertyLayers(variants);
+      if (variants.length === 0) throw new Error(`nothing matches ${target}`);
+      if (recipe.axesFrom) {
+        const kept = lookChanging(recipe.name, properties, variants, looks);
+        properties = kept.properties;
+        variants = kept.variants;
+        looks = kept.looks;
+      }
+      const { visible, texts, swaps, slots } = propertyLayers(variants);
       const booleans = new Map(
         (recipe.parts ?? []).map((entry) => [entry.name, entry.default])
       );
       const spec: ComponentSpec = {
         name: recipe.name,
+        card,
         variantProperties: properties.map(({ name, values }) => ({
           name,
           values,
         })),
+        grid: gridFor(recipe, properties),
         booleanProperties: [...visible].map((name) => ({
           name,
           default: booleans.get(name) ?? true,
@@ -818,6 +976,7 @@ export async function captureComponents(
           name,
           default: icon,
         })),
+        slotProperties: [...slots].map((name) => ({ name })),
         variants,
       };
       const slot = variants[0] ? rootSlot(variants[0]) : undefined;
@@ -829,6 +988,7 @@ export async function captureComponents(
           textProperties: [...texts.keys()],
           booleanProperties: [...visible],
           swapProperties: [...swaps.keys()],
+          slot: recipe.slot ?? false,
           variant: recipe.instanceVariant ?? attributeVariant(properties),
         };
         for (const each of [slot, ...(recipe.alsoSlots ?? [])]) {
@@ -839,25 +999,48 @@ export async function captureComponents(
       return spec;
     };
 
-    for (const recipe of recipes) {
-      try {
-        components.push(await captureRecipe(recipe));
-      } catch (error) {
-        const message = (error as Error).message;
-        if (input.app && error instanceof MissingParts) {
-          notInstalled.push(recipe.name);
-        } else {
-          problems.push(`${recipe.name}: ${message}`);
-          input.progress(`Skipped ${recipe.name}: ${message}`);
+    // An --only run also captures the components the named ones hold, so they
+    // become instances. A held component comes earlier in recipe order, and
+    // finding one means capturing again from the start.
+    for (;;) {
+      for (const recipe of every.filter(({ name }) => wanted.has(name))) {
+        try {
+          components.push(await captureRecipe(recipe));
+        } catch (error) {
+          const message = (error as Error).message;
+          if (input.app && error instanceof MissingParts) {
+            notInstalled.push(recipe.name);
+          } else {
+            problems.push(`${recipe.name}: ${message}`);
+            input.progress(`Skipped ${recipe.name}: ${message}`);
+          }
         }
+        errors.length = 0;
       }
-      errors.length = 0;
+      const last = Math.max(...[...wanted].map((name) => names.indexOf(name)));
+      const held = every
+        .slice(0, last)
+        .filter(
+          (recipe) =>
+            !wanted.has(recipe.name) &&
+            slotsOf(recipe).some((slot) => seen.has(slot))
+        );
+      if (held.length === 0) break;
+      for (const recipe of held) wanted.add(recipe.name);
+      input.progress(
+        `Capturing again with ${held.map(({ name }) => name).join(', ')}, which they hold.`
+      );
+      sources.clear();
+      components.length = 0;
+      problems.length = 0;
+      notInstalled.length = 0;
     }
     await assertFontsLoaded(page, tokens, input.app !== undefined);
     return {
       capture: {
         format: CAPTURE_FORMAT,
-        version: 2,
+        version: 5,
+        partial: input.only !== undefined,
         nxds: { release: input.release, theme: input.theme },
         collections: collections(tokens, usedTokens(components), values),
         textStyles: styles,

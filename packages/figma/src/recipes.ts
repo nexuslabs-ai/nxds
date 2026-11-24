@@ -1,10 +1,11 @@
 // What each Figma component is. By default a component renders its card's
 // README example from the release, its variant properties are the
 // string-literal props of its part in index.d.ts, and it is captured from the
-// element whose `data-slot` matches its name. An entry here only says what
+// element whose `data-slot` matches its part. An entry here only says what
 // differs: a part captured on its own, an overlay to open, the states to
 // capture, or markup when the example doesn't show the component well.
 import type { ElementFacts, Override } from './page.ts';
+import type { GridSpec } from './spec.ts';
 
 export interface StateSpec {
   /** Props on the recipe's part, or on `on`. */
@@ -29,15 +30,29 @@ export interface Axis {
   set?: (value: string, values: Record<string, string>) => Override[];
 }
 
+export const kebab = (name: string) =>
+  name
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/\s+/g, '-')
+    .toLowerCase();
+
+/** The release card a component belongs to: its name up to a slash, such as `Tabs` for `Tabs/Tab`. */
+export const cardOf = (name: string) => name.split('/')[0] ?? name;
+
+export interface Size {
+  width: number;
+  height: number;
+}
+
 export interface Recipe {
-  /** The Figma component's name. */
+  /** The Figma component's name. A part of a card's component is `<Card>/<Part>`, such as `Dialog/Header`, and renders that card's README example. */
   name: string;
-  /** The release card whose README example it renders. Default: `name`. */
-  card?: string;
   /** Markup to render in place of the README example. */
   markup?: string | ((values: Record<string, string>) => string);
   /** The part whose props become variant properties and take each state's props. Default: `name`. */
   part?: string;
+  /** The part whose props become the default variant properties, and that axes without a `part` set: a part's whole, so the part takes the whole's properties and keeps only those that change its look. Default: `part`. */
+  axesFrom?: string;
   /** The variant properties. Default: every string-literal prop of `part`, plus `booleans`. */
   axes?: readonly Axis[];
   /** Boolean props of `part` that become variant properties. */
@@ -45,23 +60,35 @@ export interface Recipe {
   /** Props of `part` left out of the default variant properties. */
   exclude?: readonly string[];
   states?: Readonly<Record<string, StateSpec>>;
+  /** Combinations the code can't produce, such as an active Previous link, left out. */
+  skip?: (values: Record<string, string>) => boolean;
+  /** How Figma lays out the variants. Default: State in rows, Size in columns, the rest in blocks. */
+  grid?: GridSpec;
   /** Props on the example's outermost part, such as `open` on an overlay's root. */
   rootProps?: Record<string, unknown>;
   /** A real click on the first element `click` matches, or a key pressed on `press`, that opens it. */
   open?:
     | { click: string; button?: 'left' | 'right' }
     | { press: string; key: string };
-  /** The element captured. Default: `[data-slot=<kebab name>]`, else the first part in the container. */
+  /** The element captured. Default: `[data-slot=<kebab part>]`, else the first part in the container. */
   target?: string | ((values: Record<string, string>) => string);
   /** The container's width. Default 400. */
   width?: number;
+  /** Recorded as a whole screen this size: the page body, with an open overlay's layers over it. */
+  screen?: Size;
+  /** The browser window's size, when it isn't `screen`'s or the default 1400×1000, such as a sheet's parts at its screen's size. */
+  viewport?: Size;
+  /** Takes focus off what an open overlay focused, as after a click, in every state. */
+  blur?: boolean;
   /** Props on `part` that add the optional parts that start hidden, so their layers exist to toggle. */
   full?: (values: Record<string, string>) => Record<string, unknown>;
   /** Optional parts, by selector. Each becomes a boolean property. */
   parts?: readonly { selector: string; name: string; default: boolean }[];
   /** Text property names by the `data-slot` of the element holding the text, when its name isn't right, such as a loading label that is still the Label. */
   textNames?: Readonly<Record<string, string>>;
-  /** Other components' slots this component also draws, such as `context-menu-item` for Menu item. */
+  /** Its root renders `children`, which Figma gets as a slot named Content that designers fill. */
+  slot?: boolean;
+  /** Other components' slots this component also draws, such as `context-menu-item` for DropdownMenu/Item. */
   alsoSlots?: readonly string[];
   /** An instance's variant, from its element and the elements around it, when attributes alone don't say. */
   instanceVariant?(
@@ -87,6 +114,8 @@ function x(
 }
 
 const icon = (name: string) => ({ __icon: name });
+
+const CHECKED = ['false', 'true'] as const;
 
 const HOVER: StateSpec = { pseudo: ['hover'] };
 const FOCUS: StateSpec = { pseudo: ['focus', 'focus-visible'] };
@@ -168,10 +197,10 @@ const PIE_DATA = JSON.stringify([
   { browser: 'Edge', visitors: 173 },
 ]);
 
-const chart = (name: string, axes: Partial<Recipe>): Recipe => ({
-  name,
-  card: 'Chart',
-  markup: x(name, {
+const chart = (part: string, axes: Partial<Recipe>): Recipe => ({
+  name: `Chart/${part.replace(/Chart$/, '')}`,
+  part,
+  markup: x(part, {
     data: CHART_DATA,
     'x-key': 'month',
     series: 'desktop,mobile',
@@ -179,6 +208,117 @@ const chart = (name: string, axes: Partial<Recipe>): Recipe => ({
   exclude: ['indicator'],
   width: 480,
   ...axes,
+});
+
+/** The desktop reference size, for a modal overlay's whole. */
+const DESKTOP = { width: 1280, height: 800 };
+/** Room for a trigger and the menu or panel it opens. */
+const FLOATING = { width: 480, height: 400 };
+
+/** The example's overlay, open, with nothing focused. */
+const OPEN: Partial<Recipe> = { rootProps: { open: true }, blur: true };
+
+const MENUBAR_OPEN: Partial<Recipe> = {
+  open: { click: '[data-slot=menubar-trigger]' },
+};
+const MULTI_SELECT_OPEN: Partial<Recipe> = {
+  open: { click: '[data-slot=multi-select-trigger]' },
+};
+const NAV_OPEN: Partial<Recipe> = {
+  open: { press: '[data-slot=navigation-menu-trigger]', key: 'Enter' },
+};
+
+/** A part of a card's example as its own component, `<Card>/<Name>`, captured from `[data-slot=<kebab part>]` unless `extra` says otherwise. */
+const partOf = (
+  card: string,
+  name: string,
+  part: string,
+  extra: Partial<Recipe> = {}
+): Recipe => ({ name: `${card}/${name}`, part, axes: [], ...extra });
+
+/** A trigger in the open example, open or closed, such as a menubar's. */
+const triggerOf = (
+  card: string,
+  part: string,
+  slot: string,
+  opener: Partial<Recipe>
+) =>
+  partOf(card, 'Trigger', part, {
+    ...opener,
+    axes: [{ name: 'Open', values: CHECKED }],
+    target: ({ Open }) =>
+      `[data-slot=${slot}][data-state=${Open === 'true' ? 'open' : 'closed'}]`,
+  });
+
+/** A part whose root renders `children`: Figma gets a slot designers fill. */
+const SLOT: Partial<Recipe> = { slot: true };
+
+/** A part of an open sheet or drawer, at its screen's size, for each side it opens from. */
+const PANEL: Partial<Recipe> = { ...OPEN, viewport: DESKTOP };
+const DIRECTION: Axis = {
+  name: 'Direction',
+  prop: 'direction',
+  part: 'Drawer',
+};
+const SIDE: Axis = { name: 'Side', prop: 'side', part: 'SheetContent' };
+const panelPart = (
+  card: string,
+  axis: Axis,
+  name: string,
+  part: string,
+  extra: Partial<Recipe> = {}
+) => partOf(card, name, part, { ...PANEL, axes: [axis], ...extra });
+
+/**
+ * A part of `whole`'s example as its own component, `<Card>/<Name>`. It
+ * renders what the whole renders, takes the whole's variant properties and
+ * optional parts, and keeps the properties that change how it looks.
+ */
+const partIn = (
+  whole: Recipe,
+  name: string,
+  part: string,
+  extra: Partial<Recipe> = {}
+): Recipe => {
+  const owner = whole.part ?? whole.name;
+  const states = whole.states
+    ? Object.fromEntries(
+        Object.entries(whole.states).map(([state, spec]) => [
+          state,
+          spec.props ? { ...spec, on: spec.on ?? owner } : spec,
+        ])
+      )
+    : undefined;
+  return {
+    name: `${cardOf(whole.name)}/${name}`,
+    part,
+    axesFrom: owner,
+    target: `[data-slot=${kebab(part)}]`,
+    markup: whole.markup,
+    axes: whole.axes,
+    booleans: whole.booleans,
+    exclude: whole.exclude,
+    states,
+    rootProps: whole.rootProps,
+    open: whole.open,
+    width: whole.width,
+    parts: whole.parts,
+    ...extra,
+  };
+};
+
+/** A card's whole example with its overlay open, recorded as a screen. */
+const opened = (
+  card: string,
+  screen: Recipe['screen'],
+  extra: Partial<Recipe> = {}
+): Recipe => ({
+  name: card,
+  target: 'body',
+  screen,
+  axes: [],
+  ...OPEN,
+  ...extra,
 });
 
 const SIDEBAR = x(
@@ -310,7 +450,167 @@ const CARD = x(
   )
 );
 
-const CHECKED = ['false', 'true'] as const;
+/** The part each kind of pagination link is drawn by. */
+const PAGINATION_PARTS: Record<string, string> = {
+  page: 'PaginationLink',
+  previous: 'PaginationPrevious',
+  next: 'PaginationNext',
+};
+
+/** A sidebar holding one menu button, with or without its icon. */
+const MENU_BUTTON = (withIcon: boolean) =>
+  x(
+    'SidebarProvider',
+    {},
+    x(
+      'Sidebar',
+      { collapsible: 'none' },
+      x(
+        'SidebarContent',
+        {},
+        x(
+          'SidebarMenu',
+          {},
+          x(
+            'SidebarMenuItem',
+            {},
+            x(
+              'SidebarMenuButton',
+              {},
+              ...(withIcon ? [x('Icon', { name: 'house' })] : []),
+              'Home'
+            )
+          )
+        )
+      )
+    )
+  );
+
+// Wholes whose parts are their own components, each part taking the whole's variant properties.
+const AVATAR: Recipe = {
+  name: 'Avatar',
+  markup: x('Avatar', {}, x('AvatarFallback', {}, 'AL')),
+  booleans: ['ring'],
+};
+const MARKER: Recipe = { name: 'Marker' };
+const ACCORDION_ITEM_TARGET = ({ Last }: Record<string, string>) =>
+  `[data-slot=accordion-item]:${Last === 'true' ? 'last-child' : 'first-child'}`;
+const ACCORDION_ITEM: Recipe = {
+  name: 'Accordion/Item',
+  part: 'AccordionItem',
+  axes: [
+    { name: 'Variant', prop: 'variant', part: 'Accordion' },
+    { name: 'Orientation', prop: 'orientation', part: 'Accordion' },
+    { name: 'Last', values: CHECKED },
+    {
+      name: 'Open',
+      values: CHECKED,
+      set: (value, { Last }) =>
+        value === 'true'
+          ? [
+              {
+                part: 'Accordion',
+                props: {
+                  defaultValue: Last === 'true' ? 'item-3' : 'item-1',
+                },
+              },
+            ]
+          : [],
+    },
+  ],
+  target: ACCORDION_ITEM_TARGET,
+  states: { default: {}, disabled: DISABLED },
+  instanceVariant: (element, ancestors) => ({
+    Variant:
+      ancestor(ancestors, 'accordion')?.attributes['data-variant'] ?? 'default',
+    Orientation:
+      ancestor(ancestors, 'accordion')?.attributes['data-orientation'] ??
+      'vertical',
+    Last: positionOf(element, ancestors) === 'last' ? 'true' : 'false',
+    Open: element.attributes['data-state'] === 'open' ? 'true' : 'false',
+    State: stateOf(element),
+  }),
+};
+/** A part inside an accordion item: its variant is its item's. */
+const accordionPart = (
+  name: string,
+  part: string,
+  extra: Partial<Recipe> = {}
+): Recipe =>
+  partIn(ACCORDION_ITEM, name, part, {
+    ...extra,
+    target: (values) =>
+      `${ACCORDION_ITEM_TARGET(values)} [data-slot=${kebab(part)}]`,
+    instanceVariant: (element, ancestors) => {
+      const index = ancestors
+        .map(({ slot }) => slot)
+        .lastIndexOf('accordion-item');
+      const item = ancestors[index];
+      return item
+        ? (ACCORDION_ITEM.instanceVariant?.(item, ancestors.slice(0, index)) ??
+            {})
+        : {};
+    },
+  });
+const TABS: Recipe = { name: 'Tabs' };
+const TABLE: Recipe = { name: 'Table', booleans: ['striped'], width: 560 };
+const SIDEBAR_WHOLE: Recipe = {
+  name: 'Sidebar',
+  markup: SIDEBAR,
+  axes: [
+    { name: 'Variant', prop: 'variant' },
+    { name: 'Side', prop: 'side' },
+  ],
+  width: 280,
+};
+const ALERT_WHOLE: Recipe = {
+  name: 'Alert',
+  markup: ALERT,
+  width: 480,
+  parts: [
+    { selector: '[data-slot=alert-icon]', name: 'Show icon', default: true },
+    {
+      selector: '[data-slot=alert-description]',
+      name: 'Description',
+      default: true,
+    },
+    { selector: '[data-slot=alert-actions]', name: 'Actions', default: true },
+  ],
+};
+const CARD_WHOLE: Recipe = {
+  name: 'Card',
+  markup: CARD,
+  width: 360,
+  slot: true,
+  parts: [
+    {
+      selector: '[data-slot=card-description]',
+      name: 'Description',
+      default: true,
+    },
+    { selector: '[data-slot=card-action]', name: 'Action', default: true },
+  ],
+};
+const ATTACHMENT: Recipe = { name: 'Attachment' };
+const BUBBLE: Recipe = { name: 'Bubble', exclude: ['side'] };
+const CAROUSEL: Recipe = { name: 'Carousel' };
+const CHOICE_CARD: Recipe = { name: 'ChoiceCard' };
+const CODE_BLOCK: Recipe = { name: 'CodeBlock' };
+const INPUT_GROUP: Recipe = { name: 'InputGroup' };
+const ITEM: Recipe = { name: 'Item' };
+const MESSAGE: Recipe = { name: 'Message' };
+const RESIZABLE: Recipe = {
+  name: 'Resizable',
+  part: 'ResizablePanelGroup',
+  target: '[data-slot=resizable-panel-group]',
+};
+const TOOLBAR: Recipe = { name: 'Toolbar' };
+const EMPTY_STATE: Recipe = {
+  name: 'EmptyState',
+  booleans: ['bordered'],
+  slot: true,
+};
+const FIELD: Recipe = { name: 'Field' };
 
 /** In capture order: a component comes after every component it holds an instance of. */
 export const RECIPES: readonly Recipe[] = [
@@ -337,6 +637,11 @@ export const RECIPES: readonly Recipe[] = [
       },
     ],
     states: { ...BUTTON_STATES, loading: { props: { loading: true } } },
+    grid: {
+      blocks: ['Variant'],
+      rows: ['State'],
+      columns: ['Size', 'Icon only'],
+    },
     textNames: { 'button-loading-label': 'Label' },
     full: (values) =>
       values['Icon only'] === 'true'
@@ -391,12 +696,10 @@ export const RECIPES: readonly Recipe[] = [
   { name: 'Spinner' },
   { name: 'Skeleton' },
   { name: 'Progress' },
-  { name: 'Marker' },
-  {
-    name: 'Avatar',
-    markup: x('Avatar', {}, x('AvatarFallback', {}, 'AL')),
-    booleans: ['ring'],
-  },
+  partIn(MARKER, 'Content', 'MarkerContent'),
+  MARKER,
+  partIn(AVATAR, 'Fallback', 'AvatarFallback'),
+  AVATAR,
   {
     name: 'Checkbox',
     axes: [
@@ -478,8 +781,7 @@ export const RECIPES: readonly Recipe[] = [
 
   // Parts that are their own components.
   {
-    name: 'Menu item',
-    card: 'DropdownMenu',
+    name: 'DropdownMenu/Item',
     part: 'DropdownMenuItem',
     rootProps: { open: true },
     target: '[data-slot=dropdown-menu-item]',
@@ -495,8 +797,7 @@ export const RECIPES: readonly Recipe[] = [
     alsoSlots: ['context-menu-item', 'menubar-item'],
   },
   {
-    name: 'Select item',
-    card: 'Select',
+    name: 'Select/Item',
     part: 'SelectItem',
     rootProps: { open: true },
     target: '[data-slot=select-item]',
@@ -523,8 +824,7 @@ export const RECIPES: readonly Recipe[] = [
     }),
   },
   {
-    name: 'Command item',
-    card: 'Command',
+    name: 'Command/Item',
     part: 'CommandItem',
     target: '[data-slot=command-item]',
     states: {
@@ -550,8 +850,7 @@ export const RECIPES: readonly Recipe[] = [
     }),
   },
   {
-    name: 'Tab',
-    card: 'Tabs',
+    name: 'Tabs/Tab',
     part: 'TabsTrigger',
     target: '[data-slot=tabs-trigger]',
     axes: [
@@ -578,48 +877,13 @@ export const RECIPES: readonly Recipe[] = [
       };
     },
   },
+  partIn(TABS, 'List', 'TabsList'),
+  partIn(TABS, 'Content', 'TabsContent', SLOT),
+  accordionPart('Trigger', 'AccordionTrigger'),
+  accordionPart('Content', 'AccordionContent', SLOT),
+  ACCORDION_ITEM,
   {
-    name: 'Accordion item',
-    card: 'Accordion',
-    part: 'AccordionItem',
-    axes: [
-      { name: 'Variant', prop: 'variant', part: 'Accordion' },
-      { name: 'Orientation', prop: 'orientation', part: 'Accordion' },
-      { name: 'Last', values: CHECKED },
-      {
-        name: 'Open',
-        values: CHECKED,
-        set: (value, { Last }) =>
-          value === 'true'
-            ? [
-                {
-                  part: 'Accordion',
-                  props: {
-                    defaultValue: Last === 'true' ? 'item-3' : 'item-1',
-                  },
-                },
-              ]
-            : [],
-      },
-    ],
-    target: ({ Last }) =>
-      `[data-slot=accordion-item]:${Last === 'true' ? 'last-child' : 'first-child'}`,
-    states: { default: {}, disabled: DISABLED },
-    instanceVariant: (element, ancestors) => ({
-      Variant:
-        ancestor(ancestors, 'accordion')?.attributes['data-variant'] ??
-        'default',
-      Orientation:
-        ancestor(ancestors, 'accordion')?.attributes['data-orientation'] ??
-        'vertical',
-      Last: positionOf(element, ancestors) === 'last' ? 'true' : 'false',
-      Open: element.attributes['data-state'] === 'open' ? 'true' : 'false',
-      State: stateOf(element),
-    }),
-  },
-  {
-    name: 'Toggle group item',
-    card: 'ToggleGroup',
+    name: 'ToggleGroup/Item',
     part: 'ToggleGroupItem',
     target: ({ Position }) =>
       `[data-slot=toggle-group-item]:${POSITION_SELECTOR[Position ?? 'first']}`,
@@ -660,8 +924,7 @@ export const RECIPES: readonly Recipe[] = [
     },
   },
   {
-    name: 'Radio',
-    card: 'RadioGroup',
+    name: 'RadioGroup/Item',
     part: 'RadioGroupItem',
     target: '[data-slot=radio-group-item]',
     axes: [
@@ -686,43 +949,99 @@ export const RECIPES: readonly Recipe[] = [
     }),
   },
   {
-    name: 'Breadcrumb link',
-    card: 'Breadcrumb',
+    name: 'Breadcrumb/Link',
     part: 'BreadcrumbLink',
     target: '[data-slot=breadcrumb-link]',
     states: LINK_STATES,
   },
   {
-    name: 'Pagination link',
-    card: 'Pagination',
+    name: 'Pagination/Link',
     part: 'PaginationLink',
-    target: '[data-slot=pagination-link]',
-    exclude: ['target'],
-    booleans: ['isActive'],
+    axes: [
+      { name: 'Kind', values: ['page', 'previous', 'next'] },
+      {
+        name: 'Size',
+        values: ['default', 'sm', 'lg'],
+        set: (value, { Kind = 'page' }) => [
+          {
+            part: PAGINATION_PARTS[Kind] ?? 'PaginationLink',
+            props: { size: value },
+          },
+        ],
+      },
+      {
+        name: 'Active',
+        values: CHECKED,
+        set: (value) => [
+          { part: 'PaginationLink', props: { isActive: value === 'true' } },
+        ],
+      },
+      {
+        name: 'Icon only',
+        values: CHECKED,
+        set: (value, { Kind = 'page' }) => [
+          {
+            part: PAGINATION_PARTS[Kind] ?? 'PaginationLink',
+            props: { iconOnly: value === 'true' },
+          },
+        ],
+      },
+    ],
+    skip: ({ Kind, Active, 'Icon only': iconOnly }) =>
+      Kind === 'page' ? iconOnly === 'true' : Active === 'true',
+    target: ({ Kind }) =>
+      Kind === 'page'
+        ? '[data-slot=pagination-item]:nth-child(2) [data-slot=pagination-link]'
+        : `[aria-label="Go to ${Kind} page"]`,
     states: LINK_STATES,
-    instanceVariant: (element) => ({
-      Size: element.attributes['data-size'] ?? 'icon',
-      Active:
-        element.attributes['data-active'] === 'true' ||
-        element.attributes['aria-current'] !== undefined
-          ? 'true'
-          : 'false',
-      State: 'default',
-    }),
+    instanceVariant: (element) => {
+      const label = element.attributes['aria-label'] ?? '';
+      const kind = /previous/.test(label)
+        ? 'previous'
+        : /next/.test(label)
+          ? 'next'
+          : 'page';
+      return {
+        Kind: kind,
+        Size: element.attributes['data-size'] ?? 'default',
+        Active:
+          element.attributes['data-active'] === 'true' ||
+          element.attributes['aria-current'] !== undefined
+            ? 'true'
+            : 'false',
+        'Icon only':
+          element.attributes['data-icon-only'] !== undefined ? 'true' : 'false',
+        State: 'default',
+      };
+    },
   },
   {
-    name: 'Sidebar menu button',
-    card: 'Sidebar',
-    markup: SIDEBAR,
+    name: 'Sidebar/Menu button',
+    markup: ({ Icon }) => MENU_BUTTON(Icon === 'true'),
     part: 'SidebarMenuButton',
-    target: '[data-slot=sidebar-content] [data-slot=sidebar-menu-button]',
-    booleans: ['isActive'],
+    axes: [
+      { name: 'Variant', prop: 'variant' },
+      { name: 'Size', prop: 'size' },
+      {
+        name: 'Active',
+        values: CHECKED,
+        set: (value) => [
+          { part: 'SidebarMenuButton', props: { isActive: value === 'true' } },
+        ],
+      },
+      { name: 'Icon', values: ['true', 'false'] },
+    ],
     states: CONTROL_STATES,
     width: 280,
   },
+  partIn(SIDEBAR_WHOLE, 'Menu badge', 'SidebarMenuBadge'),
+  partIn(SIDEBAR_WHOLE, 'Group label', 'SidebarGroupLabel'),
+  partIn(SIDEBAR_WHOLE, 'Header', 'SidebarHeader', SLOT),
+  partIn(SIDEBAR_WHOLE, 'Group', 'SidebarGroup', SLOT),
+  partIn(SIDEBAR_WHOLE, 'Content', 'SidebarContent', SLOT),
+  partIn(SIDEBAR_WHOLE, 'Footer', 'SidebarFooter', SLOT),
   {
-    name: 'Navigation menu link',
-    card: 'NavigationMenu',
+    name: 'NavigationMenu/Link',
     part: 'NavigationMenuLink',
     open: { press: '[data-slot=navigation-menu-trigger]', key: 'Enter' },
     target:
@@ -732,67 +1051,71 @@ export const RECIPES: readonly Recipe[] = [
     states: LINK_STATES,
     width: 640,
   },
-  {
-    name: 'Table row',
-    card: 'Table',
-    part: 'Table',
+  partIn(TABLE, 'Head', 'TableHead'),
+  partIn(TABLE, 'Cell', 'TableCell'),
+  partIn(TABLE, 'Row', 'TableRow', {
     axes: [
       { name: 'Type', values: ['body', 'header'] },
-      { name: 'Last', values: CHECKED },
+      { name: 'Position', values: ['first', 'middle', 'last'] },
       { name: 'Variant', prop: 'variant', part: 'Table' },
       { name: 'Density', prop: 'density', part: 'Table' },
+      {
+        name: 'Striped',
+        values: CHECKED,
+        set: (value) => [
+          { part: 'Table', props: { striped: value === 'true' } },
+        ],
+      },
     ],
-    target: ({ Type, Last }) =>
-      `[data-slot=table-${Type}] [data-slot=table-row]:${Last === 'true' ? 'last-child' : 'first-child'}`,
-    width: 560,
-    instanceVariant: (_element, ancestors) => {
+    target: ({ Type, Position }) =>
+      `[data-slot=table-${Type}] [data-slot=table-row]:${POSITION_SELECTOR[Position ?? 'first']}`,
+    instanceVariant: (element, ancestors) => {
       const table = ancestor(ancestors, 'table');
       return {
         Type: ancestor(ancestors, 'table-header') ? 'header' : 'body',
-        Last: positionOf(_element, ancestors) === 'last' ? 'true' : 'false',
+        Position: positionOf(element, ancestors),
         Variant: table?.attributes['data-variant'] ?? 'default',
         Density: table?.attributes['data-density'] ?? 'default',
       };
     },
-  },
+  }),
+  partIn(TABLE, 'Header', 'TableHeader', SLOT),
+  partIn(TABLE, 'Body', 'TableBody', SLOT),
 
   // Everything else.
-  {
-    name: 'Alert',
-    markup: ALERT,
-    width: 480,
-    parts: [
-      { selector: '[data-slot=alert-icon]', name: 'Show icon', default: true },
-      {
-        selector: '[data-slot=alert-description]',
-        name: 'Description',
-        default: true,
-      },
-      { selector: '[data-slot=alert-actions]', name: 'Actions', default: true },
-    ],
-  },
-  {
-    name: 'Card',
-    markup: CARD,
-    width: 360,
-    parts: [
-      {
-        selector: '[data-slot=card-description]',
-        name: 'Description',
-        default: true,
-      },
-      { selector: '[data-slot=card-action]', name: 'Action', default: true },
-      { selector: '[data-slot=card-content]', name: 'Content', default: true },
-      { selector: '[data-slot=card-footer]', name: 'Footer', default: true },
-    ],
-  },
+  partIn(ALERT_WHOLE, 'Icon', 'AlertIcon'),
+  partIn(ALERT_WHOLE, 'Title', 'AlertTitle'),
+  partIn(ALERT_WHOLE, 'Description', 'AlertDescription'),
+  partIn(ALERT_WHOLE, 'Content', 'AlertContent'),
+  partIn(ALERT_WHOLE, 'Close', 'AlertClose'),
+  partIn(ALERT_WHOLE, 'Actions', 'AlertActions', SLOT),
+  ALERT_WHOLE,
+  partIn(CARD_WHOLE, 'Title', 'CardTitle'),
+  partIn(CARD_WHOLE, 'Description', 'CardDescription'),
+  partIn(CARD_WHOLE, 'Action', 'CardAction'),
+  partIn(CARD_WHOLE, 'Header', 'CardHeader'),
+  partIn(CARD_WHOLE, 'Content', 'CardContent', SLOT),
+  partIn(CARD_WHOLE, 'Footer', 'CardFooter', SLOT),
+  CARD_WHOLE,
   { name: 'Accordion' },
   { name: 'AspectRatio' },
-  { name: 'Attachment' },
+  partIn(ATTACHMENT, 'Media', 'AttachmentMedia'),
+  partIn(ATTACHMENT, 'Title', 'AttachmentTitle'),
+  partIn(ATTACHMENT, 'Description', 'AttachmentDescription'),
+  partIn(ATTACHMENT, 'Content', 'AttachmentContent'),
+  partIn(ATTACHMENT, 'Actions', 'AttachmentActions', SLOT),
+  ATTACHMENT,
+  partOf('Breadcrumb', 'Separator', 'BreadcrumbSeparator'),
+  partOf('Breadcrumb', 'Page', 'BreadcrumbPage'),
   { name: 'Breadcrumb' },
-  { name: 'Bubble', exclude: ['side'] },
+  partIn(BUBBLE, 'Content', 'BubbleContent', SLOT),
+  BUBBLE,
   { name: 'ButtonGroup' },
-  { name: 'Carousel' },
+  partIn(CAROUSEL, 'Item', 'CarouselItem', SLOT),
+  partIn(CAROUSEL, 'Content', 'CarouselContent', SLOT),
+  partIn(CAROUSEL, 'Previous', 'CarouselPrevious'),
+  partIn(CAROUSEL, 'Next', 'CarouselNext'),
+  CAROUSEL,
   chart('BarChart', { booleans: ['stacked'] }),
   chart('AreaChart', { booleans: ['stacked'] }),
   chart('LineChart', { booleans: ['dots'] }),
@@ -804,29 +1127,36 @@ export const RECIPES: readonly Recipe[] = [
     }),
     booleans: ['donut', 'labels'],
   }),
-  { name: 'ChoiceCard' },
+  partIn(CHOICE_CARD, 'Title', 'ChoiceCardTitle'),
+  partIn(CHOICE_CARD, 'Description', 'ChoiceCardDescription'),
+  partIn(CHOICE_CARD, 'Content', 'ChoiceCardContent'),
+  CHOICE_CARD,
+  partOf('ChoiceRow', 'Title', 'ChoiceRowTitle'),
   { name: 'ChoiceRow' },
-  { name: 'CodeBlock' },
-  { name: 'Collapsible', rootProps: { open: true } },
-  {
-    name: 'Combobox',
-    target: '[data-slot=combobox-trigger]',
-    part: 'Combobox',
-    axes: [],
-  },
-  {
-    name: 'Combobox content',
-    card: 'Combobox',
-    part: 'Combobox',
+  partIn(CODE_BLOCK, 'Line', 'CodeBlockLine'),
+  partIn(CODE_BLOCK, 'Content', 'CodeBlockContent'),
+  partIn(CODE_BLOCK, 'Copy button', 'CodeBlockCopyButton'),
+  CODE_BLOCK,
+  partOf('Collapsible', 'Content', 'CollapsibleContent', {
     rootProps: { open: true },
-    target: '[data-slot=combobox-content]',
-    axes: [],
-  },
-  { name: 'Command', axes: [] },
+    ...SLOT,
+  }),
+  { name: 'Collapsible', rootProps: { open: true } },
+  partOf('Command', 'Input', 'CommandInput'),
+  { name: 'Command', axes: [], slot: true },
+  partOf('Combobox', 'Trigger', 'ComboboxTrigger'),
+  partOf('Combobox', 'Input', 'ComboboxInput', OPEN),
+  partOf('Combobox', 'Content', 'ComboboxContent', { ...OPEN, ...SLOT }),
+  opened('Combobox', FLOATING),
+  partOf('ContextMenu', 'Content', 'ContextMenuContent', {
+    ...SLOT,
+    open: { click: '[data-slot=context-menu-trigger]', button: 'right' },
+  }),
   {
     name: 'ContextMenu',
     open: { click: '[data-slot=context-menu-trigger]', button: 'right' },
-    target: '[data-slot=context-menu-content]',
+    target: 'body',
+    screen: FLOATING,
     axes: [],
   },
   {
@@ -834,118 +1164,183 @@ export const RECIPES: readonly Recipe[] = [
     target: '[data-slot=date-picker], [data-slot=calendar]',
     axes: [],
   },
+  partOf('DescriptionList', 'Term', 'DescriptionListTerm'),
+  partOf('DescriptionList', 'Description', 'DescriptionListDescription'),
+  partOf('DescriptionList', 'Item', 'DescriptionListItem'),
   { name: 'DescriptionList' },
-  {
-    name: 'Dialog',
-    rootProps: { open: true },
-    target: '[data-slot=dialog-content]',
-    axes: [],
-  },
-  {
-    name: 'AlertDialog',
-    rootProps: { open: true },
-    target: '[data-slot=alert-dialog-content]',
-    axes: [],
-  },
-  {
-    name: 'Drawer',
-    rootProps: { open: true },
+  // An overlay's parts, each captured from the open example before what holds it.
+  partOf('Dialog', 'Title', 'DialogTitle', OPEN),
+  partOf('Dialog', 'Description', 'DialogDescription', OPEN),
+  partOf('Dialog', 'Close', 'DialogContent', {
+    ...OPEN,
+    target: '[data-slot=dialog-close-button]',
+  }),
+  partOf('Dialog', 'Header', 'DialogHeader', OPEN),
+  partOf('Dialog', 'Body', 'DialogBody', { ...OPEN, ...SLOT }),
+  partOf('Dialog', 'Footer', 'DialogFooter', { ...OPEN, ...SLOT }),
+  partOf('Dialog', 'Trigger', 'DialogTrigger', {
+    ...OPEN,
+    target: '[aria-haspopup=dialog]',
+  }),
+  partOf('Dialog', 'Overlay', 'DialogOverlay', { ...OPEN, screen: DESKTOP }),
+  partOf('Dialog', 'Content', 'DialogContent', { ...OPEN, ...SLOT }),
+  opened('Dialog', DESKTOP),
+  partOf('AlertDialog', 'Title', 'AlertDialogTitle', OPEN),
+  partOf('AlertDialog', 'Description', 'AlertDialogDescription', OPEN),
+  partOf('AlertDialog', 'Header', 'AlertDialogHeader', OPEN),
+  partOf('AlertDialog', 'Footer', 'AlertDialogFooter', { ...OPEN, ...SLOT }),
+  partOf('AlertDialog', 'Overlay', 'AlertDialogOverlay', {
+    ...OPEN,
+    screen: DESKTOP,
+  }),
+  partOf('AlertDialog', 'Content', 'AlertDialogContent', { ...OPEN, ...SLOT }),
+  opened('AlertDialog', DESKTOP),
+  panelPart('Drawer', DIRECTION, 'Title', 'DrawerTitle'),
+  panelPart('Drawer', DIRECTION, 'Description', 'DrawerDescription'),
+  panelPart('Drawer', DIRECTION, 'Header', 'DrawerHeader'),
+  panelPart('Drawer', DIRECTION, 'Body', 'DrawerBody', SLOT),
+  panelPart('Drawer', DIRECTION, 'Footer', 'DrawerFooter', SLOT),
+  partOf('Drawer', 'Overlay', 'DrawerOverlay', { ...OPEN, screen: DESKTOP }),
+  partOf('Drawer', 'Content', 'Drawer', {
+    ...PANEL,
+    ...SLOT,
     target: '[data-slot=drawer-content]',
-    axes: [{ name: 'Direction', prop: 'direction' }],
-  },
-  {
-    name: 'Sheet',
-    rootProps: { open: true },
-    part: 'SheetContent',
-    target: '[data-slot=sheet-content]',
-    axes: [{ name: 'Side', prop: 'side' }],
-  },
-  {
-    name: 'DropdownMenu',
-    rootProps: { open: true },
-    target: '[data-slot=dropdown-menu-content]',
-    axes: [],
-  },
-  { name: 'EmptyState', booleans: ['bordered'] },
-  { name: 'Field' },
+    axes: [DIRECTION],
+  }),
+  opened('Drawer', DESKTOP, { axes: [DIRECTION] }),
+  panelPart('Sheet', SIDE, 'Title', 'SheetTitle'),
+  panelPart('Sheet', SIDE, 'Description', 'SheetDescription'),
+  panelPart('Sheet', SIDE, 'Header', 'SheetHeader'),
+  panelPart('Sheet', SIDE, 'Body', 'SheetBody', SLOT),
+  panelPart('Sheet', SIDE, 'Footer', 'SheetFooter', SLOT),
+  partOf('Sheet', 'Overlay', 'SheetOverlay', { ...OPEN, screen: DESKTOP }),
+  panelPart('Sheet', SIDE, 'Content', 'SheetContent', SLOT),
+  opened('Sheet', DESKTOP, { axes: [SIDE] }),
+  partOf('DropdownMenu', 'Label', 'DropdownMenuLabel', OPEN),
+  partOf('DropdownMenu', 'Separator', 'DropdownMenuSeparator', OPEN),
+  partOf('DropdownMenu', 'Content', 'DropdownMenuContent', {
+    ...OPEN,
+    ...SLOT,
+  }),
+  opened('DropdownMenu', FLOATING),
+  partIn(EMPTY_STATE, 'Media', 'EmptyStateMedia'),
+  partIn(EMPTY_STATE, 'Title', 'EmptyStateTitle'),
+  partIn(EMPTY_STATE, 'Description', 'EmptyStateDescription'),
+  partIn(EMPTY_STATE, 'Header', 'EmptyStateHeader'),
+  partIn(EMPTY_STATE, 'Content', 'EmptyStateContent', SLOT),
+  EMPTY_STATE,
+  partIn(FIELD, 'Label', 'FieldLabel'),
+  partIn(FIELD, 'Description', 'FieldDescription'),
+  FIELD,
   { name: 'FilterBuilder', width: 560 },
   { name: 'FilterChip' },
+  partOf('FilterCondition', 'Field', 'FilterConditionField', { width: 560 }),
+  partOf('FilterCondition', 'Segment', 'FilterConditionSegment', {
+    width: 560,
+  }),
+  partOf('FilterCondition', 'Remove', 'FilterConditionRemove', {
+    width: 560,
+  }),
   { name: 'FilterCondition', width: 560 },
-  {
-    name: 'HoverCard',
-    rootProps: { open: true },
-    target: '[data-slot=hover-card-content]',
-    axes: [],
-  },
-  {
-    name: 'Popover',
-    rootProps: { open: true },
-    target: '[data-slot=popover-content]',
-    axes: [],
-  },
-  {
-    name: 'Tooltip',
-    rootProps: { open: true },
-    part: 'TooltipContent',
-    target: '[data-slot=tooltip-content]',
+  partOf('HoverCard', 'Content', 'HoverCardContent', { ...OPEN, ...SLOT }),
+  opened('HoverCard', FLOATING),
+  partOf('Popover', 'Content', 'PopoverContent', { ...OPEN, ...SLOT }),
+  opened('Popover', FLOATING),
+  partOf('Tooltip', 'Content', 'TooltipContent', {
+    ...OPEN,
     axes: [{ name: 'Side', prop: 'side' }],
-  },
-  { name: 'InputGroup' },
+  }),
+  opened('Tooltip', FLOATING),
+  partIn(INPUT_GROUP, 'Addon', 'InputGroupAddon'),
+  partIn(INPUT_GROUP, 'Input', 'InputGroupInput', {
+    target: '[data-slot=input-group-control]',
+  }),
+  INPUT_GROUP,
+  partOf('InputOTP', 'Slot', 'InputOTPSlot', {
+    axes: [{ name: 'Position', values: ['first', 'middle', 'last'] }],
+    target: ({ Position }) =>
+      `[data-slot=input-otp-slot]:${POSITION_SELECTOR[Position ?? 'first']}`,
+  }),
+  partOf('InputOTP', 'Separator', 'InputOTPSeparator', {
+    target: '[data-slot=input-otp-separator]',
+  }),
+  partOf('InputOTP', 'Group', 'InputOTPGroup', {
+    target: '[data-slot=input-otp-group]',
+  }),
   { name: 'InputOTP', exclude: ['textAlign', 'pushPasswordManagerStrategy'] },
-  { name: 'Item' },
-  { name: 'Menubar', axes: [] },
-  { name: 'Message' },
-  { name: 'MessageScroller', width: 480 },
-  { name: 'MultiSelect', target: '[data-slot=multi-select-trigger]', axes: [] },
+  partIn(ITEM, 'Media', 'ItemMedia'),
+  partIn(ITEM, 'Title', 'ItemTitle'),
+  partIn(ITEM, 'Description', 'ItemDescription'),
+  partIn(ITEM, 'Content', 'ItemContent'),
+  partIn(ITEM, 'Actions', 'ItemActions', SLOT),
+  ITEM,
+  triggerOf('Menubar', 'MenubarTrigger', 'menubar-trigger', MENUBAR_OPEN),
+  partOf('Menubar', 'Separator', 'MenubarSeparator', MENUBAR_OPEN),
+  partOf('Menubar', 'Content', 'MenubarContent', { ...MENUBAR_OPEN, ...SLOT }),
   {
-    name: 'MultiSelect content',
-    card: 'MultiSelect',
-    open: { click: '[data-slot=multi-select-trigger]' },
-    target: '[data-slot=multi-select-content]',
+    name: 'Menubar',
+    target: 'body',
+    screen: FLOATING,
     axes: [],
+    ...MENUBAR_OPEN,
+  },
+  partIn(MESSAGE, 'Avatar', 'MessageAvatar'),
+  partIn(MESSAGE, 'Header', 'MessageHeader'),
+  partIn(MESSAGE, 'Footer', 'MessageFooter', SLOT),
+  partIn(MESSAGE, 'Content', 'MessageContent', SLOT),
+  MESSAGE,
+  { name: 'MessageScroller', width: 480 },
+  partOf('MultiSelect', 'Trigger', 'MultiSelectTrigger'),
+  partOf('MultiSelect', 'Content', 'MultiSelectContent', {
+    ...MULTI_SELECT_OPEN,
+    ...SLOT,
+  }),
+  {
+    name: 'MultiSelect',
+    target: 'body',
+    screen: FLOATING,
+    axes: [],
+    ...MULTI_SELECT_OPEN,
   },
   { name: 'NativeSelect', states: FIELD_STATES },
-  {
-    name: 'NavigationMenu',
-    open: { press: '[data-slot=navigation-menu-trigger]', key: 'Enter' },
-    axes: [],
-    width: 640,
-  },
+  triggerOf(
+    'NavigationMenu',
+    'NavigationMenuTrigger',
+    'navigation-menu-trigger',
+    NAV_OPEN
+  ),
+  partOf('NavigationMenu', 'Content', 'NavigationMenuContent', {
+    ...NAV_OPEN,
+    ...SLOT,
+  }),
+  { name: 'NavigationMenu', axes: [], ...NAV_OPEN },
+  partOf('PageHeader', 'Title', 'PageHeaderTitle', { width: 720 }),
+  partOf('PageHeader', 'Description', 'PageHeaderDescription', {
+    width: 720,
+  }),
+  partOf('PageHeader', 'Content', 'PageHeaderContent', {
+    width: 720,
+    ...SLOT,
+  }),
   { name: 'PageHeader', width: 720 },
+  partOf('Pagination', 'Ellipsis', 'PaginationEllipsis'),
   { name: 'Pagination' },
   { name: 'RadioGroup' },
-  {
-    name: 'Resizable',
-    part: 'ResizablePanelGroup',
-    target: '[data-slot=resizable-panel-group]',
-  },
+  partIn(RESIZABLE, 'Handle', 'ResizableHandle'),
+  partIn(RESIZABLE, 'Panel', 'ResizablePanel', SLOT),
+  RESIZABLE,
   { name: 'ScrollArea' },
   {
-    name: 'Select',
+    name: 'Select/Trigger',
     part: 'SelectTrigger',
-    target: '[data-slot=select-trigger]',
     states: FIELD_STATES,
   },
-  {
-    name: 'Select content',
-    card: 'Select',
-    part: 'Select',
-    rootProps: { open: true },
-    target: '[data-slot=select-content]',
-    axes: [],
-  },
-  {
-    name: 'Sidebar',
-    markup: SIDEBAR,
-    axes: [
-      { name: 'Variant', prop: 'variant' },
-      { name: 'Side', prop: 'side' },
-    ],
-    width: 280,
-  },
+  partOf('Select', 'Content', 'SelectContent', { ...OPEN, ...SLOT }),
+  opened('Select', FLOATING),
+  SIDEBAR_WHOLE,
   { name: 'Slider', booleans: ['inverted'] },
-  { name: 'Table', booleans: ['striped'], width: 560 },
-  { name: 'Tabs' },
+  TABLE,
+  TABS,
   {
     name: 'Toast',
     markup: x('Toast', {
@@ -955,7 +1350,9 @@ export const RECIPES: readonly Recipe[] = [
     booleans: ['closeButton', 'richColors'],
   },
   { name: 'ToggleGroup' },
-  { name: 'Toolbar' },
+  partIn(TOOLBAR, 'Button', 'ToolbarButton'),
+  partIn(TOOLBAR, 'Separator', 'ToolbarSeparator'),
+  TOOLBAR,
 ];
 
 /** Cards that draw no component of their own: Show and Hide only toggle visibility, Cover is the Claude Design cover, Icon is the icon set, and Sonner's toast is Toast. */

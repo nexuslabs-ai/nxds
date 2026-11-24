@@ -13,8 +13,8 @@ const post = (message: unknown) =>
   parent.postMessage({ pluginMessage: message }, '*');
 
 function summary(report: BuildReport) {
-  const { created } = report;
-  return `Built ${created.componentSets} component sets and ${created.components} components with ${created.variables} variables. ${report.failures.length} steps failed.`;
+  const { written } = report;
+  return `Wrote ${written.pages} pages, ${written.componentSets} component sets and ${written.components} components, and moved ${report.swapped} instances. ${report.failures.length} steps failed.`;
 }
 
 async function start() {

@@ -115,9 +115,10 @@ const plural = (count: number, word: string) =>
   `${count} ${word}${count === 1 ? '' : 's'}`;
 
 function reportLines(report: BuildReport, relative: string) {
-  const { created } = report;
+  const { written } = report;
   const lines = [
-    `The plugin built ${plural(created.componentSets, 'component set')} and ${plural(created.components, 'component')}, with ${plural(created.instances, 'nested instance')}, ${plural(created.icons, 'icon')}, ${plural(created.variables, 'variable')}, ${plural(created.textStyles, 'text style')} and ${plural(created.effectStyles, 'shadow style')}.`,
+    `The plugin wrote ${plural(written.pages, 'page')}, ${plural(written.componentSets, 'component set')} and ${plural(written.components, 'component')}, with ${plural(written.instances, 'nested instance')}, ${plural(written.icons, 'icon')}, ${plural(written.variables, 'variable')}, ${plural(written.textStyles, 'text style')} and ${plural(written.effectStyles, 'shadow style')}.`,
+    `It moved ${plural(report.swapped, 'instance')} elsewhere in the file to the rebuilt components, and removed ${plural(report.removed.length, 'leftover')} the release no longer has.`,
     report.darkModeError === undefined
       ? `Colour modes: ${report.modes.join(' and ')}.`
       : `Figma refused the Dark mode: "${report.darkModeError}". The file has Light only.`,

@@ -1,7 +1,11 @@
 // The plugin's main thread. It builds exactly what capture.json says:
 // variables, text and shadow styles, the icon set on an Icons page, then one
-// component set per component on the current page. Every value that carries
+// component set per component on its card's page. Every value that carries
 // a token is bound to its variable. It makes no layout decisions of its own.
+//
+// It tags everything it makes, so running it again in the same file updates
+// that file: variables, styles and icons in place, and each captured
+// component rebuilt, with its instances elsewhere moved over to the new one.
 import {
   type Bound,
   type BuildReport,
@@ -10,6 +14,7 @@ import {
   type ComponentSpec,
   type FrameLayer,
   type IconLayer,
+  type IconSpec,
   type InstanceLayer,
   type Layer,
   type Paint as SpecPaint,
@@ -22,7 +27,7 @@ import {
   type VectorLayer,
 } from '../../src/spec.ts';
 
-type Container = FrameNode | ComponentNode;
+type Container = FrameNode | ComponentNode | SlotNode;
 
 type NumberField =
   | 'itemSpacing'
@@ -56,6 +61,7 @@ interface Context {
     visible?: string;
     characters?: string;
     swap?: string;
+    slot?: string;
   }[];
   /** What is being built, for the report. */
   where: string;
@@ -63,9 +69,25 @@ interface Context {
 
 const SET_PADDING = 32;
 const SET_GAP = 24;
+/** Between one block of a component set and the next block's title. */
+const BLOCK_GAP = 64;
+/** Between a label and what it labels. */
+const LABEL_GAP = 16;
+/** The text the plugin labels components with: a component's name, a block's title and a row or column. */
+const TEXT = {
+  heading: { size: 24, style: 'Semi Bold' },
+  title: { size: 16, style: 'Semi Bold' },
+  label: { size: 12, style: 'Regular' },
+} as const;
+const LABEL_COLOR: RGB = { r: 0.4, g: 0.4, b: 0.4 };
+/** The paper each component sits on, so it reads on Figma's dark canvas. */
+const PAPER: SolidPaint = { type: 'SOLID', color: { r: 1, g: 1, b: 1 } };
+const PAPER_RADIUS = 16;
 const COMPONENT_GAP = 160;
 /** Component sets wrap to a new row past this width on the page. */
 const PAGE_WIDTH = 6000;
+/** Plugin data key marking what the plugin made, so a later run finds it. */
+const TAG = 'nxds';
 const ICON_SIZE = 24;
 const ICONS_PER_ROW = 24;
 /** How many variants are built between progress updates. */
@@ -82,6 +104,12 @@ const STYLE_NAMES: Record<number, string[]> = {
   800: ['ExtraBold', 'Extra Bold', 'UltraBold'],
   900: ['Black', 'Heavy'],
 };
+
+const tag = (item: PluginDataMixin, value: string) =>
+  item.setPluginData(TAG, value);
+const tagOf = (item: PluginDataMixin) => item.getPluginData(TAG);
+const pageTagged = (value: string) =>
+  figma.root.children.find((page) => tagOf(page) === value);
 
 const messageOf = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
@@ -144,32 +172,76 @@ const variableValue = (value: Rgba | number): VariableValue =>
     ? value
     : { r: value.r, g: value.g, b: value.b, a: value.a };
 
-async function createVariables(capture: CaptureFile, ctx: Context) {
+function newCollection(name: string) {
+  const collection = figma.variables.createVariableCollection(name);
+  tag(collection, 'collection');
+  return collection;
+}
+
+/** Deletes each item whose name `keep` doesn't have, and reports it. */
+function removeLeftovers(
+  items: readonly { name: string; remove(): void }[],
+  keep: ReadonlySet<string>,
+  kind: string,
+  ctx: Context
+) {
+  for (const item of items) {
+    if (keep.has(item.name)) continue;
+    ctx.report.removed.push(`${kind} ${item.name}`);
+    item.remove();
+  }
+}
+
+/** Updates the file's nxds variables by name, and creates the ones it lacks. */
+async function writeVariables(capture: CaptureFile, ctx: Context) {
+  const collections = (
+    await figma.variables.getLocalVariableCollectionsAsync()
+  ).filter((collection) => tagOf(collection) === 'collection');
+  const variables = (await figma.variables.getLocalVariablesAsync()).filter(
+    (variable) => tagOf(variable) === 'variable'
+  );
   const references: { variable: Variable; mode: string; token: string }[] = [];
-  for (const spec of capture.collections) {
-    if (spec.variables.length === 0) continue;
+  const specs = capture.collections.filter((spec) => spec.variables.length > 0);
+  for (const spec of specs) {
     ctx.where = `collection ${spec.name}`;
-    const collection = figma.variables.createVariableCollection(spec.name);
-    ctx.report.created.collections += 1;
+    const collection =
+      collections.find((each) => each.name === spec.name) ??
+      newCollection(spec.name);
+    ctx.report.written.collections += 1;
     const first = collection.modes[0];
     if (!first) throw new Error(`${spec.name} has no mode.`);
     collection.renameMode(first.modeId, spec.themed ? 'Light' : 'Value');
-    let dark: string | undefined;
+    let dark = spec.themed
+      ? collection.modes.find((mode) => mode.name === 'Dark')?.modeId
+      : undefined;
     if (spec.themed) {
-      try {
-        dark = collection.addMode('Dark');
-      } catch (error) {
-        ctx.report.darkModeError = messageOf(error);
+      if (dark === undefined) {
+        try {
+          dark = collection.addMode('Dark');
+        } catch (error) {
+          ctx.report.darkModeError = messageOf(error);
+        }
       }
       ctx.report.modes = collection.modes.map((mode) => mode.name);
     }
+    const known = new Map(
+      variables
+        .filter((variable) => variable.variableCollectionId === collection.id)
+        .map((variable) => [variable.name, variable])
+    );
     for (const entry of spec.variables) {
       try {
-        const variable = figma.variables.createVariable(
-          entry.name,
-          collection,
-          entry.type
-        );
+        const found = known.get(entry.name);
+        if (found && found.resolvedType !== entry.type) found.remove();
+        const variable =
+          found?.resolvedType === entry.type
+            ? found
+            : figma.variables.createVariable(
+                entry.name,
+                collection,
+                entry.type
+              );
+        tag(variable, 'variable');
         variable.description = entry.description;
         variable.setVariableCodeSyntax('WEB', `var(--${entry.token})`);
         variable.setValueForMode(first.modeId, variableValue(entry.light));
@@ -179,7 +251,7 @@ async function createVariables(capture: CaptureFile, ctx: Context) {
             variableValue(entry.dark ?? entry.light)
           );
         ctx.variables.set(entry.token, variable);
-        ctx.report.created.variables += 1;
+        ctx.report.written.variables += 1;
         if (entry.lightAlias)
           references.push({
             variable,
@@ -193,6 +265,13 @@ async function createVariables(capture: CaptureFile, ctx: Context) {
         fail(ctx, entry.name, error);
       }
     }
+    if (!capture.partial)
+      removeLeftovers(
+        [...known.values()],
+        new Set(spec.variables.map((entry) => entry.name)),
+        'variable',
+        ctx
+      );
   }
   // A variable declared as a reference to another, such as a colour an app's
   // colours file sets to var(--nx-color-blue-600), aliases it. Every variable
@@ -210,6 +289,13 @@ async function createVariables(capture: CaptureFile, ctx: Context) {
       fail(ctx, `${variable.name} alias`, error);
     }
   }
+  if (!capture.partial)
+    removeLeftovers(
+      collections,
+      new Set(specs.map((spec) => spec.name)),
+      'collection',
+      ctx
+    );
 }
 
 function effect(shadow: Shadow): Effect {
@@ -238,11 +324,28 @@ function variableFor(token: string | undefined, ctx: Context, what: string) {
   return variable;
 }
 
-async function createStyles(capture: CaptureFile, ctx: Context) {
+function newTextStyle() {
+  const style = figma.createTextStyle();
+  tag(style, 'style');
+  return style;
+}
+
+function newEffectStyle() {
+  const style = figma.createEffectStyle();
+  tag(style, 'style');
+  return style;
+}
+
+/** Updates the file's nxds text and shadow styles by name, and creates the ones it lacks. */
+async function writeStyles(capture: CaptureFile, ctx: Context) {
   ctx.where = 'text styles';
+  const textStyles = (await figma.getLocalTextStylesAsync()).filter(
+    (style) => tagOf(style) === 'style'
+  );
   for (const spec of capture.textStyles) {
     try {
-      const style = figma.createTextStyle();
+      const style =
+        textStyles.find((each) => each.name === spec.name) ?? newTextStyle();
       style.name = spec.name;
       style.description = spec.description;
       style.fontName = await ctx.font(spec.family, spec.weight);
@@ -262,27 +365,42 @@ async function createStyles(capture: CaptureFile, ctx: Context) {
           ctx,
           `${spec.name} ${field}`
         );
-        if (variable) style.setBoundVariable(field, variable);
+        style.setBoundVariable(field, variable ?? null);
       }
       ctx.textStyles.set(spec.name, style);
-      ctx.report.created.textStyles += 1;
+      ctx.report.written.textStyles += 1;
     } catch (error) {
       fail(ctx, spec.name, error);
     }
   }
   ctx.where = 'shadow styles';
+  const effectStyles = (await figma.getLocalEffectStylesAsync()).filter(
+    (style) => tagOf(style) === 'style'
+  );
   for (const spec of capture.effectStyles) {
     try {
-      const style = figma.createEffectStyle();
+      const style =
+        effectStyles.find((each) => each.name === spec.name) ??
+        newEffectStyle();
       style.name = spec.name;
       style.description = spec.description;
       style.effects = spec.effects.map(effect);
       ctx.effectStyles.set(spec.name, style);
-      ctx.report.created.effectStyles += 1;
+      ctx.report.written.effectStyles += 1;
     } catch (error) {
       fail(ctx, spec.name, error);
     }
   }
+  if (capture.partial) return;
+  const names = (specs: readonly { name: string }[]) =>
+    new Set(specs.map((spec) => spec.name));
+  removeLeftovers(textStyles, names(capture.textStyles), 'text style', ctx);
+  removeLeftovers(
+    effectStyles,
+    names(capture.effectStyles),
+    'shadow style',
+    ctx
+  );
 }
 
 function paint(value: SpecPaint, ctx: Context, what: string): SolidPaint {
@@ -315,7 +433,7 @@ function bind(
 }
 
 function setNumber(
-  node: Container,
+  node: Container | InstanceNode,
   field: NumberField,
   value: Bound,
   ctx: Context
@@ -352,36 +470,76 @@ function recolor(
   }
 }
 
-/** The icon set, as one component per icon on an Icons page, each a single vector so its colour survives a swap. */
-async function createIcons(capture: CaptureFile, ctx: Context) {
+function newPage(name: string, value: string) {
+  const page = figma.createPage();
+  page.name = name;
+  tag(page, value);
+  return page;
+}
+
+/** An SVG as a frame holding one vector, so its colour survives a swap. */
+function iconFrame(svg: string, page: PageNode) {
+  const frame = figma.createNodeFromSvg(svg);
+  page.appendChild(frame);
+  const vectors = frame.findAll(
+    (node) => node.type === 'VECTOR' || node.type === 'BOOLEAN_OPERATION'
+  );
+  if (vectors.length > 1) figma.flatten(vectors, frame);
+  const vector = frame.findOne((node) => node.type === 'VECTOR');
+  if (vector && 'constraints' in vector) {
+    vector.name = 'Vector';
+    vector.constraints = { horizontal: 'SCALE', vertical: 'SCALE' };
+  }
+  frame.fills = [];
+  frame.clipsContent = false;
+  frame.resize(ICON_SIZE, ICON_SIZE);
+  return frame;
+}
+
+/** Draws an icon into its existing component, which keeps every instance, or into a new one. */
+function drawIcon(
+  spec: IconSpec,
+  existing: ComponentNode | undefined,
+  page: PageNode,
+  color: Variable | undefined
+) {
+  const frame = iconFrame(spec.svg, page);
+  let component = existing;
+  if (component) {
+    for (const child of [...component.children]) child.remove();
+    for (const child of [...frame.children]) component.appendChild(child);
+    frame.remove();
+  } else {
+    component = figma.createComponentFromNode(frame);
+    component.name = `icon/${spec.name}`;
+    tag(component, 'icon');
+  }
+  component.setPluginData('svg', spec.svg);
+  if (color) recolor(component, color);
+  return component;
+}
+
+/** The icon set on the Icons page. An icon whose SVG changed is redrawn in place. */
+async function writeIcons(capture: CaptureFile, ctx: Context) {
   ctx.where = 'icons';
   if (capture.icons.length === 0) return;
-  const page = figma.createPage();
-  page.name = 'Icons';
+  const page = pageTagged('icons') ?? newPage('Icons', 'icons');
+  const existing = page.children.filter(
+    (node): node is ComponentNode =>
+      node.type === 'COMPONENT' && tagOf(node) === 'icon'
+  );
+  const byName = new Map(existing.map((node) => [node.name, node]));
   const color = variableFor(capture.iconColor, ctx, 'icon colour');
   for (const [index, spec] of capture.icons.entries()) {
     try {
-      const frame = figma.createNodeFromSvg(spec.svg);
-      page.appendChild(frame);
-      const vectors = frame.findAll(
-        (node) => node.type === 'VECTOR' || node.type === 'BOOLEAN_OPERATION'
-      );
-      if (vectors.length > 1) figma.flatten(vectors, frame);
-      const vector = frame.findOne((node) => node.type === 'VECTOR');
-      if (vector && 'constraints' in vector) {
-        vector.name = 'Vector';
-        vector.constraints = { horizontal: 'SCALE', vertical: 'SCALE' };
-      }
-      frame.fills = [];
-      frame.clipsContent = false;
-      frame.resize(ICON_SIZE, ICON_SIZE);
-      const component = figma.createComponentFromNode(frame);
-      component.name = `icon/${spec.name}`;
-      if (color) recolor(component, color);
+      const known = byName.get(`icon/${spec.name}`);
+      const unchanged = known?.getPluginData('svg') === spec.svg;
+      const component =
+        known && unchanged ? known : drawIcon(spec, known, page, color);
+      if (!unchanged) ctx.report.written.icons += 1;
       component.x = (index % ICONS_PER_ROW) * (ICON_SIZE * 3);
       component.y = Math.floor(index / ICONS_PER_ROW) * (ICON_SIZE * 3);
       ctx.icons.set(spec.name, component);
-      ctx.report.created.icons += 1;
     } catch (error) {
       fail(ctx, spec.name, error);
     }
@@ -390,29 +548,22 @@ async function createIcons(capture: CaptureFile, ctx: Context) {
         `Building icons: ${index + 1} of ${capture.icons.length}…`
       );
   }
+  if (!capture.partial)
+    removeLeftovers(
+      existing,
+      new Set(capture.icons.map((spec) => `icon/${spec.name}`)),
+      'icon',
+      ctx
+    );
 }
 
-async function applyFrame(node: Container, layer: FrameLayer, ctx: Context) {
-  node.name = layer.name;
-  node.fills = layer.fills.map((fill) =>
-    paint(fill, ctx, `${layer.name} fill`)
-  );
-  node.clipsContent = layer.clips;
-  node.opacity = layer.opacity;
-  const { layout, stroke, radius } = layer;
-  if (layout) {
-    node.layoutMode = layout.mode;
-    node.layoutWrap = layout.wrap ? 'WRAP' : 'NO_WRAP';
-    node.primaryAxisAlignItems = layout.primaryAlign;
-    node.counterAxisAlignItems = layout.counterAlign;
-    node.strokesIncludedInLayout = true;
-    setNumber(node, 'itemSpacing', layout.gap, ctx);
-    if (layout.wrap) setNumber(node, 'counterAxisSpacing', layout.lineGap, ctx);
-    setNumber(node, 'paddingTop', layout.padding.top, ctx);
-    setNumber(node, 'paddingRight', layout.padding.right, ctx);
-    setNumber(node, 'paddingBottom', layout.padding.bottom, ctx);
-    setNumber(node, 'paddingLeft', layout.padding.left, ctx);
-  }
+/** A layer's stroke and corners, bound to their tokens. */
+function applyBorder(
+  node: Container | InstanceNode,
+  layer: Pick<FrameLayer, 'name' | 'stroke' | 'radius'>,
+  ctx: Context
+) {
+  const { stroke, radius } = layer;
   if (stroke) {
     node.strokes = [paint(stroke.paint, ctx, `${layer.name} stroke`)];
     node.strokeAlign = 'INSIDE';
@@ -428,6 +579,30 @@ async function applyFrame(node: Container, layer: FrameLayer, ctx: Context) {
   setNumber(node, 'topRightRadius', radius.topRight, ctx);
   setNumber(node, 'bottomRightRadius', radius.bottomRight, ctx);
   setNumber(node, 'bottomLeftRadius', radius.bottomLeft, ctx);
+}
+
+async function applyFrame(node: Container, layer: FrameLayer, ctx: Context) {
+  node.name = layer.name;
+  node.fills = layer.fills.map((fill) =>
+    paint(fill, ctx, `${layer.name} fill`)
+  );
+  node.clipsContent = layer.clips;
+  node.opacity = layer.opacity;
+  const { layout } = layer;
+  if (layout) {
+    node.layoutMode = layout.mode;
+    node.layoutWrap = layout.wrap ? 'WRAP' : 'NO_WRAP';
+    node.primaryAxisAlignItems = layout.primaryAlign;
+    node.counterAxisAlignItems = layout.counterAlign;
+    node.strokesIncludedInLayout = true;
+    setNumber(node, 'itemSpacing', layout.gap, ctx);
+    if (layout.wrap) setNumber(node, 'counterAxisSpacing', layout.lineGap, ctx);
+    setNumber(node, 'paddingTop', layout.padding.top, ctx);
+    setNumber(node, 'paddingRight', layout.padding.right, ctx);
+    setNumber(node, 'paddingBottom', layout.padding.bottom, ctx);
+    setNumber(node, 'paddingLeft', layout.padding.left, ctx);
+  }
+  applyBorder(node, layer, ctx);
   if (layer.shadow) {
     const style = layer.shadow.style
       ? ctx.effectStyles.get(layer.shadow.style)
@@ -497,12 +672,14 @@ function place(
 function reference(node: SceneNode, layer: Layer, ctx: Context) {
   const characters = layer.type === 'TEXT' ? layer.textProperty : undefined;
   const swap = layer.type === 'ICON' ? layer.swapProperty : undefined;
-  if (layer.visibleProperty || characters || swap) {
+  const slot = layer.type === 'FRAME' ? layer.slotProperty : undefined;
+  if (layer.visibleProperty || characters || swap || slot) {
     ctx.references.push({
       node,
       visible: layer.visibleProperty,
       characters,
       swap,
+      slot,
     });
   }
 }
@@ -634,12 +811,18 @@ function buildInstance(layer: InstanceLayer, parent: Container, ctx: Context) {
     if (key && component) updates[key] = component.id;
   }
   if (Object.keys(updates).length > 0) node.setProperties(updates);
+  if (layer.restyle) {
+    node.fills = layer.restyle.fills.map((fill) =>
+      paint(fill, ctx, `${layer.name} fill`)
+    );
+    applyBorder(node, { name: layer.name, ...layer.restyle }, ctx);
+  }
   try {
     node.isExposedInstance = true;
   } catch (error) {
     fail(ctx, `${layer.name} exposed`, error);
   }
-  ctx.report.created.instances += 1;
+  ctx.report.written.instances += 1;
   return node;
 }
 
@@ -680,29 +863,191 @@ async function buildLayer(
   } else if (node.type === 'TEXT' || node.type === 'INSTANCE') {
     place(node, layer, parent, ctx);
   }
+  if (
+    node.type === 'INSTANCE' &&
+    layer.type === 'INSTANCE' &&
+    layer.slotContent
+  )
+    await fillSlot(node, layer.slotContent, ctx);
   reference(node, layer, ctx);
   return node;
 }
 
-/** Lays the variants out in a grid: one column per value of the last variant property. */
-function arrange(set: ComponentSetNode, spec: ComponentSpec) {
-  const last = spec.variantProperties[spec.variantProperties.length - 1];
-  const columns = last ? last.values.length : 1;
-  const children = set.children;
-  const width = Math.max(...children.map((child) => child.width));
-  const height = Math.max(...children.map((child) => child.height));
-  children.forEach((child, index) => {
-    child.x = SET_PADDING + (index % columns) * (width + SET_GAP);
-    child.y = SET_PADDING + Math.floor(index / columns) * (height + SET_GAP);
-  });
-  const rows = Math.ceil(children.length / columns);
-  set.resizeWithoutConstraints(
-    SET_PADDING * 2 + columns * width + (columns - 1) * SET_GAP,
-    SET_PADDING * 2 + rows * height + (rows - 1) * SET_GAP
-  );
+/** Puts an instance's own content in its slot, in place of its component's. */
+async function fillSlot(
+  node: InstanceNode,
+  content: readonly Layer[],
+  ctx: Context
+) {
+  const slot = node.findChild((child) => child.type === 'SLOT');
+  if (slot?.type !== 'SLOT') throw new Error(`${node.name} has no slot.`);
+  for (const child of [...slot.children]) child.remove();
+  for (const child of content) {
+    try {
+      await buildLayer(child, slot, ctx);
+    } catch (error) {
+      fail(ctx, child.name, error);
+    }
+  }
 }
 
-async function buildComponent(spec: ComponentSpec, ctx: Context) {
+/** Every combination of the named properties' values, in property order. */
+function combinations(spec: ComponentSpec, names: readonly string[]) {
+  let found: Record<string, string>[] = [{}];
+  for (const name of names) {
+    const values =
+      spec.variantProperties.find((property) => property.name === name)
+        ?.values ?? [];
+    found = found.flatMap((combination) =>
+      values.map((value) => ({ ...combination, [name]: value }))
+    );
+  }
+  return found;
+}
+
+/** A combination in words: each value, `true` as its property's name and `false` left out. */
+function caption(combination: Record<string, string>) {
+  const entries = Object.entries(combination);
+  const words = entries
+    .filter(([, value]) => value !== 'false')
+    .map(([name, value]) => (value === 'true' ? name : value));
+  if (words.length > 0) return words.join(' · ');
+  return entries.map(([name]) => `No ${name.toLowerCase()}`).join(' · ');
+}
+
+function label(
+  parent: FrameNode,
+  characters: string,
+  x: number,
+  y: number,
+  kind: keyof typeof TEXT = 'label'
+) {
+  const text = figma.createText();
+  text.fontName = { family: 'Inter', style: TEXT[kind].style };
+  text.fontSize = TEXT[kind].size;
+  text.characters = characters;
+  text.fills = [{ type: 'SOLID', color: LABEL_COLOR }];
+  parent.appendChild(text);
+  text.x = x;
+  text.y = y;
+  return text;
+}
+
+/** The paper frame that holds a component on its page, with its labels. */
+function holder(spec: ComponentSpec) {
+  const frame = figma.createFrame();
+  frame.name = spec.name;
+  frame.fills = [PAPER];
+  frame.cornerRadius = PAPER_RADIUS;
+  frame.clipsContent = false;
+  return frame;
+}
+
+/** A single component under its name. */
+function titled(component: ComponentNode, spec: ComponentSpec) {
+  const frame = holder(spec);
+  const heading = label(frame, spec.name, SET_PADDING, SET_PADDING, 'heading');
+  frame.appendChild(component);
+  component.x = SET_PADDING;
+  component.y = heading.y + heading.height + LABEL_GAP;
+  frame.resizeWithoutConstraints(
+    Math.max(heading.width, component.width) + SET_PADDING * 2,
+    component.y + component.height + SET_PADDING
+  );
+  return frame;
+}
+
+/**
+ * Lays the set's variants out as its grid says: a titled block for each
+ * combination of `blocks`, each with labelled rows and columns. Each column is
+ * as wide as its widest variant and each row as tall as its tallest. Returns a
+ * frame holding the set with its labels drawn over it.
+ */
+function arrange(set: ComponentSetNode, spec: ComponentSpec) {
+  const { blocks, rows, columns } = spec.grid;
+  const frame = holder(spec);
+  frame.appendChild(set);
+  const variants = set.children.filter(
+    (child): child is ComponentNode => child.type === 'COMPONENT'
+  );
+  const matching = (combination: Record<string, string>) =>
+    variants.filter((variant) =>
+      Object.entries(combination).every(
+        ([name, value]) => variant.variantProperties?.[name] === value
+      )
+    );
+  const largest = (
+    combination: Record<string, string>,
+    side: 'width' | 'height'
+  ) => Math.max(0, ...matching(combination).map((variant) => variant[side]));
+  const columnValues = combinations(spec, columns);
+  const rowValues = combinations(spec, rows);
+  const measure = (characters: string) => {
+    const text = label(frame, characters, 0, 0);
+    const { width } = text;
+    text.remove();
+    return width;
+  };
+  const widths = columnValues.map((column) =>
+    Math.max(largest(column, 'width'), measure(caption(column)))
+  );
+  const heights = rowValues.map((row) => largest(row, 'height'));
+  const left =
+    SET_PADDING +
+    (rows.length > 0
+      ? Math.max(...rowValues.map((row) => measure(caption(row)))) + LABEL_GAP
+      : 0);
+  const xs = widths.map(
+    (_, index) =>
+      left +
+      widths.slice(0, index).reduce((sum, width) => sum + width + SET_GAP, 0)
+  );
+  let y =
+    SET_PADDING +
+    label(frame, spec.name, SET_PADDING, SET_PADDING, 'heading').height +
+    BLOCK_GAP / 2;
+  for (const block of combinations(spec, blocks)) {
+    if (blocks.length > 0)
+      y +=
+        label(frame, caption(block), SET_PADDING, y, 'title').height +
+        LABEL_GAP;
+    if (columns.length > 0) {
+      const headings = columnValues.map((column, index) =>
+        label(frame, caption(column), xs[index] ?? left, y)
+      );
+      y += Math.max(...headings.map((text) => text.height)) + LABEL_GAP;
+    }
+    rowValues.forEach((row, rowIndex) => {
+      const height = heights[rowIndex] ?? 0;
+      if (rows.length > 0) {
+        const text = label(frame, caption(row), SET_PADDING, y);
+        text.y = y + (height - text.height) / 2;
+      }
+      columnValues.forEach((column, columnIndex) => {
+        const [variant] = matching({ ...block, ...row, ...column });
+        if (!variant) return;
+        variant.x = xs[columnIndex] ?? left;
+        variant.y = y + (height - variant.height) / 2;
+      });
+      y += height + SET_GAP;
+    });
+    y += BLOCK_GAP - SET_GAP;
+  }
+  const right = (xs[xs.length - 1] ?? left) + (widths[widths.length - 1] ?? 0);
+  set.resizeWithoutConstraints(
+    right + SET_PADDING,
+    y - BLOCK_GAP + SET_PADDING
+  );
+  frame.resizeWithoutConstraints(set.width, set.height);
+  return frame;
+}
+
+/** Builds a component on `page`, whichever page the user has open meanwhile. */
+async function buildComponent(
+  spec: ComponentSpec,
+  page: PageNode,
+  ctx: Context
+) {
   ctx.references = [];
   const variants: ComponentNode[] = [];
   for (const variant of spec.variants) {
@@ -712,6 +1057,7 @@ async function buildComponent(spec: ComponentSpec, ctx: Context) {
       throw new Error(`${spec.name}'s root isn't a component.`);
     node.name = spec.variantProperties.length > 0 ? variant.name : spec.name;
     if (variant.notes.length > 0) node.description = variant.notes.join('\n');
+    page.appendChild(node);
     variants.push(node);
     if (variants.length % PROGRESS_EVERY === 0) {
       await progress(
@@ -724,14 +1070,13 @@ async function buildComponent(spec: ComponentSpec, ctx: Context) {
   if (!single) throw new Error(`${spec.name} has no variants.`);
   const owner =
     spec.variantProperties.length > 0
-      ? figma.combineAsVariants(variants, figma.currentPage)
+      ? figma.combineAsVariants(variants, page)
       : single;
   if (owner.type === 'COMPONENT_SET') {
     owner.name = spec.name;
-    arrange(owner, spec);
-    ctx.report.created.componentSets += 1;
+    ctx.report.written.componentSets += 1;
   }
-  ctx.report.created.components += variants.length;
+  ctx.report.written.components += variants.length;
   const keys = new Map<string, string>();
   const add = (
     kind: string,
@@ -756,16 +1101,21 @@ async function buildComponent(spec: ComponentSpec, ctx: Context) {
     const icon = ctx.icons.get(property.default);
     if (icon) add('swap', property.name, 'INSTANCE_SWAP', icon.id);
   }
-  for (const { node, visible, characters, swap } of ctx.references) {
+  for (const property of spec.slotProperties)
+    add('slot', property.name, 'SLOT', '');
+  for (const { node, visible, characters, swap, slot } of ctx.references) {
+    // The installed typings don't list `slotContentId` yet, though Figma's docs do.
     const references: {
       visible?: string;
       characters?: string;
       mainComponent?: string;
+      slotContentId?: string;
     } = {};
     if (visible) references.visible = keys.get(`visible ${visible}`);
     if (characters)
       references.characters = keys.get(`characters ${characters}`);
     if (swap) references.mainComponent = keys.get(`swap ${swap}`);
+    if (slot) references.slotContentId = keys.get(`slot ${slot}`);
     try {
       node.componentPropertyReferences = references;
     } catch (error) {
@@ -775,11 +1125,144 @@ async function buildComponent(spec: ComponentSpec, ctx: Context) {
   return owner;
 }
 
+/** The cover: the page the plugin first ran on, or a new one in a file that already has nxds pages. */
+function coverPage() {
+  const found = pageTagged('cover');
+  if (found) return found;
+  const fresh = !figma.root.children.some((page) => tagOf(page) !== '');
+  const page = fresh ? figma.currentPage : figma.createPage();
+  page.name = 'nxds';
+  tag(page, 'cover');
+  return page;
+}
+
+/** The component set a component's frame on its page holds, or the component itself. */
+function ownerIn(node: SceneNode) {
+  if (node.type !== 'FRAME') return node;
+  return (
+    node.children.find(
+      (child) => child.type === 'COMPONENT_SET' || child.type === 'COMPONENT'
+    ) ?? node
+  );
+}
+
+function insideInstance(node: SceneNode) {
+  for (let parent = node.parent; parent; parent = parent.parent) {
+    if (parent.type === 'INSTANCE') return true;
+  }
+  return false;
+}
+
+/**
+ * Moves every instance of a replaced component, anywhere in the file, to the
+ * rebuilt variant of the same name. `replaced` maps each old owner's id to its
+ * component's name.
+ */
+async function swapInstances(replaced: Map<string, string>, ctx: Context) {
+  ctx.where = 'instances';
+  if (replaced.size === 0) return;
+  // Swapping an instance replaces the layers inside it, so every target is
+  // found before the first swap, and only instances no instance holds move.
+  const instances = figma.root
+    .findAllWithCriteria({ types: ['INSTANCE'] })
+    .filter((instance) => !insideInstance(instance));
+  const swaps: { instance: InstanceNode; target: ComponentNode }[] = [];
+  for (const instance of instances) {
+    const main = await instance.getMainComponentAsync();
+    if (!main) continue;
+    const owner = main.parent?.type === 'COMPONENT_SET' ? main.parent : main;
+    const name = replaced.get(owner.id);
+    if (name === undefined) continue;
+    const rebuilt = ctx.components.get(name);
+    const target =
+      rebuilt?.type === 'COMPONENT_SET'
+        ? rebuilt.findChild((child) => child.name === main.name)
+        : rebuilt;
+    if (target?.type !== 'COMPONENT') {
+      fail(
+        ctx,
+        instance.name,
+        new Error(`${name} no longer has the variant ${main.name}.`)
+      );
+      continue;
+    }
+    swaps.push({ instance, target });
+  }
+  for (const { instance, target } of swaps) {
+    try {
+      instance.swapComponent(target);
+      ctx.report.swapped += 1;
+    } catch (error) {
+      fail(ctx, instance.name, error);
+    }
+  }
+}
+
+/** On a full run, deletes the card pages and components the capture no longer has. */
+async function removeOldComponents(
+  capture: CaptureFile,
+  cover: PageNode,
+  ctx: Context
+) {
+  ctx.where = 'cleanup';
+  const cards = new Set(capture.components.map((spec) => spec.card));
+  const names = new Set(capture.components.map((spec) => spec.name));
+  for (const page of [...figma.root.children]) {
+    const value = tagOf(page);
+    if (!value.startsWith('card:')) continue;
+    if (!cards.has(value.slice('card:'.length))) {
+      if (figma.currentPage === page) await figma.setCurrentPageAsync(cover);
+      ctx.report.removed.push(`page ${page.name}`);
+      page.remove();
+      continue;
+    }
+    for (const node of [...page.children]) {
+      const name = tagOf(node).slice('component:'.length);
+      if (!tagOf(node).startsWith('component:') || names.has(name)) continue;
+      ctx.report.removed.push(`component ${name}`);
+      node.remove();
+    }
+  }
+}
+
+/** Lays a page's components out in rows that wrap past PAGE_WIDTH, in page order. */
+function layOut(page: PageNode) {
+  let x = 0;
+  let y = 0;
+  let rowHeight = 0;
+  for (const node of page.children) {
+    if (!tagOf(node).startsWith('component:')) continue;
+    if (x > 0 && x + node.width > PAGE_WIDTH) {
+      x = 0;
+      y += rowHeight + COMPONENT_GAP;
+      rowHeight = 0;
+    }
+    node.x = x;
+    node.y = y;
+    x += node.width + COMPONENT_GAP;
+    rowHeight = Math.max(rowHeight, node.height);
+  }
+}
+
+/** The cover first, then the card pages by name, then Icons, then any page someone else added. */
+function orderPages() {
+  const rank = (page: PageNode) => {
+    const value = tagOf(page);
+    if (value === 'cover') return '0';
+    if (value === 'icons') return '2';
+    return `1${page.name}`;
+  };
+  const ours = figma.root.children.filter((page) => tagOf(page) !== '');
+  ours.sort((a, b) => (rank(a) < rank(b) ? -1 : rank(a) > rank(b) ? 1 : 0));
+  ours.forEach((page, index) => figma.root.insertChild(index, page));
+}
+
 async function build(capture: CaptureFile): Promise<BuildReport> {
   const report: BuildReport = {
     format: REPORT_FORMAT,
-    version: 2,
-    created: {
+    version: 4,
+    written: {
+      pages: 0,
       collections: 0,
       variables: 0,
       textStyles: 0,
@@ -789,6 +1272,8 @@ async function build(capture: CaptureFile): Promise<BuildReport> {
       components: 0,
       instances: 0,
     },
+    swapped: 0,
+    removed: [],
     modes: [],
     unbound: [],
     fonts: [],
@@ -806,41 +1291,57 @@ async function build(capture: CaptureFile): Promise<BuildReport> {
     where: 'setup',
   };
   try {
-    if (capture.format !== CAPTURE_FORMAT || capture.version !== 2) {
+    if (capture.format !== CAPTURE_FORMAT || capture.version !== 5) {
       throw new Error(
         'This capture comes from another nxds-cli version than this plugin. Rebuild the plugin from the same checkout.'
       );
     }
+    await figma.loadAllPagesAsync();
     await figma.loadFontAsync({ family: 'Inter', style: 'Regular' });
-    await progress('Creating variables…');
-    await createVariables(capture, ctx);
-    await progress('Creating text and shadow styles…');
-    await createStyles(capture, ctx);
-    await progress('Building the icon set…');
-    await createIcons(capture, ctx);
-    const page = figma.currentPage;
-    let x = 0;
-    let y = 0;
-    let rowHeight = 0;
-    const built: SceneNode[] = [];
+    await figma.loadFontAsync({ family: 'Inter', style: 'Semi Bold' });
+    await progress('Writing variables…');
+    await writeVariables(capture, ctx);
+    await progress('Writing text and shadow styles…');
+    await writeStyles(capture, ctx);
+    const cover = coverPage();
+    await progress('Writing the icon set…');
+    await writeIcons(capture, ctx);
+    const pages = new Map<string, PageNode>();
+    const pageFor = (card: string) => {
+      const known = pages.get(card);
+      if (known) return known;
+      const page = pageTagged(`card:${card}`) ?? newPage(card, `card:${card}`);
+      pages.set(card, page);
+      report.written.pages += 1;
+      return page;
+    };
+    const replaced = new Map<string, string>();
+    const stale: SceneNode[] = [];
     for (const spec of capture.components) {
       await progress(
         `Building ${spec.name}: ${spec.variants.length} variants…`
       );
       try {
-        const owner = await buildComponent(spec, ctx);
-        page.appendChild(owner);
-        if (x > 0 && x + owner.width > PAGE_WIDTH) {
-          x = 0;
-          y += rowHeight + COMPONENT_GAP;
-          rowHeight = 0;
+        const page = pageFor(spec.card);
+        const old = page.children.filter(
+          (node) => tagOf(node) === `component:${spec.name}`
+        );
+        const owner = await buildComponent(spec, page, ctx);
+        const shown =
+          owner.type === 'COMPONENT_SET'
+            ? arrange(owner, spec)
+            : titled(owner, spec);
+        tag(shown, `component:${spec.name}`);
+        const [first] = old;
+        page.insertChild(
+          first ? page.children.indexOf(first) : page.children.length,
+          shown
+        );
+        for (const node of old) {
+          replaced.set(ownerIn(node).id, spec.name);
+          stale.push(node);
         }
-        owner.x = x;
-        owner.y = y;
-        x += owner.width + COMPONENT_GAP;
-        rowHeight = Math.max(rowHeight, owner.height);
         ctx.components.set(spec.name, owner);
-        built.push(owner);
       } catch (error) {
         ctx.where = spec.name;
         fail(ctx, '', error);
@@ -848,7 +1349,20 @@ async function build(capture: CaptureFile): Promise<BuildReport> {
       for (const variant of spec.variants)
         report.unbound.push(...unboundValues(spec.name, variant));
     }
-    figma.viewport.scrollAndZoomIntoView(built);
+    await progress('Moving instances to the rebuilt components…');
+    await swapInstances(replaced, ctx);
+    for (const node of stale) node.remove();
+    if (!capture.partial) await removeOldComponents(capture, cover, ctx);
+    // Capture order puts each part before what holds it.
+    for (const spec of capture.components) {
+      const page = pages.get(spec.card);
+      const node = page?.children.find(
+        (child) => tagOf(child) === `component:${spec.name}`
+      );
+      if (page && node) page.appendChild(node);
+    }
+    for (const page of pages.values()) layOut(page);
+    orderPages();
   } catch (error) {
     fail(ctx, '', error);
   }
