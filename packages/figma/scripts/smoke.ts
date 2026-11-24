@@ -32,8 +32,8 @@ import {
   type BuildReport,
   type ComponentSpec,
   type Layer,
+  PROTOCOL_VERSION,
   REPORT_FORMAT,
-  REPORT_VERSION,
   unboundValues,
 } from '../src/spec.ts';
 import { isPrimitiveColor } from '../src/tokens.ts';
@@ -888,7 +888,7 @@ const rebound = await new Promise<number | undefined>((resolve, reject) => {
 check(rebound === 403, 'Link: it answered a request for another host.');
 const sent: BuildReport = {
   format: REPORT_FORMAT,
-  version: REPORT_VERSION,
+  version: PROTOCOL_VERSION,
   written: {
     pages: 2,
     collections: 5,

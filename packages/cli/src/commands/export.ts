@@ -27,7 +27,7 @@ import { CliError, readJson, UsageError } from '../errors';
 import {
   assertThemeFlags,
   DEFAULT_NPM_REGISTRY,
-  fetchRelease,
+  fetchDesignRelease,
   importTheme,
   isEntryList,
   isRootName,
@@ -301,7 +301,7 @@ export async function exportClaudeDesign(
 
   const pkg = options.source
     ? localPackage(path.resolve(cwd, options.source))
-    : await fetchRelease(
+    : await fetchDesignRelease(
         options.npmRegistry ?? DEFAULT_NPM_REGISTRY,
         options.release ?? 'latest'
       );

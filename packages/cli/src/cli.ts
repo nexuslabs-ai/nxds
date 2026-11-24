@@ -74,11 +74,11 @@ type ExportFlags = {
 function withExportFlags(
   command: Command,
   defaultOut: string,
-  overwrite: string
+  overwriteHelp: string
 ) {
   command
     .option('--out <path>', 'folder to write', defaultOut)
-    .option('--overwrite', overwrite, false)
+    .option('--overwrite', overwriteHelp, false)
     .option('--release <version>', 'nxds release to export (default: latest)')
     .option(
       '--source <path>',

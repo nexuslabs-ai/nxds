@@ -955,32 +955,30 @@ const NUMBER = {
 const TEXT = { ...NUMBER, string: true, number: false } as const;
 const BOOLEAN = { ...NUMBER, number: false, boolean: true } as const;
 
-/** A prop of a part only the export ships, typed by hand. */
-function canvasProp(
-  name: string,
-  attribute: Attribute,
-  description: string,
-  icons: readonly string[],
-  {
-    defaultValue = null,
-    optional = true,
-  }: { defaultValue?: string | null; optional?: boolean } = {}
-): FlatProp {
-  const type = attributeType(attribute, 'string', icons);
-  return {
-    name,
-    type,
-    optional,
-    description,
-    defaultValue,
-    attribute,
-    control: controlOf(attribute, type),
-  };
-}
-
 // The export's own parts, in src/runtime/, which @nxds/react doesn't have.
 function canvasParts(icons: readonly string[]): FlatComponent[] {
   const iconName: Attribute = { kind: 'icon', as: 'name' };
+  /** A prop of a part only the export ships, typed by hand. */
+  const canvasProp = (
+    name: string,
+    attribute: Attribute,
+    description: string,
+    {
+      defaultValue = null,
+      optional = true,
+    }: { defaultValue?: string | null; optional?: boolean } = {}
+  ): FlatProp => {
+    const type = attributeType(attribute, 'string', icons);
+    return {
+      name,
+      type,
+      optional,
+      description,
+      defaultValue,
+      attribute,
+      control: controlOf(attribute, type),
+    };
+  };
   return [
     {
       name: 'Icon',
@@ -993,19 +991,17 @@ function canvasParts(icons: readonly string[]): FlatComponent[] {
           'name',
           iconName,
           'The icon, by its name on phosphoricons.com. A `-fill` name, such as `check-circle-fill`, draws the filled icon.',
-          icons,
           { optional: false }
         ),
-        canvasProp('size', NUMBER, 'Width and height in px.', icons, {
+        canvasProp('size', NUMBER, 'Width and height in px.', {
           defaultValue: '16',
         }),
         canvasProp(
           'aria-label',
           TEXT,
-          'Names the icon for screen readers. Without it, they skip the icon. An icon-only button names itself instead.',
-          icons
+          'Names the icon for screen readers. Without it, they skip the icon. An icon-only button names itself instead.'
         ),
-        canvasProp('className', TEXT, '', icons),
+        canvasProp('className', TEXT, ''),
       ],
     },
     {
@@ -1030,49 +1026,34 @@ function canvasParts(icons: readonly string[]): FlatComponent[] {
             ],
           },
           'The kind of message. Each kind but `default` has its icon.',
-          icons,
           { defaultValue: '"default"' }
         ),
-        canvasProp('title', TEXT, 'The message.', icons, { optional: false }),
-        canvasProp(
-          'description',
-          TEXT,
-          'A line of detail under the title.',
-          icons
-        ),
+        canvasProp('title', TEXT, 'The message.', { optional: false }),
+        canvasProp('description', TEXT, 'A line of detail under the title.'),
         canvasProp(
           'action',
           TEXT,
-          'The label of an action button, such as "Undo".',
-          icons
+          'The label of an action button, such as "Undo".'
         ),
         canvasProp(
           'cancel',
           TEXT,
-          'The label of a dismiss button, such as "Close".',
-          icons
+          'The label of a dismiss button, such as "Close".'
         ),
         canvasProp(
           'closeButton',
           BOOLEAN,
           'Shows a close button in the corner.',
-          icons,
           { defaultValue: 'false' }
         ),
         canvasProp(
           'richColors',
           BOOLEAN,
           'Fills the toast with its variant’s colour.',
-          icons,
           { defaultValue: 'false' }
         ),
-        canvasProp(
-          'icon',
-          iconName,
-          'An icon in place of the variant’s.',
-          icons
-        ),
-        canvasProp('className', TEXT, '', icons),
+        canvasProp('icon', iconName, 'An icon in place of the variant’s.'),
+        canvasProp('className', TEXT, ''),
       ],
     },
   ];

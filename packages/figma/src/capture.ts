@@ -47,12 +47,12 @@ import {
 } from './recipes.ts';
 import {
   CAPTURE_FORMAT,
-  CAPTURE_VERSION,
   type CaptureFile,
   type ComponentSpec,
   type GridSpec,
   type IconSpec,
   type Layer,
+  PROTOCOL_VERSION,
   variantName,
   type VariantSpec,
 } from './spec.ts';
@@ -1045,7 +1045,7 @@ export async function captureComponents(
     return {
       capture: {
         format: CAPTURE_FORMAT,
-        version: CAPTURE_VERSION,
+        version: PROTOCOL_VERSION,
         // The plugin removes what a full capture lacks, so a failed component stays.
         partial: input.only !== undefined || problems.length > 0,
         nxds: { release: input.release, theme: input.theme },

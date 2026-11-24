@@ -10,7 +10,7 @@ import {
 } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
-import { type BuildReport, REPORT_FORMAT, REPORT_VERSION } from './spec.ts';
+import { type BuildReport, PROTOCOL_VERSION, REPORT_FORMAT } from './spec.ts';
 
 const CORS = {
   'access-control-allow-origin': '*',
@@ -37,7 +37,7 @@ const isReport = (value: unknown): value is BuildReport =>
   typeof value === 'object' &&
   value !== null &&
   (value as BuildReport).format === REPORT_FORMAT &&
-  (value as BuildReport).version === REPORT_VERSION;
+  (value as BuildReport).version === PROTOCOL_VERSION;
 
 /** A web page, or a host name rebound to this machine, sends another Host or Origin. */
 function isPlugin(request: IncomingMessage, port: number) {

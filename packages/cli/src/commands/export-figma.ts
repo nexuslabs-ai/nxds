@@ -13,7 +13,11 @@ import {
 import { ExportError } from '@nxds/figma/errors';
 import { openLink, PortInUseError } from '@nxds/figma/link';
 import { LINK_PORT } from '@nxds/figma/port';
-import { type BuildReport, unboundValues } from '@nxds/figma/spec';
+import {
+  type BuildReport,
+  CAPTURE_FORMAT,
+  unboundValues,
+} from '@nxds/figma/spec';
 import {
   existsSync,
   mkdirSync,
@@ -31,8 +35,8 @@ import { CliError, UsageError } from '../errors';
 import {
   assertThemeFlags,
   DEFAULT_NPM_REGISTRY,
+  fetchDesignRelease,
   fetchPackage,
-  fetchRelease,
   importTheme,
   localPackage,
   readRelease,
@@ -77,12 +81,34 @@ const COLOR_FLAGS = NXDS_THEME_FIELDS.filter(
     (NXDS_COLOR_APPEARANCE_KEYS as readonly string[]).includes(field.key)
 ).map((field) => field.flag);
 
-/** Refuses an --out holding files the export didn't write, unless asked to write beside them. */
+/** Whether an earlier export wrote `out`, which its capture.json shows. */
+function exportedBefore(out: string) {
+  try {
+    const capture = JSON.parse(
+      readFileSync(path.join(out, 'capture.json'), 'utf8')
+    ) as { format?: unknown };
+    return capture.format === CAPTURE_FORMAT;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Refuses an --out holding files the export didn't write. One named like an
+ * export file is refused always, since the run replaces it. Any other is
+ * refused unless asked to write beside it.
+ */
 function assertOwnFolder(out: string, overwrite: boolean) {
-  if (overwrite || !existsSync(out)) return;
-  const other = readdirSync(out).find(
-    (name) => !EXPORT_FILES.has(name) && !name.startsWith('.')
-  );
+  if (!existsSync(out)) return;
+  const names = readdirSync(out).filter((name) => !name.startsWith('.'));
+  const clash = names.find((name) => EXPORT_FILES.has(name));
+  if (clash !== undefined && !exportedBefore(out)) {
+    throw new UsageError(
+      `${out} has a ${clash} the Figma export didn't write, and the export would replace it. Move it, or choose another --out.`
+    );
+  }
+  if (overwrite) return;
+  const other = names.find((name) => !EXPORT_FILES.has(name));
   if (other === undefined) return;
   throw new UsageError(
     `${out} has files the Figma export didn't write, such as ${other}. Pass --overwrite to write the export beside them, or choose another --out.`
@@ -156,9 +182,9 @@ async function reactSources(registry: string) {
 }
 
 /** `work`'s result. A failure the person can fix becomes a CliError, which prints without a stack. */
-async function reported<T>(work: Promise<T>) {
+async function reported<T>(work: () => T | Promise<T>) {
   try {
-    return await work;
+    return await work();
   } catch (error) {
     throw error instanceof ExportError ? new CliError(error.message) : error;
   }
@@ -222,7 +248,10 @@ export async function exportFigma(
   // The release's README examples and prop types match the app's parts when it's the app's own release.
   const pkg = options.source
     ? localPackage(path.resolve(cwd, options.source))
-    : await fetchRelease(registry, options.release ?? app?.version ?? 'latest');
+    : await fetchDesignRelease(
+        registry,
+        options.release ?? app?.version ?? 'latest'
+      );
 
   let files: Map<string, Buffer>;
   let themeModule: Buffer | undefined;
@@ -274,10 +303,10 @@ export async function exportFigma(
       iconLibrary: app.iconLibrary ?? 'phosphor',
       ownColors,
     };
-    appTypes = appProps(setup, props);
+    appTypes = await reported(() => appProps(setup, props));
     props = appTypes.props;
     const { markup, icons } = examples(readmes, props);
-    const built = await reported(buildAppPage(setup, markup, icons));
+    const built = await reported(() => buildAppPage(setup, markup, icons));
     page = { styles: [built.css], scripts: [built.script] };
     missingIcons = built.missingIcons;
   } else {
@@ -296,7 +325,7 @@ export async function exportFigma(
   for (const name of EXPORT_FILES) {
     rmSync(path.join(out, name), { recursive: true, force: true });
   }
-  const { capture, problems, notInstalled } = await reported(
+  const { capture, problems, notInstalled } = await reported(() =>
     captureComponents({
       release: pkg.version,
       theme,
@@ -357,6 +386,12 @@ export async function exportFigma(
       `Text is set in Inter, because Figma can't draw the system UI font. Pass --font to choose another.`
     );
   }
+  if (problems.length > 0) {
+    captured.push(
+      ...problems.map((problem) => `Couldn't capture ${problem}`),
+      'The capture is incomplete, so the plugin removes nothing from the Figma file this run.'
+    );
+  }
 
   let link: Awaited<ReturnType<typeof openLink>>;
   try {
@@ -388,10 +423,7 @@ export async function exportFigma(
 
   return {
     ok: report.failures.length === 0 && problems.length === 0,
-    lines: [
-      ...problems.map((problem) => `Couldn't capture ${problem}`),
-      ...reportLines(report, relative),
-    ],
+    lines: reportLines(report, relative),
     data: {
       version: pkg.version,
       app: app !== null,

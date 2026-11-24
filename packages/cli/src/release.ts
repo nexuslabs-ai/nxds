@@ -181,8 +181,8 @@ export async function fetchPackage(
   }
 }
 
-/** The release at `release`, a version or a dist-tag, from the npm registry. */
-export function fetchRelease(registry: string, release: string) {
+/** @nxds/claude-design at `release`, a version or a dist-tag, from the npm registry. */
+export function fetchDesignRelease(registry: string, release: string) {
   return fetchPackage(
     registry,
     CLAUDE_DESIGN_PACKAGE,
@@ -191,7 +191,7 @@ export function fetchRelease(registry: string, release: string) {
   );
 }
 
-/** A built @nxds/claude-design dist folder, as `fetchRelease` returns a downloaded one. */
+/** A built @nxds/claude-design dist folder, as `fetchDesignRelease` returns a downloaded one. */
 export function localPackage(source: string) {
   if (!existsSync(path.join(source, 'project'))) {
     throw new UsageError(

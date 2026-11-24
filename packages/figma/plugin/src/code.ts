@@ -11,7 +11,6 @@ import {
   type Bound,
   type BuildReport,
   CAPTURE_FORMAT,
-  CAPTURE_VERSION,
   type CaptureFile,
   type ComponentSpec,
   type FrameLayer,
@@ -20,8 +19,8 @@ import {
   type InstanceLayer,
   type Layer,
   type Paint as SpecPaint,
+  PROTOCOL_VERSION,
   REPORT_FORMAT,
-  REPORT_VERSION,
   type Rgba,
   type Shadow,
   type Sizing,
@@ -32,28 +31,8 @@ import {
 
 type Container = FrameNode | ComponentNode | SlotNode;
 
-type NumberField =
-  | 'itemSpacing'
-  | 'counterAxisSpacing'
-  | 'paddingTop'
-  | 'paddingRight'
-  | 'paddingBottom'
-  | 'paddingLeft'
-  | 'topLeftRadius'
-  | 'topRightRadius'
-  | 'bottomRightRadius'
-  | 'bottomLeftRadius'
-  | 'strokeTopWeight'
-  | 'strokeRightWeight'
-  | 'strokeBottomWeight'
-  | 'strokeLeftWeight';
-
-/** The fields a variant's frame binds, which are unbound before it's drawn again. */
-const FRAME_BINDINGS: readonly VariableBindableNodeField[] = [
-  'width',
-  'height',
-  'minWidth',
-  'minHeight',
+/** A frame's layout and border numbers, each set with `setNumber`. */
+const NUMBER_FIELDS = [
   'itemSpacing',
   'counterAxisSpacing',
   'paddingTop',
@@ -68,6 +47,17 @@ const FRAME_BINDINGS: readonly VariableBindableNodeField[] = [
   'strokeRightWeight',
   'strokeBottomWeight',
   'strokeLeftWeight',
+] as const satisfies readonly VariableBindableNodeField[];
+
+type NumberField = (typeof NUMBER_FIELDS)[number];
+
+/** The fields a variant's frame binds, which are unbound before it's drawn again. */
+const FRAME_BINDINGS: readonly VariableBindableNodeField[] = [
+  'width',
+  'height',
+  'minWidth',
+  'minHeight',
+  ...NUMBER_FIELDS,
 ];
 
 interface Context {
@@ -135,15 +125,21 @@ const tag = (item: PluginDataMixin, value: string) =>
 const tagOf = (item: PluginDataMixin) => item.getPluginData(TAG);
 const pageTagged = (value: string) =>
   figma.root.children.find((page) => tagOf(page) === value);
+/** The tags on a component's component set or component, and on the paper frame it sits on. */
+const componentTag = (name: string) => `component:${name}`;
+const paperTag = (name: string) => `paper:${name}`;
 
 const messageOf = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
 
+/** Records each failure once. A redrawn variant's root is drawn twice, so its failures would come twice. */
 function fail(ctx: Context, what: string, error: unknown) {
-  ctx.report.failures.push({
-    where: what ? `${ctx.where} / ${what}` : ctx.where,
-    message: messageOf(error),
-  });
+  const where = what ? `${ctx.where} / ${what}` : ctx.where;
+  const message = messageOf(error);
+  const { failures } = ctx.report;
+  if (failures.some((each) => each.where === where && each.message === message))
+    return;
+  failures.push({ where, message });
 }
 
 async function progress(text: string) {
@@ -953,7 +949,7 @@ async function clearComponent(node: ComponentNode) {
   node.dashPattern = [];
 }
 
-/** Draws a variant into `node`, the component it was built as before or a new one. */
+/** Draws a variant's root frame and its layers into `node`. */
 async function drawVariant(
   node: ComponentNode,
   variant: VariantSpec,
@@ -962,12 +958,47 @@ async function drawVariant(
   const { root } = variant;
   if (root.type !== 'FRAME')
     throw new Error(`A ${root.type} layer can't be a component's root.`);
-  await clearComponent(node);
   await applyFrame(node, root, ctx);
   place(node, root, null, ctx);
   await buildChildren(root.children, node, ctx);
-  reference(node, root, ctx);
-  node.description = variant.notes.join('\n');
+}
+
+/** Draws each variant into a new component. When one fails, it removes them all, so last run's components stay as they were. */
+async function drawVariants(spec: ComponentSpec, page: PageNode, ctx: Context) {
+  const drawn: { variant: VariantSpec; node: ComponentNode }[] = [];
+  try {
+    for (const variant of spec.variants) {
+      ctx.where = `${spec.name} ${variant.name}`;
+      const node = figma.createComponent();
+      page.appendChild(node);
+      drawn.push({ variant, node });
+      await drawVariant(node, variant, ctx);
+      if (drawn.length % PROGRESS_EVERY === 0) {
+        await progress(
+          `Building ${spec.name}: ${drawn.length} of ${spec.variants.length} variants…`
+        );
+      }
+    }
+  } catch (error) {
+    for (const { node } of drawn) node.remove();
+    throw error;
+  }
+  return drawn;
+}
+
+/** Moves `drawn`'s layers into `old`, the component last run drew the variant in, so its instances follow. */
+async function redraw(
+  old: ComponentNode,
+  drawn: ComponentNode,
+  variant: VariantSpec,
+  ctx: Context
+) {
+  await clearComponent(old);
+  await applyFrame(old, variant.root, ctx);
+  place(old, variant.root, null, ctx);
+  for (const child of [...drawn.children]) old.appendChild(child);
+  drawn.remove();
+  return old;
 }
 
 /** Every combination of the named properties' values, in property order. */
@@ -1127,20 +1158,45 @@ function arrange(set: ComponentSetNode, spec: ComponentSpec, frame: FrameNode) {
   frame.resizeWithoutConstraints(set.width, set.height);
 }
 
-/** What a component was built as last run: the paper frame on its card's page, and the component set or component in it. */
-function builtBefore(spec: ComponentSpec, page: PageNode) {
-  const frame = page.children.find(
-    (node): node is FrameNode =>
-      node.type === 'FRAME' && tagOf(node) === `component:${spec.name}`
-  );
-  const owner = frame?.children.find(
-    (child): child is ComponentSetNode | ComponentNode =>
-      child.type === 'COMPONENT_SET' || child.type === 'COMPONENT'
-  );
-  return { frame, owner };
+/** Last run's component sets and components, by component name, wherever someone moved them in the file. */
+function builtComponents() {
+  const found = new Map<string, ComponentSetNode | ComponentNode>();
+  const tagged = figma.root.findAllWithCriteria({
+    types: ['COMPONENT_SET', 'COMPONENT'],
+    pluginData: { keys: [TAG] },
+  });
+  for (const node of tagged) {
+    const value = tagOf(node);
+    if (value.startsWith('component:'))
+      found.set(value.slice('component:'.length), node);
+  }
+  return found;
 }
 
-/** The component last run drew each of `spec`'s variants in, by name, or the first one when the variant properties come or go. */
+/** The paper frame `spec` sits on, on its card's page: last run's, or a new one. */
+function paperFor(spec: ComponentSpec, page: PageNode) {
+  const found = page.children.find(
+    (node): node is FrameNode =>
+      node.type === 'FRAME' && tagOf(node) === paperTag(spec.name)
+  );
+  if (found) return found;
+  const frame = figma.createFrame();
+  tag(frame, paperTag(spec.name));
+  page.appendChild(frame);
+  return frame;
+}
+
+/** Whether `node` is the variant `values` names: the same variant properties, each with the same value. */
+function sameVariant(node: ComponentNode, values: Record<string, string>) {
+  const properties = node.variantProperties ?? {};
+  const names = Object.keys(values);
+  return (
+    Object.keys(properties).length === names.length &&
+    names.every((name) => properties[name] === values[name])
+  );
+}
+
+/** The component last run drew each of `spec`'s variants in, by its variant properties, or the only one when the component has none. */
 function reusable(
   spec: ComponentSpec,
   owner: ComponentSetNode | ComponentNode | undefined
@@ -1152,7 +1208,7 @@ function reusable(
   );
   if (spec.variantProperties.length === 0) return variants.slice(0, 1);
   return spec.variants.map((variant) =>
-    variants.find((child) => child.name === variant.name)
+    variants.find((child) => sameVariant(child, variant.values))
   );
 }
 
@@ -1172,8 +1228,11 @@ function assemble(
     }
     return first;
   }
-  if (old?.type !== 'COMPONENT_SET')
+  if (old?.type !== 'COMPONENT_SET') {
+    // Last run's single component, if any, is one of the variants now.
+    if (old) tag(old, '');
     return figma.combineAsVariants(variants, page);
+  }
   for (const node of variants) {
     if (node.parent !== old) old.appendChild(node);
   }
@@ -1266,40 +1325,37 @@ function writeProperties(
 
 /**
  * Builds a component on `page`, whichever page the user has open meanwhile.
- * Each variant is drawn inside the component last run built for it, so every
- * instance of it, here or in a file using the library, follows. When the
- * build fails, the components it made are removed.
+ * Every variant is drawn first. Then each is moved inside the component last
+ * run built for it, `old`'s, so every instance of it, here or in a file using
+ * the library, follows. When the build fails, the components it made are
+ * removed.
  */
 async function buildComponent(
   spec: ComponentSpec,
   page: PageNode,
+  old: ComponentSetNode | ComponentNode | undefined,
   ctx: Context
 ) {
   ctx.references = [];
-  const before = builtBefore(spec, page);
-  const reused = reusable(spec, before.owner);
-  const created: ComponentNode[] = [];
+  const drawn = await drawVariants(spec, page, ctx);
+  const reused = reusable(spec, old);
   try {
     const variants: ComponentNode[] = [];
-    for (const [index, variant] of spec.variants.entries()) {
+    for (const [index, { variant, node }] of drawn.entries()) {
       ctx.where = `${spec.name} ${variant.name}`;
-      let node = reused[index];
-      if (!node) {
-        node = figma.createComponent();
-        page.appendChild(node);
-        created.push(node);
-      }
-      await drawVariant(node, variant, ctx);
-      node.name = spec.variantProperties.length > 0 ? variant.name : spec.name;
-      variants.push(node);
-      if (variants.length % PROGRESS_EVERY === 0) {
-        await progress(
-          `Building ${spec.name}: ${variants.length} of ${spec.variants.length} variants…`
-        );
-      }
+      const previous = reused[index];
+      const component = previous
+        ? await redraw(previous, node, variant, ctx)
+        : node;
+      reference(component, variant.root, ctx);
+      component.description = variant.notes.join('\n');
+      component.name =
+        spec.variantProperties.length > 0 ? variant.name : spec.name;
+      variants.push(component);
     }
     ctx.where = spec.name;
-    const owner = assemble(spec, variants, before.owner, page);
+    const owner = assemble(spec, variants, old, page);
+    tag(owner, componentTag(spec.name));
     if (owner.type === 'COMPONENT_SET') owner.name = spec.name;
     const keys = writeProperties(owner, spec, ctx);
     for (const { node, visible, characters, swap, slot } of ctx.references) {
@@ -1321,11 +1377,7 @@ async function buildComponent(
       }
     }
     // Laid out last, since a property's default can hide a layer.
-    const frame = before.frame ?? figma.createFrame();
-    if (!before.frame) {
-      tag(frame, `component:${spec.name}`);
-      page.appendChild(frame);
-    }
+    const frame = paperFor(spec, page);
     if (owner.type === 'COMPONENT_SET') {
       arrange(owner, spec, frame);
       ctx.report.written.componentSets += 1;
@@ -1335,7 +1387,7 @@ async function buildComponent(
     ctx.report.written.components += variants.length;
     return owner;
   } catch (error) {
-    for (const node of created) {
+    for (const { node } of drawn) {
       if (!node.removed) node.remove();
     }
     throw error;
@@ -1353,7 +1405,7 @@ function coverPage() {
   return page;
 }
 
-/** On a full run, deletes the card pages and components the capture no longer has. */
+/** On a full run, deletes the card pages and components the capture no longer has, and the paper each component sat on. */
 async function removeOldComponents(
   capture: CaptureFile,
   cover: PageNode,
@@ -1362,20 +1414,29 @@ async function removeOldComponents(
   ctx.where = 'cleanup';
   const cards = new Set(capture.components.map((spec) => spec.card));
   const names = new Set(capture.components.map((spec) => spec.name));
-  for (const page of [...figma.root.children]) {
-    const value = tagOf(page);
-    if (!value.startsWith('card:')) continue;
-    if (!cards.has(value.slice('card:'.length))) {
-      if (figma.currentPage === page) await figma.setCurrentPageAsync(cover);
-      ctx.report.removed.push(`page ${page.name}`);
-      page.remove();
-      continue;
-    }
+  const cardPages = figma.root.children.filter((page) =>
+    tagOf(page).startsWith('card:')
+  );
+  for (const page of cardPages) {
+    if (cards.has(tagOf(page).slice('card:'.length))) continue;
+    if (figma.currentPage === page) await figma.setCurrentPageAsync(cover);
+    ctx.report.removed.push(`page ${page.name}`);
+    page.remove();
+  }
+  for (const [name, owner] of builtComponents()) {
+    if (names.has(name)) continue;
+    ctx.report.removed.push(`component ${name}`);
+    owner.remove();
+  }
+  for (const page of cardPages) {
+    if (page.removed) continue;
     for (const node of [...page.children]) {
-      const name = tagOf(node).slice('component:'.length);
-      if (!tagOf(node).startsWith('component:') || names.has(name)) continue;
-      ctx.report.removed.push(`component ${name}`);
-      node.remove();
+      const value = tagOf(node);
+      if (
+        value.startsWith('paper:') &&
+        !names.has(value.slice('paper:'.length))
+      )
+        node.remove();
     }
   }
 }
@@ -1386,7 +1447,7 @@ function layOut(page: PageNode) {
   let y = 0;
   let rowHeight = 0;
   for (const node of page.children) {
-    if (!tagOf(node).startsWith('component:')) continue;
+    if (!tagOf(node).startsWith('paper:')) continue;
     if (x > 0 && x + node.width > PAGE_WIDTH) {
       x = 0;
       y += rowHeight + COMPONENT_GAP;
@@ -1415,7 +1476,7 @@ function orderPages() {
 async function build(capture: CaptureFile): Promise<BuildReport> {
   const report: BuildReport = {
     format: REPORT_FORMAT,
-    version: REPORT_VERSION,
+    version: PROTOCOL_VERSION,
     written: {
       pages: 0,
       collections: 0,
@@ -1446,7 +1507,7 @@ async function build(capture: CaptureFile): Promise<BuildReport> {
   try {
     if (
       capture.format !== CAPTURE_FORMAT ||
-      capture.version !== CAPTURE_VERSION
+      capture.version !== PROTOCOL_VERSION
     ) {
       throw new Error(
         'This capture comes from another nxds-cli version than this plugin. Rebuild the plugin from the same checkout.'
@@ -1471,12 +1532,18 @@ async function build(capture: CaptureFile): Promise<BuildReport> {
       report.written.pages += 1;
       return page;
     };
+    const built = builtComponents();
     for (const spec of capture.components) {
       await progress(
         `Building ${spec.name}: ${spec.variants.length} variants…`
       );
       try {
-        const owner = await buildComponent(spec, pageFor(spec.card), ctx);
+        const owner = await buildComponent(
+          spec,
+          pageFor(spec.card),
+          built.get(spec.name),
+          ctx
+        );
         ctx.components.set(spec.name, owner);
       } catch (error) {
         ctx.where = spec.name;
@@ -1488,7 +1555,7 @@ async function build(capture: CaptureFile): Promise<BuildReport> {
     for (const spec of capture.components) {
       const page = pages.get(spec.card);
       const node = page?.children.find(
-        (child) => tagOf(child) === `component:${spec.name}`
+        (child) => tagOf(child) === paperTag(spec.name)
       );
       if (page && node) page.appendChild(node);
     }

@@ -6,12 +6,15 @@ import type { CanvasSchema } from '@nxds/claude-design/attribute';
 import { canvasSchema } from '@nxds/claude-design/canvas-schema';
 import { type PartProps, partProps } from '@nxds/claude-design/index-dts';
 import { componentParts } from '@nxds/claude-design/props';
-import { publicExports } from '@nxds/source-model/props-contract.mjs';
-import { isUnder } from '@nxds/source-model/roots.mjs';
+import {
+  publicExports,
+  toSlugFolder,
+} from '@nxds/source-model/props-contract.mjs';
 import path from 'node:path';
 import ts from 'typescript';
 
 import { type AppSetup, componentFiles } from './app.ts';
+import { ExportError } from './errors.ts';
 
 export interface AppProps {
   /** The app's parts' props, then the release's, so a part the app has reads from the app. */
@@ -38,22 +41,37 @@ const OPTIONS: ts.CompilerOptions = {
   noEmit: true,
 };
 
-export function appProps(app: AppSetup, release: PartProps): AppProps {
-  const folder = path.join(app.root, app.dir, 'components');
+/** The app's parts in `folder`, its components folder. */
+function readParts(folder: string, icons: readonly string[]) {
   const files = componentFiles(folder);
   const program = ts.createProgram(files, OPTIONS);
   const checker = program.getTypeChecker();
-  // A file may re-export a library's component, which isn't one of the app's parts.
+  // A part sits in a folder of its own, as nxds's do. A file directly in the
+  // components folder, or a library's component re-exported, isn't one.
   const exported = new Map(
     [...publicExports(checker, program, files)].filter(([, symbol]) => {
       const file = symbol.declarations?.[0]?.getSourceFile().fileName;
-      return file !== undefined && isUnder(file, folder);
+      return (
+        file !== undefined && toSlugFolder(path.relative(folder, file)) !== null
+      );
     })
   );
+  return componentParts(checker, exported, folder, icons);
+}
+
+export function appProps(app: AppSetup, release: PartProps): AppProps {
+  const components = path.join(app.dir, 'components');
   // An icon prop takes the names the release's Icon draws.
   const icons =
     release.get('Icon')?.find((prop) => prop.name === 'name')?.literals ?? [];
-  const parts = componentParts(checker, exported, folder, icons);
+  let parts: ReturnType<typeof componentParts>;
+  try {
+    parts = readParts(path.join(app.root, components), icons);
+  } catch (error) {
+    throw new ExportError(
+      `The Figma export can't read the props of the app's components in ${components}: ${(error as Error).message}`
+    );
+  }
   return {
     props: new Map([...release, ...partProps(parts)]),
     schema: canvasSchema(parts),

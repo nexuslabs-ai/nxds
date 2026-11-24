@@ -53,7 +53,7 @@ Then the command exits. It writes these files to `nxds-figma/`, and a later run 
 | `screenshots/` | A browser screenshot of every variant, with its optional parts hidden  |
 | `report.json`  | What the plugin wrote and removed, the fonts it replaced, and failures |
 
-If the folder holds other files, pass `--overwrite` to write beside them.
+If the folder holds other files, pass `--overwrite` to write beside them. If it holds one of these names that an earlier export didn't write, the export stops instead of replacing it.
 
 If Chromium doesn't start, run `npx playwright@1.64.1 install chromium`.
 

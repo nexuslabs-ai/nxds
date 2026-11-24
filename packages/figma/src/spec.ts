@@ -3,9 +3,9 @@
 // layer, size and binding; the plugin only creates what this file says.
 
 export const CAPTURE_FORMAT = 'nxds-figma-capture';
-export const CAPTURE_VERSION = 5;
 export const REPORT_FORMAT = 'nxds-figma-report';
-export const REPORT_VERSION = 5;
+/** The version of capture.json, the report and the plugin's tags. A plugin and a CLI of different versions refuse each other's files. */
+export const PROTOCOL_VERSION = 6;
 
 /** sRGB, each channel 0–1. */
 export interface Rgba {
@@ -248,7 +248,7 @@ export interface IconSpec {
 
 export interface CaptureFile {
   format: typeof CAPTURE_FORMAT;
-  version: typeof CAPTURE_VERSION;
+  version: typeof PROTOCOL_VERSION;
   /** True when it holds only some components, so the plugin leaves every other part of the file alone. */
   partial: boolean;
   nxds: { release: string; theme: Record<string, string> };
@@ -274,7 +274,7 @@ export interface UnboundValue {
 
 export interface BuildReport {
   format: typeof REPORT_FORMAT;
-  version: typeof REPORT_VERSION;
+  version: typeof PROTOCOL_VERSION;
   /** What the run created, or updated when the file already had it. An unchanged icon isn't counted. */
   written: {
     pages: number;
