@@ -51,6 +51,8 @@ export type FigmaExportOptions = {
   out?: string;
   /** An app's own colours file, such as nxds-colors.css. */
   colors?: string;
+  /** Only these components, by Figma name, for a quicker run. */
+  only?: string[];
   release?: string;
   source?: string;
   npmRegistry?: string;
@@ -262,6 +264,7 @@ export async function exportFigma(
       app: props && { schema: props.schema },
       outDir: out,
       progress,
+      only: options.only,
     });
   } catch (error) {
     throw new CliError((error as Error).message);
