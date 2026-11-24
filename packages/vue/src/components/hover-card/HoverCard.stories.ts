@@ -38,7 +38,7 @@ export const Default: Story = {
         </HoverCardTrigger>
         <HoverCardContent>
           <div class="nx:flex nx:flex-col nx:gap-1">
-            <p class="nx:typography-label-default nx:font-semibold nx:text-foreground">@nxds</p>
+            <p class="nx:typography-label-default nx:text-foreground">@nxds</p>
             <p class="nx:typography-body-default nx:text-muted-foreground">The AI-native design system. Joined March 2026.</p>
           </div>
         </HoverCardContent>
@@ -79,7 +79,7 @@ export const ProfileCard: Story = {
               <AvatarFallback>AL</AvatarFallback>
             </Avatar>
             <div class="nx:flex nx:flex-col nx:gap-1">
-              <p class="nx:typography-label-default nx:font-semibold nx:text-foreground">Ada Lovelace</p>
+              <p class="nx:typography-label-default nx:text-foreground">Ada Lovelace</p>
               <p class="nx:typography-body-default nx:text-muted-foreground">Wrote the first program for the Analytical Engine.</p>
               <p class="nx:typography-label-small nx:text-muted-foreground">Joined December 1843</p>
             </div>

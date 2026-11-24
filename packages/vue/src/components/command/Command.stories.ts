@@ -694,6 +694,6 @@ export const WithDataAttributes: Story = {
       '[data-slot="command-shortcut"]'
     );
     await expect(shortcut).toHaveClass('nx:typography-shortcut');
-    await expect(shortcut).not.toHaveClass('nx:tracking-widest');
+    await expect(shortcut?.className).not.toContain('tracking-');
   },
 };

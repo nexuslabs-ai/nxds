@@ -917,6 +917,9 @@ const AttachedExample = defineComponent({
     DropdownMenuItem,
     DropdownMenuTrigger,
     PhCaretDown,
+    PhTextB,
+    PhTextItalic,
+    PhTextUnderline,
     Toolbar,
     ToolbarButton,
     ToolbarSeparator,
@@ -943,7 +946,7 @@ const AttachedExample = defineComponent({
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
                   <ToolbarToggleItem value="bold" icon-only>
-                    <template #start-icon><span class="nx:font-bold">B</span></template>Bold note</ToolbarToggleItem>
+                    <template #start-icon><PhTextB /></template>Bold note</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Bold</TooltipContent>
@@ -952,7 +955,7 @@ const AttachedExample = defineComponent({
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
                   <ToolbarToggleItem value="italic" icon-only>
-                    <template #start-icon><span class="nx:italic">I</span></template>Italic note</ToolbarToggleItem>
+                    <template #start-icon><PhTextItalic /></template>Italic note</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Italic</TooltipContent>
@@ -961,7 +964,7 @@ const AttachedExample = defineComponent({
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
                   <ToolbarToggleItem value="underline" icon-only>
-                    <template #start-icon><span class="nx:underline">U</span></template>Underline note</ToolbarToggleItem>
+                    <template #start-icon><PhTextUnderline /></template>Underline note</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Underline</TooltipContent>

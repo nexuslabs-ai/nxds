@@ -246,7 +246,7 @@ export const Default: Story = {
         </TableHeader>
         <TableBody>
           <TableRow v-for="row in invoices" :key="row.invoice">
-            <TableCell class="nx:font-medium">{{ row.invoice }}</TableCell>
+            <TableCell class="nx:typography-label-default">{{ row.invoice }}</TableCell>
             <TableCell>{{ row.status }}</TableCell>
             <TableCell>{{ row.method }}</TableCell>
             <TableCell class="nx:text-right">{{ row.amount }}</TableCell>
@@ -296,7 +296,7 @@ export const WithFooter: Story = {
         </TableHeader>
         <TableBody>
           <TableRow v-for="row in invoices" :key="row.invoice">
-            <TableCell class="nx:font-medium">{{ row.invoice }}</TableCell>
+            <TableCell class="nx:typography-label-default">{{ row.invoice }}</TableCell>
             <TableCell>{{ row.status }}</TableCell>
             <TableCell class="nx:text-right">{{ row.amount }}</TableCell>
           </TableRow>
@@ -449,7 +449,7 @@ export const WithActions: Story = {
         </TableHeader>
         <TableBody>
           <TableRow v-for="row in invoices" :key="row.invoice">
-            <TableCell class="nx:font-medium">{{ row.invoice }}</TableCell>
+            <TableCell class="nx:typography-label-default">{{ row.invoice }}</TableCell>
             <TableCell>{{ row.status }}</TableCell>
             <TableCell>
               <div class="nx:flex nx:justify-end nx:gap-2">
@@ -901,7 +901,7 @@ export const AllVariants: Story = {
               :key="row.invoice"
               :data-state="i === 1 ? 'selected' : undefined"
             >
-              <TableCell class="nx:font-medium">{{ row.invoice }}</TableCell>
+              <TableCell class="nx:typography-label-default">{{ row.invoice }}</TableCell>
               <TableCell>{{ row.status }}</TableCell>
               <TableCell>{{ row.method }}</TableCell>
               <TableCell class="nx:text-right">{{ row.amount }}</TableCell>
@@ -1251,7 +1251,7 @@ export const StackedCard: Story = {
             >
               <div class="nx:flex nx:justify-between">
                 <span class="nx:text-muted-foreground">Invoice</span>
-                <span class="nx:font-medium">{{ row.invoice }}</span>
+                <span class="nx:typography-label-default">{{ row.invoice }}</span>
               </div>
               <div class="nx:flex nx:justify-between">
                 <span class="nx:text-muted-foreground">Status</span>

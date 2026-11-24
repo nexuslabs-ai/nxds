@@ -39,11 +39,11 @@ export const Default: Story = {
         style="height: 220px"
       >
         <ResizablePanel :default-size="50">
-          <div class="nx:p-6 nx:text-center nx:font-semibold">One</div>
+          <div class="nx:p-6 nx:text-center nx:typography-label-default">One</div>
         </ResizablePanel>
         <ResizableHandle with-handle aria-label="Resize panels" />
         <ResizablePanel :default-size="50">
-          <div class="nx:p-6 nx:text-center nx:font-semibold">Two</div>
+          <div class="nx:p-6 nx:text-center nx:typography-label-default">Two</div>
         </ResizablePanel>
       </ResizablePanelGroup>
     `,
@@ -69,11 +69,11 @@ export const Vertical: Story = {
         style="height: 220px"
       >
         <ResizablePanel :default-size="50">
-          <div class="nx:p-6 nx:text-center nx:font-semibold">Top</div>
+          <div class="nx:p-6 nx:text-center nx:typography-label-default">Top</div>
         </ResizablePanel>
         <ResizableHandle with-handle aria-label="Resize panels" />
         <ResizablePanel :default-size="50">
-          <div class="nx:p-6 nx:text-center nx:font-semibold">Bottom</div>
+          <div class="nx:p-6 nx:text-center nx:typography-label-default">Bottom</div>
         </ResizablePanel>
       </ResizablePanelGroup>
     `,
@@ -98,15 +98,15 @@ export const ThreePanels: Story = {
         style="height: 220px"
       >
         <ResizablePanel :default-size="25">
-          <div class="nx:p-6 nx:text-center nx:font-semibold">Nav</div>
+          <div class="nx:p-6 nx:text-center nx:typography-label-default">Nav</div>
         </ResizablePanel>
         <ResizableHandle aria-label="Resize nav" />
         <ResizablePanel :default-size="50">
-          <div class="nx:p-6 nx:text-center nx:font-semibold">Content</div>
+          <div class="nx:p-6 nx:text-center nx:typography-label-default">Content</div>
         </ResizablePanel>
         <ResizableHandle aria-label="Resize aside" />
         <ResizablePanel :default-size="25">
-          <div class="nx:p-6 nx:text-center nx:font-semibold">Aside</div>
+          <div class="nx:p-6 nx:text-center nx:typography-label-default">Aside</div>
         </ResizablePanel>
       </ResizablePanelGroup>
     `,
@@ -124,11 +124,11 @@ const TwoPanels = {
       style="height: 220px"
     >
       <ResizablePanel :default-size="50">
-        <div class="nx:p-6 nx:text-center nx:font-semibold">One</div>
+        <div class="nx:p-6 nx:text-center nx:typography-label-default">One</div>
       </ResizablePanel>
       <ResizableHandle with-handle aria-label="Resize panels" />
       <ResizablePanel :default-size="50">
-        <div class="nx:p-6 nx:text-center nx:font-semibold">Two</div>
+        <div class="nx:p-6 nx:text-center nx:typography-label-default">Two</div>
       </ResizablePanel>
     </ResizablePanelGroup>
   `,
@@ -169,11 +169,11 @@ export const LayoutChangeInteraction: Story = {
         style="height: 220px"
       >
         <ResizablePanel :default-size="120" size-unit="px">
-          <div class="nx:p-6 nx:text-center nx:font-semibold">One</div>
+          <div class="nx:p-6 nx:text-center nx:typography-label-default">One</div>
         </ResizablePanel>
         <ResizableHandle with-handle aria-label="Resize panels" />
         <ResizablePanel>
-          <div class="nx:p-6 nx:text-center nx:font-semibold">Two</div>
+          <div class="nx:p-6 nx:text-center nx:typography-label-default">Two</div>
         </ResizablePanel>
       </ResizablePanelGroup>
     `,
@@ -225,11 +225,11 @@ export const AllVariants: Story = {
           style="height: 220px"
         >
           <ResizablePanel :default-size="50">
-            <div class="nx:p-6 nx:text-center nx:font-semibold">One</div>
+            <div class="nx:p-6 nx:text-center nx:typography-label-default">One</div>
           </ResizablePanel>
           <ResizableHandle with-handle aria-label="Resize columns" />
           <ResizablePanel :default-size="50">
-            <div class="nx:p-6 nx:text-center nx:font-semibold">Two</div>
+            <div class="nx:p-6 nx:text-center nx:typography-label-default">Two</div>
           </ResizablePanel>
         </ResizablePanelGroup>
         <ResizablePanelGroup
@@ -238,11 +238,11 @@ export const AllVariants: Story = {
           style="height: 220px"
         >
           <ResizablePanel :default-size="50">
-            <div class="nx:p-6 nx:text-center nx:font-semibold">Top</div>
+            <div class="nx:p-6 nx:text-center nx:typography-label-default">Top</div>
           </ResizablePanel>
           <ResizableHandle with-handle aria-label="Resize rows" />
           <ResizablePanel :default-size="50">
-            <div class="nx:p-6 nx:text-center nx:font-semibold">Bottom</div>
+            <div class="nx:p-6 nx:text-center nx:typography-label-default">Bottom</div>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>

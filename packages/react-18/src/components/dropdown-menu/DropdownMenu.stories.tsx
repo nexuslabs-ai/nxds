@@ -614,7 +614,7 @@ export const WithDataAttributes: Story = {
       '[data-slot="dropdown-menu-shortcut"]'
     );
     await expect(shortcut).toHaveClass('nx:typography-shortcut');
-    await expect(shortcut).not.toHaveClass('nx:tracking-widest');
+    await expect(shortcut?.className).not.toContain('tracking-');
 
     // Check destructive variant
     const destructiveItem = document.querySelector(
