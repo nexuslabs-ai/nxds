@@ -37,7 +37,7 @@ type Story = StoryObj<typeof Carousel>;
 const slideItems = [1, 2, 3, 4, 5].map((n) => (
   <CarouselItem key={n} aria-label={`Slide ${n} of 5`}>
     <div className="nx:flex nx:aspect-square nx:items-center nx:justify-center nx:rounded-md nx:border-default nx:border-border-default">
-      <span className="nx:typography-display-small">{n}</span>
+      <span className="nx:typography-display-medium">{n}</span>
     </div>
   </CarouselItem>
 ));

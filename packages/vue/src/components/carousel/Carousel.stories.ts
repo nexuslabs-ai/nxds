@@ -46,7 +46,7 @@ const SlideItems = {
   template: `
     <CarouselItem v-for="n in 5" :key="n" :aria-label="'Slide ' + n + ' of 5'">
       <div class="nx:flex nx:aspect-square nx:items-center nx:justify-center nx:rounded-md nx:border-default nx:border-border-default">
-        <span class="nx:typography-display-small">{{ n }}</span>
+        <span class="nx:typography-display-medium">{{ n }}</span>
       </div>
     </CarouselItem>
   `,
@@ -69,7 +69,7 @@ export const Default: Story = {
         <CarouselContent>
           <CarouselItem v-for="n in 5" :key="n" :aria-label="'Slide ' + n + ' of 5'">
             <div class="nx:flex nx:aspect-square nx:items-center nx:justify-center nx:rounded-md nx:border-default nx:border-border-default">
-              <span class="nx:typography-display-small">{{ n }}</span>
+              <span class="nx:typography-display-medium">{{ n }}</span>
             </div>
           </CarouselItem>
         </CarouselContent>
@@ -103,7 +103,7 @@ export const Vertical: Story = {
         <CarouselContent class="nx:h-[350px]">
           <CarouselItem v-for="n in 5" :key="n" :aria-label="'Slide ' + n + ' of 5'">
             <div class="nx:flex nx:aspect-square nx:items-center nx:justify-center nx:rounded-md nx:border-default nx:border-border-default">
-              <span class="nx:typography-display-small">{{ n }}</span>
+              <span class="nx:typography-display-medium">{{ n }}</span>
             </div>
           </CarouselItem>
         </CarouselContent>

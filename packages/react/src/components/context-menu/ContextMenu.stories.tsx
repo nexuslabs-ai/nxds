@@ -636,7 +636,7 @@ export const WithDataAttributes: Story = {
     );
     await expect(shortcut).toHaveClass('nx:typography-shortcut');
     await expect(shortcut).not.toHaveClass('nx:typography-body-small');
-    await expect(shortcut?.className).not.toContain('tracking-');
+    await expect(shortcut).not.toHaveClass(/tracking-/);
 
     // Check destructive variant
     const destructiveItem = document.querySelector(
