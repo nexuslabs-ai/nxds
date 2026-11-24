@@ -1,6 +1,7 @@
 // The local link between nxds-cli and the plugin. The plugin's UI iframe has
-// a null origin, so every answer allows any origin. It GETs /capture, builds,
-// and POSTs its report to /report, which resolves `report`.
+// a null origin, so every answer allows any origin, and only a request for
+// localhost from no origin or the null one is answered. It GETs /capture,
+// builds, and POSTs its report to /report, which resolves `report`.
 import {
   createServer,
   type IncomingMessage,
@@ -9,7 +10,7 @@ import {
 } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
-import { type BuildReport, REPORT_FORMAT } from './spec.ts';
+import { type BuildReport, REPORT_FORMAT, REPORT_VERSION } from './spec.ts';
 
 const CORS = {
   'access-control-allow-origin': '*',
@@ -19,6 +20,8 @@ const CORS = {
 };
 
 const MAX_REPORT_BYTES = 64 * 1024 * 1024;
+
+const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
 
 export interface Link {
   port: number;
@@ -33,7 +36,17 @@ export class PortInUseError extends Error {}
 const isReport = (value: unknown): value is BuildReport =>
   typeof value === 'object' &&
   value !== null &&
-  (value as BuildReport).format === REPORT_FORMAT;
+  (value as BuildReport).format === REPORT_FORMAT &&
+  (value as BuildReport).version === REPORT_VERSION;
+
+/** A web page, or a host name rebound to this machine, sends another Host or Origin. */
+function isPlugin(request: IncomingMessage, port: number) {
+  const { host, origin } = request.headers;
+  return (
+    LOCAL_HOSTS.some((name) => host === `${name}:${port}`) &&
+    (origin === undefined || origin === 'null')
+  );
+}
 
 function readBody(request: IncomingMessage) {
   return new Promise<string>((resolve, reject) => {
@@ -63,12 +76,25 @@ function listen(server: Server, port: number, host: string) {
   });
 }
 
+async function closeAll(servers: readonly Server[]) {
+  await Promise.all(
+    servers.map(
+      (server) =>
+        new Promise<void>((resolve) => {
+          server.closeAllConnections();
+          server.close(() => resolve());
+        })
+    )
+  );
+}
+
 /** Serves `capture` on localhost at `port`, over IPv4 and IPv6, until the plugin posts a report. Port 0 picks a free port. */
 export async function openLink(capture: string, port: number): Promise<Link> {
   let deliver: (report: BuildReport) => void = () => {};
   const report = new Promise<BuildReport>((resolve) => {
     deliver = resolve;
   });
+  let bound = port;
 
   const handle = async (request: IncomingMessage, response: ServerResponse) => {
     const answer = (status: number, body = '', type = 'text/plain') => {
@@ -79,6 +105,7 @@ export async function openLink(capture: string, port: number): Promise<Link> {
       });
       response.end(body);
     };
+    if (!isPlugin(request, bound)) return answer(403, 'Forbidden.');
     if (request.method === 'OPTIONS') return answer(204);
     if (request.method === 'GET' && request.url === '/capture') {
       return answer(200, capture, 'application/json');
@@ -91,7 +118,10 @@ export async function openLink(capture: string, port: number): Promise<Link> {
         return answer(400, (error as Error).message);
       }
       if (!isReport(parsed))
-        return answer(400, 'That is not an nxds Figma build report.');
+        return answer(
+          400,
+          'That is not a build report from this version of the nxds plugin.'
+        );
       answer(204);
       deliver(parsed);
       return;
@@ -117,37 +147,20 @@ export async function openLink(capture: string, port: number): Promise<Link> {
     }
     throw error;
   }
-  const bound = (servers[0]?.address() as AddressInfo).port;
+  bound = (servers[0]?.address() as AddressInfo).port;
   try {
     await open('::1', bound);
   } catch (error) {
-    // A machine without IPv6 still answers on 127.0.0.1.
     const code = (error as NodeJS.ErrnoException).code;
-    if (code === 'EADDRINUSE') {
-      await Promise.all(
-        servers.map((server) => new Promise((resolve) => server.close(resolve)))
-      );
-      throw new PortInUseError(
-        `Port ${bound} is already in use on this machine.`
-      );
+    // A machine without IPv6 still answers on 127.0.0.1.
+    if (code !== 'EADDRNOTAVAIL' && code !== 'EAFNOSUPPORT') {
+      await closeAll(servers);
+      throw code === 'EADDRINUSE'
+        ? new PortInUseError(`Port ${bound} is already in use on this machine.`)
+        : error;
     }
-    if (code !== 'EADDRNOTAVAIL' && code !== 'EAFNOSUPPORT') throw error;
     servers.pop();
   }
 
-  return {
-    port: bound,
-    report,
-    close: async () => {
-      await Promise.all(
-        servers.map(
-          (server) =>
-            new Promise<void>((resolve) => {
-              server.closeAllConnections();
-              server.close(() => resolve());
-            })
-        )
-      );
-    },
-  };
+  return { port: bound, report, close: () => closeAll(servers) };
 }

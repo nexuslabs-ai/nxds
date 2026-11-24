@@ -1,10 +1,11 @@
 // An app's own props, read from its nxds folder with TypeScript the way the
-// release reads nxds's: each part's flat props, as index.d.ts prints them,
-// and the attributes its README examples convert. A prop the team added or
-// a union they changed reaches Figma.
+// release reads nxds's: each part's flat props, and the attributes its README
+// examples convert. A prop the team added or a union they changed reaches
+// Figma.
 import type { CanvasSchema } from '@nxds/claude-design/attribute';
 import { canvasSchema } from '@nxds/claude-design/canvas-schema';
-import { componentParts, renderIndexDts } from '@nxds/claude-design/props';
+import { type PartProps, partProps } from '@nxds/claude-design/index-dts';
+import { componentParts } from '@nxds/claude-design/props';
 import { publicExports } from '@nxds/source-model/props-contract.mjs';
 import { isUnder } from '@nxds/source-model/roots.mjs';
 import path from 'node:path';
@@ -13,8 +14,8 @@ import ts from 'typescript';
 import { type AppSetup, componentFiles } from './app.ts';
 
 export interface AppProps {
-  /** The app's `<Part>Props` interfaces, then the release's, so a part the app has reads from the app. */
-  indexDts: string;
+  /** The app's parts' props, then the release's, so a part the app has reads from the app. */
+  props: PartProps;
   /** What each of the app's parts converts its attribute strings to. */
   schema: CanvasSchema;
   /** The app's parts the release has no props for, so no example draws them. */
@@ -37,7 +38,7 @@ const OPTIONS: ts.CompilerOptions = {
   noEmit: true,
 };
 
-export function appProps(app: AppSetup, releaseIndexDts: string): AppProps {
+export function appProps(app: AppSetup, release: PartProps): AppProps {
   const folder = path.join(app.root, app.dir, 'components');
   const files = componentFiles(folder);
   const program = ts.createProgram(files, OPTIONS);
@@ -49,14 +50,15 @@ export function appProps(app: AppSetup, releaseIndexDts: string): AppProps {
       return file !== undefined && isUnder(file, folder);
     })
   );
-  const parts = componentParts(checker, exported, folder);
+  // An icon prop takes the names the release's Icon draws.
+  const icons =
+    release.get('Icon')?.find((prop) => prop.name === 'name')?.literals ?? [];
+  const parts = componentParts(checker, exported, folder, icons);
   return {
-    indexDts: `${renderIndexDts(parts)}\n${releaseIndexDts}`,
+    props: new Map([...release, ...partProps(parts)]),
     schema: canvasSchema(parts),
     newParts: parts
       .map((part) => part.name)
-      .filter(
-        (name) => !releaseIndexDts.includes(`export interface ${name}Props {`)
-      ),
+      .filter((name) => !release.has(name)),
   };
 }

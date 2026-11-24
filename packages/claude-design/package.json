@@ -27,6 +27,7 @@
     "./attribute": "./src/attribute.ts",
     "./canvas-schema": "./src/canvas-schema.ts",
     "./icons": "./src/icons.ts",
+    "./index-dts": "./src/index-dts.ts",
     "./props": "./src/props.ts",
     "./system-index": "./src/system-index.ts",
     "./theme": "./src/theme.ts",

@@ -4,6 +4,7 @@
 // recipes, and every other card in the release gets a default one, so a new
 // nxds component lands in Figma without a recipe.
 import type { CanvasSchema } from '@nxds/claude-design/attribute';
+import type { PartProps } from '@nxds/claude-design/index-dts';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -18,6 +19,7 @@ import {
   type SourceVariant,
   svgSignature,
 } from './convert.ts';
+import { ExportError } from './errors.ts';
 import {
   type ElementFacts,
   installHelpers,
@@ -34,7 +36,6 @@ import {
   settle,
   type TextFacts,
 } from './page.ts';
-import { defaultFirst, partProp, partProps } from './props.ts';
 import {
   type Axis,
   cardOf,
@@ -46,6 +47,7 @@ import {
 } from './recipes.ts';
 import {
   CAPTURE_FORMAT,
+  CAPTURE_VERSION,
   type CaptureFile,
   type ComponentSpec,
   type GridSpec,
@@ -82,10 +84,11 @@ export interface CaptureInput {
     scripts: { path: string; js: string }[];
     /** The release's tokens.json, themed: the tokens that become variables. */
     tokensJson: string;
-    indexDts: string;
     /** Each card's README.md, by card name. */
     readmes: Readonly<Record<string, string>>;
   };
+  /** Each part's props: the release's, with an app's own parts over them. */
+  props: PartProps;
   /**
    * The page draws an app rather than the release: it serves the files the
    * app's CSS points at, such as fonts, takes the icon set from the app's
@@ -96,7 +99,7 @@ export interface CaptureInput {
   /** Screenshots go in `<outDir>/screenshots/<Component>/`. */
   outDir: string;
   progress(line: string): void;
-  /** Only these components, by name, for a quicker run. A card's name also takes its parts, such as `Dialog/Header` for `Dialog`. */
+  /** Only these components, of `componentNames`, for a quicker run. A card's name also takes its parts, such as `Dialog/Header` for `Dialog`. */
   only?: readonly string[];
 }
 
@@ -204,7 +207,7 @@ async function launch() {
     const { version } = createRequire(import.meta.url)(
       'playwright-core/package.json'
     ) as { version: string };
-    throw new Error(
+    throw new ExportError(
       `Headless Chromium didn't start (${(error as Error).message.split('\n')[0]}). Run \`npx playwright@${version} install chromium\`, then run the command again.`
     );
   }
@@ -247,10 +250,23 @@ interface Property {
   boolean: boolean;
 }
 
+/** The values with the default first, so Figma shows the default variant first. */
+function defaultFirst(values: readonly string[], first: string | undefined) {
+  if (first === undefined || !values.includes(first)) return [...values];
+  return [first, ...values.filter((value) => value !== first)];
+}
+
+/** `prop` of `part`. Throws when the part has no such prop. */
+function propOf(props: PartProps, part: string, prop: string) {
+  const found = props.get(part)?.find((entry) => entry.name === prop);
+  if (!found) throw new Error(`${part} has no prop ${prop}.`);
+  return found;
+}
+
 function variantProperties(
   recipe: Recipe,
   part: string,
-  indexDts: string
+  props: PartProps
 ): Property[] {
   // The part whose props they are: the recipe's, or its whole's.
   const owner = recipe.axesFrom ?? part;
@@ -264,7 +280,7 @@ function variantProperties(
           axis,
           boolean: false,
         };
-      const prop = partProp(indexDts, axis.part, axis.prop ?? '');
+      const prop = propOf(props, axis.part, axis.prop ?? '');
       if (!prop.literals)
         throw new Error(`${axis.part}.${axis.prop} isn't a union of strings.`);
       return {
@@ -275,14 +291,9 @@ function variantProperties(
       };
     });
   }
-  let props: ReturnType<typeof partProps> = [];
-  try {
-    props = partProps(indexDts, owner);
-  } catch {
-    return [];
-  }
+  const owned = props.get(owner) ?? [];
   const exclude = new Set([...NOT_VISUAL, ...(recipe.exclude ?? [])]);
-  const unions = props.filter(
+  const unions = owned.filter(
     (prop) =>
       prop.literals &&
       prop.literals.length > 1 &&
@@ -290,7 +301,7 @@ function variantProperties(
       !exclude.has(prop.name)
   );
   const booleans = (recipe.booleans ?? []).flatMap((name) =>
-    props.filter((prop) => prop.name === name && prop.boolean)
+    owned.filter((prop) => prop.name === name && prop.boolean)
   );
   return [
     ...unions.map(
@@ -360,13 +371,14 @@ async function mountOpen(page: Page, mount: MountInput, recipe: Recipe) {
   if (!recipe.open) return;
   await page.evaluate(settle);
   if ('click' in recipe.open) {
-    await page.click(recipe.open.click, {
-      button: recipe.open.button ?? 'left',
-    });
+    await page
+      .locator(recipe.open.click)
+      .first()
+      .click({ button: recipe.open.button ?? 'left' });
     // The pointer leaves, so it hovers nothing later components draw.
     await page.mouse.move(0, 0);
   } else {
-    await page.focus(recipe.open.press);
+    await page.locator(recipe.open.press).first().focus();
     await page.keyboard.press(recipe.open.key);
   }
   await page.evaluate(settle);
@@ -465,7 +477,6 @@ function propertyLayers(variants: readonly VariantSpec[]) {
   return { visible, texts, swaps, slots };
 }
 
-/** Every token a layer binds, to keep only the palette colours components use. */
 /** The recipe's grid, checked against its properties, or State in rows, Size in columns and the rest in blocks. */
 function gridFor(
   recipe: Recipe,
@@ -493,6 +504,7 @@ function gridFor(
   return { blocks: rest, rows, columns };
 }
 
+/** Every token a layer binds, to keep only the palette colours components use. */
 function usedTokens(components: readonly ComponentSpec[]) {
   const used = new Set<string>([ICON_COLOR]);
   const collect = (value: unknown) => {
@@ -562,6 +574,11 @@ function iconsIn(value: unknown, found: Set<string>) {
   for (const item of Object.values(value)) iconsIn(item, found);
 }
 
+/** Every component the capture draws, by name, which `only` picks from. */
+export function componentNames(readmes: Readonly<Record<string, string>>) {
+  return allRecipes(readmes).map((recipe) => recipe.name);
+}
+
 /**
  * Every example the capture renders, in every variant, and the icon names
  * they use, so an app's Tailwind compiles their classes and its bundle draws
@@ -569,7 +586,7 @@ function iconsIn(value: unknown, found: Set<string>) {
  */
 export function examples(
   readmes: Readonly<Record<string, string>>,
-  indexDts: string
+  props: PartProps
 ) {
   const markup: string[] = [];
   const icons = new Set<string>();
@@ -580,11 +597,7 @@ export function examples(
         : example(readmes[cardOf(recipe.name)]);
     let properties: Property[] = [];
     try {
-      properties = variantProperties(
-        recipe,
-        recipe.part ?? recipe.name,
-        indexDts
-      );
+      properties = variantProperties(recipe, recipe.part ?? recipe.name, props);
     } catch {
       // The capture reports a part the release lacks.
     }
@@ -721,11 +734,6 @@ export async function captureComponents(
   const traced = tracedTokens(tokens);
   const every = allRecipes(input.files.readmes);
   const names = every.map((recipe) => recipe.name);
-  const unknown = input.only?.filter((name) => !names.includes(name)) ?? [];
-  if (unknown.length > 0)
-    throw new Error(
-      `There's no component named ${unknown.join(', ')}. The components are ${names.join(', ')}.`
-    );
   // A card's name also takes its parts: Dialog brings Dialog/Header.
   const only = input.only;
   const wanted = new Set(
@@ -787,7 +795,7 @@ export async function captureComponents(
           ?.icons
     );
     const iconNames =
-      appIcons ?? partProp(input.files.indexDts, 'Icon', 'name').literals ?? [];
+      appIcons ?? propOf(input.props, 'Icon', 'name').literals ?? [];
     const icons = await page.evaluate(recordIcons, iconNames);
     const iconsByShape = new Map<string, string>();
     for (const icon of icons) {
@@ -838,7 +846,7 @@ export async function captureComponents(
       if (recipe.markup === undefined && base === undefined)
         throw new Error(`the ${card} README has no canvas example`);
       const part = recipe.part ?? recipe.name;
-      const axes = variantProperties(recipe, part, input.files.indexDts);
+      const axes = variantProperties(recipe, part, input.props);
       const stateNames = Object.keys(recipe.states ?? {});
       let properties: Property[] =
         stateNames.length > 0
@@ -1007,12 +1015,10 @@ export async function captureComponents(
         try {
           components.push(await captureRecipe(recipe));
         } catch (error) {
-          const message = (error as Error).message;
           if (input.app && error instanceof MissingParts) {
             notInstalled.push(recipe.name);
           } else {
-            problems.push(`${recipe.name}: ${message}`);
-            input.progress(`Skipped ${recipe.name}: ${message}`);
+            problems.push(`${recipe.name}: ${(error as Error).message}`);
           }
         }
         errors.length = 0;
@@ -1039,8 +1045,9 @@ export async function captureComponents(
     return {
       capture: {
         format: CAPTURE_FORMAT,
-        version: 5,
-        partial: input.only !== undefined,
+        version: CAPTURE_VERSION,
+        // The plugin removes what a full capture lacks, so a failed component stays.
+        partial: input.only !== undefined || problems.length > 0,
         nxds: { release: input.release, theme: input.theme },
         collections: collections(tokens, usedTokens(components), values),
         textStyles: styles,
@@ -1071,7 +1078,7 @@ async function assertFontsLoaded(page: Page, tokens: TokensFile, app: boolean) {
   }, family);
   // An app may set text in the system font, which declares no face; Figma's report names its replacement.
   if (loaded || (app && faces === 0)) return;
-  throw new Error(
+  throw new ExportError(
     `${family} didn't load, so the screenshots would show a fallback font. Check your connection, then run the command again.`
   );
 }

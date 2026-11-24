@@ -1,23 +1,18 @@
 import { isExportThemeFlag } from '@nxds/claude-design/theme-fields';
 import { NXDS_THEME_FIELDS } from '@nxds/core/source/lib/theme-fields.ts';
-import { Argument, Command, CommanderError, Option } from 'commander';
+import { Command, CommanderError, Option } from 'commander';
 import path from 'node:path';
 
 import { resolveRegistry } from './catalog';
 import { CLI_COMMAND } from './cli-command';
 import { info, list, search, view } from './commands/browse';
 import { diff, doctor } from './commands/check';
-import {
-  DEFAULT_EXPORT_DIR,
-  DEFAULT_NPM_REGISTRY,
-  exportClaudeDesign,
-  type ExportOptions,
-} from './commands/export';
-import { DEFAULT_FIGMA_DIR, exportFigma } from './commands/export-figma';
+import { exportClaudeDesign } from './commands/export';
 import { add, init, update } from './commands/install';
 import type { CommandResult } from './commands/result';
-import { CliError, EXIT_CODES, type ExitCode, UsageError } from './errors';
+import { CliError, EXIT_CODES, type ExitCode } from './errors';
 import type { InstallOptions } from './install';
+import { DEFAULT_NPM_REGISTRY } from './release';
 import { ICONS_FLAG } from './theme';
 
 export type Output = {
@@ -57,6 +52,75 @@ function withInstallFlags(command: Command) {
     .option('--overwrite', "replace files that differ from nxds's copy")
     .option('--no-install', 'skip installing npm packages');
 }
+
+/** The theme flags an export takes, each with the key commander stores it under. */
+const EXPORT_THEME_FLAGS = NXDS_THEME_FIELDS.filter((field) =>
+  isExportThemeFlag(field.flag)
+).map((field) => ({
+  flag: field.flag,
+  description: field.description,
+  key: new Option(`--${field.flag} <value>`).attributeName(),
+}));
+
+type ExportFlags = {
+  out: string;
+  release?: string;
+  source?: string;
+  npmRegistry?: string;
+  overwrite: boolean;
+};
+
+/** The flags every export takes: where it writes, the release it exports, and the theme. */
+function withExportFlags(
+  command: Command,
+  defaultOut: string,
+  overwrite: string
+) {
+  command
+    .option('--out <path>', 'folder to write', defaultOut)
+    .option('--overwrite', overwrite, false)
+    .option('--release <version>', 'nxds release to export (default: latest)')
+    .option(
+      '--source <path>',
+      'a built @nxds/claude-design dist folder, instead of the npm release'
+    )
+    .addOption(
+      new Option(
+        '--npm-registry <url>',
+        `npm registry to download from (default: ${DEFAULT_NPM_REGISTRY})`
+      ).env('npm_config_registry')
+    );
+  for (const { flag, description } of EXPORT_THEME_FLAGS) {
+    command.addOption(new Option(`--${flag} <value>`, description));
+  }
+  return command;
+}
+
+/** What `withExportFlags` reads, with the theme flags passed, by name. */
+function exportOptions(command: Command) {
+  const flags = command.opts<ExportFlags & Record<string, unknown>>();
+  const theme = Object.fromEntries(
+    EXPORT_THEME_FLAGS.flatMap(({ flag, key }) => {
+      const value = flags[key];
+      return typeof value === 'string' ? [[flag, value]] : [];
+    })
+  );
+  return {
+    out: flags.out,
+    release: flags.release,
+    source: flags.source,
+    npmRegistry: flags.npmRegistry,
+    overwrite: flags.overwrite,
+    theme,
+  };
+}
+
+/** `--only`'s comma-separated names, leaving out empty ones. */
+const nameList = (value: string) =>
+  value
+    .split(',')
+    .map((name) => name.trim())
+    .filter(Boolean);
 
 /**
  * The program, with each command's action passing its result to `done`.
@@ -215,19 +279,18 @@ function program(
   const exportCommand = cli
     .command('export')
     .description(
-      "export nxds as a Claude Design System folder, ready to publish, or as native Figma components through the nxds Figma plugin. Theme flags set the theme, as they do for init; for claude-design with --index, one left out keeps the system's value, and an empty one, such as --density=, resets it"
-    )
-    .addArgument(
-      new Argument('<target>', 'what to export').choices([
-        'claude-design',
-        'figma',
-      ])
-    )
-    .option(
-      '--out <path>',
-      `folder to write (default: ${DEFAULT_EXPORT_DIR}, or ${DEFAULT_FIGMA_DIR} for figma)`
-    )
-    .option('--release <version>', 'nxds release to export (default: latest)')
+      'export nxds to a design tool: as a Claude Design System, or as native Figma components'
+    );
+
+  withExportFlags(
+    exportCommand
+      .command('claude-design')
+      .description(
+        "export nxds as a Claude Design System folder, ready to publish. Theme flags set the system's theme, as they do for init; with --index, one left out keeps the system's value, and an empty one, such as --density=, resets it"
+      ),
+    'nxds-design-system',
+    'replace the export in --out'
+  )
     .option(
       '--index <path>',
       "the system's current design-system.json, to keep its title, creation date and theme"
@@ -236,86 +299,53 @@ function program(
       '--existing <path>',
       "a JSON list of the system's current file paths, to list the ones this release removes"
     )
-    .option('--overwrite', 'replace the export in --out', false)
+    .action(async (_options, command: Command) => {
+      const { index, existing } = command.opts<{
+        index?: string;
+        existing?: string;
+      }>();
+      done(
+        await exportClaudeDesign(cwdOf(command), {
+          ...exportOptions(command),
+          index,
+          existing,
+        })
+      );
+    });
+
+  withExportFlags(
+    exportCommand
+      .command('figma')
+      .description(
+        "export nxds as native Figma components, through the nxds Figma plugin. Theme flags set the theme, as they do for init. Inside an app, it exports the app's own components"
+      ),
+    'nxds-figma',
+    'write the export into an --out that holds other files'
+  )
     .option(
       '--colors <path>',
-      "figma: an app's own colours file, such as nxds-colors.css, in place of the theme's colours"
+      "an app's own colours file, such as nxds-colors.css, in place of the theme's colours"
     )
     .option(
       '--only <components>',
-      'figma: only these components, comma-separated, such as Button,Badge'
+      'only these components, comma-separated, such as Button,Badge',
+      nameList
     )
-    .option(
-      '--source <path>',
-      'a built @nxds/claude-design dist folder, instead of the npm release'
-    )
-    .addOption(
-      new Option(
-        '--npm-registry <url>',
-        `npm registry to download from (default: ${DEFAULT_NPM_REGISTRY})`
-      ).env('npm_config_registry')
-    );
-  const exportThemeOptions = NXDS_THEME_FIELDS.filter((field) =>
-    isExportThemeFlag(field.flag)
-  ).map((field) => {
-    const option = new Option(`--${field.flag} <value>`, field.description);
-    exportCommand.addOption(option);
-    return { flag: field.flag, key: option.attributeName() };
-  });
-
-  exportCommand.action(async (target: string, _options, command: Command) => {
-    const options = command.opts<Record<string, string | undefined>>();
-    const theme = Object.fromEntries(
-      exportThemeOptions.flatMap(({ flag, key }) => {
-        const value = options[key];
-        return value === undefined ? [] : [[flag, value]];
-      })
-    );
-    const { out, release, source, npmRegistry, index, existing, overwrite } =
-      command.opts<Omit<ExportOptions, 'theme'>>();
-    const { colors, only } = command.opts<{ colors?: string; only?: string }>();
-    if (target === 'figma') {
-      if (index !== undefined || existing !== undefined) {
-        throw new UsageError(
-          '--index and --existing update a Claude Design System. The Figma export builds a new file each time, so it takes neither.'
-        );
-      }
+    .action(async (_options, command: Command) => {
+      const { colors, only } = command.opts<{
+        colors?: string;
+        only?: string[];
+      }>();
+      // Loaded here, so no other command loads TypeScript, Chromium or esbuild.
+      const { exportFigma } = await import('./commands/export-figma');
       done(
         await exportFigma(
           cwdOf(command),
-          {
-            out,
-            colors,
-            only: only?.split(',').map((name) => name.trim()),
-            release,
-            source,
-            npmRegistry,
-            overwrite,
-            theme,
-          },
+          { ...exportOptions(command), colors, only },
           progress
         )
       );
-      return;
-    }
-    if (colors !== undefined || only !== undefined) {
-      throw new UsageError(
-        '--colors and --only are for the Figma export. A Claude Design System takes its colours from the theme flags and exports every component.'
-      );
-    }
-    done(
-      await exportClaudeDesign(cwdOf(command), {
-        out,
-        release,
-        source,
-        npmRegistry,
-        index,
-        existing,
-        overwrite,
-        theme,
-      })
-    );
-  });
+    });
 
   cli
     .command('doctor')

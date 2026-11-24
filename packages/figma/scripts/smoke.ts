@@ -6,6 +6,7 @@
 // an app's own colours and edited components, and the local link the plugin
 // talks to. Build @nxds/claude-design and nxds-cli first. Pass a folder to
 // keep the capture and its screenshots.
+import { readIndexDts } from '@nxds/claude-design/index-dts';
 import { execFileSync } from 'node:child_process';
 import {
   existsSync,
@@ -16,6 +17,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
+import { request } from 'node:http';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -31,6 +33,7 @@ import {
   type ComponentSpec,
   type Layer,
   REPORT_FORMAT,
+  REPORT_VERSION,
   unboundValues,
 } from '../src/spec.ts';
 import { isPrimitiveColor } from '../src/tokens.ts';
@@ -94,12 +97,11 @@ const input = {
   files: {
     ...releasePage(releaseFiles),
     tokensJson: themed['tokens.json'] ?? '',
-    indexDts: readFileSync(
-      path.join(project, 'components', 'index.d.ts'),
-      'utf8'
-    ),
     readmes,
   },
+  props: readIndexDts(
+    readFileSync(path.join(project, 'components', 'index.d.ts'), 'utf8')
+  ),
   outDir,
   progress: (line: string) => console.log(line),
 };
@@ -531,9 +533,7 @@ for (const collection of capture.collections) {
 }
 
 // Every colour is bound, except Sonner's own toast colours and image placeholders.
-const unbound = capture.components.flatMap((spec) =>
-  spec.variants.flatMap((entry) => unboundValues(spec.name, entry))
-);
+const unbound = unboundValues(capture);
 const colorProperties = new Set([
   'fill',
   'stroke',
@@ -590,7 +590,7 @@ const own = await captureComponents({
     ...input.files,
     ...releasePage({ ...releaseFiles, colorsCss: OWN_COLORS }),
   },
-  outDir: mkdtempSync(path.join(tmpdir(), 'nxds-figma-own-')),
+  outDir: path.join(outDir, 'own'),
   only: ['Card'],
   progress: () => {},
 });
@@ -763,8 +763,8 @@ const setup: AppSetup = {
   iconLibrary: config.iconLibrary,
   ownColors: true,
 };
-const appTypes = appProps(setup, input.files.indexDts);
-const appExamples = examples(readmes, appTypes.indexDts);
+const appTypes = appProps(setup, input.props);
+const appExamples = examples(readmes, appTypes.props);
 const appPage = await buildAppPage(
   setup,
   appExamples.markup,
@@ -776,10 +776,10 @@ const app = await captureComponents({
     ...input.files,
     styles: [appPage.css],
     scripts: [appPage.script],
-    indexDts: appTypes.indexDts,
   },
+  props: appTypes.props,
   app: { schema: appTypes.schema },
-  outDir: mkdtempSync(path.join(tmpdir(), 'nxds-figma-app-')),
+  outDir: path.join(outDir, 'app'),
   only: [
     'Button',
     'Card',
@@ -865,9 +865,30 @@ const junk = await fetch(`${base}/report`, {
   body: '{"format":"other"}',
 });
 check(junk.status === 400, 'Link: it took a body that is not a report.');
+const crossOrigin = await fetch(`${base}/capture`, {
+  headers: { origin: 'https://example.com' },
+});
+check(
+  crossOrigin.status === 403,
+  'Link: it answered a web page, which sends its own origin.'
+);
+// A host name rebound to this machine reaches the port with its own Host.
+const rebound = await new Promise<number | undefined>((resolve, reject) => {
+  request(
+    `${base}/capture`,
+    { headers: { host: `example.com:${link.port}` } },
+    (response) => {
+      response.resume();
+      resolve(response.statusCode);
+    }
+  )
+    .on('error', reject)
+    .end();
+});
+check(rebound === 403, 'Link: it answered a request for another host.');
 const sent: BuildReport = {
   format: REPORT_FORMAT,
-  version: 4,
+  version: REPORT_VERSION,
   written: {
     pages: 2,
     collections: 5,
@@ -879,11 +900,9 @@ const sent: BuildReport = {
     components: 1,
     instances: 1,
   },
-  swapped: 1,
   removed: ['page Kbd'],
   modes: ['Light'],
   darkModeError: 'in addMode: Limited to 1 modes only',
-  unbound: [],
   fonts: [],
   failures: [],
 };

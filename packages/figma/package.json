@@ -9,6 +9,7 @@
     "./app": "./src/app.ts",
     "./app-props": "./src/app-props.ts",
     "./capture": "./src/capture.ts",
+    "./errors": "./src/errors.ts",
     "./link": "./src/link.ts",
     "./port": "./src/port.ts",
     "./spec": "./src/spec.ts"

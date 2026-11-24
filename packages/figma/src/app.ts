@@ -8,6 +8,8 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { ExportError } from './errors.ts';
+
 /** An app's nxds setup, as nxds.json and the CLI's setup describe it. */
 export interface AppSetup {
   root: string;
@@ -182,25 +184,31 @@ function entrySource(app: AppSetup, exampleIcons: readonly string[]) {
 
 /** Bundles the app's components and their packages into one script for the capture page. */
 async function bundle(app: AppSetup, source: string) {
-  const result = await build({
-    stdin: {
-      contents: source,
-      resolveDir: app.root,
-      sourcefile: 'nxds-figma-entry.tsx',
-      loader: 'tsx',
-    },
-    absWorkingDir: app.root,
-    bundle: true,
-    format: 'iife',
-    globalName: 'Nxds',
-    platform: 'browser',
-    jsx: 'automatic',
-    define: { 'process.env.NODE_ENV': '"production"' },
-    loader: { '.css': 'empty' },
-    logLevel: 'silent',
-    write: false,
-  });
-  return result.outputFiles[0]?.text ?? '';
+  try {
+    const result = await build({
+      stdin: {
+        contents: source,
+        resolveDir: app.root,
+        sourcefile: 'nxds-figma-entry.tsx',
+        loader: 'tsx',
+      },
+      absWorkingDir: app.root,
+      bundle: true,
+      format: 'iife',
+      globalName: 'Nxds',
+      platform: 'browser',
+      jsx: 'automatic',
+      define: { 'process.env.NODE_ENV': '"production"' },
+      loader: { '.css': 'empty' },
+      logLevel: 'silent',
+      write: false,
+    });
+    return result.outputFiles[0]?.text ?? '';
+  } catch (error) {
+    throw new ExportError(
+      `The app's nxds components didn't bundle: ${(error as Error).message}`
+    );
+  }
 }
 
 /** The parts of `@tailwindcss/node` and `@tailwindcss/oxide` the export calls. */
@@ -224,6 +232,39 @@ interface TailwindOxide {
   };
 }
 
+/** The first Tailwind release whose `@tailwindcss/node` and `@tailwindcss/oxide` API the export calls, within its major version. */
+const TAILWIND_FROM = { major: 4, minor: 3 };
+
+/** Where the first of `requires` that has `id` resolves it. */
+function resolveFrom(requires: readonly NodeJS.Require[], id: string) {
+  for (const require of requires) {
+    try {
+      return require.resolve(id);
+    } catch {
+      // Try the next place the app could have it.
+    }
+  }
+  return undefined;
+}
+
+/** `id`'s version, from the package.json above its resolved entry. */
+function versionOf(entry: string, id: string) {
+  for (
+    let dir = path.dirname(entry);
+    dir !== path.dirname(dir);
+    dir = path.dirname(dir)
+  ) {
+    const file = path.join(dir, 'package.json');
+    if (!existsSync(file)) continue;
+    const pkg = JSON.parse(readFileSync(file, 'utf8')) as {
+      name?: string;
+      version?: string;
+    };
+    if (pkg.name === id) return pkg.version;
+  }
+  return undefined;
+}
+
 /**
  * The app's own Tailwind: `@tailwindcss/node` and `@tailwindcss/oxide`, as the
  * app installed them, directly or through its Vite or PostCSS plugin.
@@ -245,16 +286,20 @@ async function appTailwind(root: string) {
     }),
   ];
   const load = async <T>(id: string): Promise<T> => {
-    for (const require of from) {
-      try {
-        return (await import(pathToFileURL(require.resolve(id)).href)) as T;
-      } catch {
-        // Try the next place the app could have it.
-      }
+    const entry = resolveFrom(from, id);
+    if (!entry) {
+      throw new ExportError(
+        `The app has no ${id}. Install Tailwind CSS v4 as nxds's setup does, then run the command again.`
+      );
     }
-    throw new Error(
-      `The app has no ${id}. Install Tailwind CSS v4 as nxds's setup does, then run the command again.`
-    );
+    const version = versionOf(entry, id);
+    const [major, minor = 0] = (version ?? '').split('.').map(Number);
+    if (major !== TAILWIND_FROM.major || minor < TAILWIND_FROM.minor) {
+      throw new ExportError(
+        `The app has ${id} ${version ?? 'of an unknown version'}. The export works with Tailwind CSS ${TAILWIND_FROM.major}.${TAILWIND_FROM.minor} and later ${TAILWIND_FROM.major}.x releases. Update Tailwind, then run the command again.`
+      );
+    }
+    return (await import(pathToFileURL(entry).href)) as T;
   };
   const node = await load<TailwindNode>('@tailwindcss/node');
   const oxide = await load<TailwindOxide>('@tailwindcss/oxide');
@@ -265,12 +310,19 @@ async function appTailwind(root: string) {
 async function compileCss(app: AppSetup, markup: string) {
   const { compile, Scanner } = await appTailwind(app.root);
   const entry = path.join(app.root, app.css);
-  const compiler = await compile(readFileSync(entry, 'utf8'), {
-    base: path.dirname(entry),
-    from: entry,
-    onDependency() {},
-    shouldRewriteUrls: true,
-  });
+  let compiler: Awaited<ReturnType<typeof compile>>;
+  try {
+    compiler = await compile(readFileSync(entry, 'utf8'), {
+      base: path.dirname(entry),
+      from: entry,
+      onDependency() {},
+      shouldRewriteUrls: true,
+    });
+  } catch (error) {
+    throw new ExportError(
+      `The app's CSS entry ${app.css} didn't compile: ${(error as Error).message}`
+    );
+  }
   const scanner = new Scanner({
     sources: [
       { base: path.join(app.root, app.dir), pattern: '**/*', negated: false },

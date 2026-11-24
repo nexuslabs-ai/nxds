@@ -14,7 +14,7 @@ const post = (message: unknown) =>
 
 function summary(report: BuildReport) {
   const { written } = report;
-  return `Wrote ${written.pages} pages, ${written.componentSets} component sets and ${written.components} components, and moved ${report.swapped} instances. ${report.failures.length} steps failed.`;
+  return `Wrote ${written.pages} pages, ${written.componentSets} component sets and ${written.components} components. ${report.failures.length} steps failed.`;
 }
 
 async function start() {

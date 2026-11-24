@@ -3,7 +3,9 @@
 // layer, size and binding; the plugin only creates what this file says.
 
 export const CAPTURE_FORMAT = 'nxds-figma-capture';
+export const CAPTURE_VERSION = 5;
 export const REPORT_FORMAT = 'nxds-figma-report';
+export const REPORT_VERSION = 5;
 
 /** sRGB, each channel 0–1. */
 export interface Rgba {
@@ -246,7 +248,7 @@ export interface IconSpec {
 
 export interface CaptureFile {
   format: typeof CAPTURE_FORMAT;
-  version: 5;
+  version: typeof CAPTURE_VERSION;
   /** True when it holds only some components, so the plugin leaves every other part of the file alone. */
   partial: boolean;
   nxds: { release: string; theme: Record<string, string> };
@@ -272,7 +274,7 @@ export interface UnboundValue {
 
 export interface BuildReport {
   format: typeof REPORT_FORMAT;
-  version: 4;
+  version: typeof REPORT_VERSION;
   /** What the run created, or updated when the file already had it. An unchanged icon isn't counted. */
   written: {
     pages: number;
@@ -285,15 +287,12 @@ export interface BuildReport {
     components: number;
     instances: number;
   };
-  /** Instances elsewhere in the file moved over to a rebuilt component. */
-  swapped: number;
   /** What a full run deleted because the capture no longer has it, such as `page Kbd`. */
   removed: string[];
   /** The modes the themed collection ended with. */
   modes: string[];
   /** Figma's exact message when it refused the Dark mode. */
   darkModeError?: string;
-  unbound: UnboundValue[];
   fonts: { requested: string; used: string }[];
   failures: { where: string; message: string }[];
 }
@@ -314,7 +313,7 @@ const css = ({ r, g, b, a }: Rgba) =>
  * sizes, padding, gaps, radii, stroke widths, shadows and type. Zero and
  * fully transparent values are left out, since there is nothing to bind.
  */
-export function unboundValues(component: string, variant: VariantSpec) {
+function variantUnbound(component: string, variant: VariantSpec) {
   const found: UnboundValue[] = [];
   const add = (path: string[], property: string, value: string) =>
     found.push({
@@ -389,4 +388,13 @@ export function unboundValues(component: string, variant: VariantSpec) {
   };
   visit(variant.root, []);
   return found;
+}
+
+/** Every value in the capture's variants that isn't bound to a variable or style. */
+export function unboundValues(capture: CaptureFile) {
+  return capture.components.flatMap((component) =>
+    component.variants.flatMap((variant) =>
+      variantUnbound(component.name, variant)
+    )
+  );
 }

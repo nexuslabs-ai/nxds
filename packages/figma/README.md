@@ -39,24 +39,27 @@ The first run renames the current page `nxds` for a cover, and adds a page per c
 A later run in the same file updates it:
 
 - Variables, styles and icons are updated in place, so everything bound to them keeps working.
-- Each captured component is rebuilt where it was. Its instances on other pages move to the new one.
-- A run without `--only` also deletes the pages, components, variables, styles and icons the release no longer has.
+- Each captured component is redrawn inside the component it was built as. Its instances follow, on any page and in files that use the published library.
+- A run without `--only` also deletes the pages, components, variables, styles and icons the release no longer has. If a component fails to capture, nothing is deleted.
 
-The plugin finds what it made by a hidden tag, so pages you add are left alone. A page it rebuilds loses edits made by hand.
+The plugin finds what it made by a hidden tag that names its token or component, so pages you add are left alone. A variable or style someone renamed keeps its bindings, and the run sets its name back. A component it redraws loses edits made by hand.
 
-Then the command exits. It writes these files to `nxds-figma/`:
+Then the command exits. It writes these files to `nxds-figma/`, and a later run replaces them:
 
-| File           | What it holds                                                                         |
-| -------------- | ------------------------------------------------------------------------------------- |
-| `capture.json` | Every variable, style, icon, component and layer, with its token                      |
-| `screenshots/` | A browser screenshot of every variant, with its optional parts hidden                 |
-| `report.json`  | What the plugin wrote, moved and removed, unbound values, replaced fonts and failures |
+| File           | What it holds                                                          |
+| -------------- | ---------------------------------------------------------------------- |
+| `capture.json` | Every variable, style, icon, component and layer, with its token       |
+| `unbound.json` | Each value a layer uses that isn't bound to a variable or style        |
+| `screenshots/` | A browser screenshot of every variant, with its optional parts hidden  |
+| `report.json`  | What the plugin wrote and removed, the fonts it replaced, and failures |
+
+If the folder holds other files, pass `--overwrite` to write beside them.
 
 If Chromium doesn't start, run `npx playwright@1.64.1 install chromium`.
 
 ## Export an app
 
-Run the command in a folder with an `nxds.json`, after the app's packages are installed:
+Run the command in a folder with an `nxds.json`, after the app's packages are installed. The app needs Tailwind CSS 4.3 or a later 4.x release.
 
 ```bash
 cd path/to/app
@@ -110,7 +113,6 @@ The smoke test captures every component from the built release, then checks the 
 | File                 | Job                                                                       |
 | -------------------- | ------------------------------------------------------------------------- |
 | `src/recipes.ts`     | What differs from the defaults: parts, overlays to open, states, markup   |
-| `src/props.ts`       | Reads each part's props from the release's `index.d.ts`                   |
 | `src/app.ts`         | Bundles an app's components and compiles its CSS entry                    |
 | `src/app-props.ts`   | Reads an app's props from its own types                                   |
 | `src/attributes.ts`  | Converts an example's attribute strings by an app's props                 |
