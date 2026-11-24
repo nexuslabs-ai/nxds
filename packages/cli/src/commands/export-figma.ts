@@ -23,6 +23,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -59,6 +60,9 @@ const EXPORT_FILES = new Set([
   'report.json',
   'screenshots',
 ]);
+
+/** The folder in --out a capture is written to, before it replaces the last export's files. */
+const STAGING = '.nxds-capture';
 
 export type FigmaExportOptions = {
   out: string;
@@ -187,6 +191,38 @@ async function reported<T>(work: () => T | Promise<T>) {
     return await work();
   } catch (error) {
     throw error instanceof ExportError ? new CliError(error.message) : error;
+  }
+}
+
+/**
+ * Captures into a staging folder in `out`, then replaces the last export's
+ * files with it. A capture that fails leaves the last export as it was.
+ */
+async function captureInto(out: string, input: Omit<CaptureInput, 'outDir'>) {
+  const staging = path.join(out, STAGING);
+  // A run stopped with Ctrl+C leaves its staging folder.
+  rmSync(staging, { recursive: true, force: true });
+  mkdirSync(staging, { recursive: true });
+  try {
+    const result = await reported(() =>
+      captureComponents({ ...input, outDir: staging })
+    );
+    const json = JSON.stringify(result.capture, null, 2);
+    const unbound = unboundValues(result.capture);
+    writeFileSync(path.join(staging, 'capture.json'), `${json}\n`);
+    writeFileSync(
+      path.join(staging, 'unbound.json'),
+      `${JSON.stringify(unbound, null, 2)}\n`
+    );
+    for (const name of EXPORT_FILES) {
+      rmSync(path.join(out, name), { recursive: true, force: true });
+    }
+    for (const name of readdirSync(staging)) {
+      renameSync(path.join(staging, name), path.join(out, name));
+    }
+    return { ...result, json, unbound };
+  } finally {
+    rmSync(staging, { recursive: true, force: true });
   }
 }
 
@@ -321,12 +357,9 @@ export async function exportFigma(
     });
   }
 
-  mkdirSync(out, { recursive: true });
-  for (const name of EXPORT_FILES) {
-    rmSync(path.join(out, name), { recursive: true, force: true });
-  }
-  const { capture, problems, notInstalled } = await reported(() =>
-    captureComponents({
+  const { capture, json, unbound, problems, notInstalled } = await captureInto(
+    out,
+    {
       release: pkg.version,
       theme,
       files: {
@@ -336,17 +369,9 @@ export async function exportFigma(
       },
       props,
       app: appTypes && { schema: appTypes.schema },
-      outDir: out,
       progress,
       only: options.only,
-    })
-  );
-  const json = JSON.stringify(capture, null, 2);
-  writeFileSync(path.join(out, 'capture.json'), `${json}\n`);
-  const unbound = unboundValues(capture);
-  writeFileSync(
-    path.join(out, 'unbound.json'),
-    `${JSON.stringify(unbound, null, 2)}\n`
+    }
   );
 
   const relative = path.relative(cwd, out) || '.';
