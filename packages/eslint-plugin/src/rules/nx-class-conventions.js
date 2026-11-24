@@ -154,26 +154,22 @@ const CHECKS = [
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}font-(?:${RAW_FONT_WEIGHTS.join('|')})\\b`
     ),
-    skipFile: isStoryFile,
   },
   {
     messageId: 'rawLineHeight',
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}leading-(?:${RAW_LINE_HEIGHTS.join('|')}|\\d+|\\[)`
     ),
-    skipFile: isStoryFile,
   },
   {
     messageId: 'densityIconSize',
     test: sizesSvgFromSpacing,
-    // Stories are checked: the docs pages copy their code into apps.
   },
   {
     messageId: 'rawLetterSpacing',
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}tracking-(?:${RAW_LETTER_SPACINGS.join('|')}|\\[)`
     ),
-    skipFile: isStoryFile,
   },
 ];
 
@@ -213,12 +209,6 @@ function sizesIconWithoutLine(scope) {
   });
 }
 
-// Stories quote utilities as specimens, so the raw typography and icon line
-// checks skip them.
-function isStoryFile(filename) {
-  return /\.stories\.[jt]sx?$/.test(filename);
-}
-
 // Avatar's initials and Chart's tooltip values. The class string alone
 // matches, so the components pass wherever an app copies them.
 const RAW_TYPOGRAPHY_EXCEPTIONS = [
@@ -246,17 +236,10 @@ function isRawTypographyException(check, raw) {
   );
 }
 
-function shouldRunCheck(check, filename, raw) {
-  if (check.skipFile?.(filename)) {
-    return false;
-  }
-  return !isRawTypographyException(check, raw);
-}
-
-function matchedMessageIds(raw, filename) {
+function matchedMessageIds(raw) {
   const matched = new Set();
   for (const check of CHECKS) {
-    if (!shouldRunCheck(check, filename, raw)) {
+    if (isRawTypographyException(check, raw)) {
       continue;
     }
     const matches = check.test ? check.test(raw) : check.re.test(raw);
@@ -387,7 +370,6 @@ export default {
     messages: MESSAGES,
   },
   create(context) {
-    const filename = context.filename ?? '';
     const skipped = new Set(context.options[0]?.skip);
     const { visitorKeys } = context.sourceCode;
 
@@ -407,7 +389,6 @@ export default {
       if (fadesItsFocusRing(scope)) {
         report(node, 'ringFadingTransition');
       }
-      if (isStoryFile(filename)) return;
       if (leavesIconUnstroked(scope)) {
         report(node, 'unstrokedIcon');
       }
@@ -421,7 +402,7 @@ export default {
         if (typeof node.value !== 'string') {
           return;
         }
-        for (const messageId of matchedMessageIds(node.value, filename)) {
+        for (const messageId of matchedMessageIds(node.value)) {
           report(node, messageId);
         }
         reportScope(node);
@@ -430,7 +411,7 @@ export default {
         const matched = new Set();
         for (const quasi of node.quasis) {
           const raw = quasi.value.cooked ?? quasi.value.raw;
-          for (const id of matchedMessageIds(raw, filename)) {
+          for (const id of matchedMessageIds(raw)) {
             matched.add(id);
           }
         }

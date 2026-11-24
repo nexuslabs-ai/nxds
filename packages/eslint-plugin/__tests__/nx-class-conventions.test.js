@@ -75,12 +75,6 @@ ruleTester.run('nx-class-conventions', rule, {
     // Font families are still legal; the raw typography guard targets weight,
     // line-height, and tracking utilities that bypass the composite scale.
     "const c = 'nx:font-mono nx:tabular-nums';",
-    // The raw typography guard is runtime-scoped. Stories remain useful demo
-    // surfaces, but are not part of this hard gate.
-    {
-      code: "const c = 'nx:font-medium nx:leading-none nx:tracking-wide';",
-      filename: '/repo/packages/react/src/components/table/Table.stories.tsx',
-    },
     // Avatar initials inherit diameter-driven text size from the root variant;
     // this stays a narrow exception until there is an Avatar-specific typography
     // token that preserves that relationship. The exceptions match the class
@@ -134,11 +128,6 @@ ruleTester.run('nx-class-conventions', rule, {
     "const c = 'nx:has-[>svg]:size-8 nx:[&:has(svg)]:h-9';",
     "const c = 'nx:[&_svg]:pointer-events-none nx:[&>svg]:text-muted-foreground';",
     "const c = 'nx:size-4 nx:[&_img]:size-full';",
-    // Stories skip the stroke check, like the raw typography checks.
-    {
-      code: "const c = 'nx:[&_svg]:size-icon-glyph-default';",
-      filename: '/repo/packages/react/src/components/button/Button.stories.tsx',
-    },
   ],
   invalid: [
     {
@@ -196,17 +185,6 @@ ruleTester.run('nx-class-conventions', rule, {
     },
     {
       code: "const x = <IconX className='nx:size-(--nx-spacing-2_5)' />;",
-      errors: [{ messageId: 'densityIconSize' }],
-    },
-    // The docs pages copy a story's code into apps.
-    {
-      code: "const x = <IconX className='nx:size-4' />;",
-      filename: '/repo/packages/react/src/components/kbd/Kbd.stories.tsx',
-      errors: [{ messageId: 'densityIconSize' }],
-    },
-    {
-      code: "const c = 'nx:[&_svg]:size-4';",
-      filename: '/repo/packages/react/src/components/kbd/Kbd.stories.tsx',
       errors: [{ messageId: 'densityIconSize' }],
     },
     {
@@ -392,15 +370,13 @@ ruleTester.run('nx-class-conventions', rule, {
       code: "const c = cx({ 'nx:transition-colors': true, 'nx:focus-visible:outline-2': on });",
       errors: [{ messageId: 'ringFadingTransition' }],
     },
-    // A story's class strings are the component's real ones, so they're
-    // checked.
+    // Only `skip` turns a check off. A file's path doesn't, so an app's own
+    // stories and docs folder are checked.
     {
-      code: "const c = 'nx:transition-colors nx:focus-visible:outline-2';",
-      filename: '/repo/packages/react/src/components/input/Input.stories.tsx',
-      errors: [{ messageId: 'ringFadingTransition' }],
+      code: "const c = 'nx:font-medium nx:[&_svg]:size-icon-glyph-default';",
+      filename: '/app/components/button.stories.tsx',
+      errors: [{ messageId: 'rawFontWeight' }, { messageId: 'unstrokedIcon' }],
     },
-    // Only `skip` turns a check off: a file's path doesn't, so an app's own
-    // docs folder is checked.
     {
       code: "const c = 'nx:transition-colors nx:focus-visible:outline-2 nx:font-medium';",
       filename: '/app/apps/docs/app/_pages/foundations/focus.tsx',

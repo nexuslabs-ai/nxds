@@ -25,14 +25,14 @@ function reactSources(...globs) {
   );
 }
 
-const docsSkippedChecks = [
+const storySkippedChecks = [
   'rawFontWeight',
   'rawLineHeight',
   'rawLetterSpacing',
-  'densityIconSize',
   'unstrokedIcon',
   'plainIconSize',
 ];
+const docsSkippedChecks = [...storySkippedChecks, 'densityIconSize'];
 
 const radiusBaseConsumer = String.raw`/rounded(?:-[a-z]{1,2})?-base\b|radius-base/`;
 const radiusBaseMessage =
@@ -359,6 +359,17 @@ export default tseslint.config(
   {
     files: [...reactSources('src/**/*.{ts,tsx}'), 'apps/**/*.{ts,tsx}'],
     ...nxdsComponentConfig(),
+  },
+  // Stories quote raw typography and icon sizes as specimens. The docs pages
+  // copy their code into apps, so the other checks still run.
+  {
+    files: [
+      ...reactSources('src/**/*.stories.tsx'),
+      'packages/vue/src/**/*.stories.ts',
+    ],
+    rules: {
+      '@nxds/nx-class-conventions': ['error', { skip: storySkippedChecks }],
+    },
   },
   // The docs app quotes utilities as specimens and prose, and styles its own
   // chrome off-system.

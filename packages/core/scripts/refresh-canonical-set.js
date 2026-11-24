@@ -7,6 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SEMANTIC_DIR = path.resolve(__dirname, '..', 'tokens', 'semantic');
 const OUTPUT_PATH = path.resolve(__dirname, 'canonical-step-set.json');
 const REFRESH_COMMAND = 'pnpm --filter @nxds/core refresh:canonical-set';
+const COMMENT = `Union of every px value in packages/core/tokens/semantic/spacing-*.json. Regenerate via \`${REFRESH_COMMAND}\`.`;
 
 function collectPxValues(node, out) {
   if (!node || typeof node !== 'object') return;
@@ -95,7 +96,7 @@ function main() {
   }
 
   const out = {
-    $comment: existing?.$comment ?? defaultComment(),
+    $comment: COMMENT,
     values: sorted,
   };
 
@@ -113,10 +114,6 @@ function main() {
   process.stdout.write(
     `✓ canonical-step-set.json refreshed (${sorted.length} values across ${files.length} modes).\n`
   );
-}
-
-function defaultComment() {
-  return `Union of every px value shipped across packages/core/tokens/semantic/spacing-{vega,lyra,maia,mira,nova,luma,sera}.json. Regenerate via \`${REFRESH_COMMAND}\`. The shipped union may exceed the originally-intended scale; reconciliation tracked separately.`;
 }
 
 main();

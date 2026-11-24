@@ -78,10 +78,6 @@ The icon and focus ring checks read a whole class list: one `cva`, `cn`, `clsx`
 or `cx` call, or one `[…].join(' ')`. Two variants of one key share that list,
 so a ring in one variant and `nx:transition-colors` in another still report.
 
-Story files (`*.stories.*`) quote utilities as examples. They skip
-`rawFontWeight`, `rawLineHeight`, `rawLetterSpacing`, `plainIconSize` and
-`unstrokedIcon`.
-
 To turn checks off for some files, list them in `skip`:
 
 ```js

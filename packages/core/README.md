@@ -15,12 +15,14 @@ React or Vue, such as Electron, or in a tool that reads the tokens.
 
 ## Apply a theme
 
-Put your app's starting appearance in its own file, so `vite.config.ts` can
-import it too:
+Put your app's starting appearance and storage key in their own file, so
+`vite.config.ts` can import them too:
 
 ```ts
 // src/appearance-state.ts
 import { DEFAULT_NXDS_APPEARANCE, type NxdsAppearanceState } from '@nxds/core';
+
+export const storageKey = 'app-appearance';
 
 export const defaultAppearance = {
   ...DEFAULT_NXDS_APPEARANCE,
@@ -39,16 +41,16 @@ import {
   readStoredNxdsAppearance,
 } from '@nxds/core';
 
-import { defaultAppearance } from './appearance-state';
+import { defaultAppearance, storageKey } from './appearance-state';
 
 applyNxdsAppearance(
-  readStoredNxdsAppearance('app-appearance', defaultAppearance),
+  readStoredNxdsAppearance(storageKey, defaultAppearance),
   prefersDarkColorScheme()
 );
 
 export function setAppearance(appearance: NxdsAppearanceState) {
   applyNxdsAppearance(appearance, prefersDarkColorScheme());
-  persistNxdsAppearance(appearance, { storageKey: 'app-appearance' });
+  persistNxdsAppearance(appearance, { storageKey });
 }
 ```
 
@@ -70,10 +72,10 @@ import {
 } from '@nxds/core';
 import { defineConfig } from 'vite';
 
-import { defaultAppearance } from './src/appearance-state';
+import { defaultAppearance, storageKey } from './src/appearance-state';
 
 const script = createNxdsAppearanceBootstrapScript({
-  storageKey: 'app-appearance',
+  storageKey,
   defaultSnapshot: createNxdsAppearanceSnapshotFromState(defaultAppearance),
 });
 
@@ -90,9 +92,8 @@ export default defineConfig({
 ```
 
 The script applies the saved appearance before the first paint, so the page
-doesn't flash the default theme. It uses the same storage key as
-`persistNxdsAppearance`. If you don't use Vite, put `script` in a `<script>` tag
-in `<head>` yourself.
+doesn't flash the default theme. If you don't use Vite, put `script` in a
+`<script>` tag in `<head>` yourself.
 
 ## Main exports
 
