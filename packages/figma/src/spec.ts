@@ -4,7 +4,7 @@
 
 export const CAPTURE_FORMAT = 'nxds-figma-capture';
 export const REPORT_FORMAT = 'nxds-figma-report';
-/** The version of capture.json, the report and the plugin's tags, which the plugin stamps on the Figma file. A plugin refuses a CLI's files, and a Figma file, of another version, and the CLI refuses its report. */
+/** The version of capture.json, the report and the plugin's tags, which the plugin stamps on the Figma file. The plugin refuses a capture or a Figma file of another version. The CLI refuses a report of another version. */
 export const PROTOCOL_VERSION = 7;
 
 /** sRGB, each channel 0–1. */

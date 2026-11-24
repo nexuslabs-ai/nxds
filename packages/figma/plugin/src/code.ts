@@ -1430,21 +1430,36 @@ async function buildComponent(
 
 /**
  * Stamps the file with PROTOCOL_VERSION. Refuses a file an export of another
- * version built, whose tags this plugin can't read, so it doesn't build every
+ * version stamped, whose tags this plugin can't read, so it doesn't build every
  * component a second time beside the old ones.
  */
 function stampFile() {
   const stamp = figma.root.getPluginData(FILE_VERSION);
-  // A file built before files were stamped has tagged pages and no stamp.
-  const built =
-    stamp !== '' ||
-    figma.root.children.some((page) => page.getPluginData(TAG) !== '');
-  if (built && stamp !== String(PROTOCOL_VERSION)) {
+  if (stamp !== '' && stamp !== String(PROTOCOL_VERSION)) {
     throw new Error(
       "Another version of the nxds export built this file, and this plugin can't update it. Run the plugin in a new file."
     );
   }
   figma.root.setPluginData(FILE_VERSION, String(PROTOCOL_VERSION));
+}
+
+/**
+ * Re-tags each node whose tag names an id the file no longer has, such as a
+ * node cut and pasted, which Figma gives a new id, or a copy whose original was
+ * deleted. One node takes over each id.
+ */
+async function adoptOrphans() {
+  const adopted = new Set<string>();
+  const tagged = figma.root.findAllWithCriteria({
+    pluginData: { keys: [TAG] },
+  });
+  for (const node of tagged) {
+    const id = node.getPluginData(TAGGED_ID);
+    if (id === node.id || adopted.has(id)) continue;
+    if (await figma.getNodeByIdAsync(id)) continue;
+    adopted.add(id);
+    node.setPluginData(TAGGED_ID, node.id);
+  }
 }
 
 /** The cover: the page the plugin first ran on, or a new one in a file that already has nxds pages. */
@@ -1484,12 +1499,15 @@ async function removeOldComponents(
     ctx.report.removed.push(`component ${name}`);
     owner.remove();
   }
-  // A component moved to another card leaves its old paper behind.
+  // A component moved to another card leaves its old paper behind. A paper holding more than its labels, such as someone's copy, stays.
   for (const { page, card } of cardPages) {
     if (page.removed) continue;
     for (const node of [...page.children]) {
       const name = taggedName(node, 'paper');
-      if (name !== undefined && cardOf.get(name) !== card) node.remove();
+      if (name === undefined || cardOf.get(name) === card) continue;
+      if (node.type !== 'FRAME') continue;
+      if (node.children.every((child) => tagOf(child) === 'label'))
+        node.remove();
     }
   }
 }
@@ -1568,6 +1586,7 @@ async function build(capture: CaptureFile): Promise<BuildReport> {
     }
     await figma.loadAllPagesAsync();
     stampFile();
+    await adoptOrphans();
     await figma.loadFontAsync({ family: 'Inter', style: 'Regular' });
     await figma.loadFontAsync({ family: 'Inter', style: 'Semi Bold' });
     await progress('Writing variables…');
@@ -1587,6 +1606,8 @@ async function build(capture: CaptureFile): Promise<BuildReport> {
       return page;
     };
     const built = builtComponents();
+    // A component that fails to build stays where last run left it, on a page or paper cleanup would remove.
+    let complete = !capture.partial;
     for (const spec of capture.components) {
       await progress(
         `Building ${spec.name}: ${spec.variants.length} variants…`
@@ -1602,9 +1623,10 @@ async function build(capture: CaptureFile): Promise<BuildReport> {
       } catch (error) {
         ctx.where = spec.name;
         fail(ctx, '', error);
+        complete = false;
       }
     }
-    if (!capture.partial) await removeOldComponents(capture, cover, ctx);
+    if (complete) await removeOldComponents(capture, cover, ctx);
     // Capture order puts each part before what holds it.
     for (const spec of capture.components) {
       const page = pages.get(spec.card);
