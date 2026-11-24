@@ -27,14 +27,13 @@ add `languageOptions: { parser: tseslint.parser }` to the entry.
 
 ## Rules
 
-| Rule                             | In `nxdsComponentConfig` | Reports                                                                         |
-| -------------------------------- | ------------------------ | ------------------------------------------------------------------------------- |
-| `nx-class-conventions`           | Yes                      | `nx:` classes that break nxds token and styling conventions                     |
-| `no-render-prop-types`           | Yes                      | Props that inject what a component renders, instead of `children`               |
-| `no-multi-statement-jsx-handler` | Yes                      | Long inline JSX handlers that should be named functions                         |
-| `no-jsdoc-data-tags`             | No                       | `@default` and `@example` JSDoc tags                                            |
-| `no-react-19-only`               | No                       | React 19-only APIs in code that must also run on React 18                       |
-| `canonical-spacing-steps`        | No                       | Off-scale values in the nxds repo's own spacing token files. Apps don't need it |
+| Rule                             | In `nxdsComponentConfig` | Reports                                                           |
+| -------------------------------- | ------------------------ | ----------------------------------------------------------------- |
+| `nx-class-conventions`           | Yes                      | `nx:` classes that break nxds token and styling conventions       |
+| `no-render-prop-types`           | Yes                      | Props that inject what a component renders, instead of `children` |
+| `no-multi-statement-jsx-handler` | Yes                      | Long inline JSX handlers that should be named functions           |
+| `no-jsdoc-data-tags`             | No                       | `@default` and `@example` JSDoc tags                              |
+| `no-react-19-only`               | No                       | React 19-only APIs in code that must also run on React 18         |
 
 To turn on a rule the config leaves off, add it for the same files:
 
@@ -60,29 +59,56 @@ export default eslintConfig;
 
 `nx-class-conventions` reads every class string, and reports:
 
-| Problem                    | Example                                                  | Write instead                                                                |
-| -------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Prefix after a modifier    | `hover:nx:bg-…`                                          | `nx:hover:bg-…`                                                              |
-| The removed `accent` token | `nx:bg-accent`                                           | `nx:bg-background-hover` or `nx:bg-container-hover`                          |
-| A token without its role   | `nx:bg-primary`                                          | `nx:bg-primary-background`                                                   |
-| A raw palette color        | `nx:bg-blue-500`                                         | A semantic token, such as `nx:bg-primary-background`                         |
-| Raw typography             | `nx:text-sm`, `nx:font-medium`                           | A composite, such as `nx:typography-body-default`                            |
-| An icon sized from spacing | `nx:[&_svg]:size-4`                                      | `nx:[&_svg]:size-icon-glyph-default`                                         |
-| A plain icon size          | `nx:[&_svg]:size-[20px]` alone                           | A `size-icon-glyph-*` class, or `nx:[&_svg]:[--nx-icon-size:20px]` beside it |
-| An unstroked icon size     | `nx:[&_svg]:size-icon-glyph-sm` alone                    | Add `nx:icon-stroke` to the same class list                                  |
-| A focus ring that fades in | `nx:transition-colors` with `nx:focus-visible:outline-2` | `nx:transition-control`, or `nx:transition-field` on a field                 |
+| Check                  | Problem                    | Example                                                  | Write instead                                                                |
+| ---------------------- | -------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `prefixOrder`          | Prefix after a modifier    | `hover:nx:bg-…`                                          | `nx:hover:bg-…`                                                              |
+| `bannedAccent`         | The removed `accent` token | `nx:bg-accent`                                           | `nx:bg-background-hover` or `nx:bg-container-hover`                          |
+| `incompletePath`       | A token without its role   | `nx:bg-primary`                                          | `nx:bg-primary-background`                                                   |
+| `rawPrimitive`         | A raw palette color        | `nx:bg-blue-500`                                         | A semantic token, such as `nx:bg-primary-background`                         |
+| `rawFontSize`          | A raw font size            | `nx:text-sm`                                             | A composite, such as `nx:typography-body-default`                            |
+| `rawFontWeight`        | A raw font weight          | `nx:font-medium`                                         | A composite, such as `nx:typography-label-default`                           |
+| `rawLineHeight`        | A raw line height          | `nx:leading-none`                                        | A composite, such as `nx:typography-body-default`                            |
+| `rawLetterSpacing`     | A raw letter spacing       | `nx:tracking-wide`                                       | A composite, such as `nx:typography-label-caps`                              |
+| `densityIconSize`      | An icon sized from spacing | `nx:[&_svg]:size-4`                                      | `nx:[&_svg]:size-icon-glyph-default`                                         |
+| `plainIconSize`        | A plain icon size          | `nx:[&_svg]:size-[20px]` alone                           | A `size-icon-glyph-*` class, or `nx:[&_svg]:[--nx-icon-size:20px]` beside it |
+| `unstrokedIcon`        | An unstroked icon size     | `nx:[&_svg]:size-icon-glyph-sm` alone                    | Add `nx:icon-stroke` to the same class list                                  |
+| `ringFadingTransition` | A focus ring that fades in | `nx:transition-colors` with `nx:focus-visible:outline-2` | `nx:transition-control`, or `nx:transition-field` on a field                 |
 
 The icon and focus ring checks read a whole class list: one `cva`, `cn`, `clsx`
 or `cx` call, or one `[…].join(' ')`. Two variants of one key share that list,
 so a ring in one variant and `nx:transition-colors` in another still report.
 
-Some files skip checks, because they quote utilities as examples:
+Story files (`*.stories.*`) quote utilities as examples. They skip
+`rawFontWeight`, `rawLineHeight`, `rawLetterSpacing`, `plainIconSize` and
+`unstrokedIcon`.
 
-| Files                                  | Skip                                                                    |
-| -------------------------------------- | ----------------------------------------------------------------------- |
-| `*.stories.*`                          | Raw typography other than font size, plain icon size and unstroked icon |
-| Any file under an `apps/docs/` folder  | The story checks, and an icon sized from spacing                        |
-| Any file under `apps/docs/app/_pages/` | The `apps/docs/` checks, and a focus ring that fades in                 |
+To turn checks off for some files, list them in `skip`:
+
+```js
+// eslint.config.mjs
+import { nxdsComponentConfig } from '@nxds/eslint-plugin/config';
+
+const eslintConfig = [
+  {
+    files: ['components/**/*.tsx'],
+    ...nxdsComponentConfig(),
+  },
+  {
+    files: ['components/style-guide/**/*.tsx'],
+    rules: {
+      '@nxds/nx-class-conventions': [
+        'error',
+        { skip: ['rawFontWeight', 'rawLineHeight'] },
+      ],
+    },
+  },
+];
+
+export default eslintConfig;
+```
+
+`skip` takes names from the Check column. Put the entry after the
+`nxdsComponentConfig` entry, so its options win.
 
 ### no-render-prop-types
 

@@ -6,10 +6,6 @@ export const componentRuleSet = {
   '@nxds/no-multi-statement-jsx-handler': 'error',
 };
 
-export const spacingTokenRuleSet = {
-  '@nxds/canonical-spacing-steps': 'error',
-};
-
 export function nxdsComponentConfig(options = {}) {
   const { files } = options;
 
@@ -22,29 +18,8 @@ export function nxdsComponentConfig(options = {}) {
   };
 }
 
-export function nxdsSpacingTokenConfig(options = {}) {
-  const { files, parser } = options;
-
-  return {
-    ...(files ? { files } : {}),
-    ...(parser
-      ? {
-          languageOptions: {
-            parser,
-          },
-        }
-      : {}),
-    plugins: {
-      '@nxds': plugin,
-    },
-    rules: spacingTokenRuleSet,
-  };
-}
-
 export default {
   plugin,
   componentRuleSet,
-  spacingTokenRuleSet,
   nxdsComponentConfig,
-  nxdsSpacingTokenConfig,
 };

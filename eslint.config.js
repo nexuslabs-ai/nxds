@@ -1,9 +1,6 @@
 import js from '@eslint/js';
 import eslintCommentsPlugin from '@eslint-community/eslint-plugin-eslint-comments';
-import {
-  nxdsComponentConfig,
-  nxdsSpacingTokenConfig,
-} from '@nxds/eslint-plugin/config';
+import { nxdsComponentConfig } from '@nxds/eslint-plugin/config';
 import { nxdsTailwindClassesConfig } from '@nxds/eslint-plugin/tailwind';
 import prettierConfig from 'eslint-config-prettier';
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
@@ -13,7 +10,6 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import pluginVue from 'eslint-plugin-vue';
 import vueA11yPlugin from 'eslint-plugin-vuejs-accessibility';
 import globals from 'globals';
-import * as jsoncParser from 'jsonc-eslint-parser';
 import path from 'node:path';
 import tseslint from 'typescript-eslint';
 import vueParser from 'vue-eslint-parser';
@@ -28,6 +24,15 @@ function reactSources(...globs) {
     globs.map((glob) => `${root}/${glob}`)
   );
 }
+
+const docsSkippedChecks = [
+  'rawFontWeight',
+  'rawLineHeight',
+  'rawLetterSpacing',
+  'densityIconSize',
+  'unstrokedIcon',
+  'plainIconSize',
+];
 
 const radiusBaseConsumer = String.raw`/rounded(?:-[a-z]{1,2})?-base\b|radius-base/`;
 const radiusBaseMessage =
@@ -355,6 +360,25 @@ export default tseslint.config(
     files: [...reactSources('src/**/*.{ts,tsx}'), 'apps/**/*.{ts,tsx}'],
     ...nxdsComponentConfig(),
   },
+  // The docs app quotes utilities as specimens and prose, and styles its own
+  // chrome off-system.
+  {
+    files: ['apps/docs/**/*.{ts,tsx}'],
+    rules: {
+      '@nxds/nx-class-conventions': ['error', { skip: docsSkippedChecks }],
+    },
+  },
+  // The docs pages also render a transition and focus ring pairing as the
+  // subject of the prose around it.
+  {
+    files: ['apps/docs/app/_pages/**/*.{ts,tsx}'],
+    rules: {
+      '@nxds/nx-class-conventions': [
+        'error',
+        { skip: [...docsSkippedChecks, 'ringFadingTransition'] },
+      ],
+    },
+  },
 
   // The docs read defaults from code and examples from docs stories, so the
   // published source carries no `@default` or `@example` copies of them.
@@ -488,12 +512,6 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',
     },
-  },
-
-  // nxds: gate px values in spacing mode files to the canonical step set.
-  {
-    files: ['packages/core/tokens/semantic/spacing-*.json'],
-    ...nxdsSpacingTokenConfig({ parser: jsoncParser }),
   },
 
   // Disable rules that conflict with Prettier

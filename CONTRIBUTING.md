@@ -195,7 +195,7 @@ Edit the token's source in `packages/core`, then run `make tokens`. It regenerat
 
 A new or renamed token file needs an import in `packages/core/src/catalogue/token-files.ts`. `pnpm test:unit` fails until that list matches the files on disk.
 
-A spacing value outside the canonical step set fails `pnpm lint`. If a density file needs a new step, run `pnpm --filter @nxds/eslint-plugin refresh:canonical-set` and commit the `canonical-step-set.json` it writes.
+A spacing value outside the canonical step set fails the pre-commit hook and CI. If a density file needs a new step, run `pnpm --filter @nxds/core refresh:canonical-set` and commit the `canonical-step-set.json` it writes.
 
 ---
 

@@ -40,4 +40,4 @@ Run `npx nxds-cli@latest <command> --help` for one command's options.
 
 - **[Set your theme](https://nxds.dev/getting-started/install#optional-set-your-theme)**: every `init` theme flag and its values.
 - **[Update components](https://nxds.dev/getting-started/install#update-components)**: how `update` merges a release into files you edited.
-- **[Options](https://nxds.dev/getting-started/install#options)**: the options every command takes, proxy settings and exit codes.
+- **[Options](https://nxds.dev/getting-started/install#options)**: the CLI's options, proxy settings and exit codes.

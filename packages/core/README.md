@@ -33,19 +33,32 @@ export const defaultAppearance = {
 // src/appearance.ts
 import {
   applyNxdsAppearance,
+  type NxdsAppearanceState,
   persistNxdsAppearance,
   prefersDarkColorScheme,
+  readStoredNxdsAppearance,
 } from '@nxds/core';
 
 import { defaultAppearance } from './appearance-state';
 
-applyNxdsAppearance(defaultAppearance, prefersDarkColorScheme());
-persistNxdsAppearance(defaultAppearance, { storageKey: 'app-appearance' });
+applyNxdsAppearance(
+  readStoredNxdsAppearance('app-appearance', defaultAppearance),
+  prefersDarkColorScheme()
+);
+
+export function setAppearance(appearance: NxdsAppearanceState) {
+  applyNxdsAppearance(appearance, prefersDarkColorScheme());
+  persistNxdsAppearance(appearance, { storageKey: 'app-appearance' });
+}
 ```
 
-`applyNxdsAppearance` sets the `dark` class and the preset attributes on
-`<html>`, and writes the theme CSS into `<head>`. `persistNxdsAppearance` saves
-the appearance for the first-paint script.
+`readStoredNxdsAppearance` returns the appearance the user saved, or
+`defaultAppearance` on a first visit. `applyNxdsAppearance` sets the `dark`
+class and the preset attributes on `<html>`, and writes the theme CSS into
+`<head>`.
+
+Call `setAppearance` when the user changes the appearance. It applies the
+change, and `persistNxdsAppearance` saves it for the next load.
 
 ## Stop the theme flashing on reload
 
@@ -81,22 +94,24 @@ doesn't flash the default theme. It uses the same storage key as
 `persistNxdsAppearance`. If you don't use Vite, put `script` in a `<script>` tag
 in `<head>` yourself.
 
-## Exports
+## Main exports
 
-| Export                                                                                                                                                                           | What it does                                                         |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `DEFAULT_NXDS_APPEARANCE`, `sanitizeNxdsAppearance`, `NxdsAppearanceState`                                                                                                       | The appearance: its defaults, its validation and its type            |
-| `applyNxdsAppearance`, `removeNxdsAppearance`, `persistNxdsAppearance`, `readStoredNxdsAppearance`                                                                               | Apply, remove, save and read an appearance in the browser            |
-| `prefersDarkColorScheme`, `watchColorScheme`, `resolveNxdsAppearanceMode`                                                                                                        | Read the OS color scheme, and resolve `system` mode to light or dark |
-| `createNxdsAppearanceSnapshotFromState`, `createNxdsAppearanceBootstrapScript`, `resolveFirstPaint`, `DEFAULT_STORAGE_KEY`                                                       | The first-paint script                                               |
-| `createNxdsAppearanceSnapshotFromCookie`, `DEFAULT_COOKIE_KEY`                                                                                                                   | The first paint from a cookie, for an app that renders on the server |
-| `createNxdsThemeContract`, `deriveTheme`, `themeToCss`                                                                                                                           | Derive the color tokens from an appearance, and render them to CSS   |
-| `BRAND_COLOR_PRESETS`, `findBrandColorPreset`, `DEFAULT_BRAND_COLOR`                                                                                                             | Brand color choices for an appearance editor                         |
-| `BASE_TONE_OPTIONS`, `UI_SCALE_OPTIONS`, `TEXT_SIZE_OPTIONS`, `DENSITY_OPTIONS`, `CORNER_OPTIONS`, `ELEVATION_OPTIONS`, `STROKE_OPTIONS`, `FONT_OPTIONS`, `ICON_LIBRARY_OPTIONS` | The values and labels for each other field, for an appearance editor |
-| `shuffleNxdsAppearance`                                                                                                                                                          | A random appearance from those values                                |
-| `nxdsThemeFlags`, `applyNxdsThemeFlags`                                                                                                                                          | Turn a theme into `nxds-cli init` flags, and flags into a theme      |
-| `measureThemeContrast`                                                                                                                                                           | Measures a derived theme against every contrast pair                 |
-| `adjustContrast`, `PALETTE_KEYS`, `TIER_THRESHOLDS`, `isColor`                                                                                                                   | Low-level palette and contrast helpers. They may change before 1.0   |
+| Export                                                                                                                                                                           | What it does                                                                                                        |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `DEFAULT_NXDS_APPEARANCE`, `sanitizeNxdsAppearance`, `NxdsAppearanceState`                                                                                                       | The appearance: its defaults, its validation and its type                                                           |
+| `applyNxdsAppearance`, `removeNxdsAppearance`, `persistNxdsAppearance`, `readStoredNxdsAppearance`                                                                               | Apply, remove, save and read an appearance in the browser                                                           |
+| `prefersDarkColorScheme`, `watchColorScheme`, `resolveNxdsAppearanceMode`                                                                                                        | Read the OS color scheme, and resolve `system` mode to light or dark                                                |
+| `createNxdsAppearanceSnapshotFromState`, `createNxdsAppearanceBootstrapScript`, `resolveFirstPaint`, `DEFAULT_STORAGE_KEY`                                                       | The first-paint script                                                                                              |
+| `createNxdsAppearanceSnapshotFromCookie`, `DEFAULT_COOKIE_KEY`                                                                                                                   | The first paint from a cookie, for an app that renders on the server                                                |
+| `createNxdsThemeContract`, `deriveTheme`, `themeToCss`                                                                                                                           | Derive the color tokens from an appearance, and render them to CSS                                                  |
+| `BRAND_COLOR_PRESETS`, `findBrandColorPreset`, `DEFAULT_BRAND_COLOR`                                                                                                             | Brand color choices for an appearance editor                                                                        |
+| `BASE_TONE_OPTIONS`, `UI_SCALE_OPTIONS`, `TEXT_SIZE_OPTIONS`, `DENSITY_OPTIONS`, `CORNER_OPTIONS`, `ELEVATION_OPTIONS`, `STROKE_OPTIONS`, `FONT_OPTIONS`, `ICON_LIBRARY_OPTIONS` | The values and labels for each other field, for an appearance editor                                                |
+| `shuffleNxdsAppearance`                                                                                                                                                          | A random brand color, surface tone, density, corners, elevation, stroke and fonts. The rest of the appearance stays |
+| `shuffleNxdsIconLibrary`                                                                                                                                                         | A random icon library                                                                                               |
+| `NxdsTheme`, `DEFAULT_NXDS_THEME`                                                                                                                                                | A theme: an appearance, and the icon library the app installs                                                       |
+| `nxdsThemeFlags`, `applyNxdsThemeFlags`                                                                                                                                          | Turn a theme into `nxds-cli init` flags, and flags into a theme                                                     |
+| `measureThemeContrast`                                                                                                                                                           | Measures a derived theme against every contrast pair                                                                |
+| `adjustContrast`, `PALETTE_KEYS`, `TIER_THRESHOLDS`, `isColor`                                                                                                                   | Low-level palette and contrast helpers. They may change before 1.0                                                  |
 
 `findBrandColorPreset(color)` returns the preset a saved color matches, in any
 CSS notation, or `undefined` for a custom color.
@@ -155,11 +170,14 @@ getPaletteShade('green', '600'); // oklch(0.62 0.2233 140.055)
 const neutral = getPaletteRamp('neutral');
 ```
 
-`PRIMITIVE_PALETTE_NAMES` lists the 22 palettes, and `SHADES` lists 50 through 950. `getPaletteShade` returns the shade nxds renders, not the authored hex.
+`PRIMITIVE_PALETTE_NAMES` lists the 22 palettes, and `SHADES` lists the shades
+from 50 through 950. `getPaletteShade` returns the shade nxds renders, not the
+authored hex.
 
-`BRAND_COLOR_PRESETS` holds the authored 600 hex of eight palettes: Indigo,
-Blue, Violet, Rose, Orange, Amber, Green and Teal. To seed `brandColor` from one
-of them, use its preset's `color`.
+`BRAND_COLOR_PRESETS` holds nine presets. The first, Default, is
+`DEFAULT_BRAND_COLOR`. The other eight are the authored 600 hex of Indigo, Blue,
+Violet, Rose, Orange, Amber, Green and Teal. To seed `brandColor` from a preset,
+use its `color`.
 
 ## Read the token catalogue
 

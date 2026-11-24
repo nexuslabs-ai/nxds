@@ -38,14 +38,22 @@ ruleTester.run('nx-class-conventions', rule, {
     // Only an `Icon*` or `*Icon` element is an icon.
     "const x = <Badge className='nx:size-4' />;",
     "const x = <Iconography className='nx:size-8' />;",
-    // The docs app styles its own chrome.
+    // A check in `skip` reports nothing.
     {
       code: "const x = <IconX className='nx:size-4' />;",
-      filename: '/repo/apps/docs/app/_components/Nav.tsx',
+      options: [{ skip: ['densityIconSize'] }],
     },
     {
       code: "const c = 'nx:[&_svg]:size-4';",
-      filename: '/repo/apps/docs/app/_components/Nav.tsx',
+      options: [{ skip: ['densityIconSize', 'unstrokedIcon'] }],
+    },
+    {
+      code: "const c = 'nx:font-semibold nx:tracking-wider';",
+      options: [{ skip: ['rawFontWeight', 'rawLetterSpacing'] }],
+    },
+    {
+      code: "const c = 'nx:transition-colors nx:focus-visible:outline-2';",
+      options: [{ skip: ['ringFadingTransition'] }],
     },
     // Correct prefix order + complete semantic paths.
     "const c = 'nx:hover:bg-primary-background';",
@@ -67,26 +75,23 @@ ruleTester.run('nx-class-conventions', rule, {
     // Font families are still legal; the raw typography guard targets weight,
     // line-height, and tracking utilities that bypass the composite scale.
     "const c = 'nx:font-mono nx:tabular-nums';",
-    // The raw typography guard is runtime-scoped. Stories and docs remain useful
-    // demo surfaces, but are not part of this hard gate.
+    // The raw typography guard is runtime-scoped. Stories remain useful demo
+    // surfaces, but are not part of this hard gate.
     {
       code: "const c = 'nx:font-medium nx:leading-none nx:tracking-wide';",
       filename: '/repo/packages/react/src/components/table/Table.stories.tsx',
     },
-    {
-      code: "const c = 'nx:font-semibold nx:tracking-wider';",
-      filename: '/repo/apps/docs/app/page.tsx',
-    },
     // Avatar initials inherit diameter-driven text size from the root variant;
     // this stays a narrow exception until there is an Avatar-specific typography
-    // token that preserves that relationship.
+    // token that preserves that relationship. The exceptions match the class
+    // string in any file, such as the copy `nxds-cli add` writes into an app.
     {
       code: "const c = 'nx:flex nx:size-full nx:items-center nx:justify-center nx:rounded-[inherit] nx:bg-muted nx:text-foreground nx:font-medium nx:leading-none';",
-      filename: '/repo/packages/react/src/components/avatar/avatar.tsx',
+      filename: '/app/components/nxds/avatar/avatar.tsx',
     },
     {
       code: "const c = 'nx:text-foreground nx:font-mono nx:font-medium nx:tabular-nums';",
-      filename: '/repo/packages/react/src/components/chart/chart.tsx',
+      filename: '/app/components/nxds/chart/chart.tsx',
     },
     // `transition-colors` is legal on a surface that paints no ring — menu rows
     // take the popover tint instead.
@@ -117,11 +122,6 @@ ruleTester.run('nx-class-conventions', rule, {
     // reaches the attribute only through that call's return value.
     "const c = cn('nx:transition-colors', useRing({ ring: 'nx:focus-visible:outline-2' }));",
     "const c = cn('nx:transition-colors', items.map(() => 'nx:focus-visible:outline-2'));",
-    // Only the docs pages render a pairing as the subject of the prose.
-    {
-      code: "const c = 'nx:transition-colors nx:focus-visible:outline-2';",
-      filename: '/repo/apps/docs/app/_pages/foundations/focus.tsx',
-    },
     // A class list that sizes its `svg` children strokes them too, in the
     // same string or anywhere in the same `cva()` call.
     "const c = 'nx:icon-stroke nx:[&>svg]:size-icon-glyph-xs';",
@@ -134,15 +134,10 @@ ruleTester.run('nx-class-conventions', rule, {
     "const c = 'nx:has-[>svg]:size-8 nx:[&:has(svg)]:h-9';",
     "const c = 'nx:[&_svg]:pointer-events-none nx:[&>svg]:text-muted-foreground';",
     "const c = 'nx:size-4 nx:[&_img]:size-full';",
-    // Stories and the docs app skip the stroke check, like the raw typography
-    // checks.
+    // Stories skip the stroke check, like the raw typography checks.
     {
       code: "const c = 'nx:[&_svg]:size-icon-glyph-default';",
       filename: '/repo/packages/react/src/components/button/Button.stories.tsx',
-    },
-    {
-      code: "const c = 'nx:[&_svg]:size-4';",
-      filename: '/repo/apps/docs/app/_components/TopNav.tsx',
     },
   ],
   invalid: [
@@ -312,7 +307,6 @@ ruleTester.run('nx-class-conventions', rule, {
     },
     {
       code: "const c = 'nx:flex nx:size-full nx:items-center nx:justify-center nx:rounded-[inherit] nx:bg-muted nx:text-foreground nx:font-medium nx:leading-none nx:tracking-wide';",
-      filename: '/repo/packages/react/src/components/avatar/avatar.tsx',
       errors: [
         { messageId: 'rawFontWeight' },
         { messageId: 'rawLineHeight' },
@@ -321,7 +315,6 @@ ruleTester.run('nx-class-conventions', rule, {
     },
     {
       code: "const c = 'nx:text-foreground nx:font-mono nx:font-medium nx:tabular-nums nx:tracking-wide';",
-      filename: '/repo/packages/react/src/components/chart/chart.tsx',
       errors: [
         { messageId: 'rawFontWeight' },
         { messageId: 'rawLetterSpacing' },
@@ -399,17 +392,27 @@ ruleTester.run('nx-class-conventions', rule, {
       code: "const c = cx({ 'nx:transition-colors': true, 'nx:focus-visible:outline-2': on });",
       errors: [{ messageId: 'ringFadingTransition' }],
     },
-    // A story's class strings are the component's real ones, and the docs app
-    // outside `_pages` is its own shipped chrome — both are checked.
+    // A story's class strings are the component's real ones, so they're
+    // checked.
     {
       code: "const c = 'nx:transition-colors nx:focus-visible:outline-2';",
       filename: '/repo/packages/react/src/components/input/Input.stories.tsx',
       errors: [{ messageId: 'ringFadingTransition' }],
     },
+    // Only `skip` turns a check off: a file's path doesn't, so an app's own
+    // docs folder is checked.
     {
-      code: "const c = 'nx:transition-colors nx:focus-visible:outline-2';",
-      filename: '/repo/apps/docs/app/_components/TopNav.tsx',
-      errors: [{ messageId: 'ringFadingTransition' }],
+      code: "const c = 'nx:transition-colors nx:focus-visible:outline-2 nx:font-medium';",
+      filename: '/app/apps/docs/app/_pages/foundations/focus.tsx',
+      errors: [
+        { messageId: 'rawFontWeight' },
+        { messageId: 'ringFadingTransition' },
+      ],
+    },
+    {
+      code: "const c = 'nx:font-medium nx:leading-none';",
+      options: [{ skip: ['rawFontWeight'] }],
+      errors: [{ messageId: 'rawLineHeight' }],
     },
     // A class list that sizes its `svg` children must stroke them.
     {
