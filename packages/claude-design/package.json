@@ -24,16 +24,11 @@
     "linkDirectory": false
   },
   "exports": {
-    "./attribute": "./src/attribute.ts",
-    "./canvas-schema": "./src/canvas-schema.ts",
     "./icons": "./src/icons.ts",
-    "./index-dts": "./src/index-dts.ts",
-    "./props": "./src/props.ts",
     "./system-index": "./src/system-index.ts",
     "./theme": "./src/theme.ts",
     "./theme-fields": "./src/theme-fields.ts",
-    "./tokens-css": "./src/tokens-css.ts",
-    "./values": "./src/runtime/values.ts"
+    "./tokens-css": "./src/tokens-css.ts"
   },
   "scripts": {
     "build": "node scripts/build.ts",

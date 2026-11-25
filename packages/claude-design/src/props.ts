@@ -1,10 +1,10 @@
-// The flat props of every component part the bundle exports, which
-// src/index-dts.ts prints as components/index.d.ts. Each prop's type is what
-// its x-import attribute holds (src/attribute.ts), so the canvas can turn it
-// into a control. A coverage report lists the props that get no control, and
-// why.
+// components/index.d.ts: a flat `<Name>Props` interface for every component
+// part the bundle exports. Each prop's type is what its x-import attribute
+// holds (src/attribute.ts), so the canvas can turn it into a control. A
+// coverage report lists the props that get no control, and why.
 import { publicComponents } from '@nxds/source-model/props-contract.mjs';
 import { componentDefaults } from '@nxds/source-model/props-entries.ts';
+import { reactProgram } from '@nxds/source-model/react-props.mjs';
 import { componentsRoot } from '@nxds/source-model/roots.mjs';
 import path from 'node:path';
 import ts from 'typescript';
@@ -206,8 +206,8 @@ const PRINT_FLAGS =
   ts.TypeFormatFlags.NoTruncation |
   ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope;
 
-function slugOf(fileName: string, root: string) {
-  return path.relative(root, fileName).split(path.sep)[0] ?? '';
+function slugOf(fileName: string) {
+  return path.relative(componentsRoot, fileName).split(path.sep)[0] ?? '';
 }
 
 function declaringPackage(symbol: ts.Symbol) {
@@ -555,12 +555,8 @@ function literalUnion(scalar: ScalarAttribute) {
   return parts.join(' | ');
 }
 
-/** The type index.d.ts prints: what the attribute holds. An icon takes one of `icons`. */
-function attributeType(
-  attribute: Attribute,
-  ownType: string,
-  icons: readonly string[]
-) {
+/** The type index.d.ts prints: what the attribute holds. */
+function attributeType(attribute: Attribute, ownType: string) {
   switch (attribute.kind) {
     case 'scalar':
       if (attribute.number && attribute.literals.length === 0) return 'number';
@@ -575,7 +571,7 @@ function attributeType(
     case 'json':
       return 'string';
     case 'icon':
-      return icons.map((name) => JSON.stringify(name)).join(' | ');
+      return iconNameUnion();
     default:
       return ownType;
   }
@@ -733,13 +729,10 @@ function flatComponent(
   checker: ts.TypeChecker,
   name: string,
   symbol: ts.Symbol,
-  root: string,
-  icons: readonly string[],
   listed: (prop: ts.Symbol) => boolean = isListedProp
 ): Omit<FlatComponent, 'unwraps'> {
   const fileName = symbol.declarations?.[0]?.getSourceFile().fileName ?? '';
-  // The folder that holds components/ and lib/, whose types a default may come from.
-  const defaults = componentDefaults(checker, symbol, path.dirname(root));
+  const defaults = componentDefaults(checker, symbol);
   const resolved = propsType(checker, symbol);
   const props: FlatProp[] = [];
   if (resolved) {
@@ -761,9 +754,7 @@ function flatComponent(
         ),
         multiple
       );
-      const type = attribute
-        ? attributeType(attribute, ownType, icons)
-        : ownType;
+      const type = attribute ? attributeType(attribute, ownType) : ownType;
       const description = [
         documentation(checker, first),
         attributeFormat(attribute),
@@ -785,46 +776,26 @@ function flatComponent(
   }
   return {
     name,
-    slug: slugOf(fileName, root),
+    slug: slugOf(fileName),
     description: documentation(checker, symbol),
     props,
   };
 }
 
-/**
- * The component parts `exported` declares in `root`, a components folder, in
- * name order: @nxds/react's, or an app's own copy of them. An icon prop takes
- * one of `icons`.
- */
-export function componentParts(
-  checker: ts.TypeChecker,
-  exported: ReadonlyMap<string, ts.Symbol>,
-  root: string,
-  icons: readonly string[]
-): FlatComponent[] {
-  const parts = publicComponents(checker, exported, root);
+/** Every component part the bundle exports, in name order. */
+export function flatComponents(): FlatComponent[] {
+  const { checker, exported } = reactProgram();
+  const parts = publicComponents(checker, exported, componentsRoot);
   const unwrapping = unwrappingParts(checker, parts);
-  return [...parts]
-    .map(([name, symbol]) => ({
-      ...flatComponent(checker, name, symbol, root, icons),
-      unwraps: unwrapping.has(name),
-    }))
-    .filter((component) => component.slug !== 'appearance');
-}
-
-/** Every component part the bundle exports, read from @nxds/react's `reactProgram()`. */
-export function flatComponents({
-  checker,
-  exported,
-}: {
-  checker: ts.TypeChecker;
-  exported: ReadonlyMap<string, ts.Symbol>;
-}): FlatComponent[] {
-  const icons = releaseIcons();
   return [
-    ...componentParts(checker, exported, componentsRoot, icons),
-    ...canvasParts(icons),
-    ...rechartsParts(checker, exported, icons),
+    ...[...parts]
+      .map(([name, symbol]) => ({
+        ...flatComponent(checker, name, symbol),
+        unwraps: unwrapping.has(name),
+      }))
+      .filter((component) => component.slug !== 'appearance'),
+    ...canvasParts(),
+    ...rechartsParts(checker, exported),
   ];
 }
 
@@ -883,8 +854,7 @@ function narrowed(
 /** Typed Recharts parts, `Nxds.Recharts.Bar` as `RechartsBar`, with the props src/canvas/recharts.ts lists. */
 function rechartsParts(
   checker: ts.TypeChecker,
-  exported: ReadonlyMap<string, ts.Symbol>,
-  icons: readonly string[]
+  exported: ReadonlyMap<string, ts.Symbol>
 ): FlatComponent[] {
   const recharts = rechartsExports(checker, exported);
   const problems: string[] = [];
@@ -897,13 +867,8 @@ function rechartsParts(
     );
     const symbol = recharts.get(name);
     if (!symbol) throw new Error(`index.d.ts: recharts exports no ${name}.`);
-    const part = flatComponent(
-      checker,
-      `Recharts${name}`,
-      symbol,
-      componentsRoot,
-      icons,
-      (prop) => specs.has(prop.name)
+    const part = flatComponent(checker, `Recharts${name}`, symbol, (prop) =>
+      specs.has(prop.name)
     );
     const props = [...specs].flatMap(([prop, to]) => {
       const found = part.props.find((candidate) => candidate.name === prop);
@@ -918,7 +883,7 @@ function rechartsParts(
         );
         return [];
       }
-      const type = attributeType(attribute, found.type, icons);
+      const type = attributeType(attribute, found.type);
       return [
         { ...found, attribute, type, control: controlOf(attribute, type) },
       ];
@@ -933,15 +898,14 @@ function rechartsParts(
   return parts;
 }
 
-/** The names of the icons the bundle ships. */
-function releaseIcons() {
-  const icons = iconSet().map(({ name }) => name);
+function iconNameUnion() {
+  const icons = iconSet();
   if (icons.length > DROPDOWN_LIMIT) {
     throw new Error(
       `icons: ${icons.length} icons, over the ${DROPDOWN_LIMIT} the props panel shows as a dropdown. Trim src/icons.ts.`
     );
   }
-  return icons;
+  return icons.map(({ name }) => JSON.stringify(name)).join(' | ');
 }
 
 const NUMBER = {
@@ -955,30 +919,31 @@ const NUMBER = {
 const TEXT = { ...NUMBER, string: true, number: false } as const;
 const BOOLEAN = { ...NUMBER, number: false, boolean: true } as const;
 
-// The export's own parts, in src/runtime/, which @nxds/react doesn't have.
-function canvasParts(icons: readonly string[]): FlatComponent[] {
-  const iconName: Attribute = { kind: 'icon', as: 'name' };
-  /** A prop of a part only the export ships, typed by hand. */
-  const canvasProp = (
-    name: string,
-    attribute: Attribute,
-    description: string,
-    {
-      defaultValue = null,
-      optional = true,
-    }: { defaultValue?: string | null; optional?: boolean } = {}
-  ): FlatProp => {
-    const type = attributeType(attribute, 'string', icons);
-    return {
-      name,
-      type,
-      optional,
-      description,
-      defaultValue,
-      attribute,
-      control: controlOf(attribute, type),
-    };
+/** A prop of a part only the export ships, typed by hand. */
+function canvasProp(
+  name: string,
+  attribute: Attribute,
+  description: string,
+  {
+    defaultValue = null,
+    optional = true,
+  }: { defaultValue?: string | null; optional?: boolean } = {}
+): FlatProp {
+  const type = attributeType(attribute, 'string');
+  return {
+    name,
+    type,
+    optional,
+    description,
+    defaultValue,
+    attribute,
+    control: controlOf(attribute, type),
   };
+}
+
+// The export's own parts, in src/runtime/, which @nxds/react doesn't have.
+function canvasParts(): FlatComponent[] {
+  const iconName: Attribute = { kind: 'icon', as: 'name' };
   return [
     {
       name: 'Icon',
@@ -1044,7 +1009,9 @@ function canvasParts(icons: readonly string[]): FlatComponent[] {
           'closeButton',
           BOOLEAN,
           'Shows a close button in the corner.',
-          { defaultValue: 'false' }
+          {
+            defaultValue: 'false',
+          }
         ),
         canvasProp(
           'richColors',
@@ -1057,6 +1024,46 @@ function canvasParts(icons: readonly string[]): FlatComponent[] {
       ],
     },
   ];
+}
+
+function docComment(lines: string[], indent: string) {
+  const body = lines.flatMap((line) => line.split('\n'));
+  if (body.length === 0) return [];
+  if (body.length === 1) return [`${indent}/** ${body[0]} */`];
+  return [
+    `${indent}/**`,
+    ...body.map((line) => `${indent} *${line ? ` ${line}` : ''}`),
+    `${indent} */`,
+  ];
+}
+
+function propLines(prop: FlatProp) {
+  const lines = prop.description ? [prop.description] : [];
+  if (prop.defaultValue !== null) lines.push(`@default ${prop.defaultValue}`);
+  const key = /^[A-Za-z_$][\w$]*$/.test(prop.name)
+    ? prop.name
+    : `'${prop.name}'`;
+  return [
+    ...docComment(lines, '  '),
+    `  ${key}${prop.optional ? '?' : ''}: ${prop.type};`,
+  ];
+}
+
+export function renderIndexDts(components: readonly FlatComponent[]) {
+  const interfaces = components.flatMap((component) => [
+    '',
+    ...docComment(component.description ? [component.description] : [], ''),
+    `export interface ${component.name}Props {`,
+    ...component.props.flatMap(propLines),
+    '}',
+  ]);
+  return [
+    '// nxds component props, one interface per part the Nxds bundle exports.',
+    '// Each type is what the prop’s x-import attribute holds.',
+    "import type * as React from 'react';",
+    ...interfaces,
+    '',
+  ].join('\n');
 }
 
 export interface Coverage {

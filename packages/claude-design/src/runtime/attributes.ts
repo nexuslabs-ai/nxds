@@ -16,6 +16,19 @@ import { unwrapped, withoutIndentation } from './canvas-wrapper.ts';
 import { Icon } from './icon.ts';
 import { type Converted, convertValue, fail, type Props } from './values.ts';
 
+export interface CanvasSchema {
+  /** Each part's props whose attribute string converts, by prop. */
+  attributes: Record<string, Record<string, SchemaAttribute>>;
+  /** Each part's props that have no default, so a bad value can't just be dropped. */
+  required: Record<string, string[]>;
+  /** Parts that read their children's types, which get them without canvas wrappers. */
+  unwrap: string[];
+  /** A `data-*` attribute a canvas keeps as written, by the prop it sets: `data-key` for Recharts' `dataKey`. */
+  renames: Record<string, Record<string, string>>;
+  /** Each part's required function props, which get a function that does nothing when the markup binds none. */
+  handlers: Record<string, string[]>;
+}
+
 const MAX_CACHED_LENGTH = 4 * 1024 * 1024;
 
 // `PlusIcon`, `IconPlus` or `Plus` for `plus`.

@@ -3,13 +3,13 @@
 import {
   type Attribute,
   type CanvasAttribute,
-  type CanvasSchema,
   isCanvasAttribute,
   type ScalarAttribute,
   type SchemaAttribute,
   type SchemaScalar,
 } from './attribute.ts';
 import { type FlatComponent, isRequired } from './props.ts';
+import type { CanvasSchema } from './runtime/attributes.ts';
 import { kebab } from './runtime/canvas-names.ts';
 
 function withoutSuggested(attribute: ScalarAttribute): SchemaScalar {
