@@ -6,6 +6,7 @@
 // theme.js, as a themed export's do. Fails when the output, or a theme at the
 // edge of what a flag takes, breaks the Design System format.
 import { NXDS_THEME_FIELDS } from '@nxds/core';
+import { reactProgram } from '@nxds/source-model/react-props.mjs';
 import {
   componentLabel,
   exportedComponentSlugs,
@@ -27,6 +28,7 @@ import path from 'node:path';
 import { buildBundle } from '../src/bundle.ts';
 import { canvasPartFiles } from '../src/canvas/pages.ts';
 import { CANVAS_PARTS, EXCLUDED_SLUGS, GROUPS } from '../src/groups.ts';
+import { renderIndexDts } from '../src/index-dts.ts';
 import {
   buildPreview,
   checkCanvasExamples,
@@ -34,12 +36,7 @@ import {
   componentReadme,
   folderCanvasExample,
 } from '../src/previews.ts';
-import {
-  coverage,
-  flatComponents,
-  renderCoverage,
-  renderIndexDts,
-} from '../src/props.ts';
+import { coverage, flatComponents, renderCoverage } from '../src/props.ts';
 import { componentReads } from '../src/reads.ts';
 import {
   boardEntry,
@@ -256,7 +253,7 @@ async function main() {
     readFileSync(path.join(contentDir, 'cover.html'), 'utf8')
   );
 
-  const parts = flatComponents();
+  const parts = flatComponents(reactProgram());
   const samplerErrors = samplerProblems(sampler, {
     readme: defaults.project['README.md'],
     stylesheets: defaults.project['tokens.css'] + styles,

@@ -312,13 +312,19 @@ function attributeDefaults(
   return defaults;
 }
 
+/**
+ * The defaults of `symbol`'s props. `sources` is the folder whose types and
+ * components a default is followed into: @nxds/react's src, or an app's
+ * nxds folder.
+ */
 export function componentDefaults(
   checker: ts.TypeChecker,
-  symbol: ts.Symbol
+  symbol: ts.Symbol,
+  sources: string = reactSrc
 ): Map<string, LazyDefault> {
   const fn = componentFunction(symbol);
   if (!fn) return new Map();
-  return functionDefaults(checker, symbol.getName(), fn);
+  return functionDefaults(checker, symbol.getName(), fn, sources);
 }
 
 // Destructuring defaults win over cva `defaultVariants`, which win over the
@@ -326,7 +332,8 @@ export function componentDefaults(
 function functionDefaults(
   checker: ts.TypeChecker,
   owner: string,
-  fn: ts.SignatureDeclaration
+  fn: ts.SignatureDeclaration,
+  sources: string
 ) {
   const [parameter] = fn.parameters;
   const defaults = new Map(destructuringDefaults(checker, owner, parameter));
@@ -341,9 +348,9 @@ function functionDefaults(
   function addInherited(query: ts.TypeQueryNode) {
     const target = symbolAt(checker, query.exprName);
     const fileName = target?.valueDeclaration?.getSourceFile().fileName;
-    if (!target || !fileName || !isUnder(fileName, reactSrc)) return;
+    if (!target || !fileName || !isUnder(fileName, sources)) return;
 
-    const inherited = componentDefaults(checker, target);
+    const inherited = componentDefaults(checker, target, sources);
     addMissing(attributeDefaults(checker, owner, fn, target, inherited));
   }
 
@@ -357,7 +364,7 @@ function functionDefaults(
 
     const declarations = symbolAt(checker, reference)?.declarations ?? [];
     for (const declaration of declarations) {
-      if (!isUnder(declaration.getSourceFile().fileName, reactSrc)) continue;
+      if (!isUnder(declaration.getSourceFile().fileName, sources)) continue;
       if (
         ts.isInterfaceDeclaration(declaration) ||
         ts.isTypeAliasDeclaration(declaration)

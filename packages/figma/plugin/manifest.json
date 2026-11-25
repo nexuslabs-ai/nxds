@@ -1,0 +1,13 @@
+{
+  "name": "nxds export",
+  "id": "nxds-figma-export-poc",
+  "api": "1.0.0",
+  "main": "dist/code.js",
+  "ui": "dist/ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["none"],
+    "devAllowedDomains": ["http://localhost:7357"]
+  }
+}
