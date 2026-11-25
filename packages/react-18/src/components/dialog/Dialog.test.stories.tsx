@@ -175,7 +175,7 @@ export const CloseButtonFocusStyle: Story = {
 
 export const CloseButtonTargetAtSmallScale: Story = {
   globals: { uiScale: 'small' },
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open settings dialog</Button>

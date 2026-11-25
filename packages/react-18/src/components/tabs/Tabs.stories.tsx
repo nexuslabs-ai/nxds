@@ -52,7 +52,7 @@ async function waitForIndicatorReady(indicator: HTMLElement) {
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="account" className="nx:w-[400px]">
       <TabsList>
         <TabsTrigger value="account">Account</TabsTrigger>
@@ -96,7 +96,7 @@ export const UnderlineVariant: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="account" className="nx:w-[400px]">
       <TabsList variant="underline">
         <TabsTrigger value="account">Account</TabsTrigger>
@@ -154,7 +154,7 @@ export const SmallSize: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="tab1" className="nx:w-[400px]">
       <TabsList size="sm">
         <TabsTrigger value="tab1">Small Tab</TabsTrigger>
@@ -179,7 +179,7 @@ export const LargeSize: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="tab1" className="nx:w-[500px]">
       <TabsList size="lg">
         <TabsTrigger value="tab1">Large Tab</TabsTrigger>
@@ -196,7 +196,7 @@ export const LargeSize: Story = {
 };
 
 export const WithCards: Story = {
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="account" className="nx:w-[400px]">
       <TabsList className="nx:grid nx:w-full nx:grid-cols-2">
         <TabsTrigger value="account">Account</TabsTrigger>
@@ -266,7 +266,7 @@ export const WithDisabledTab: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="account" className="nx:w-[400px]">
       <TabsList>
         <TabsTrigger value="account">Account</TabsTrigger>
@@ -305,7 +305,7 @@ export const WithDisabledTab: Story = {
 // ============================================
 
 export const ClickInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="tab1" className="nx:w-[400px]">
       <TabsList>
         <TabsTrigger value="tab1">Tab 1</TabsTrigger>
@@ -338,7 +338,7 @@ export const ClickInteraction: Story = {
 };
 
 export const KeyboardInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="tab1" className="nx:w-[400px]">
       <TabsList>
         <TabsTrigger value="tab1">Tab 1</TabsTrigger>
@@ -381,7 +381,7 @@ export const KeyboardInteraction: Story = {
 };
 
 export const DisabledTabInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="tab1" className="nx:w-[400px]">
       <TabsList>
         <TabsTrigger value="tab1">Tab 1</TabsTrigger>
@@ -427,7 +427,7 @@ export const DisabledTabInteraction: Story = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="tab1" className="nx:w-[400px]">
       <TabsList variant="underline" size="lg">
         <TabsTrigger value="tab1">Tab 1</TabsTrigger>
@@ -470,7 +470,7 @@ const listRef = React.createRef<HTMLDivElement>();
 
 // A ref on TabsList reaches the list, beside the ref the indicator measures.
 export const ListRef: Story = {
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="tab1" className="nx:w-[400px]">
       <TabsList ref={listRef}>
         <TabsTrigger value="tab1">Tab 1</TabsTrigger>
@@ -497,7 +497,7 @@ export const ListRef: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

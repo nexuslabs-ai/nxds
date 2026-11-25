@@ -1,5 +1,3 @@
-import * as React from 'react';
-
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
@@ -41,7 +39,7 @@ const SIDES = [
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <Tooltip>
       <TooltipTrigger asChild>
         <Button variant="outline">Hover me</Button>
@@ -63,7 +61,7 @@ export const Sides: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-wrap nx:gap-4">
       {SIDES.map(({ side, label }) => (
         <Tooltip key={side}>
@@ -89,7 +87,7 @@ export const WithLongContent: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Tooltip>
       <TooltipTrigger asChild>
         <Button variant="outline">Hover for details</Button>
@@ -114,7 +112,7 @@ export const WithCustomOffset: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Tooltip>
       <TooltipTrigger asChild>
         <Button variant="outline">Custom offset</Button>
@@ -131,7 +129,7 @@ export const WithCustomOffset: Story = {
 // ============================================
 
 export const HoverInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Tooltip>
       <TooltipTrigger asChild>
         <Button variant="outline">Hover me</Button>
@@ -171,7 +169,7 @@ export const HoverInteraction: Story = {
 // A standalone Tooltip waits Radix's default 700ms. Opening within 300ms proves
 // each Tooltip joined the provider's group and took its delay.
 export const GroupedInProvider: Story = {
-  render: (_args) => (
+  render: () => (
     <TooltipProvider delayDuration={0}>
       <div className="nx:flex nx:gap-2">
         <Tooltip>
@@ -211,7 +209,7 @@ export const GroupedInProvider: Story = {
 };
 
 export const FocusInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Tooltip>
       <TooltipTrigger asChild>
         <Button variant="outline">Focus me</Button>
@@ -247,7 +245,7 @@ export const FocusInteraction: Story = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <Tooltip>
       <TooltipTrigger asChild>
         <Button variant="outline">Hover me</Button>
@@ -286,7 +284,7 @@ export const WithDataAttributes: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

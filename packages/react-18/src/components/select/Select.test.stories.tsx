@@ -97,7 +97,7 @@ export const SizesGeometry: Story = {
 };
 
 export const CheckInsetAtEveryDensity: Story = {
-  render: (_args) => (
+  render: () => (
     <Select defaultValue="banana">
       <SelectTrigger className="nx:w-[180px]" aria-label="Select a fruit">
         <SelectValue />

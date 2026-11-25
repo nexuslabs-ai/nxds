@@ -281,28 +281,30 @@ export async function init(
 
   const setup = setupVariant(catalog, config);
   const framework = config.stories && storybookFramework(catalog, project);
-  const plans = [
-    planWiring(
-      project,
-      config,
-      addTailwind,
-      setup.steps,
-      { source: nxdsThemeSource({ lines, fonts }), fonts, custom },
-      options.ownColors ? colorsCss(release, flags) : null
-    ),
-    ...(framework ? [planStorybook(project, config, framework)] : []),
-  ];
+  const storybook = framework
+    ? planStorybook(project, config, framework, setup.packages.tailwind)
+    : { changes: [], manual: [], devPackages: {} };
+  const app = planWiring(
+    project,
+    config,
+    addTailwind,
+    setup.steps,
+    { source: nxdsThemeSource({ lines, fonts }), fonts, custom },
+    options.ownColors ? colorsCss(release, flags) : null
+  );
   const wiring = {
-    changes: plans.flatMap((plan) => plan.changes),
-    manual: plans.flatMap((plan) => plan.manual),
+    changes: [...app.changes, ...storybook.changes],
+    manual: [...app.manual, ...storybook.manual],
   };
 
-  const tailwind = packagesToInstall(
-    project,
-    addTailwind ? tailwindPackages(project.setup, setup.packages.tailwind) : {}
-  );
+  const devPackages = packagesToInstall(project, {
+    ...(addTailwind
+      ? tailwindPackages(project.setup, setup.packages.tailwind)
+      : {}),
+    ...storybook.devPackages,
+  });
   if (options.install && !options.dryRun) {
-    installPackages(project, tailwind, { dev: true });
+    installPackages(project, devPackages, { dev: true });
   }
   const installed = installItems(
     catalog,
@@ -338,7 +340,7 @@ export async function init(
     edited.push(config.css);
   }
 
-  const packages = [...tailwind, ...installed.packages];
+  const packages = [...devPackages, ...installed.packages];
   const iconsLabel = release.iconLibraries.find(
     (library) => library.name === config.iconLibrary
   )?.label;

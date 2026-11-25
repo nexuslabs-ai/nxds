@@ -478,8 +478,16 @@ export const LoadingSkeleton: Story = {
 };
 
 export const NarrowDrawer: Story = {
+  // The story brings its own narrow viewport, so it needs none from the preview.
+  parameters: {
+    viewport: {
+      options: {
+        narrow: { name: 'Narrow', styles: { width: '375px', height: '667px' } },
+      },
+    },
+  },
   globals: {
-    viewport: { value: 'mobile', isRotated: false },
+    viewport: { value: 'narrow', isRotated: false },
   },
   render: () => ({
     components: { DemoInset, DemoSidebar, SidebarProvider },

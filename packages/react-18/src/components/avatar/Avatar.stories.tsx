@@ -114,7 +114,7 @@ export const Default: Story = {
 };
 
 export const WithFallback: Story = {
-  render: (_args) => (
+  render: () => (
     <Avatar role="img" aria-label="Ada Lovelace">
       <AvatarImage src="broken-image.jpg" alt="" />
       <AvatarFallback aria-hidden="true">AL</AvatarFallback>
@@ -123,7 +123,7 @@ export const WithFallback: Story = {
 };
 
 export const WithIcon: Story = {
-  render: (_args) => (
+  render: () => (
     <Avatar role="img" aria-label="Unknown user">
       <AvatarFallback aria-hidden="true">
         <UserIcon aria-hidden="true" className="nx:size-icon-glyph-lg" />
@@ -133,7 +133,7 @@ export const WithIcon: Story = {
 };
 
 export const CroppedImage: Story = {
-  render: (_args) => (
+  render: () => (
     <Avatar size="4xl" shape="rounded">
       <AvatarImage src={WIDE_AVATAR_URL} alt="Wide portrait crop" />
       <AvatarFallback>WC</AvatarFallback>
@@ -146,7 +146,7 @@ export const CroppedImage: Story = {
 // ============================================
 
 export const ShapeRounded: Story = {
-  render: (_args) => (
+  render: () => (
     <Avatar shape="rounded">
       <AvatarImage src={AVATAR_URL} alt="Ada Lovelace" />
       <AvatarFallback>AL</AvatarFallback>
@@ -159,7 +159,7 @@ export const ShapeRounded: Story = {
 // ============================================
 
 export const WithStatus: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:items-end nx:gap-4">
       {AVATAR_SIZES.map((size) => (
         <Avatar key={size} size={size}>
@@ -192,7 +192,7 @@ export const StatusVariants: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:items-center nx:gap-4">
       {STATUS_VALUES.map((status, index) => (
         <Avatar key={status} size="lg">
@@ -214,7 +214,7 @@ export const StatusVariants: Story = {
 };
 
 export const WithRing: Story = {
-  render: (_args) => (
+  render: () => (
     <Avatar ring>
       <AvatarImage src={AVATAR_URL} alt="Ada Lovelace" />
       <AvatarFallback>AL</AvatarFallback>
@@ -236,7 +236,7 @@ export const GroupWithMax: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <AvatarGroup max={3} role="group" aria-label="Project team">
       {TEAM.map((person, index) => (
         <TeamAvatar
@@ -270,7 +270,7 @@ export const GroupSizes: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-6">
       {(['sm', 'md', 'lg'] as const).map((size) => (
         <AvatarGroup
@@ -312,7 +312,7 @@ export const OnContainerSurface: Story = {
     },
   },
   globals: { mode: 'dark' },
-  render: (_args) => (
+  render: () => (
     <div data-testid="page" className="nx:bg-background nx:p-6">
       <div
         data-testid="card"
@@ -340,7 +340,7 @@ export const OnContainerSurface: Story = {
 // ============================================
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:items-center nx:gap-4">
       <Avatar size="lg" shape="rounded" ring data-testid="configured-avatar">
         <AvatarImage src={AVATAR_URL} alt="Ada Lovelace" />
@@ -379,7 +379,7 @@ export const WithDataAttributes: Story = {
 
 export const AllSizes: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:mb-4 nx:typography-label-default nx:text-foreground">

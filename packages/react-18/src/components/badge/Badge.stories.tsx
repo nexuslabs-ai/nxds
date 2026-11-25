@@ -377,7 +377,7 @@ export const LongContent: Story = {
 
 export const AllVariants: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       {/* Solid Fill - Caps */}
       <div>

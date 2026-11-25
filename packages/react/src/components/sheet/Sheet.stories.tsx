@@ -43,7 +43,7 @@ const SIDES = ['top', 'right', 'bottom', 'left'] as const;
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline">Open Sheet</Button>
@@ -72,7 +72,7 @@ export const Default: Story = {
 };
 
 export const Left: Story = {
-  render: (_args) => (
+  render: () => (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline">Open Left</Button>
@@ -95,7 +95,7 @@ export const Left: Story = {
 };
 
 export const Top: Story = {
-  render: (_args) => (
+  render: () => (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline">Open Top</Button>
@@ -113,7 +113,7 @@ export const Top: Story = {
 };
 
 export const Bottom: Story = {
-  render: (_args) => (
+  render: () => (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline">Open Bottom</Button>
@@ -188,7 +188,7 @@ export const ScrollableContent: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline">Terms & Conditions</Button>
@@ -226,7 +226,7 @@ export const ScrollableContent: Story = {
 // ============================================
 
 export const OpenCloseInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline">Open Sheet</Button>
@@ -277,7 +277,7 @@ export const OpenCloseInteraction: Story = {
 };
 
 export const KeyboardInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline">Open Sheet</Button>
@@ -314,7 +314,7 @@ export const KeyboardInteraction: Story = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline">Open Sheet</Button>
@@ -389,7 +389,7 @@ export const WithDataAttributes: Story = {
 
 export const AllVariants: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-wrap nx:gap-4">
       {SIDES.map((side) => (
         <Sheet key={side}>

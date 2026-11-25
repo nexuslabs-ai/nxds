@@ -107,7 +107,7 @@ export const IndicatorCrossFadeStyle: Story = {
 };
 
 export const CheckInsetAtEveryDensity: Story = {
-  render: (_args) => (
+  render: () => (
     <ContextMenu>
       <ContextMenuTrigger className={triggerClass}>
         Right click here
@@ -143,7 +143,7 @@ export const CheckInsetAtEveryDensity: Story = {
 };
 
 export const RadioDotAtEveryUiScale: Story = {
-  render: (_args) => (
+  render: () => (
     <ContextMenu>
       <ContextMenuTrigger className={triggerClass}>
         Right click here

@@ -34,7 +34,7 @@ type Story = StoryObj<typeof NavigationMenu>;
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -85,7 +85,7 @@ export const WithSimpleLink: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -119,7 +119,7 @@ export const WithoutViewport: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <NavigationMenu viewport={false}>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -152,7 +152,7 @@ export const WithIndicator: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -190,7 +190,7 @@ export const Disabled: Story = {
       description: { story: 'Disable a trigger so its flyout cannot open.' },
     },
   },
-  render: (_args) => (
+  render: () => (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -221,7 +221,7 @@ export const Disabled: Story = {
 // ============================================
 
 export const OpenCloseInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -265,7 +265,7 @@ export const OpenCloseInteraction: Story = {
 };
 
 export const KeyboardInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -303,7 +303,7 @@ export const KeyboardInteraction: Story = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -364,7 +364,7 @@ export const WithDataAttributes: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

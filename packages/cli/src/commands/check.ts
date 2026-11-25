@@ -12,7 +12,9 @@ import {
   loadRelease,
   releaseFiles,
   resolveItems,
+  setupVariant,
   splitInstalled,
+  storybookFramework,
   variantFor,
   withIconLibrary,
   withStories,
@@ -372,9 +374,17 @@ function storiesCheck(
 ) {
   if (!config.stories) return catalog;
   const unsupported = storybookProblem(catalog, project);
+  const framework = storybookFramework(catalog, project);
   let problem = unsupported;
   try {
-    problem ??= storybookWiringProblem(project, config);
+    if (framework) {
+      problem ??= storybookWiringProblem(
+        project,
+        config,
+        framework,
+        setupVariant(catalog, config).packages.tailwind
+      );
+    }
   } catch (error) {
     if (!(error instanceof CliError)) throw error;
     problem = error.message;

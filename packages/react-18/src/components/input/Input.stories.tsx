@@ -455,7 +455,7 @@ export const WithDataAttributes: Story = {
 
 export const AllVariants: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8 nx:w-[400px]">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

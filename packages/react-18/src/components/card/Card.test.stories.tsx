@@ -22,7 +22,7 @@ export default meta;
 type Story = StoryObj<typeof Card>;
 
 export const LongTitleWithAction: Story = {
-  render: (_args) => (
+  render: () => (
     <Card className="nx:w-[320px]">
       <CardHeader>
         <CardTitle>

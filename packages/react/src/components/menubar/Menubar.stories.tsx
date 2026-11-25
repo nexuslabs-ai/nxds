@@ -42,7 +42,7 @@ type Story = StoryObj<typeof Menubar>;
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>File</MenubarTrigger>
@@ -144,7 +144,7 @@ export const WithRadioItems: Story = {
 };
 
 export const IndicatorCrossFade: Story = {
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>View</MenubarTrigger>
@@ -245,7 +245,7 @@ export const WithSubMenu: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>File</MenubarTrigger>
@@ -278,7 +278,7 @@ export const WithInsetItems: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>View</MenubarTrigger>
@@ -299,7 +299,7 @@ export const WithInsetItems: Story = {
 // ============================================
 
 export const OpenCloseInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>File</MenubarTrigger>
@@ -341,7 +341,7 @@ export const OpenCloseInteraction: Story = {
 };
 
 export const KeyboardInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>File</MenubarTrigger>
@@ -393,7 +393,7 @@ export const WithDisabledItems: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>Edit</MenubarTrigger>
@@ -436,7 +436,7 @@ export const WithDisabledItems: Story = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>File</MenubarTrigger>
@@ -507,7 +507,7 @@ export const WithDataAttributes: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

@@ -28,7 +28,7 @@ type Story = StoryObj<ToggleGroupArgs>;
 export const WithoutRovingFocusStyle: Story = {
   ...WithoutRovingFocus,
   play: async ({ canvasElement }) => {
-    const group = within(canvasElement).getByRole('group');
+    const group = canvasElement.querySelector('[data-slot="toggle-group"]')!;
     await expect(getComputedStyle(group).flexDirection).toBe('column');
   },
 };
@@ -79,7 +79,7 @@ export const InvalidOwnershipStyle: Story = {
         .trim()
     );
     for (const item of within(
-      canvas.getByRole('group', { name: 'Item errors' })
+      canvas.getByLabelText('Item errors')
     ).getAllByRole('button')) {
       await expect(getComputedStyle(item).borderTopColor).toBe(
         getComputedStyle(item)
@@ -130,7 +130,7 @@ export const HalfStepSpacing: Story = {
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const group = canvas.getByRole('group', { name: 'Text alignment' });
+    const group = canvas.getByLabelText('Text alignment');
     await expect(getComputedStyle(group).columnGap).toBe(
       getComputedStyle(group).getPropertyValue('--nx-spacing-0_5').trim()
     );
@@ -157,10 +157,8 @@ export const OutlinePrimarySizesGeometry: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     for (const size of SIZES) {
-      const outline = canvas.getByRole('group', { name: `outline ${size}` });
-      const primary = canvas.getByRole('group', {
-        name: `outline-primary ${size}`,
-      });
+      const outline = canvas.getByLabelText(`outline ${size}`);
+      const primary = canvas.getByLabelText(`outline-primary ${size}`);
       const outlineBox = outline.getBoundingClientRect();
       const primaryBox = primary.getBoundingClientRect();
       await expect([primaryBox.width, primaryBox.height]).toEqual([

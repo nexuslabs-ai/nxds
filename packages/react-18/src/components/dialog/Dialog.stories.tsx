@@ -47,7 +47,7 @@ type Story = StoryObj<typeof Dialog>;
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open Dialog</Button>
@@ -133,7 +133,7 @@ export const WithDescription: Story = {
 };
 
 export const NoCloseButton: Story = {
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open Dialog</Button>
@@ -169,7 +169,7 @@ export const ScrollableContent: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Terms & Conditions</Button>
@@ -203,7 +203,7 @@ export const ScrollableContent: Story = {
 };
 
 export const ViewportBoundContent: Story = {
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open viewport-bound dialog</Button>
@@ -276,7 +276,7 @@ export const PropDrivenContent: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open invite dialog</Button>
@@ -338,7 +338,7 @@ export const PropDrivenContent: Story = {
 // ============================================
 
 export const OpenCloseInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open Dialog</Button>
@@ -400,7 +400,7 @@ export const OpenCloseInteraction: Story = {
 };
 
 export const KeyboardInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open Dialog</Button>
@@ -440,7 +440,7 @@ export const KeyboardInteraction: Story = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open Dialog</Button>
@@ -518,7 +518,7 @@ export const WithDataAttributes: Story = {
 };
 
 export const CloseButtonFocus: Story = {
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open focus dialog</Button>
@@ -557,7 +557,7 @@ export const CloseButtonFocus: Story = {
 // ============================================
 
 export const NestedOverlayStacking: Story = {
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open stacking dialog</Button>
@@ -619,7 +619,7 @@ export const NestedOverlayStacking: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

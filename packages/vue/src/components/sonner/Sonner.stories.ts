@@ -123,6 +123,8 @@ export const BesideHostToaster: Story = {
     const canvas = within(canvasElement);
     const body = within(document.body);
     const count = canvas.getByRole('status', { name: 'nxds toast count' });
+    // A toast from an earlier story can still be on screen.
+    const before = Number(count.textContent);
     await userEvent.click(canvas.getByRole('button', { name: 'nxds toast' }));
     await userEvent.click(canvas.getByRole('button', { name: 'Host toast' }));
 
@@ -135,8 +137,8 @@ export const BesideHostToaster: Story = {
     const titles = toast.getToasts().map((entry) => entry.title);
     await expect(titles).toContain('Saved in nxds');
     await expect(titles).not.toContain('Saved in host');
-    // useSonner counts only the nxds toast.
-    await expect(count).toHaveTextContent('1');
+    // useSonner counts the nxds toast and not the host's.
+    await expect(count).toHaveTextContent(String(before + 1));
 
     toast.dismiss();
     await waitFor(async () => {

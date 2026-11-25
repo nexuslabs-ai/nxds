@@ -165,6 +165,16 @@ const meta = {
 } satisfies Meta<typeof FilterBuilder>;
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+/**
+ * A Select hides the page from assistive technology while it is open. After
+ * one closes, this waits until role queries reach the page again.
+ */
+async function pageReachable(canvasElement: HTMLElement) {
+  await waitFor(() =>
+    expect(canvasElement.closest('[aria-hidden="true"]')).toBeNull()
+  );
+}
 export const Default: Story = {
   tags: ['docs'],
 };
@@ -176,6 +186,7 @@ export const ValueChange: Story = {
       canvas.getByRole('combobox', { name: 'Filters match' })
     );
     await userEvent.click(page.getByRole('option', { name: 'Any' }));
+    await pageReachable(canvasElement);
     await expect(args.onValueChange).toHaveBeenCalledWith(
       expect.objectContaining({ conjunction: 'any' })
     );
@@ -220,6 +231,7 @@ export const Empty: Story = {
         name: 'Team',
       })
     );
+    await pageReachable(canvasElement);
     await expect(canvas.getByText('Enter a value.')).toBeVisible();
     await userEvent.click(
       canvas.getByRole('button', { name: 'Remove Team condition' })
@@ -310,6 +322,7 @@ export const OperatorAndFieldChanges: Story = {
       canvas.getByRole('combobox', { name: 'Status operator' })
     );
     await userEvent.click(page.getByRole('option', { name: 'is empty' }));
+    await pageReachable(canvasElement);
     await expect(
       canvas.queryByRole('combobox', { name: 'Status value' })
     ).not.toBeInTheDocument();
@@ -318,6 +331,7 @@ export const OperatorAndFieldChanges: Story = {
     );
     await userEvent.click(canvas.getByRole('combobox', { name: 'Field' }));
     await userEvent.click(page.getByRole('option', { name: 'Projects' }));
+    await pageReachable(canvasElement);
     await expect(
       canvas.getByRole('spinbutton', { name: 'Projects value' })
     ).toHaveValue(null);
@@ -346,6 +360,7 @@ export const KeyboardInteraction: Story = {
     await userEvent.keyboard('{Enter}');
     await expect(page.getByRole('listbox')).toBeVisible();
     await userEvent.keyboard('{ArrowDown}{Enter}');
+    await pageReachable(canvasElement);
     await expect(
       canvas.getByRole('combobox', { name: 'Status operator' })
     ).toHaveTextContent('is not');
@@ -596,6 +611,7 @@ export const TextAndDates: Story = {
       canvas.getByRole('combobox', { name: 'Joined operator' })
     );
     await userEvent.click(page.getByRole('option', { name: 'is before' }));
+    await pageReachable(canvasElement);
     await expect(canvas.getByLabelText('Joined value')).toHaveValue('');
     await expect(canvas.getByRole('status')).toHaveTextContent('1 incomplete');
   },

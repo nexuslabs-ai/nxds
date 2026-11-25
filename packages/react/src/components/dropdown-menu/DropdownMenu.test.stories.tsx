@@ -113,7 +113,7 @@ export const WithDisabledItemsStyle: Story = {
 };
 
 export const CheckInsetAtEveryDensity: Story = {
-  render: (_args) => (
+  render: () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">View</Button>
@@ -146,7 +146,7 @@ export const CheckInsetAtEveryDensity: Story = {
 };
 
 export const RadioDotAtEveryUiScale: Story = {
-  render: (_args) => (
+  render: () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">View</Button>

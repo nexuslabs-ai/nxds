@@ -105,7 +105,7 @@ export const IndicatorCrossFadeStyle: Story = {
 };
 
 export const CheckInsetAtEveryDensity: Story = {
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>View</MenubarTrigger>
@@ -138,7 +138,7 @@ export const CheckInsetAtEveryDensity: Story = {
 };
 
 export const RadioDotAtEveryUiScale: Story = {
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>View</MenubarTrigger>

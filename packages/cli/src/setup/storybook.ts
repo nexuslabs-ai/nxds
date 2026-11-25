@@ -6,6 +6,7 @@ import {
   isExportDefaultDeclaration,
   isIdentifier,
   isObjectExpression,
+  isObjectMethod,
   isObjectProperty,
   isStringLiteral,
   isTSAsExpression,
@@ -27,7 +28,12 @@ import { relativeImport } from '../files';
 import { installedVersion } from '../packages';
 import { findFile, type Project } from '../project';
 
-import { entryDir, type WiringPlan } from './react';
+import {
+  entryDir,
+  type ManualStep,
+  POSTCSS_CONFIGS,
+  type WiringPlan,
+} from './react';
 import {
   applyInsertions,
   endOf,
@@ -126,6 +132,15 @@ function exportedObject(program: Program): ObjectExpression | undefined {
     return undefined;
   }
   return objectOf(declaration);
+}
+
+/** Whether an object literal has a property or method named `name`. */
+function hasMember(object: ObjectExpression, name: string) {
+  return object.properties.some(
+    (member) =>
+      (isObjectProperty(member) || isObjectMethod(member)) &&
+      isIdentifier(member.key, { name })
+  );
 }
 
 function property(object: ObjectExpression, name: string) {
@@ -334,77 +349,132 @@ function coversDir(entry: Node | null, dir: string) {
   );
 }
 
-/**
- * Adds the nxds folder's stories to `.storybook/main`, unless an entry there
- * already covers the folder.
- */
-function wireStories(project: Project, config: Config): WiringPlan {
-  const file = findFile(project, MAIN_FILES);
-  const glob = `${relativeImport(`${STORYBOOK_DIR}/main`, config.dir)}/**/*.stories.tsx`;
-  const manual = (target: string): WiringPlan => ({
-    changes: [],
-    manual: [{ file: target, step: `Add '${glob}' to stories.` }],
-  });
-  if (!file) return manual(DEFAULT_MAIN);
+const TAILWIND_VITE = '@tailwindcss/vite';
 
-  const source = read(project, file);
-  const main = exportedObject(parseModule(source, file));
+/**
+ * Whether Storybook's Vite already runs Tailwind: through the app's own Vite
+ * config, or through a PostCSS config, which Vite reads.
+ */
+function buildsTailwind(project: Project) {
+  if (project.setup === 'vite-react') return true;
+  const postcss = findFile(project, POSTCSS_CONFIGS);
+  return (
+    postcss !== undefined &&
+    read(project, postcss).includes('@tailwindcss/postcss')
+  );
+}
+
+type MainPlan = WiringPlan & {
+  /** Dev packages the edit imports, by name, at `tailwind`'s range. */
+  devPackages: Record<string, string>;
+};
+
+/**
+ * What `.storybook/main` needs for the nxds stories: an entry that covers the
+ * nxds folder, and Tailwind's Vite plugin where the app's build runs Tailwind
+ * out of Storybook's sight, as Next.js with Turbopack does. Each part the edit
+ * can't add is a manual step.
+ */
+function wireMain(
+  project: Project,
+  config: Config,
+  tailwind: string
+): MainPlan {
+  const file = findFile(project, MAIN_FILES);
+  const source = file ? read(project, file) : '';
+  const program = file ? parseModule(source, file) : undefined;
+  const main = program && exportedObject(program);
+  const target = file ?? DEFAULT_MAIN;
+  const insertions: Insertion[] = [];
+  const imports: string[] = [];
+  const manual: ManualStep[] = [];
+  const devPackages: Record<string, string> = {};
+
+  const glob = `${relativeImport(`${STORYBOOK_DIR}/main`, config.dir)}/**/*.stories.tsx`;
   const stories = main && property(main, 'stories')?.value;
-  if (!isArrayExpression(stories)) return manual(file);
-  if (stories.elements.some((entry) => coversDir(entry, config.dir))) {
-    return { changes: [], manual: [] };
+  if (!isArrayExpression(stories)) {
+    manual.push({ file: target, step: `Add '${glob}' to stories.` });
+  } else if (!stories.elements.some((entry) => coversDir(entry, config.dir))) {
+    // The entry takes the quotes the file's other entries use.
+    const written = stories.elements.find((entry) => isStringLiteral(entry));
+    const quote = written ? source.charAt(startOf(written)) : "'";
+    insertions.push(appended(source, stories, [`${quote}${glob}${quote}`]));
+  }
+
+  if (!buildsTailwind(project) && !source.includes(TAILWIND_VITE)) {
+    devPackages[TAILWIND_VITE] = tailwind;
+    if (main && !hasMember(main, 'viteFinal')) {
+      imports.push(`import tailwindcss from '${TAILWIND_VITE}';`);
+      insertions.push(
+        appended(source, main, [
+          'viteFinal: (config) => ({ ...config, plugins: [...(config.plugins ?? []), tailwindcss()] })',
+        ])
+      );
+    } else {
+      manual.push({
+        file: target,
+        step: `Add tailwindcss() from '${TAILWIND_VITE}' to the plugins in viteFinal, so Storybook builds the nxds CSS.`,
+      });
+    }
+  }
+
+  if (!program || insertions.length === 0) {
+    return { changes: [], manual, devPackages };
+  }
+  if (imports.length > 0) {
+    insertions.push(importInsertion(source, program, imports));
   }
   return {
     changes: [
       {
-        path: file,
-        content: applyInsertions(source, [
-          appended(source, stories, [`'${glob}'`]),
-        ]),
+        path: target,
+        content: applyInsertions(source, insertions),
         created: false,
       },
     ],
-    manual: [],
+    manual,
+    devPackages,
   };
 }
 
 /**
  * What `init --stories` writes or edits in `.storybook`: the preview takes
- * nxds's wiring, and main lists the nxds folder's stories.
+ * nxds's wiring, and main lists the nxds folder's stories and builds its CSS.
+ * `tailwind` is the Tailwind range the release installs.
  */
 export function planStorybook(
   project: Project,
   config: Config,
-  framework: string
-): WiringPlan {
-  const plans = [
-    wirePreview(project, config, framework),
-    wireStories(project, config),
-  ];
+  framework: string,
+  tailwind: string
+): MainPlan {
+  const preview = wirePreview(project, config, framework);
+  const main = wireMain(project, config, tailwind);
   return {
-    changes: plans.flatMap((plan) => plan.changes),
-    manual: plans.flatMap((plan) => plan.manual),
+    changes: [...preview.changes, ...main.changes],
+    manual: [...preview.manual, ...main.manual],
+    devPackages: main.devPackages,
   };
 }
 
 /**
- * Why the installed stories won't render as nxds's own do, or null: the
- * preview doesn't take nxds's wiring, or main doesn't list the nxds folder.
+ * Why the installed stories won't render as nxds's own do, or null: what
+ * `init --stories` would still edit, or leave as a step for you.
  */
-export function storybookWiringProblem(project: Project, config: Config) {
-  const preview = findFile(project, PREVIEW_FILES) ?? DEFAULT_PREVIEW;
-  const wired =
-    existsSync(path.join(project.root, preview)) &&
-    read(project, preview).includes('nxdsPreview');
-  if (!wired) {
-    return `${preview} doesn't use nxdsPreview, so stories render without the nxds provider. Run \`${CLI_COMMAND} init --stories\`.`;
-  }
-  const stories = wireStories(project, config);
-  const [step] = stories.manual;
+export function storybookWiringProblem(
+  project: Project,
+  config: Config,
+  framework: string,
+  tailwind: string
+) {
+  const { changes, manual } = planStorybook(
+    project,
+    config,
+    framework,
+    tailwind
+  );
+  const [step] = manual;
   if (step) return `${step.file}: ${step.step}`;
-  const [change] = stories.changes;
-  if (change) {
-    return `${change.path} doesn't list the stories in ${config.dir}. Run \`${CLI_COMMAND} init --stories\`.`;
-  }
-  return null;
+  if (changes.length === 0) return null;
+  return `${changes.map((change) => change.path).join(' and ')} ${changes.length === 1 ? 'is' : 'are'} not wired for nxds's stories. Run \`${CLI_COMMAND} init --stories\`.`;
 }

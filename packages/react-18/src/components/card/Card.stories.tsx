@@ -39,7 +39,7 @@ type Story = StoryObj<typeof Card>;
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <Card className="nx:w-[350px]">
       <CardHeader>
         <CardTitle>Card Title</CardTitle>
@@ -57,7 +57,7 @@ export const Default: Story = {
 };
 
 export const TitleAsHeading: Story = {
-  render: (_args) => (
+  render: () => (
     <section aria-labelledby="card-section-heading">
       <Card className="nx:w-[350px]">
         <CardHeader>
@@ -95,7 +95,7 @@ export const WithAction: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Card className="nx:w-[350px]">
       <CardHeader>
         <CardTitle>Card with Action</CardTitle>
@@ -122,7 +122,7 @@ export const WithFooter: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Card className="nx:w-[350px]">
       <CardHeader>
         <CardTitle>Card with Footer</CardTitle>
@@ -152,7 +152,7 @@ export const ContentOnly: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Card className="nx:w-[350px]">
       <CardContent className="nx:pt-6">
         <p>A card with only content, no header or footer.</p>
@@ -162,7 +162,7 @@ export const ContentOnly: Story = {
 };
 
 export const HeaderOnly: Story = {
-  render: (_args) => (
+  render: () => (
     <Card className="nx:w-[350px]">
       <CardHeader>
         <CardTitle>Header Only Card</CardTitle>
@@ -175,7 +175,7 @@ export const HeaderOnly: Story = {
 };
 
 export const LongContent: Story = {
-  render: (_args) => (
+  render: () => (
     <Card className="nx:w-[400px]">
       <CardHeader>
         <CardTitle>Article Title</CardTitle>
@@ -201,7 +201,7 @@ export const LongContent: Story = {
 };
 
 export const MediaCard: Story = {
-  render: (_args) => (
+  render: () => (
     <Card className="nx:w-[350px]">
       <div aria-hidden="true" className="nx:aspect-video nx:bg-muted nx:p-6">
         <div className="nx:size-full nx:rounded-lg nx:border-default nx:border-border-default nx:bg-container" />
@@ -281,7 +281,7 @@ export const LoginCard: Story = {
 };
 
 export const BorderedFooter: Story = {
-  render: (_args) => (
+  render: () => (
     <Card className="nx:w-[350px]">
       <CardHeader>
         <CardTitle>Plan Usage</CardTitle>
@@ -308,7 +308,7 @@ export const BorderedFooter: Story = {
 };
 
 export const StatsCard: Story = {
-  render: (_args) => (
+  render: () => (
     <Card className="nx:w-[200px]">
       <CardHeader className="nx:pb-2">
         <CardDescription>Total Revenue</CardDescription>
@@ -330,7 +330,7 @@ export const StatsCard: Story = {
 // ============================================
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <Card className="nx:w-[350px]">
       <CardHeader>
         <CardTitle>Data Attributes Test</CardTitle>
@@ -383,7 +383,7 @@ export const WithDataAttributes: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:mb-4 nx:typography-label-default nx:text-foreground">

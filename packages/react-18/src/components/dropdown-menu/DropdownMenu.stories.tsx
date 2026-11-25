@@ -44,7 +44,7 @@ type Story = StoryObj<typeof DropdownMenu>;
 
 export const WithLabelsAndSeparators: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">My Account</Button>
@@ -264,7 +264,7 @@ export const WithSubMenu: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">Open Menu</Button>
@@ -300,7 +300,7 @@ export const WithSubMenu: Story = {
 };
 
 export const WithDestructiveItem: Story = {
-  render: (_args) => (
+  render: () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">Actions</Button>
@@ -316,7 +316,7 @@ export const WithDestructiveItem: Story = {
 };
 
 export const WithDisabledItems: Story = {
-  render: (_args) => (
+  render: () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">Edit</Button>
@@ -369,7 +369,7 @@ export const WithDisabledItems: Story = {
 };
 
 export const WithInsetItems: Story = {
-  render: (_args) => (
+  render: () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">Open Menu</Button>
@@ -390,7 +390,7 @@ export const WithInsetItems: Story = {
 // ============================================
 
 export const OpenCloseInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">Open Menu</Button>
@@ -433,7 +433,7 @@ export const OpenCloseInteraction: Story = {
 };
 
 export const KeyboardInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">Open Menu</Button>
@@ -474,7 +474,7 @@ export const KeyboardInteraction: Story = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">Open Menu</Button>
@@ -542,7 +542,7 @@ export const WithDataAttributes: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

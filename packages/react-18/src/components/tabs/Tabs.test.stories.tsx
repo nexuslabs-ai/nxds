@@ -110,7 +110,7 @@ export const DisabledTabInteractionGeometry: Story = {
 };
 
 export const VerticalIndicatorFollowsActiveTab: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:gap-8">
       <Tabs
         defaultValue="account"

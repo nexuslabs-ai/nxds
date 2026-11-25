@@ -41,7 +41,7 @@ type Story = StoryObj<typeof AlertDialog>;
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="outline">Show dialog</Button>
@@ -72,7 +72,7 @@ export const Destructive: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="destructive">Delete account</Button>
@@ -112,7 +112,7 @@ export const Destructive: Story = {
 };
 
 export const ViewportBoundContent: Story = {
-  render: (_args) => (
+  render: () => (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="destructive">Show viewport alert</Button>
@@ -183,7 +183,7 @@ export const Centered: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="destructive">Show centered dialog</Button>
@@ -233,7 +233,7 @@ export const Centered: Story = {
 // ============================================
 
 export const FocusManagement: Story = {
-  render: (_args) => (
+  render: () => (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="outline">Show focus dialog</Button>
@@ -330,7 +330,7 @@ export const OverlayDoesNotDismiss: Story = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="outline">Show dialog</Button>
@@ -419,7 +419,7 @@ export const WithDataAttributes: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

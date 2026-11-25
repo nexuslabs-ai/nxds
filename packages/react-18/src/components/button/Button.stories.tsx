@@ -303,7 +303,7 @@ export const Loading: Story = {
 };
 
 export const LoadingWithVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-wrap nx:items-center nx:gap-2">
       <Button loading variant="default">
         Default
@@ -533,7 +533,7 @@ export const AllVariants: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-6">
       <div>
         <h3 className="nx:text-foreground nx:mb-2 nx:typography-label-default">

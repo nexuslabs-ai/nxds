@@ -36,7 +36,7 @@ type Story = StoryObj<typeof Popover>;
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline">Open popover</Button>
@@ -111,7 +111,7 @@ export const Placements: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-wrap nx:gap-4">
       {(['top', 'right', 'bottom', 'left'] as const).map((side) => (
         <Popover key={side}>
@@ -147,7 +147,7 @@ export const WithAnchor: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Popover>
       <PopoverAnchor asChild>
         <div className="nx:rounded-md nx:border-default nx:border-border-default nx:bg-muted nx:p-container nx:typography-label-default nx:text-muted-foreground">
@@ -173,7 +173,7 @@ export const WithAnchor: Story = {
 // ============================================
 
 export const OpenCloseInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline">Open popover</Button>
@@ -236,7 +236,7 @@ export const OutsideClickInteraction: StoryObj<typeof PopoverContent> = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline">Open popover</Button>
@@ -272,7 +272,7 @@ export const WithDataAttributes: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

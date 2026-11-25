@@ -36,7 +36,7 @@ type Story = StoryObj<typeof Select>;
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <Select>
       <SelectTrigger className="nx:w-[180px]" aria-label="Select a fruit">
         <SelectValue placeholder="Select a fruit" />
@@ -62,7 +62,7 @@ export const WithDefaultValue: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Select defaultValue="banana">
       <SelectTrigger className="nx:w-[180px]" aria-label="Select a fruit">
         <SelectValue placeholder="Select a fruit" />
@@ -117,7 +117,7 @@ export const WithDisabledItems: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Select>
       <SelectTrigger className="nx:w-[180px]" aria-label="Select an option">
         <SelectValue placeholder="Select option" />
@@ -212,7 +212,7 @@ export const WithGroups: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Select>
       <SelectTrigger className="nx:w-[200px]" aria-label="Select a food">
         <SelectValue placeholder="Select a food" />
@@ -252,7 +252,7 @@ export const Sizes: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:w-[420px] nx:flex-col nx:gap-3">
       {SIZES.map((size) => (
         <div key={size} className="nx:flex nx:items-center nx:gap-3">
@@ -281,7 +281,7 @@ export const Sizes: Story = {
 };
 
 export const FullWidth: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:w-[300px]">
       <Select>
         <SelectTrigger className="nx:w-full" aria-label="Select a country">
@@ -304,7 +304,7 @@ export const FullWidth: Story = {
 // ============================================
 
 export const Scrollable: Story = {
-  render: (_args) => (
+  render: () => (
     <Select>
       <SelectTrigger className="nx:w-[200px]" aria-label="Select a timezone">
         <SelectValue placeholder="Select timezone" />
@@ -345,7 +345,7 @@ export const Scrollable: Story = {
 // ============================================
 
 export const OpenCloseInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Select>
       <SelectTrigger className="nx:w-[180px]" aria-label="Select a fruit">
         <SelectValue placeholder="Select a fruit" />
@@ -392,7 +392,7 @@ export const OpenCloseInteraction: Story = {
 };
 
 export const SelectItemInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Select>
       <SelectTrigger className="nx:w-[180px]" aria-label="Select a fruit">
         <SelectValue placeholder="Select a fruit" />
@@ -431,7 +431,7 @@ export const SelectItemInteraction: Story = {
 };
 
 export const KeyboardInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Select>
       <SelectTrigger className="nx:w-[180px]" aria-label="Select a fruit">
         <SelectValue placeholder="Select a fruit" />
@@ -471,7 +471,7 @@ export const KeyboardInteraction: Story = {
 };
 
 export const DisabledInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Select disabled>
       <SelectTrigger className="nx:w-[180px]" aria-label="Disabled select">
         <SelectValue placeholder="Disabled" />
@@ -497,7 +497,7 @@ export const DisabledInteraction: Story = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <Select>
       <SelectTrigger className="nx:w-[180px]" aria-label="Select a fruit">
         <SelectValue placeholder="Select a fruit" />
@@ -546,7 +546,7 @@ export const WithDataAttributes: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

@@ -449,8 +449,9 @@ jobs:
   # ============================================
   # CLI install check
   # ============================================
-  # Installs nxds with the built CLI into a fresh app, pastes every docs
-  # example, then runs the app's own typecheck, lint, build and `doctor`.
+  # Installs nxds and its stories with the built CLI into a fresh app that has
+  # Storybook, pastes every docs example, then runs the app's own typecheck,
+  # lint and build, its Storybook build, every story as a test, and `doctor`.
 
   cli-install:
     name: CLI Install (${{ matrix.app }})

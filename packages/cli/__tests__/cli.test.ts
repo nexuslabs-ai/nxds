@@ -1693,10 +1693,20 @@ function addStorybook(
   writeApp(app, STORYBOOK_PREVIEW, PREVIEW_SOURCE);
 }
 
-/** A Next.js app with Storybook, and a registry whose releases have stories. */
+const POSTCSS_CONFIG = 'postcss.config.mjs';
+
+/**
+ * A Next.js app with Storybook, whose PostCSS config runs Tailwind, and a
+ * registry whose releases have stories.
+ */
 function setupStories(releases: Catalog[] = [storiesRelease('0.4.7')]) {
   const context = setup(releases);
   addStorybook(context.app);
+  writeApp(
+    context.app,
+    POSTCSS_CONFIG,
+    "export default { plugins: { '@tailwindcss/postcss': {} } };\n"
+  );
   return context;
 }
 
@@ -1728,7 +1738,7 @@ describe('stories', () => {
       expect(preview).toContain(line);
     }
     expect(readApp(context.app, STORYBOOK_MAIN)).toContain(
-      "'../components/nxds/**/*.stories.tsx'"
+      '"../components/nxds/**/*.stories.tsx"'
     );
   });
 
@@ -1945,6 +1955,43 @@ export default sharedPreview;
     expect(readApp(context.app, STORYBOOK_MAIN)).toBe(main);
   });
 
+  it("adds Tailwind to Storybook's build when the app's own build keeps it out of sight", async () => {
+    const context = setupStories();
+    // As Next.js sets Tailwind up for Turbopack: no PostCSS config.
+    rmSync(path.join(context.app, POSTCSS_CONFIG));
+
+    const { exitCode, body } = await cliJson(['init', '--stories'], context);
+
+    expect(exitCode, JSON.stringify(body)).toBe(EXIT_CODES.ok);
+    const main = readApp(context.app, STORYBOOK_MAIN);
+    expect(main).toContain("import tailwindcss from '@tailwindcss/vite'");
+    expect(main).toContain(
+      'viteFinal: (config) => ({ ...config, plugins: [...(config.plugins ?? []), tailwindcss()] })'
+    );
+    expect(body.data.packages.join(' ')).toContain('@tailwindcss/vite@');
+  });
+
+  it('leaves a main that sets its own viteFinal as a step for you', async () => {
+    const context = setupStories();
+    rmSync(path.join(context.app, POSTCSS_CONFIG));
+    const main = MAIN_SOURCE.replace(
+      '"framework"',
+      'viteFinal: (config) => config,\n  "framework"'
+    );
+    writeApp(context.app, STORYBOOK_MAIN, main);
+
+    const { exitCode, body } = await cliJson(['init', '--stories'], context);
+
+    expect(exitCode).toBe(EXIT_CODES.attention);
+    expect(readApp(context.app, STORYBOOK_MAIN)).not.toContain('tailwindcss');
+    expect(body.data.manual).toContainEqual(
+      expect.objectContaining({
+        file: STORYBOOK_MAIN,
+        step: expect.stringContaining('@tailwindcss/vite'),
+      })
+    );
+  });
+
   it.each([
     ['an app without Storybook', {}, /npx storybook@latest init/],
     [
@@ -1996,7 +2043,7 @@ export default sharedPreview;
 
     expect(await storiesCheck()).toMatchObject({
       ok: false,
-      message: expect.stringContaining('nxdsPreview'),
+      message: expect.stringContaining(STORYBOOK_PREVIEW),
     });
   });
 

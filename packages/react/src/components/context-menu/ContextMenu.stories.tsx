@@ -45,7 +45,7 @@ type Story = StoryObj<typeof ContextMenu>;
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <ContextMenu>
       <ContextMenuTrigger className={triggerClass}>
         Right click here
@@ -69,7 +69,7 @@ export const WithLabelsAndSeparators: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <ContextMenu>
       <ContextMenuTrigger className={triggerClass}>
         Right click here
@@ -175,7 +175,7 @@ export const WithRadioItems: Story = {
 };
 
 export const IndicatorCrossFade: Story = {
-  render: (_args) => (
+  render: () => (
     <ContextMenu>
       <ContextMenuTrigger className={triggerClass}>
         Indicator Motion
@@ -276,7 +276,7 @@ export const WithSubMenu: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <ContextMenu>
       <ContextMenuTrigger className={triggerClass}>
         Right click here
@@ -321,7 +321,7 @@ export const WithDestructiveItem: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <ContextMenu>
       <ContextMenuTrigger className={triggerClass}>
         Right click here
@@ -337,7 +337,7 @@ export const WithDestructiveItem: Story = {
 };
 
 export const WithInsetItems: Story = {
-  render: (_args) => (
+  render: () => (
     <ContextMenu>
       <ContextMenuTrigger className={triggerClass}>
         Right click here
@@ -358,7 +358,7 @@ export const WithInsetItems: Story = {
 // ============================================
 
 export const OpenCloseInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <ContextMenu>
       <ContextMenuTrigger className={triggerClass}>
         Right click here
@@ -400,7 +400,7 @@ export const OpenCloseInteraction: Story = {
 };
 
 export const KeyboardInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <ContextMenu>
       <ContextMenuTrigger className={triggerClass}>
         Right click here
@@ -441,7 +441,7 @@ export const KeyboardInteraction: Story = {
 };
 
 export const WithDisabledItems: Story = {
-  render: (_args) => (
+  render: () => (
     <ContextMenu>
       <ContextMenuTrigger className={triggerClass}>
         Right click here
@@ -484,7 +484,7 @@ export const WithDisabledItems: Story = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <ContextMenu>
       <ContextMenuTrigger className={triggerClass}>
         Right click here
@@ -552,7 +552,7 @@ export const WithDataAttributes: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

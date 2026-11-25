@@ -481,7 +481,7 @@ export const LongContent: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:grid nx:gap-8 nx:lg:grid-cols-2">
       <div>
         <h3 className="nx:mb-4 nx:typography-label-default nx:text-foreground">

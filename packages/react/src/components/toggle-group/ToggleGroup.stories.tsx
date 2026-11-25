@@ -211,9 +211,7 @@ export const KeyboardContract: Story = {
   ),
   play: async ({ canvasElement }) => {
     for (const config of NAVIGATION) {
-      const group = within(canvasElement).getByRole('group', {
-        name: config.name,
-      });
+      const group = within(canvasElement).getByLabelText(config.name);
       const left = within(group).getByRole('radio', { name: 'Left' });
       const center = within(group).getByRole('radio', { name: 'Center' });
       const right = within(group).getByRole('radio', { name: 'Right' });
@@ -278,7 +276,7 @@ export const WithoutRovingFocus: Story = {
   ),
   play: async ({ canvasElement }) => {
     const items = within(canvasElement).getAllByRole('button');
-    const group = within(canvasElement).getByRole('group');
+    const group = canvasElement.querySelector('[data-slot="toggle-group"]');
     await expect(group).toHaveAttribute('data-orientation', 'vertical');
     for (const item of items) {
       await userEvent.tab();
@@ -394,7 +392,7 @@ export const InvalidOwnership: Story = {
     const normal = canvas.getByRole('button', { name: 'Bold' });
     await expect(normal).not.toHaveAttribute('aria-invalid');
     for (const item of within(
-      canvas.getByRole('group', { name: 'Item errors' })
+      canvas.getByLabelText('Item errors')
     ).getAllByRole('button')) {
       await expect(item).toHaveAccessibleDescription(
         'Choose supported formatting.'
@@ -425,9 +423,7 @@ export const EmptyAndSingle: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(
-      within(
-        canvas.getByRole('group', { name: 'Empty formatting' })
-      ).queryAllByRole('button')
+      within(canvas.getByLabelText('Empty formatting')).queryAllByRole('button')
     ).toHaveLength(0);
     const item = canvas.getByRole('button', { name: 'Single composed bold' });
     await userEvent.click(item);
@@ -668,9 +664,7 @@ export const OutlinePrimarySizes: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     for (const size of SIZES) {
-      const primary = canvas.getByRole('group', {
-        name: `outline-primary ${size}`,
-      });
+      const primary = canvas.getByLabelText(`outline-primary ${size}`);
       for (const item of within(primary).getAllByRole('button')) {
         await expect(item).toHaveAttribute('data-size', size);
         await expect(item).toHaveAttribute('data-variant', 'outline-primary');

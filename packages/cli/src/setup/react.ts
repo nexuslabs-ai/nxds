@@ -658,7 +658,7 @@ const POSTCSS_CONFIG = `export default {
 };
 `;
 
-const POSTCSS_CONFIGS = [
+export const POSTCSS_CONFIGS = [
   'postcss.config.mjs',
   'postcss.config.js',
   'postcss.config.cjs',
