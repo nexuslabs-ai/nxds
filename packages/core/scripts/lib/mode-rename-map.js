@@ -17,11 +17,6 @@ export const MODE_RENAME = {
     vega: 'flat',
     lyra: 'soft',
   },
-  radius: {
-    sharp: 'square',
-    mellow: 'round',
-    blunt: 'extra-round',
-  },
   borderwidth: {
     maia: 'fine',
     vega: 'normal',
@@ -32,6 +27,21 @@ export const MODE_RENAME = {
   },
 };
 
+// Radius modes are named by their pixel value; every earlier name is retired.
+export const RETIRED_RADIUS_MODES = [
+  'sharp',
+  'mellow',
+  'blunt',
+  'square',
+  'subtle',
+  'smooth',
+  'round',
+  'extra-round',
+];
+
 export const RETIRED_CODENAMES = [
-  ...new Set(Object.values(MODE_RENAME).flatMap((map) => Object.keys(map))),
+  ...new Set([
+    ...Object.values(MODE_RENAME).flatMap((map) => Object.keys(map)),
+    ...RETIRED_RADIUS_MODES,
+  ]),
 ].sort();

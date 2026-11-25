@@ -1,6 +1,8 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { CORNER_MODES } from '../../src/token-source/radius.ts';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const TOKENS_DIR = path.resolve(__dirname, '..', '..', 'tokens');
@@ -20,13 +22,7 @@ export const CANONICAL_MODES = [
   'spacious',
   'tight',
 ];
-export const CANONICAL_RADIUS_MODES = [
-  'extra-round',
-  'round',
-  'smooth',
-  'square',
-  'subtle',
-];
+export const CANONICAL_RADIUS_MODES = [...CORNER_MODES];
 export const CANONICAL_BORDERWIDTH_MODES = ['fine', 'normal', 'strong'];
 export const CANONICAL_SHADOW_MODES = [
   'flat',
@@ -54,7 +50,7 @@ export function tokenModeFamilies({
     {
       family: 'radius',
       dir: path.join(primitivesDir, 'radius'),
-      modePattern: /^radius-([a-z]+(?:-[a-z]+)*)\.json$/,
+      modePattern: /^radius-(\d+)\.json$/,
     },
     {
       family: 'borderwidth',
@@ -89,9 +85,9 @@ export function keyParityModeFamilyConfigs({
       name: 'radius',
       reportName: 'radius',
       dir: path.join(primitivesDir, 'radius'),
-      baseline: 'square',
+      baseline: '0',
       expectedModes: CANONICAL_RADIUS_MODES,
-      modePattern: /^radius-([a-z]+(?:-[a-z]+)*)\.json$/,
+      modePattern: /^radius-(\d+)\.json$/,
       fileName: (mode) => `radius-${mode}.json`,
     },
     {

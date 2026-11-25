@@ -848,7 +848,7 @@ describe('nxds-cli export claude-design', () => {
  * rejects a corners value nxds doesn't take with core's message, and writes
  * the theme into each file it renders, so a test can read back what it got.
  */
-const THEME_JS = `const CORNERS = ['square', 'subtle', 'round'];
+const THEME_JS = `const CORNERS = ['0', '4', '12'];
 function check(theme) {
   const corners = theme.corners;
   if (corners !== undefined && !CORNERS.includes(corners)) {
@@ -899,7 +899,7 @@ const EVERY_FLAG: Record<string, string> = {
   'surface-tone': 'stone',
   'ui-scale': 'large',
   density: 'compact',
-  corners: 'round',
+  corners: '12',
   elevation: 'strong',
   stroke: 'strong',
   'light-contrast': '70',
@@ -967,13 +967,13 @@ describe('nxds-cli export claude-design with theme flags', () => {
         '--brand-color',
         'oklch(0.6 0.2 20)',
         '--corners',
-        'round',
+        '12',
       ],
       cwd
     );
 
     expect(stdout).toContain(
-      "Themed with --brand-color 'oklch(0.6 0.2 20)' --corners round."
+      "Themed with --brand-color 'oklch(0.6 0.2 20)' --corners 12."
     );
   });
 
@@ -1002,16 +1002,14 @@ describe('nxds-cli export claude-design with theme flags', () => {
     );
 
     expect(exitCode).toBe(EXIT_CODES.usage);
-    expect(body.error).toBe(
-      '--corners "bevel" isn\'t one of square, subtle, round.'
-    );
+    expect(body.error).toBe('--corners "bevel" isn\'t one of 0, 4, 12.');
     expect(existsSync(path.join(cwd, 'nxds-design-system'))).toBe(false);
   });
 
   it('refuses theme flags on a release from before themes', async () => {
     const { source, cwd } = setup();
     const { exitCode, body } = await cliJson(
-      ['export', 'claude-design', '--source', source, '--corners', 'round'],
+      ['export', 'claude-design', '--source', source, '--corners', '12'],
       cwd
     );
 
@@ -1027,7 +1025,7 @@ describe('nxds-cli export claude-design with theme flags', () => {
       path.join(cwd, 'current.json'),
       JSON.stringify({
         ...buildSystemIndex({ version: VERSION, at: '2026-10-01T08:00:00Z' }),
-        theme: { corners: 'round' },
+        theme: { corners: '12' },
       })
     );
     const { exitCode, body } = await cliJson(
@@ -1061,7 +1059,7 @@ describe('nxds-cli export claude-design with theme flags', () => {
 
   it('keeps the theme on an update, and changes only the flags passed', async () => {
     const { source, cwd } = themedSetup();
-    const theme = { 'brand-color': '#e11d48', corners: 'round' };
+    const theme = { 'brand-color': '#e11d48', corners: '12' };
     await cli(
       ['export', 'claude-design', '--source', source, ...flagArgs(theme)],
       cwd
@@ -1091,10 +1089,10 @@ describe('nxds-cli export claude-design with theme flags', () => {
     );
 
     saveIndex(cwd);
-    await update('--corners', 'square');
+    await update('--corners', '0');
     expect(readIndex(cwd)['theme']).toEqual({
       'brand-color': '#e11d48',
-      corners: 'square',
+      corners: '0',
     });
 
     saveIndex(cwd);
@@ -1106,7 +1104,7 @@ describe('nxds-cli export claude-design with theme flags', () => {
   it('goes back to the default system when every flag is reset', async () => {
     const { source, cwd } = themedSetup();
     await cli(
-      ['export', 'claude-design', '--source', source, '--corners', 'round'],
+      ['export', 'claude-design', '--source', source, '--corners', '12'],
       cwd
     );
     saveIndex(cwd);
@@ -1190,8 +1188,8 @@ describe('nxds-cli export claude-design with theme flags', () => {
 
   it.each([
     ['null', null],
-    ['a list', ['corners', 'round']],
-    ['a string', 'round'],
+    ['a list', ['corners', '12']],
+    ['a string', '12'],
     ['a number value', { 'light-contrast': 70 }],
   ])('refuses a stored theme that is %s', async (_, theme) => {
     const { source, cwd } = themedSetup();
@@ -1239,7 +1237,7 @@ describe('nxds-cli export claude-design with theme flags', () => {
     [
       "a value the release doesn't take",
       { corners: 'bevel' },
-      'current.json theme: --corners "bevel" isn\'t one of square, subtle, round. Pass --corners <value> to change it, or --corners= to reset it.',
+      'current.json theme: --corners "bevel" isn\'t one of 0, 4, 12. Pass --corners <value> to change it, or --corners= to reset it.',
     ],
   ])('refuses a stored theme with %s', async (_, theme, message) => {
     const { source, cwd } = themedSetup();
@@ -1279,7 +1277,7 @@ describe('nxds-cli export claude-design with theme flags', () => {
         source,
         '--overwrite',
         '--corners',
-        'round',
+        '12',
       ],
       cwd
     );
@@ -1294,7 +1292,7 @@ describe('nxds-cli export claude-design with theme flags', () => {
       'export default { api: 2, flags: [], render() {} };\n'
     );
     const { exitCode, body } = await cliJson(
-      ['export', 'claude-design', '--source', source, '--corners', 'round'],
+      ['export', 'claude-design', '--source', source, '--corners', '12'],
       cwd
     );
 
@@ -1312,12 +1310,12 @@ describe('nxds-cli export claude-design with theme flags', () => {
         '--npm-registry',
         registry,
         '--corners',
-        'round',
+        '12',
       ],
       cwd
     );
 
     expect(exitCode).toBe(EXIT_CODES.ok);
-    expect(readIndex(cwd)['theme']).toEqual({ corners: 'round' });
+    expect(readIndex(cwd)['theme']).toEqual({ corners: '12' });
   });
 });

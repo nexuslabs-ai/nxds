@@ -34,13 +34,13 @@ type Story = StoryObj<typeof meta>;
 
 export const ScopeAndPrecedence: Story = {
   render: () => (
-    <div data-radius="round" className="nx:grid nx:gap-4">
+    <div data-radius="12" className="nx:grid nx:gap-4">
       <div style={pillRadius} className="nx:grid nx:gap-4">
         <Button variant="outline">Pill button</Button>
-        <Input aria-label="Unchanged input" placeholder="Still round" />
+        <Input aria-label="Unchanged input" placeholder="Still 12px" />
         <Select>
           <SelectTrigger aria-label="Unchanged select">
-            <SelectValue placeholder="Still round" />
+            <SelectValue placeholder="Still 12px" />
           </SelectTrigger>
         </Select>
         <div>
@@ -49,12 +49,12 @@ export const ScopeAndPrecedence: Story = {
         <div style={nestedRadius}>
           <Button variant="outline">Nested override</Button>
         </div>
-        <div data-radius="smooth">
+        <div data-radius="8">
           <Button variant="outline">Nested preset</Button>
         </div>
-        <div data-radius="round" style={pillRadius}>
+        <div data-radius="12" style={pillRadius}>
           <Button variant="outline">Inline beats preset</Button>
-          <Input aria-label="Preset medium" placeholder="Still round" />
+          <Input aria-label="Preset medium" placeholder="Still 12px" />
         </div>
         <Button variant="outline" asChild>
           <a href="#radius-example">Composed pill link</a>

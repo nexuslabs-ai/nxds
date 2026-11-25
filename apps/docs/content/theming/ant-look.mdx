@@ -58,13 +58,14 @@ only the preview on this page. Your app sets them on `:root` and `.dark`.
 
 ## Set Ant's corners
 
-Ant rounds a control by 6px and a container by 8px. No `corners` value gives
-6px, so redefine `subtle` in the colors file:
+Ant rounds a control by 6px and a container by 8px. The `6` corner mode comes
+close, but its `sm` step is 5px, where Ant uses 4px. So redefine the default
+mode, `4`, in the colors file:
 
 ```css
 /* app/nxds-colors.css */
 @layer theme {
-  [data-radius='subtle'] {
+  [data-radius='4'] {
     --nx-radius-sm: 4px;
     --nx-radius-base: 6px;
     --nx-radius-md: 6px;

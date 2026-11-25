@@ -1,3 +1,4 @@
+import { CORNER_MODES, type CornerMode } from '../token-source/radius';
 import {
   MIN_TEXT_PX,
   scaleText,
@@ -28,12 +29,8 @@ export type NxdsDensity =
   | 'comfortable'
   | 'relaxed'
   | 'spacious';
-export type NxdsCorners =
-  | 'square'
-  | 'subtle'
-  | 'smooth'
-  | 'round'
-  | 'extra-round';
+/** The corner mode, named by its `md` radius in px at the Default UI scale. */
+export type NxdsCorners = CornerMode;
 export type NxdsElevation = 'flat' | 'quiet' | 'soft' | 'standard' | 'strong';
 export type NxdsStroke = 'fine' | 'normal' | 'strong';
 
@@ -128,13 +125,10 @@ export const DENSITY_OPTIONS = [
   { value: 'spacious', label: 'Spacious' },
 ] as const satisfies readonly { value: NxdsDensity; label: string }[];
 
-export const CORNER_OPTIONS = [
-  { value: 'square', label: 'Square' },
-  { value: 'subtle', label: 'Subtle' },
-  { value: 'smooth', label: 'Smooth' },
-  { value: 'round', label: 'Round' },
-  { value: 'extra-round', label: 'Extra Round' },
-] as const satisfies readonly { value: NxdsCorners; label: string }[];
+export const CORNER_OPTIONS: readonly {
+  readonly value: NxdsCorners;
+  readonly label: string;
+}[] = CORNER_MODES.map((value) => ({ value, label: `${value}px` }));
 
 export const ELEVATION_OPTIONS = [
   { value: 'flat', label: 'Flat' },
@@ -159,7 +153,7 @@ export const DEFAULT_NXDS_APPEARANCE: NxdsAppearanceState = {
   uiScale: 'default',
   textSize: 14,
   density: 'default',
-  corners: 'subtle',
+  corners: '4',
   elevation: 'quiet',
   stroke: 'normal',
   prefs: {
@@ -192,9 +186,7 @@ const TEXT_SIZE_VALUES = new Set<NxdsTextSize>(TEXT_SIZES);
 const DENSITIES = new Set<NxdsDensity>(
   DENSITY_OPTIONS.map((option) => option.value)
 );
-const CORNERS = new Set<NxdsCorners>(
-  CORNER_OPTIONS.map((option) => option.value)
-);
+const CORNERS = new Set<NxdsCorners>(CORNER_MODES);
 const ELEVATIONS = new Set<NxdsElevation>(
   ELEVATION_OPTIONS.map((option) => option.value)
 );
@@ -235,16 +227,15 @@ const clampFontSize = (value: unknown, fallback: number): number =>
 // Retired public-mode codename -> friendly, applied to persisted state on read
 // (see normalizeAppearanceModeIds). Internal; correctness is covered behaviorally
 // by the sanitize codename->friendly tests, so it is not part of the public API.
-const PUBLIC_MODE_RENAME: Record<NxdsPresetField, Record<string, string>> = {
+const PUBLIC_MODE_RENAME: Record<
+  Exclude<NxdsPresetField, 'corners'>,
+  Record<string, string>
+> = {
   density: {
     nova: 'compact',
     mira: 'default',
     luma: 'comfortable',
     sera: 'spacious',
-  },
-  corners: {
-    sharp: 'square',
-    mellow: 'round',
   },
   elevation: {
     maia: 'quiet',

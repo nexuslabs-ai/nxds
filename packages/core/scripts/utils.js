@@ -640,7 +640,9 @@ export function generateSpacingModesCSS(modesByName, opts = {}) {
     }
   }
 
-  const otherModes = allModes.filter((m) => m !== defaultMode).sort();
+  const otherModes = allModes
+    .filter((m) => m !== defaultMode)
+    .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
 
   let css = `\n/* ===== PER-MODE ${commentLabel} (mode swap via [${attrName}="X"] on any ancestor) ===== */\n`;
 
@@ -1030,7 +1032,7 @@ export function collectShadowModes(tokensDir) {
  * Returns array of { cssName, varRef } for @theme block
  *
  * @param {string} tokensDir - Path to tokens directory
- * @param {string} mode - Radius mode (e.g., 'subtle')
+ * @param {string} mode - Radius mode (e.g., '4')
  * @returns {object[]} Array of { cssName, varRef }
  */
 export function collectRadiusTokens(tokensDir, mode) {

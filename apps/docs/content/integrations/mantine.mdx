@@ -242,21 +242,21 @@ export const defaultAppearance = {
   ...DEFAULT_NXDS_APPEARANCE,
   brandColor: '#228be6',
   surfaceTone: 'gray',
-  corners: 'smooth',
+  corners: '8',
 } satisfies NxdsAppearanceState;
 ```
 
-| Mantine theme                  | Appearance field | How to match                                                                                             |
-| ------------------------------ | ---------------- | -------------------------------------------------------------------------------------------------------- |
-| `primaryColor`, `primaryShade` | `brandColor`     | Use the light shade, `colors[primaryColor][6]` by default. Mantine's blue is `#228be6`                   |
-| `colors.gray`                  | `surfaceTone`    | `gray` is closest to Mantine's gray                                                                      |
-| `defaultRadius`                | `corners`        | `xs` and `sm` are `subtle`, `md` is `smooth`, `lg` and `xl` are `extra-round`. Mantine's default is `md` |
-| `spacing`, `scale`             | `density`        | Compare in the [Playground](/playground)                                                                 |
-| `shadows`                      | `elevation`      | Compare in the [Playground](/playground). `flat` turns shadows off                                       |
-| None                           | `stroke`         | Mantine has no border width setting, so keep `normal`                                                    |
-| `fontFamily`                   | `prefs.uiFont`   | Pass the same font stack                                                                                 |
-| `fontSizes.md`                 | `textSize`       | Mantine's default is 16px and nxds's is 14px. Set `16` for 16px text with the same spacing               |
-| The color scheme               | `mode`           | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows                           |
+| Mantine theme                  | Appearance field | How to match                                                                               |
+| ------------------------------ | ---------------- | ------------------------------------------------------------------------------------------ |
+| `primaryColor`, `primaryShade` | `brandColor`     | Use the light shade, `colors[primaryColor][6]` by default. Mantine's blue is `#228be6`     |
+| `colors.gray`                  | `surfaceTone`    | `gray` is closest to Mantine's gray                                                        |
+| `defaultRadius`                | `corners`        | `xs` is `2`, `sm` is `4`, `md` is `8`, `lg` and `xl` are `16`. Mantine's default is `md`   |
+| `spacing`, `scale`             | `density`        | Compare in the [Playground](/playground)                                                   |
+| `shadows`                      | `elevation`      | Compare in the [Playground](/playground). `flat` turns shadows off                         |
+| None                           | `stroke`         | Mantine has no border width setting, so keep `normal`                                      |
+| `fontFamily`                   | `prefs.uiFont`   | Pass the same font stack                                                                   |
+| `fontSizes.md`                 | `textSize`       | Mantine's default is 16px and nxds's is 14px. Set `16` for 16px text with the same spacing |
+| The color scheme               | `mode`           | nxds owns it, as [Share light and dark mode](#share-light-and-dark-mode) shows             |
 
 ## Where nxds fits
 

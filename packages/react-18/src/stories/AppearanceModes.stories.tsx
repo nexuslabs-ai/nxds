@@ -116,22 +116,22 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const TightSquare: Story = {
-  globals: { density: 'tight', corners: 'square' },
+export const TightRadius0: Story = {
+  globals: { density: 'tight', corners: '0' },
 };
 
-export const SpaciousExtraRound: Story = {
-  globals: { density: 'spacious', corners: 'extra-round' },
+export const SpaciousRadius16: Story = {
+  globals: { density: 'spacious', corners: '16' },
 };
 
-export const CompactSmoothLarger: Story = {
-  globals: { density: 'compact', corners: 'smooth', uiScale: 'larger' },
+export const CompactRadius8Larger: Story = {
+  globals: { density: 'compact', corners: '8', uiScale: 'larger' },
 };
 
 export const TightSmall: Story = {
   globals: { density: 'tight', uiScale: 'small' },
 };
 
-export const RelaxedRound: Story = {
-  globals: { density: 'relaxed', corners: 'round' },
+export const RelaxedRadius12: Story = {
+  globals: { density: 'relaxed', corners: '12' },
 };
