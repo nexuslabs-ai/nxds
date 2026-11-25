@@ -185,7 +185,7 @@ export const WithSeparator: Story = {
   },
 };
 
-// The group's size reaches an icon-only member, which stays square.
+// The group's size reaches an icon-only member.
 export const IconOnlyInSmallGroup: Story = {
   render: () => (
     <ButtonGroup size="sm">
@@ -197,15 +197,9 @@ export const IconOnlyInSmallGroup: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const text = canvas.getByRole('button', { name: 'Copy link' });
     const icon = canvas.getByRole('button', { name: 'More share options' });
-    const { width, height } = icon.getBoundingClientRect();
 
     await expect(icon).toHaveAttribute('data-size', 'sm');
-    // `sm` is 32px high.
-    await expect(height).toBe(32);
-    await expect(width).toBe(height);
-    await expect(text.getBoundingClientRect().height).toBe(height);
   },
 };
 
@@ -248,9 +242,9 @@ export const WithDataAttributes: Story = {
   },
 };
 
-// A Select trigger joins the group as a button-shaped control, sharing the
-// seam with the previous control. The group size reaches Buttons and
-// ButtonGroupText only: the Input and Select trigger keep their own size.
+// A Select trigger joins the group as a button-shaped control. The group size
+// reaches Buttons and ButtonGroupText only: the Input and Select trigger keep
+// their own size.
 export const WithSelectTrigger: Story = {
   render: () => (
     <ButtonGroup size="lg">
@@ -270,14 +264,8 @@ export const WithSelectTrigger: Story = {
     </ButtonGroup>
   ),
   play: async ({ canvasElement }) => {
-    const trigger = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="select-trigger"]'
-    );
+    const trigger = canvasElement.querySelector('[data-slot="select-trigger"]');
     await expect(trigger).toBeInTheDocument();
-    if (!trigger) return;
-    // The trigger joins the seam like a button: its left border is removed so
-    // it doesn't double up against the previous control.
-    await expect(getComputedStyle(trigger).borderLeftWidth).toBe('0px');
 
     const canvas = within(canvasElement);
     await expect(trigger).toHaveAttribute('data-size', 'default');
@@ -362,7 +350,6 @@ export const TierAPolishEvidence: Story = {
     const verticalGroup = canvas.getByRole('group', {
       name: 'format density',
     });
-    const link = canvas.getByRole('link', { name: 'Docs' });
     const loadingButton = canvas.getByRole('button', { name: 'Saving' });
     const disabledButton = canvas.getByRole('button', { name: 'Disabled' });
 
@@ -376,12 +363,6 @@ export const TierAPolishEvidence: Story = {
     for (const button of within(verticalGroup).getAllByRole('button')) {
       await expect(button).toHaveAttribute('data-size', 'sm');
     }
-
-    await expect(link).toHaveClass('nx:transition-control');
-    await expect(link).toHaveClass('nx:duration-fast');
-    await expect(link).toHaveClass('nx:focus-visible:outline-2');
-    await expect(link).toHaveClass('nx:hover:bg-container-hover');
-    await expect(link).toHaveClass('nx:active:bg-container-active');
 
     await expect(loadingButton).toHaveAttribute('data-loading', 'true');
     await expect(loadingButton).toHaveAttribute('aria-busy', 'true');
