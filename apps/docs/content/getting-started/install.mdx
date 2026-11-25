@@ -88,6 +88,15 @@ from your app's nxds version. Each component page shows its `add` command.
 Copied files are yours to edit. Import them from the nxds folder, such as
 `components/nxds/components/button/button`.
 
+## (Optional) Get Storybook stories
+
+```bash
+npx nxds-cli@latest init --stories
+```
+
+`init --stories` copies each component's stories with it and wires nxds into
+your Storybook. [Storybook](/getting-started/storybook) covers it.
+
 ## Update components
 
 ```bash
@@ -147,6 +156,8 @@ and says how to fix each problem.
 | `--dry-run`              | `init`, `add`, `update`  | Shows what would change, without changing anything                        |
 | `--overwrite`            | `init`, `add`, `update`  | Replaces files that differ from nxds's copy, including files you edited   |
 | `--no-install`           | `init`, `add`, `update`  | Skips installing npm packages                                             |
+| `--stories`              | `init`                   | Copies each item's Storybook stories with it, and wires your Storybook    |
+| `--no-stories`           | `init`                   | Stops copying and tracking stories. The story files stay                  |
 | `--json`                 | Every command            | Prints `{ ok, exitCode, data }`, or `{ ok, exitCode, error }` on failure  |
 | `--cwd <path>`           | Every command            | Runs in another folder                                                    |
 | `--registry <url\|path>` | All but `info`, `export` | Gets nxds releases from another registry. `NXDS_REGISTRY_URL` sets it too |

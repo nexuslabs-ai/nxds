@@ -49,6 +49,7 @@ export const PAGE_REGISTRY = {
     pages: [
       { slug: 'introduction', label: 'Introduction' },
       { slug: 'install', label: 'Install' },
+      { slug: 'storybook', label: 'Storybook' },
       { slug: 'examples', label: 'Examples' },
       { slug: 'ai-agents', label: 'AI agents' },
       { slug: 'claude-design', label: 'Claude Design' },

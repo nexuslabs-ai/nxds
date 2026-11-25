@@ -11,6 +11,9 @@
 - A change to a React component changes its Vue port in the same PR.
 - No code is shared between the packages. Class recipes, story helpers and
   stories are copied, and the tests prove the copies agree.
+- A Vue component's stories are split as React's are: what ships in
+  `X.stories.ts`, the rest in `X.test.stories.ts`. See
+  [`testing-react.md`](testing-react.md#shipped-stories-and-test-stories).
 - A difference that must stay gets an entry in `parity/parity.ts` with a
   one-line reason. An entry that no longer matches anything fails, so delete it
   when the difference goes.

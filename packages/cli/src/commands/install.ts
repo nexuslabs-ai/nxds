@@ -344,6 +344,10 @@ export async function init(
   const iconsLabel = release.iconLibraries.find(
     (library) => library.name === config.iconLibrary
   )?.label;
+  const extras = [
+    ...(iconsLabel ? [`${iconsLabel} icons`] : []),
+    ...(config.stories ? ['stories'] : []),
+  ];
   const [createVerb, editVerb] = options.dryRun
     ? ['Would create', 'Would edit']
     : ['Created', 'Edited'];
@@ -366,7 +370,7 @@ export async function init(
       manual: wiring.manual,
     },
     lines: [
-      `nxds ${config.version} in ${config.dir}, for React ${config.react}${iconsLabel ? `, with ${iconsLabel} icons` : ''}${config.stories ? ', with stories' : ''}`,
+      `nxds ${config.version} in ${config.dir}, for React ${config.react}${extras.length > 0 ? `, with ${extras.join(' and ')}` : ''}`,
       ...installLines(config, { ...installed, packages }, options),
       ...created.map((file) => `${createVerb} ${file}`),
       ...edited.map((file) => `${editVerb} ${file}`),

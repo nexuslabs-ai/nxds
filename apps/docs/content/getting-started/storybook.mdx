@@ -1,0 +1,126 @@
+export const description =
+  'Get each nxds component with its Storybook stories. Every story tests keyboard, focus and screen-reader behaviour in your own Storybook.';
+
+# Storybook
+
+Get each component's Storybook stories with it, in a React app set up with
+`nxds-cli`. Each story tests the component's keyboard, focus and screen-reader
+behaviour, so your Storybook shows when an edit breaks one.
+
+## Turn stories on
+
+```bash
+npx nxds-cli@latest init --stories
+```
+
+`init --stories` needs Storybook 10 or later on `@storybook/react-vite` or
+`@storybook/nextjs-vite`. If your app has no Storybook, add it first with
+`npx storybook@latest init`.
+
+| Step            | What `init --stories` does                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------- |
+| Wiring file     | Copies `storybook.tsx` into your nxds folder                                                            |
+| Preview         | Adds your nxds CSS entry and the nxds wiring to `.storybook/preview`                                    |
+| Stories         | Adds your nxds folder to `stories` in `.storybook/main`, if no entry covers it                          |
+| Tailwind        | Adds `@tailwindcss/vite` to `.storybook/main`, if Storybook can't see the Tailwind your app builds with |
+| Installed items | Copies the stories of every item your app has                                                           |
+
+`init` also records `"stories": true` in `nxds.json`.
+
+## Add a component with its stories
+
+```bash
+npx nxds-cli@latest add dialog
+```
+
+`add` copies `Dialog.stories.tsx` beside `dialog.tsx`. It also installs the
+components the stories use, such as Button and Input, and any package they
+import.
+
+Each story draws its icons with your icon library. A story has no title, so
+Storybook names it from its path.
+
+## Run the stories as tests
+
+```bash
+npx vitest run --project=storybook
+```
+
+Storybook's Vitest addon runs each story in a browser. A story with a `play`
+function clicks, types and tabs through the component, then checks the result.
+
+If your Storybook has no `storybook` Vitest project, add the addon with
+`npx storybook add @storybook/addon-vitest`.
+
+## What the wiring adds
+
+`nxdsPreview` in `storybook.tsx` returns four parts of a Storybook preview:
+
+| Part                            | What it does                                                                                                    |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `decorators`                    | Renders each story inside the nxds appearance provider                                                          |
+| `globalTypes`, `initialGlobals` | Adds a toolbar for mode, brand color, surface tone, UI scale, text size, density, corners, elevation and stroke |
+| `parameters`                    | Turns off axe's two color contrast rules. nxds checks contrast with APCA, which those rules disagree with       |
+
+Stories start from `defaultAppearance` in your `appearance-state.ts`.
+
+## Wire the preview by hand
+
+If `init --stories` can't extend your preview, it lists this step. Add the
+four parts to the preview your Storybook exports:
+
+```tsx
+// .storybook/preview.tsx
+import type { Preview } from '@storybook/react-vite';
+
+import '../src/nxds.css';
+import { defaultAppearance } from '../src/appearance-state';
+import { nxdsPreview } from '../src/components/nxds/storybook';
+
+const nxds = nxdsPreview(defaultAppearance);
+
+const preview: Preview = {
+  decorators: [...nxds.decorators],
+  parameters: {
+    a11y: { options: nxds.parameters.a11y.options },
+  },
+  globalTypes: { ...nxds.globalTypes },
+  initialGlobals: { ...nxds.initialGlobals },
+};
+
+export default preview;
+```
+
+Put your own decorators before `...nxds.decorators`, so the provider wraps
+them. Keep the default export an object, because Storybook reads the preview
+file without running it.
+
+## Edit and update stories
+
+Stories are your files. `update` replaces a story you haven't edited, and
+merges the release's changes into one you have. `diff` lists the stories that
+differ from the latest release.
+
+When you change a component, change its story to match. A story that fails
+names the behaviour the change broke.
+
+## Turn stories off
+
+```bash
+npx nxds-cli@latest init --no-stories
+```
+
+`init --no-stories` leaves the story files where they are. `add`, `update` and
+`diff` stop copying and tracking them.
+
+## Check your setup
+
+- [ ] `npx nxds-cli@latest doctor` passes its `stories` check.
+- [ ] Storybook lists the stories in your nxds folder.
+- [ ] The Storybook toolbar switches a story between light and dark.
+
+## Next steps
+
+- **[Install](/getting-started/install)**: every `nxds-cli` command and option.
+- **[Components](/components)**: each component, with its `add` command.
+- **[Appearance](/theming/appearance)**: the settings the toolbar changes.
