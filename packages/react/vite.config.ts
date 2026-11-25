@@ -28,6 +28,7 @@ export default defineConfig({
         '**/*.test.ts',
         '**/*.test.tsx',
         '**/*.stories.tsx',
+        'src/storybook.tsx',
         'src/stories/**',
         'src/blocks/**',
         'src/patterns/**',
