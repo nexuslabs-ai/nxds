@@ -104,7 +104,9 @@ export const Default: Story = {
       <TableBody>
         {invoices.map((row) => (
           <TableRow key={row.invoice}>
-            <TableCell className="nx:font-medium">{row.invoice}</TableCell>
+            <TableCell className="nx:typography-label-default">
+              {row.invoice}
+            </TableCell>
             <TableCell>{row.status}</TableCell>
             <TableCell>{row.method}</TableCell>
             <TableCell className="nx:text-right">{row.amount}</TableCell>
@@ -138,7 +140,9 @@ export const WithFooter: Story = {
       <TableBody>
         {invoices.map((row) => (
           <TableRow key={row.invoice}>
-            <TableCell className="nx:font-medium">{row.invoice}</TableCell>
+            <TableCell className="nx:typography-label-default">
+              {row.invoice}
+            </TableCell>
             <TableCell>{row.status}</TableCell>
             <TableCell className="nx:text-right">{row.amount}</TableCell>
           </TableRow>
@@ -416,7 +420,9 @@ export const WithActions: Story = {
       <TableBody>
         {invoices.slice(0, 3).map((row) => (
           <TableRow key={row.invoice}>
-            <TableCell className="nx:font-medium">{row.invoice}</TableCell>
+            <TableCell className="nx:typography-label-default">
+              {row.invoice}
+            </TableCell>
             <TableCell>{row.status}</TableCell>
             <TableCell>
               <div className="nx:flex nx:justify-end nx:gap-2">
@@ -527,7 +533,9 @@ export const AllVariants: Story = {
                 key={row.invoice}
                 data-state={i === 1 ? 'selected' : undefined}
               >
-                <TableCell className="nx:font-medium">{row.invoice}</TableCell>
+                <TableCell className="nx:typography-label-default">
+                  {row.invoice}
+                </TableCell>
                 <TableCell>{row.status}</TableCell>
                 <TableCell>{row.method}</TableCell>
                 <TableCell className="nx:text-right">{row.amount}</TableCell>
@@ -1052,7 +1060,9 @@ export const StackedCard: Story = {
             >
               <div className="nx:flex nx:justify-between">
                 <span className="nx:text-muted-foreground">Invoice</span>
-                <span className="nx:font-medium">{row.invoice}</span>
+                <span className="nx:typography-label-default">
+                  {row.invoice}
+                </span>
               </div>
               <div className="nx:flex nx:justify-between">
                 <span className="nx:text-muted-foreground">Status</span>

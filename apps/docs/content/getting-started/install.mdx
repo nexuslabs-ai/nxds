@@ -142,13 +142,14 @@ and says how to fix each problem.
 
 ## Options
 
-| Option                   | What it does                                                             |
-| ------------------------ | ------------------------------------------------------------------------ |
-| `--dry-run`              | Shows what would change, without changing anything                       |
-| `--json`                 | Prints `{ ok, exitCode, data }`, or `{ ok, exitCode, error }` on failure |
-| `--no-install`           | Skips installing npm packages                                            |
-| `--cwd <path>`           | Runs in another folder                                                   |
-| `--registry <url\|path>` | Installs from another registry. `NXDS_REGISTRY_URL` sets it too          |
+| Option                   | Commands                 | What it does                                                              |
+| ------------------------ | ------------------------ | ------------------------------------------------------------------------- |
+| `--dry-run`              | `init`, `add`, `update`  | Shows what would change, without changing anything                        |
+| `--overwrite`            | `init`, `add`, `update`  | Replaces files that differ from nxds's copy, including files you edited   |
+| `--no-install`           | `init`, `add`, `update`  | Skips installing npm packages                                             |
+| `--json`                 | Every command            | Prints `{ ok, exitCode, data }`, or `{ ok, exitCode, error }` on failure  |
+| `--cwd <path>`           | Every command            | Runs in another folder                                                    |
+| `--registry <url\|path>` | All but `info`, `export` | Gets nxds releases from another registry. `NXDS_REGISTRY_URL` sets it too |
 
 Run `npx nxds-cli@latest --help` to list every command, or
 `npx nxds-cli@latest add --help` for one command's options.

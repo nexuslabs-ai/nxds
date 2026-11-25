@@ -511,7 +511,7 @@ export const AllVariants: Story = {
               <Switch size="default" id={`${uid}-desc-default`} />
               <label
                 htmlFor={`${uid}-desc-default`}
-                className="nx:typography-label-default nx:leading-none"
+                className="nx:typography-label-default"
               >
                 Default with description
               </label>
@@ -523,7 +523,7 @@ export const AllVariants: Story = {
               <Switch size="sm" id={`${uid}-desc-sm`} />
               <label
                 htmlFor={`${uid}-desc-sm`}
-                className="nx:typography-label-default nx:leading-none"
+                className="nx:typography-label-default"
               >
                 Small with description
               </label>

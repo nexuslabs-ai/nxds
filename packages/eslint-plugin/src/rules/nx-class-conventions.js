@@ -154,27 +154,22 @@ const CHECKS = [
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}font-(?:${RAW_FONT_WEIGHTS.join('|')})\\b`
     ),
-    skipFile: isExampleFile,
   },
   {
     messageId: 'rawLineHeight',
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}leading-(?:${RAW_LINE_HEIGHTS.join('|')}|\\d+|\\[)`
     ),
-    skipFile: isExampleFile,
   },
   {
     messageId: 'densityIconSize',
     test: sizesSvgFromSpacing,
-    // Stories are checked: the docs pages copy their code into apps.
-    skipFile: isDocsFile,
   },
   {
     messageId: 'rawLetterSpacing',
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}tracking-(?:${RAW_LETTER_SPACINGS.join('|')}|\\[)`
     ),
-    skipFile: isExampleFile,
   },
 ];
 
@@ -214,39 +209,15 @@ function sizesIconWithoutLine(scope) {
   });
 }
 
-function isStoryFile(filename) {
-  return /\.stories\.[jt]sx?$/.test(filename);
-}
-
-function isDocsFile(filename) {
-  return /(?:^|[/\\])apps[/\\]docs[/\\]/.test(filename);
-}
-
-// What the raw typography and stroke checks skip: stories and the docs app
-// quote utilities as specimens and prose, and the docs app styles its own
-// chrome off-system.
-function isExampleFile(filename) {
-  return isStoryFile(filename) || isDocsFile(filename);
-}
-
-// The ring check skips less: only the docs pages, which render a pairing as
-// the subject of the prose around it. The rest of the docs app is its own
-// shipped chrome, and a story's class strings are the component's real ones.
-function isDocsSpecimenPage(filename) {
-  return /(?:^|[/\\])apps[/\\]docs[/\\]app[/\\]_pages[/\\]/.test(filename);
-}
-
+// Avatar's initials and Chart's tooltip values. The class string alone
+// matches, so the components pass wherever an app copies them.
 const RAW_TYPOGRAPHY_EXCEPTIONS = [
   {
-    filename:
-      /(?:^|[/\\])packages[/\\]react(?:-18)?[/\\]src[/\\]components[/\\]avatar[/\\]avatar\.tsx$/,
     className:
       'nx:flex nx:size-full nx:items-center nx:justify-center nx:rounded-[inherit] nx:bg-muted nx:text-foreground nx:font-medium nx:leading-none',
     messageIds: new Set(['rawFontWeight', 'rawLineHeight']),
   },
   {
-    filename:
-      /(?:^|[/\\])packages[/\\]react(?:-18)?[/\\]src[/\\]components[/\\]chart[/\\]chart\.tsx$/,
     className: 'nx:text-foreground nx:font-mono nx:font-medium nx:tabular-nums',
     messageIds: new Set(['rawFontWeight']),
   },
@@ -256,27 +227,19 @@ function normalizeClassName(raw) {
   return raw.trim().replace(/\s+/g, ' ');
 }
 
-function isRawTypographyException(check, filename, raw) {
+function isRawTypographyException(check, raw) {
   const normalized = normalizeClassName(raw);
   return RAW_TYPOGRAPHY_EXCEPTIONS.some(
     (exception) =>
-      exception.filename.test(filename) &&
       exception.className === normalized &&
       exception.messageIds.has(check.messageId)
   );
 }
 
-function shouldRunCheck(check, filename, raw) {
-  if (check.skipFile?.(filename)) {
-    return false;
-  }
-  return !isRawTypographyException(check, filename, raw);
-}
-
-function matchedMessageIds(raw, filename) {
+function matchedMessageIds(raw) {
   const matched = new Set();
   for (const check of CHECKS) {
-    if (!shouldRunCheck(check, filename, raw)) {
+    if (isRawTypographyException(check, raw)) {
       continue;
     }
     const matches = check.test ? check.test(raw) : check.re.test(raw);
@@ -357,6 +320,33 @@ function collectClassStrings(node, visitorKeys, collected) {
   }
 }
 
+const MESSAGES = {
+  prefixOrder:
+    'Wrong nx: prefix order — `nx:` must come BEFORE all modifiers (e.g. `nx:hover:bg-*`, not `hover:nx:bg-*`).',
+  bannedAccent:
+    'Banned `accent` token — nxds has no `accent`; use `background-hover` / `container-hover` / `popover-hover`.',
+  incompletePath:
+    'Incomplete semantic token path — add a `-background`, `-foreground`, or `-subtle` suffix (e.g. `nx:bg-primary-background`).',
+  rawPrimitive:
+    'Raw Tailwind primitive color — use a semantic token instead (e.g. `nx:bg-primary-background`, not `nx:bg-blue-500`).',
+  rawFontSize:
+    'Raw Tailwind font-size utility — use a typography composite instead (e.g. `nx:typography-body-default`, not `nx:text-sm`).',
+  rawFontWeight:
+    'Raw Tailwind font-weight utility — use a typography composite instead (e.g. `nx:typography-label-default`, not `nx:font-medium`).',
+  rawLineHeight:
+    'Raw Tailwind line-height utility — let a typography composite own line-height instead of `nx:leading-*`.',
+  rawLetterSpacing:
+    'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
+  densityIconSize:
+    'Icon size from spacing — a numeric `size-*`, `h-*` or `w-*`, or one that reads a `--nx-spacing-*` variable, on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm`, `-default`, `-lg` or `-xl` (12, 14, 16, 24 or 32px at the Default UI scale).',
+  ringFadingTransition:
+    'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
+  unstrokedIcon:
+    'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-icon-glyph-default`), so add `nx:icon-stroke` to draw stroked icons at the icon line width.',
+  plainIconSize:
+    'Plain icon size — size `svg` children with a `size-icon-glyph-*` class, so the line matches the icon. `size-*`, `h-*` and `w-*` leave `--nx-icon-size` unset, so set it on the same selector for a size off the scale.',
+};
+
 export default {
   meta: {
     type: 'problem',
@@ -364,40 +354,27 @@ export default {
       description:
         'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, no icon sized from spacing, no ring-fading `transition-colors` on a focus-ring surface, and no sized `svg` children without `nx:icon-stroke`.',
     },
-    schema: [],
-    messages: {
-      prefixOrder:
-        'Wrong nx: prefix order — `nx:` must come BEFORE all modifiers (e.g. `nx:hover:bg-*`, not `hover:nx:bg-*`).',
-      bannedAccent:
-        'Banned `accent` token — nxds has no `accent`; use `background-hover` / `container-hover` / `popover-hover` (see shadcn-divergences.md).',
-      incompletePath:
-        'Incomplete semantic token path — add a `-background`, `-foreground`, or `-subtle` suffix (e.g. `nx:bg-primary-background`).',
-      rawPrimitive:
-        'Raw Tailwind primitive color — use a semantic token instead (e.g. `nx:bg-primary-background`, not `nx:bg-blue-500`).',
-      rawFontSize:
-        'Raw Tailwind font-size utility — use a typography composite instead (e.g. `nx:typography-body-default`, not `nx:text-sm`).',
-      rawFontWeight:
-        'Raw Tailwind font-weight utility — use a typography composite instead (e.g. `nx:typography-label-default`, not `nx:font-medium`).',
-      rawLineHeight:
-        'Raw Tailwind line-height utility — let a typography composite own line-height instead of `nx:leading-*`.',
-      rawLetterSpacing:
-        'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
-      densityIconSize:
-        'Icon size from spacing — a numeric `size-*`, `h-*` or `w-*`, or one that reads a `--nx-spacing-*` variable, on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm`, `-default`, `-lg` or `-xl` (12, 14, 16, 24 or 32px at the Default UI scale).',
-      ringFadingTransition:
-        'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
-      unstrokedIcon:
-        'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-icon-glyph-default`), so add `nx:icon-stroke` to draw stroked icons at the icon line width.',
-      plainIconSize:
-        'Plain icon size — size `svg` children with a `size-icon-glyph-*` class, so the line matches the icon. `size-*`, `h-*` and `w-*` leave `--nx-icon-size` unset, so set it on the same selector for a size off the scale.',
-    },
+    schema: [
+      {
+        type: 'object',
+        properties: {
+          skip: {
+            type: 'array',
+            items: { enum: Object.keys(MESSAGES) },
+            uniqueItems: true,
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
+    messages: MESSAGES,
   },
   create(context) {
-    const filename = context.filename ?? '';
+    const skipped = new Set(context.options[0]?.skip);
     const { visitorKeys } = context.sourceCode;
 
-    function report(node, raw) {
-      for (const messageId of matchedMessageIds(raw, filename)) {
+    function report(node, messageId) {
+      if (!skipped.has(messageId)) {
         context.report({ node, messageId });
       }
     }
@@ -409,15 +386,14 @@ export default {
       const collected = [];
       collectClassStrings(node, visitorKeys, collected);
       const scope = collected.join(' ');
-      if (!isDocsSpecimenPage(filename) && fadesItsFocusRing(scope)) {
-        context.report({ node, messageId: 'ringFadingTransition' });
+      if (fadesItsFocusRing(scope)) {
+        report(node, 'ringFadingTransition');
       }
-      if (isExampleFile(filename)) return;
       if (leavesIconUnstroked(scope)) {
-        context.report({ node, messageId: 'unstrokedIcon' });
+        report(node, 'unstrokedIcon');
       }
       if (sizesIconWithoutLine(scope)) {
-        context.report({ node, messageId: 'plainIconSize' });
+        report(node, 'plainIconSize');
       }
     }
 
@@ -426,19 +402,21 @@ export default {
         if (typeof node.value !== 'string') {
           return;
         }
-        report(node, node.value);
+        for (const messageId of matchedMessageIds(node.value)) {
+          report(node, messageId);
+        }
         reportScope(node);
       },
       TemplateLiteral(node) {
         const matched = new Set();
         for (const quasi of node.quasis) {
           const raw = quasi.value.cooked ?? quasi.value.raw;
-          for (const id of matchedMessageIds(raw, filename)) {
+          for (const id of matchedMessageIds(raw)) {
             matched.add(id);
           }
         }
         for (const messageId of matched) {
-          context.report({ node, messageId });
+          report(node, messageId);
         }
         reportScope(node);
       },
@@ -449,7 +427,7 @@ export default {
         reportScope(node);
       },
       JSXOpeningElement(node) {
-        if (isDocsFile(filename) || !isIconElement(node.name)) {
+        if (!isIconElement(node.name)) {
           return;
         }
         const className = node.attributes.find(
@@ -463,7 +441,7 @@ export default {
         const collected = [];
         collectClassStrings(className.value, visitorKeys, collected);
         if (collected.some(sizesFromSpacing)) {
-          context.report({ node: className, messageId: 'densityIconSize' });
+          report(className, 'densityIconSize');
         }
       },
     };

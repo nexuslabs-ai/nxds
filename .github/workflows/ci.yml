@@ -303,11 +303,11 @@ jobs:
       - name: Validate spacing mode files
         run: pnpm validate:spacing-modes
 
-      # Guard against drift between the committed canonical-step-set.json
-      # and the live union across spacing-*.json. Same fail-fast tier as
-      # the validator above — stdlib-only, sub-second.
+      # Fails when a spacing-*.json file uses a px step that the committed
+      # canonical-step-set.json lacks, or the set keeps a step no file uses.
+      # Same fail-fast tier as the validator above — stdlib-only, sub-second.
       - name: Check canonical step set freshness
-        run: pnpm --filter @nxds/eslint-plugin refresh:canonical-set --check
+        run: pnpm --filter @nxds/core refresh:canonical-set --check
 
       - name: Check token scales freshness
         run: pnpm --filter @nxds/core generate:scales --check

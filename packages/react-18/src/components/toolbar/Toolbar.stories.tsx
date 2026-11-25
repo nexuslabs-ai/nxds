@@ -905,7 +905,7 @@ function AttachedExample() {
                   <ToolbarToggleItem
                     value="bold"
                     iconOnly
-                    startIcon={<span className="nx:font-bold">B</span>}
+                    startIcon={<TextBIcon />}
                   >
                     Bold note
                   </ToolbarToggleItem>
@@ -919,7 +919,7 @@ function AttachedExample() {
                   <ToolbarToggleItem
                     value="italic"
                     iconOnly
-                    startIcon={<span className="nx:italic">I</span>}
+                    startIcon={<TextItalicIcon />}
                   >
                     Italic note
                   </ToolbarToggleItem>
@@ -933,7 +933,7 @@ function AttachedExample() {
                   <ToolbarToggleItem
                     value="underline"
                     iconOnly
-                    startIcon={<span className="nx:underline">U</span>}
+                    startIcon={<TextUnderlineIcon />}
                   >
                     Underline note
                   </ToolbarToggleItem>

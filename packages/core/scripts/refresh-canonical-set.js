@@ -4,20 +4,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const SEMANTIC_DIR = path.resolve(
-  __dirname,
-  '..',
-  '..',
-  'core',
-  'tokens',
-  'semantic'
-);
-const OUTPUT_PATH = path.resolve(
-  __dirname,
-  '..',
-  'src',
-  'canonical-step-set.json'
-);
+const SEMANTIC_DIR = path.resolve(__dirname, '..', 'tokens', 'semantic');
+const OUTPUT_PATH = path.resolve(__dirname, 'canonical-step-set.json');
+const REFRESH_COMMAND = 'pnpm --filter @nxds/core refresh:canonical-set';
+const COMMENT = `Union of every px value in packages/core/tokens/semantic/spacing-*.json. Regenerate via \`${REFRESH_COMMAND}\`.`;
 
 function collectPxValues(node, out) {
   if (!node || typeof node !== 'object') return;
@@ -77,7 +67,7 @@ function main() {
   if (check) {
     if (!existing) {
       process.stderr.write(
-        `Error: ${OUTPUT_PATH} is missing. Run \`pnpm --filter @nxds/eslint-plugin refresh:canonical-set\` and commit the result.\n`
+        `Error: ${OUTPUT_PATH} is missing. Run \`${REFRESH_COMMAND}\` and commit the result.\n`
       );
       process.exit(1);
     }
@@ -100,13 +90,13 @@ function main() {
         (extra.length
           ? `  no longer in any mode file: ${extra.join(', ')}\n`
           : '') +
-        `Refresh via \`pnpm --filter @nxds/eslint-plugin refresh:canonical-set\` and commit the result.\n`
+        `Refresh via \`${REFRESH_COMMAND}\` and commit the result.\n`
     );
     process.exit(1);
   }
 
   const out = {
-    $comment: existing?.$comment ?? defaultComment(),
+    $comment: COMMENT,
     values: sorted,
   };
 
@@ -124,10 +114,6 @@ function main() {
   process.stdout.write(
     `✓ canonical-step-set.json refreshed (${sorted.length} values across ${files.length} modes).\n`
   );
-}
-
-function defaultComment() {
-  return 'Union of every px value shipped across packages/core/tokens/semantic/spacing-{vega,lyra,maia,mira,nova,luma,sera}.json. Regenerate via `pnpm --filter @nxds/eslint-plugin refresh:canonical-set`. The shipped union may exceed the originally-intended scale; reconciliation tracked separately.';
 }
 
 main();

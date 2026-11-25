@@ -309,6 +309,10 @@ export default function ColorShowcase() {
         </p>
         <p className="nx:typography-body-default nx:text-muted-foreground nx:mb-4 nx:max-w-[64ch]">
           CI also checks that the palettes stay distinct for color-blind users.
+          Two pairs look alike under deuteranopia (red-green color blindness):
+          Success (green) and Warning (orange), and chart colors 2 and 3 in
+          light mode. Pair status colors with an icon and a label, and label
+          each chart series.
         </p>
         <p className="nx:typography-body-default nx:text-muted-foreground nx:mb-4 nx:max-w-[64ch]">
           Every foreground is checked against each surface it can sit on,
