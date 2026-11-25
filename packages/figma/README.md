@@ -1,31 +1,35 @@
 # @nxds/figma
 
-`nxds-cli export figma` turns every nxds component into native Figma components, with variables, text styles, shadow styles and an icon set. Private, not published.
+`nxds-cli export figma` turns an app's own nxds components into native Figma components, with variables, text styles, shadow styles and an icon set. Private, not published.
 
 ## Run it
 
-Build the plugin and the CLI from the repo root:
+Build the plugin and the CLI, then run the export in an app. For nxds itself, the app is `examples/figma-app`:
 
 ```bash
 pnpm --filter @nxds/figma build
 pnpm --filter nxds-cli build
-node packages/cli/dist/index.js export figma
+cd examples/figma-app
+npm ci
+npm run nxds:add
+npm run figma
 ```
 
-The command takes the same theme flags as `export claude-design`, such as `--brand-color '#e11d48'`. Without `--font`, text is set in Inter, because Figma can't draw the system UI font.
+`npm run nxds:add` brings the app's components up to date with the repo, so Figma gets the current source.
 
-To export an app's own colours, pass its colours file. A colour flag beside it is refused.
+In your own app, run the command in the folder with `nxds.json`, after the app's packages are installed. The app needs Tailwind CSS 4.3 or a later 4.x release.
 
 ```bash
-node packages/cli/dist/index.js export figma --colors path/to/nxds-colors.css
+cd path/to/app
+node path/to/nxds/packages/cli/dist/index.js export figma
 ```
 
-A colour that references another nxds token, such as `var(--nx-color-blue-600)`, becomes a Figma alias of that variable. Any other value, such as `color-mix()` or the app's own variable, is exported as the colour it resolves to.
+Outside an app, the command stops and says to run it in one.
 
 To rebuild a few components quickly, name them. A card's name also takes its parts, so `Dialog` brings `Dialog/Header` and the rest. The components they hold, such as the Button in a Card, are captured with them.
 
 ```bash
-node packages/cli/dist/index.js export figma --only Button,Badge
+node path/to/nxds/packages/cli/dist/index.js export figma --only Button,Badge
 ```
 
 When it says it's waiting, do this in the Figma desktop app:
@@ -40,7 +44,7 @@ A later run in the same file updates it:
 
 - Variables, styles and icons are updated in place, so everything bound to them keeps working.
 - Each captured component is redrawn inside the component it was built as. Its instances follow, on any page and in files that use the published library.
-- A run without `--only` also deletes the pages, components, variables, styles and icons the release no longer has. If a component fails to capture, nothing is deleted. If a component fails to build, no page or component is deleted.
+- A run without `--only` also deletes the pages, components, variables, styles and icons the app no longer has. If a component fails to capture, nothing is deleted. If a component fails to build, no page or component is deleted.
 
 The plugin finds what it made by a hidden tag that names its token or component, so pages you add are left alone. A variable or style someone renamed keeps its bindings, and the run sets its name back. A component it redraws loses edits made by hand. A copy of a component, such as one made with Cmd+D, is yours, and the run leaves it alone.
 
@@ -61,70 +65,79 @@ If the folder holds other files, pass `--overwrite` to write beside them. If it 
 
 If Chromium doesn't start, run `npx playwright@1.64.1 install chromium`.
 
-## Export an app
+## What it reads
 
-Run the command in a folder with an `nxds.json`, after the app's packages are installed. The app needs Tailwind CSS 4.3 or a later 4.x release.
-
-```bash
-cd path/to/app
-node path/to/nxds/packages/cli/dist/index.js export figma
-```
-
-Figma gets the app's own components, as the team edited them:
+Figma gets the app's own components, as the team edited them. Nothing else is an input:
 
 | From the app                  | What the export does with it                                                                  |
 | ----------------------------- | --------------------------------------------------------------------------------------------- |
 | The nxds folder               | Bundles every component with the app's own packages                                           |
 | The CSS entry                 | Compiles it with the app's Tailwind, with its fonts and its `nxds-colors.css` when it has one |
-| `NxdsAppearanceProvider`      | Wraps every example, with the app's default appearance                                        |
+| `NxdsAppearanceProvider`      | Wraps every component, with the app's default appearance                                      |
 | The components' types         | Reads each part's props, so a new variant or prop becomes a Figma property                    |
-| The icon library in nxds.json | Draws the icon set, limited to nxds's own icons and the ones the examples use                 |
+| The icon library in nxds.json | Draws nxds's own icons and the ones the recipes use                                           |
 
-The examples come from the README of the release in `nxds.json`. Theme flags and `--colors` are refused, because the app sets its own theme.
+Each Figma component is a recipe in `src/recipes.tsx`, written in JSX with the app's component names and real props. Most recipes draw their card's example in `src/examples.tsx`. The page renders the app's own component for each part.
+
+Every `--nx-*` property the app's CSS declares becomes a variable, sorted into a collection by its name. A colour that references another nxds token, such as `var(--nx-color-blue-600)`, becomes a Figma alias of that variable. Any other value, such as `color-mix()` or the app's own variable, is exported as the colour it resolves to.
 
 The command lists what Figma doesn't get:
 
-- Components the app didn't add, or whose example uses a part it didn't add
-- The app's own parts that the release doesn't have, since no example draws them
-- Icons the examples use that the app's icon library doesn't have
+- Components whose recipe draws a part the app didn't add
+- The app's components that no recipe draws, such as one the team added
+- Icons the recipes use that the app's icon library doesn't have
 
 ## What it builds
 
 | In Figma             | From                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Variables            | Semantic colours, spacing, radius, border width, icon sizes, container widths and typography. A palette colour only when a component binds it or a colour references it                                                                                                                                                                                                                                                                                                           |
-| Text styles          | Each `typography-*` class, bound to the typography variables it declares                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Text styles          | Each `typography-*` utility the app's CSS defines, bound to the typography variables it declares                                                                                                                                                                                                                                                                                                                                                                                  |
 | Shadow styles        | Each shadow token                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Icons page           | Every Phosphor icon the release ships, regular and fill, one component each. In an app, the icons its library draws                                                                                                                                                                                                                                                                                                                                                               |
-| A page per card      | The card's README example, open when it's an overlay, in every variant and state. Variants sit in a labelled grid: states in rows, sizes in columns, the rest in blocks                                                                                                                                                                                                                                                                                                           |
+| Icons page           | nxds's own icons and the ones the recipes use, one component each, from the app's icon library                                                                                                                                                                                                                                                                                                                                                                                    |
+| A page per card      | The card's recipes, open when it's an overlay, in every variant and state. Variants sit in a labelled grid: states in rows, sizes in columns, the rest in blocks                                                                                                                                                                                                                                                                                                                  |
 | A component per part | Parts named `<Card>/<Part>`, such as `Card/Footer`, `Select/Trigger` and `Sheet/Content`, on their card's page. The components hold them as instances. A modal overlay's whole, such as Dialog or Sheet, is a 1280×800 screen with its Overlay and Content over the page. A menu, popover or select is a 480×400 screen with its trigger and the open panel. A part takes its whole's variant properties and keeps those that change how it looks, such as `Alert/Icon`'s Variant |
 | Restyled instances   | A component its holder restyles, such as a Button in a ButtonGroup, is an instance with its fill, border and corners overridden                                                                                                                                                                                                                                                                                                                                                   |
 | Slots                | A part that renders `children`, such as `Card/Content`, `Dialog/Body` or `Popover/Content`, holds them in a slot named Content. Its instances fill the slot with their own content, so a Carousel item holding a Card is a `Carousel/Item` instance with a `Card` instance in its slot. To leave a part out, delete it from the slot                                                                                                                                              |
 
+## Add a component
+
+A new nxds component reaches Figma once it has a recipe:
+
+1. Add the card's example to `EXAMPLES` in `src/examples.tsx`, written as an app uses the component.
+2. Add each part the example draws to `src/parts.ts`.
+3. Add an entry to `RECIPES` in `src/recipes.tsx`. `{ name: 'Badge' }` draws the example. The other fields say what differs: parts on their own, an overlay to open, states, axes.
+4. Run `npm run nxds:add` in `examples/figma-app`, then the smoke test.
+
+A component folder Figma gets nothing for, such as Show, goes in `NOT_DRAWN` with the reason.
+
 ## Check it
 
 ```bash
-pnpm --filter @nxds/core build
-pnpm --filter @nxds/claude-design build
-pnpm --filter nxds-cli build
+cd examples/figma-app
+npm ci
+cd ../..
 pnpm --filter @nxds/figma smoke
 ```
 
-The smoke test captures every component from the built release, then checks the bindings, sizing, icons, nested instances, properties, variables and the local link. It captures again with an own colours file. Then it builds an app in `packages/figma/.fixture` with `init --own-colors` and `add`, edits a Button variant, a part and a colour, and checks Figma gets the edits. Pass a folder to keep its output: `pnpm --filter @nxds/figma smoke ../../nxds-figma-smoke`.
+The smoke test captures every component in `examples/figma-app`, then checks the bindings, sizing, icons, nested instances, properties, variables and the local link. Then it copies the app to `packages/figma/.fixture`, adds its own colours file, a Button variant and a component of its own, removes Kbd, and checks Figma gets the edits. Pass a folder to keep its output: `pnpm --filter @nxds/figma smoke ../../nxds-figma-smoke`.
 
 ## Source
 
-| File                 | Job                                                                       |
-| -------------------- | ------------------------------------------------------------------------- |
-| `src/recipes.ts`     | What differs from the defaults: parts, overlays to open, states, markup   |
-| `src/app.ts`         | Bundles an app's components and compiles its CSS entry                    |
-| `src/app-props.ts`   | Reads an app's props from its own types                                   |
-| `src/attributes.ts`  | Converts an example's attribute strings by an app's props                 |
-| `src/page.ts`        | Runs in the page: mounts a variant, records it, draws the icon set        |
-| `src/convert.ts`     | Turns a recording into auto layout, sizing, bindings, icons and instances |
-| `src/tokens.ts`      | Turns tokens.json into variables, text styles and shadow styles           |
-| `src/capture.ts`     | Drives headless Chromium through every component and variant              |
-| `src/link.ts`        | Serves the capture on `localhost:7357` and takes the report               |
-| `src/spec.ts`        | The capture and report formats, shared with the plugin                    |
-| `plugin/src/code.ts` | Builds what the capture says in Figma                                     |
-| `plugin/src/ui.ts`   | Fetches the capture and posts the report                                  |
+| File                   | Job                                                                               |
+| ---------------------- | --------------------------------------------------------------------------------- |
+| `src/recipes.tsx`      | Each Figma component: what it draws, its parts, overlays to open, states and axes |
+| `src/examples.tsx`     | Each card's example, in JSX with real props                                       |
+| `src/parts.ts`         | Every part a recipe draws, so a mistyped one fails the typecheck                  |
+| `src/markup.ts`        | The JSX factory recipes are written in                                            |
+| `src/app.ts`           | Bundles an app's components and compiles its CSS entry                            |
+| `src/props.ts`         | Reads each part's props from the app's own types                                  |
+| `src/page.ts`          | Runs in the page: mounts a variant, records it, reads tokens, draws the icon set  |
+| `src/convert.ts`       | Turns a recording into auto layout, sizing, bindings, icons and instances         |
+| `src/tokens.ts`        | Turns the page's tokens into variables, text styles and shadow styles             |
+| `src/capture.ts`       | Drives headless Chromium through every component and variant                      |
+| `src/link.ts`          | Serves the capture on `localhost:7357` and takes the report                       |
+| `src/spec.ts`          | The capture and report formats, shared with the plugin                            |
+| `scripts/tsx-hooks.ts` | Lets the smoke test load the `.tsx` recipes                                       |
+| `plugin/src/code.ts`   | Builds what the capture says in Figma                                             |
+| `plugin/src/ui.ts`     | Fetches the capture and posts the report                                          |
