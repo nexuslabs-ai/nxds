@@ -4,6 +4,7 @@ import path from 'node:path';
 import { major, satisfies } from 'semver';
 
 import {
+  appCatalog,
   type Catalog,
   type CatalogFile,
   type CatalogItem,
@@ -14,6 +15,7 @@ import {
   splitInstalled,
   variantFor,
   withIconLibrary,
+  withStories,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
 import {
@@ -47,6 +49,7 @@ import {
   rendersDerivedColors,
   VITE_PLUGIN_FILE,
 } from '../setup/react';
+import { storybookProblem, storybookWiringProblem } from '../setup/storybook';
 import {
   fontImportLine,
   nxdsThemeSource,
@@ -63,14 +66,18 @@ export async function diff(
   names: string[]
 ): Promise<CommandResult> {
   const config = requireConfig(cwd);
+  const project = readProject(cwd);
   // `update` installs the app's React major, which may differ from the files'.
-  const target = { ...config, react: reactMajor(readProject(cwd)) };
+  const target = { ...config, react: reactMajor(project) };
   const release = await loadRelease(registry, 'latest', target.react);
   // As `update` does: an app from before icon libraries gets the default.
-  const library = config.iconLibrary ?? release.iconLibraries[0]?.name;
-  const latest = withIconLibrary(release, library);
+  const app = {
+    iconLibrary: config.iconLibrary ?? release.iconLibraries[0]?.name,
+    stories: config.stories,
+  };
+  const latest = appCatalog(release, app, project);
   const fetched = await fetchRelease(registry, config.version);
-  const previous = fetched && withIconLibrary(fetched, library);
+  const previous = fetched && appCatalog(fetched, app, project);
   const previousFiles = previous && releaseFiles(previous, config);
   const { known, removed } = splitInstalled(latest, config.items);
   const items = resolveItems(
@@ -353,6 +360,34 @@ function iconsCheck(
 }
 
 /**
+ * `catalog` with each item's stories, for an app that has stories on, after
+ * checking that its Storybook runs them and takes nxds's wiring. When it
+ * doesn't, the `stories` check fails and `catalog` keeps its stories apart.
+ */
+function storiesCheck(
+  catalog: Catalog,
+  project: Project,
+  config: Config,
+  check: (name: string, ok: boolean, message: string) => void
+) {
+  if (!config.stories) return catalog;
+  const unsupported = storybookProblem(catalog, project);
+  let problem = unsupported;
+  try {
+    problem ??= storybookWiringProblem(project, config);
+  } catch (error) {
+    if (!(error instanceof CliError)) throw error;
+    problem = error.message;
+  }
+  check(
+    'stories',
+    problem === null,
+    problem ?? `Storybook runs the stories in ${config.dir}, with nxds's wiring`
+  );
+  return unsupported === null ? withStories(catalog, project) : catalog;
+}
+
+/**
  * The theme nxds.json sets on `release`, after checking that `nxds-theme.ts`
  * is what `init` writes for it. An app with no theme and no `nxds-theme.ts`
  * has nothing to check. Null when nxds.json's theme doesn't fit the release.
@@ -466,7 +501,8 @@ export async function doctor(
       ? `Files come from nxds ${config.version}`
       : `${registry} has no nxds ${config.version}. Run \`${CLI_COMMAND} update\`.`
   );
-  const catalog = fetched && iconsCheck(fetched, config, check);
+  const drawn = fetched && iconsCheck(fetched, config, check);
+  const catalog = drawn && storiesCheck(drawn, project, config, check);
 
   check(
     'tailwind',

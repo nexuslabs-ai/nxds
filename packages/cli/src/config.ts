@@ -31,6 +31,8 @@ const configSchema = z.looseObject({
   iconLibrary: z.string().optional(),
   /** The theme `nxds-theme.ts` sets: each `init` theme flag the app was given, by flag name. */
   theme: z.record(z.string(), z.string()).optional(),
+  /** Whether each item's Storybook stories are installed and tracked with it. */
+  stories: z.boolean().optional(),
 });
 
 export type Config = z.infer<typeof configSchema>;
@@ -61,6 +63,8 @@ export function requireConfig(root: string): Config {
   );
 }
 
+/** Writes nxds.json with its fields in the schema's order, whenever each was set. */
 export function writeConfig(root: string, config: Config) {
-  writeFileSync(configPath(root), `${JSON.stringify(config, null, 2)}\n`);
+  const ordered = configSchema.parse(config);
+  writeFileSync(configPath(root), `${JSON.stringify(ordered, null, 2)}\n`);
 }

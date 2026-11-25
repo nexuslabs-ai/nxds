@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import {
+  appCatalog,
   type Catalog,
   fetchRelease,
   type Font,
@@ -14,9 +15,9 @@ import {
   SETUP,
   setupVariant,
   splitInstalled,
+  storybookFramework,
   type Target,
   variantFor,
-  withIconLibrary,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
 import { colorFields, colorsCss } from '../colors';
@@ -45,6 +46,11 @@ import {
   planWiring,
   tailwindPackages,
 } from '../setup/react';
+import {
+  hasStorybook,
+  planStorybook,
+  storybookProblem,
+} from '../setup/storybook';
 import {
   nxdsThemeSource,
   resolveTheme,
@@ -108,6 +114,17 @@ function assertFilesMatchReact(config: Config, react: ReactMajor) {
   throw new CliError(
     `nxds.json has React ${config.react} files, and this app uses React ${react}. Run \`${CLI_COMMAND} update\` to switch them, then run this command again.`
   );
+}
+
+/**
+ * A line that tells an app with Storybook it can have stories, when it has
+ * none and its release ships them.
+ */
+function storiesHint(release: Catalog, project: Project, config: Config) {
+  if (config.stories || !release.storybook || !hasStorybook(project)) return [];
+  return [
+    `Storybook found. Run \`${CLI_COMMAND} init --stories\` to get each item's stories.`,
+  ];
 }
 
 function nxdsDir(dir: string) {
@@ -178,6 +195,8 @@ export async function init(
     theme?: ThemeFlags;
     /** Write `nxds-colors.css` from the theme, and turn color derivation off. */
     ownColors?: boolean;
+    /** Install each item's stories and wire Storybook, or stop tracking them. Left out, it stays as it is. */
+    stories?: boolean;
   }
 ): Promise<CommandResult> {
   const project = readProject(cwd);
@@ -222,7 +241,18 @@ export async function init(
     css: cssEntryPath(project),
     items: [],
   };
-  const previousLibrary = config.iconLibrary;
+  const before = { iconLibrary: config.iconLibrary, stories: config.stories };
+  if (options.stories) {
+    const problem = storybookProblem(release, project);
+    if (problem) {
+      throw new CliError(
+        `${problem} Then run \`${CLI_COMMAND} init --stories\` again.`
+      );
+    }
+    config.stories = true;
+  }
+  // The story files stay where they are; nxds stops installing and tracking them.
+  if (options.stories === false) delete config.stories;
   const icons = pickedIconLibrary(release, options.icons);
   config.iconLibrary =
     icons ?? config.iconLibrary ?? release.iconLibraries[0]?.name;
@@ -241,21 +271,31 @@ export async function init(
   const custom = lines.length > 0;
   if (custom) config.theme = flags;
   else delete config.theme;
-  const catalog = withIconLibrary(release, config.iconLibrary);
-  // A new icon library rewrites `lib/icons.ts` in every installed item, from
-  // the files the old library gave them.
+  const catalog = appCatalog(release, config, project);
+  // A new icon library rewrites `lib/icons.ts` and the stories' icons in every
+  // installed item, from the files the old library gave them.
   const switched =
-    existing !== null && icons !== undefined && icons !== previousLibrary;
+    existing !== null && icons !== undefined && icons !== before.iconLibrary;
+  // Turning stories on installs the stories of every installed item.
+  const addedStories = existing !== null && config.stories && !before.stories;
 
   const setup = setupVariant(catalog, config);
-  const wiring = planWiring(
-    project,
-    config,
-    addTailwind,
-    setup.steps,
-    { source: nxdsThemeSource({ lines, fonts }), fonts, custom },
-    options.ownColors ? colorsCss(release, flags) : null
-  );
+  const framework = config.stories && storybookFramework(catalog, project);
+  const plans = [
+    planWiring(
+      project,
+      config,
+      addTailwind,
+      setup.steps,
+      { source: nxdsThemeSource({ lines, fonts }), fonts, custom },
+      options.ownColors ? colorsCss(release, flags) : null
+    ),
+    ...(framework ? [planStorybook(project, config, framework)] : []),
+  ];
+  const wiring = {
+    changes: plans.flatMap((plan) => plan.changes),
+    manual: plans.flatMap((plan) => plan.manual),
+  };
 
   const tailwind = packagesToInstall(
     project,
@@ -268,9 +308,9 @@ export async function init(
     catalog,
     project,
     config,
-    switched ? [SETUP, ...config.items] : [SETUP],
+    switched || addedStories ? [SETUP, ...config.items] : [SETUP],
     switched
-      ? releaseFiles(withIconLibrary(release, previousLibrary), config)
+      ? releaseFiles(appCatalog(release, before, project), config)
       : null,
     options,
     Object.fromEntries(fonts.map((font) => [font.package, font.range]))
@@ -314,6 +354,7 @@ export async function init(
       dir: config.dir,
       css: config.css,
       iconLibrary: config.iconLibrary,
+      stories: config.stories === true,
       theme: flags,
       dryRun: options.dryRun,
       ...installed,
@@ -323,11 +364,14 @@ export async function init(
       manual: wiring.manual,
     },
     lines: [
-      `nxds ${config.version} in ${config.dir}, for React ${config.react}${iconsLabel ? `, with ${iconsLabel} icons` : ''}`,
+      `nxds ${config.version} in ${config.dir}, for React ${config.react}${iconsLabel ? `, with ${iconsLabel} icons` : ''}${config.stories ? ', with stories' : ''}`,
       ...installLines(config, { ...installed, packages }, options),
       ...created.map((file) => `${createVerb} ${file}`),
       ...edited.map((file) => `${editVerb} ${file}`),
       ...manualLines(wiring.manual),
+      ...(options.stories === false
+        ? []
+        : storiesHint(release, project, config)),
       ...(done && !options.dryRun
         ? [
             `nxds is set up. Add a component with \`${CLI_COMMAND} add button\`.`,
@@ -356,10 +400,8 @@ export async function add(
   const config = requireConfig(cwd);
   const project = readProject(cwd);
   assertFilesMatchReact(config, reactMajor(project));
-  const catalog = withIconLibrary(
-    await loadRelease(registry, config.version, config.react),
-    config.iconLibrary
-  );
+  const release = await loadRelease(registry, config.version, config.react);
+  const catalog = appCatalog(release, config, project);
   const installed = installItems(
     catalog,
     project,
@@ -379,6 +421,7 @@ export async function add(
             `${names.join(', ')} ${names.length === 1 ? 'is' : 'are'} already up to date.`,
           ]
         : []),
+      ...storiesHint(release, project, config),
     ],
     ok: settled(installed),
   };
@@ -437,11 +480,11 @@ export async function update(
   const release = await loadRelease(registry, 'latest', react);
   // An app from before icon libraries keeps the default from now on.
   config.iconLibrary ??= release.iconLibraries[0]?.name;
-  const latest = withIconLibrary(release, config.iconLibrary);
+  const latest = appCatalog(release, config, project);
   const { known, removed } = splitInstalled(latest, config.items);
   const current = filesOf(latest, { ...config, react }, known);
   const fetched = await fetchRelease(registry, from);
-  const previous = fetched && withIconLibrary(fetched, config.iconLibrary);
+  const previous = fetched && appCatalog(fetched, config, project);
   const installedBefore = previous
     ? filesOf(previous, config, splitInstalled(previous, config.items).known)
     : new Set<string>();

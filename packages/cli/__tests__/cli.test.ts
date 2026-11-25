@@ -1558,6 +1558,460 @@ describe('own colors', () => {
   });
 });
 
+const WIRING = 'storybook.tsx';
+const NXDS_WIRING = `components/nxds/${WIRING}`;
+const WIRING_SOURCE = readFileSync(
+  path.resolve(import.meta.dirname, '../../react/src/storybook.tsx'),
+  'utf8'
+);
+const BUTTON_STORY = 'components/button/Button.stories.tsx';
+const NXDS_BUTTON_STORY = `components/nxds/${BUTTON_STORY}`;
+// A story as the release's first icon library, Tabler, draws it. It uses
+// Label, which Button itself doesn't need.
+const BUTTON_STORY_SOURCE = `import type { Meta, StoryObj } from '@storybook/react-vite';
+import { IconPlus } from '@tabler/icons-react';
+
+import { Label } from '../label/label';
+
+import { Button } from './button';
+
+const meta = { component: Button } satisfies Meta<typeof Button>;
+export default meta;
+
+export const Default: StoryObj<typeof meta> = {
+  render: () => (
+    <Label>
+      <Button startIcon={<IconPlus />}>Add a member</Button>
+    </Label>
+  ),
+};
+`;
+const NEXTJS_VITE = '@storybook/nextjs-vite';
+
+/** The edit that turns `from` into `to` in the Button story. */
+function storyEdit(from: string, to: string): [number, number, string] {
+  const start = BUTTON_STORY_SOURCE.indexOf(from);
+  if (start < 0) throw new Error(`The Button story has no ${from}`);
+  return [start, start + from.length, to];
+}
+
+function reactVariant(release: Catalog, name: string) {
+  const variant = release.items.find((item) => item.name === name)?.variants
+    .react;
+  if (!variant) throw new Error(`${release.version} has no ${name}`);
+  return variant;
+}
+
+/**
+ * `choicesRelease` with stories: setup's brings the Storybook wiring file, and
+ * Button's brings its story, which Lucide draws with other icons.
+ */
+function storiesRelease(version: string): Catalog {
+  const release = choicesRelease(version);
+  release.storybook = {
+    range: '>=10.0.0',
+    frameworks: ['@storybook/react-vite', NEXTJS_VITE],
+  };
+  reactVariant(release, 'setup').stories = {
+    items: [],
+    packages: { npm: {} },
+    files: [{ path: WIRING, content: WIRING_SOURCE }],
+  };
+  reactVariant(release, 'button').stories = {
+    items: ['label'],
+    packages: { npm: { '@tabler/icons-react': '^3.36.1' } },
+    files: [
+      {
+        path: BUTTON_STORY,
+        content: BUTTON_STORY_SOURCE,
+        icons: {
+          lucide: [
+            storyEdit(
+              "import { IconPlus } from '@tabler/icons-react';",
+              "import { PlusIcon } from 'lucide-react';"
+            ),
+            storyEdit('<IconPlus />', '<PlusIcon />'),
+          ],
+        },
+      },
+    ],
+  };
+  return release;
+}
+
+const STORYBOOK_MAIN = '.storybook/main.ts';
+const STORYBOOK_PREVIEW = '.storybook/preview.ts';
+// As `storybook init` writes them, with no semicolon after an import.
+const MAIN_SOURCE = `import type { StorybookConfig } from '${NEXTJS_VITE}'
+
+const config: StorybookConfig = {
+  "stories": [
+    "../stories/**/*.mdx",
+    "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)"
+  ],
+  "addons": ["@storybook/addon-a11y", "@storybook/addon-docs"],
+  "framework": "${NEXTJS_VITE}"
+};
+export default config;
+`;
+const PREVIEW_SOURCE = `import type { Preview } from '${NEXTJS_VITE}'
+
+const preview: Preview = {
+  parameters: {
+    controls: {
+      matchers: {
+       color: /(background|color)$/i,
+       date: /Date$/i,
+      },
+    },
+
+    a11y: {
+      // 'todo' - show a11y violations in the test UI only
+      test: 'todo'
+    }
+  },
+};
+
+export default preview;
+`;
+
+/** Adds Storybook to the app, as `storybook init` leaves it. */
+function addStorybook(
+  app: string,
+  packages: Record<string, string> = {
+    storybook: '^10.1.0',
+    [NEXTJS_VITE]: '^10.1.0',
+  }
+) {
+  const manifest = JSON.parse(readApp(app, 'package.json')) as {
+    devDependencies: Record<string, string>;
+  };
+  Object.assign(manifest.devDependencies, packages);
+  writeApp(app, 'package.json', JSON.stringify(manifest));
+  mkdirSync(path.join(app, '.storybook'));
+  writeApp(app, STORYBOOK_MAIN, MAIN_SOURCE);
+  writeApp(app, STORYBOOK_PREVIEW, PREVIEW_SOURCE);
+}
+
+/** A Next.js app with Storybook, and a registry whose releases have stories. */
+function setupStories(releases: Catalog[] = [storiesRelease('0.4.7')]) {
+  const context = setup(releases);
+  addStorybook(context.app);
+  return context;
+}
+
+describe('stories', () => {
+  it('installs the wiring file and wires Storybook when init is given --stories', async () => {
+    const context = setupStories();
+
+    const { exitCode, body } = await cliJson(['init', '--stories'], context);
+
+    expect(exitCode, JSON.stringify(body)).toBe(EXIT_CODES.ok);
+    expect(nxdsJson(context.app)).toMatchObject({ stories: true });
+    // The wiring imports its types from the app's own Storybook framework.
+    expect(readApp(context.app, NXDS_WIRING)).toBe(
+      WIRING_SOURCE.replaceAll("'@storybook/react-vite'", `'${NEXTJS_VITE}'`)
+    );
+    const preview = readApp(context.app, STORYBOOK_PREVIEW);
+    for (const line of [
+      "import '../app/nxds.css'",
+      "import { nxdsPreview } from '../components/nxds/storybook'",
+      "import { defaultAppearance } from '../app/appearance-state'",
+      'const nxds = nxdsPreview(defaultAppearance)',
+      'decorators: nxds.decorators',
+      'globalTypes: nxds.globalTypes',
+      'initialGlobals: nxds.initialGlobals',
+      // The preview's own a11y settings stay, and take nxds's axe rules.
+      "test: 'todo'",
+      'options: nxds.parameters.a11y.options',
+    ]) {
+      expect(preview).toContain(line);
+    }
+    expect(readApp(context.app, STORYBOOK_MAIN)).toContain(
+      "'../components/nxds/**/*.stories.tsx'"
+    );
+  });
+
+  it('changes nothing when init --stories runs again', async () => {
+    const context = setupStories();
+    await cli(['init', '--stories'], context);
+    const before = readTree(context.app);
+
+    const again = await cli(['init', '--stories'], context);
+
+    expect(again.exitCode, again.stdout).toBe(EXIT_CODES.ok);
+    expect(readTree(context.app)).toEqual(before);
+  });
+
+  it("installs an item's story, and the items and packages the story uses", async () => {
+    const context = setupStories();
+    await cli(['init', '--stories'], context);
+
+    const { exitCode, body } = await cliJson(['add', 'button'], context);
+
+    expect(exitCode, JSON.stringify(body)).toBe(EXIT_CODES.ok);
+    expect(readApp(context.app, NXDS_BUTTON_STORY)).toBe(
+      BUTTON_STORY_SOURCE.replace('@storybook/react-vite', NEXTJS_VITE)
+    );
+    expect(body.data.items).toContain('label');
+    expect(body.data.written).toContain('components/label/label.tsx');
+    expect(body.data.packages).toContain('@tabler/icons-react@^3.36.1');
+  });
+
+  it('installs no story, and says how to get them, while stories are off', async () => {
+    const context = setupStories();
+    await cli(['init'], context);
+
+    const run = await cli(['add', 'button'], context);
+
+    expect(run.exitCode, run.stdout).toBe(EXIT_CODES.ok);
+    expect(readTree(context.app)).not.toHaveProperty([NXDS_BUTTON_STORY]);
+    expect(readTree(context.app)).not.toHaveProperty([NXDS_WIRING]);
+    expect(run.stdout).toMatch(/Storybook found\. Run `.* init --stories`/);
+  });
+
+  it('gives no stories hint in an app without Storybook', async () => {
+    const context = setup([storiesRelease('0.4.7')]);
+    await cli(['init'], context);
+
+    const run = await cli(['add', 'button'], context);
+
+    expect(run.stdout).not.toMatch(/--stories/);
+  });
+
+  it('installs the stories of the items an app already has when stories turn on', async () => {
+    const context = setupStories();
+    await installButton(context);
+
+    const run = await cli(['init', '--stories'], context);
+
+    expect(run.exitCode, run.stdout).toBe(EXIT_CODES.ok);
+    expect(readApp(context.app, NXDS_BUTTON_STORY)).toContain('Add a member');
+    expect(nxdsJson(context.app)).toMatchObject({
+      items: expect.arrayContaining(['button', 'label']),
+    });
+  });
+
+  it("draws a story's icons with the app's icon library", async () => {
+    const context = setupStories();
+    await cli(['init', '--stories', '--icons', 'lucide'], context);
+
+    const { exitCode, body } = await cliJson(['add', 'button'], context);
+
+    expect(exitCode, JSON.stringify(body)).toBe(EXIT_CODES.ok);
+    const story = readApp(context.app, NXDS_BUTTON_STORY);
+    expect(story).toContain("import { PlusIcon } from 'lucide-react';");
+    expect(story).toContain('<Button startIcon={<PlusIcon />}>');
+    expect(story).not.toContain('tabler');
+    expect(body.data.packages).toContain('lucide-react@^1.61.0');
+    expect(body.data.packages.join(' ')).not.toContain('@tabler/icons-react');
+  });
+
+  it("merges the next release's story changes into a story you edited", async () => {
+    const context = setupStories();
+    await cli(['init', '--stories'], context);
+    await cli(['add', 'button'], context);
+    writeApp(
+      context.app,
+      NXDS_BUTTON_STORY,
+      readApp(context.app, NXDS_BUTTON_STORY).replace(
+        'Add a member',
+        'Invite a teammate'
+      )
+    );
+    const next = storiesRelease('0.4.8');
+    const [story] = reactVariant(next, 'button').stories?.files ?? [];
+    if (!story) throw new Error('0.4.8 has no Button story');
+    story.content +=
+      '\nexport const Disabled = { args: { disabled: true } };\n';
+    writeRegistry(context.registry, [storiesRelease('0.4.7'), next]);
+
+    const { exitCode, body } = await cliJson(['update'], context);
+
+    expect(exitCode, JSON.stringify(body)).toBe(EXIT_CODES.ok);
+    expect(body.data.merged).toContain(BUTTON_STORY);
+    const merged = readApp(context.app, NXDS_BUTTON_STORY);
+    expect(merged).toContain('Invite a teammate');
+    expect(merged).toContain('export const Disabled');
+  });
+
+  it('leaves the story files and stops tracking them when init is given --no-stories', async () => {
+    const context = setupStories();
+    await cli(['init', '--stories'], context);
+    await cli(['add', 'button'], context);
+    const story = `${readApp(context.app, NXDS_BUTTON_STORY)}\n// Edited.\n`;
+    writeApp(context.app, NXDS_BUTTON_STORY, story);
+
+    const off = await cli(['init', '--no-stories'], context);
+
+    expect(off.exitCode, off.stdout).toBe(EXIT_CODES.ok);
+    expect(off.stdout).not.toMatch(/Storybook found/);
+    expect(nxdsJson(context.app)).not.toHaveProperty('stories');
+    expect(readApp(context.app, NXDS_BUTTON_STORY)).toBe(story);
+    const { body } = await cliJson(['diff'], context);
+    expect(
+      body.data.files.map((file: { path: string }) => file.path)
+    ).not.toContain(BUTTON_STORY);
+  });
+
+  it('tracks a story in diff while stories are on', async () => {
+    const context = setupStories();
+    await cli(['init', '--stories'], context);
+    await cli(['add', 'button'], context);
+    writeApp(
+      context.app,
+      NXDS_BUTTON_STORY,
+      `${readApp(context.app, NXDS_BUTTON_STORY)}\n// Edited.\n`
+    );
+
+    const { body } = await cliJson(['diff'], context);
+
+    expect(body.data.files).toContainEqual(
+      expect.objectContaining({ path: BUTTON_STORY, state: 'changed' })
+    );
+  });
+
+  it('adds only what a preview lacks, and keeps what it sets', async () => {
+    const context = setupStories();
+    writeApp(
+      context.app,
+      STORYBOOK_PREVIEW,
+      `import { withThemeByClassName } from '@storybook/addon-themes';
+
+export default {
+  decorators: [withThemeByClassName({ themes: { light: '', dark: 'dark' } })],
+  globalTypes: { locale: { name: 'Locale' } },
+};
+`
+    );
+
+    const run = await cli(['init', '--stories'], context);
+
+    expect(run.exitCode, run.stdout).toBe(EXIT_CODES.ok);
+    const preview = readApp(context.app, STORYBOOK_PREVIEW);
+    expect(preview).toContain(
+      "decorators: [withThemeByClassName({ themes: { light: '', dark: 'dark' } }), ...nxds.decorators]"
+    );
+    expect(preview).toContain(
+      "globalTypes: { ...nxds.globalTypes, locale: { name: 'Locale' } }"
+    );
+    expect(preview).toContain('initialGlobals: nxds.initialGlobals');
+    expect(preview).toContain('parameters: nxds.parameters');
+  });
+
+  it('writes a preview for an app that has none', async () => {
+    const context = setupStories();
+    rmSync(path.join(context.app, STORYBOOK_PREVIEW));
+
+    const { exitCode, body } = await cliJson(['init', '--stories'], context);
+
+    expect(exitCode, JSON.stringify(body)).toBe(EXIT_CODES.ok);
+    expect(body.data.created).toContain(STORYBOOK_PREVIEW);
+    expect(readApp(context.app, STORYBOOK_PREVIEW)).toContain(
+      `import type { Preview } from '${NEXTJS_VITE}';`
+    );
+  });
+
+  it('leaves a preview it cannot extend as a step for you', async () => {
+    const context = setupStories();
+    const preview = `import { sharedPreview } from '@acme/storybook';
+
+export default sharedPreview;
+`;
+    writeApp(context.app, STORYBOOK_PREVIEW, preview);
+
+    const { exitCode, body } = await cliJson(['init', '--stories'], context);
+
+    expect(exitCode).toBe(EXIT_CODES.attention);
+    expect(readApp(context.app, STORYBOOK_PREVIEW)).toBe(preview);
+    expect(body.data.manual).toContainEqual(
+      expect.objectContaining({
+        file: STORYBOOK_PREVIEW,
+        step: expect.stringContaining('nxdsPreview'),
+      })
+    );
+  });
+
+  it('leaves main alone when its stories already cover the nxds folder', async () => {
+    const context = setupStories();
+    const main = MAIN_SOURCE.replace(
+      '"../stories/**/*.mdx",',
+      '"../components/**/*.stories.@(ts|tsx)",'
+    );
+    writeApp(context.app, STORYBOOK_MAIN, main);
+
+    await cli(['init', '--stories'], context);
+
+    expect(readApp(context.app, STORYBOOK_MAIN)).toBe(main);
+  });
+
+  it.each([
+    ['an app without Storybook', {}, /npx storybook@latest init/],
+    [
+      'Storybook 9',
+      { storybook: '^9.1.0', [NEXTJS_VITE]: '^9.1.0' },
+      /need Storybook >=10\.0\.0, and this app has storybook 9\.1\.0/,
+    ],
+    [
+      'a webpack Storybook',
+      { storybook: '^10.1.0', '@storybook/nextjs': '^10.1.0' },
+      /Vite-based Storybook/,
+    ],
+  ])('refuses --stories for %s', async (_name, packages, message) => {
+    const context = setup([storiesRelease('0.4.7')]);
+    addStorybook(context.app, packages);
+
+    const run = await cli(['init', '--stories'], context);
+
+    expect(run.exitCode).toBe(EXIT_CODES.error);
+    expect(run.stderr).toMatch(message);
+    expect(readTree(context.app)).not.toHaveProperty(['nxds.json']);
+  });
+
+  it('refuses --stories on a release from before stories', async () => {
+    const context = setup();
+    addStorybook(context.app);
+
+    const run = await cli(['init', '--stories'], context);
+
+    expect(run.exitCode).toBe(EXIT_CODES.error);
+    expect(run.stderr).toMatch(/nxds 0\.4\.6 has no stories/);
+  });
+
+  it('passes the doctor stories check, and fails it once the preview drops the wiring', async () => {
+    const context = setupStories();
+    await cli(['init', '--stories'], context);
+    await cli(['add', 'button'], context);
+    type Checks = { name: string; ok: boolean; message: string }[];
+    const storiesCheck = async () => {
+      const { body } = await cliJson(['doctor'], context);
+      return (body.data.checks as Checks).find(
+        (check) => check.name === 'stories'
+      );
+    };
+
+    expect(await storiesCheck()).toMatchObject({ ok: true });
+
+    writeApp(context.app, STORYBOOK_PREVIEW, PREVIEW_SOURCE);
+
+    expect(await storiesCheck()).toMatchObject({
+      ok: false,
+      message: expect.stringContaining('nxdsPreview'),
+    });
+  });
+
+  it('runs no doctor stories check while stories are off', async () => {
+    const context = setupStories();
+    await cli(['init'], context);
+
+    const { body } = await cliJson(['doctor'], context);
+
+    expect(
+      body.data.checks.map((check: { name: string }) => check.name)
+    ).not.toContain('stories');
+  });
+});
+
 describe('help', () => {
   it.each([[['help', 'add']], [['add', '--help']]])(
     'prints help for %j and exits 0',

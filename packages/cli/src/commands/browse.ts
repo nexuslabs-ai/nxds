@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 import {
+  appCatalog,
   type Catalog,
   type CatalogItem,
   findItem,
@@ -10,7 +11,6 @@ import {
   type ReactMajor,
   SETUP,
   variantFor,
-  withIconLibrary,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
 import { type Config, readConfig } from '../config';
@@ -122,10 +122,11 @@ export async function view(
 ): Promise<CommandResult> {
   const config = readConfig(cwd);
   const react = projectReact(cwd);
-  const catalog = withIconLibrary(
-    await appRelease(registry, config, react),
-    config?.iconLibrary
-  );
+  const release = await appRelease(registry, config, react);
+  // What `add` would install: in an app, drawn by its icons, with its stories.
+  const catalog = config
+    ? appCatalog(release, config, readProject(cwd))
+    : release;
   const item = findItem(catalog, name);
   const variant = variantFor(item, {
     framework: projectFramework(config, catalog),
@@ -173,6 +174,7 @@ export function info(cwd: string): CommandResult {
       version: config?.version ?? null,
       dir: config?.dir ?? null,
       css: config?.css ?? null,
+      stories: config?.stories === true,
       items: config?.items ?? [],
     },
     lines: [
@@ -181,7 +183,7 @@ export function info(cwd: string): CommandResult {
       `TypeScript: ${project.typescript ? 'yes' : 'no'}`,
       `Tailwind: ${project.dependencies.tailwindcss ?? 'not installed'}`,
       config
-        ? `nxds: ${config.version} in ${config.dir}, CSS entry ${config.css}`
+        ? `nxds: ${config.version} in ${config.dir}, CSS entry ${config.css}${config.stories ? ', with stories' : ''}`
         : `nxds: not set up. Run \`${CLI_COMMAND} init\`.`,
       ...(config && config.items.length > 0
         ? [
