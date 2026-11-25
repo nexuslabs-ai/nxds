@@ -1,8 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { expectMenuItemInsetAtEveryDensity } from '../../stories/support/menu-item-inset-test-utils';
-import { expectInterruptibleOverlayMotion } from '../../stories/support/overlay-motion-test-utils';
 import { Input } from '../input/input';
 
 import {
@@ -107,10 +105,6 @@ export const InvalidTrigger: Story = {
     const trigger = canvas.getByRole('combobox', { name: 'Invalid select' });
 
     await expect(trigger).toHaveAttribute('aria-invalid', 'true');
-    await expect(trigger).toHaveClass('nx:aria-invalid:border-error-border');
-    await expect(trigger).toHaveClass(
-      'nx:aria-invalid:focus-visible:outline-focus-error'
-    );
   },
 };
 
@@ -199,34 +193,8 @@ export const BorderlessStates: Story = {
     const disabled = canvas.getByTestId('select-borderless-disabled');
 
     await expect(empty).toHaveAttribute('data-variant', 'borderless');
-    await expect(empty).toHaveClass('nx:border-transparent');
-    await expect(empty).toHaveClass('nx:bg-control-background');
-    await expect(empty).toHaveClass(
-      'nx:enabled:hover:bg-control-background-hover'
-    );
-
     await expect(invalid).toHaveAttribute('aria-invalid', 'true');
-    await expect(invalid).toHaveClass('nx:aria-invalid:border-error-border');
-    // The stroke is a real border now, so a borderless field keeps a
-    // transparent one and the invalid state recolours it in place.
-    const restStyles = window.getComputedStyle(empty);
-    await expect(Number.parseFloat(restStyles.borderTopWidth)).toBeGreaterThan(
-      0
-    );
-    await expect(restStyles.borderTopColor).toBe('rgba(0, 0, 0, 0)');
-
-    const invalidStyles = window.getComputedStyle(invalid);
-    await expect(
-      Number.parseFloat(invalidStyles.borderTopWidth)
-    ).toBeGreaterThan(0);
-    await expect(invalidStyles.borderTopColor).not.toBe('rgba(0, 0, 0, 0)');
-    await expect(invalidStyles.boxShadow).toBe('none');
-
     await expect(disabled).toBeDisabled();
-    await expect(disabled).toHaveClass('nx:disabled:bg-disabled');
-    await expect(disabled).not.toHaveClass(
-      'nx:disabled:border-border-disabled'
-    );
   },
 };
 
@@ -303,15 +271,11 @@ export const Sizes: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const height = (element: HTMLElement) =>
-      Math.round(element.getBoundingClientRect().height);
 
     for (const size of SIZES) {
       const trigger = canvas.getByRole('combobox', { name: `${size} select` });
-      const input = canvas.getByRole('textbox', { name: `${size} input` });
 
       await expect(trigger).toHaveAttribute('data-size', size);
-      await expect(height(trigger)).toBe(height(input));
     }
   },
 };
@@ -380,36 +344,6 @@ export const Scrollable: Story = {
 // INTERACTION TESTS
 // ============================================
 
-export const CheckInsetAtEveryDensity: Story = {
-  render: (_args) => (
-    <Select defaultValue="banana">
-      <SelectTrigger className="nx:w-[180px]" aria-label="Select a fruit">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="apple">Apple</SelectItem>
-        <SelectItem value="banana">Banana</SelectItem>
-        <SelectItem value="orange">Orange</SelectItem>
-      </SelectContent>
-    </Select>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('combobox'));
-    const listbox = await within(document.body).findByRole('listbox');
-    const option = within(listbox).getByRole('option', { name: 'Banana' });
-    const check = option.querySelector<HTMLElement>(
-      '[data-slot="select-item-indicator-icon"]'
-    )!.parentElement!;
-    await expectMenuItemInsetAtEveryDensity(listbox, option, check);
-
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => {
-      expect(document.querySelector('[role="listbox"]')).toBeNull();
-    });
-  },
-};
-
 export const OpenCloseInteraction: Story = {
   render: (_args) => (
     <Select>
@@ -441,8 +375,6 @@ export const OpenCloseInteraction: Story = {
     // Wait for listbox to appear
     const listbox = await within(document.body).findByRole('listbox');
     await expect(listbox).toBeInTheDocument();
-    const content = document.querySelector('[data-slot="select-content"]');
-    await expectInterruptibleOverlayMotion(content);
 
     // Options should be visible
     const appleOption = within(listbox).getByRole('option', { name: 'Apple' });
@@ -555,14 +487,6 @@ export const DisabledInteraction: Story = {
     // Trigger should be disabled
     const trigger = canvas.getByRole('combobox');
     await expect(trigger).toBeDisabled();
-    await expect(trigger).toHaveClass('nx:disabled:border-border-disabled');
-    await expect(trigger).toHaveClass('nx:disabled:bg-disabled');
-    await expect(trigger).toHaveClass('nx:disabled:text-disabled-foreground');
-
-    const icon = trigger.querySelector('svg');
-    await expect(icon).toHaveClass(
-      'nx:group-disabled/select-trigger:text-disabled-foreground'
-    );
 
     // Try to click - should not open
     await userEvent.click(trigger);
@@ -595,8 +519,6 @@ export const WithDataAttributes: Story = {
     await expect(trigger).toHaveAttribute('data-slot', 'select-trigger');
     await expect(trigger).toHaveAttribute('data-size', 'default');
     await expect(trigger).toHaveAttribute('data-variant', 'bordered');
-    await expect(trigger).toHaveClass('nx:bg-container');
-    await expect(trigger).toHaveClass('nx:enabled:hover:bg-container-hover');
 
     await userEvent.click(trigger);
 

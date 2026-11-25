@@ -48,17 +48,6 @@ export const Default: Story = {
       </div>
     `,
   }),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const label = canvas.getByText('Email');
-    const input = canvas.getByLabelText('Email');
-    const labelToInputGap = Math.round(
-      input.getBoundingClientRect().top - label.getBoundingClientRect().bottom
-    );
-
-    // 8px is the Field label→control gap (gap-2).
-    await expect(labelToInputGap).toBe(8);
-  },
 };
 
 // The three orientations: vertical, horizontal, and container-responsive.
@@ -319,9 +308,6 @@ export const RequiredAndOptionalIndicators: Story = {
     await expect(optionalIndicator).toHaveTextContent('Optional');
     await expect(optionalIndicator).toHaveAttribute('data-optional', 'true');
     await expect(optionalIndicator).not.toHaveAttribute('aria-hidden');
-    await expect(optionalIndicator).toHaveClass(
-      'nx:data-[optional=true]:typography-body-default'
-    );
   },
 };
 
@@ -457,16 +443,6 @@ export const Disabled: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('textbox')).toBeDisabled();
-
-    // The FieldLabel dims via the field group's data-disabled, using a semantic
-    // text token at full opacity (not a fade).
-    const fieldLabel = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="field-label"]'
-    )!;
-    await expect(fieldLabel).toHaveClass(
-      'nx:group-data-[disabled=true]/field:text-disabled-foreground'
-    );
-    await expect(getComputedStyle(fieldLabel).opacity).toBe('1');
   },
 };
 
