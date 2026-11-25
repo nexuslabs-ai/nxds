@@ -19,6 +19,9 @@ const config: StorybookConfig = {
     '../src/components/appearance/**/*.stories.tsx',
     '../src/patterns/**/*.stories.tsx',
     '../src/stories/**/*.stories.tsx',
+    // Docs pages we write by hand. They attach to a shipped story file and
+    // never ship themselves.
+    '../src/**/*.mdx',
   ],
   addons: [
     '@storybook/addon-docs',

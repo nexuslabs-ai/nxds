@@ -22,6 +22,7 @@ const config: StorybookConfig = {
     '../src/components/appearance/**/*.stories.tsx',
     '../src/patterns/**/*.stories.tsx',
     '../src/stories/**/*.stories.tsx',
+    '../src/**/*.mdx',
   ],
   addons: [
     '@storybook/addon-docs',

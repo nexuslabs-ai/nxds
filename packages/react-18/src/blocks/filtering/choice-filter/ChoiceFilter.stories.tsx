@@ -1,6 +1,5 @@
 import * as React from 'react';
 
-import { Canvas, Source, Title } from '@storybook/addon-docs/blocks';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
@@ -10,14 +9,10 @@ import {
   expectFocus,
   expectMenuClosed,
   useStoryEvent,
-} from '../../../stories/support/filter-block-test-utils';
-import operatorSource from '../filter-operator.tsx?raw';
-import editorSource from '../use-condition-editor.ts?raw';
+} from '../filter.story-utils';
 
 import { type ChoiceCondition, ChoiceFilter } from './choice-filter';
-import blockSource from './choice-filter.tsx?raw';
 import { ChoiceFilterExample } from './choice-filter-example';
-import exampleSource from './choice-filter-example.tsx?raw';
 
 const replacement: ChoiceCondition = { operator: 'is', value: 'suspended' };
 function Preview({
@@ -67,10 +62,6 @@ function Preview({
   );
 }
 
-const valueShape = `type ChoiceCondition =
-  | { operator: 'is' | 'isNot'; value: string }
-  | { operator: 'isEmpty' }
-  | { operator: 'isNotEmpty' };`;
 const meta = {
   component: Preview,
   args: { onChange: fn() },
@@ -83,137 +74,6 @@ const meta = {
         component:
           'ChoiceFilter filters by one value from a short list and applies it at once. Use it for a few mutually exclusive options. To match several values, use MultiChoiceFilter.',
       },
-      page: () => (
-        <>
-          <Title />
-          <p>
-            Filter by one value from a short list. Selecting a value applies it
-            immediately.
-          </p>
-          <h2>When to use it</h2>
-          <p>
-            Use it for a short list of mutually exclusive options where each
-            choice is cheap to apply. To match several values at once, use
-            MultiChoiceFilter. For a long list, compose a searchable Command
-            menu instead.
-          </p>
-          <h2>Minimal composition</h2>
-          <Canvas of={Default} />
-          <Source code={exampleSource} language="tsx" />
-          <h2>Value and changes</h2>
-          <p>
-            <code>value</code> is controlled: pass the current condition and
-            update it in <code>onChange</code>. <code>null</code> means no
-            filter.
-          </p>
-          <Source code={valueShape} language="tsx" />
-          <ul>
-            <li>
-              Selecting a value emits a complete condition immediately and
-              closes the menu.
-            </li>
-            <li>
-              Choosing <em>Any</em> or pressing × emits <code>null</code>.
-            </li>
-            <li>
-              Changing between <em>is</em> and <em>is not</em> keeps the value
-              and emits immediately.
-            </li>
-            <li>
-              <em>Is empty</em> and <em>is not empty</em> emit immediately and
-              hide the value.
-            </li>
-            <li>
-              Switching from an empty operator to <em>is</em> or <em>is not</em>{' '}
-              waits until you choose a value; nothing incomplete is emitted.
-            </li>
-          </ul>
-          <p>
-            The block owns only its open menu and a pending operator. Option IDs
-            are data and labels are display text; IDs must be unique, nonempty
-            strings. ChoiceEditor is also exported for use inside your own
-            DropdownMenuContent.
-          </p>
-          <h2>States and dismissal</h2>
-          <p>
-            Escape and clicking outside close the menu without a change. Focus
-            returns to the value, to the operator after backing out of a pending
-            operator, and to Add after removal. Replacing the value from
-            outside, or disabling the block, closes the menu. An unknown ID
-            stays visible as “(unavailable)” until you replace or remove it.
-          </p>
-          <h3>Not applied</h3>
-          <Canvas of={NotApplied} />
-          <h3>Empty operator</h3>
-          <Canvas of={EmptyOperator} />
-          <h3>Unavailable value</h3>
-          <Canvas of={UnavailableOption} />
-          <h3>Disabled</h3>
-          <Canvas of={Disabled} />
-          <h2>Delivery</h2>
-          <p>
-            Manual guidance until the generated catalog lands (#798). This is
-            copy-source, not a package export.
-          </p>
-          <ul>
-            <li>
-              Copy <code>blocks/filtering/choice-filter/choice-filter.tsx</code>{' '}
-              , <code>blocks/filtering/filter-operator.tsx</code> and{' '}
-              <code>blocks/filtering/use-condition-editor.ts</code>, keeping the{' '}
-              <code>blocks/filtering</code> layout.
-            </li>
-            <li>
-              They need these nxds component folders, including the ones those
-              folders import: <code>button</code>, <code>button-group</code>,{' '}
-              <code>dropdown-menu</code>, <code>filter-condition</code>,{' '}
-              <code>overlay-layout</code>, <code>separator</code>,{' '}
-              <code>spinner</code> and <code>lib/</code>. If your copy lives
-              elsewhere, update the relative imports.
-            </li>
-            <li>
-              No npm packages beyond those the nxds components already use.
-            </li>
-            <li>
-              Include the copied files in your Tailwind source scan and use the
-              nxds theme and styles setup.
-            </li>
-            <li>
-              Your application owns the options and data, matching, fetching,
-              loading and error states, and URL state. Lay several filters out
-              with <code>blocks/filtering/applied-filters.tsx</code>.
-            </li>
-          </ul>
-          <h2>Evidence and support boundary</h2>
-          <p>The stories on this page test each behaviour above.</p>
-          <p>
-            Not supported: searching options, selecting several values, and
-            loading states while options are fetched. The application decides
-            how an ID matches a record.
-          </p>
-          <h2>Implementation</h2>
-          <details>
-            <summary>blocks/filtering/choice-filter/choice-filter.tsx</summary>
-            <Source code={blockSource} language="tsx" />
-          </details>
-          <details>
-            <summary>
-              blocks/filtering/filter-operator.tsx — required shared helper
-            </summary>
-            <Source code={operatorSource} language="tsx" />
-          </details>
-          <details>
-            <summary>
-              blocks/filtering/use-condition-editor.ts — required shared helper
-            </summary>
-            <Source code={editorSource} language="tsx" />
-          </details>
-          <p>
-            <a href="/?path=/docs/patterns-filtering--docs" target="_top">
-              See how this fits the Filtering pattern
-            </a>
-          </p>
-        </>
-      ),
     },
   },
 } satisfies Meta<typeof Preview>;
@@ -222,7 +82,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   tags: ['docs'],
   render: () => <ChoiceFilterExample />,
-  parameters: { docs: { source: { code: exampleSource } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(

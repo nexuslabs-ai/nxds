@@ -1,7 +1,6 @@
 import * as React from 'react';
 
 import { TextAaIcon } from '@phosphor-icons/react/ssr';
-import { Canvas, Source, Title } from '@storybook/addon-docs/blocks';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
@@ -12,14 +11,10 @@ import {
   expectMenuClosed,
   ParentForm,
   useStoryEvent,
-} from '../../../stories/support/filter-block-test-utils';
-import operatorSource from '../filter-operator.tsx?raw';
-import editorSource from '../use-condition-editor.ts?raw';
+} from '../filter.story-utils';
 
 import { type TextCondition, TextFilter } from './text-filter';
-import blockSource from './text-filter.tsx?raw';
 import { TextFilterExample } from './text-filter-example';
-import exampleSource from './text-filter-example.tsx?raw';
 
 const initial: TextCondition = { operator: 'contains', value: 'design' };
 const replacement: TextCondition = {
@@ -66,10 +61,6 @@ function Preview({
     </section>
   );
 }
-const valueShape = `type TextCondition =
-  | { operator: 'contains' | 'is' | 'isNot' | 'startsWith'; value: string }
-  | { operator: 'isEmpty' }
-  | { operator: 'isNotEmpty' };`;
 const meta = {
   component: Preview,
   args: { onChange: fn() },
@@ -82,131 +73,6 @@ const meta = {
         component:
           'TextFilter filters records whose text contains, equals, does not equal or starts with a value, or is empty or not empty. Use it for free-text fields such as names or titles. For a fixed set of values, use ChoiceFilter or MultiChoiceFilter.',
       },
-      page: () => (
-        <>
-          <Title />
-          <p>
-            Filter records whose text contains, equals, does not equal or starts
-            with a value, or is empty or not empty. The text is a draft until
-            you press Apply.
-          </p>
-          <h2>When to use it</h2>
-          <p>
-            Use it for free-text fields such as names or titles. For a fixed set
-            of values, use ChoiceFilter or MultiChoiceFilter.
-          </p>
-          <h2>Minimal composition</h2>
-          <Canvas of={Default} />
-          <Source code={exampleSource} language="tsx" />
-          <h2>Value and changes</h2>
-          <p>
-            <code>value</code> is controlled: pass the current condition and
-            update it in <code>onChange</code>. <code>null</code> means no
-            filter.
-          </p>
-          <Source code={valueShape} language="tsx" />
-          <ul>
-            <li>
-              Apply, or Enter in the field, emits the trimmed text. Blank text
-              cannot be applied.
-            </li>
-            <li>
-              Changing between text operators keeps the text and emits
-              immediately.
-            </li>
-            <li>
-              <em>Is empty</em> and <em>is not empty</em> emit immediately.
-            </li>
-            <li>Switching from an empty operator waits for text and Apply.</li>
-            <li>
-              Pressing × emits <code>null</code>.
-            </li>
-          </ul>
-          <p>
-            The block owns the open editor, the draft and a pending operator.
-            Applying never submits a surrounding form.
-          </p>
-          <h2>States and dismissal</h2>
-          <p>
-            Cancel, Escape and clicking outside discard the draft; nothing is
-            emitted. Focus returns to the value you edited, to the operator when
-            you backed out of a pending operator, and to Add after you remove
-            the filter. Replacing the value from outside, or disabling the
-            block, closes an unfinished editor without emitting. An open
-            operator menu is not closed when the block is disabled.
-          </p>
-          <h3>Not applied</h3>
-          <Canvas of={NotApplied} />
-          <h3>Empty operator</h3>
-          <Canvas of={EmptyOperator} />
-          <h3>Narrow container</h3>
-          <Canvas of={NarrowContainer} />
-          <h3>Disabled</h3>
-          <Canvas of={Disabled} />
-          <h2>Delivery</h2>
-          <p>
-            Manual guidance until the generated catalog lands (#798). This is
-            copy-source, not a package export.
-          </p>
-          <ul>
-            <li>
-              Copy <code>blocks/filtering/text-filter/text-filter.tsx</code>,{' '}
-              <code>blocks/filtering/filter-operator.tsx</code> and{' '}
-              <code>blocks/filtering/use-condition-editor.ts</code>, keeping the{' '}
-              <code>blocks/filtering</code> layout.
-            </li>
-            <li>
-              They need these nxds component folders, including the ones those
-              folders import: <code>button</code>, <code>button-group</code>,{' '}
-              <code>dropdown-menu</code>, <code>filter-condition</code>,{' '}
-              <code>input</code>, <code>label</code>,{' '}
-              <code>overlay-layout</code>, <code>popover</code>,{' '}
-              <code>separator</code>, <code>spinner</code> and <code>lib/</code>
-              . If your copy lives elsewhere, update the relative imports.
-            </li>
-            <li>
-              No npm packages beyond those the nxds components already use.
-            </li>
-            <li>
-              Include the copied files in your Tailwind source scan and use the
-              nxds theme and styles setup.
-            </li>
-            <li>
-              Your application owns the options and data, matching, fetching,
-              loading and error states, and URL state. Lay several filters out
-              with <code>blocks/filtering/applied-filters.tsx</code>.
-            </li>
-          </ul>
-          <h2>Evidence and support boundary</h2>
-          <p>The stories on this page test each behaviour above.</p>
-          <p>
-            Not supported: case sensitivity, normalization and query escaping.
-            The application decides how text matches.
-          </p>
-          <h2>Implementation</h2>
-          <details>
-            <summary>blocks/filtering/text-filter/text-filter.tsx</summary>
-            <Source code={blockSource} language="tsx" />
-          </details>
-          <details>
-            <summary>
-              blocks/filtering/filter-operator.tsx — required shared helper
-            </summary>
-            <Source code={operatorSource} language="tsx" />
-          </details>
-          <details>
-            <summary>
-              blocks/filtering/use-condition-editor.ts — required shared helper
-            </summary>
-            <Source code={editorSource} language="tsx" />
-          </details>
-          <p>
-            <a href="/?path=/docs/patterns-filtering--docs" target="_top">
-              See how this fits the Filtering pattern
-            </a>
-          </p>
-        </>
-      ),
     },
   },
 } satisfies Meta<typeof Preview>;
@@ -215,7 +81,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   tags: ['docs'],
   render: () => <TextFilterExample />,
-  parameters: { docs: { source: { code: exampleSource } } },
 };
 export const NotApplied: Story = {
   render: () => <Preview initialValue={null} />,

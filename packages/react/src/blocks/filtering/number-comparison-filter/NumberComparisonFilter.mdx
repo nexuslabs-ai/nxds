@@ -1,0 +1,108 @@
+import { Canvas, Meta, Source, Title } from '@storybook/addon-docs/blocks';
+
+import operatorSource from '../filter-operator.tsx?raw';
+import editorSource from '../use-condition-editor.ts?raw';
+
+import exampleSource from './number-comparison-filter-example.tsx?raw';
+import blockSource from './number-comparison-filter.tsx?raw';
+import * as NumberComparisonFilterStories from './NumberComparisonFilter.stories';
+
+<Meta of={NumberComparisonFilterStories} />
+
+<Title />
+
+Compare one number: equals, not equals, greater than or less than. The number is a draft until you press Apply.
+
+## When to use it
+
+Use it for a single threshold such as an amount or a count. For a range with both ends, use NumberRangeFilter.
+
+## Minimal composition
+
+<Canvas
+  of={NumberComparisonFilterStories.Default}
+  source={{ code: exampleSource, language: 'tsx' }}
+/>
+
+<Source code={exampleSource} language="tsx" />
+
+## Value and changes
+
+`value` is controlled: pass the current condition and update it in `onChange`. `null` means no filter.
+
+```tsx
+type NumberComparisonCondition =
+  | { operator: 'is' | 'isNot' | 'greaterThan' | 'lessThan'; value: number }
+  | { operator: 'isEmpty' }
+  | { operator: 'isNotEmpty' };
+```
+
+- Apply, or Enter in the field, emits a finite number. Zero, negatives and decimals work.
+- Optional `lowerBound` and `upperBound` are inclusive; a value outside them cannot be applied. `unit` is display text only.
+- Changing between comparison operators keeps the value and emits immediately.
+- _Is empty_ and _is not empty_ emit immediately.
+- Switching from an empty operator waits for a number and Apply.
+- Pressing × emits `null`.
+
+The block owns the open editor, the draft and a pending operator. Bounds changing while the editor is open do not close it; the draft is re-checked against the new bounds.
+
+## States and dismissal
+
+Cancel, Escape and clicking outside discard the draft; nothing is emitted. Focus returns to the value you edited, to the operator when you backed out of a pending operator, and to Add after you remove the filter. Replacing the value from outside, or disabling the block, closes an unfinished editor without emitting. An open operator menu is not closed when the block is disabled.
+
+### Not applied
+
+<Canvas of={NumberComparisonFilterStories.NotApplied} />
+
+### Empty operator
+
+<Canvas of={NumberComparisonFilterStories.EmptyOperator} />
+
+### Narrow container
+
+<Canvas of={NumberComparisonFilterStories.NarrowContainer} />
+
+### Disabled
+
+<Canvas of={NumberComparisonFilterStories.Disabled} />
+
+## Delivery
+
+Manual guidance until the generated catalog lands (#798). This is copy-source, not a package export.
+
+- Copy `blocks/filtering/number-comparison-filter/number-comparison-filter.tsx`, `blocks/filtering/filter-operator.tsx` and `blocks/filtering/use-condition-editor.ts`, keeping the `blocks/filtering` layout.
+- They need these nxds component folders, including the ones those folders import: `button`, `button-group`, `dropdown-menu`, `filter-condition`, `input`, `label`, `overlay-layout`, `popover`, `separator`, `spinner` and `lib/`. If your copy lives elsewhere, update the relative imports.
+- No npm packages beyond those the nxds components already use.
+- Include the copied files in your Tailwind source scan and use the nxds theme and styles setup.
+- Your application owns the options and data, matching, fetching, loading and error states, and URL state. Lay several filters out with `blocks/filtering/applied-filters.tsx`.
+
+## Evidence and support boundary
+
+The stories on this page test each behaviour above.
+
+Not supported: unit conversion and currency formatting. The application decides how the comparison matches.
+
+## Implementation
+
+<details>
+<summary>blocks/filtering/number-comparison-filter/number-comparison-filter.tsx</summary>
+
+<Source code={blockSource} language="tsx" />
+
+</details>
+
+<details>
+<summary>blocks/filtering/filter-operator.tsx — required shared helper</summary>
+
+<Source code={operatorSource} language="tsx" />
+
+</details>
+
+<details>
+<summary>blocks/filtering/use-condition-editor.ts — required shared helper</summary>
+
+<Source code={editorSource} language="tsx" />
+
+</details>
+
+[See how this fits the Filtering pattern](?path=/docs/patterns-filtering--docs)

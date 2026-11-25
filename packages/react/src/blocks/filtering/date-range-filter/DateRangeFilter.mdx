@@ -1,0 +1,107 @@
+import { Canvas, Meta, Source, Title } from '@storybook/addon-docs/blocks';
+
+import operatorSource from '../filter-operator.tsx?raw';
+import editorSource from '../use-condition-editor.ts?raw';
+
+import exampleSource from './date-range-filter-example.tsx?raw';
+import blockSource from './date-range-filter.tsx?raw';
+import * as DateRangeFilterStories from './DateRangeFilter.stories';
+
+<Meta of={DateRangeFilterStories} />
+
+<Title />
+
+Filter by a range of calendar days. The range is a draft until you press Apply.
+
+## When to use it
+
+Use it for created, updated or due dates. Presets cover common ranges; the calendar covers the rest.
+
+## Minimal composition
+
+<Canvas
+  of={DateRangeFilterStories.Default}
+  source={{ code: exampleSource, language: 'tsx' }}
+/>
+
+<Source code={exampleSource} language="tsx" />
+
+## Value and changes
+
+`value` is controlled: pass the current condition and update it in `onChange`. `null` means no filter.
+
+```tsx
+type DateRangeCondition =
+  | { operator: 'between'; from: string; to: string }
+  | { operator: 'isEmpty' }
+  | { operator: 'isNotEmpty' };
+```
+
+- Apply emits an ordered, complete range of local calendar dates.
+- Presets such as _Last 7 days_ become fixed dates when applied, not rolling ranges. Pass `today` to fix the reference day.
+- _Is empty_ and _is not empty_ emit immediately.
+- Switching from an empty operator to _is between_ waits for a range and Apply.
+- Pressing × emits `null`.
+
+The block owns the open editor, the draft and a pending operator.`from` and `to` are calendar days (`YYYY-MM-DD`), so URL and JSON state keep the same day in every timezone.
+
+## States and dismissal
+
+Cancel, Escape and clicking outside discard the draft; nothing is emitted. Focus returns to the value you edited, to the operator when you backed out of a pending operator, and to Add after you remove the filter. Replacing the value from outside, or disabling the block, closes an unfinished editor without emitting. An open operator menu is not closed when the block is disabled.
+
+### Not applied
+
+<Canvas of={DateRangeFilterStories.NotApplied} />
+
+### Empty operator
+
+<Canvas of={DateRangeFilterStories.EmptyOperator} />
+
+### Narrow container
+
+<Canvas of={DateRangeFilterStories.NarrowContainer} />
+
+### Disabled
+
+<Canvas of={DateRangeFilterStories.Disabled} />
+
+## Delivery
+
+Manual guidance until the generated catalog lands (#798). This is copy-source, not a package export.
+
+- Copy `blocks/filtering/date-range-filter/date-range-filter.tsx`, `blocks/filtering/filter-operator.tsx` and `blocks/filtering/use-condition-editor.ts`, keeping the `blocks/filtering` layout.
+- They need these nxds component folders, including the ones those folders import: `button`, `button-group`, `date-picker`, `dropdown-menu`, `filter-condition`, `overlay-layout`, `popover`, `separator`, `spinner` and `lib/`. If your copy lives elsewhere, update the relative imports.
+- The date picker needs the optional `react-day-picker` v9 peer dependency.
+- Include the copied files in your Tailwind source scan and use the nxds theme and styles setup.
+- Your application owns the options and data, matching, fetching, loading and error states, and URL state. Lay several filters out with `blocks/filtering/applied-filters.tsx`.
+
+## Evidence and support boundary
+
+The stories on this page test each behaviour above.
+
+Not supported: time of day, timezone conversion and relative ranges that keep moving. The application decides whether the end date is inclusive.
+
+## Implementation
+
+<details>
+<summary>blocks/filtering/date-range-filter/date-range-filter.tsx</summary>
+
+<Source code={blockSource} language="tsx" />
+
+</details>
+
+<details>
+<summary>blocks/filtering/filter-operator.tsx — required shared helper</summary>
+
+<Source code={operatorSource} language="tsx" />
+
+</details>
+
+<details>
+<summary>blocks/filtering/use-condition-editor.ts — required shared helper</summary>
+
+<Source code={editorSource} language="tsx" />
+
+</details>
+
+[See how this fits the Filtering pattern](?path=/docs/patterns-filtering--docs)

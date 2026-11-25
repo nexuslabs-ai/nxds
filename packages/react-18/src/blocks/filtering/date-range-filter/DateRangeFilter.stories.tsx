@@ -1,7 +1,6 @@
 import * as React from 'react';
 
 import { CalendarBlankIcon } from '@phosphor-icons/react/ssr';
-import { Canvas, Source, Title } from '@storybook/addon-docs/blocks';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
@@ -12,14 +11,10 @@ import {
   expectMenuClosed,
   ParentForm,
   useStoryEvent,
-} from '../../../stories/support/filter-block-test-utils';
-import operatorSource from '../filter-operator.tsx?raw';
-import editorSource from '../use-condition-editor.ts?raw';
+} from '../filter.story-utils';
 
 import { type DateRangeCondition, DateRangeFilter } from './date-range-filter';
-import blockSource from './date-range-filter.tsx?raw';
 import { DateRangeFilterExample } from './date-range-filter-example';
-import exampleSource from './date-range-filter-example.tsx?raw';
 
 const initial: DateRangeCondition = {
   operator: 'between',
@@ -74,10 +69,6 @@ function Preview({
     </section>
   );
 }
-const valueShape = `type DateRangeCondition =
-  | { operator: 'between'; from: string; to: string }
-  | { operator: 'isEmpty' }
-  | { operator: 'isNotEmpty' };`;
 const meta = {
   component: Preview,
   args: { onChange: fn() },
@@ -90,142 +81,6 @@ const meta = {
         component:
           "DateRangeFilter filters by a range of calendar days, applied when users press Apply. Use it for created, updated or due dates. Presets cover common ranges, and the calendar covers the rest. If your Next.js app uses Cache Components, render DateRangeFilter inside `<Suspense>` so it can read today's date.",
       },
-      page: () => (
-        <>
-          <Title />
-          <p>
-            Filter by a range of calendar days. The range is a draft until you
-            press Apply.
-          </p>
-          <h2>When to use it</h2>
-          <p>
-            Use it for created, updated or due dates. Presets cover common
-            ranges; the calendar covers the rest.
-          </p>
-          <h2>Minimal composition</h2>
-          <Canvas of={Default} />
-          <Source code={exampleSource} language="tsx" />
-          <h2>Value and changes</h2>
-          <p>
-            <code>value</code> is controlled: pass the current condition and
-            update it in <code>onChange</code>. <code>null</code> means no
-            filter.
-          </p>
-          <Source code={valueShape} language="tsx" />
-          <ul>
-            <li>
-              Apply emits an ordered, complete range of local calendar dates.
-            </li>
-            <li>
-              Presets such as <em>Last 7 days</em> become fixed dates when
-              applied, not rolling ranges. Pass <code>today</code> to fix the
-              reference day.
-            </li>
-            <li>
-              <em>Is empty</em> and <em>is not empty</em> emit immediately.
-            </li>
-            <li>
-              Switching from an empty operator to <em>is between</em> waits for
-              a range and Apply.
-            </li>
-            <li>
-              Pressing × emits <code>null</code>.
-            </li>
-          </ul>
-          <p>
-            The block owns the open editor, the draft and a pending operator.
-            <code>from</code> and <code>to</code> are calendar days (
-            <code>YYYY-MM-DD</code>), so URL and JSON state keep the same day in
-            every timezone.
-          </p>
-          <h2>States and dismissal</h2>
-          <p>
-            Cancel, Escape and clicking outside discard the draft; nothing is
-            emitted. Focus returns to the value you edited, to the operator when
-            you backed out of a pending operator, and to Add after you remove
-            the filter. Replacing the value from outside, or disabling the
-            block, closes an unfinished editor without emitting. An open
-            operator menu is not closed when the block is disabled.
-          </p>
-          <h3>Not applied</h3>
-          <Canvas of={NotApplied} />
-          <h3>Empty operator</h3>
-          <Canvas of={EmptyOperator} />
-          <h3>Narrow container</h3>
-          <Canvas of={NarrowContainer} />
-          <h3>Disabled</h3>
-          <Canvas of={Disabled} />
-          <h2>Delivery</h2>
-          <p>
-            Manual guidance until the generated catalog lands (#798). This is
-            copy-source, not a package export.
-          </p>
-          <ul>
-            <li>
-              Copy{' '}
-              <code>
-                blocks/filtering/date-range-filter/date-range-filter.tsx
-              </code>{' '}
-              , <code>blocks/filtering/filter-operator.tsx</code> and{' '}
-              <code>blocks/filtering/use-condition-editor.ts</code>, keeping the{' '}
-              <code>blocks/filtering</code> layout.
-            </li>
-            <li>
-              They need these nxds component folders, including the ones those
-              folders import: <code>button</code>, <code>button-group</code>,{' '}
-              <code>date-picker</code>, <code>dropdown-menu</code>,{' '}
-              <code>filter-condition</code>, <code>overlay-layout</code>,{' '}
-              <code>popover</code>, <code>separator</code>, <code>spinner</code>{' '}
-              and <code>lib/</code>. If your copy lives elsewhere, update the
-              relative imports.
-            </li>
-            <li>
-              The date picker needs the optional <code>react-day-picker</code>{' '}
-              v9 peer dependency.
-            </li>
-            <li>
-              Include the copied files in your Tailwind source scan and use the
-              nxds theme and styles setup.
-            </li>
-            <li>
-              Your application owns the options and data, matching, fetching,
-              loading and error states, and URL state. Lay several filters out
-              with <code>blocks/filtering/applied-filters.tsx</code>.
-            </li>
-          </ul>
-          <h2>Evidence and support boundary</h2>
-          <p>The stories on this page test each behaviour above.</p>
-          <p>
-            Not supported: time of day, timezone conversion and relative ranges
-            that keep moving. The application decides whether the end date is
-            inclusive.
-          </p>
-          <h2>Implementation</h2>
-          <details>
-            <summary>
-              blocks/filtering/date-range-filter/date-range-filter.tsx
-            </summary>
-            <Source code={blockSource} language="tsx" />
-          </details>
-          <details>
-            <summary>
-              blocks/filtering/filter-operator.tsx — required shared helper
-            </summary>
-            <Source code={operatorSource} language="tsx" />
-          </details>
-          <details>
-            <summary>
-              blocks/filtering/use-condition-editor.ts — required shared helper
-            </summary>
-            <Source code={editorSource} language="tsx" />
-          </details>
-          <p>
-            <a href="/?path=/docs/patterns-filtering--docs" target="_top">
-              See how this fits the Filtering pattern
-            </a>
-          </p>
-        </>
-      ),
     },
   },
 } satisfies Meta<typeof Preview>;
@@ -234,7 +89,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   tags: ['docs'],
   render: () => <DateRangeFilterExample />,
-  parameters: { docs: { source: { code: exampleSource } } },
 };
 export const NotApplied: Story = {
   render: () => <Preview initialValue={null} />,
