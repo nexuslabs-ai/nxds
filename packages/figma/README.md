@@ -42,7 +42,7 @@ A later run in the same file updates it:
 - Each captured component is redrawn inside the component it was built as. Its instances follow, on any page and in files that use the published library.
 - A run without `--only` also deletes the pages, components, variables, styles and icons the release no longer has. If a component fails to capture, nothing is deleted. If a component fails to build, no page or component is deleted.
 
-The plugin finds what it made by a hidden tag that names its token or component, so pages you add are left alone. A variable or style someone renamed keeps its bindings, and the run sets its name back. A component it redraws loses edits made by hand. A copy of a component, such as one made with Cmd+D, is yours, and the run leaves it alone. If you delete the original, the run takes over the copy instead.
+The plugin finds what it made by a hidden tag that names its token or component, so pages you add are left alone. A variable or style someone renamed keeps its bindings, and the run sets its name back. A component it redraws loses edits made by hand. A copy of a component, such as one made with Cmd+D, is yours, and the run leaves it alone.
 
 The plugin stamps its version on the file. A plugin of another version refuses the file, so run the plugin in a new file.
 

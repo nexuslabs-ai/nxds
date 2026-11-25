@@ -1443,45 +1443,6 @@ function stampFile() {
   figma.root.setPluginData(FILE_VERSION, String(PROTOCOL_VERSION));
 }
 
-/** Each tagged node whose tag names an id the file no longer has. */
-async function orphans() {
-  const tagged = figma.root.findAllWithCriteria({
-    pluginData: { keys: [TAG] },
-  });
-  const found: typeof tagged = [];
-  for (const node of tagged) {
-    const id = node.getPluginData(TAGGED_ID);
-    if (id === node.id) continue;
-    if (await figma.getNodeByIdAsync(id)) continue;
-    found.push(node);
-  }
-  return found;
-}
-
-/**
- * Re-tags a node for each id the file lost since last run, such as a node cut
- * and pasted, which Figma gives a new id, or a copy whose original someone
- * deleted. One node takes over each id.
- */
-async function adoptOrphans() {
-  const adopted = new Set<string>();
-  for (const node of await orphans()) {
-    const id = node.getPluginData(TAGGED_ID);
-    if (adopted.has(id)) continue;
-    adopted.add(id);
-    node.setPluginData(TAGGED_ID, node.id);
-  }
-}
-
-/**
- * Untags each copy of a node this run removed, and each copy another was
- * adopted over, so a later run doesn't take it for the original. It's the
- * user's from then on.
- */
-async function releaseOrphans() {
-  for (const node of await orphans()) node.setPluginData(TAG, '');
-}
-
 /** The cover: the page the plugin first ran on, or a new one in a file that already has nxds pages. */
 function coverPage() {
   const found = pageTagged('cover');
@@ -1606,7 +1567,6 @@ async function build(capture: CaptureFile): Promise<BuildReport> {
     }
     await figma.loadAllPagesAsync();
     stampFile();
-    await adoptOrphans();
     await figma.loadFontAsync({ family: 'Inter', style: 'Regular' });
     await figma.loadFontAsync({ family: 'Inter', style: 'Semi Bold' });
     await progress('Writing variables…');
@@ -1657,7 +1617,6 @@ async function build(capture: CaptureFile): Promise<BuildReport> {
     }
     for (const page of pages.values()) layOut(page);
     orderPages();
-    await releaseOrphans();
   } catch (error) {
     fail(ctx, '', error);
   }
