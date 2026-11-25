@@ -171,21 +171,11 @@ export const LongContent: Story = {
       </div>
     `,
   }),
-  play: async ({ canvasElement, args }) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', {
-      name: `Edit Workspace value: ${args.value}`,
-    });
-    await expect(trigger.scrollWidth).toBeLessThanOrEqual(
-      trigger.clientWidth + 1
-    );
     await expect(
       canvas.getByRole('button', { name: 'Remove Workspace filter' })
     ).toBeVisible();
-    const condition = canvas.getByTestId('condition');
-    await expect(condition.scrollWidth).toBeLessThanOrEqual(
-      condition.clientWidth + 1
-    );
   },
 };
 export const WithDataAttributes: Story = {

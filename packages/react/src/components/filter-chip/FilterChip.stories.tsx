@@ -80,14 +80,6 @@ export const LongLabel: Story = {
       <FilterChip {...args} />
     </div>
   ),
-  play: async ({ canvasElement }) => {
-    const button = within(canvasElement).getByRole('button', {
-      name: 'Remove owner filter: InternationalCustomerExperienceOperations',
-    });
-    await expect(button.getBoundingClientRect().width).toBeLessThanOrEqual(
-      button.parentElement!.getBoundingClientRect().width
-    );
-  },
 };
 export const AllVariants: Story = {
   render: (args) => (

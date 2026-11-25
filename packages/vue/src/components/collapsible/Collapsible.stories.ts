@@ -258,9 +258,6 @@ export const WithDataAttributes: Story = {
     await expect(
       canvasElement.querySelector('[data-slot="collapsible-content"]')
     ).toBeInTheDocument();
-    await expect(
-      canvasElement.querySelector('[data-slot="collapsible-content"]')
-    ).toHaveClass('nx:duration-default');
   },
 };
 

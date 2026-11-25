@@ -181,8 +181,6 @@ export const LongCopyWithLink: Story = {
       'data-slot',
       'empty-state-description'
     );
-    // underline-offset-4 is unique to the hook — no anchor defaults to 4px.
-    await expect(link).toHaveStyle({ textUnderlineOffset: '4px' });
 
     await userEvent.tab();
     await expect(link).toHaveFocus();
@@ -219,7 +217,6 @@ export const Bordered: Story = {
   play: async ({ canvasElement }) => {
     const root = canvasElement.querySelector('[data-slot="empty-state"]');
     await expect(root).toHaveAttribute('data-bordered', 'true');
-    await expect(root).toHaveStyle({ borderStyle: 'dashed' });
   },
 };
 

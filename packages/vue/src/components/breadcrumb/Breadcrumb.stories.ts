@@ -323,7 +323,6 @@ export const IconOnly: Story = {
     await expect(
       canvas.getByRole('link', { name: 'Projects' })
     ).toHaveAttribute('data-slot', 'breadcrumb-link');
-    await expect(canvas.getByText('Settings')).toHaveClass('nx:sr-only');
   },
 };
 

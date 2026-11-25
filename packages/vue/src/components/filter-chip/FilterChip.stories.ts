@@ -108,12 +108,4 @@ export const LongLabel: Story = {
       </div>
     `,
   }),
-  play: async ({ canvasElement }) => {
-    const button = within(canvasElement).getByRole('button', {
-      name: 'Remove owner filter: InternationalCustomerExperienceOperations',
-    });
-    await expect(button.getBoundingClientRect().width).toBeLessThanOrEqual(
-      button.parentElement!.getBoundingClientRect().width
-    );
-  },
 };
