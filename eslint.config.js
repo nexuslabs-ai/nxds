@@ -490,6 +490,21 @@ export default tseslint.config(
     },
   },
 
+  // The Figma export's recipes are JSX through the `h` factory their `@jsx`
+  // pragma names, and the factory's JSX types are a namespace merged into it.
+  {
+    files: ['packages/figma/src/**/*.tsx'],
+    rules: {
+      'react/jsx-uses-react': 'error',
+    },
+  },
+  {
+    files: ['packages/figma/src/markup.ts'],
+    rules: {
+      '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
+    },
+  },
+
   // nxds: gate px values in spacing mode files to the canonical step set.
   {
     files: ['packages/core/tokens/semantic/spacing-*.json'],

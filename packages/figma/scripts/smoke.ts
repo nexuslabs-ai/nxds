@@ -1,33 +1,32 @@
-// Runs the Figma capture on the built @nxds/claude-design release, the way
-// `nxds-cli export figma` does, then checks what a designer relies on in
-// Figma: every component captured, every colour bound, palette colours only
-// when used, text styles bound to the typography variables, icons as
-// swappable instances, repeated parts as instances of their own components,
-// an app's own colours and edited components, and the local link the plugin
-// talks to. Build @nxds/claude-design and nxds-cli first. Pass a folder to
-// keep the capture and its screenshots.
-import { readIndexDts } from '@nxds/claude-design/index-dts';
-import { execFileSync } from 'node:child_process';
+// Runs the Figma capture in examples/figma-app, the reference app with every
+// nxds component, the way `nxds-cli export figma` does, then checks what a
+// designer relies on in Figma: every recipe captured, every colour bound,
+// palette colours only when used, text styles bound to the typography
+// variables, icons as swappable instances, repeated parts as instances of
+// their own components, an app's own colours and edited components, and the
+// local link the plugin talks to. Run `npm install` in examples/figma-app
+// first. Pass a folder to keep the captures and their screenshots.
 import {
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
-  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import { request } from 'node:http';
-import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
-import { type AppSetup, buildAppPage } from '../src/app.ts';
-import { appProps } from '../src/app-props.ts';
-import { captureComponents, examples, releasePage } from '../src/capture.ts';
+import { buildAppPage } from '../src/app.ts';
+import {
+  captureComponents,
+  componentNames,
+  recipeContent,
+} from '../src/capture.ts';
 import { openLink } from '../src/link.ts';
-import { SKIPPED_CARDS } from '../src/recipes.ts';
+import { appParts } from '../src/props.ts';
 import {
   type BuildReport,
   type ComponentSpec,
@@ -38,21 +37,17 @@ import {
 } from '../src/spec.ts';
 import { isPrimitiveColor } from '../src/tokens.ts';
 
-const packages = path.join(import.meta.dirname, '..', '..');
-const release = path.join(packages, 'claude-design', 'dist');
-const project = path.join(release, 'project');
-const require = createRequire(
-  path.join(packages, 'claude-design', 'package.json')
+const reference = path.join(
+  import.meta.dirname,
+  '..',
+  '..',
+  '..',
+  'examples',
+  'figma-app'
 );
-const umd = (name: string, file: string) =>
-  readFileSync(
-    path.join(
-      path.dirname(require.resolve(`${name}/package.json`)),
-      'umd',
-      file
-    ),
-    'utf8'
-  );
+if (!existsSync(path.join(reference, 'node_modules'))) {
+  throw new Error('Run npm install in examples/figma-app first.');
+}
 
 const kept = process.argv[2];
 const outDir = kept
@@ -66,46 +61,41 @@ const check = (ok: boolean, message: string) => {
   if (!ok) fail(message);
 };
 
-const themeModule = (await import(
-  pathToFileURL(path.join(release, 'theme.js')).href
-)) as {
-  default: {
-    render(flags: Record<string, string>): { project: Record<string, string> };
-  };
-};
-const theme = { font: 'inter' };
-const themed = themeModule.default.render(theme).project;
-const readmes: Record<string, string> = {};
-for (const card of readdirSync(path.join(project, 'components'))) {
-  const file = path.join(project, 'components', card, 'README.md');
-  if (existsSync(file)) readmes[card] = readFileSync(file, 'utf8');
+/** Captures the app at `root` as `nxds-cli export figma` does, without the plugin. */
+async function captureApp(root: string, out: string, only?: readonly string[]) {
+  const config = JSON.parse(
+    readFileSync(path.join(root, 'nxds.json'), 'utf8')
+  ) as { version: string; dir: string; css: string; iconLibrary?: string };
+  const css = readFileSync(path.join(root, config.css), 'utf8');
+  const parts = appParts(root, config.dir);
+  const content = recipeContent(parts);
+  const page = await buildAppPage(
+    {
+      root,
+      dir: config.dir,
+      css: config.css,
+      iconLibrary: config.iconLibrary ?? 'phosphor',
+      ownColors: css.includes('nxds-colors.css'),
+    },
+    content.text,
+    content.icons
+  );
+  const result = await captureComponents({
+    version: config.version,
+    files: { styles: [page.css], scripts: [page.script] },
+    props: parts.props,
+    outDir: out,
+    progress: only ? () => {} : (line) => console.log(line),
+    only,
+  });
+  return { ...result, undrawn: content.undrawn };
 }
+
 const started = Date.now();
-const releaseFiles = {
-  tokensCss: themed['tokens.css'] ?? '',
-  bundleCss: readFileSync(
-    path.join(project, 'components', 'bundle.css'),
-    'utf8'
-  ),
-  bundleJs: readFileSync(path.join(project, 'components', 'bundle.js'), 'utf8'),
-  react: umd('react', 'react.production.min.js'),
-  reactDom: umd('react-dom', 'react-dom.production.min.js'),
-};
-const input = {
-  release: 'smoke',
-  theme,
-  files: {
-    ...releasePage(releaseFiles),
-    tokensJson: themed['tokens.json'] ?? '',
-    readmes,
-  },
-  props: readIndexDts(
-    readFileSync(path.join(project, 'components', 'index.d.ts'), 'utf8')
-  ),
-  outDir,
-  progress: (line: string) => console.log(line),
-};
-const { capture, problems } = await captureComponents(input);
+const { capture, problems, notInstalled, undrawn } = await captureApp(
+  reference,
+  outDir
+);
 const json = JSON.stringify(capture, null, 2);
 writeFileSync(path.join(outDir, 'capture.json'), json);
 const variantCount = capture.components.reduce(
@@ -145,13 +135,19 @@ const instancesOf = (root: Layer, name: string) =>
       layer.type === 'INSTANCE' && layer.component === name
   );
 
-// Every card is captured: by its own recipe, as a part, or by a default recipe.
+// The reference app has every component, and every recipe draws from it.
 for (const problem of problems) fail(`Not captured: ${problem}`);
-const captured = new Set(capture.components.map((spec) => spec.card));
-for (const card of Object.keys(readmes).filter(
-  (name) => !SKIPPED_CARDS.includes(name)
-)) {
-  check(captured.has(card), `${card} has no Figma component.`);
+check(
+  notInstalled.length === 0,
+  `figma-app lacks parts these recipes draw: ${notInstalled.join(', ')}.`
+);
+check(
+  undrawn.length === 0,
+  `These figma-app components have no recipe: ${undrawn.join(', ')}.`
+);
+const captured = new Set(capture.components.map((spec) => spec.name));
+for (const name of componentNames()) {
+  check(captured.has(name), `${name} has no Figma component.`);
 }
 check(
   JSON.stringify(component('Button').grid) ===
@@ -222,9 +218,12 @@ check(
 
 // Icons are instances of the icon set, and an icon slot is an instance-swap property.
 const startIcon = named(button, 'Start icon')[0];
+const iconNames = new Set(capture.icons.map((icon) => icon.name));
 check(
-  capture.icons.length >= 700,
-  `The icon set has ${capture.icons.length} icons, expected regular and fill.`
+  ['plus', 'check', 'x', 'caret-down', 'house'].every((name) =>
+    iconNames.has(name)
+  ),
+  "The icon set lacks the icons nxds's components and the recipes draw."
 );
 check(
   startIcon?.type === 'ICON' && startIcon.swapProperty === 'Start icon',
@@ -235,7 +234,6 @@ check(
     startIcon.fill.token === 'nx-color-primary-foreground',
   "Button: its icon isn't recoloured with primary-foreground."
 );
-const iconNames = new Set(capture.icons.map((icon) => icon.name));
 for (const spec of capture.components) {
   for (const entry of spec.variants) {
     for (const layer of layers(entry.root)) {
@@ -257,11 +255,7 @@ const alert = variant(component('Alert'), {
 });
 const cardTitle = named(cardTitleRoot, 'Label')[0];
 const alertTitle = named(
-  variant(component('Alert/Title'), {
-    Variant: 'default',
-    Presentation: 'card',
-    Layout: 'stack',
-  }),
+  variant(component('Alert/Title'), { Variant: 'default', Layout: 'stack' }),
   'Label'
 )[0];
 check(
@@ -315,7 +309,7 @@ check(
 
 // Nested components and repeated parts are instances.
 const nesting: [string, Record<string, string>, string, number][] = [
-  ['Alert/Actions', { Presentation: 'card', Layout: 'stack' }, 'Button', 1],
+  ['Alert/Actions', { Layout: 'stack' }, 'Button', 1],
   ['Card/Footer', {}, 'Button', 2],
   ['Card', {}, 'Card/Footer', 1],
   ['DropdownMenu/Content', {}, 'DropdownMenu/Item', 4],
@@ -568,10 +562,30 @@ for (const collection of capture.collections) {
   }
 }
 
-// An app's own colours file: components draw in its colours, a reference to
-// another nxds token becomes an alias, an app's own variable resolves to its
-// value, and a redefined shadow reaches its style.
-const OWN_COLORS = `@layer theme {
+// A copy of figma-app, edited as a team would: its own colours file, where a
+// reference to another nxds token becomes an alias and an app's own variable
+// resolves to its value, a new Button variant, a component of its own that no
+// recipe draws, and Kbd removed. The copy sits in the repo, so its packages
+// resolve from the repo's.
+const fixture = path.join(import.meta.dirname, '..', '.fixture');
+rmSync(fixture, { recursive: true, force: true });
+cpSync(reference, fixture, {
+  recursive: true,
+  filter: (source) => !/[/\\](?:node_modules|nxds-figma)$/.test(source),
+});
+const config = JSON.parse(
+  readFileSync(path.join(fixture, 'nxds.json'), 'utf8')
+) as { dir: string; css: string };
+const edit = (file: string, from: string, to: string) => {
+  const full = path.join(fixture, file);
+  const text = readFileSync(full, 'utf8');
+  const edited = text.replace(from, to);
+  if (edited === text) throw new Error(`figma-app's ${file} changed shape.`);
+  writeFileSync(full, edited);
+};
+writeFileSync(
+  path.join(fixture, path.dirname(config.css), 'nxds-colors.css'),
+  `@layer theme {
   :root {
     --app-accent: #e11d48;
     --nx-color-primary-background: var(--nx-color-blue-600);
@@ -583,33 +597,50 @@ const OWN_COLORS = `@layer theme {
   .dark {
     --nx-color-primary-background: var(--nx-color-blue-400);
   }
-}`;
-const own = await captureComponents({
-  ...input,
-  files: {
-    ...input.files,
-    ...releasePage({ ...releaseFiles, colorsCss: OWN_COLORS }),
-  },
-  outDir: path.join(outDir, 'own'),
-  only: ['Card'],
-  progress: () => {},
-});
+}
+`
+);
+edit(
+  config.css,
+  "@import './components/nxds/tailwind/nxds.css';",
+  "@import './components/nxds/tailwind/nxds.css';\n@import './nxds-colors.css';"
+);
+edit(
+  path.join(config.dir, 'components/button/button-variants.ts'),
+  "        link: 'nx:border-0",
+  "        brand: 'nx:bg-information-background nx:text-information-foreground',\n        link: 'nx:border-0"
+);
+mkdirSync(path.join(fixture, config.dir, 'components/rating'));
+writeFileSync(
+  path.join(fixture, config.dir, 'components/rating/rating.tsx'),
+  '/** A row of stars. */\nexport function Rating({ value }: { value: number }) {\n  return <span data-slot="rating">{"★".repeat(value)}</span>;\n}\n'
+);
+rmSync(path.join(fixture, config.dir, 'components/kbd'), { recursive: true });
+const own = await captureApp(fixture, path.join(outDir, 'own'), [
+  'Button',
+  'Card',
+  'Kbd',
+]);
+rmSync(fixture, { recursive: true, force: true });
+
 const ownVariable = (token: string) =>
   own.capture.collections
     .flatMap((collection) => collection.variables)
     .find((entry) => entry.token === token);
-const ownButton = own.capture.components
-  .find((spec) => spec.name === 'Button')
-  ?.variants.find((entry) => entry.values['State'] === 'default')?.root;
+const ownComponent = (name: string) =>
+  own.capture.components.find((spec) => spec.name === name);
+const ownVariant = (values: Record<string, string>) =>
+  ownComponent('Button')?.variants.find((entry) =>
+    Object.entries(values).every(([key, value]) => entry.values[key] === value)
+  )?.root;
+const ownButton = ownVariant({ Variant: 'default', State: 'default' });
 const blue600 = ownVariable('nx-color-blue-600');
-check(own.problems.length === 0, `Own colours: ${own.problems.join('; ')}`);
+check(own.problems.length === 0, `Edited app: ${own.problems.join('; ')}`);
 check(
   !capture.partial && own.capture.partial,
   'Capture: partial is not set by --only alone.'
 );
-const ownFooter = own.capture.components.find(
-  (spec) => spec.name === 'Card/Footer'
-);
+const ownFooter = ownComponent('Card/Footer');
 check(
   ownButton !== undefined &&
     ownFooter !== undefined &&
@@ -661,183 +692,24 @@ check(
   ownShadow?.effects.length === 1 && ownShadow.effects[0]?.blur === 6,
   "Own colours: shadow/sm isn't the colours file's shadow."
 );
-
-// An app: a Vite app gets nxds through `init --own-colors` and `add` from a
-// local registry of this release, leaving out Kbd, then edits it as a team
-// would. Inside the repo, its packages resolve from the repo's.
-const fixture = path.join(packages, 'figma', '.fixture');
-const appRoot = path.join(fixture, 'app');
-const registry = path.join(fixture, 'registry');
-rmSync(fixture, { recursive: true, force: true });
-const version = (
-  JSON.parse(readFileSync(path.join(release, 'package.json'), 'utf8')) as {
-    version: string;
-  }
-).version;
-// The registry nxds-cli reads: the release's catalog, as <version>.json and latest.json.
-const catalogFile = path.join(
-  packages,
-  'catalog',
-  'releases',
-  `${version}.json`
-);
-const catalog = JSON.parse(readFileSync(catalogFile, 'utf8')) as {
-  items: { name: string; kind: string }[];
-};
-mkdirSync(registry, { recursive: true });
-for (const name of [`${version}.json`, 'latest.json']) {
-  writeFileSync(path.join(registry, name), readFileSync(catalogFile));
-}
-const skeleton: Record<string, string> = {
-  'package.json': JSON.stringify({
-    name: 'acme',
-    type: 'module',
-    dependencies: { react: '^19.2.0', 'react-dom': '^19.2.0' },
-    devDependencies: {
-      vite: '^7.3.0',
-      tailwindcss: '^4.1.0',
-      '@tailwindcss/vite': '^4.1.0',
-      typescript: '^5.9.0',
-    },
-  }),
-  'tsconfig.json': JSON.stringify({ compilerOptions: { jsx: 'react-jsx' } }),
-  'vite.config.ts': `import react from '@vitejs/plugin-react';\nimport { defineConfig } from 'vite';\nexport default defineConfig({ plugins: [react()] });\n`,
-  'src/main.tsx': `import { createRoot } from 'react-dom/client';\nimport App from './App';\ncreateRoot(document.getElementById('root')!).render(<App />);\n`,
-  'src/App.tsx': 'export default function App() { return null; }\n',
-};
-for (const [file, content] of Object.entries(skeleton)) {
-  mkdirSync(path.dirname(path.join(appRoot, file)), { recursive: true });
-  writeFileSync(path.join(appRoot, file), content);
-}
-const cli = (...args: string[]) =>
-  execFileSync(
-    process.execPath,
-    [
-      path.join(packages, 'cli', 'dist', 'index.js'),
-      ...args,
-      '--cwd',
-      appRoot,
-      '--registry',
-      registry,
-      '--no-install',
-    ],
-    { stdio: 'pipe' }
-  );
-cli('init', '--own-colors', '--font', 'inter');
-cli(
-  'add',
-  ...catalog.items
-    .filter((item) => item.kind === 'component' && item.name !== 'kbd')
-    .map((item) => item.name)
-);
-const config = JSON.parse(
-  readFileSync(path.join(appRoot, 'nxds.json'), 'utf8')
-) as { dir: string; css: string; iconLibrary: string };
-const edit = (file: string, from: RegExp | string, to: string) => {
-  const full = path.join(appRoot, file);
-  const text = readFileSync(full, 'utf8');
-  const edited = text.replace(from, to);
-  if (edited === text) throw new Error(`The fixture's ${file} changed shape.`);
-  writeFileSync(full, edited);
-};
-// A new Button variant, a new part the release lacks, and a changed colour.
-edit(
-  path.join(config.dir, 'components/button/button-variants.ts'),
-  "        link: 'nx:border-0",
-  "        brand: 'nx:bg-information-background nx:text-information-foreground',\n        link: 'nx:border-0"
-);
-mkdirSync(path.join(appRoot, config.dir, 'components/rating'));
-writeFileSync(
-  path.join(appRoot, config.dir, 'components/rating/rating.tsx'),
-  '/** A row of stars. */\nexport function Rating({ value }: { value: number }) {\n  return <span data-slot="rating">{\'★\'.repeat(value)}</span>;\n}\n'
-);
-edit(
-  path.join(path.dirname(config.css), 'nxds-colors.css'),
-  /--nx-color-primary-background: [^;]+;/,
-  '--nx-color-primary-background: #7c3aed;'
-);
-const setup: AppSetup = {
-  root: appRoot,
-  dir: config.dir,
-  css: config.css,
-  iconLibrary: config.iconLibrary,
-  ownColors: true,
-};
-const appTypes = appProps(setup, input.props);
-const appExamples = examples(readmes, appTypes.props);
-const appPage = await buildAppPage(
-  setup,
-  appExamples.markup,
-  appExamples.icons
-);
-const app = await captureComponents({
-  ...input,
-  files: {
-    ...input.files,
-    styles: [appPage.css],
-    scripts: [appPage.script],
-  },
-  props: appTypes.props,
-  app: { schema: appTypes.schema },
-  outDir: path.join(outDir, 'app'),
-  only: [
-    'Button',
-    'Card',
-    'Chart/Bar',
-    'Slider',
-    'MultiSelect',
-    'FilterBuilder',
-    'Toast',
-    'Kbd',
-  ],
-  progress: () => {},
-});
-const appComponent = (name: string) =>
-  app.capture.components.find((spec) => spec.name === name);
-const appButton = appComponent('Button');
-const appVariant = (values: Record<string, string>) =>
-  appButton?.variants.find((entry) =>
-    Object.entries(values).every(([key, value]) => entry.values[key] === value)
-  )?.root;
-check(app.problems.length === 0, `App: ${app.problems.join('; ')}`);
-for (const name of [
-  'Chart/Bar',
-  'Slider',
-  'MultiSelect',
-  'FilterBuilder',
-  'Toast',
-]) {
-  check(
-    (appComponent(name)?.variants.length ?? 0) > 0,
-    `App: ${name}'s example didn't draw from its converted attributes.`
-  );
-}
 check(
-  appButton?.variantProperties
-    .find((property) => property.name === 'Variant')
+  ownComponent('Button')
+    ?.variantProperties.find((property) => property.name === 'Variant')
     ?.values.includes('brand') === true,
-  "App: Button's Variant has no brand, the app's new variant."
+  "Edited app: Button's Variant has no brand, the app's new variant."
 );
 check(
-  appVariant({ Variant: 'brand', State: 'default' })?.fills[0]?.token ===
+  ownVariant({ Variant: 'brand', State: 'default' })?.fills[0]?.token ===
     'nx-color-information-background',
-  "App: Button's brand variant isn't bound to information-background."
-);
-const violet = appVariant({ Variant: 'default', State: 'default' })?.fills[0]
-  ?.color;
-check(
-  violet !== undefined &&
-    Math.abs(violet.r - 124 / 255) < 0.01 &&
-    Math.abs(violet.b - 237 / 255) < 0.01,
-  "App: Button doesn't draw in the app's edited primary/background."
+  "Edited app: Button's brand variant isn't bound to information-background."
 );
 check(
-  app.notInstalled.includes('Kbd'),
-  "App: Kbd, which the app didn't add, isn't listed as not installed."
+  own.notInstalled.includes('Kbd'),
+  "Edited app: Kbd, which the app removed, isn't listed as not installed."
 );
 check(
-  appTypes.newParts.includes('Rating'),
-  "App: Rating, the app's own part, isn't listed as new."
+  own.undrawn.includes('rating'),
+  "Edited app: rating, the app's own component, isn't listed as having no recipe."
 );
 
 // The link: the plugin's UI fetches the capture with CORS, and posts its report.

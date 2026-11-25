@@ -1,16 +1,13 @@
 // Renders every variant of every component in headless Chromium, screenshots
 // it as Figma will show it, records it with its optional parts in, and
-// converts the record into capture.json's layers. Components come from the
-// recipes, and every other card in the release gets a default one, so a new
-// nxds component lands in Figma without a recipe.
-import type { CanvasSchema } from '@nxds/claude-design/attribute';
-import type { PartProps } from '@nxds/claude-design/index-dts';
+// converts the record into capture.json's layers. The page draws the app's
+// own components with its own CSS, each component is a recipe in
+// recipes.tsx, and the tokens are the ones the app's CSS declares.
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { type CDPSession, chromium, type Page } from 'playwright-core';
 
-import { convertMarkup } from './attributes.ts';
 import {
   convertVariant,
   deepFingerprint,
@@ -20,14 +17,17 @@ import {
   svgSignature,
 } from './convert.ts';
 import { ExportError } from './errors.ts';
+import { EXAMPLES } from './examples.tsx';
+import type { Markup } from './markup.ts';
 import {
   type ElementFacts,
   installHelpers,
+  type MarkupElement,
   type MarkupNode,
   missingParts,
   type MountInput,
   type Override,
-  parseMarkup,
+  readTokenNames,
   readTokenValues,
   readTypography,
   recordIcons,
@@ -36,15 +36,16 @@ import {
   settle,
   type TextFacts,
 } from './page.ts';
+import type { AppParts, PartProps } from './props.ts';
 import {
   type Axis,
   cardOf,
   kebab,
+  NOT_DRAWN,
   type Recipe,
   RECIPES,
-  SKIPPED_CARDS,
   type StateSpec,
-} from './recipes.ts';
+} from './recipes.tsx';
 import {
   CAPTURE_FORMAT,
   type CaptureFile,
@@ -59,43 +60,23 @@ import {
 import {
   collections,
   effectStyles,
-  firstFamily,
   textStyles,
-  type TokensFile,
+  tokenList,
   tracedTokens,
   valueProbes,
 } from './tokens.ts';
 
 export interface CaptureInput {
-  release: string;
-  theme: Record<string, string>;
+  /** The nxds release the app's components came from, as its nxds.json records it. */
+  version: string;
   files: {
-    /**
-     * The page's stylesheets, in order, each with the path it's served at:
-     * the release's themed tokens.css, its bundle.css and an app's own
-     * colours file, or an app's compiled CSS entry.
-     */
+    /** The app's compiled CSS entry, served at its own path, so its relative URLs, such as fonts, reach the app's files. */
     styles: { path: string; css: string }[];
-    /**
-     * The page's scripts, in order. Together they set `window.React`,
-     * `window.ReactDOM` and `window.Nxds`, as the release's bundle expects
-     * and an app's bundle provides.
-     */
+    /** The app's bundle, which sets `window.React`, `window.ReactDOM` and `window.Nxds`. */
     scripts: { path: string; js: string }[];
-    /** The release's tokens.json, themed: the tokens that become variables. */
-    tokensJson: string;
-    /** Each card's README.md, by card name. */
-    readmes: Readonly<Record<string, string>>;
   };
-  /** Each part's props: the release's, with an app's own parts over them. */
+  /** Each of the app's parts' props, from its own types. */
   props: PartProps;
-  /**
-   * The page draws an app rather than the release: it serves the files the
-   * app's CSS points at, such as fonts, takes the icon set from the app's
-   * bundle, lets the app set text in the system font, and converts each
-   * example's attributes by the app's own props.
-   */
-  app?: { schema: CanvasSchema };
   /** Screenshots go in `<outDir>/screenshots/<Component>/`. */
   outDir: string;
   progress(line: string): void;
@@ -107,11 +88,11 @@ export interface CaptureResult {
   capture: CaptureFile;
   /** Components that couldn't be captured, and why. */
   problems: string[];
-  /** Components an app doesn't have, because their example uses a part it didn't install. */
+  /** Components the app doesn't have, because their recipe draws a part it didn't add. */
   notInstalled: string[];
 }
 
-/** An example uses parts the page doesn't have. */
+/** A recipe draws parts the app doesn't have. */
 class MissingParts extends Error {}
 
 const ORIGIN = 'https://capture.nxds.invalid';
@@ -129,35 +110,6 @@ const NOT_VISUAL = new Set([
 ]);
 /** A string union longer than this is a list of names, such as icons, not a variant property. */
 const MAX_VALUES = 12;
-
-/**
- * The capture page's stylesheets and scripts for the release: its themed
- * tokens.css and bundle.css, an app's own colours file after them in the same
- * theme layer so it wins, then React 18, ReactDOM 18 and bundle.js.
- */
-export function releasePage(release: {
-  tokensCss: string;
-  bundleCss: string;
-  bundleJs: string;
-  react: string;
-  reactDom: string;
-  colorsCss?: string;
-}): Pick<CaptureInput['files'], 'styles' | 'scripts'> {
-  return {
-    styles: [
-      { path: '/tokens.css', css: release.tokensCss },
-      { path: '/bundle.css', css: release.bundleCss },
-      ...(release.colorsCss === undefined
-        ? []
-        : [{ path: '/colors.css', css: release.colorsCss }]),
-    ],
-    scripts: [
-      { path: '/react.js', js: release.react },
-      { path: '/react-dom.js', js: release.reactDom },
-      { path: '/bundle.js', js: release.bundleJs },
-    ],
-  };
-}
 
 /** The capture page: the stylesheets, then the capture's own rules, then the scripts. */
 function pageHtml(files: CaptureInput['files']) {
@@ -222,12 +174,20 @@ const title = (prop: string) => {
   return words.charAt(0).toUpperCase() + words.slice(1);
 };
 
-/** The README's canvas example: its first html block. */
-function example(readme: string | undefined) {
-  return /```html\n([\s\S]*?)```/.exec(readme ?? '')?.[1];
+/** What `recipe` renders for one variant: its own markup, or its card's example. */
+function markupOf(recipe: Recipe, values: Record<string, string>) {
+  const markup: Markup | undefined =
+    typeof recipe.markup === 'function'
+      ? recipe.markup(values)
+      : (recipe.markup ?? EXAMPLES[cardOf(recipe.name)]);
+  if (markup === undefined) return undefined;
+  return Array.isArray(markup) ? [...markup] : [markup as MarkupNode];
 }
 
-const firstPart = (markup: string) => /Nxds\.([\w.]+)/.exec(markup)?.[1];
+/** The part the markup's outermost element draws, which a recipe's `rootProps` go on. */
+const rootPart = (nodes: readonly MarkupNode[]) =>
+  nodes.find((node): node is MarkupElement => typeof node !== 'string')?.part ??
+  undefined;
 
 /** Each combination of the properties' values, the first property slowest. */
 function combinations(
@@ -522,19 +482,6 @@ function usedTokens(components: readonly ComponentSpec[]) {
   return used;
 }
 
-/** The recipes to run: every recipe, then a default one for each card no recipe draws. */
-function allRecipes(readmes: Readonly<Record<string, string>>) {
-  const drawn = new Set([
-    ...RECIPES.map((recipe) => cardOf(recipe.name)),
-    ...SKIPPED_CARDS,
-  ]);
-  const extra = Object.keys(readmes)
-    .filter((card) => !drawn.has(card))
-    .sort()
-    .map((card): Recipe => ({ name: card }));
-  return [...RECIPES, ...extra];
-}
-
 /** The slot a recipe's component is drawn with, plus the other slots it also draws. */
 function slotsOf(recipe: Recipe) {
   const target =
@@ -575,36 +522,42 @@ function iconsIn(value: unknown, found: Set<string>) {
 }
 
 /** Every component the capture draws, by name, which `only` picks from. */
-export function componentNames(readmes: Readonly<Record<string, string>>) {
-  return allRecipes(readmes).map((recipe) => recipe.name);
+export const componentNames = () => RECIPES.map((recipe) => recipe.name);
+
+/** Each icon `nodes` draw: an `Icon`'s `name`, and every `{ __icon: name }` in their props. */
+function iconsInMarkup(nodes: readonly MarkupNode[], found: Set<string>) {
+  for (const node of nodes) {
+    if (typeof node === 'string') continue;
+    if (node.part === 'Icon' && typeof node.props['name'] === 'string')
+      found.add(node.props['name']);
+    iconsIn(node.props, found);
+    iconsInMarkup(node.children, found);
+  }
 }
 
 /**
- * Every example the capture renders, in every variant, and the icon names
- * they use, so an app's Tailwind compiles their classes and its bundle draws
- * their icons.
+ * Every recipe's markup in every variant, as text, and the icon names the
+ * recipes use, so the app's Tailwind compiles their classes and its bundle
+ * draws their icons. `undrawn` lists the app's component folders no recipe
+ * draws a part of, such as one the team added, which Figma doesn't get.
  */
-export function examples(
-  readmes: Readonly<Record<string, string>>,
-  props: PartProps
-) {
-  const markup: string[] = [];
+export function recipeContent({ props, folders }: AppParts) {
+  const text = new Set<string>();
   const icons = new Set<string>();
-  for (const recipe of allRecipes(readmes)) {
-    const base =
-      typeof recipe.markup === 'string'
-        ? recipe.markup
-        : example(readmes[cardOf(recipe.name)]);
+  const drawn = new Set<string>();
+  for (const recipe of RECIPES) {
     let properties: Property[] = [];
     try {
       properties = variantProperties(recipe, recipe.part ?? recipe.name, props);
     } catch {
-      // The capture reports a part the release lacks.
+      // The capture reports a part the app lacks.
     }
+    drawn.add(recipe.part ?? recipe.name);
     for (const values of combinations(properties)) {
-      const text =
-        typeof recipe.markup === 'function' ? recipe.markup(values) : base;
-      if (text) markup.push(text);
+      const nodes = markupOf(recipe, values) ?? [];
+      text.add(JSON.stringify(nodes));
+      partsIn(nodes, drawn);
+      iconsInMarkup(nodes, icons);
       iconsIn([recipe.rootProps, recipe.full?.(values)], icons);
       for (const property of properties) {
         const value = values[property.name];
@@ -613,15 +566,16 @@ export function examples(
       }
     }
   }
-  const text = [...new Set(markup)].join('\n');
-  // Nxds.Icon's `name`, and an icon prop such as Button's `start-icon`.
-  for (const match of text.matchAll(
-    /Nxds\.Icon"[^>]*\sname="([a-z0-9-]+)"|\s(?:[a-z]+-)?icon="([a-z0-9-]+)"/g
-  )) {
-    const name = match[1] ?? match[2];
-    if (name) icons.add(name);
-  }
-  return { markup: text, icons: [...icons].sort() };
+  const drawnFolders = new Set(
+    [...drawn].flatMap((part) => folders.get(part) ?? [])
+  );
+  return {
+    text: [...text].join('\n'),
+    icons: [...icons].sort(),
+    undrawn: [...new Set(folders.values())]
+      .filter((folder) => !drawnFolders.has(folder) && !(folder in NOT_DRAWN))
+      .sort(),
+  };
 }
 
 /** The icon set, with each icon's markup ready for Figma's SVG import. */
@@ -730,10 +684,8 @@ function attributeVariant(
 export async function captureComponents(
   input: CaptureInput
 ): Promise<CaptureResult> {
-  const tokens = JSON.parse(input.files.tokensJson) as TokensFile;
-  const traced = tracedTokens(tokens);
-  const every = allRecipes(input.files.readmes);
-  const names = every.map((recipe) => recipe.name);
+  const every = RECIPES;
+  const names = componentNames();
   // A card's name also takes its parts: Dialog brings Dialog/Header.
   const only = input.only;
   const wanted = new Set(
@@ -772,7 +724,7 @@ export async function captureComponents(
       const urlPath = new URL(route.request().url()).pathname;
       const file = served.get(urlPath);
       if (file) return route.fulfill({ contentType: file[0], body: file[1] });
-      const asset = input.app ? servedFile(urlPath) : undefined;
+      const asset = servedFile(urlPath);
       return asset
         ? route.fulfill({ contentType: asset.type, body: asset.body })
         : route.fulfill({ status: 404 });
@@ -780,22 +732,23 @@ export async function captureComponents(
     await page.goto(`${ORIGIN}/`);
     await page.mouse.move(1399, 999);
     await page.evaluate(installHelpers);
-    // An app's provider applies its appearance when it first mounts, so the values are read after.
+    // The app's provider applies its appearance when it first mounts, so the tokens are read after.
     await mountOn(page, { nodes: [], overrides: [], width: DEFAULT_WIDTH });
     await page.evaluate(settle);
+    const tokens = tokenList(await page.evaluate(readTokenNames));
+    const traced = tracedTokens(tokens);
     const values = await page.evaluate(readTokenValues, valueProbes(tokens));
     const effects = effectStyles(tokens, values);
+    await assertFontsLoaded(page);
     const cdp = await context.newCDPSession(page);
     await cdp.send('DOM.enable');
     await cdp.send('CSS.enable');
 
-    const appIcons = await page.evaluate(
+    const iconNames = await page.evaluate(
       () =>
         (window as { Nxds?: { __figma?: { icons?: string[] } } }).Nxds?.__figma
-          ?.icons
+          ?.icons ?? []
     );
-    const iconNames =
-      appIcons ?? propOf(input.props, 'Icon', 'name').literals ?? [];
     const icons = await page.evaluate(recordIcons, iconNames);
     const iconsByShape = new Map<string, string>();
     for (const icon of icons) {
@@ -804,7 +757,7 @@ export async function captureComponents(
         iconsByShape.set(signature, icon.name);
     }
     input.progress(`Captured ${icons.length} icons.`);
-    const styles = textStyles(tokens, await page.evaluate(readTypography));
+    const styles = textStyles(await page.evaluate(readTypography));
     const textStylesByToken = new Map(
       styles.map((style) => [style.token, style])
     );
@@ -819,32 +772,26 @@ export async function captureComponents(
     /** Every slot the captured components draw, to find the components they hold. */
     const seen = new Set<string>();
 
-    // Each example parsed once, with an app's attributes converted.
-    const parsed = new Map<string, MarkupNode[]>();
-    const nodesOf = async (markup: string) => {
-      const known = parsed.get(markup);
-      if (known) return known;
-      const nodes = await page.evaluate(parseMarkup, markup);
+    /** What the recipe renders for this variant, once the page has every part it draws. */
+    const nodesOf = async (recipe: Recipe, values: Record<string, string>) => {
+      const nodes = markupOf(recipe, values);
+      if (!nodes) {
+        throw new Error(
+          `it has no markup, and examples.tsx has no ${cardOf(recipe.name)} example`
+        );
+      }
       const missing = await page.evaluate(missingParts, [...partsIn(nodes)]);
       if (missing.length > 0) {
         throw new MissingParts(
-          `the page has no ${missing.map((part) => `Nxds.${part}`).join(', ')}`
+          `the app has no ${missing.map((part) => `Nxds.${part}`).join(', ')}`
         );
       }
-      const result = input.app ? convertMarkup(nodes, input.app.schema) : nodes;
-      parsed.set(markup, result);
-      return result;
+      return nodes;
     };
 
     const captureRecipe = async (recipe: Recipe): Promise<ComponentSpec> => {
       await page.setViewportSize(recipe.viewport ?? recipe.screen ?? VIEWPORT);
       const card = cardOf(recipe.name);
-      const base =
-        typeof recipe.markup === 'string'
-          ? recipe.markup
-          : example(input.files.readmes[card]);
-      if (recipe.markup === undefined && base === undefined)
-        throw new Error(`the ${card} README has no canvas example`);
       const part = recipe.part ?? recipe.name;
       const axes = variantProperties(recipe, part, input.props);
       const stateNames = Object.keys(recipe.states ?? {});
@@ -865,11 +812,7 @@ export async function captureComponents(
           blur: recipe.blur,
           ...recipe.states?.[values['State'] ?? 'default'],
         };
-        const markup =
-          typeof recipe.markup === 'function'
-            ? recipe.markup(values)
-            : (base ?? '');
-        const nodes = await nodesOf(markup);
+        const nodes = await nodesOf(recipe, values);
         const mount = (full: boolean): MountInput => ({
           nodes,
           overrides: overridesFor(
@@ -879,7 +822,7 @@ export async function captureComponents(
             state,
             full,
             part,
-            firstPart(markup)
+            rootPart(nodes)
           ),
           width: recipe.width ?? DEFAULT_WIDTH,
         });
@@ -908,6 +851,7 @@ export async function captureComponents(
         // A part only some of its whole's variants draw, such as an inline Alert's close button.
         if (!box && recipe.axesFrom) continue;
         if (!box) throw new Error(`nothing matches ${target}`);
+        const viewport = page.viewportSize() ?? VIEWPORT;
         await page.screenshot({
           path: path.join(input.outDir, screenshot),
           clip: {
@@ -916,6 +860,10 @@ export async function captureComponents(
             width: box.width + 16,
             height: box.height + 16,
           },
+          // A part laid out past the window, such as a tall vertical carousel's Next button.
+          fullPage:
+            box.x + box.width + 8 > viewport.width ||
+            box.y + box.height + 8 > viewport.height,
         });
         if (hasOffParts)
           await show(page, cdp, mount(true), recipe, target, state);
@@ -1015,7 +963,7 @@ export async function captureComponents(
         try {
           components.push(await captureRecipe(recipe));
         } catch (error) {
-          if (input.app && error instanceof MissingParts) {
+          if (error instanceof MissingParts) {
             notInstalled.push(recipe.name);
           } else {
             problems.push(`${recipe.name}: ${(error as Error).message}`);
@@ -1041,14 +989,13 @@ export async function captureComponents(
       problems.length = 0;
       notInstalled.length = 0;
     }
-    await assertFontsLoaded(page, tokens, input.app !== undefined);
     return {
       capture: {
         format: CAPTURE_FORMAT,
         version: PROTOCOL_VERSION,
         // The plugin removes what a full capture lacks, so a failed component stays.
         partial: input.only !== undefined || problems.length > 0,
-        nxds: { release: input.release, theme: input.theme },
+        nxds: { version: input.version },
         collections: collections(tokens, usedTokens(components), values),
         textStyles: styles,
         effectStyles: effects,
@@ -1064,20 +1011,25 @@ export async function captureComponents(
   }
 }
 
-/** Fails when the theme's text font fell back, so the screenshots wouldn't match Figma. */
-async function assertFontsLoaded(page: Page, tokens: TokensFile, app: boolean) {
-  const family = firstFamily(tokens.type.families['sans'] ?? '');
-  const { faces, loaded } = await page.evaluate((name) => {
+/** Loads the app's text font, and fails when it falls back, so the screenshots wouldn't match Figma. */
+async function assertFontsLoaded(page: Page) {
+  const { family, faces, loaded } = await page.evaluate(async () => {
+    const stack = getComputedStyle(document.documentElement).getPropertyValue(
+      '--nx-typography-family-font-sans'
+    );
+    const name = (stack.split(',')[0] ?? '').trim().replace(/^["']|["']$/g, '');
+    await document.fonts.load(`16px "${name}"`).catch(() => []);
     const named = [...document.fonts].filter(
       (face) => face.family.replace(/["']/g, '') === name
     );
     return {
+      family: name,
       faces: named.length,
       loaded: named.some((face) => face.status === 'loaded'),
     };
-  }, family);
-  // An app may set text in the system font, which declares no face; Figma's report names its replacement.
-  if (loaded || (app && faces === 0)) return;
+  });
+  // The app may set text in the system font, which declares no face; Figma's report names its replacement.
+  if (loaded || faces === 0) return;
   throw new ExportError(
     `${family} didn't load, so the screenshots would show a fallback font. Check your connection, then run the command again.`
   );

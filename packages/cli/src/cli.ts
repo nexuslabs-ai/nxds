@@ -313,18 +313,16 @@ function program(
       );
     });
 
-  withExportFlags(
-    exportCommand
-      .command('figma')
-      .description(
-        "export nxds as native Figma components, through the nxds Figma plugin. Theme flags set the theme, as they do for init. Inside an app, it exports the app's own components"
-      ),
-    'nxds-figma',
-    'write the export into an --out that holds other files'
-  )
+  exportCommand
+    .command('figma')
+    .description(
+      "export an app's own nxds components as native Figma components, through the nxds Figma plugin. Run it in the app"
+    )
+    .option('--out <path>', 'folder to write', 'nxds-figma')
     .option(
-      '--colors <path>',
-      "an app's own colours file, such as nxds-colors.css, in place of the theme's colours"
+      '--overwrite',
+      'write the export into an --out that holds other files',
+      false
     )
     .option(
       '--only <components>',
@@ -332,18 +330,15 @@ function program(
       nameList
     )
     .action(async (_options, command: Command) => {
-      const { colors, only } = command.opts<{
-        colors?: string;
+      const { out, overwrite, only } = command.opts<{
+        out: string;
+        overwrite: boolean;
         only?: string[];
       }>();
       // Loaded here, so no other command loads TypeScript, Chromium or esbuild.
       const { exportFigma } = await import('./commands/export-figma');
       done(
-        await exportFigma(
-          cwdOf(command),
-          { ...exportOptions(command), colors, only },
-          progress
-        )
+        await exportFigma(cwdOf(command), { out, overwrite, only }, progress)
       );
     });
 

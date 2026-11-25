@@ -1,10 +1,14 @@
+/** @jsx h */
 // What each Figma component is. By default a component renders its card's
-// README example from the release, its variant properties are the
-// string-literal props of its part in index.d.ts, and it is captured from the
-// element whose `data-slot` matches its part. An entry here only says what
-// differs: a part captured on its own, an overlay to open, the states to
-// capture, or markup when the example doesn't show the component well.
+// example in examples.tsx, its variant properties are the string-literal props
+// of its part in the app's own types, and it is captured from the element
+// whose `data-slot` matches its part. An entry here only says what differs: a
+// part captured on its own, an overlay to open, the states to capture, or
+// markup when the example doesn't show the component well. Every component
+// Figma gets has an entry, and a card without one isn't drawn.
+import { h, icon, type Markup, type Part } from './markup.ts';
 import type { ElementFacts, Override } from './page.ts';
+import * as Nxds from './parts.ts';
 import type { GridSpec } from './spec.ts';
 
 export interface StateSpec {
@@ -22,7 +26,7 @@ export interface StateSpec {
 
 export interface Axis {
   name: string;
-  /** The prop it sets, on `part` (default: the recipe's part). Its values come from index.d.ts unless `values` lists them. */
+  /** The prop it sets, on `part` (default: the recipe's part). Its values come from the prop's type unless `values` lists them. */
   prop?: string;
   part?: string;
   values?: readonly string[];
@@ -36,7 +40,7 @@ export const kebab = (name: string) =>
     .replace(/\s+/g, '-')
     .toLowerCase();
 
-/** The release card a component belongs to: its name up to a slash, such as `Tabs` for `Tabs/Tab`. */
+/** The card a component belongs to: its name up to a slash, such as `Tabs` for `Tabs/Tab`. */
 export const cardOf = (name: string) => name.split('/')[0] ?? name;
 
 export interface Size {
@@ -45,10 +49,10 @@ export interface Size {
 }
 
 export interface Recipe {
-  /** The Figma component's name. A part of a card's component is `<Card>/<Part>`, such as `Dialog/Header`, and renders that card's README example. */
+  /** The Figma component's name. A part of a card's component is `<Card>/<Part>`, such as `Dialog/Header`, and renders that card's example. */
   name: string;
-  /** Markup to render in place of the README example. */
-  markup?: string | ((values: Record<string, string>) => string);
+  /** What it renders, in place of its card's example. */
+  markup?: Markup | ((values: Record<string, string>) => Markup);
   /** The part whose props become variant properties and take each state's props. Default: `name`. */
   part?: string;
   /** The part whose props become the default variant properties, and that axes without a `part` set: a part's whole, so the part takes the whole's properties and keeps only those that change its look. Default: `part`. */
@@ -97,24 +101,6 @@ export interface Recipe {
   ): Record<string, string>;
 }
 
-/** Canvas markup for one part. A `true` attribute is written bare. */
-function x(
-  part: string,
-  attributes: Record<string, string | true> = {},
-  ...children: string[]
-) {
-  const written = Object.entries(attributes)
-    .map(([name, value]) =>
-      value === true
-        ? ` ${name}`
-        : ` ${name}="${value.replace(/"/g, '&quot;')}"`
-    )
-    .join('');
-  return `<x-import component-from-global-scope="Nxds.${part}"${written}>${children.join('')}</x-import>`;
-}
-
-const icon = (name: string) => ({ __icon: name });
-
 const CHECKED = ['false', 'true'] as const;
 
 const HOVER: StateSpec = { pseudo: ['hover'] };
@@ -158,7 +144,7 @@ const POSITION_SELECTOR: Record<string, string> = {
   middle: 'nth-child(2)',
   last: 'last-child',
 };
-/** The value of the ToggleGroup README example's item at each position. */
+/** The value of the ToggleGroup example's item at each position. */
 const ITEM_VALUES: Record<string, string> = {
   first: 'left',
   middle: 'center',
@@ -182,29 +168,27 @@ const stateOf = (element: ElementFacts) =>
     ? 'disabled'
     : 'default';
 
-const CHART_DATA = JSON.stringify([
+const CHART_DATA = [
   { month: 'Jan', desktop: 186, mobile: 80 },
   { month: 'Feb', desktop: 305, mobile: 200 },
   { month: 'Mar', desktop: 237, mobile: 120 },
   { month: 'Apr', desktop: 173, mobile: 190 },
   { month: 'May', desktop: 209, mobile: 130 },
   { month: 'Jun', desktop: 264, mobile: 140 },
-]);
-const PIE_DATA = JSON.stringify([
+];
+const PIE_DATA = [
   { browser: 'Chrome', visitors: 275 },
   { browser: 'Safari', visitors: 200 },
   { browser: 'Firefox', visitors: 187 },
   { browser: 'Edge', visitors: 173 },
-]);
+];
 
-const chart = (part: string, axes: Partial<Recipe>): Recipe => ({
-  name: `Chart/${part.replace(/Chart$/, '')}`,
-  part,
-  markup: x(part, {
-    data: CHART_DATA,
-    'x-key': 'month',
-    series: 'desktop,mobile',
-  }),
+const chart = (Chart: Part, axes: Partial<Recipe>): Recipe => ({
+  name: `Chart/${Chart.part.replace(/Chart$/, '')}`,
+  part: Chart.part,
+  markup: (
+    <Chart data={CHART_DATA} xKey="month" series={['desktop', 'mobile']} />
+  ),
   exclude: ['indicator'],
   width: 480,
   ...axes,
@@ -321,133 +305,119 @@ const opened = (
   ...extra,
 });
 
-const SIDEBAR = x(
-  'SidebarProvider',
-  {},
-  x(
-    'Sidebar',
-    { collapsible: 'none' },
-    x(
-      'SidebarHeader',
-      {},
-      x(
-        'SidebarMenu',
-        {},
-        x(
-          'SidebarMenuItem',
-          {},
-          x('SidebarMenuButton', { size: 'lg' }, 'Acme Inc')
-        )
-      )
-    ),
-    x(
-      'SidebarContent',
-      {},
-      x(
-        'SidebarGroup',
-        {},
-        x('SidebarGroupLabel', {}, 'Platform'),
-        x(
-          'SidebarGroupContent',
-          {},
-          x(
-            'SidebarMenu',
-            {},
-            x(
-              'SidebarMenuItem',
-              {},
-              x('SidebarMenuButton', {}, x('Icon', { name: 'house' }), 'Home')
-            ),
-            x(
-              'SidebarMenuItem',
-              {},
-              x('SidebarMenuButton', {}, x('Icon', { name: 'tray' }), 'Inbox'),
-              x('SidebarMenuBadge', {}, '24')
-            ),
-            x(
-              'SidebarMenuItem',
-              {},
-              x(
-                'SidebarMenuButton',
-                {},
-                x('Icon', { name: 'gear' }),
-                'Settings'
-              )
-            )
-          )
-        )
-      )
-    ),
-    x(
-      'SidebarFooter',
-      {},
-      x(
-        'SidebarMenu',
-        {},
-        x(
-          'SidebarMenuItem',
-          {},
-          x(
-            'SidebarMenuButton',
-            {},
-            x('Icon', { name: 'user' }),
-            'Ada Lovelace'
-          )
-        )
-      )
-    )
-  )
+const SIDEBAR = (
+  <Nxds.SidebarProvider>
+    <Nxds.Sidebar collapsible="none">
+      <Nxds.SidebarHeader>
+        <Nxds.SidebarMenu>
+          <Nxds.SidebarMenuItem>
+            <Nxds.SidebarMenuButton size="lg">Acme Inc</Nxds.SidebarMenuButton>
+          </Nxds.SidebarMenuItem>
+        </Nxds.SidebarMenu>
+      </Nxds.SidebarHeader>
+      <Nxds.SidebarContent>
+        <Nxds.SidebarGroup>
+          <Nxds.SidebarGroupLabel>Platform</Nxds.SidebarGroupLabel>
+          <Nxds.SidebarGroupContent>
+            <Nxds.SidebarMenu>
+              <Nxds.SidebarMenuItem>
+                <Nxds.SidebarMenuButton>
+                  <Nxds.Icon name="house" />
+                  Home
+                </Nxds.SidebarMenuButton>
+              </Nxds.SidebarMenuItem>
+              <Nxds.SidebarMenuItem>
+                <Nxds.SidebarMenuButton>
+                  <Nxds.Icon name="tray" />
+                  Inbox
+                </Nxds.SidebarMenuButton>
+                <Nxds.SidebarMenuBadge>24</Nxds.SidebarMenuBadge>
+              </Nxds.SidebarMenuItem>
+              <Nxds.SidebarMenuItem>
+                <Nxds.SidebarMenuButton>
+                  <Nxds.Icon name="gear" />
+                  Settings
+                </Nxds.SidebarMenuButton>
+              </Nxds.SidebarMenuItem>
+            </Nxds.SidebarMenu>
+          </Nxds.SidebarGroupContent>
+        </Nxds.SidebarGroup>
+      </Nxds.SidebarContent>
+      <Nxds.SidebarFooter>
+        <Nxds.SidebarMenu>
+          <Nxds.SidebarMenuItem>
+            <Nxds.SidebarMenuButton>
+              <Nxds.Icon name="user" />
+              Ada Lovelace
+            </Nxds.SidebarMenuButton>
+          </Nxds.SidebarMenuItem>
+        </Nxds.SidebarMenu>
+      </Nxds.SidebarFooter>
+    </Nxds.Sidebar>
+  </Nxds.SidebarProvider>
 );
 
 const ALERT = ({ Layout }: Record<string, string>) => {
-  const title = x('AlertTitle', {}, 'Your trial ends in 3 days');
-  const description = x(
-    'AlertDescription',
-    {},
-    'Upgrade to keep your projects and team seats.'
+  const title = <Nxds.AlertTitle>Your trial ends in 3 days</Nxds.AlertTitle>;
+  const description = (
+    <Nxds.AlertDescription>
+      Upgrade to keep your projects and team seats.
+    </Nxds.AlertDescription>
   );
-  const alertIcon = x('AlertIcon', {}, x('Icon', { name: 'info' }));
-  const upgrade = x('Button', { variant: 'outline' }, 'Upgrade');
+  const alertIcon = (
+    <Nxds.AlertIcon>
+      <Nxds.Icon name="info" />
+    </Nxds.AlertIcon>
+  );
+  const upgrade = <Nxds.Button variant="outline">Upgrade</Nxds.Button>;
   if (Layout === 'inline') {
-    return x(
-      'Alert',
-      {},
-      alertIcon,
-      x('AlertContent', {}, title, description),
-      x('AlertActions', {}, upgrade, x('AlertClose'))
+    return (
+      <Nxds.Alert>
+        {alertIcon}
+        <Nxds.AlertContent>
+          {title}
+          {description}
+        </Nxds.AlertContent>
+        <Nxds.AlertActions>
+          {upgrade}
+          <Nxds.AlertClose />
+        </Nxds.AlertActions>
+      </Nxds.Alert>
     );
   }
-  return x(
-    'Alert',
-    {},
-    alertIcon,
-    title,
-    description,
-    x('AlertActions', {}, upgrade)
+  return (
+    <Nxds.Alert>
+      {alertIcon}
+      {title}
+      {description}
+      <Nxds.AlertActions>{upgrade}</Nxds.AlertActions>
+    </Nxds.Alert>
   );
 };
 
-const CARD = x(
-  'Card',
-  {},
-  x(
-    'CardHeader',
-    {},
-    x('CardTitle', {}, 'Team plan'),
-    x('CardDescription', {}, 'Billed monthly. Cancel anytime.'),
-    x('CardAction', {}, x('Button', { size: 'sm', variant: 'outline' }, 'Edit'))
-  ),
-  x(
-    'CardContent',
-    {},
-    '<p class="nx:m-0 nx:typography-body-default">8 of 10 seats used. Invite two more people before your next bill.</p>'
-  ),
-  x(
-    'CardFooter',
-    {},
-    x('Button', { variant: 'outline' }, 'Cancel'),
-    x('Button', {}, 'Upgrade')
-  )
+const CARD = (
+  <Nxds.Card>
+    <Nxds.CardHeader>
+      <Nxds.CardTitle>Team plan</Nxds.CardTitle>
+      <Nxds.CardDescription>
+        Billed monthly. Cancel anytime.
+      </Nxds.CardDescription>
+      <Nxds.CardAction>
+        <Nxds.Button size="sm" variant="outline">
+          Edit
+        </Nxds.Button>
+      </Nxds.CardAction>
+    </Nxds.CardHeader>
+    <Nxds.CardContent>
+      <p className="nx:m-0 nx:typography-body-default">
+        8 of 10 seats used. Invite two more people before your next bill.
+      </p>
+    </Nxds.CardContent>
+    <Nxds.CardFooter>
+      <Nxds.Button variant="outline">Cancel</Nxds.Button>
+      <Nxds.Button>Upgrade</Nxds.Button>
+    </Nxds.CardFooter>
+  </Nxds.Card>
 );
 
 /** The part each kind of pagination link is drawn by. */
@@ -458,38 +428,31 @@ const PAGINATION_PARTS: Record<string, string> = {
 };
 
 /** A sidebar holding one menu button, with or without its icon. */
-const MENU_BUTTON = (withIcon: boolean) =>
-  x(
-    'SidebarProvider',
-    {},
-    x(
-      'Sidebar',
-      { collapsible: 'none' },
-      x(
-        'SidebarContent',
-        {},
-        x(
-          'SidebarMenu',
-          {},
-          x(
-            'SidebarMenuItem',
-            {},
-            x(
-              'SidebarMenuButton',
-              {},
-              ...(withIcon ? [x('Icon', { name: 'house' })] : []),
-              'Home'
-            )
-          )
-        )
-      )
-    )
-  );
+const MENU_BUTTON = (withIcon: boolean) => (
+  <Nxds.SidebarProvider>
+    <Nxds.Sidebar collapsible="none">
+      <Nxds.SidebarContent>
+        <Nxds.SidebarMenu>
+          <Nxds.SidebarMenuItem>
+            <Nxds.SidebarMenuButton>
+              {withIcon && <Nxds.Icon name="house" />}
+              Home
+            </Nxds.SidebarMenuButton>
+          </Nxds.SidebarMenuItem>
+        </Nxds.SidebarMenu>
+      </Nxds.SidebarContent>
+    </Nxds.Sidebar>
+  </Nxds.SidebarProvider>
+);
 
 // Wholes whose parts are their own components, each part taking the whole's variant properties.
 const AVATAR: Recipe = {
   name: 'Avatar',
-  markup: x('Avatar', {}, x('AvatarFallback', {}, 'AL')),
+  markup: (
+    <Nxds.Avatar>
+      <Nxds.AvatarFallback>AL</Nxds.AvatarFallback>
+    </Nxds.Avatar>
+  ),
   booleans: ['ring'],
 };
 const MARKER: Recipe = { name: 'Marker' };
@@ -617,7 +580,7 @@ export const RECIPES: readonly Recipe[] = [
   // Components that others hold.
   {
     name: 'Button',
-    markup: x('Button', {}, 'Button'),
+    markup: <Nxds.Button>Button</Nxds.Button>,
     axes: [
       { name: 'Variant', prop: 'variant' },
       { name: 'Size', prop: 'size' },
@@ -674,7 +637,7 @@ export const RECIPES: readonly Recipe[] = [
   },
   {
     name: 'Badge',
-    markup: x('Badge', {}, 'Badge'),
+    markup: <Nxds.Badge>Badge</Nxds.Badge>,
     booleans: ['isCaps'],
     full: () => ({ leftIcon: icon('check'), rightIcon: icon('x') }),
     parts: [
@@ -691,7 +654,7 @@ export const RECIPES: readonly Recipe[] = [
     ],
   },
   { name: 'Kbd' },
-  { name: 'Label', markup: x('Label', {}, 'Email address') },
+  { name: 'Label', markup: <Nxds.Label>Email address</Nxds.Label> },
   { name: 'Separator' },
   { name: 'Spinner' },
   { name: 'Skeleton' },
@@ -720,7 +683,7 @@ export const RECIPES: readonly Recipe[] = [
   },
   {
     name: 'Switch',
-    markup: x('Switch', { 'aria-label': 'Notifications' }),
+    markup: <Nxds.Switch aria-label="Notifications" />,
     axes: [
       { name: 'Size', prop: 'size' },
       {
@@ -756,10 +719,7 @@ export const RECIPES: readonly Recipe[] = [
   },
   {
     name: 'Input',
-    markup: x('Input', {
-      placeholder: 'you@example.com',
-      'aria-label': 'Email',
-    }),
+    markup: <Nxds.Input placeholder="you@example.com" aria-label="Email" />,
     states: {
       ...FIELD_STATES,
       filled: { props: { defaultValue: 'ada@example.com' } },
@@ -768,10 +728,12 @@ export const RECIPES: readonly Recipe[] = [
   },
   {
     name: 'Textarea',
-    markup: x('Textarea', {
-      placeholder: 'Tell us about your project',
-      'aria-label': 'Project',
-    }),
+    markup: (
+      <Nxds.Textarea
+        placeholder="Tell us about your project"
+        aria-label="Project"
+      />
+    ),
     states: {
       ...FIELD_STATES,
       filled: { props: { defaultValue: 'A dashboard for our sales team.' } },
@@ -1116,15 +1078,13 @@ export const RECIPES: readonly Recipe[] = [
   partIn(CAROUSEL, 'Previous', 'CarouselPrevious'),
   partIn(CAROUSEL, 'Next', 'CarouselNext'),
   CAROUSEL,
-  chart('BarChart', { booleans: ['stacked'] }),
-  chart('AreaChart', { booleans: ['stacked'] }),
-  chart('LineChart', { booleans: ['dots'] }),
-  chart('PieChart', {
-    markup: x('PieChart', {
-      data: PIE_DATA,
-      'name-key': 'browser',
-      'value-key': 'visitors',
-    }),
+  chart(Nxds.BarChart, { booleans: ['stacked'] }),
+  chart(Nxds.AreaChart, { booleans: ['stacked'] }),
+  chart(Nxds.LineChart, { booleans: ['dots'] }),
+  chart(Nxds.PieChart, {
+    markup: (
+      <Nxds.PieChart data={PIE_DATA} nameKey="browser" valueKey="visitors" />
+    ),
     booleans: ['donut', 'labels'],
   }),
   partIn(CHOICE_CARD, 'Title', 'ChoiceCardTitle'),
@@ -1343,10 +1303,12 @@ export const RECIPES: readonly Recipe[] = [
   TABS,
   {
     name: 'Toast',
-    markup: x('Toast', {
-      title: 'Changes saved',
-      description: 'Your profile is up to date.',
-    }),
+    markup: (
+      <Nxds.Toast
+        title="Changes saved"
+        description="Your profile is up to date."
+      />
+    ),
     booleans: ['closeButton', 'richColors'],
   },
   { name: 'ToggleGroup' },
@@ -1355,11 +1317,9 @@ export const RECIPES: readonly Recipe[] = [
   TOOLBAR,
 ];
 
-/** Cards that draw no component of their own: Show and Hide only toggle visibility, Cover is the Claude Design cover, Icon is the icon set, and Sonner's toast is Toast. */
-export const SKIPPED_CARDS: readonly string[] = [
-  'Show',
-  'Hide',
-  'Cover',
-  'Icon',
-  'Sonner',
-];
+/** Component folders Figma gets no component of their own for, and why, so the export doesn't list them as missing a recipe. */
+export const NOT_DRAWN: Readonly<Record<string, string>> = {
+  show: 'Show only toggles visibility.',
+  hide: 'Hide only toggles visibility.',
+  sonner: "Sonner's toast is the Toast recipe.",
+};

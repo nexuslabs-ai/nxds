@@ -7,21 +7,20 @@
   "type": "module",
   "exports": {
     "./app": "./src/app.ts",
-    "./app-props": "./src/app-props.ts",
     "./capture": "./src/capture.ts",
     "./errors": "./src/errors.ts",
     "./link": "./src/link.ts",
     "./port": "./src/port.ts",
+    "./props": "./src/props.ts",
     "./spec": "./src/spec.ts"
   },
   "scripts": {
     "build": "node scripts/build-plugin.ts",
-    "smoke": "node scripts/smoke.ts",
+    "smoke": "node --import ./scripts/register-tsx.ts scripts/smoke.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p plugin",
     "clean": "rm -rf plugin/dist"
   },
   "dependencies": {
-    "@nxds/claude-design": "workspace:*",
     "@nxds/source-model": "workspace:*",
     "culori": "^4.0.2",
     "esbuild": "^0.28.1",

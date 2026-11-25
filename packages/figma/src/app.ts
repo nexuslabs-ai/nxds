@@ -27,12 +27,12 @@ export interface AppPage {
   /** The compiled CSS entry, and the path it's served at, so its relative URLs reach the app's files. */
   css: { path: string; css: string };
   script: { path: string; js: string };
-  /** Icon names the examples use that the app's icon library has no icon for. */
+  /** Icon names the recipes use that the app's icon library has no icon for. */
   missingIcons: string[];
 }
 
 /**
- * nxds's internal icons, by the name an example gives `Nxds.Icon`, from the
+ * nxds's internal icons, by the name a recipe gives `Nxds.Icon`, from the
  * Phosphor adapter in packages/react/src/lib/icons.ts. An app on another
  * library draws these through its own adapter.
  */
@@ -97,8 +97,8 @@ export function componentFiles(folder: string) {
 }
 
 /**
- * Nxds.Toast as the release draws it on a canvas, where nothing calls
- * `toast()`: one toast, shown in place in the app's own Toaster.
+ * A recipe's Nxds.Toast, where nothing calls `toast()`: one toast, shown in
+ * place in the app's own Toaster.
  */
 const TOAST = [
   "const IN_PLACE = { position: 'relative', inset: 'auto', transform: 'none' };",
@@ -122,11 +122,11 @@ const TOAST = [
 
 /**
  * The bundle's entry: every component, the app's provider and default
- * appearance, `Icon`, which draws an example's icon by name, and `Toast` when
+ * appearance, `Icon`, which draws a recipe's icon by name, and `Toast` when
  * the app has Sonner. A Phosphor app draws any Phosphor name; another library
  * draws the names nxds's own icons cover, through the app's adapter.
  */
-function entrySource(app: AppSetup, exampleIcons: readonly string[]) {
+function entrySource(app: AppSetup, recipeIcons: readonly string[]) {
   const folder = path.join(app.root, app.dir);
   const state = path.join(
     app.root,
@@ -136,8 +136,8 @@ function entrySource(app: AppSetup, exampleIcons: readonly string[]) {
   const sonner = path.join(folder, 'components/sonner/sonner.tsx');
   const phosphor = app.iconLibrary === 'phosphor';
   const drawn = phosphor
-    ? exampleIcons
-    : exampleIcons.filter((name) => INTERNAL_ICONS[name]);
+    ? recipeIcons
+    : recipeIcons.filter((name) => INTERNAL_ICONS[name]);
   const lines = [
     "import * as React from 'react';",
     "import * as ReactDOM from 'react-dom';",
@@ -178,7 +178,7 @@ function entrySource(app: AppSetup, exampleIcons: readonly string[]) {
   ];
   return {
     source: lines.join('\n'),
-    missing: exampleIcons.filter((name) => !drawn.includes(name)),
+    missing: recipeIcons.filter((name) => !drawn.includes(name)),
   };
 }
 
@@ -306,16 +306,23 @@ async function appTailwind(root: string) {
   return { compile: node.compile, Scanner: oxide.Scanner };
 }
 
-/** The app's CSS entry, compiled with every class its nxds folder and the examples use. */
-async function compileCss(app: AppSetup, markup: string) {
+/**
+ * The app's CSS entry, compiled with every class its nxds folder and the
+ * recipes use, and every `typography-*` utility its CSS defines, so each
+ * becomes a text style whether a component uses it or not.
+ */
+async function compileCss(app: AppSetup, recipes: string) {
   const { compile, Scanner } = await appTailwind(app.root);
   const entry = path.join(app.root, app.css);
+  const files = [entry];
   let compiler: Awaited<ReturnType<typeof compile>>;
   try {
     compiler = await compile(readFileSync(entry, 'utf8'), {
       base: path.dirname(entry),
       from: entry,
-      onDependency() {},
+      onDependency(file) {
+        files.push(file);
+      },
       shouldRewriteUrls: true,
     });
   } catch (error) {
@@ -323,6 +330,15 @@ async function compileCss(app: AppSetup, markup: string) {
       `The app's CSS entry ${app.css} didn't compile: ${(error as Error).message}`
     );
   }
+  const typography = files.flatMap((file) =>
+    existsSync(file)
+      ? [
+          ...readFileSync(file, 'utf8').matchAll(
+            /@utility\s+(typography-[\w-]+)/g
+          ),
+        ].map((match) => `nx:${match[1]}`)
+      : []
+  );
   const scanner = new Scanner({
     sources: [
       { base: path.join(app.root, app.dir), pattern: '**/*', negated: false },
@@ -330,24 +346,25 @@ async function compileCss(app: AppSetup, markup: string) {
   });
   const candidates = [
     ...scanner.scan(),
-    ...scanner.scanFiles([{ content: markup, extension: 'html' }]),
+    ...scanner.scanFiles([{ content: recipes, extension: 'html' }]),
+    ...typography,
   ];
   return { path: servedPath(entry), css: compiler.build(candidates) };
 }
 
 /**
- * The capture page's CSS and script for `app`. `markup` is every example the
- * capture renders, so their classes are compiled too, and `exampleIcons` the
- * icon names they use.
+ * The capture page's CSS and script for `app`. `recipes` is every recipe's
+ * markup as text, so its classes are compiled too, and `recipeIcons` the icon
+ * names the recipes use.
  */
 export async function buildAppPage(
   app: AppSetup,
-  markup: string,
-  exampleIcons: readonly string[]
+  recipes: string,
+  recipeIcons: readonly string[]
 ): Promise<AppPage> {
-  const { source, missing } = entrySource(app, exampleIcons);
+  const { source, missing } = entrySource(app, recipeIcons);
   return {
-    css: await compileCss(app, markup),
+    css: await compileCss(app, recipes),
     script: { path: '/app.js', js: await bundle(app, source) },
     missingIcons: missing,
   };

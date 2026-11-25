@@ -5,7 +5,7 @@
 export const CAPTURE_FORMAT = 'nxds-figma-capture';
 export const REPORT_FORMAT = 'nxds-figma-report';
 /** The version of capture.json, the report and the plugin's tags, which the plugin stamps on the Figma file. The plugin refuses a capture or a Figma file of another version. The CLI refuses a report of another version. */
-export const PROTOCOL_VERSION = 7;
+export const PROTOCOL_VERSION = 8;
 
 /** sRGB, each channel 0–1. */
 export interface Rgba {
@@ -187,7 +187,7 @@ export interface GridSpec {
 
 export interface ComponentSpec {
   name: string;
-  /** The release card it belongs to, such as `Tabs` for Tab. Each card gets its own Figma page. */
+  /** The card it belongs to, such as `Tabs` for Tab. Each card gets its own Figma page. */
   card: string;
   variantProperties: { name: string; values: string[] }[];
   grid: GridSpec;
@@ -210,7 +210,6 @@ export interface VariableSpec {
   /** The token this one is declared as a reference to, in light and in dark, which Figma makes an alias. */
   lightAlias?: string;
   darkAlias?: string;
-  description: string;
 }
 
 export interface CollectionSpec {
@@ -230,14 +229,12 @@ export interface TextStyleSpec {
   letterSpacing: number;
   /** The typography tokens its class declares, by the text field each sets. */
   variables: { fontSize?: string; lineHeight?: string; letterSpacing?: string };
-  description: string;
 }
 
 export interface EffectStyleSpec {
   name: string;
   token: string;
   effects: Shadow[];
-  description: string;
 }
 
 export interface IconSpec {
@@ -251,7 +248,8 @@ export interface CaptureFile {
   version: typeof PROTOCOL_VERSION;
   /** True when it holds only some components, so the plugin leaves every other part of the file alone. */
   partial: boolean;
-  nxds: { release: string; theme: Record<string, string> };
+  /** The nxds release the app's components came from. */
+  nxds: { version: string };
   collections: CollectionSpec[];
   textStyles: TextStyleSpec[];
   effectStyles: EffectStyleSpec[];

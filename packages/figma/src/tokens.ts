@@ -1,8 +1,10 @@
-// tokens.json → Figma variables, text styles and effect styles, plus the
-// colour and shadow parsing the converter shares.
+// The app's tokens, as its CSS declares them, → Figma variables, text styles
+// and effect styles, plus the colour and shadow parsing the converter shares.
+// Every name comes from the `--nx-*` properties on the capture page, and every
+// value from the page, so what Figma gets is what the app's CSS renders.
 import { clampRgb, converter, parse } from 'culori';
 
-import type { Kind, TokenValue, ValueKind } from './page.ts';
+import type { Kind, TokenValue, TypographyFacts, ValueKind } from './page.ts';
 import type {
   CollectionSpec,
   EffectStyleSpec,
@@ -11,41 +13,6 @@ import type {
   TextStyleSpec,
   VariableSpec,
 } from './spec.ts';
-
-type Themed = string | { light?: string; dark?: string };
-
-interface ListToken {
-  name: string;
-  value: Themed;
-  usage: string;
-}
-
-/** The parts of the release's tokens.json this export reads. */
-export interface TokensFile {
-  color: { tokens: ListToken[] };
-  type: {
-    families: Record<string, string>;
-    groups: {
-      name: string;
-      family: string;
-      styles: {
-        name: string;
-        fontSize: string;
-        lineHeight?: string;
-        fontWeight?: number;
-        letterSpacing?: string;
-        usage: string;
-      }[];
-    }[];
-  };
-  spacing?: { tokens: ListToken[] };
-  radius?: { tokens: ListToken[] };
-  borderWidth?: { tokens: ListToken[] };
-  shadow?: { tokens: ListToken[] };
-  typeScale?: { tokens: ListToken[] };
-  icon?: { tokens: ListToken[] };
-  width?: { tokens: ListToken[] };
-}
 
 const toRgb = converter('rgb');
 const round = (channel: number) => Math.round(channel * 10000) / 10000;
@@ -123,11 +90,49 @@ export function firstFamily(stack: string) {
   return (splitTopLevel(stack, ',')[0] ?? '').replace(/^["']|["']$/g, '');
 }
 
-const light = (value: Themed) =>
-  typeof value === 'string' ? value : (value.light ?? value.dark ?? '');
+/** The tokens that become variables, by family, each a list of names without `--`. */
+export interface TokenList {
+  color: string[];
+  spacing: string[];
+  radius: string[];
+  borderWidth: string[];
+  shadow: string[];
+  icon: string[];
+  width: string[];
+  typeScale: string[];
+}
 
-const dark = (value: Themed) =>
-  typeof value === 'string' ? undefined : value.dark;
+/** Each family, by the name pattern its tokens share. Layout, motion, z-index and the scale knobs aren't Figma variables. */
+const FAMILIES: Readonly<Record<keyof TokenList, RegExp>> = {
+  color: /^nx-color-/,
+  spacing: /^nx-spacing-/,
+  radius: /^nx-radius-/,
+  borderWidth: /^nx-borderwidth-/,
+  shadow: /^nx-shadow-/,
+  icon: /^nx-icon-(?:glyph|stroke)-/,
+  width: /^nx-container-(?!p$|gap$)/,
+  typeScale:
+    /^nx-typography-(?:size|weight|line-height|letterspacing)-|^nx-typography-code-size$/,
+};
+
+/** The page's `--nx-*` names sorted into the families that become variables. */
+export function tokenList(names: readonly string[]): TokenList {
+  const list = (pattern: RegExp) => names.filter((name) => pattern.test(name));
+  return {
+    color: list(FAMILIES.color),
+    spacing: list(FAMILIES.spacing),
+    radius: list(FAMILIES.radius),
+    borderWidth: list(FAMILIES.borderWidth),
+    shadow: list(FAMILIES.shadow),
+    icon: list(FAMILIES.icon),
+    width: list(FAMILIES.width),
+    typeScale: list(FAMILIES.typeScale),
+  };
+}
+
+/** A weight or the icon stroke ratio is a bare number; every other float token is a length. */
+const isNumber = (token: string) =>
+  /^nx-typography-weight-|^nx-icon-stroke-ratio$/.test(token);
 
 /** `nx-color-primary-background` → `primary/background`: the first word groups the rest. */
 function colorName(token: string) {
@@ -145,24 +150,22 @@ const aliases = (value: TokenValue | undefined) => ({
 });
 
 function colorVariables(
-  tokens: readonly ListToken[],
+  tokens: readonly string[],
   values: TokenValues
 ): VariableSpec[] {
   return tokens.flatMap((token): VariableSpec[] => {
-    const page = values[token.name];
-    const lightValue = rgba(page?.light ?? light(token.value));
+    const page = values[token];
+    const lightValue = rgba(page?.light ?? '');
     if (!lightValue) return [];
-    const darkText = page?.dark ?? dark(token.value);
-    const darkValue = darkText === undefined ? undefined : rgba(darkText);
+    const darkValue = page?.dark === undefined ? undefined : rgba(page.dark);
     return [
       {
-        token: token.name,
-        name: colorName(token.name),
+        token,
+        name: colorName(token),
         type: 'COLOR',
         light: lightValue,
         ...(darkValue ? { dark: darkValue } : {}),
         ...aliases(page),
-        description: token.usage,
       },
     ];
   });
@@ -178,22 +181,21 @@ function numberValue(value: string) {
 }
 
 function floatVariables(
-  tokens: readonly ListToken[],
+  tokens: readonly string[],
   prefix: string,
   values: TokenValues
 ): VariableSpec[] {
   return tokens.flatMap((token): VariableSpec[] => {
-    const page = values[token.name];
-    const value = numberValue(page?.light ?? light(token.value));
+    const page = values[token];
+    const value = numberValue(page?.light ?? '');
     if (!Number.isFinite(value)) return [];
     return [
       {
-        token: token.name,
-        name: token.name.replace(prefix, ''),
+        token,
+        name: token.replace(prefix, ''),
         type: 'FLOAT',
         light: value,
         ...aliases(page),
-        description: token.usage,
       },
     ];
   });
@@ -212,7 +214,7 @@ function typographyName(token: string) {
   return match ? `${match[1]}/${match[2]}` : short;
 }
 
-/** The families that become variables, after Color, with each one's name prefix. */
+/** The families that become float variables, after Color. */
 const FLOAT_FAMILIES = [
   'spacing',
   'radius',
@@ -223,24 +225,16 @@ const FLOAT_FAMILIES = [
 ] as const;
 
 /** Every token the page reads a value for: each variable, and each shadow for its effect style. */
-export function valueProbes(tokens: TokensFile): [string, ValueKind][] {
-  const unit = (token: ListToken): ValueKind =>
-    /(px|rem|em)$/.test(light(token.value).trim()) ? 'length' : 'number';
+export function valueProbes(tokens: TokenList): [string, ValueKind][] {
   return [
-    ...tokens.color.tokens.map((token): [string, ValueKind] => [
-      token.name,
-      'color',
-    ]),
+    ...tokens.color.map((token): [string, ValueKind] => [token, 'color']),
     ...FLOAT_FAMILIES.flatMap((family) =>
-      (tokens[family]?.tokens ?? []).map((token): [string, ValueKind] => [
-        token.name,
-        unit(token),
+      tokens[family].map((token): [string, ValueKind] => [
+        token,
+        isNumber(token) ? 'number' : 'length',
       ])
     ),
-    ...(tokens.shadow?.tokens ?? []).map((token): [string, ValueKind] => [
-      token.name,
-      'shadow',
-    ]),
+    ...tokens.shadow.map((token): [string, ValueKind] => [token, 'shadow']),
   ];
 }
 
@@ -250,7 +244,7 @@ export function valueProbes(tokens: TokensFile): [string, ValueKind][] {
  * declared as a reference to it.
  */
 export function collections(
-  tokens: TokensFile,
+  tokens: TokenList,
   used: ReadonlySet<string>,
   values: TokenValues
 ): CollectionSpec[] {
@@ -259,16 +253,20 @@ export function collections(
       [value.lightAlias, value.darkAlias].filter((name) => name !== undefined)
     )
   );
+  /** `nx-container-sm` → `container/sm`, `nx-icon-glyph-sm` → `glyph/sm`. */
+  const grouped = (variables: VariableSpec[]) =>
+    variables.map((variable) => ({
+      ...variable,
+      name: variable.name.replace(/^([a-z]+)-/, '$1/'),
+    }));
   return [
     {
       name: 'Color',
       themed: true,
       variables: colorVariables(
-        tokens.color.tokens.filter(
+        tokens.color.filter(
           (token) =>
-            !isPrimitiveColor(token.name) ||
-            used.has(token.name) ||
-            referenced.has(token.name)
+            !isPrimitiveColor(token) || used.has(token) || referenced.has(token)
         ),
         values
       ),
@@ -276,71 +274,42 @@ export function collections(
     {
       name: 'Spacing',
       themed: false,
-      variables: floatVariables(
-        tokens.spacing?.tokens ?? [],
-        'nx-spacing-',
-        values
-      ),
+      variables: floatVariables(tokens.spacing, 'nx-spacing-', values),
     },
     {
       name: 'Radius',
       themed: false,
-      variables: floatVariables(
-        tokens.radius?.tokens ?? [],
-        'nx-radius-',
-        values
-      ),
+      variables: floatVariables(tokens.radius, 'nx-radius-', values),
     },
     {
       name: 'Border width',
       themed: false,
-      variables: floatVariables(
-        tokens.borderWidth?.tokens ?? [],
-        'nx-borderwidth-',
-        values
-      ),
+      variables: floatVariables(tokens.borderWidth, 'nx-borderwidth-', values),
     },
     {
       name: 'Icon',
       themed: false,
-      // `nx-icon-glyph-default` → `glyph/default`.
-      variables: floatVariables(
-        tokens.icon?.tokens ?? [],
-        'nx-icon-',
-        values
-      ).map((variable) => ({
-        ...variable,
-        name: variable.name.replace(/^([a-z]+)-/, '$1/'),
-      })),
+      variables: grouped(floatVariables(tokens.icon, 'nx-icon-', values)),
     },
     {
       name: 'Width',
       themed: false,
-      // `nx-container-sm` → `container/sm`.
-      variables: floatVariables(tokens.width?.tokens ?? [], 'nx-', values).map(
-        (variable) => ({
-          ...variable,
-          name: variable.name.replace(/^([a-z]+)-/, '$1/'),
-        })
-      ),
+      variables: grouped(floatVariables(tokens.width, 'nx-', values)),
     },
     {
       name: 'Typography',
       themed: false,
-      variables: floatVariables(tokens.typeScale?.tokens ?? [], '', values).map(
-        (variable) => ({
-          ...variable,
-          name: typographyName(variable.token),
-        })
+      variables: floatVariables(tokens.typeScale, '', values).map(
+        (variable) => ({ ...variable, name: typographyName(variable.token) })
       ),
     },
   ];
 }
 
 /** Every token a stand-in traces, with the kind of value it holds. */
-export function tracedTokens(tokens: TokensFile): [string, Kind][] {
-  const list = (family: { tokens: ListToken[] } | undefined, kind: Kind) =>
-    (family?.tokens ?? []).map((token): [string, Kind] => [token.name, kind]);
+export function tracedTokens(tokens: TokenList): [string, Kind][] {
+  const list = (names: readonly string[], kind: Kind) =>
+    names.map((token): [string, Kind] => [token, kind]);
   return [
     ...list(tokens.color, 'color'),
     ...list(tokens.spacing, 'length'),
@@ -348,64 +317,55 @@ export function tracedTokens(tokens: TokensFile): [string, Kind][] {
     ...list(tokens.borderWidth, 'length'),
     ...list(tokens.shadow, 'shadow'),
     ...list(tokens.width, 'length'),
-    // Only the icon tokens in px are sizes; the stroke ratio has no unit.
-    ...(tokens.icon?.tokens ?? []).flatMap((token): [string, Kind][] =>
-      light(token.value).endsWith('px') ? [[token.name, 'length']] : []
+    ...list(
+      tokens.icon.filter((token) => !isNumber(token)),
+      'length'
     ),
-    ...(tokens.typeScale?.tokens ?? []).flatMap((token): [string, Kind][] => {
-      if (token.name.startsWith('nx-typography-size-'))
-        return [[token.name, 'font-size']];
-      if (/^nx-typography-(line-height|letterspacing)-/.test(token.name))
-        return [[token.name, 'length']];
+    ...tokens.typeScale.flatMap((token): [string, Kind][] => {
+      if (token.startsWith('nx-typography-size-'))
+        return [[token, 'font-size']];
+      if (/^nx-typography-(line-height|letterspacing)-/.test(token))
+        return [[token, 'length']];
       return [];
     }),
   ];
 }
 
-const px = (value: string | undefined) =>
-  value === undefined ? undefined : Number.parseFloat(value);
-
-/** `typography-label-caps` in group `label` → `label/caps`. */
-function textStyleName(group: string, token: string) {
+/** `typography-label-caps` → `label/caps`: the first word names the group. */
+function textStyleName(token: string) {
   const short = token.replace(/^typography-/, '');
-  return short.startsWith(`${group}-`)
-    ? `${group}/${short.slice(group.length + 1)}`
-    : short;
+  const [group, ...rest] = short.split('-');
+  return rest.length > 0 ? `${group}/${rest.join('-')}` : short;
 }
 
-/** The text styles. `declared` holds the typography tokens each style's class declares. */
+/** A text style for each `nx:typography-*` class the app's CSS defines, as the page resolves it. */
 export function textStyles(
-  tokens: TokensFile,
-  declared: Readonly<Record<string, Readonly<Record<string, string>>>>
+  typography: Readonly<Record<string, TypographyFacts>>
 ): TextStyleSpec[] {
-  return tokens.type.groups.flatMap((group) =>
-    group.styles.map((style) => ({
-      name: textStyleName(group.name, style.name),
-      token: style.name,
-      family: firstFamily(tokens.type.families[group.family] ?? 'Inter'),
-      weight: style.fontWeight ?? 400,
-      size: px(style.fontSize) ?? 14,
-      lineHeight: px(style.lineHeight),
-      letterSpacing: px(style.letterSpacing) ?? 0,
-      variables: {
-        fontSize: declared[style.name]?.['font-size'],
-        lineHeight: declared[style.name]?.['line-height'],
-        letterSpacing: declared[style.name]?.['letter-spacing'],
-      },
-      description: style.usage,
-    }))
-  );
+  return Object.entries(typography).map(([token, facts]) => ({
+    name: textStyleName(token),
+    token,
+    family: firstFamily(facts.family),
+    weight: facts.weight,
+    size: facts.size,
+    lineHeight: facts.lineHeight,
+    letterSpacing: facts.letterSpacing,
+    variables: {
+      fontSize: facts.tokens['font-size'],
+      lineHeight: facts.tokens['line-height'],
+      letterSpacing: facts.tokens['letter-spacing'],
+    },
+  }));
 }
 
 /** The shadow styles, with the values the page resolved, such as an app's redefined shadows. */
 export function effectStyles(
-  tokens: TokensFile,
+  tokens: TokenList,
   values: TokenValues
 ): EffectStyleSpec[] {
-  return (tokens.shadow?.tokens ?? []).map((token) => ({
-    name: `shadow/${token.name.replace(/^nx-shadow-/, '')}`,
-    token: token.name,
-    effects: parseShadows(values[token.name]?.light ?? light(token.value)),
-    description: token.usage,
+  return tokens.shadow.map((token) => ({
+    name: `shadow/${token.replace(/^nx-shadow-/, '')}`,
+    token,
+    effects: parseShadows(values[token]?.light ?? ''),
   }));
 }

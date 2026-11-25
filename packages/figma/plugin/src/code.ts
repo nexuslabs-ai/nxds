@@ -298,7 +298,6 @@ async function writeVariables(capture: CaptureFile, ctx: Context) {
               );
         tag(variable, key);
         variable.name = entry.name;
-        variable.description = entry.description;
         variable.setVariableCodeSyntax('WEB', `var(--${entry.token})`);
         variable.setValueForMode(first.modeId, variableValue(entry.light));
         if (dark !== undefined)
@@ -406,7 +405,6 @@ async function writeStyles(capture: CaptureFile, ctx: Context) {
         textStyles.find((each) => tagOf(each) === styleTag(spec.token)) ??
         newTextStyle(spec.token);
       style.name = spec.name;
-      style.description = spec.description;
       style.fontName = await ctx.font(spec.family, spec.weight);
       style.fontSize = spec.size;
       style.lineHeight =
@@ -442,7 +440,6 @@ async function writeStyles(capture: CaptureFile, ctx: Context) {
         effectStyles.find((each) => tagOf(each) === styleTag(spec.token)) ??
         newEffectStyle(spec.token);
       style.name = spec.name;
-      style.description = spec.description;
       style.effects = spec.effects.map(effect);
       ctx.effectStyles.set(spec.name, style);
       ctx.report.written.effectStyles += 1;

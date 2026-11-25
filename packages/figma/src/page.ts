@@ -55,13 +55,12 @@ export interface Override {
   props: Record<string, unknown>;
 }
 
-/** An element of canvas markup, with its attributes as props. */
+/** An element of a recipe's JSX: an HTML element, or a part of the app's nxds. */
 export interface MarkupElement {
-  /** The HTML tag, or the component's path in Nxds for an `<x-import>`, such as `Button`. */
+  /** The HTML tag, or the part's name, such as `Button`. */
   tag: string;
-  /** The part an `<x-import>` draws, or null for an HTML element. */
+  /** The part it draws, or null for an HTML element. */
   part: string | null;
-  /** The attributes by prop name: strings, until an app's conversion types a part's. */
   props: Record<string, unknown>;
   children: MarkupNode[];
 }
@@ -69,7 +68,7 @@ export interface MarkupElement {
 export type MarkupNode = MarkupElement | string;
 
 export interface MountInput {
-  /** Parsed canvas markup, from `parseMarkup`. */
+  /** A recipe's JSX. */
   nodes: MarkupNode[];
   overrides: Override[];
   /** The container's width. Block-level components fill it. */
@@ -105,72 +104,7 @@ interface PageGlobals {
   __figmaUnmount(): void;
 }
 
-/**
- * Canvas markup, such as `<x-import component-from-global-scope="Nxds.Button">`,
- * as a tree. Each attribute is named as its prop, and its value stays the
- * string a canvas passes, which the release's bundle converts. Text keeps
- * one space for each run of whitespace.
- */
-export function parseMarkup(markup: string): MarkupNode[] {
-  const NAMES: Record<string, string> = {
-    class: 'className',
-    for: 'htmlFor',
-    tabindex: 'tabIndex',
-    colspan: 'colSpan',
-    rowspan: 'rowSpan',
-    viewbox: 'viewBox',
-  };
-  const camel = (name: string) =>
-    /^(?:aria|data)-/.test(name)
-      ? name
-      : name.replace(/-([a-z])/g, (_, char: string) => char.toUpperCase());
-  const styleObject = (text: string) =>
-    Object.fromEntries(
-      text
-        .split(';')
-        .map((declaration) => declaration.split(':').map((side) => side.trim()))
-        .filter(([name, value]) => name && value)
-        .map(([name = '', value]) => [
-          name.startsWith('--') ? name : camel(name),
-          value,
-        ])
-    );
-  const parse = (node: ChildNode): MarkupNode | null => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const text = (node.textContent ?? '').replace(/\s+/g, ' ').trim();
-      return text === '' ? null : text;
-    }
-    if (!(node instanceof Element)) return null;
-    const children = [...node.childNodes]
-      .map(parse)
-      .filter((child) => child !== null);
-    const tag = node.tagName.toLowerCase();
-    const props: Record<string, unknown> = {};
-    if (tag === 'x-import') {
-      const part = (
-        node.getAttribute('component-from-global-scope') ?? ''
-      ).replace(/^Nxds\./, '');
-      for (const attribute of node.attributes) {
-        if (attribute.name === 'component-from-global-scope') continue;
-        props[camel(attribute.name)] = attribute.value;
-      }
-      return { tag: part, part, props, children };
-    }
-    for (const attribute of node.attributes) {
-      const name = NAMES[attribute.name] ?? attribute.name;
-      props[name] =
-        name === 'style' ? styleObject(attribute.value) : attribute.value;
-    }
-    return { tag, part: null, props, children };
-  };
-  const template = document.createElement('template');
-  template.innerHTML = markup.trim();
-  return [...template.content.childNodes]
-    .map(parse)
-    .filter((node) => node !== null);
-}
-
-/** The parts, such as `Button` or `Chart.Bar`, that the page's `Nxds` doesn't have. */
+/** The parts, such as `Button`, that the page's `Nxds` doesn't have. */
 export function missingParts(parts: string[]) {
   const { Nxds } = window as unknown as PageGlobals;
   return parts.filter(
@@ -185,8 +119,8 @@ export function missingParts(parts: string[]) {
 }
 
 /**
- * Defines `__figmaMount(input)` and `__figmaUnmount()`. A mount renders parsed
- * canvas markup into a fresh `[data-capture-root]` container, `width` px wide
+ * Defines `__figmaMount(input)` and `__figmaUnmount()`. A mount renders a
+ * recipe's JSX into a fresh `[data-capture-root]` container, `width` px wide
  * with 8px of room around it, and sets each override's props on the first
  * element of its part. `{ __icon: name }` draws that icon and
  * `{ __handler: true }` is a function that does nothing.
@@ -468,9 +402,42 @@ export function readTokenValues(probes: [string, ValueKind][]) {
   return values;
 }
 
-/** The token each `nx:typography-*` class declares for its size, line height and letter spacing, by class. */
+/** Every `--nx-*` property the page's stylesheets or its root element declare, by name without `--`. */
+export function readTokenNames() {
+  const found = new Set<string>();
+  const add = (style: CSSStyleDeclaration) => {
+    for (const name of style) {
+      if (name.startsWith('--nx-')) found.add(name.slice(2));
+    }
+  };
+  const visit = (rules: CSSRuleList) => {
+    for (const rule of rules) {
+      if (rule instanceof CSSStyleRule) add(rule.style);
+      if ('cssRules' in rule) visit((rule as CSSGroupingRule).cssRules);
+    }
+  };
+  for (const sheet of document.styleSheets) visit(sheet.cssRules);
+  add(document.documentElement.style);
+  return [...found].sort();
+}
+
+/** A `nx:typography-*` class as the page resolves it, and the token it declares each size with. */
+export interface TypographyFacts {
+  /** The token each of `font-size`, `line-height` and `letter-spacing` is declared with. */
+  tokens: Record<string, string>;
+  family: string;
+  weight: number;
+  size: number;
+  /** Undefined for `normal`. */
+  lineHeight?: number;
+  letterSpacing: number;
+}
+
+/** Each `nx:typography-*` class the page's CSS has, by class without `nx:`. */
 export function readTypography() {
-  const found: Record<string, Record<string, string>> = {};
+  const found: Record<string, TypographyFacts> = {};
+  const probe = document.createElement('span');
+  document.body.append(probe);
   const visit = (rules: CSSRuleList) => {
     for (const rule of rules) {
       if ('cssRules' in rule && !(rule instanceof CSSStyleRule)) {
@@ -487,10 +454,26 @@ export function readTypography() {
         );
         if (variable?.[1]) tokens[property] = variable[1];
       }
-      found[match[1]] = tokens;
+      probe.className = `nx:${match[1]}`;
+      const style = getComputedStyle(probe);
+      found[match[1]] = {
+        tokens,
+        family: style.fontFamily,
+        weight: Number(style.fontWeight),
+        size: Number.parseFloat(style.fontSize),
+        lineHeight:
+          style.lineHeight === 'normal'
+            ? undefined
+            : Number.parseFloat(style.lineHeight),
+        letterSpacing:
+          style.letterSpacing === 'normal'
+            ? 0
+            : Number.parseFloat(style.letterSpacing),
+      };
     }
   };
   for (const sheet of document.styleSheets) visit(sheet.cssRules);
+  probe.remove();
   return found;
 }
 
