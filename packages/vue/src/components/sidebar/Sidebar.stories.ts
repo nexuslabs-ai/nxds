@@ -59,15 +59,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-interface SidebarControlsArgs {
-  open: boolean;
-  collapsible: 'offcanvas' | 'icon' | 'none';
-  side: 'left' | 'right';
-  variant: 'sidebar' | 'floating' | 'inset';
-}
-
-type ControlsStory = StoryObj<SidebarControlsArgs>;
-
 const NAV_ITEMS = [
   { title: 'Home', icon: PhHouse },
   { title: 'Inbox', icon: PhTray, badge: '4' },
@@ -165,48 +156,6 @@ export const Default: Story = {
     template: `
       <SidebarProvider>
         <DemoSidebar />
-        <DemoInset />
-      </SidebarProvider>
-    `,
-  }),
-};
-
-export const InteractiveControls: ControlsStory = {
-  name: 'Interactive Controls',
-  args: {
-    open: true,
-    collapsible: 'offcanvas',
-    variant: 'sidebar',
-    side: 'left',
-  },
-  argTypes: {
-    open: {
-      control: 'boolean',
-    },
-    collapsible: {
-      control: 'inline-radio',
-      options: ['offcanvas', 'icon', 'none'],
-    },
-    variant: {
-      control: 'inline-radio',
-      options: ['sidebar', 'floating', 'inset'],
-    },
-    side: {
-      control: 'inline-radio',
-      options: ['left', 'right'],
-    },
-  },
-  parameters: {
-    controls: {
-      include: ['open', 'collapsible', 'variant', 'side'],
-    },
-  },
-  render: (args) => ({
-    components: { DemoInset, DemoSidebar, SidebarProvider },
-    setup: () => ({ args }),
-    template: `
-      <SidebarProvider :open="args.open" @open-change="(open) => (args.open = open)">
-        <DemoSidebar :collapsible="args.collapsible" :side="args.side" :variant="args.variant" />
         <DemoInset />
       </SidebarProvider>
     `,
