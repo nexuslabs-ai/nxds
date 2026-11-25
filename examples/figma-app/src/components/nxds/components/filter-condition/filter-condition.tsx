@@ -1,0 +1,104 @@
+import * as React from 'react';
+
+import { IconChevronDown, IconX } from '../../lib/icons';
+import { cn } from '../../lib/utils';
+import { buttonVariants } from '../button/button-variants';
+
+function FilterCondition({ className, ...props }: React.ComponentProps<'div'>) {
+  return (
+    <div
+      {...props}
+      data-slot="filter-condition"
+      className={cn(
+        'nx:inline-flex nx:max-w-full nx:min-w-0 nx:items-stretch',
+        className
+      )}
+    />
+  );
+}
+
+function FilterConditionField({
+  children,
+  className,
+  ...props
+}: React.ComponentProps<'span'>) {
+  return (
+    <span
+      {...props}
+      data-slot="filter-condition-field"
+      className={cn(
+        'nx:inline-flex nx:h-(--nx-spacing-8) nx:shrink-0 nx:items-center nx:gap-2 nx:[&_svg]:size-icon-glyph-sm nx:[&_svg]:shrink-0 nx:icon-stroke nx:rounded-s-base nx:border-default nx:border-border-default nx:bg-container nx:px-2.5 nx:typography-label-default nx:text-muted-foreground',
+        className
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** One clickable part of a condition, such as its operator or value. */
+function FilterConditionSegment({
+  children,
+  className,
+  ...props
+}: Omit<React.ComponentProps<'button'>, 'type'>) {
+  return (
+    <button
+      {...props}
+      type="button"
+      data-slot="filter-condition-segment"
+      className={cn(
+        buttonVariants({ variant: 'outline', size: 'sm' }),
+        'nx:h-(--nx-spacing-8) nx:min-w-0 nx:rounded-none nx:border-s-0 nx:active:scale-100 nx:focus-visible:relative nx:focus-visible:z-10',
+        className
+      )}
+    >
+      <span className="nx:truncate">{children}</span>
+      <IconChevronDown
+        aria-hidden="true"
+        className="nx:text-muted-foreground"
+      />
+    </button>
+  );
+}
+
+interface FilterConditionRemoveProps extends Omit<
+  React.ComponentProps<'button'>,
+  'children' | 'type'
+> {
+  /**
+   * The button's name, such as "Remove status filter". Screen readers read
+   * it, and it stays visually hidden.
+   */
+  children: string;
+}
+
+function FilterConditionRemove({
+  className,
+  children,
+  ...props
+}: FilterConditionRemoveProps) {
+  return (
+    <button
+      {...props}
+      type="button"
+      data-slot="filter-condition-remove"
+      className={cn(
+        buttonVariants({ variant: 'outline', size: 'sm', iconOnly: true }),
+        'nx:size-(--nx-spacing-8) nx:shrink-0 nx:rounded-s-none nx:border-s-0 nx:text-muted-foreground nx:active:scale-100 nx:focus-visible:relative nx:focus-visible:z-10',
+        className
+      )}
+    >
+      <IconX aria-hidden="true" />
+      <span className="nx:sr-only">{children}</span>
+    </button>
+  );
+}
+
+export {
+  FilterCondition,
+  FilterConditionField,
+  FilterConditionRemove,
+  type FilterConditionRemoveProps,
+  FilterConditionSegment,
+};

@@ -1,0 +1,4 @@
+@import './components/nxds/tailwind/nxds.css';
+@import 'tw-animate-css';
+@import '@fontsource-variable/inter';
+@import './components/nxds/components/progress/progress.css';

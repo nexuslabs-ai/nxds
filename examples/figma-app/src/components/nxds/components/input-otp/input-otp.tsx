@@ -1,0 +1,141 @@
+'use client';
+
+import * as React from 'react';
+
+import { OTPInput, OTPInputContext } from 'input-otp';
+
+import { IconCircleFilled } from '../../lib/icons';
+import { cn } from '../../lib/utils';
+
+/**
+ * Every `input-otp` prop except `render`, with slots passed as `children`.
+ * `className` styles the transparent input and `containerClassName` the slot
+ * wrapper.
+ */
+type InputOTPProps = Omit<
+  React.ComponentProps<typeof OTPInput>,
+  'render' | 'children'
+> & {
+  /** `InputOTPGroup`, `InputOTPSlot` and `InputOTPSeparator` elements. */
+  children?: React.ReactNode;
+};
+
+/**
+ * One-time code field that shows each character in its own slot. Build it
+ * from `InputOTPGroup`, `InputOTPSlot` and `InputOTPSeparator`.
+ */
+function InputOTP({
+  className,
+  containerClassName,
+  children,
+  ...props
+}: InputOTPProps) {
+  return (
+    <OTPInput
+      data-slot="input-otp"
+      autoComplete="one-time-code"
+      containerClassName={cn(
+        'nx:group/input-otp nx:flex nx:items-center nx:gap-2',
+        containerClassName
+      )}
+      className={cn('nx:disabled:cursor-not-allowed', className)}
+      {...props}
+    >
+      {children}
+    </OTPInput>
+  );
+}
+
+/**
+ * Props for a group of OTP slots.
+ */
+type InputOTPGroupProps = React.ComponentProps<'div'>;
+
+/**
+ * Row of adjacent slots. For a split code such as 3-3, put an
+ * `InputOTPSeparator` between two groups.
+ */
+function InputOTPGroup({ className, ...props }: InputOTPGroupProps) {
+  return (
+    <div
+      data-slot="input-otp-group"
+      className={cn('nx:isolate nx:flex nx:items-center', className)}
+      {...props}
+    />
+  );
+}
+
+/**
+ * Props for a single OTP slot.
+ */
+interface InputOTPSlotProps extends React.ComponentProps<'div'> {
+  /**
+   * Position of the slot in the code, starting at 0.
+   */
+  index: number;
+}
+
+/**
+ * One character cell. Shows a blinking caret and a focus ring while it is the
+ * active slot.
+ */
+function InputOTPSlot({ index, className, ...props }: InputOTPSlotProps) {
+  const inputOTPContext = React.useContext(OTPInputContext);
+  const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {};
+
+  return (
+    <div
+      data-slot="input-otp-slot"
+      data-active={isActive}
+      className={cn(
+        'nx:relative nx:flex nx:box-border nx:size-10 nx:items-center nx:justify-center',
+        'nx:border-default nx:border-border-default nx:not-first:-ml-(--nx-borderwidth-default)',
+        'nx:group-has-[:disabled]/input-otp:border-border-disabled nx:group-has-[:disabled]/input-otp:bg-disabled nx:group-has-[:disabled]/input-otp:text-disabled-foreground',
+        'nx:bg-container nx:text-foreground nx:typography-body-small nx:transition-field nx:duration-fast',
+        'nx:first:rounded-l-md nx:last:rounded-r-md',
+        'nx:data-[active=true]:z-1 nx:data-[active=true]:border-focus-default nx:data-[active=true]:outline-default nx:data-[active=true]:outline-focus-default',
+        className
+      )}
+      {...props}
+    >
+      {char}
+      {hasFakeCaret && (
+        <div className="nx:pointer-events-none nx:absolute nx:inset-0 nx:flex nx:items-center nx:justify-center">
+          <div className="nx:h-4 nx:w-px nx:animate-caret-blink nx:bg-foreground" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Props for the separator between OTP groups.
+ */
+type InputOTPSeparatorProps = React.ComponentProps<'div'>;
+
+/**
+ * Decorative dot between two `InputOTPGroup`s. Screen readers skip it.
+ */
+function InputOTPSeparator({ className, ...props }: InputOTPSeparatorProps) {
+  return (
+    <div
+      data-slot="input-otp-separator"
+      aria-hidden="true"
+      className={cn('nx:flex nx:items-center', className)}
+      {...props}
+    >
+      <IconCircleFilled className="nx:size-[4px] nx:text-muted-foreground" />
+    </div>
+  );
+}
+
+export {
+  InputOTP,
+  InputOTPGroup,
+  type InputOTPGroupProps,
+  type InputOTPProps,
+  InputOTPSeparator,
+  type InputOTPSeparatorProps,
+  InputOTPSlot,
+  type InputOTPSlotProps,
+};
