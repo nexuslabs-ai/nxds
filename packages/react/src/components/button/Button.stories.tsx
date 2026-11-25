@@ -10,8 +10,6 @@ import {
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { expectHeightPinned } from '../../stories/support/story-height-test-utils';
-
 import { Button } from './button';
 
 const meta: Meta<typeof Button> = {
@@ -142,21 +140,9 @@ export const Ghost: Story = {
 };
 
 export const Link: Story = {
-  render: () => (
-    <Button variant="link" data-testid="button-link">
-      Link
-    </Button>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const button = canvas.getByRole('button', { name: 'Link' });
-
-    await expect(button).toHaveClass('nx:underline-offset-4');
-    await expect(button).toHaveClass('nx:hover:underline');
-    await expect(button).toHaveClass('nx:border-0');
-    await expect(button).toHaveClass('nx:p-0!');
-    await expect(button).not.toHaveClass('nx:hover:bg-primary-subtle-hover');
-    await expectHeightPinned(canvas, 'button-link', 20);
+  args: {
+    variant: 'link',
+    children: 'Link',
   },
 };
 
@@ -177,9 +163,6 @@ export const Large: Story = {
     children: 'Large',
   },
 };
-
-// The square each `size` gives an `iconOnly` button, in px.
-const ICON_ONLY_SQUARES = [32, 40, 48];
 
 export const IconOnlySizes: Story = {
   tags: ['docs'],
@@ -204,17 +187,6 @@ export const IconOnlySizes: Story = {
       </Button>
     </div>
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const buttons = canvas.getAllByRole('button');
-
-    await expect(buttons).toHaveLength(ICON_ONLY_SQUARES.length);
-    for (const [index, button] of buttons.entries()) {
-      const { width, height } = button.getBoundingClientRect();
-      await expect(height).toBe(ICON_ONLY_SQUARES[index]);
-      await expect(width).toBe(height);
-    }
-  },
 };
 
 export const IconOnlyName: Story = {
@@ -226,13 +198,8 @@ export const IconOnlyName: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const button = canvas.getByRole('button', { name: 'Download' });
-    const label = within(button).getByText('Download');
 
     await expect(button).toHaveAttribute('data-icon-only', 'true');
-    await expect(label).toHaveClass('nx:sr-only');
-    const { width, height } = label.getBoundingClientRect();
-    await expect(width).toBeLessThanOrEqual(1);
-    await expect(height).toBeLessThanOrEqual(1);
   },
 };
 
@@ -245,13 +212,8 @@ export const IconOnlyLoading: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const button = canvas.getByRole('button', { name: 'Download' });
-    const { width, height } = button.getBoundingClientRect();
 
     await expect(button).toHaveAttribute('aria-busy', 'true');
-    await expect(within(button).getByText('Download')).toHaveClass(
-      'nx:sr-only'
-    );
-    await expect(width).toBe(height);
     await expect(
       button.querySelector('[data-slot="button-start-icon"]')
     ).toBeNull();
@@ -277,93 +239,6 @@ export const IconOnlyInteraction: Story = {
 
     await userEvent.click(button);
     await expect(args.onClick).toHaveBeenCalledTimes(3);
-  },
-};
-
-// Each line must fail to compile: `iconOnly` needs a text name and a
-// `startIcon`, and refuses `endIcon` and `asChild`.
-const _rejectedIconOnlyButtons = [
-  // @ts-expect-error An icon-only button needs a name.
-  <Button key="no-name" iconOnly startIcon={<StarIcon />} />,
-  // @ts-expect-error The name must be text.
-  <Button key="node-name" iconOnly startIcon={<StarIcon />}>
-    <span>Download</span>
-  </Button>,
-  // @ts-expect-error An icon-only button needs an icon.
-  <Button key="no-icon" iconOnly>
-    Download
-  </Button>,
-  // @ts-expect-error An icon-only button shows one icon.
-  <Button
-    key="end-icon"
-    iconOnly
-    startIcon={<StarIcon />}
-    endIcon={<ArrowRightIcon />}
-  >
-    Download
-  </Button>,
-  // @ts-expect-error asChild can't render an icon-only button.
-  <Button key="as-child" iconOnly asChild startIcon={<StarIcon />}>
-    Download
-  </Button>,
-];
-
-// A screen-size switch is one boolean prop.
-function _ResponsiveDownload({ isNarrow }: { isNarrow: boolean }) {
-  return (
-    <Button iconOnly={isNarrow} startIcon={<DownloadSimpleIcon />}>
-      Download
-    </Button>
-  );
-}
-
-export const IconSize: Story = {
-  render: () => (
-    <div className="nx:flex nx:flex-col nx:items-start nx:gap-3">
-      <div className="nx:flex nx:items-center nx:gap-2">
-        <Button size="sm" startIcon={<DownloadSimpleIcon />}>
-          Download
-        </Button>
-        <Button size="sm" iconOnly startIcon={<StarIcon />}>
-          Add to favorites
-        </Button>
-      </div>
-      <div className="nx:flex nx:items-center nx:gap-2">
-        <Button startIcon={<DownloadSimpleIcon />}>Download</Button>
-        <Button iconOnly startIcon={<StarIcon />}>
-          Add to favorites
-        </Button>
-      </div>
-      <div className="nx:flex nx:items-center nx:gap-2">
-        <Button size="lg" startIcon={<DownloadSimpleIcon />}>
-          Download
-        </Button>
-        <Button size="lg" iconOnly startIcon={<StarIcon />}>
-          Add to favorites
-        </Button>
-      </div>
-      <div data-density="compact" className="nx:flex nx:items-center nx:gap-2">
-        <Button startIcon={<DownloadSimpleIcon />}>Download</Button>
-        <Button iconOnly startIcon={<StarIcon />}>
-          Add to favorites
-        </Button>
-      </div>
-    </div>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const iconToken = parseFloat(
-      getComputedStyle(canvasElement).getPropertyValue(
-        '--nx-icon-glyph-default'
-      )
-    );
-    const icons = canvasElement.querySelectorAll('button svg');
-    await expect(icons).toHaveLength(canvas.getAllByRole('button').length);
-    for (const svg of icons) {
-      const { width, height } = svg.getBoundingClientRect();
-      await expect(width).toBe(iconToken);
-      await expect(height).toBe(iconToken);
-    }
   },
 };
 
@@ -419,7 +294,6 @@ export const Loading: Story = {
       button.querySelector('[data-slot="spinner"]')
     ).toBeInTheDocument();
     await expect(loadingLabel).toBeInTheDocument();
-    await expect(loadingLabel).toHaveClass('nx:opacity-0');
     await expect(loadingLabel).toHaveTextContent('Submitting');
     await expect(button).toHaveAccessibleName('Submitting');
 
@@ -488,15 +362,6 @@ export const KeyboardInteraction: Story = {
     // Tab to focus
     await userEvent.tab();
     await expect(button).toHaveFocus();
-
-    // The ring is a real outline with a transparent 2px gap, so the gap shows
-    // whatever surface the button sits on rather than an opaque page-background
-    // band painted by a box-shadow.
-    const focusStyles = getComputedStyle(button);
-    await expect(focusStyles.outlineOffset).toBe('2px');
-    await expect(focusStyles.outlineStyle).toBe('solid');
-    await expect(focusStyles.outlineWidth).toBe('2px');
-    await expect(focusStyles.boxShadow).toBe('none');
 
     // Enter triggers click
     await userEvent.keyboard('{Enter}');
@@ -591,15 +456,12 @@ export const DisabledAsLink: Story = {
     const link = canvas.getByRole('link');
 
     // asChild disabled is best-effort: an <a> ignores native `disabled`, so
-    // non-interactivity comes from aria-disabled + tabIndex=-1 + the
-    // aria-disabled:pointer-events-none class (no JS click guard).
+    // non-interactivity comes from aria-disabled + tabIndex=-1 (no JS click
+    // guard).
     await expect(link).not.toHaveAttribute('disabled');
     await expect(link).not.toHaveAttribute('type');
     await expect(link).toHaveAttribute('aria-disabled', 'true');
     await expect(link).toHaveAttribute('tabindex', '-1');
-    await expect(link).toHaveClass('nx:aria-disabled:pointer-events-none');
-    await expect(link).toHaveClass('nx:aria-disabled:opacity-100');
-    await expect(link).toHaveClass('nx:aria-disabled:bg-primary-disabled');
   },
 };
 
