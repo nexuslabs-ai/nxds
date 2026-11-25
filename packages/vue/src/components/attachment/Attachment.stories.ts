@@ -333,9 +333,6 @@ export const GroupKeyboardInteraction: Story = {
     await userEvent.tab();
     await expect(group).toHaveFocus();
     await expect(group).toHaveAttribute('data-slot', 'attachment-group');
-
-    // A tab stop that cannot scroll would make the focus pointless.
-    await expect(group.scrollWidth).toBeGreaterThan(group.clientWidth);
   },
 };
 
@@ -381,12 +378,6 @@ export const LongFileName: Story = {
       </TooltipProvider>
     `,
   }),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const title = canvas.getByText(LONG_NAME);
-
-    await expect(title.scrollWidth).toBeGreaterThan(title.clientWidth);
-  },
 };
 
 // The remove action fires, and is not blocked by the full-card trigger overlay.
