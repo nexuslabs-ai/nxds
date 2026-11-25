@@ -1,7 +1,6 @@
-// The icons docs stories pass to components, such as a Badge's `rightIcon`,
-// in each icon library nxds can install. Stories draw Phosphor; the docs show
-// each example in the reader's library, and the CLI install check pastes the
-// app's.
+// The icons stories draw, such as a Badge's `rightIcon`, in each icon library
+// nxds can install. Stories draw Phosphor; the docs show each example in the
+// reader's library, and the CLI installs each story in the app's.
 
 /** The libraries `nxds-cli init --icons` installs. Phosphor is the stories' own. */
 export const ICON_LIBRARIES = [
@@ -46,6 +45,12 @@ export const EXAMPLE_ICONS: Record<string, ExampleIcon> = {
     tabler: 'Refresh',
     hugeicons: 'Refresh',
     remix: 'RefreshLine',
+  },
+  ArrowCounterClockwise: {
+    lucide: 'RotateCcw',
+    tabler: 'Rotate',
+    hugeicons: 'Reload',
+    remix: 'ResetLeftLine',
   },
   ArrowRight: {
     lucide: 'ArrowRight',
@@ -101,6 +106,12 @@ export const EXAMPLE_ICONS: Record<string, ExampleIcon> = {
     hugeicons: 'UnfoldMore',
     remix: 'ExpandUpDownLine',
   },
+  ChartBar: {
+    lucide: 'ChartColumn',
+    tabler: 'ChartBar',
+    hugeicons: 'ChartColumn',
+    remix: 'BarChartLine',
+  },
   ChatText: {
     lucide: 'MessageSquareText',
     tabler: 'Message',
@@ -126,11 +137,29 @@ export const EXAMPLE_ICONS: Record<string, ExampleIcon> = {
     hugeicons: 'GridView',
     remix: 'LayoutGridLine',
   },
+  Checks: {
+    lucide: 'CheckCheck',
+    tabler: 'Checks',
+    hugeicons: 'TickDouble02',
+    remix: 'CheckDoubleLine',
+  },
+  Clock: {
+    lucide: 'Clock',
+    tabler: 'Clock',
+    hugeicons: 'Clock01',
+    remix: 'TimeLine',
+  },
   Copy: {
     lucide: 'Copy',
     tabler: 'Copy',
     hugeicons: 'Copy01',
     remix: 'FileCopyLine',
+  },
+  CreditCard: {
+    lucide: 'CreditCard',
+    tabler: 'CreditCard',
+    hugeicons: 'Payment01',
+    remix: 'BankCardLine',
   },
   Cursor: {
     lucide: 'MousePointer2',
@@ -161,6 +190,12 @@ export const EXAMPLE_ICONS: Record<string, ExampleIcon> = {
     tabler: 'Eraser',
     hugeicons: 'Eraser',
     remix: 'EraserLine',
+  },
+  Eye: {
+    lucide: 'Eye',
+    tabler: 'Eye',
+    hugeicons: 'View',
+    remix: 'EyeLine',
   },
   File: {
     lucide: 'File',
@@ -216,6 +251,12 @@ export const EXAMPLE_ICONS: Record<string, ExampleIcon> = {
     hugeicons: 'GitBranch',
     remix: 'GitBranchLine',
   },
+  Hash: {
+    lucide: 'Hash',
+    tabler: 'Hash',
+    hugeicons: 'Hashtag',
+    remix: 'Hashtag',
+  },
   House: {
     lucide: 'House',
     tabler: 'Home',
@@ -240,11 +281,23 @@ export const EXAMPLE_ICONS: Record<string, ExampleIcon> = {
     hugeicons: 'Search01',
     remix: 'SearchLine',
   },
+  PaperPlaneTilt: {
+    lucide: 'Send',
+    tabler: 'Send',
+    hugeicons: 'Sent',
+    remix: 'SendPlaneLine',
+  },
   PencilSimple: {
     lucide: 'Pencil',
     tabler: 'Pencil',
     hugeicons: 'PencilEdit02',
     remix: 'PencilLine',
+  },
+  Plus: {
+    lucide: 'Plus',
+    tabler: 'Plus',
+    hugeicons: 'PlusSign',
+    remix: 'AddLine',
   },
   Rocket: {
     lucide: 'Rocket',
@@ -263,6 +316,12 @@ export const EXAMPLE_ICONS: Record<string, ExampleIcon> = {
     tabler: 'Star',
     hugeicons: 'Star',
     remix: 'StarLine',
+  },
+  TextAa: {
+    lucide: 'CaseSensitive',
+    tabler: 'LetterCase',
+    hugeicons: 'TextFont',
+    remix: 'FontSize',
   },
   TextAlignCenter: {
     lucide: 'TextAlignCenter',
@@ -315,7 +374,7 @@ export const EXAMPLE_ICONS: Record<string, ExampleIcon> = {
   User: {
     lucide: 'User',
     tabler: 'User',
-    hugeicons: 'User',
+    hugeicons: 'User02',
     remix: 'UserLine',
   },
   Users: {

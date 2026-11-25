@@ -117,6 +117,41 @@ const react18Schema = z.object({
   packages: z.object({ npm: npmPackagesSchema }),
 });
 
+/** A replacement of `content.slice(start, end)`: `[start, end, text]`. */
+const editSchema = z.tuple([
+  z.number().int().nonnegative(),
+  z.number().int().nonnegative(),
+  z.string(),
+]);
+
+type Edit = z.infer<typeof editSchema>;
+
+const storyFileSchema = z.object({
+  /** Relative to the project's nxds folder. */
+  path: relativePathSchema,
+  /** The file as the release's first icon library draws it. */
+  content: z.string(),
+  /** What each other icon library changes in `content`, by library name. */
+  icons: z.record(z.string(), z.array(editSchema)).optional(),
+});
+
+type StoryFile = z.infer<typeof storyFileSchema>;
+
+/**
+ * A variant's Storybook stories, which an app installs only when it asks for
+ * stories: the files, and what they need beyond the variant itself.
+ */
+const storiesSchema = z.object({
+  /** Other items the stories use. */
+  items: z.array(z.string()),
+  packages: z.object({ npm: npmPackagesSchema }),
+  files: z.array(storyFileSchema),
+  /** The files whose content differs for an app on React 18. */
+  react18: z.object({ files: z.array(storyFileSchema) }).optional(),
+});
+
+type Stories = z.infer<typeof storiesSchema>;
+
 /** A variant with `packages`, whose `css` names only files in its `files`. */
 function variantWith<P extends z.ZodType>(packages: P) {
   return z
@@ -129,6 +164,7 @@ function variantWith<P extends z.ZodType>(packages: P) {
       css: z.array(relativePathSchema),
       steps: z.array(setupStepSchema),
       react18: react18Schema.optional(),
+      stories: storiesSchema.optional(),
     })
     .refine(
       ({ css, files }) =>
@@ -143,6 +179,16 @@ function variantWith<P extends z.ZodType>(packages: P) {
       {
         path: ['react18', 'files'],
         message: 'must replace files in `files`',
+      }
+    )
+    .refine(
+      ({ stories }) =>
+        (stories?.react18?.files ?? []).every((file) =>
+          stories?.files.some((own) => own.path === file.path)
+        ),
+      {
+        path: ['stories', 'react18', 'files'],
+        message: 'must replace files in `stories.files`',
       }
     );
 }
@@ -321,6 +367,15 @@ export const catalogSchema = z.object({
     .default([]),
   /** Whether an app on this release can set its own colors: its provider takes `deriveColors`. Releases from before own colors leave it out. */
   ownColors: z.boolean().default(false),
+  /** The Storybook the release's stories run in. Releases from before stories leave it out. */
+  storybook: z
+    .object({
+      /** The Storybook versions the stories run on. */
+      range: rangeSchema,
+      /** The Storybook framework packages a story can import its types from. The files name the first. */
+      frameworks: z.array(npmNameSchema).nonempty(),
+    })
+    .optional(),
 });
 
 export type Catalog = z.infer<typeof catalogSchema>;
@@ -360,26 +415,73 @@ function releaseItem(item: CatalogItem, frameworks: Framework[]): CatalogItem {
   return { ...item, variants: installedVariants(item.variants, frameworks) };
 }
 
-/** `variant` with `library`'s `lib/icons.ts` and packages in place of `fallback`'s. */
+function applyEdits(content: string, edits: Edit[]) {
+  return edits.reduceRight(
+    (text, [start, end, replacement]) =>
+      text.slice(0, start) + replacement + text.slice(end),
+    content
+  );
+}
+
+/** `npm` with `library`'s packages in place of `fallback`'s. */
+function iconPackages(
+  npm: Record<string, string>,
+  library: IconLibrary,
+  fallback: IconLibrary
+) {
+  const others = Object.entries(npm).filter(([pkg]) => !(pkg in fallback.npm));
+  return { ...Object.fromEntries(others), ...library.npm };
+}
+
+/** `stories` with each file's icons drawn by `library`. */
+function storiesWithIconLibrary(
+  stories: Stories,
+  library: IconLibrary,
+  fallback: IconLibrary
+): Stories {
+  const drawn = ({ path, content, icons }: StoryFile): StoryFile => ({
+    path,
+    content: applyEdits(content, icons?.[library.name] ?? []),
+  });
+  const { npm } = stories.packages;
+  const importsIcons = Object.keys(npm).some((pkg) => pkg in fallback.npm);
+  return {
+    ...stories,
+    packages: {
+      npm: importsIcons ? iconPackages(npm, library, fallback) : npm,
+    },
+    files: stories.files.map(drawn),
+    ...(stories.react18 && {
+      react18: { files: stories.react18.files.map(drawn) },
+    }),
+  };
+}
+
+/**
+ * `variant` with `library`'s `lib/icons.ts` and packages in place of
+ * `fallback`'s, and its stories' icons drawn by `library`.
+ */
 function withIconLibrary<V extends Variant>(
   variant: V,
   library: IconLibrary,
   fallback: IconLibrary
 ): V {
+  const stories = variant.stories && {
+    stories: storiesWithIconLibrary(variant.stories, library, fallback),
+  };
   if (!variant.files.some((file) => file.path === library.file.path)) {
-    return variant;
+    return { ...variant, ...stories };
   }
-  const npm = Object.fromEntries(
-    Object.entries(variant.packages.npm).filter(
-      ([pkg]) => !(pkg in fallback.npm)
-    )
-  );
   return {
     ...variant,
+    ...stories,
     files: variant.files.map((file) =>
       file.path === library.file.path ? library.file : file
     ),
-    packages: { ...variant.packages, npm: { ...npm, ...library.npm } },
+    packages: {
+      ...variant.packages,
+      npm: iconPackages(variant.packages.npm, library, fallback),
+    },
   };
 }
 
@@ -417,6 +519,78 @@ export function catalogWithIconLibrary(
     ...catalog,
     items: catalog.items.map((item) =>
       itemWithIconLibrary(item, library, fallback)
+    ),
+  };
+}
+
+/**
+ * `variant` with its stories among its own files, items and packages. A story
+ * imports its types from `framework.to` in place of `framework.from`.
+ */
+function withStories<V extends Variant>(
+  variant: V,
+  framework: { from: string; to: string }
+): V {
+  const { stories } = variant;
+  if (!stories) return variant;
+  const plain = ({ path, content }: StoryFile): CatalogFile => ({
+    path,
+    content: content.replaceAll(`'${framework.from}'`, `'${framework.to}'`),
+  });
+  const react18Files = [
+    ...(variant.react18?.files ?? []),
+    ...(stories.react18?.files ?? []).map(plain),
+  ];
+  return {
+    ...variant,
+    stories: undefined,
+    items: [...new Set([...variant.items, ...stories.items])],
+    packages: {
+      ...variant.packages,
+      npm: { ...stories.packages.npm, ...variant.packages.npm },
+    },
+    files: [...variant.files, ...stories.files.map(plain)],
+    ...(react18Files.length > 0 && {
+      react18: {
+        files: react18Files,
+        packages: variant.react18?.packages ?? { npm: {} },
+      },
+    }),
+  };
+}
+
+// Two returns, so each keeps its own variant type.
+function itemWithStories(
+  item: CatalogItem,
+  framework: { from: string; to: string }
+): CatalogItem {
+  const fold = <V extends Variant>(variants: Partial<Record<Framework, V>>) =>
+    Object.fromEntries(
+      Object.entries(variants).map(([name, variant]) => [
+        name,
+        withStories(variant, framework),
+      ])
+    ) as Partial<Record<Framework, V>>;
+  if (item.kind === 'setup') return { ...item, variants: fold(item.variants) };
+  return { ...item, variants: fold(item.variants) };
+}
+
+/**
+ * `catalog` as an app with stories installs it: each variant's stories are
+ * among its files, and import their types from the Storybook framework package
+ * `framework`. Call it after `catalogWithIconLibrary`, which draws the stories'
+ * icons.
+ */
+export function catalogWithStories(
+  catalog: Catalog,
+  framework: string
+): Catalog {
+  const [written] = catalog.storybook?.frameworks ?? [];
+  if (!written) return catalog;
+  return {
+    ...catalog,
+    items: catalog.items.map((item) =>
+      itemWithStories(item, { from: written, to: framework })
     ),
   };
 }

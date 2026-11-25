@@ -581,7 +581,7 @@ export const WithPresets: Story = {
 
 // Calendar in a Card with start/end time inputs in the footer (shadcn's
 // CalendarWithTime). The time fields use Field + InputGroup with a trailing
-// clock addon; the consumer supplies the icon (here from @phosphor-icons/react).
+// clock addon; the consumer supplies the icon.
 export const WithTime: Story = {
   render: function WithTimeStory() {
     const [date, setDate] = React.useState<Date | undefined>(
