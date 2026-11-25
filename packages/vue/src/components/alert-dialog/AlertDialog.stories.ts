@@ -18,7 +18,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/AlertDialog',
   component: AlertDialog,
   parameters: {
     layout: 'padded',

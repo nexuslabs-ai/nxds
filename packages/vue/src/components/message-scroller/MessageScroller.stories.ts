@@ -31,7 +31,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/MessageScroller',
   component: MessageScroller,
   parameters: {
     layout: 'padded',

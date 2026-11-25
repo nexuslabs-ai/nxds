@@ -8,7 +8,6 @@ import { expectTextFits } from '../../stories/support/story-height-test-utils';
 import { Kbd, KbdGroup } from '.';
 
 const meta = {
-  title: 'Components/Kbd',
   component: Kbd,
   parameters: {
     docs: {

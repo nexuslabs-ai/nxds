@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Star } from 'lucide-react';
 import { toast as hostToast, Toaster as HostToaster } from 'sonner';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
@@ -8,7 +8,6 @@ import { Button } from '../button/button';
 import { toast, Toaster, useSonner } from './sonner';
 
 const meta: Meta<typeof Toaster> = {
-  title: 'Components/Sonner',
   component: Toaster,
   parameters: {
     docs: {

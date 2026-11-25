@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 
 import { StarIcon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Star } from 'lucide-react';
 import { expect, within } from 'storybook/test';
 

@@ -1,5 +1,5 @@
 import { Canvas, Source, Title } from '@storybook/addon-docs/blocks';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import {
@@ -63,7 +63,6 @@ function ConditionExample({
 }
 
 const meta = {
-  title: 'Components/FilterCondition',
   component: ConditionExample,
   args: {
     field: 'Status',
@@ -106,7 +105,7 @@ const meta = {
           <ul>
             <li>
               <a
-                href="/?path=/docs/blocks-filtering-choicefilter--docs"
+                href="/?path=/docs/blocks-filtering-choice-filter-choicefilter--docs"
                 target="_top"
               >
                 ChoiceFilter
@@ -115,7 +114,7 @@ const meta = {
             </li>
             <li>
               <a
-                href="/?path=/docs/blocks-filtering-multichoicefilter--docs"
+                href="/?path=/docs/blocks-filtering-multi-choice-filter-multichoicefilter--docs"
                 target="_top"
               >
                 MultiChoiceFilter
@@ -124,7 +123,7 @@ const meta = {
             </li>
             <li>
               <a
-                href="/?path=/docs/blocks-filtering-textfilter--docs"
+                href="/?path=/docs/blocks-filtering-text-filter-textfilter--docs"
                 target="_top"
               >
                 TextFilter
@@ -133,7 +132,7 @@ const meta = {
             </li>
             <li>
               <a
-                href="/?path=/docs/blocks-filtering-numbercomparisonfilter--docs"
+                href="/?path=/docs/blocks-filtering-number-comparison-filter-numbercomparisonfilter--docs"
                 target="_top"
               >
                 NumberComparisonFilter
@@ -142,7 +141,7 @@ const meta = {
             </li>
             <li>
               <a
-                href="/?path=/docs/blocks-filtering-numberrangefilter--docs"
+                href="/?path=/docs/blocks-filtering-number-range-filter-numberrangefilter--docs"
                 target="_top"
               >
                 NumberRangeFilter
@@ -151,7 +150,7 @@ const meta = {
             </li>
             <li>
               <a
-                href="/?path=/docs/blocks-filtering-daterangefilter--docs"
+                href="/?path=/docs/blocks-filtering-date-range-filter-daterangefilter--docs"
                 target="_top"
               >
                 DateRangeFilter

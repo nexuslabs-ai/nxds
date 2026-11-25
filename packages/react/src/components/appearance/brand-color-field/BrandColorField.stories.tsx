@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { BRAND_COLOR_PRESETS, DEFAULT_BRAND_COLOR } from '@nxds/core';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fireEvent, fn, userEvent, within } from 'storybook/test';
 
 import { Button } from '../../button/button';

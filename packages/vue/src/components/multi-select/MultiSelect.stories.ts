@@ -65,7 +65,6 @@ const Frameworks = defineComponent({
 });
 
 const meta = {
-  title: 'Components/MultiSelect',
   component: MultiSelect,
   parameters: {
     layout: 'padded',

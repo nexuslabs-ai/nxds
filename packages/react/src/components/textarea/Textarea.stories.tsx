@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
@@ -9,7 +9,6 @@ import { Label } from '../label/label';
 import { Textarea } from './textarea';
 
 const meta: Meta<typeof Textarea> = {
-  title: 'Components/Textarea',
   component: Textarea,
   decorators: [
     (Story) => (

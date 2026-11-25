@@ -16,7 +16,7 @@ import {
   UserIcon,
   UsersIcon,
 } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
@@ -50,7 +50,6 @@ import {
 } from './sidebar';
 
 const meta: Meta<typeof Sidebar> = {
-  title: 'Components/Sidebar',
   component: Sidebar,
   parameters: {
     docs: {

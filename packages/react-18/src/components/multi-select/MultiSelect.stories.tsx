@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { expectImmediateItemMotion } from '../../stories/support/motion-test-utils';
@@ -66,7 +66,6 @@ function Frameworks({
 }
 
 const meta: Meta<typeof MultiSelect> = {
-  title: 'Components/MultiSelect',
   component: MultiSelect,
   parameters: {
     layout: 'padded',

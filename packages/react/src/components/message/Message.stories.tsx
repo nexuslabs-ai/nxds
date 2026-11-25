@@ -5,7 +5,7 @@ import {
   CopyIcon,
   FileTextIcon,
 } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { cn } from '../../lib/utils';
@@ -36,7 +36,6 @@ import {
 } from './message';
 
 const meta: Meta<typeof Message> = {
-  title: 'Components/Message',
   component: Message,
   parameters: {
     layout: 'padded',

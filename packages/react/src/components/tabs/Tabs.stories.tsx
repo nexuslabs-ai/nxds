@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -15,7 +15,6 @@ import { Input } from '../input/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
 
 const meta: Meta<typeof Tabs> = {
-  title: 'Components/Tabs',
   component: Tabs,
   parameters: {
     docs: {

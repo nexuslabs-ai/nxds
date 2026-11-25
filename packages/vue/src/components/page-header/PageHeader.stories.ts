@@ -23,7 +23,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/PageHeader',
   component: PageHeader,
   decorators: [
     (story) => ({

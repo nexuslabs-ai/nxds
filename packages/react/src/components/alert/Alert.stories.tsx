@@ -6,7 +6,7 @@ import {
   WarningCircleIcon,
   WarningIcon,
 } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -22,7 +22,6 @@ import {
 } from './alert';
 
 const meta: Meta<typeof Alert> = {
-  title: 'Components/Alert',
   component: Alert,
   parameters: {
     layout: 'padded',

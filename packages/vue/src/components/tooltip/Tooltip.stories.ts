@@ -10,7 +10,6 @@ import { Button } from '../button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '.';
 
 const meta = {
-  title: 'Components/Tooltip',
   component: Tooltip,
   parameters: {
     docs: {

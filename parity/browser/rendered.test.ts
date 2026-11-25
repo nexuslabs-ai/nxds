@@ -2,7 +2,7 @@ import {
   composeStory as composeReactStory,
   type Meta as ReactMeta,
   type StoryObj as ReactStory,
-} from '@storybook/react';
+} from '@storybook/react-vite';
 import {
   composeStory as composeVueStory,
   type Meta as VueMeta,

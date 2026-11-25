@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { DENSITY_OPTIONS } from '@nxds/core';
 import { TextBIcon, TextItalicIcon } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -10,7 +10,6 @@ import { Button } from '../button/button';
 import { Toggle } from './toggle';
 
 const meta: Meta<typeof Toggle> = {
-  title: 'Components/Toggle',
   component: Toggle,
   parameters: {
     docs: {

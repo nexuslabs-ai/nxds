@@ -18,7 +18,6 @@ type InputArgs = InstanceType<typeof Input>['$props'] & {
 };
 
 const meta = {
-  title: 'Components/Input',
   component: Input,
   decorators: [
     (story) => ({

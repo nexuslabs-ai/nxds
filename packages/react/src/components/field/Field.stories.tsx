@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Checkbox } from '../checkbox/checkbox';
@@ -19,7 +19,6 @@ import {
 } from './field';
 
 const meta: Meta<typeof Field> = {
-  title: 'Components/Field',
   component: Field,
   parameters: {
     docs: {

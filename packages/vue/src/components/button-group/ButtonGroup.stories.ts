@@ -27,7 +27,6 @@ import {
 import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from '.';
 
 const meta = {
-  title: 'Components/ButtonGroup',
   component: ButtonGroup,
   parameters: {
     docs: {

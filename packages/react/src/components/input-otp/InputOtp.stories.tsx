@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor } from 'storybook/test';
 
 import {
@@ -68,7 +68,6 @@ async function expectActiveSlotRing({
 }
 
 const meta: Meta<typeof InputOTP> = {
-  title: 'Components/InputOTP',
   component: InputOTP,
   parameters: {
     layout: 'centered',

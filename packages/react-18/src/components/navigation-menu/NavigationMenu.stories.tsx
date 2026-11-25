@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { expectInterruptibleOverlayMotion } from '../../stories/support/overlay-motion-test-utils';
@@ -15,7 +15,6 @@ import {
 } from './navigation-menu';
 
 const meta: Meta<typeof NavigationMenu> = {
-  title: 'Components/NavigationMenu',
   component: NavigationMenu,
   parameters: {
     layout: 'padded',

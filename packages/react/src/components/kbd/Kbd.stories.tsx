@@ -1,6 +1,6 @@
 import { DENSITY_OPTIONS } from '@nxds/core';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { expectTextFits } from '../../stories/support/story-height-test-utils';
@@ -8,7 +8,6 @@ import { expectTextFits } from '../../stories/support/story-height-test-utils';
 import { Kbd, KbdGroup } from './kbd';
 
 const meta: Meta<typeof Kbd> = {
-  title: 'Components/Kbd',
   component: Kbd,
   parameters: {
     docs: {

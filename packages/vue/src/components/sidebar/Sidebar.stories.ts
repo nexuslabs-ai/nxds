@@ -48,7 +48,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Sidebar',
   component: Sidebar,
   parameters: {
     docs: {

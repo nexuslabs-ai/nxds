@@ -13,7 +13,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Pagination',
   component: Pagination,
   parameters: {
     layout: 'padded',

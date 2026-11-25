@@ -1,6 +1,6 @@
 import type { NxdsDensity } from '@nxds/core';
 import { CommandIcon, StarIcon, TrayIcon } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { Checkbox } from '../components/checkbox/checkbox';

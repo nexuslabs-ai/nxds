@@ -2,7 +2,7 @@ import * as React from 'react';
 import type { DateRange } from 'react-day-picker';
 
 import { ClockIcon } from '@phosphor-icons/react/ssr';
-import type { Decorator, Meta, StoryObj } from '@storybook/react';
+import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -54,7 +54,6 @@ const inCard: Decorator = (Story) => (
 );
 
 const meta: Meta<typeof DatePicker> = {
-  title: 'Components/DatePicker',
   component: DatePicker,
   parameters: {
     docs: {

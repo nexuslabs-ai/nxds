@@ -29,7 +29,6 @@ const VARIANTS = [
 ] as const;
 
 const meta = {
-  title: 'Components/Alert',
   parameters: {
     docs: {
       description: {

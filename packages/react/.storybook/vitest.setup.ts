@@ -1,12 +1,12 @@
 // packages/react/.storybook/vitest.setup.ts
 import * as a11yAddonAnnotations from '@storybook/addon-a11y/preview';
-import { setProjectAnnotations } from '@storybook/react';
+import { setProjectAnnotations } from '@storybook/react-vite';
 import { afterEach, beforeAll, beforeEach } from 'vitest';
 
 import * as projectAnnotations from './preview';
 
 // Set up project annotations for Vitest
-// setProjectAnnotations from @storybook/react already includes React renderer internally
+// setProjectAnnotations already includes the React renderer internally
 const annotations = setProjectAnnotations([
   a11yAddonAnnotations,
   projectAnnotations,

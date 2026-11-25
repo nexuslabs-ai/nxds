@@ -27,7 +27,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Command',
   component: Command,
   parameters: {
     layout: 'padded',

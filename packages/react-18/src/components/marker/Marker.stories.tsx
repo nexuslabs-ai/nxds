@@ -7,7 +7,7 @@ import {
   MagnifyingGlassIcon,
   PencilSimpleIcon,
 } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Spinner } from '../spinner/spinner';
@@ -15,7 +15,6 @@ import { Spinner } from '../spinner/spinner';
 import { Marker, MarkerContent, MarkerIcon, type MarkerProps } from './marker';
 
 const meta: Meta<typeof Marker> = {
-  title: 'Components/Marker',
   component: Marker,
   parameters: {
     layout: 'padded',

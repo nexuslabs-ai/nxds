@@ -15,7 +15,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Card',
   parameters: {
     docs: {
       description: {

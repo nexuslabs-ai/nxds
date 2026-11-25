@@ -8,7 +8,6 @@ import { Label } from '../label';
 import { RadioGroup, RadioGroupItem } from '.';
 
 const meta = {
-  title: 'Components/RadioGroup',
   component: RadioGroup,
   args: {
     'onUpdate:modelValue': fn(),

@@ -30,7 +30,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Message',
   component: Message,
   parameters: {
     layout: 'padded',

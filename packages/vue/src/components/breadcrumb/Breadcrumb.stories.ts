@@ -21,7 +21,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Breadcrumb',
   component: Breadcrumb,
   parameters: {
     docs: {

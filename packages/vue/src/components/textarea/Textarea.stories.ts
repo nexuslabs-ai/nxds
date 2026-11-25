@@ -17,7 +17,6 @@ type TextareaArgs = InstanceType<typeof Textarea>['$props'] & {
 };
 
 const meta = {
-  title: 'Components/Textarea',
   component: Textarea,
   decorators: [
     (story) => ({

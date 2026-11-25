@@ -34,7 +34,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Table',
   component: Table,
   parameters: {
     docs: {

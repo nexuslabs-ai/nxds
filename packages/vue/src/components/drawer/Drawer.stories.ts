@@ -22,7 +22,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Drawer',
   component: Drawer,
   parameters: {
     layout: 'padded',

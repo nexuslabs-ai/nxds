@@ -8,7 +8,6 @@ import { Input } from '../input';
 import { Label } from '.';
 
 const meta = {
-  title: 'Components/Label',
   component: Label,
   parameters: {
     layout: 'padded',

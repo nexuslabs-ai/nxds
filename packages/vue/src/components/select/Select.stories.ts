@@ -23,7 +23,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Select',
   component: SelectTrigger,
   parameters: {
     docs: {

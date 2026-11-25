@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Checkbox } from '../checkbox/checkbox';
@@ -15,7 +15,6 @@ import {
 } from './choice-row';
 
 const meta: Meta<typeof ChoiceRow> = {
-  title: 'Components/ChoiceRow',
   component: ChoiceRow,
   parameters: {
     layout: 'padded',

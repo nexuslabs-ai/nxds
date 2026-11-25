@@ -7,7 +7,7 @@ import {
   StarIcon,
   UploadSimpleIcon,
 } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { expectHeightPinned } from '../../stories/support/story-height-test-utils';
@@ -15,7 +15,6 @@ import { expectHeightPinned } from '../../stories/support/story-height-test-util
 import { Button } from './button';
 
 const meta: Meta<typeof Button> = {
-  title: 'Components/Button',
   component: Button,
   parameters: {
     docs: {

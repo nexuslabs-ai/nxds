@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -11,7 +11,6 @@ import { Button } from '../button/button';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from './hover-card';
 
 const meta: Meta<typeof HoverCard> = {
-  title: 'Components/HoverCard',
   component: HoverCard,
   parameters: {
     docs: {

@@ -1,5 +1,5 @@
 import tsx from '@shikijs/langs/tsx';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { createHighlighterCoreSync } from 'shiki/core';
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
 import { expect, fn, spyOn, userEvent, waitFor, within } from 'storybook/test';
@@ -15,7 +15,6 @@ import {
 } from './code-block';
 
 const meta: Meta<typeof CodeBlock> = {
-  title: 'Components/CodeBlock',
   component: CodeBlock,
   parameters: {
     docs: {

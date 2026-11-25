@@ -1,6 +1,6 @@
 import { type ComponentProps, useState } from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { IconX } from '../../lib/icons';
@@ -24,7 +24,6 @@ import {
 } from './drawer';
 
 const meta: Meta<typeof Drawer> = {
-  title: 'Components/Drawer',
   component: Drawer,
   parameters: {
     layout: 'padded',

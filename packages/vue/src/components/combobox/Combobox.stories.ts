@@ -95,7 +95,6 @@ const ComboboxExample = defineComponent({
 });
 
 const meta = {
-  title: 'Components/Combobox',
   component: Combobox,
   parameters: {
     layout: 'padded',

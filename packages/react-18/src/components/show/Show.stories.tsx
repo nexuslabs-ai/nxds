@@ -1,10 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { Show } from './show';
 
 const meta: Meta<typeof Show> = {
-  title: 'Primitives/Show',
   component: Show,
   parameters: {
     docs: {

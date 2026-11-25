@@ -25,7 +25,6 @@ type InputGroupArgs = InstanceType<typeof InputGroup>['$props'] & {
 };
 
 const meta = {
-  title: 'Components/InputGroup',
   component: InputGroup,
   parameters: {
     docs: {

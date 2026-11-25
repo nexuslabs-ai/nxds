@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -33,7 +33,6 @@ const triggerClass =
   'nx:flex nx:h-[96px] nx:w-full nx:max-w-md nx:select-none nx:items-center nx:justify-center nx:rounded-md nx:border-default nx:border-dashed nx:border-border-default nx:typography-body-default nx:text-muted-foreground';
 
 const meta: Meta<typeof ContextMenu> = {
-  title: 'Components/ContextMenu',
   component: ContextMenu,
   parameters: {
     layout: 'padded',

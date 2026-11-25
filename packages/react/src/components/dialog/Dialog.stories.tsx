@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { expectExitBeforeUnmount } from '../../stories/support/overlay-motion-test-utils';
@@ -27,7 +27,6 @@ import {
 } from './dialog';
 
 const meta: Meta<typeof Dialog> = {
-  title: 'Components/Dialog',
   component: Dialog,
   parameters: {
     layout: 'padded',

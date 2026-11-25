@@ -10,7 +10,6 @@ type FilterChipArgs = InstanceType<typeof FilterChip>['$props'] & {
 };
 
 const meta = {
-  title: 'Components/FilterChip',
   component: FilterChip,
   args: {
     ariaLabel: 'Remove status filter: Active',

@@ -1,10 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { Progress } from './progress';
 
 const meta: Meta<typeof Progress> = {
-  title: 'Components/Progress',
   component: Progress,
   parameters: {
     layout: 'padded',

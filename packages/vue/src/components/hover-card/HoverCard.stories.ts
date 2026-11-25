@@ -11,7 +11,6 @@ import { Button } from '../button';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '.';
 
 const meta = {
-  title: 'Components/HoverCard',
   component: HoverCard,
   parameters: {
     docs: {

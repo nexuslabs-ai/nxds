@@ -30,7 +30,6 @@ const inCard: Decorator = () => ({
 });
 
 const meta = {
-  title: 'Components/DatePicker',
   component: DatePicker,
   parameters: {
     docs: {

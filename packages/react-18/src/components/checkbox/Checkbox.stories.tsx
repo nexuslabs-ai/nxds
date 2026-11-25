@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { DENSITY_OPTIONS } from '@nxds/core';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { expectInsideBorder } from '../../stories/support/story-height-test-utils';
@@ -10,7 +10,6 @@ import { Label } from '../label/label';
 import { Checkbox } from './checkbox';
 
 const meta: Meta<typeof Checkbox> = {
-  title: 'Components/Checkbox',
   component: Checkbox,
   args: {
     onCheckedChange: fn(),

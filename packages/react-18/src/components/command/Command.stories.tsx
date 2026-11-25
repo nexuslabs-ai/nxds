@@ -8,7 +8,7 @@ import {
   UserIcon,
   UsersIcon,
 } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useCommandState } from 'cmdk';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
@@ -29,7 +29,6 @@ import {
 } from './command';
 
 const meta: Meta<typeof Command> = {
-  title: 'Components/Command',
   component: Command,
   parameters: {
     layout: 'padded',

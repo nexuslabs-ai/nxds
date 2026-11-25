@@ -15,7 +15,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/CodeBlock',
   component: CodeBlock,
   parameters: {
     docs: {

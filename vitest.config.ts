@@ -25,7 +25,7 @@ export default defineConfig({
       'react-dom',
       'react/jsx-dev-runtime',
       '@storybook/addon-a11y/preview',
-      '@storybook/react',
+      '@storybook/react-vite',
     ],
   },
   test: {

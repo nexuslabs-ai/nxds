@@ -31,7 +31,6 @@ const BADGE_SIZE_PX = 24;
 const BADGE_ICON_SIZE_PX = 14;
 
 const meta = {
-  title: 'Components/Badge',
   parameters: {
     docs: {
       description: {

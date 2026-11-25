@@ -15,7 +15,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/ChoiceCard',
   component: ChoiceCard,
   parameters: {
     layout: 'padded',

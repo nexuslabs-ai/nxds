@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { expectMenuItemInsetAtEveryDensity } from '../../stories/support/menu-item-inset-test-utils';
@@ -17,7 +17,6 @@ import {
 } from './select';
 
 const meta: Meta<typeof Select> = {
-  title: 'Components/Select',
   component: Select,
   parameters: {
     docs: {

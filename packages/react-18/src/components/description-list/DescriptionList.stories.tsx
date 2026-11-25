@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { Badge } from '../badge/badge';
@@ -11,7 +11,6 @@ import {
 } from './description-list';
 
 const meta: Meta<typeof DescriptionList> = {
-  title: 'Components/DescriptionList',
   component: DescriptionList,
   parameters: {
     docs: {

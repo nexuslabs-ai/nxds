@@ -11,7 +11,6 @@ type SliderArgs = InstanceType<typeof Slider>['$props'] & {
 };
 
 const meta = {
-  title: 'Components/Slider',
   component: Slider,
   parameters: {
     docs: {

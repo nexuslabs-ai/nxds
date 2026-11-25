@@ -9,7 +9,6 @@ import { Button } from '../button';
 import { Toggle } from '.';
 
 const meta = {
-  title: 'Components/Toggle',
   component: Toggle,
   parameters: {
     docs: {

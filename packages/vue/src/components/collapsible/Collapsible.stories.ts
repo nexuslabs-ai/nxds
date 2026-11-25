@@ -8,7 +8,6 @@ import { Button } from '../button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '.';
 
 const meta = {
-  title: 'Components/Collapsible',
   component: Collapsible,
   parameters: {
     docs: {

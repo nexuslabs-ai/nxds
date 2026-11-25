@@ -10,7 +10,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Accordion',
   component: Accordion,
   parameters: {
     layout: 'padded',

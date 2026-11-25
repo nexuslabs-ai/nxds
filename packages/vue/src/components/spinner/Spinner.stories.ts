@@ -4,7 +4,6 @@ import { expect, within } from 'storybook/test';
 import { Spinner } from '.';
 
 const meta = {
-  title: 'Components/Spinner',
   parameters: {
     docs: {
       description: {

@@ -11,7 +11,7 @@ import {
   WarningIcon,
   XIcon,
 } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -37,7 +37,6 @@ import {
 } from './attachment';
 
 const meta: Meta<typeof Attachment> = {
-  title: 'Components/Attachment',
   component: Attachment,
   parameters: {
     docs: {

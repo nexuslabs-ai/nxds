@@ -24,7 +24,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Dialog',
   parameters: {
     docs: {
       description: {

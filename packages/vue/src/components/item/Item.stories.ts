@@ -16,7 +16,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Item',
   component: Item,
   parameters: {
     docs: {

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 
 import { Canvas, Source, Title } from '@storybook/addon-docs/blocks';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Button } from '../../../components/button/button';
@@ -18,7 +18,6 @@ import { InlineEditExample } from './inline-edit-example';
 import exampleSource from './inline-edit-example.tsx?raw';
 
 const meta: Meta<typeof InlineEdit> = {
-  title: 'Blocks/Editing/InlineEdit',
   component: InlineEdit,
   tags: ['autodocs'],
   parameters: {

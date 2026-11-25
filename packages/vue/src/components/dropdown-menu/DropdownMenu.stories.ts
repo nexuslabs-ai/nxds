@@ -31,7 +31,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/DropdownMenu',
   component: DropdownMenu,
   parameters: {
     layout: 'padded',

@@ -8,7 +8,7 @@ import {
   TextItalicIcon,
   TextUnderlineIcon,
 } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -18,7 +18,6 @@ import { Label } from '../label/label';
 import { ToggleGroup, ToggleGroupItem } from './toggle-group';
 
 const meta: Meta<typeof ToggleGroup> = {
-  title: 'Components/ToggleGroup',
   component: ToggleGroup,
   parameters: {
     docs: {

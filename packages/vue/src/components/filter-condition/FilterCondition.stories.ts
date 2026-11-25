@@ -56,7 +56,6 @@ const ConditionExample = defineComponent({
 });
 
 const meta = {
-  title: 'Components/FilterCondition',
   component: ConditionExample,
   args: {
     field: 'Status',

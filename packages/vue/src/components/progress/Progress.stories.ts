@@ -9,7 +9,6 @@ type ProgressArgs = InstanceType<typeof Progress>['$props'] & {
 };
 
 const meta = {
-  title: 'Components/Progress',
   component: Progress,
   parameters: {
     layout: 'padded',

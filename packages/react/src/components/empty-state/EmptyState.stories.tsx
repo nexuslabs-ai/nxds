@@ -1,5 +1,5 @@
 import { UsersIcon } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -14,7 +14,6 @@ import {
 } from './empty-state';
 
 const meta: Meta<typeof EmptyState> = {
-  title: 'Components/EmptyState',
   component: EmptyState,
   parameters: {
     docs: {

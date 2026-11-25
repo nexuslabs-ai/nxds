@@ -12,7 +12,6 @@ type NativeSelectArgs = InstanceType<typeof NativeSelect>['$props'] & {
 };
 
 const meta = {
-  title: 'Components/NativeSelect',
   component: NativeSelect,
   parameters: {
     docs: {

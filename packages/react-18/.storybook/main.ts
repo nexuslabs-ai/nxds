@@ -5,7 +5,24 @@ import type { StorybookConfig } from '@storybook/react-vite';
 const REACT_18 = ['react', 'react-dom'];
 
 const config: StorybookConfig = {
-  stories: ['../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+  // The same entries as packages/react's: a story that ships carries no
+  // title, so its folder names it.
+  stories: [
+    {
+      directory: '../src/components',
+      files: '*/!(*.test).stories.tsx',
+      titlePrefix: 'Components',
+    },
+    {
+      directory: '../src/blocks',
+      files: '**/!(*.test).stories.tsx',
+      titlePrefix: 'Blocks',
+    },
+    '../src/**/*.test.stories.tsx',
+    '../src/components/appearance/**/*.stories.tsx',
+    '../src/patterns/**/*.stories.tsx',
+    '../src/stories/**/*.stories.tsx',
+  ],
   addons: [
     '@storybook/addon-docs',
     '@storybook/addon-a11y',

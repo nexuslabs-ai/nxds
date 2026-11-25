@@ -1,5 +1,5 @@
 import { CaretUpDownIcon } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -11,7 +11,6 @@ import {
 } from './collapsible';
 
 const meta: Meta<typeof Collapsible> = {
-  title: 'Components/Collapsible',
   component: Collapsible,
   parameters: {
     docs: {

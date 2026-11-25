@@ -4,7 +4,6 @@ import { expect } from 'storybook/test';
 import { AspectRatio } from '.';
 
 const meta = {
-  title: 'Components/AspectRatio',
   component: AspectRatio,
   parameters: {
     docs: {

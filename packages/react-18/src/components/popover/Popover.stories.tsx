@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -20,7 +20,6 @@ import {
 } from './popover';
 
 const meta: Meta<typeof Popover> = {
-  title: 'Components/Popover',
   component: Popover,
   parameters: {
     layout: 'padded',

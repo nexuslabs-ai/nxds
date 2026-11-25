@@ -69,7 +69,6 @@ async function expectActiveSlotRing({
 }
 
 const meta = {
-  title: 'Components/InputOTP',
   component: InputOTP,
   parameters: {
     layout: 'centered',

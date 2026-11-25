@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -32,7 +32,6 @@ import {
 } from './dropdown-menu';
 
 const meta: Meta<typeof DropdownMenu> = {
-  title: 'Components/DropdownMenu',
   component: DropdownMenu,
   parameters: {
     layout: 'padded',

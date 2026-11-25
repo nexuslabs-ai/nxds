@@ -14,7 +14,6 @@ import { Label } from '../label';
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '.';
 
 const meta = {
-  title: 'Components/Popover',
   component: Popover,
   parameters: {
     layout: 'padded',

@@ -14,7 +14,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/ChoiceRow',
   component: ChoiceRow,
   parameters: {
     layout: 'padded',

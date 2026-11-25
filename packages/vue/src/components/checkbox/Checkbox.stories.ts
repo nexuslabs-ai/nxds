@@ -14,7 +14,6 @@ type CheckboxArgs = InstanceType<typeof Checkbox>['$props'] & {
 };
 
 const meta = {
-  title: 'Components/Checkbox',
   component: Checkbox,
   args: {
     'onUpdate:modelValue': fn(),

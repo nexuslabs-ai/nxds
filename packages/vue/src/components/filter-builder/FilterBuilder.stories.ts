@@ -147,7 +147,6 @@ const Demo = defineComponent({
 });
 
 const meta = {
-  title: 'Components/FilterBuilder',
   component: FilterBuilder,
   args: {
     fields: exampleFields,

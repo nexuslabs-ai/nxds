@@ -5,7 +5,7 @@ import {
   MagnifyingGlassIcon,
   XIcon,
 } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
@@ -25,7 +25,6 @@ import {
 } from './input-group';
 
 const meta: Meta<typeof InputGroup> = {
-  title: 'Components/InputGroup',
   component: InputGroup,
   parameters: {
     docs: {

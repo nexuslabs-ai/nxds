@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { DENSITY_OPTIONS } from '@nxds/core';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { Label } from '../label/label';
@@ -9,7 +9,6 @@ import { Label } from '../label/label';
 import { RadioGroup, RadioGroupItem } from './radio-group';
 
 const meta: Meta<typeof RadioGroup> = {
-  title: 'Components/RadioGroup',
   component: RadioGroup,
   args: {
     onValueChange: fn(),

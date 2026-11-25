@@ -29,7 +29,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Menubar',
   component: Menubar,
   parameters: {
     layout: 'padded',

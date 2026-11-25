@@ -1,7 +1,7 @@
 import { useId } from 'react';
 
 import { CheckerboardIcon } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import * as Recharts from 'recharts';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
@@ -19,7 +19,6 @@ import {
 } from './chart';
 
 const meta: Meta<typeof ChartContainer> = {
-  title: 'Components/Chart',
   component: ChartContainer,
   parameters: {
     docs: {

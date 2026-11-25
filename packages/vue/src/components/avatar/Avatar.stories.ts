@@ -14,7 +14,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Avatar',
   component: Avatar,
   parameters: {
     layout: 'padded',

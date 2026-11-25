@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { cn } from '../../lib/utils';
@@ -8,7 +8,6 @@ import { cn } from '../../lib/utils';
 import { Slider, type SliderProps } from './slider';
 
 const meta: Meta<typeof Slider> = {
-  title: 'Components/Slider',
   component: Slider,
   parameters: {
     docs: {

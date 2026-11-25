@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -129,7 +129,6 @@ function Demo({
   );
 }
 const meta = {
-  title: 'Components/FilterBuilder',
   component: FilterBuilder,
   args: {
     fields: exampleFields,

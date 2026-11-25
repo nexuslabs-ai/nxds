@@ -28,7 +28,6 @@ type ToggleGroupArgs = InstanceType<typeof ToggleGroup>['$props'] & {
 };
 
 const meta = {
-  title: 'Components/ToggleGroup',
   component: ToggleGroup,
   parameters: {
     docs: {

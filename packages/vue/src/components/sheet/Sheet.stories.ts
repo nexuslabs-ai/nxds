@@ -23,7 +23,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Sheet',
   component: Sheet,
   parameters: {
     layout: 'padded',

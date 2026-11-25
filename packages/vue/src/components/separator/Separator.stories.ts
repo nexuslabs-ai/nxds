@@ -4,7 +4,6 @@ import { expect, within } from 'storybook/test';
 import { Separator } from '.';
 
 const meta = {
-  title: 'Components/Separator',
   component: Separator,
   parameters: {
     docs: {

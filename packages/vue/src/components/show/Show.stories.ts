@@ -4,7 +4,6 @@ import { expect, waitFor, within } from 'storybook/test';
 import { Show } from '.';
 
 const meta: Meta<typeof Show> = {
-  title: 'Primitives/Show',
   component: Show,
   parameters: {
     docs: {

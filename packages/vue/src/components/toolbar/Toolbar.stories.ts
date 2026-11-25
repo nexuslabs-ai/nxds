@@ -49,7 +49,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Toolbar',
   component: Toolbar,
   parameters: {
     layout: 'padded',

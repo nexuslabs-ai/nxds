@@ -29,7 +29,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/ContextMenu',
   component: ContextMenu,
   parameters: {
     layout: 'padded',

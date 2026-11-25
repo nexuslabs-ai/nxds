@@ -4,7 +4,6 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '.';
 
 const meta = {
-  title: 'Components/Tabs',
   parameters: {
     docs: {
       description: {

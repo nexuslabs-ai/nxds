@@ -7,7 +7,7 @@ import {
   WarningIcon,
   XIcon,
 } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { expectTextFits } from '../../stories/support/story-height-test-utils';
@@ -16,7 +16,6 @@ import { Spinner } from '../spinner/spinner';
 import { Badge } from './badge';
 
 const meta: Meta<typeof Badge> = {
-  title: 'Components/Badge',
   component: Badge,
   parameters: {
     docs: {

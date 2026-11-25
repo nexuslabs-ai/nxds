@@ -8,7 +8,7 @@ import {
   MagnifyingGlassIcon,
   WarningCircleIcon,
 } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -38,7 +38,6 @@ import {
 } from './table';
 
 const meta: Meta<typeof Table> = {
-  title: 'Components/Table',
   component: Table,
   parameters: {
     docs: {

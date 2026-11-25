@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -18,7 +18,6 @@ import {
 } from './card';
 
 const meta: Meta<typeof Card> = {
-  title: 'Components/Card',
   component: Card,
   parameters: {
     layout: 'padded',

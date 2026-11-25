@@ -37,7 +37,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Attachment',
   component: Attachment,
   parameters: {
     docs: {

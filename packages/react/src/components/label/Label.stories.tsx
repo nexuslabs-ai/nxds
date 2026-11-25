@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Checkbox } from '../checkbox/checkbox';
@@ -9,7 +9,6 @@ import { Input } from '../input/input';
 import { Label } from './label';
 
 const meta: Meta<typeof Label> = {
-  title: 'Components/Label',
   component: Label,
   args: {
     children: 'Email',

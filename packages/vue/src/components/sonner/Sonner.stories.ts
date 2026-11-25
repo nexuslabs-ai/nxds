@@ -9,7 +9,6 @@ import { Button } from '../button';
 import { toast, Toaster, useSonner } from '.';
 
 const meta = {
-  title: 'Components/Sonner',
   component: Toaster,
   parameters: {
     docs: {

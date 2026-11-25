@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { Canvas, Source, Title } from '@storybook/addon-docs/blocks';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -78,7 +78,6 @@ const valueShape = `type NumberRangeCondition =
   | { operator: 'isEmpty' }
   | { operator: 'isNotEmpty' };`;
 const meta = {
-  title: 'Blocks/Filtering/NumberRangeFilter',
   component: Preview,
   args: { onChange: fn() },
   tags: ['autodocs'],

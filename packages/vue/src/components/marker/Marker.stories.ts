@@ -15,7 +15,6 @@ import { Spinner } from '../spinner';
 import { Marker, MarkerContent, MarkerIcon, type MarkerProps } from '.';
 
 const meta = {
-  title: 'Components/Marker',
   component: Marker,
   parameters: {
     layout: 'padded',

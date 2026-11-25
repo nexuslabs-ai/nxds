@@ -29,7 +29,6 @@ type ButtonArgs = InstanceType<typeof Button>['$props'] & {
 };
 
 const meta = {
-  title: 'Components/Button',
   parameters: {
     docs: {
       description: {

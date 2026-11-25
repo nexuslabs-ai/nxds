@@ -14,7 +14,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/EmptyState',
   component: EmptyState,
   parameters: {
     docs: {

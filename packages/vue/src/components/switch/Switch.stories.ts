@@ -14,7 +14,6 @@ type SwitchArgs = InstanceType<typeof Switch>['$props'] & {
 };
 
 const meta = {
-  title: 'Components/Switch',
   parameters: {
     docs: {
       description: {

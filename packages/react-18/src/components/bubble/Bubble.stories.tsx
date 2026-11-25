@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { ChecksIcon, InfoIcon } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -27,7 +27,6 @@ import {
 } from './bubble';
 
 const meta: Meta<typeof Bubble> = {
-  title: 'Components/Bubble',
   component: Bubble,
   parameters: {
     layout: 'padded',

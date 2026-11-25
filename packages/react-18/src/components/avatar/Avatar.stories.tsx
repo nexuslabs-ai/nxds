@@ -1,5 +1,5 @@
 import { UserIcon } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, waitFor, within } from 'storybook/test';
 
 import {
@@ -12,7 +12,6 @@ import {
 import { STARTER_AVATARS } from './avatar-fixtures';
 
 const meta: Meta<typeof Avatar> = {
-  title: 'Components/Avatar',
   component: Avatar,
   parameters: {
     layout: 'padded',

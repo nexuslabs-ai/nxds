@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, waitFor } from 'storybook/test';
 
 import { Card, CardContent, CardHeader, CardTitle } from '../card/card';
@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../card/card';
 import { ScrollArea, ScrollBar } from './scroll-area';
 
 const meta: Meta<typeof ScrollArea> = {
-  title: 'Components/ScrollArea',
   component: ScrollArea,
   parameters: {
     layout: 'centered',

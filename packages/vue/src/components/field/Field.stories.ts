@@ -19,7 +19,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Field',
   component: Field,
   parameters: {
     docs: {

@@ -11,7 +11,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/DescriptionList',
   component: DescriptionList,
   parameters: {
     docs: {

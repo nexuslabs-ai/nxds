@@ -26,7 +26,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Bubble',
   component: Bubble,
   parameters: {
     layout: 'padded',

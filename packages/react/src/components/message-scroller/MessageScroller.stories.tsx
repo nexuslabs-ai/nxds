@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { ChatTextIcon } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { AvatarFallback } from '../avatar/avatar';
@@ -33,7 +33,6 @@ import {
 } from './message-scroller';
 
 const meta: Meta<typeof MessageScroller> = {
-  title: 'Components/MessageScroller',
   component: MessageScroller,
   parameters: {
     layout: 'padded',

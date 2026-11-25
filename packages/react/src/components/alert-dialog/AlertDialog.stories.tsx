@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { expectExitBeforeUnmount } from '../../stories/support/overlay-motion-test-utils';
@@ -18,7 +18,6 @@ import {
 } from './alert-dialog';
 
 const meta: Meta<typeof AlertDialog> = {
-  title: 'Components/AlertDialog',
   component: AlertDialog,
   parameters: {
     layout: 'padded',

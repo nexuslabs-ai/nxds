@@ -1,10 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { Hide } from './hide';
 
 const meta: Meta<typeof Hide> = {
-  title: 'Primitives/Hide',
   component: Hide,
   parameters: {
     docs: {
