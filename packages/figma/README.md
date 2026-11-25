@@ -44,7 +44,7 @@ A later run in the same file updates it:
 
 The plugin finds what it made by a hidden tag that names its token or component, so pages you add are left alone. A variable or style someone renamed keeps its bindings, and the run sets its name back. A component it redraws loses edits made by hand. A copy of a component, such as one made with Cmd+D, is yours, and the run leaves it alone.
 
-Each run puts a component back on its card's page. Don't cut and paste a component to move it. A pasted component can be a copy, and the run then draws a new one.
+A run puts each component it builds back on its card's page. Don't cut and paste a component to move it. A pasted component can be a copy, and the run then draws a new one.
 
 The plugin stamps its version on the file. A plugin of another version refuses the file, so run the plugin in a new file.
 
