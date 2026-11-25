@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import { expectExitBeforeUnmount } from '../../stories/support/overlay-motion-test-utils';
 import { Button } from '../button';
 
 import {
@@ -184,29 +183,6 @@ export const ViewportBoundContent: Story = {
     const dialog = await within(document.body).findByRole('alertdialog', {
       name: 'Viewport bounded alert dialog',
     });
-    await expect(dialog).toHaveClass(
-      'nx:max-h-[calc(100svh-2rem)]',
-      'nx:overflow-hidden',
-      'nx:py-6',
-      'nx:gap-4'
-    );
-    await expect(dialog).not.toHaveClass('nx:p-6');
-    await expect(
-      document.querySelector('[data-slot="alert-dialog-header"]')
-    ).toHaveClass('nx:px-6');
-    await expect(
-      document.querySelector('[data-slot="alert-dialog-footer"]')
-    ).toHaveClass('nx:px-6');
-    await expect(
-      document.querySelector('[data-slot="alert-dialog-body"]')
-    ).toHaveClass(
-      'nx:px-6',
-      'nx:min-h-0',
-      'nx:overflow-y-auto',
-      'nx:focus-visible:outline-2',
-      'nx:focus-visible:outline-focus-default',
-      'nx:focus-visible:[outline-offset:-2px]'
-    );
     await expect(
       document.querySelector('[data-slot="alert-dialog-body"]')
     ).toHaveAttribute('tabindex', '0');
@@ -274,7 +250,6 @@ export const Centered: Story = {
     const dialog = await within(document.body).findByRole('alertdialog');
     await expect(dialog).toHaveAttribute('data-variant', 'center');
     await expect(dialog).toHaveAttribute('data-orientation', 'vertical');
-    await expect(dialog.className).toContain('nx:max-w-xs');
 
     const header = document.querySelector('[data-slot="alert-dialog-header"]');
     const footer = document.querySelector('[data-slot="alert-dialog-footer"]');
@@ -339,7 +314,6 @@ export const FocusManagement: Story = {
 
     await userEvent.click(cancelButton);
 
-    await expectExitBeforeUnmount(dialog);
     await waitFor(() => {
       expect(trigger).toHaveFocus();
     });

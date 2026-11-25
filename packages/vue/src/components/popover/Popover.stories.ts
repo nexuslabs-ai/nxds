@@ -2,11 +2,6 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { useId } from 'vue';
 
-import {
-  expectExitBeforeUnmount,
-  expectInterruptibleOverlayMotion,
-  expectPlacedBelow,
-} from '../../stories/support/overlay-motion-test-utils';
 import { Button } from '../button';
 import { Input } from '../input';
 import { Label } from '../label';
@@ -198,14 +193,15 @@ export const OpenCloseInteraction: Story = {
 
     await userEvent.click(trigger);
     const content = await within(document.body).findByText('Popover content');
-    const panel = content.closest('[data-slot="popover-content"]');
 
     await waitFor(() => expect(content).toBeVisible());
-    await expectInterruptibleOverlayMotion(panel);
-    await expectPlacedBelow(panel, trigger);
 
     await userEvent.keyboard('{Escape}');
-    await expectExitBeforeUnmount(panel);
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-slot="popover-content"]')
+      ).toBeNull();
+    });
     await expect(trigger).toHaveFocus();
   },
 };

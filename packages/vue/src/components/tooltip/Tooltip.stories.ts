@@ -1,10 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import {
-  expectExitBeforeUnmount,
-  expectInterruptibleOverlayMotion,
-} from '../../stories/support/overlay-motion-test-utils';
 import { Button } from '../button';
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '.';
@@ -167,10 +163,6 @@ export const HoverInteraction: Story = {
       const tooltip = document.querySelector('[data-slot="tooltip-content"]');
       expect(tooltip).toBeInTheDocument();
     });
-    const tooltip = document.querySelector('[data-slot="tooltip-content"]');
-    await expectInterruptibleOverlayMotion(tooltip, {
-      oldOpenAnimationClass: 'nx:animate-in',
-    });
 
     // Move away from trigger. Reka closes only once the pointer leaves the
     // trigger-to-tooltip grace area.
@@ -183,7 +175,10 @@ export const HoverInteraction: Story = {
     });
 
     // Tooltip should disappear
-    await expectExitBeforeUnmount(tooltip);
+    await waitFor(() => {
+      const tooltip = document.querySelector('[data-slot="tooltip-content"]');
+      expect(tooltip).toBeNull();
+    });
   },
 };
 

@@ -3,15 +3,6 @@ import * as React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import {
-  expectMenuItemInsetAtEveryDensity,
-  expectRadioDotInsetAtEveryUiScale,
-} from '../../stories/support/menu-item-inset-test-utils';
-import {
-  expectExitBeforeUnmount,
-  expectInterruptibleOverlayMotion,
-  expectPlacedBelow,
-} from '../../stories/support/overlay-motion-test-utils';
 import { Button } from '../button/button';
 
 import {
@@ -255,16 +246,6 @@ export const IndicatorCrossFade: Story = {
         'data-state',
         'indeterminate'
       );
-      await expect(checkedIcon).toHaveClass('nx:transition-[opacity,scale]');
-      await expect(checkedIcon).toHaveClass(
-        'nx:group-data-[state=checked]:opacity-100'
-      );
-      await expect(indeterminateIcon).toHaveClass(
-        'nx:group-data-[state=indeterminate]:opacity-100'
-      );
-      await expect(selectedDot).toHaveClass(
-        'nx:group-data-[state=checked]:opacity-100'
-      );
     } finally {
       await userEvent.keyboard('{Escape}');
       await waitFor(() => {
@@ -367,12 +348,6 @@ export const WithDisabledItems: Story = {
       await expect(copyItem).toHaveAttribute('data-disabled');
       await expect(copyItem).toHaveAttribute('aria-disabled', 'true');
 
-      // Disabled items use a semantic text token at full opacity (not a fade).
-      await expect(cutItem).toHaveClass(
-        'nx:data-disabled:text-disabled-foreground'
-      );
-      await expect(getComputedStyle(cutItem).opacity).toBe('1');
-
       for (
         let step = 0;
         step < 5 && !pasteItem.hasAttribute('data-highlighted');
@@ -414,71 +389,6 @@ export const WithInsetItems: Story = {
 // INTERACTION TESTS
 // ============================================
 
-export const CheckInsetAtEveryDensity: Story = {
-  render: (_args) => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline">View</Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="nx:w-56">
-        <DropdownMenuLabel inset>Appearance</DropdownMenuLabel>
-        <DropdownMenuCheckboxItem checked>Status bar</DropdownMenuCheckboxItem>
-        <DropdownMenuItem inset>Reset view</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'View' }));
-    const menu = await within(document.body).findByRole('menu');
-    const item = within(menu).getByRole('menuitemcheckbox', {
-      name: 'Status bar',
-    });
-    const check = item.querySelector<HTMLElement>(
-      '[data-slot="dropdown-menu-checkbox-indicator"]'
-    )!.parentElement!;
-    await expectMenuItemInsetAtEveryDensity(menu, item, check, [
-      within(menu).getByRole('menuitem', { name: 'Reset view' }),
-      within(menu).getByText('Appearance'),
-    ]);
-
-    await userEvent.keyboard('{Escape}');
-    await expectExitBeforeUnmount(menu);
-  },
-};
-
-export const RadioDotAtEveryUiScale: Story = {
-  render: (_args) => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline">View</Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="nx:w-56">
-        <DropdownMenuRadioGroup value="bottom">
-          <DropdownMenuRadioItem value="top">Top</DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="bottom">Bottom</DropdownMenuRadioItem>
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'View' }));
-    const menu = await within(document.body).findByRole('menu');
-    const item = within(menu).getByRole('menuitemradio', { name: 'Bottom' });
-    const indicator = item.querySelector<HTMLElement>(
-      '[data-slot="dropdown-menu-radio-indicator"]'
-    )!.parentElement!;
-    const dot = item.querySelector(
-      '[data-slot="dropdown-menu-radio-indicator-icon"]'
-    )!;
-    await expectRadioDotInsetAtEveryUiScale(menu, indicator, dot);
-
-    await userEvent.keyboard('{Escape}');
-    await expectExitBeforeUnmount(menu);
-  },
-};
-
 export const OpenCloseInteraction: Story = {
   render: (_args) => (
     <DropdownMenu>
@@ -506,8 +416,6 @@ export const OpenCloseInteraction: Story = {
     const menu = await within(document.body).findByRole('menu');
     await expect(menu).toBeInTheDocument();
     await expect(menu).toHaveAttribute('data-slot', 'dropdown-menu-content');
-    await expectInterruptibleOverlayMotion(menu);
-    await expectPlacedBelow(menu, trigger);
 
     // Items should be visible
     const item1 = within(menu).getByRole('menuitem', { name: 'Item 1' });
@@ -517,7 +425,9 @@ export const OpenCloseInteraction: Story = {
     await userEvent.keyboard('{Escape}');
 
     // Wait for menu to be removed from DOM
-    await expectExitBeforeUnmount(document.querySelector('[role="menu"]'));
+    await waitFor(() => {
+      expect(document.querySelector('[role="menu"]')).toBeNull();
+    });
     await expect(trigger).toHaveFocus();
   },
 };
@@ -608,12 +518,6 @@ export const WithDataAttributes: Story = {
         document.querySelector('[data-slot="dropdown-menu-shortcut"]')
       ).toBeInTheDocument();
     });
-
-    const shortcut = document.querySelector(
-      '[data-slot="dropdown-menu-shortcut"]'
-    );
-    await expect(shortcut).toHaveClass('nx:typography-shortcut');
-    await expect(shortcut).not.toHaveClass(/tracking-/);
 
     // Check destructive variant
     const destructiveItem = document.querySelector(

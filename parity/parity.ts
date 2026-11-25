@@ -442,6 +442,7 @@ export const behaviourOnlyIn: Record<
   react: {
     'button/RefForwarding': REACT_REF,
     'tabs/ListRef': REACT_REF,
+    'tabs/ListRefSize': REACT_REF,
   },
   vue: {
     'accordion/VModel': V_MODEL,
@@ -489,10 +490,13 @@ export const behaviourDifferences: Record<string, string> = {
   'input-otp/Paste': PIN_INPUT,
   'message/WithActions': GRACE_AREA,
   'tabs/DisabledTabInteraction': TABS_INDICATOR,
+  'tabs/DisabledTabInteractionGeometry':
+    "React pins its measured indicator's left and width; Vue checks the left, and IndicatorFollowsActiveTab pins the width of Reka's indicator",
   'tabs/UnderlineVariant': TABS_INDICATOR,
   'tabs/VerticalIndicatorFollowsActiveTab': TABS_INDICATOR,
   'tooltip/GroupedInProvider': GRACE_AREA,
   'tooltip/HoverInteraction': GRACE_AREA,
+  'tooltip/HoverInteractionMotion': GRACE_AREA,
   'tooltip/WithDataAttributes': GRACE_AREA,
   'toggle-group/ControlledDisabledTransition':
     "clearing a single selection emits '' from Radix and undefined from Reka",

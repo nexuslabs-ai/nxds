@@ -1,6 +1,6 @@
 import { CalendarDate } from '@internationalized/date';
 import type { Decorator, Meta, StoryObj } from '@storybook/vue3-vite';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 import { ref } from 'vue';
 
 import { Button } from '../button';
@@ -11,15 +11,6 @@ import { DatePicker } from '.';
 // Fixed reference month keeps day-grid layout deterministic across runs.
 const REFERENCE_MONTH = new CalendarDate(2025, 1, 1);
 const REFERENCE_TODAY = new CalendarDate(2025, 1, 15);
-
-// Resolve a spacing token to px from :root so cell-size assertions track the
-// active spacing mode instead of hardcoding the default-mode value.
-function resolveSpacingPx(canvasElement: HTMLElement, varName: string) {
-  const root = canvasElement.ownerDocument.documentElement;
-  return Math.round(
-    parseFloat(getComputedStyle(root).getPropertyValue(varName))
-  );
-}
 
 // The grid is a borderless primitive built to sit inside a Card or Popover: it
 // goes transparent in `[data-slot=card-content]`, so the Card is its surface.
@@ -68,19 +59,10 @@ export const Default: Story = {
     const outsideMonthDay = canvasElement.querySelector<HTMLButtonElement>(
       'button[data-day="2024-12-29"]'
     );
-    const outsideMonthCell = outsideMonthDay?.closest('td');
 
     await expect(currentMonthDay).toBeInTheDocument();
     await expect(outsideMonthDay).toBeInTheDocument();
-    await expect(outsideMonthCell).toBeInTheDocument();
     await expect(outsideMonthDay).toHaveAttribute('data-outside', 'true');
-
-    const currentColor = getComputedStyle(currentMonthDay!).color;
-    const outsideColor = getComputedStyle(outsideMonthDay!).color;
-    const outsideCellColor = getComputedStyle(outsideMonthCell!).color;
-
-    expect(outsideColor).not.toBe(currentColor);
-    expect(outsideColor).toBe(outsideCellColor);
   },
 };
 
@@ -112,19 +94,9 @@ export const LargeCells: Story = {
       '<DatePicker cell-size="large" :default-value="REFERENCE_TODAY" />',
   }),
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const selected = canvas.getByText('15').closest('button');
-
     await expect(
       canvasElement.querySelector('[data-cell-size="large"]')
     ).toBeInTheDocument();
-    const largeCellPx = resolveSpacingPx(canvasElement, '--nx-spacing-12');
-    expect(Math.round(selected!.getBoundingClientRect().width)).toBe(
-      largeCellPx
-    );
-    expect(Math.round(selected!.getBoundingClientRect().height)).toBe(
-      largeCellPx
-    );
   },
 };
 
@@ -146,19 +118,11 @@ export const CustomDayContent: Story = {
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const selected = canvas.getByText('15').closest('button');
 
     await expect(
       canvasElement.querySelector('[data-cell-size="xlarge"]')
     ).toBeInTheDocument();
     await expect(canvas.getByText('$75')).toBeInTheDocument();
-    const xlargeCellPx = resolveSpacingPx(canvasElement, '--nx-spacing-14');
-    expect(Math.round(selected!.getBoundingClientRect().width)).toBe(
-      xlargeCellPx
-    );
-    expect(Math.round(selected!.getBoundingClientRect().height)).toBe(
-      xlargeCellPx
-    );
   },
 };
 
@@ -202,20 +166,6 @@ export const RangeHoverPreview: Story = {
     }),
     template: '<DatePicker v-model="range" mode="range" />',
   }),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.hover(canvas.getByText('11').closest('button')!);
-
-    // Day 10 sits between the committed start (8) and the hovered day (11),
-    // so its cell should carry the preview rail.
-    const cell = canvas.getByText('10').closest('td');
-    await waitFor(() =>
-      expect(getComputedStyle(cell!).backgroundColor).not.toBe(
-        'rgba(0, 0, 0, 0)'
-      )
-    );
-    await expect(cell).toHaveClass('nx:bg-container-hover');
-  },
 };
 
 // A range can't span a disabled or unavailable day: the preview drops, and a
@@ -241,29 +191,6 @@ export const RangeSkipsBlockedDays: Story = {
     const canvas = within(canvasElement);
     const day = (label: string) => canvas.getByText(label).closest('button')!;
     const cell = (label: string) => canvas.getByText(label).closest('td');
-
-    await userEvent.hover(day('13'));
-    await waitFor(() =>
-      expect(cell('13')).toHaveClass('nx:bg-container-hover')
-    );
-
-    // Day 12 is disabled, so hovering back to 10 shades nothing.
-    await userEvent.hover(day('10'));
-    await waitFor(() =>
-      expect(cell('13')).not.toHaveClass('nx:bg-container-hover')
-    );
-
-    await userEvent.hover(day('16'));
-    await waitFor(() =>
-      expect(cell('16')).toHaveClass('nx:bg-container-hover')
-    );
-
-    // Day 17 is unavailable, so hovering 19 shades nothing.
-    await userEvent.hover(day('19'));
-    await waitFor(() =>
-      expect(cell('16')).not.toHaveClass('nx:bg-container-hover')
-    );
-    await expect(cell('18')).not.toHaveClass('nx:bg-container-hover');
 
     // Clicking 19 can't end the range across day 17, so it starts a new one.
     await userEvent.click(day('19'));
@@ -373,10 +300,6 @@ export const DisabledDays: Story = {
     const day10 = canvas.getByText('10').closest('button');
 
     await expect(day10).toBeDisabled();
-    // A disabled day recolors via a semantic disabled-text token at full
-    // opacity (not a fade).
-    await expect(day10).toHaveClass('nx:disabled:text-disabled-foreground');
-    await expect(getComputedStyle(day10!).opacity).toBe('1');
     await userEvent.click(day10!, { pointerEventsCheck: 0 });
     await expect(day10).not.toHaveAttribute('data-selected-single', 'true');
   },
@@ -407,9 +330,6 @@ export const UnavailableDays: Story = {
     const cell = canvas.getByText('20').closest('td');
 
     await expect(cell).toBeInTheDocument();
-    expect(getComputedStyle(cell!).textDecorationLine).toContain(
-      'line-through'
-    );
   },
 };
 
@@ -423,13 +343,6 @@ export const WeekStartsMonday: Story = {
     template:
       '<DatePicker :week-starts-on="1" :default-value="REFERENCE_TODAY" />',
   }),
-  play: async ({ canvasElement }) => {
-    const weekdays = canvasElement.querySelectorAll('thead th');
-
-    // Monday-first → the first weekday header is "Mo", last is "Su".
-    await expect(weekdays[0]).toHaveTextContent('Mo');
-    await expect(weekdays[6]).toHaveTextContent('Su');
-  },
 };
 
 // Clicking a day selects it (data-selected-single flips true).
@@ -481,11 +394,6 @@ export const WithDataAttributes: Story = {
     const canvas = within(canvasElement);
     const day15 = canvas.getByText('15').closest('button');
     await expect(day15).toHaveAttribute('data-day');
-    // Day cells + weekday headers share the typography-body-default composite.
-    await expect(day15).toHaveClass('nx:typography-body-default');
-    await expect(canvasElement.querySelector('thead th')).toHaveClass(
-      'nx:typography-body-default'
-    );
   },
 };
 

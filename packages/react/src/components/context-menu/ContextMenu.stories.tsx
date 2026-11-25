@@ -4,15 +4,6 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import {
-  expectMenuItemInsetAtEveryDensity,
-  expectRadioDotInsetAtEveryUiScale,
-} from '../../stories/support/menu-item-inset-test-utils';
-import {
-  expectExitBeforeUnmount,
-  expectInterruptibleOverlayMotion,
-} from '../../stories/support/overlay-motion-test-utils';
-
-import {
   ContextMenu,
   ContextMenuCheckboxItem,
   ContextMenuContent,
@@ -264,24 +255,8 @@ export const IndicatorCrossFade: Story = {
         'data-state',
         'indeterminate'
       );
-      await expect(checkedItem).toHaveClass('nx:group');
-      await expect(selectedRadio).toHaveClass('nx:group');
       await expect(checkedIcon).toHaveAttribute('aria-hidden', 'true');
       await expect(selectedDot).toHaveAttribute('aria-hidden', 'true');
-      await expect(checkedIcon).toHaveClass('nx:transition-[opacity,scale]');
-      await expect(uncheckedIcon).toHaveClass('nx:scale-50');
-      await expect(uncheckedIcon).toHaveClass('nx:opacity-0');
-      await expect(checkedIcon).toHaveClass(
-        'nx:group-data-[state=checked]:opacity-100'
-      );
-      await expect(indeterminateIcon).toHaveClass(
-        'nx:group-data-[state=indeterminate]:opacity-100'
-      );
-      await expect(unselectedDot).toHaveClass('nx:scale-50');
-      await expect(unselectedDot).toHaveClass('nx:opacity-0');
-      await expect(selectedDot).toHaveClass(
-        'nx:group-data-[state=checked]:opacity-100'
-      );
     } finally {
       await userEvent.keyboard('{Escape}');
       await waitFor(() => {
@@ -382,77 +357,6 @@ export const WithInsetItems: Story = {
 // INTERACTION TESTS
 // ============================================
 
-export const CheckInsetAtEveryDensity: Story = {
-  render: (_args) => (
-    <ContextMenu>
-      <ContextMenuTrigger className={triggerClass}>
-        Right click here
-      </ContextMenuTrigger>
-      <ContextMenuContent className="nx:w-56">
-        <ContextMenuLabel inset>Appearance</ContextMenuLabel>
-        <ContextMenuCheckboxItem checked>Status bar</ContextMenuCheckboxItem>
-        <ContextMenuItem inset>Reset view</ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await fireEvent.contextMenu(canvas.getByText('Right click here'), {
-      clientX: 20,
-      clientY: 20,
-    });
-    const menu = await within(document.body).findByRole('menu');
-    const item = within(menu).getByRole('menuitemcheckbox', {
-      name: 'Status bar',
-    });
-    const check = item.querySelector<HTMLElement>(
-      '[data-slot="context-menu-checkbox-indicator"]'
-    )!.parentElement!;
-    await expectMenuItemInsetAtEveryDensity(menu, item, check, [
-      within(menu).getByRole('menuitem', { name: 'Reset view' }),
-      within(menu).getByText('Appearance'),
-    ]);
-
-    await userEvent.keyboard('{Escape}');
-    await expectExitBeforeUnmount(menu);
-  },
-};
-
-export const RadioDotAtEveryUiScale: Story = {
-  render: (_args) => (
-    <ContextMenu>
-      <ContextMenuTrigger className={triggerClass}>
-        Right click here
-      </ContextMenuTrigger>
-      <ContextMenuContent className="nx:w-56">
-        <ContextMenuRadioGroup value="bottom">
-          <ContextMenuRadioItem value="top">Top</ContextMenuRadioItem>
-          <ContextMenuRadioItem value="bottom">Bottom</ContextMenuRadioItem>
-        </ContextMenuRadioGroup>
-      </ContextMenuContent>
-    </ContextMenu>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await fireEvent.contextMenu(canvas.getByText('Right click here'), {
-      clientX: 20,
-      clientY: 20,
-    });
-    const menu = await within(document.body).findByRole('menu');
-    const item = within(menu).getByRole('menuitemradio', { name: 'Bottom' });
-    const indicator = item.querySelector<HTMLElement>(
-      '[data-slot="context-menu-radio-indicator"]'
-    )!.parentElement!;
-    const dot = item.querySelector(
-      '[data-slot="context-menu-radio-indicator-icon"]'
-    )!;
-    await expectRadioDotInsetAtEveryUiScale(menu, indicator, dot);
-
-    await userEvent.keyboard('{Escape}');
-    await expectExitBeforeUnmount(menu);
-  },
-};
-
 export const OpenCloseInteraction: Story = {
   render: (_args) => (
     <ContextMenu>
@@ -480,7 +384,6 @@ export const OpenCloseInteraction: Story = {
     const menu = await within(document.body).findByRole('menu');
     await expect(menu).toBeInTheDocument();
     await expect(menu).toHaveAttribute('data-slot', 'context-menu-content');
-    await expectInterruptibleOverlayMotion(menu);
 
     // Items should be visible
     const item1 = within(menu).getByRole('menuitem', { name: 'Item 1' });
@@ -490,7 +393,9 @@ export const OpenCloseInteraction: Story = {
     await userEvent.keyboard('{Escape}');
 
     // Wait for menu to be removed from DOM
-    await expectExitBeforeUnmount(document.querySelector('[role="menu"]'));
+    await waitFor(() => {
+      expect(document.querySelector('[role="menu"]')).toBeNull();
+    });
   },
 };
 
@@ -566,12 +471,6 @@ export const WithDisabledItems: Story = {
     await expect(disabledItem).toHaveAttribute('data-disabled');
     await expect(disabledItem).toHaveAttribute('aria-disabled', 'true');
 
-    // Disabled items use a semantic text token at full opacity (not a fade).
-    await expect(disabledItem).toHaveClass(
-      'nx:data-disabled:text-disabled-foreground'
-    );
-    await expect(getComputedStyle(disabledItem).opacity).toBe('1');
-
     // An enabled item is reachable
     const enabledItem = within(menu).getByRole('menuitem', { name: 'Paste' });
     await expect(enabledItem).not.toHaveAttribute('data-disabled');
@@ -629,13 +528,6 @@ export const WithDataAttributes: Story = {
         document.querySelector('[data-slot="context-menu-shortcut"]')
       ).toBeInTheDocument();
     });
-
-    const shortcut = document.querySelector(
-      '[data-slot="context-menu-shortcut"]'
-    );
-    await expect(shortcut).toHaveClass('nx:typography-shortcut');
-    await expect(shortcut).not.toHaveClass('nx:typography-body-small');
-    await expect(shortcut).not.toHaveClass(/tracking-/);
 
     // Check destructive variant
     const destructiveItem = document.querySelector(

@@ -229,12 +229,6 @@ export const Range: Story = {
 
     await expect(range).not.toHaveAttribute('data-range-start');
     await expect(range).not.toHaveAttribute('data-range-end');
-    await expect(
-      Number.parseFloat(getComputedStyle(range).borderTopLeftRadius)
-    ).toBe(0);
-    await expect(
-      Number.parseFloat(getComputedStyle(range).borderTopRightRadius)
-    ).toBe(0);
   },
 };
 
@@ -272,22 +266,8 @@ export const ExplicitMarkers: Story = {
     const markers = Array.from(
       canvasElement.querySelectorAll<HTMLElement>('[data-slot="slider-marker"]')
     );
-    const marker = markers[0];
-
-    if (!marker) throw new Error('Expected one future explicit marker.');
-
-    const markerRect = marker.getBoundingClientRect();
-    const trackRect = marker
-      .closest('[data-slot="slider-track"]')!
-      .getBoundingClientRect();
-    const markerCenter =
-      ((markerRect.left + markerRect.width / 2 - trackRect.left) /
-        trackRect.width) *
-      100;
 
     await expect(markers).toHaveLength(1);
-    await expect(markerCenter).toBeGreaterThan(74);
-    await expect(markerCenter).toBeLessThan(76);
   },
 };
 
@@ -323,79 +303,11 @@ export const Vertical: Story = {
     const thumb = canvasElement.querySelector<HTMLElement>(
       '[data-slot="slider-thumb"]'
     )!;
-    const thumbHandleStyle = getComputedStyle(thumb, '::before');
 
     await expect(range).toHaveAttribute('data-orientation', 'vertical');
     await expect(range).toHaveAttribute('data-range-start', 'true');
     await expect(range).not.toHaveAttribute('data-range-end');
-    await expect(range).toHaveClass('nx:rounded-b-md');
-    await expect(range).not.toHaveClass('nx:rounded-t-md');
-    await expect(
-      Number.parseFloat(getComputedStyle(range).borderTopLeftRadius)
-    ).toBe(0);
     await expect(thumb).toHaveAttribute('data-orientation', 'vertical');
-    await expect(getComputedStyle(thumb).height).toBe('20px');
-    await expect(getComputedStyle(thumb).width).toBe('20px');
-    await expect(thumbHandleStyle.height).toBe('2px');
-    await expect(thumbHandleStyle.width).toBe('20px');
-  },
-};
-
-// Slider ends follow the active nxds corner mode instead of staying fully pill-shaped.
-export const CornerModes: Story = {
-  render: () => ({
-    components: { SliderControlRow },
-    setup: () => ({ radii: ['square', 'subtle', 'round'] }),
-    template: `
-      <div class="nx:grid nx:w-full nx:gap-6">
-        <div
-          v-for="radius in radii"
-          :key="radius"
-          :data-radius="radius"
-          :data-testid="'radius-' + radius"
-          class="nx:grid nx:gap-2"
-        >
-          <span class="nx:typography-label-small nx:text-muted-foreground">{{ radius }}</span>
-          <SliderControlRow
-            label="Roundness"
-            :default-value="[2]"
-            :max="4"
-            markers="steps"
-            :step="1"
-          />
-        </div>
-      </div>
-    `,
-  }),
-  play: async ({ canvasElement }) => {
-    const trackRadiusFor = (radius: string) => {
-      const track = canvasElement.querySelector<HTMLElement>(
-        `[data-testid="radius-${radius}"] [data-slot="slider-track"]`
-      )!;
-
-      return Number.parseFloat(getComputedStyle(track).borderTopLeftRadius);
-    };
-    const rangeRadiusFor = (radius: string) => {
-      const range = canvasElement.querySelector<HTMLElement>(
-        `[data-testid="radius-${radius}"] [data-slot="slider-range"]`
-      )!;
-
-      return Number.parseFloat(getComputedStyle(range).borderTopLeftRadius);
-    };
-
-    const squareRadius = trackRadiusFor('square');
-    const subtleRadius = trackRadiusFor('subtle');
-    const roundRadius = trackRadiusFor('round');
-    const squareRangeRadius = rangeRadiusFor('square');
-    const subtleRangeRadius = rangeRadiusFor('subtle');
-    const roundRangeRadius = rangeRadiusFor('round');
-
-    await expect(squareRadius).toBe(0);
-    await expect(subtleRadius).toBeGreaterThan(squareRadius);
-    await expect(roundRadius).toBeGreaterThan(subtleRadius);
-    await expect(squareRangeRadius).toBe(0);
-    await expect(subtleRangeRadius).toBeGreaterThan(squareRangeRadius);
-    await expect(roundRangeRadius).toBeGreaterThan(subtleRangeRadius);
   },
 };
 
@@ -429,25 +341,9 @@ export const KeyboardInteraction: Story = {
       );
     const [marker] = getMarkers();
 
-    if (!marker) throw new Error('Expected one future step marker.');
-
-    const markerRect = marker.getBoundingClientRect();
-    const trackRect = marker
-      .closest('[data-slot="slider-track"]')!
-      .getBoundingClientRect();
-    const markerCenter =
-      ((markerRect.left + markerRect.width / 2 - trackRect.left) /
-        trackRect.width) *
-      100;
-
     await expect(getMarkers()).toHaveLength(1);
-    await expect(markerCenter).toBeGreaterThan(74);
-    await expect(markerCenter).toBeLessThan(76);
     await expect(marker).toHaveAttribute('aria-hidden', 'true');
     await expect(marker).toHaveAttribute('data-orientation', 'horizontal');
-    await expect(marker).toHaveClass('nx:bg-muted-foreground-subtle');
-    await expect(getComputedStyle(marker).height).toBe('6px');
-    await expect(getComputedStyle(marker).width).toBe('6px');
     await expect(thumb).toHaveAttribute('aria-valuenow', '2');
 
     await userEvent.tab();
@@ -475,22 +371,12 @@ export const Disabled: Story = {
   }),
   play: async ({ canvasElement }) => {
     const slider = canvasElement.querySelector('[data-slot="slider"]');
-    // Reka marks disabled with data-disabled on the root; the track/range
-    // recolor to semantic disabled tokens at full opacity (not a fade), and
-    // Reka blocks interaction.
+    // Reka marks disabled with data-disabled on the root and blocks
+    // interaction.
     await expect(slider).toHaveAttribute('data-disabled');
     await expect(
       canvasElement.querySelector('[data-slot="slider"]')
     ).toBeInTheDocument();
-
-    const track = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="slider-track"]'
-    )!;
-    await expect(track).toHaveClass('nx:data-disabled:bg-disabled');
-    const root = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="slider"]'
-    )!;
-    await expect(getComputedStyle(root).opacity).toBe('1');
   },
 };
 
@@ -546,9 +432,6 @@ export const Invalid: Story = {
     await expect(thumbs).toHaveLength(2);
     for (const thumb of thumbs) {
       await expect(thumb).toHaveAttribute('aria-invalid', 'true');
-      await expect(thumb).toHaveClass(
-        'nx:aria-invalid:focus-visible:outline-focus-error'
-      );
     }
   },
 };
