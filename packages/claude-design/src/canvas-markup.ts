@@ -52,7 +52,7 @@ const UNWRITABLE = Symbol('unwritable');
 
 interface Context {
   parts: ReadonlySet<string>;
-  /** Module-level constants and `useId()` ids, by name. */
+  /** Story data, module-level constants and `useId()` ids, by name. */
   values: ReadonlyMap<string, TreeValue>;
 }
 
@@ -95,7 +95,18 @@ function isoDate(year: number, month: number, day: number) {
   ].join('-');
 }
 
-// A literal value, a module-level constant, or `new Date(y, m, d)`.
+// `STARTER_AVATARS[0]` or `person.src`: one entry of a value already known.
+function member(
+  target: TreeValue | typeof UNWRITABLE,
+  key: TreeValue | typeof UNWRITABLE
+): TreeValue | typeof UNWRITABLE {
+  if (typeof target !== 'object' || target === null) return UNWRITABLE;
+  if (typeof key !== 'string' && typeof key !== 'number') return UNWRITABLE;
+  if (!Object.hasOwn(target, key)) return UNWRITABLE;
+  return (target as Record<string, TreeValue>)[key] ?? UNWRITABLE;
+}
+
+// A literal value, a known value or one of its entries, or `new Date(y, m, d)`.
 function literal(
   node: ts.Expression,
   context: Context
@@ -122,6 +133,15 @@ function literal(
   if (node.kind === ts.SyntaxKind.FalseKeyword) return false;
   if (node.kind === ts.SyntaxKind.NullKeyword) return null;
   if (ts.isIdentifier(node)) return context.values.get(node.text) ?? UNWRITABLE;
+  if (ts.isPropertyAccessExpression(node)) {
+    return member(literal(node.expression, context), node.name.text);
+  }
+  if (ts.isElementAccessExpression(node)) {
+    return member(
+      literal(node.expression, context),
+      literal(node.argumentExpression, context)
+    );
+  }
   if (ts.isArrayLiteralExpression(node)) {
     const items = node.elements.map((element) => literal(element, context));
     return items.includes(UNWRITABLE) ? UNWRITABLE : (items as TreeValue[]);
@@ -436,10 +456,14 @@ function storyFunction(source: ts.SourceFile, context: Context) {
   return null;
 }
 
-/** `parts` names every component the bundle exports. */
+/**
+ * `parts` names every component the bundle exports. `storyData` holds the
+ * values the story imports, by name.
+ */
 export function canvasExample(
   storySource: string,
-  parts: ReadonlySet<string>
+  parts: ReadonlySet<string>,
+  storyData: ReadonlyMap<string, TreeValue>
 ): CanvasExample | null {
   const source = ts.createSourceFile(
     'story.tsx',
@@ -450,7 +474,7 @@ export function canvasExample(
   );
   const moduleValues = constants(
     source.statements,
-    { parts, values: new Map() },
+    { parts, values: storyData },
     false
   );
   const story = storyFunction(source, {

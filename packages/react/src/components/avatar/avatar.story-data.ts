@@ -1,6 +1,6 @@
 /**
- * Vendored avatar fixtures — Storybook only. NOT exported from the package barrel
- * (avatar/index.ts re-exports ./avatar only), so these never enter the bundle.
+ * Sample portraits for the Avatar stories and docs examples. Nothing in the
+ * component imports them, so an app bundles them only where it uses them.
  *
  * Source: DiceBear "notionists-neutral" by Zoish — https://www.dicebear.com/styles/notionists-neutral/
  * License: CC0 1.0 (public domain), no attribution required —
@@ -10,11 +10,11 @@
  * backgroundType=solid over nxds palette shade-200 backgrounds — the rendered sRGB hex
  * of --nx-color-{rose,sky,violet,amber,indigo}-200 (primitives, identical light & dark).
  *
- * Stored as inline `data:image/svg+xml` URIs (not remote URLs) so Radix renders the
- * image synchronously and play-function image assertions stay deterministic in CI.
+ * Stored as inline `data:image/svg+xml` URIs (not remote URLs) so the image
+ * renders without a request and image assertions stay deterministic.
  */
 
-export interface AvatarFixture {
+export interface StarterAvatar {
   /** Full display name, used for `alt` text and labels. */
   name: string;
   /** Two-letter fallback initials. */
@@ -24,7 +24,7 @@ export interface AvatarFixture {
 }
 
 // Non-empty tuple type so `STARTER_AVATARS[0]` is defined under noUncheckedIndexedAccess.
-export const STARTER_AVATARS: [AvatarFixture, ...AvatarFixture[]] = [
+export const STARTER_AVATARS: [StarterAvatar, ...StarterAvatar[]] = [
   {
     name: 'Ada Lovelace',
     initials: 'AL',

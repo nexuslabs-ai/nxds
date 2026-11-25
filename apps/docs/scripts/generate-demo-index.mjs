@@ -1,11 +1,4 @@
-import {
-  cpSync,
-  existsSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  watch,
-} from 'node:fs';
+import { existsSync, readdirSync, readFileSync, rmSync, watch } from 'node:fs';
 import path from 'node:path';
 
 import {
@@ -34,7 +27,7 @@ import {
   componentSlugs,
   exportedComponentSlugs,
 } from '@nxds/source-model/react-sources.mjs';
-import { reactRoot, reactSrc, toRepoPath } from '@nxds/source-model/roots.mjs';
+import { reactSrc, toRepoPath } from '@nxds/source-model/roots.mjs';
 
 import prettier from 'prettier';
 
@@ -48,15 +41,6 @@ import { resolveFormatOptions } from './page-manifest.mjs';
 
 const GENERATED_DIR = path.join(docsRoot, '__generated__');
 const PROPS_DIR = path.join(docsRoot, 'generated', 'props');
-
-/** Images docs stories load by URL, served from Storybook's public dir and copied to the docs app's. */
-const STORY_ASSETS_SOURCE = path.join(
-  reactRoot,
-  '.storybook',
-  'public',
-  'avatars'
-);
-const STORY_ASSETS_TARGET = path.join(docsRoot, 'public', 'avatars');
 
 const COPIED_PREFIX = '@/';
 /**
@@ -816,11 +800,6 @@ const blockDocs: Record<string, BlockDocs> = ${blocksLiteral};
 ${INDEX_FOOTER}`;
 }
 
-function copyStoryAssets() {
-  rmSync(STORY_ASSETS_TARGET, { recursive: true, force: true });
-  cpSync(STORY_ASSETS_SOURCE, STORY_ASSETS_TARGET, { recursive: true });
-}
-
 async function generateDemoIndex() {
   const exported = exportedComponentSlugs();
   const demos = await collectDemos(exported);
@@ -911,15 +890,6 @@ function watchSources() {
   });
 
   console.log(`demo-index: watching ${relativeSrc} sources`);
-}
-
-try {
-  copyStoryAssets();
-} catch (error) {
-  console.error(
-    `demo-index: cannot copy ${path.relative(docsRoot, STORY_ASSETS_SOURCE)} — ${error.message}`
-  );
-  process.exit(1);
 }
 
 if (process.argv.includes('--watch')) {

@@ -478,7 +478,7 @@ const TABS_INDICATOR =
 
 /** Paired play stories whose steps differ by design, as `{slug}/{Story}`. */
 export const behaviourDifferences: Record<string, string> = {
-  'avatar/CroppedImage': AVATAR_IMAGE_LOAD,
+  'avatar/CroppedImageStyle': AVATAR_IMAGE_LOAD,
   'command/SearchRanking':
     'cmdk sorts the matches by score; Vue keeps them in the order they are written, since sorting would move DOM nodes Vue owns, so Enter runs another item',
   'date-picker/Accessibility':
@@ -486,6 +486,7 @@ export const behaviourDifferences: Record<string, string> = {
   'avatar/WithDataAttributes': AVATAR_IMAGE_LOAD,
   'bubble/WithTooltip': GRACE_AREA,
   'hover-card/OpenCloseInteraction': GRACE_AREA,
+  'hover-card/OpenCloseInteractionMotion': GRACE_AREA,
   'input-otp/KeyboardInteraction': PIN_INPUT,
   'input-otp/Paste': PIN_INPUT,
   'message/WithActions': GRACE_AREA,
@@ -677,8 +678,8 @@ export const copies: [react: string, vue: string][] = [
     'packages/vue/src/stories/support/story-height-test-utils.ts',
   ],
   [
-    'packages/react/src/components/avatar/avatar-fixtures.ts',
-    'packages/vue/src/stories/support/avatar-fixtures.ts',
+    'packages/react/src/components/avatar/avatar.story-data.ts',
+    'packages/vue/src/components/avatar/avatar.story-data.ts',
   ],
   [
     'packages/react/src/stories/support/menu-item-inset-test-utils.ts',

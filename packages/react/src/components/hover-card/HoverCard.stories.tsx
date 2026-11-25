@@ -1,11 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import {
-  expectExitBeforeUnmount,
-  expectInterruptibleOverlayMotion,
-} from '../../stories/support/overlay-motion-test-utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../avatar/avatar';
+import { STARTER_AVATARS } from '../avatar/avatar.story-data';
 import { Button } from '../button/button';
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from './hover-card';
@@ -72,7 +69,7 @@ export const ProfileCard: Story = {
       <HoverCardContent className="nx:w-80">
         <div className="nx:flex nx:gap-4">
           <Avatar>
-            <AvatarImage src="/avatars/ada.svg" alt="Ada Lovelace" />
+            <AvatarImage src={STARTER_AVATARS[0].src} alt="Ada Lovelace" />
             <AvatarFallback>AL</AvatarFallback>
           </Avatar>
           <div className="nx:flex nx:flex-col nx:gap-1">
@@ -139,11 +136,13 @@ export const OpenCloseInteraction: Story = {
         document.querySelector('[data-slot="hover-card-content"]')
       ).toBeInTheDocument();
     });
-    const content = document.querySelector('[data-slot="hover-card-content"]');
-    await expectInterruptibleOverlayMotion(content);
 
     await userEvent.unhover(trigger);
-    await expectExitBeforeUnmount(content);
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-slot="hover-card-content"]')
+      ).toBeNull();
+    });
   },
 };
 
