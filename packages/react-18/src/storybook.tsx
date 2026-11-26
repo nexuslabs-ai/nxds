@@ -211,7 +211,7 @@ function toolbarItems<
  * What a Storybook preview takes from nxds: the appearance decorator, its
  * toolbar and the accessibility settings. Stories start from `appearance`.
  * An app that sets its own colors passes `deriveColors: false`, as it does to
- * its provider.
+ * its provider, and the toolbar leaves out the color menus.
  */
 export function nxdsPreview(
   appearance: NxdsAppearanceState,
@@ -316,26 +316,32 @@ export function nxdsPreview(
           dynamicTitle: true,
         },
       },
+      // Without derived colors, the color menus would change nothing, so
+      // they have no toolbar.
       brandColor: {
         name: 'Primary',
         description: 'Primary brand color',
-        toolbar: {
-          icon: 'circle',
-          items: BRAND_COLOR_PRESETS.map(({ color, label }) => ({
-            value: color,
-            title: label,
-          })),
-          dynamicTitle: true,
-        },
+        toolbar: deriveColors
+          ? {
+              icon: 'circle',
+              items: BRAND_COLOR_PRESETS.map(({ color, label }) => ({
+                value: color,
+                title: label,
+              })),
+              dynamicTitle: true,
+            }
+          : undefined,
       },
       surfaceTone: {
         name: 'Surface',
         description: 'Neutral surface tone',
-        toolbar: {
-          icon: 'paintbrush',
-          items: toolbarItems(BASE_TONE_OPTIONS),
-          dynamicTitle: true,
-        },
+        toolbar: deriveColors
+          ? {
+              icon: 'paintbrush',
+              items: toolbarItems(BASE_TONE_OPTIONS),
+              dynamicTitle: true,
+            }
+          : undefined,
       },
       uiScale: {
         name: 'UI scale',
