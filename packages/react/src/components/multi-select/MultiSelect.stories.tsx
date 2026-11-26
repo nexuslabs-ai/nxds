@@ -306,6 +306,38 @@ export const InvalidField: Story = {
   },
 };
 
+export const LabelledBy: Story = {
+  render: () => (
+    <div className="nx:flex nx:flex-col nx:gap-2">
+      <span id="frameworks-heading">Frameworks</span>
+      <MultiSelect defaultValues={['react', 'vue']}>
+        <MultiSelectTrigger
+          aria-labelledby="frameworks-heading"
+          className="nx:w-80"
+        >
+          <MultiSelectValue placeholder="Select frameworks" />
+        </MultiSelectTrigger>
+        <MultiSelectContent
+          searchPlaceholder="Search frameworks…"
+          emptyMessage="No frameworks found."
+        >
+          {FRAMEWORKS.map((option) => (
+            <MultiSelectItem key={option.value} value={option.value}>
+              {option.label}
+            </MultiSelectItem>
+          ))}
+        </MultiSelectContent>
+      </MultiSelect>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
+
+    await expect(trigger).toHaveAccessibleName(/^Frameworks.*React.*Vue/);
+  },
+};
+
 export const ClickInteraction: Story = {
   render: () => <Frameworks />,
   play: async ({ canvasElement }) => {

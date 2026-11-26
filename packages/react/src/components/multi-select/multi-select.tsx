@@ -151,8 +151,8 @@ type MultiSelectTriggerProps = React.ComponentProps<'button'>;
 /**
  * Field that shows the selected values, opens the list, and removes the last
  * value on Backspace or Delete. Needs an `aria-label` or a visible label from
- * `Field`. With an `aria-label`, its name is that label and then the values it
- * shows.
+ * `Field`. With an `aria-label` or `aria-labelledby`, its name is that label
+ * and then the values it shows.
  */
 function MultiSelectTrigger({
   className,
@@ -162,6 +162,9 @@ function MultiSelectTrigger({
   const { open, selectedValues, toggle, valueId } = useMultiSelect();
   const ownId = React.useId();
   const id = props.id ?? ownId;
+  // A label names the field, not the values the trigger shows, so the values
+  // follow it in the name. An `aria-label` labels the trigger by its own id.
+  const label = props['aria-label'] ? id : props['aria-labelledby'];
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (event.key !== 'Backspace' && event.key !== 'Delete') return;
@@ -189,11 +192,7 @@ function MultiSelectTrigger({
         onKeyDown={handleKeyDown}
         {...props}
         id={id}
-        // An `aria-label` names the field, not the values the trigger shows.
-        // Naming the trigger by itself and then its value puts both in its name.
-        aria-labelledby={
-          props['aria-label'] ? `${id} ${valueId}` : props['aria-labelledby']
-        }
+        aria-labelledby={label ? `${label} ${valueId}` : undefined}
       >
         {children}
         <IconChevronDown

@@ -3,12 +3,14 @@
 import * as React from 'react';
 import {
   type Chevron,
+  type DateLibOptions,
   type DateRange,
   type Day,
   type DayButton,
   DayPicker,
   getDefaultClassNames,
   type Matcher,
+  type Modifiers,
   type Months,
   rangeContainsModifiers,
   useDayPicker,
@@ -64,19 +66,15 @@ const DatePickerPreviewSpanContext = React.createContext<
 // react-day-picker's default class names are static — compute once at module load.
 const defaultClassNames = getDefaultClassNames();
 
-type DayButtonLabel = NonNullable<
-  NonNullable<
-    React.ComponentProps<typeof DayPicker>['labels']
-  >['labelDayButton']
->;
-
 /**
  * Names a day button with its day as a plain number, such as "Tuesday,
  * January 7, 2025", so the name holds the number the button shows.
  * react-day-picker's own label writes "7th".
  */
 function labelDayButton(
-  ...[date, modifiers, options]: Parameters<DayButtonLabel>
+  date: Date,
+  modifiers: Modifiers,
+  options?: DateLibOptions
 ) {
   let label = date.toLocaleDateString(options?.locale?.code, {
     dateStyle: 'full',

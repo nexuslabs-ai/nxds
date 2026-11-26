@@ -35,7 +35,7 @@ export async function checkTimeZone() {
   failOnProblems(name, problems, true);
   compareSignatures(name, want, got);
   const selected = (got.signature ?? []).some((line) =>
-    line.includes('aria-label=Sunday, September 6th, 2026, selected')
+    line.includes('aria-label=Sunday, September 6, 2026, selected')
   );
   if (!selected) fail(`${name}: 2026-09-06 isn't the selected day.`);
   await zoned.close();

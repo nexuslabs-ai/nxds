@@ -21,13 +21,14 @@ const attrs = useAttrs();
 const popover = injectPopoverRootContext();
 // Reka gives the trigger this id, and names the list's dialog by it.
 popover.triggerId ||= (attrs.id as string | undefined) ?? useId();
-// An `aria-label` names the field, not the values the trigger shows. Naming
-// the trigger by itself and then its value puts both in its name.
-const labelledBy = computed(() =>
-  attrs['aria-label']
-    ? `${popover.triggerId} ${valueId}`
-    : (attrs['aria-labelledby'] as string | undefined)
-);
+// A label names the field, not the values the trigger shows, so the values
+// follow it in the name. An `aria-label` labels the trigger by its own id.
+const labelledBy = computed(() => {
+  const label = attrs['aria-label']
+    ? popover.triggerId
+    : (attrs['aria-labelledby'] as string | undefined);
+  return label ? `${label} ${valueId}` : undefined;
+});
 
 function handleKeyDown(event: KeyboardEvent) {
   if (event.key !== 'Backspace' && event.key !== 'Delete') return;

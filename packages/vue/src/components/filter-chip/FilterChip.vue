@@ -6,14 +6,16 @@ import { cn } from '../../lib/utils';
 import { buttonVariants } from '../button';
 
 export interface FilterChipProps {
-  /** Names the action and then the chip's text, such as "Remove filter: Status: Active". */
-  ariaLabel: string;
+  /** What activating the chip does. Screen readers read it before the chip's text, such as "Remove filter: Status: Active". */
+  action?: string;
   class?: HTMLAttributes['class'];
 }
 
 defineOptions({ inheritAttrs: false });
 
-const props = defineProps<FilterChipProps>();
+const props = withDefaults(defineProps<FilterChipProps>(), {
+  action: 'Remove filter',
+});
 </script>
 
 <template>
@@ -21,7 +23,6 @@ const props = defineProps<FilterChipProps>();
     v-bind="$attrs"
     type="button"
     data-slot="filter-chip"
-    :aria-label="ariaLabel"
     :class="
       cn(
         buttonVariants({ variant: 'outline', size: 'sm' }),
@@ -30,6 +31,7 @@ const props = defineProps<FilterChipProps>();
       )
     "
   >
+    <span class="nx:sr-only">{{ props.action }}: </span>
     <span data-slot="filter-chip-label" class="nx:min-w-0 nx:truncate">
       <slot />
     </span>

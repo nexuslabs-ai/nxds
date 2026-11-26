@@ -7,14 +7,13 @@ const meta = {
   component: FilterChip,
   args: {
     children: 'Status: Active',
-    'aria-label': 'Remove filter: Status: Active',
     onClick: fn(),
   },
   parameters: {
     docs: {
       description: {
         component:
-          'FilterChip is a button that removes an applied filter. Use it in a row of applied filters chosen in a menu or panel. For passive metadata use Badge, and for a condition the user edits use FilterCondition.\n\n- Clicking the label or × removes the filter. It never opens an editor or toggles a choice.\n- Give it an `aria-label` that names the action and then the chip\'s text, such as "Remove filter: Status: Paid".\n- Your app owns the filter values. After removal, move focus to the next chip, the previous chip or a stable filter control.\n- Long labels truncate on screen but keep their full accessible name.\n- It has one compact size that follows the density setting.',
+          'FilterChip is a button that removes an applied filter. Use it in a row of applied filters chosen in a menu or panel. For passive metadata use Badge, and for a condition the user edits use FilterCondition.\n\n- Clicking the label or × removes the filter. It never opens an editor or toggles a choice.\n- Screen readers read its action and then its text, such as "Remove filter: Status: Paid". Set `action` to change the action\'s words, such as for another language.\n- Your app owns the filter values. After removal, move focus to the next chip, the previous chip or a stable filter control.\n- Long labels truncate on screen but keep their full accessible name.\n- It has one compact size that follows the density setting.',
       },
     },
   },
@@ -35,7 +34,9 @@ export const ClickInteraction: Story = {
     const form = canvas.getByRole('form');
     form.addEventListener('submit', submit);
     try {
-      await userEvent.click(canvas.getByRole('button'));
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Remove filter: Status: Active' })
+      );
       await expect(args.onClick).toHaveBeenCalledTimes(1);
       await expect(submit).not.toHaveBeenCalled();
     } finally {
@@ -50,6 +51,14 @@ export const KeyboardInteraction: Story = {
     await userEvent.keyboard('{Enter}');
     await userEvent.keyboard(' ');
     await expect(args.onClick).toHaveBeenCalledTimes(2);
+  },
+};
+export const ActionName: Story = {
+  args: { action: 'Clear filter' },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('button')
+    ).toHaveAccessibleName('Clear filter: Status: Active');
   },
 };
 export const Disabled: Story = {
@@ -72,8 +81,6 @@ export const WithDataAttributes: Story = {
 export const LongLabel: Story = {
   args: {
     children: 'Owner: InternationalCustomerExperienceOperations',
-    'aria-label':
-      'Remove filter: Owner: InternationalCustomerExperienceOperations',
   },
   render: (args) => (
     <div className="nx:w-full nx:max-w-48">
@@ -85,9 +92,7 @@ export const AllVariants: Story = {
   render: (args) => (
     <div className="nx:flex nx:max-w-full nx:flex-wrap nx:items-center nx:gap-3">
       <FilterChip {...args} />
-      <FilterChip aria-label="Remove filter: Country: India">
-        Country: India
-      </FilterChip>
+      <FilterChip>Country: India</FilterChip>
       <FilterChip {...args} disabled />
     </div>
   ),
