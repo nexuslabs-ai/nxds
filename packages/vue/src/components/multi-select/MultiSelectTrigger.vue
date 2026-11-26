@@ -25,7 +25,7 @@ popover.triggerId ||= (attrs.id as string | undefined) ?? useId();
 // follow it in the name. An `aria-label` labels the trigger by its own id.
 const labelledBy = computed(() => {
   const label =
-    (attrs['aria-labelledby'] as string | undefined) ??
+    (attrs['aria-labelledby'] as string | undefined) ||
     (attrs['aria-label'] ? popover.triggerId : undefined);
   return label ? `${label} ${valueId}` : undefined;
 });

@@ -165,7 +165,7 @@ function MultiSelectTrigger({
   // A label names the field, not the values the trigger shows, so the values
   // follow it in the name. An `aria-label` labels the trigger by its own id.
   const label =
-    props['aria-labelledby'] ?? (props['aria-label'] ? id : undefined);
+    props['aria-labelledby'] || (props['aria-label'] ? id : undefined);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (event.key !== 'Backspace' && event.key !== 'Delete') return;
