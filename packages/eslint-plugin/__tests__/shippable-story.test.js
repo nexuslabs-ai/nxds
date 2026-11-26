@@ -65,6 +65,11 @@ ruleTester.run('shippable-story', rule, {
     `<img src="https://example.com/ada.svg" alt="" />`,
     // Passing a class on to an element reads no element's classes.
     `<Badge className={status.className}>{status.label}</Badge>`,
+    `<Badge className={cn('nx:gap-2', status.className)} />`,
+    `<Badge className={active ? status.className : undefined} />`,
+    `<Badge className={\`nx:gap-2 \${status.className}\`} />`,
+    // Any other attribute is not a class.
+    `await expect(link).toHaveAttribute('href', '/settings');`,
     {
       code: `import { PhDownloadSimple } from '@phosphor-icons/vue';
              import type { Meta, StoryObj } from '@storybook/vue3-vite';
@@ -92,6 +97,28 @@ ruleTester.run('shippable-story', rule, {
     {
       code: `const classes = Array.from(chart.classList);`,
       errors: [{ messageId: 'classAssertion', data: { name: 'classList' } }],
+    },
+    {
+      code: `<Badge data-class={status.className} />`,
+      errors: [{ messageId: 'classAssertion', data: { name: 'className' } }],
+    },
+    {
+      code: `await expect(button).toHaveAttribute('class', 'nx:inline-flex');`,
+      errors: [
+        {
+          messageId: 'classAssertion',
+          data: { name: "toHaveAttribute('class')" },
+        },
+      ],
+    },
+    {
+      code: `const classes = button.getAttribute('class');`,
+      errors: [
+        {
+          messageId: 'classAssertion',
+          data: { name: "getAttribute('class')" },
+        },
+      ],
     },
     {
       code: `const spinners = canvasElement.getElementsByClassName('nx:animate-spin');`,

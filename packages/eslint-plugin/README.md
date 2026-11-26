@@ -162,7 +162,7 @@ in the `*.test.stories.*` file beside it:
 
 | Pattern                                                                                   | Use instead                                     |
 | ----------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `toHaveClass`, or a read of `classList` or `className`                                    | A role, name, state or data attribute assertion |
+| `toHaveClass`, a read of `classList` or `className`, or of the `class` attribute          | A role, name, state or data attribute assertion |
 | `getComputedStyle`, `toHaveStyle`, `getBoundingClientRect`, `offset*` and `client*` sizes | The test stories file                           |
 | A class in a `querySelector`, `closest` or `matches` selector, `getElementsByClassName`   | A role, label, text, `data-slot` or test id     |
 | An import from `stories/support`, or one with a query such as `?raw`                      | The test stories file                           |

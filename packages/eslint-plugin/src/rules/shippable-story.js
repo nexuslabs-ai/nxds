@@ -41,6 +41,7 @@ const SELECTOR_CALLS = new Set([
 ]);
 
 const CLASS_PROPERTIES = new Set(['classList', 'className']);
+const ATTRIBUTE_CALLS = new Set(['toHaveAttribute', 'getAttribute']);
 
 const ASSET_ATTRIBUTES = new Set(['src', 'srcSet', 'poster']);
 const MARKUP_ASSET = /\bsrc="(\/(?!\/)[^"]*)"/;
@@ -95,6 +96,16 @@ function hasClassSelector(selector) {
 /** A path served from the Storybook's own static folder: `/avatars/ada.svg`. */
 function isAssetPath(value) {
   return /^\/(?!\/)/.test(value);
+}
+
+/** Whether a node sits in a `className` attribute's value, which passes a class on. */
+function inClassNameAttribute(node) {
+  for (let current = node.parent; current; current = current.parent) {
+    if (current.type === 'JSXAttribute') {
+      return current.name.name === 'className';
+    }
+  }
+  return false;
 }
 
 function propertyName(property) {
@@ -217,6 +228,17 @@ export default {
           context.report({ node, messageId: 'classAssertion', data: { name } });
           return;
         }
+        if (
+          ATTRIBUTE_CALLS.has(name) &&
+          staticText(node.arguments[0]) === 'class'
+        ) {
+          context.report({
+            node,
+            messageId: 'classAssertion',
+            data: { name: `${name}('class')` },
+          });
+          return;
+        }
         if (MEASURING_CALLS.has(name)) {
           context.report({ node, messageId: 'measurement', data: { name } });
           return;
@@ -246,12 +268,7 @@ export default {
           });
           return;
         }
-        // `className={item.className}` passes a class on. Any other read
-        // checks one.
-        if (
-          CLASS_PROPERTIES.has(name) &&
-          node.parent.type !== 'JSXExpressionContainer'
-        ) {
+        if (CLASS_PROPERTIES.has(name) && !inClassNameAttribute(node)) {
           context.report({
             node: node.property,
             messageId: 'classAssertion',
