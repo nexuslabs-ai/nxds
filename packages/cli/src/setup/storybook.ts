@@ -86,8 +86,8 @@ function storybookVersion(project: Project) {
 }
 
 /**
- * The framework package the release's stories run in, in this app's
- * Storybook, or why they won't run there.
+ * The Storybook framework this app has that runs the release's stories, or
+ * why the app's Storybook can't run them.
  */
 export function storybookSupport(
   release: Catalog,
