@@ -87,7 +87,7 @@ function storybookVersion(project: Project) {
 
 /**
  * The Storybook framework this app has that runs the release's stories, or
- * why the app's Storybook can't run them.
+ * why the app can't run them.
  */
 export function storybookSupport(
   release: Catalog,
