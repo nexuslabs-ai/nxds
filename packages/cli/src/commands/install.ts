@@ -6,6 +6,7 @@ import {
   appCatalog,
   type Catalog,
   fetchRelease,
+  filesOf,
   type Font,
   loadRelease,
   type ReactMajor,
@@ -16,7 +17,6 @@ import {
   setupVariant,
   splitInstalled,
   storybookFramework,
-  type Target,
   variantFor,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
@@ -299,7 +299,7 @@ export async function init(
   const catalog = appCatalog(release, config, project);
   // The files that turning stories off leaves behind, for the app to keep or
   // delete: `update` no longer changes them.
-  const untracked =
+  const leftBehind =
     before.stories && options.stories === false
       ? storyFilesInApp(catalog, project, config)
       : [];
@@ -318,6 +318,8 @@ export async function init(
         tailwind: setup.packages.tailwind,
         addsTailwind: addTailwind,
         ownColors: options.ownColors === true || ownsColors(project, config),
+        // Main loads every story of the release, which `add` installs later.
+        files: [...releaseFiles(catalog, config).keys()],
       })
     : { changes: [], manual: [], devPackages: {} };
   const app = planWiring(
@@ -414,7 +416,10 @@ export async function init(
       ...result,
       created,
       edited,
-      untracked,
+      // `.storybook/preview` still imports the wiring file, so it is listed
+      // apart from the stories.
+      untracked: leftBehind.filter((file) => file !== WIRING_FILE),
+      untrackedWiring: leftBehind.includes(WIRING_FILE) ? WIRING_FILE : null,
       manual: wiring.manual,
     },
     lines: [
@@ -422,7 +427,7 @@ export async function init(
       ...installLines(config, result, options),
       ...created.map((file) => `${createVerb} ${file}`),
       ...edited.map((file) => `${editVerb} ${file}`),
-      ...untrackedLines(config, untracked, options.dryRun),
+      ...untrackedLines(config, leftBehind, options.dryRun),
       ...manualLines(wiring.manual),
       ...storiesHint(release, project, config),
       ...(done && !options.dryRun
@@ -436,12 +441,12 @@ export async function init(
 }
 
 /** What `init --no-stories` says about the Storybook files it leaves behind. */
-function untrackedLines(config: Config, untracked: string[], dryRun: boolean) {
-  if (untracked.length === 0) return [];
+function untrackedLines(config: Config, leftBehind: string[], dryRun: boolean) {
+  if (leftBehind.length === 0) return [];
   const lines = [
-    `${dryRun ? 'Would stop' : 'Stopped'} tracking ${untracked.length} Storybook ${untracked.length === 1 ? 'file' : 'files'} in ${config.dir}. \`${CLI_COMMAND} update\` no longer changes them, so delete the ones you don't need.`,
+    `${dryRun ? 'Would stop' : 'Stopped'} tracking ${leftBehind.length} Storybook ${leftBehind.length === 1 ? 'file' : 'files'} in ${config.dir}. \`${CLI_COMMAND} update\` no longer changes them, so delete the ones you don't need.`,
   ];
-  if (untracked.includes(WIRING_FILE)) {
+  if (leftBehind.includes(WIRING_FILE)) {
     lines.push(
       `Delete ${config.dir}/${WIRING_FILE} only after you remove its import from .storybook/preview.`
     );
@@ -492,15 +497,6 @@ export async function add(
     ],
     ok: settled(installed),
   };
-}
-
-/** The files `names` and everything they need install. */
-function filesOf(catalog: Catalog, target: Target, names: string[]) {
-  return new Set(
-    resolveItems(catalog, target.framework, names).flatMap((item) =>
-      variantFor(item, target).files.map((file) => file.path)
-    )
-  );
 }
 
 type UpdateData = InstallResult & {

@@ -9,6 +9,7 @@ import {
   type CatalogFile,
   type CatalogItem,
   fetchRelease,
+  filesOf,
   loadRelease,
   releaseFiles,
   resolveItems,
@@ -382,15 +383,15 @@ function storiesCheck(
   if (!config.stories) return catalog;
   const unsupported = storybookProblem(catalog, project);
   const framework = storybookFramework(catalog, project);
+  const result = unsupported === null ? withStories(catalog, project) : catalog;
   let problem = unsupported;
   try {
     if (framework) {
-      problem ??= storybookWiringProblem(
-        project,
-        config,
-        framework,
-        setupVariant(catalog, config).packages.tailwind
-      );
+      const { known } = splitInstalled(result, config.items);
+      problem ??= storybookWiringProblem(project, config, framework, {
+        tailwind: setupVariant(catalog, config).packages.tailwind,
+        files: [...filesOf(result, config, known)],
+      });
     }
   } catch (error) {
     if (!(error instanceof CliError)) throw error;
@@ -401,7 +402,7 @@ function storiesCheck(
     problem === null,
     problem ?? `Storybook runs the stories in ${config.dir}, with nxds's wiring`
   );
-  return unsupported === null ? withStories(catalog, project) : catalog;
+  return result;
 }
 
 /**

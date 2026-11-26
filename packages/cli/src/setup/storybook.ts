@@ -362,11 +362,8 @@ function wirePreview(
 
 /** The files Storybook reads from a `stories` entry that names only a folder. */
 const DEFAULT_STORY_FILES = '**/*.@(mdx|stories.@(js|jsx|mjs|ts|tsx))';
-/** Where a component's and a block's story sit in the nxds folder, to try entries on. */
-const SAMPLE_STORIES = [
-  'components/button/Button.stories.tsx',
-  'blocks/editing/inline-edit/InlineEdit.stories.tsx',
-];
+/** The nxds folder's files that are stories, which the entry `init` adds loads. */
+const NXDS_STORY_FILES = '**/*.stories.tsx';
 
 /**
  * A `stories` entry as one glob, from `.storybook`: the glob it is, or its
@@ -386,17 +383,17 @@ function storiesGlob(entry: Node | null) {
 }
 
 /**
- * Whether a `stories` list loads the stories in the nxds folder, components'
- * and blocks' alike, matched as Storybook matches them.
+ * Whether a `stories` list loads every story among `files`, which are in the
+ * nxds folder, matched as Storybook matches them.
  */
-function loadsStories(stories: ArrayExpression, dir: string) {
+function loadsStories(stories: ArrayExpression, dir: string, files: string[]) {
   const globs = stories.elements
     .map(storiesGlob)
     .filter((glob) => glob !== null)
     .map((glob) => path.posix.join(STORYBOOK_DIR, glob));
-  return SAMPLE_STORIES.every((sample) =>
-    picomatch.isMatch(`${dir}/${sample}`, globs)
-  );
+  return files
+    .filter((file) => picomatch.isMatch(file, NXDS_STORY_FILES))
+    .every((file) => picomatch.isMatch(`${dir}/${file}`, globs));
 }
 
 const TAILWIND_VITE = '@tailwindcss/vite';
@@ -427,18 +424,20 @@ type StorybookApp = {
   addsTailwind: boolean;
   /** Whether the app sets its own colors. */
   ownColors: boolean;
+  /** Files in the nxds folder. Main has to load the stories among them. */
+  files: string[];
 };
 
 /**
  * What `.storybook/main` needs for the nxds stories: an entry that loads the
- * nxds folder's stories, and Tailwind's Vite plugin where the app's build runs
+ * stories among `files`, and Tailwind's Vite plugin where the app's build runs
  * Tailwind out of Storybook's sight, as Next.js with Turbopack does. Each part
  * the edit can't add is a manual step.
  */
 function wireMain(
   project: Project,
   config: Config,
-  { tailwind, addsTailwind }: StorybookApp
+  { tailwind, addsTailwind, files }: StorybookApp
 ): MainPlan {
   const file = findFile(project, MAIN_FILES);
   const source = file ? read(project, file) : '';
@@ -451,14 +450,14 @@ function wireMain(
   const devPackages: Record<string, string> = {};
 
   const folder = relativeImport(`${STORYBOOK_DIR}/main`, config.dir);
-  const glob = `${folder}/**/*.stories.tsx`;
+  const glob = `${folder}/${NXDS_STORY_FILES}`;
   const stories = main && property(main, 'stories')?.value;
   // A `stories` the edit can't read, such as a function, is a step for you,
   // done once main names the nxds folder.
   if (!isArrayExpression(stories) && !source.includes(folder)) {
     manual.push({ file: target, step: `Add '${glob}' to stories.` });
   }
-  if (isArrayExpression(stories) && !loadsStories(stories, config.dir)) {
+  if (isArrayExpression(stories) && !loadsStories(stories, config.dir, files)) {
     // The entry takes the quotes the file's other entries use.
     const written = stories.elements.find((entry) => isStringLiteral(entry));
     const quote = written ? source.charAt(startOf(written)) : "'";
@@ -523,23 +522,24 @@ export function planStorybook(
 }
 
 /**
- * Why the installed stories won't render as nxds's own do, or null: what
- * `init --stories` would still edit, or leave as a step for you. That covers a
- * preview that derives colors over the app's own.
+ * Why the stories among `app.files`, the installed items' files, won't render
+ * as nxds's own do, or null: what `init --stories` would still edit for them,
+ * or leave as a step for you. That covers a preview that derives colors over
+ * the app's own.
  */
 export function storybookWiringProblem(
   project: Project,
   config: Config,
   framework: string,
-  tailwind: string
+  app: Pick<StorybookApp, 'tailwind' | 'files'>
 ) {
   const { changes, manual } = planStorybook(project, config, framework, {
-    tailwind,
+    ...app,
     addsTailwind: false,
     ownColors: ownsColors(project, config),
   });
   const [step] = manual;
   if (step) return `${step.file}: ${step.step}`;
   if (changes.length === 0) return null;
-  return `${changes.map((change) => change.path).join(' and ')} ${changes.length === 1 ? 'is' : 'are'} not wired for nxds's stories. Run \`${CLI_COMMAND} init --stories\`.`;
+  return `${changes.map((change) => change.path).join(' and ')} ${changes.length === 1 ? 'differs' : 'differ'} from what \`${CLI_COMMAND} init --stories\` writes. Run that command.`;
 }

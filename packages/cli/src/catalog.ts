@@ -243,6 +243,15 @@ export function resolveItems(
   return ordered;
 }
 
+/** The paths of the files `names` and everything they need install. */
+export function filesOf(catalog: Catalog, target: Target, names: string[]) {
+  return new Set(
+    resolveItems(catalog, target.framework, names).flatMap((item) =>
+      variantFor(item, target).files.map((file) => file.path)
+    )
+  );
+}
+
 /** Every file a release installs for `target`, by path. */
 export function releaseFiles(catalog: Catalog, target: Target) {
   return new Map(

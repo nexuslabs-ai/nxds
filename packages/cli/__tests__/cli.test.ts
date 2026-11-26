@@ -1719,6 +1719,36 @@ function setupStories(releases: Catalog[] = [storiesRelease('0.4.7')]) {
   return context;
 }
 
+const INLINE_EDIT_STORY = 'blocks/editing/inline-edit/InlineEdit.stories.tsx';
+
+/** `storiesRelease`, with a story outside `components/`: the InlineEdit block's. */
+function blockStoriesRelease(version: string): Catalog {
+  const release = storiesRelease(version);
+  reactVariant(release, 'inline-edit').stories = {
+    items: [],
+    packages: { npm: {} },
+    files: [
+      {
+        path: INLINE_EDIT_STORY,
+        content: `import type { Meta, StoryObj } from '@storybook/react-vite';
+
+import { InlineEdit } from './inline-edit';
+
+const meta = { component: InlineEdit } satisfies Meta<typeof InlineEdit>;
+export default meta;
+
+export const Default: StoryObj<typeof meta> = {};
+`,
+      },
+    ],
+  };
+  return release;
+}
+
+const NXDS_STORIES_ENTRY = '"../components/nxds/**/*.stories.tsx"';
+const COMPONENT_STORIES_ENTRY =
+  '"../components/nxds/components/**/*.stories.tsx"';
+
 /** `storiesRelease`, from a nxds whose provider takes `deriveColors`. */
 function ownColorsStoriesRelease(version: string): Catalog {
   return { ...storiesRelease(version), ownColors: true };
@@ -1762,9 +1792,7 @@ describe('stories', () => {
     ]) {
       expect(preview).toContain(line);
     }
-    expect(readApp(context.app, STORYBOOK_MAIN)).toContain(
-      '"../components/nxds/**/*.stories.tsx"'
-    );
+    expect(readApp(context.app, STORYBOOK_MAIN)).toContain(NXDS_STORIES_ENTRY);
   });
 
   it('changes nothing when init --stories runs again', async () => {
@@ -1957,6 +1985,20 @@ describe('stories', () => {
     ).not.toContain(BUTTON_STORY);
   });
 
+  it('lists the wiring file apart from the story files it stops tracking', async () => {
+    const context = setupStories();
+    await cli(['init', '--stories'], context);
+    await cli(['add', 'button'], context);
+
+    const { body } = await cliJson(['init', '--no-stories'], context);
+
+    // An agent deletes what `untracked` lists. The preview imports the wiring file.
+    expect(body.data).toMatchObject({
+      untracked: [BUTTON_STORY],
+      untrackedWiring: WIRING,
+    });
+  });
+
   it('stops suggesting stories once init is given --no-stories', async () => {
     const context = setupStories();
     await cli(['init', '--no-stories'], context);
@@ -2092,14 +2134,11 @@ export default ${exported};
 
   it.each([
     ['loads no stories', '"../components/**/*.mdx"'],
-    [
-      "loads only the components' stories",
-      '"../components/nxds/components/**/*.stories.tsx"',
-    ],
+    ["loads only some of the release's stories", COMPONENT_STORIES_ENTRY],
   ])(
     'adds its entry when the one for the nxds folder %s',
     async (_name, entry) => {
-      const context = setupStories();
+      const context = setupStories([blockStoriesRelease('0.4.7')]);
       writeApp(
         context.app,
         STORYBOOK_MAIN,
@@ -2109,7 +2148,7 @@ export default ${exported};
       await cli(['init', '--stories'], context);
 
       expect(readApp(context.app, STORYBOOK_MAIN)).toContain(
-        '"../components/nxds/**/*.stories.tsx"'
+        NXDS_STORIES_ENTRY
       );
     }
   );
@@ -2245,6 +2284,29 @@ function storyGlobs() {
     });
   });
 
+  it('passes the doctor stories check while main loads the stories the app has, and fails it for one main leaves out', async () => {
+    const context = setupStories([blockStoriesRelease('0.4.7')]);
+    await cli(['init', '--stories'], context);
+    await cli(['add', 'button'], context);
+    writeApp(
+      context.app,
+      STORYBOOK_MAIN,
+      readApp(context.app, STORYBOOK_MAIN).replace(
+        NXDS_STORIES_ENTRY,
+        COMPONENT_STORIES_ENTRY
+      )
+    );
+
+    expect(await doctorCheck(context, 'stories')).toMatchObject({ ok: true });
+
+    await cli(['add', 'inline-edit'], context);
+
+    expect(await doctorCheck(context, 'stories')).toMatchObject({
+      ok: false,
+      message: expect.stringContaining(STORYBOOK_MAIN),
+    });
+  });
+
   it('wires a preview that derives no colors in an app that sets its own', async () => {
     const context = setupStories([ownColorsStoriesRelease('0.4.7')]);
     await cli(['init', '--own-colors'], context);
@@ -2304,7 +2366,9 @@ function storyGlobs() {
 
     expect(await doctorCheck(context, 'stories')).toMatchObject({
       ok: false,
-      message: expect.stringContaining(STORYBOOK_PREVIEW),
+      message: expect.stringContaining(
+        `${STORYBOOK_PREVIEW} differs from what`
+      ),
     });
     expect(await doctorCheck(context, 'colors')).toMatchObject({ ok: true });
   });
