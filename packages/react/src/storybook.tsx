@@ -316,8 +316,6 @@ export function nxdsPreview(
           dynamicTitle: true,
         },
       },
-      // Without derived colors, the color menus would change nothing, so
-      // they have no toolbar.
       brandColor: {
         name: 'Primary',
         description: 'Primary brand color',
