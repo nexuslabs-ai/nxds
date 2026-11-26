@@ -12,14 +12,14 @@ type FilterChipArgs = InstanceType<typeof FilterChip>['$props'] & {
 const meta = {
   component: FilterChip,
   args: {
-    ariaLabel: 'Remove status filter: Active',
+    ariaLabel: 'Remove filter: Status: Active',
     onClick: fn(),
   },
   parameters: {
     docs: {
       description: {
         component:
-          'FilterChip is a button that removes an applied filter. Use it in a row of applied filters chosen in a menu or panel. For passive metadata use Badge, and for a condition the user edits use FilterCondition.\n\n- Clicking the label or × removes the filter. It never opens an editor or toggles a choice.\n- Give it a full `aria-label`, such as "Remove status filter: Paid".\n- Your app owns the filter values. After removal, move focus to the next chip, the previous chip or a stable filter control.\n- Long labels truncate on screen but keep their full accessible name.\n- It has one compact size that follows the density setting.',
+          'FilterChip is a button that removes an applied filter. Use it in a row of applied filters chosen in a menu or panel. For passive metadata use Badge, and for a condition the user edits use FilterCondition.\n\n- Clicking the label or × removes the filter. It never opens an editor or toggles a choice.\n- Give it an `aria-label` that names the action and then the chip\'s text, such as "Remove filter: Status: Paid".\n- Your app owns the filter values. After removal, move focus to the next chip, the previous chip or a stable filter control.\n- Long labels truncate on screen but keep their full accessible name.\n- It has one compact size that follows the density setting.',
       },
     },
   },
@@ -37,7 +37,7 @@ export const Default: Story = {
   render: () => ({
     components: { FilterChip },
     template:
-      '<FilterChip aria-label="Remove status filter: Active">Status: Active</FilterChip>',
+      '<FilterChip aria-label="Remove filter: Status: Active">Status: Active</FilterChip>',
   }),
 };
 export const ClickInteraction: Story = {
@@ -97,7 +97,8 @@ export const WithDataAttributes: Story = {
 };
 export const LongLabel: Story = {
   args: {
-    ariaLabel: 'Remove owner filter: InternationalCustomerExperienceOperations',
+    ariaLabel:
+      'Remove filter: Owner: InternationalCustomerExperienceOperations',
   },
   render: (args) => ({
     components: { FilterChip },

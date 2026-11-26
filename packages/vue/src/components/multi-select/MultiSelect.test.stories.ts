@@ -92,7 +92,7 @@ export const WithDataAttributesStyle: Story = {
   ...WithDataAttributes,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await expect(trigger).toHaveClass('nx:bg-container');
     await expect(trigger).toHaveClass('nx:enabled:hover:bg-container-hover');
@@ -105,7 +105,7 @@ export const WithDataAttributesMotion: Story = {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
-    await userEvent.click(canvas.getByRole('button', { name: 'Frameworks' }));
+    await userEvent.click(canvas.getByRole('button', { name: /^Frameworks/ }));
     const listbox = await body.findByRole('listbox');
     const options = Array.from(
       listbox.querySelectorAll('[data-slot="multi-select-item"]')
@@ -131,7 +131,7 @@ export const IndicatorMatchesCheckboxAtLargerScale: Story = {
     const body = within(document.body);
     const checkbox = canvas.getByRole('checkbox').getBoundingClientRect();
 
-    await userEvent.click(canvas.getByRole('button', { name: 'Frameworks' }));
+    await userEvent.click(canvas.getByRole('button', { name: /^Frameworks/ }));
     const option = await body.findByRole('option', { name: 'React' });
     const indicator = option
       .querySelector('[data-slot="multi-select-indicator"]')!

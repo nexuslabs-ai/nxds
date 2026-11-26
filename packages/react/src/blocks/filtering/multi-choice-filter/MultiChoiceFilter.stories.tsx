@@ -111,7 +111,7 @@ export const EmptyOperator: Story = {
     const canvas = within(canvasElement);
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Change Team operator' })
+      canvas.getByRole('button', { name: /^Change Team operator/ })
     );
     await userEvent.click(
       page.getByRole('menuitemradio', { name: 'is any of' })
@@ -123,7 +123,7 @@ export const EmptyOperator: Story = {
     );
     await waitFor(() =>
       expect(
-        canvas.getByRole('button', { name: 'Change Team operator' })
+        canvas.getByRole('button', { name: /^Change Team operator/ })
       ).toHaveFocus()
     );
   },
@@ -263,7 +263,7 @@ export const OperatorKeepsValue: Story = {
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
       within(canvasElement).getByRole('button', {
-        name: 'Change Team operator',
+        name: /^Change Team operator/,
       })
     );
     await userEvent.click(
@@ -283,7 +283,7 @@ export const ValuelessOperatorCommits: Story = {
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
       within(canvasElement).getByRole('button', {
-        name: 'Change Team operator',
+        name: /^Change Team operator/,
       })
     );
     await userEvent.click(
@@ -303,7 +303,7 @@ export const PendingOperatorApplies: Story = {
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
       within(canvasElement).getByRole('button', {
-        name: 'Change Team operator',
+        name: /^Change Team operator/,
       })
     );
     await userEvent.click(

@@ -517,8 +517,8 @@ export const Accessibility: Story = {
     const todayLabel =
       canvas.getByText('8').closest('button')!.getAttribute('aria-label') ?? '';
 
-    // Full date + status come from react-day-picker's labelDayButton.
-    expect(selectedLabel).toContain('January 15th, 2025');
+    // The full date, with the day as a plain number, and its status.
+    expect(selectedLabel).toContain('January 15, 2025');
     expect(selectedLabel).toContain('selected');
     expect(todayLabel).toContain('Today');
 

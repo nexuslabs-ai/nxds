@@ -45,7 +45,7 @@ export function ConditionOperator<Operator extends FilterOperator>({
           disabled={disabled}
           className="nx:min-w-16 nx:text-muted-foreground"
           title={filterOperatorLabels[value]}
-          aria-label={`Change ${label} operator`}
+          aria-label={`Change ${label} operator: ${filterOperatorLabels[value]}`}
         >
           {filterOperatorLabels[value]}
         </FilterConditionSegment>

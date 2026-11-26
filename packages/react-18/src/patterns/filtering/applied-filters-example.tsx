@@ -80,7 +80,7 @@ export function AppliedFiltersExample() {
         {paid && (
           <FilterChip
             ref={paidRef}
-            aria-label="Remove status filter: Paid"
+            aria-label="Remove filter: Status: Paid"
             onClick={removePaid}
           >
             Status: Paid
@@ -89,7 +89,7 @@ export function AppliedFiltersExample() {
         {india && (
           <FilterChip
             ref={indiaRef}
-            aria-label="Remove country filter: India"
+            aria-label="Remove filter: Country: India"
             onClick={removeIndia}
           >
             Country: India

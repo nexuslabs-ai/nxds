@@ -29,7 +29,7 @@ function ConditionExample({
     <FilterCondition data-testid="condition">
       <FilterConditionField>{field}</FilterConditionField>
       <FilterConditionSegment
-        aria-label={`Edit ${field} operator`}
+        aria-label={`Edit ${field} operator: ${operator}`}
         className="nx:shrink-0 nx:text-muted-foreground"
         disabled={disabled}
         onClick={onOperatorClick}
@@ -80,7 +80,7 @@ export const ClickInteraction: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Edit Status operator' })
+      canvas.getByRole('button', { name: 'Edit Status operator: is' })
     );
     await expect(args.onOperatorClick).toHaveBeenCalledTimes(1);
     await expect(args.onValueClick).not.toHaveBeenCalled();
@@ -101,7 +101,7 @@ export const ClickInteraction: Story = {
 export const KeyboardInteraction: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    canvas.getByRole('button', { name: 'Edit Status operator' }).focus();
+    canvas.getByRole('button', { name: 'Edit Status operator: is' }).focus();
     await userEvent.keyboard('{Enter}');
     await userEvent.tab();
     await expect(

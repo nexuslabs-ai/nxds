@@ -482,7 +482,7 @@ export const behaviourDifferences: Record<string, string> = {
   'command/SearchRanking':
     'cmdk sorts the matches by score; Vue keeps them in the order they are written, since sorting would move DOM nodes Vue owns, so Enter runs another item',
   'date-picker/Accessibility':
-    "react-day-picker labels a day 'Today, Wednesday, January 15th, 2025, selected'; Reka labels it 'Wednesday, January 15, 2025' and marks selection with aria-selected on the cell, so Vue checks those",
+    "React labels a day 'Today, Wednesday, January 15, 2025, selected'; Reka labels it 'Wednesday, January 15, 2025' and marks selection with aria-selected on the cell, so Vue checks those",
   'avatar/WithDataAttributes': AVATAR_IMAGE_LOAD,
   'bubble/WithTooltip': GRACE_AREA,
   'hover-card/OpenCloseInteraction': GRACE_AREA,

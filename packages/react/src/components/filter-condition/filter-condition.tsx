@@ -36,7 +36,11 @@ function FilterConditionField({
   );
 }
 
-/** One clickable part of a condition, such as its operator or value. */
+/**
+ * One clickable part of a condition, such as its operator or value. An
+ * `aria-label` ends with the text the part shows, such as "Edit status value:
+ * Paid".
+ */
 function FilterConditionSegment({
   children,
   className,

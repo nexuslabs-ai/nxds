@@ -211,7 +211,7 @@ export const Disabled: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await expect(trigger).toBeDisabled();
     await expect(trigger).toHaveAttribute('aria-expanded', 'false');
@@ -250,7 +250,7 @@ export const WithDisabledOption: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await userEvent.click(trigger);
     const disabled = await body.findByRole('option', { name: 'Vue' });
@@ -300,7 +300,7 @@ export const InvalidField: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await expect(trigger).toHaveAttribute('aria-invalid', 'true');
   },
@@ -311,7 +311,7 @@ export const ClickInteraction: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await userEvent.click(trigger);
     await userEvent.click(await body.findByRole('option', { name: 'React' }));
@@ -327,7 +327,7 @@ export const KeyboardInteraction: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await userEvent.click(trigger);
     const search = await body.findByPlaceholderText('Search frameworks…');
@@ -347,7 +347,7 @@ export const ChipRemoval: Story = {
   render: () => <Frameworks defaultValues={['react', 'vue']} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await expect(within(trigger).getByText('React')).toBeInTheDocument();
     await userEvent.click(within(trigger).getByText('React'));
@@ -363,7 +363,7 @@ export const ChipKeyboardRemoval: Story = {
   render: () => <Frameworks defaultValues={['react', 'vue']} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     // Backspace on the focused field removes the last selected value without
     // reopening the list — the keyboard equivalent of clicking a chip's X.
@@ -381,7 +381,7 @@ export const LastChipRemoval: Story = {
   render: () => <Frameworks defaultValues={['react']} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await userEvent.click(within(trigger).getByText('React'));
 
@@ -445,7 +445,7 @@ export const SearchEmpty: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await userEvent.click(trigger);
     await userEvent.type(
@@ -484,7 +484,7 @@ export const WithDataAttributes: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await expect(trigger).toHaveAttribute('data-slot', 'multi-select-trigger');
 

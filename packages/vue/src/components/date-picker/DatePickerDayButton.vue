@@ -4,7 +4,12 @@ import {
   type CalendarCellTriggerProps,
   RangeCalendarCellTrigger,
 } from 'reka-ui';
-import { computed, type FunctionalComponent, type HTMLAttributes } from 'vue';
+import {
+  computed,
+  type FunctionalComponent,
+  type HTMLAttributes,
+  useId,
+} from 'vue';
 
 import { cn } from '../../lib/utils';
 import { buttonVariants } from '../button';
@@ -23,6 +28,8 @@ export interface DatePickerDayButtonProps extends Omit<
 const props = defineProps<DatePickerDayButtonProps>();
 
 const datePicker = injectDatePicker();
+const id = useId();
+const contentId = `${id}-content`;
 
 const isSelected = computed(
   () =>
@@ -47,17 +54,24 @@ const DayContent: FunctionalComponent = () =>
 </script>
 
 <template>
-  <!-- These attributes win over Reka's own, which mark today by the clock and not the `today` prop. -->
+  <!--
+    These attributes win over Reka's own, which mark today by the clock and not the `today` prop.
+    Custom content shows text the date lacks, so the button's name is its date and then its content.
+  -->
   <component
     :is="
       datePicker.mode.value === 'range'
         ? RangeCalendarCellTrigger
         : CalendarCellTrigger
     "
+    :id="datePicker.dayContent() ? id : undefined"
     :day="day"
     :month="month"
     as="button"
     type="button"
+    :aria-labelledby="
+      datePicker.dayContent() ? `${id} ${contentId}` : undefined
+    "
     data-slot="date-picker-day-button"
     :disabled="modifiers.disabled || undefined"
     :data-day="day.toString()"
@@ -91,6 +105,7 @@ const DayContent: FunctionalComponent = () =>
     "
   >
     <span
+      :id="datePicker.dayContent() ? contentId : undefined"
       data-slot="date-picker-day-content"
       class="nx:relative nx:z-10 nx:flex nx:flex-col nx:items-center nx:justify-center nx:gap-1"
     >

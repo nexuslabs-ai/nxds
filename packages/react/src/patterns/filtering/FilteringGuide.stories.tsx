@@ -293,12 +293,12 @@ export const PanelSummaries: Story = {
     const canvas = within(canvasElement);
     const page = within(canvasElement.ownerDocument.body);
     const paid = canvas.getByRole('button', {
-      name: 'Remove status filter: Paid',
+      name: 'Remove filter: Status: Paid',
     });
     paid.focus();
     await userEvent.keyboard('{Enter}');
     await expect(
-      canvas.getByRole('button', { name: 'Remove country filter: India' })
+      canvas.getByRole('button', { name: 'Remove filter: Country: India' })
     ).toHaveFocus();
     await expect(canvas.getByRole('status')).toHaveTextContent(
       'any status from India'
@@ -312,7 +312,7 @@ export const PanelSummaries: Story = {
     await userEvent.click(page.getByRole('checkbox', { name: 'Status: Paid' }));
     await userEvent.keyboard('{Escape}');
     await expect(
-      canvas.getByRole('button', { name: 'Remove status filter: Paid' })
+      canvas.getByRole('button', { name: 'Remove filter: Status: Paid' })
     ).toBeVisible();
     await expect(canvas.getByRole('status')).toHaveTextContent(
       'paid invoices from all countries'

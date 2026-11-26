@@ -99,7 +99,7 @@ export const EmptyOperator: Story = {
     const canvas = within(canvasElement);
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Change Created operator' })
+      canvas.getByRole('button', { name: /^Change Created operator/ })
     );
     await userEvent.click(
       page.getByRole('menuitemradio', { name: 'is between' })
@@ -111,7 +111,7 @@ export const EmptyOperator: Story = {
     );
     await waitFor(() =>
       expect(
-        canvas.getByRole('button', { name: 'Change Created operator' })
+        canvas.getByRole('button', { name: /^Change Created operator/ })
       ).toHaveFocus()
     );
   },
@@ -213,7 +213,7 @@ export const ValuelessOperatorCommits: Story = {
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
       within(canvasElement).getByRole('button', {
-        name: 'Change Created operator',
+        name: /^Change Created operator/,
       })
     );
     await userEvent.click(
@@ -233,7 +233,7 @@ export const PendingOperatorApplies: Story = {
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
       within(canvasElement).getByRole('button', {
-        name: 'Change Created operator',
+        name: /^Change Created operator/,
       })
     );
     await userEvent.click(

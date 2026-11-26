@@ -9,7 +9,7 @@ interface FilterChipProps extends Omit<
   'children' | 'type'
 > {
   children: string;
-  /** Names the action, field and full value, such as "Remove status filter: Active". */
+  /** Names the action and then the chip's text, such as "Remove filter: Status: Active". */
   'aria-label': string;
 }
 

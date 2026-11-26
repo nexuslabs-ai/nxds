@@ -488,10 +488,10 @@ export const MultipleChoices: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement),
       page = within(canvasElement.ownerDocument.body);
-    await userEvent.click(canvas.getByRole('button', { name: 'Team values' }));
+    await userEvent.click(canvas.getByRole('button', { name: /^Team values/ }));
     await userEvent.click(page.getByRole('checkbox', { name: 'Engineering' }));
     await expect(
-      canvas.getByRole('button', { name: 'Team values' })
+      canvas.getByRole('button', { name: /^Team values/ })
     ).toHaveTextContent('Design, Engineering');
     await userEvent.type(
       page.getByRole('textbox', { name: 'Search Team options' }),
@@ -501,7 +501,7 @@ export const MultipleChoices: Story = {
     await userEvent.keyboard('{Escape}');
     await closed();
     await waitFor(() =>
-      expect(canvas.getByRole('button', { name: 'Team values' })).toHaveFocus()
+      expect(canvas.getByRole('button', { name: /^Team values/ })).toHaveFocus()
     );
   },
 };

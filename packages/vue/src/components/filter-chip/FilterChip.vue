@@ -6,7 +6,7 @@ import { cn } from '../../lib/utils';
 import { buttonVariants } from '../button';
 
 export interface FilterChipProps {
-  /** Names the action, field and full value, such as "Remove status filter: Active". */
+  /** Names the action and then the chip's text, such as "Remove filter: Status: Active". */
   ariaLabel: string;
   class?: HTMLAttributes['class'];
 }

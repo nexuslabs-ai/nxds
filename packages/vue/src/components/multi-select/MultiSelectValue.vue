@@ -45,7 +45,7 @@ defineSlots<{
   placeholder?: () => VNode[];
 }>();
 
-const { selectedValues, labels, open, toggle } = injectMultiSelect();
+const { selectedValues, labels, open, toggle, valueId } = injectMultiSelect();
 const overflowAmount = ref(0);
 const container = useTemplateRef<HTMLDivElement>('container');
 
@@ -114,6 +114,7 @@ const ChipLabel: FunctionalComponent<{
 <template>
   <span
     v-if="selectedValues.size === 0"
+    :id="valueId"
     data-slot="multi-select-placeholder"
     class="nx:truncate nx:text-muted-foreground"
   >
@@ -121,6 +122,7 @@ const ChipLabel: FunctionalComponent<{
   </span>
   <div
     v-else
+    :id="valueId"
     ref="container"
     data-slot="multi-select-value"
     :class="

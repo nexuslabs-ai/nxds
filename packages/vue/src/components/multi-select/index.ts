@@ -41,6 +41,8 @@ export const MultiSelectKey: InjectionKey<{
   /** Each option's chip label by value. Call it while rendering. */
   labels: () => Map<string, () => VNode[]>;
   toggle: (value: string) => void;
+  /** The id of the element that shows the selected values, or the placeholder. */
+  valueId: string;
 }> = Symbol('multi-select');
 
 /** The selection the MultiSelect provides to its parts. */

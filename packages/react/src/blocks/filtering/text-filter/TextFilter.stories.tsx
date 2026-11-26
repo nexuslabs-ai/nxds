@@ -91,7 +91,7 @@ export const EmptyOperator: Story = {
     const canvas = within(canvasElement);
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Change Name operator' })
+      canvas.getByRole('button', { name: /^Change Name operator/ })
     );
     await userEvent.click(
       page.getByRole('menuitemradio', { name: 'contains' })
@@ -103,7 +103,7 @@ export const EmptyOperator: Story = {
     );
     await waitFor(() =>
       expect(
-        canvas.getByRole('button', { name: 'Change Name operator' })
+        canvas.getByRole('button', { name: /^Change Name operator/ })
       ).toHaveFocus()
     );
   },
@@ -193,7 +193,7 @@ export const OperatorKeepsValue: Story = {
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
       within(canvasElement).getByRole('button', {
-        name: 'Change Name operator',
+        name: /^Change Name operator/,
       })
     );
     await userEvent.click(page.getByRole('menuitemradio', { name: 'is' }));
@@ -211,7 +211,7 @@ export const ValuelessOperatorCommits: Story = {
     const canvas = within(canvasElement);
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Change Name operator' })
+      canvas.getByRole('button', { name: /^Change Name operator/ })
     );
     await userEvent.click(
       page.getByRole('menuitemradio', { name: 'is empty' })
@@ -233,7 +233,7 @@ export const PendingOperatorApplies: Story = {
     const canvas = within(canvasElement);
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Change Name operator' })
+      canvas.getByRole('button', { name: /^Change Name operator/ })
     );
     await userEvent.click(
       page.getByRole('menuitemradio', { name: 'starts with' })

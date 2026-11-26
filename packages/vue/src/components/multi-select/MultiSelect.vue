@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PopoverRoot } from 'reka-ui';
-import { computed, provide, ref, type VNode } from 'vue';
+import { computed, provide, ref, useId, type VNode } from 'vue';
 
 import { flattenedNodes } from '../../lib/slots';
 
@@ -85,6 +85,7 @@ provide(MultiSelectKey, {
   selectedValues,
   labels: () => itemLabels(slots.default?.()),
   toggle,
+  valueId: useId(),
 });
 </script>
 

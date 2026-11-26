@@ -7,14 +7,14 @@ const meta = {
   component: FilterChip,
   args: {
     children: 'Status: Active',
-    'aria-label': 'Remove status filter: Active',
+    'aria-label': 'Remove filter: Status: Active',
     onClick: fn(),
   },
   parameters: {
     docs: {
       description: {
         component:
-          'FilterChip is a button that removes an applied filter. Use it in a row of applied filters chosen in a menu or panel. For passive metadata use Badge, and for a condition the user edits use FilterCondition.\n\n- Clicking the label or × removes the filter. It never opens an editor or toggles a choice.\n- Give it a full `aria-label`, such as "Remove status filter: Paid".\n- Your app owns the filter values. After removal, move focus to the next chip, the previous chip or a stable filter control.\n- Long labels truncate on screen but keep their full accessible name.\n- It has one compact size that follows the density setting.',
+          'FilterChip is a button that removes an applied filter. Use it in a row of applied filters chosen in a menu or panel. For passive metadata use Badge, and for a condition the user edits use FilterCondition.\n\n- Clicking the label or × removes the filter. It never opens an editor or toggles a choice.\n- Give it an `aria-label` that names the action and then the chip\'s text, such as "Remove filter: Status: Paid".\n- Your app owns the filter values. After removal, move focus to the next chip, the previous chip or a stable filter control.\n- Long labels truncate on screen but keep their full accessible name.\n- It has one compact size that follows the density setting.',
       },
     },
   },
@@ -73,7 +73,7 @@ export const LongLabel: Story = {
   args: {
     children: 'Owner: InternationalCustomerExperienceOperations',
     'aria-label':
-      'Remove owner filter: InternationalCustomerExperienceOperations',
+      'Remove filter: Owner: InternationalCustomerExperienceOperations',
   },
   render: (args) => (
     <div className="nx:w-full nx:max-w-48">
@@ -85,7 +85,7 @@ export const AllVariants: Story = {
   render: (args) => (
     <div className="nx:flex nx:max-w-full nx:flex-wrap nx:items-center nx:gap-3">
       <FilterChip {...args} />
-      <FilterChip aria-label="Remove country filter: India">
+      <FilterChip aria-label="Remove filter: Country: India">
         Country: India
       </FilterChip>
       <FilterChip {...args} disabled />

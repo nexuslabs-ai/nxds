@@ -117,7 +117,7 @@ export const PendingOperator: Story = {
     const canvas = within(canvasElement);
     const page = within(canvasElement.ownerDocument.body);
     const operator = canvas.getByRole('button', {
-      name: 'Change Size operator',
+      name: /^Change Size operator/,
     });
     await userEvent.click(operator);
     await userEvent.click(
@@ -172,7 +172,7 @@ export const ReapplySameRange: Story = {
     const canvas = within(canvasElement);
     const page = within(canvasElement.ownerDocument.body);
     const operator = canvas.getByRole('button', {
-      name: 'Change Size operator',
+      name: /^Change Size operator/,
     });
     await userEvent.click(operator);
     await userEvent.click(
@@ -280,7 +280,7 @@ export const ValuelessOperatorCommits: Story = {
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
       within(canvasElement).getByRole('button', {
-        name: 'Change Size operator',
+        name: /^Change Size operator/,
       })
     );
     await userEvent.click(
@@ -300,7 +300,7 @@ export const PendingOperatorApplies: Story = {
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
       within(canvasElement).getByRole('button', {
-        name: 'Change Size operator',
+        name: /^Change Size operator/,
       })
     );
     await userEvent.click(

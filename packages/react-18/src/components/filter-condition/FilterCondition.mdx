@@ -26,12 +26,15 @@ import {
 <FilterCondition>
   <FilterConditionField>Status</FilterConditionField>
   <FilterConditionSegment
-    aria-label="Edit status operator"
+    aria-label="Edit status operator: is"
     onClick={openOperator}
   >
     is
   </FilterConditionSegment>
-  <FilterConditionSegment aria-label="Edit status value" onClick={openValue}>
+  <FilterConditionSegment
+    aria-label="Edit status value: Paid"
+    onClick={openValue}
+  >
     Paid
   </FilterConditionSegment>
   <FilterConditionRemove onClick={removeCondition}>

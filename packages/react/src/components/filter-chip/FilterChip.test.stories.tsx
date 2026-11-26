@@ -15,7 +15,7 @@ export const LongLabelGeometry: Story = {
   ...LongLabel,
   play: async ({ canvasElement }) => {
     const button = within(canvasElement).getByRole('button', {
-      name: 'Remove owner filter: InternationalCustomerExperienceOperations',
+      name: 'Remove filter: Owner: InternationalCustomerExperienceOperations',
     });
     await expect(button.getBoundingClientRect().width).toBeLessThanOrEqual(
       button.parentElement!.getBoundingClientRect().width

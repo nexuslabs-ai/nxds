@@ -177,7 +177,7 @@ export const OperatorKeepsValue: Story = {
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
       within(canvasElement).getByRole('button', {
-        name: 'Change Status operator',
+        name: /^Change Status operator/,
       })
     );
     await userEvent.click(page.getByRole('menuitemradio', { name: 'is not' }));
@@ -195,7 +195,7 @@ export const ValuelessOperatorCommits: Story = {
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
       within(canvasElement).getByRole('button', {
-        name: 'Change Status operator',
+        name: /^Change Status operator/,
       })
     );
     await userEvent.click(
@@ -215,7 +215,7 @@ export const PendingOperatorApplies: Story = {
     const canvas = within(canvasElement);
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Change Status operator' })
+      canvas.getByRole('button', { name: /^Change Status operator/ })
     );
     await userEvent.click(page.getByRole('menuitemradio', { name: 'is' }));
     await expect(
@@ -229,12 +229,12 @@ export const PendingOperatorApplies: Story = {
       expect(page.queryByRole('menu')).not.toBeInTheDocument()
     );
     await expect(
-      canvas.getByRole('button', { name: 'Change Status operator' })
+      canvas.getByRole('button', { name: /^Change Status operator/ })
     ).toHaveFocus();
     await expect(args.onChange).not.toHaveBeenCalled();
 
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Change Status operator' })
+      canvas.getByRole('button', { name: /^Change Status operator/ })
     );
     await userEvent.click(page.getByRole('menuitemradio', { name: 'is not' }));
     await userEvent.click(

@@ -64,6 +64,28 @@ const DatePickerPreviewSpanContext = React.createContext<
 // react-day-picker's default class names are static — compute once at module load.
 const defaultClassNames = getDefaultClassNames();
 
+type DayButtonLabel = NonNullable<
+  NonNullable<
+    React.ComponentProps<typeof DayPicker>['labels']
+  >['labelDayButton']
+>;
+
+/**
+ * Names a day button with its day as a plain number, such as "Tuesday,
+ * January 7, 2025", so the name holds the number the button shows.
+ * react-day-picker's own label writes "7th".
+ */
+function labelDayButton(
+  ...[date, modifiers, options]: Parameters<DayButtonLabel>
+) {
+  let label = date.toLocaleDateString(options?.locale?.code, {
+    dateStyle: 'full',
+  });
+  if (modifiers.today) label = `Today, ${label}`;
+  if (modifiers.selected) label = `${label}, selected`;
+  return label;
+}
+
 // Prop-independent slot class names — merged once at module load, not per render.
 // `satisfies` keeps the slot-key typo-checking the inline `classNames` literal
 // had: a misspelled key would otherwise spread in silently and ship its default.
@@ -179,6 +201,7 @@ function DatePicker({
   cellSize = 'default',
   renderDayContent,
   formatters,
+  labels,
   disabled,
   modifiers,
   modifiersClassNames,
@@ -229,6 +252,7 @@ function DatePicker({
               date.toLocaleString('default', { month: 'short' }),
             ...formatters,
           }}
+          labels={{ labelDayButton, ...labels }}
           // `unavailable` strikes booked or blackout days.
           modifiersClassNames={{
             unavailable: 'nx:text-muted-foreground nx:line-through',
@@ -411,6 +435,8 @@ function DatePickerDayButton({
   ...props
 }: React.ComponentProps<typeof DayButton>) {
   const renderDayContent = React.useContext(DatePickerDayContentContext);
+  const id = React.useId();
+  const contentId = `${id}-content`;
 
   const ref = React.useRef<HTMLButtonElement>(null);
   // Sync DOM focus to react-day-picker's roving-focus model (external system).
@@ -468,8 +494,15 @@ function DatePickerDayButton({
         className
       )}
       {...props}
+      // Custom content shows text the date lacks, so the button's name is
+      // its date and then its content.
+      id={renderDayContent ? id : props.id}
+      aria-labelledby={
+        renderDayContent ? `${id} ${contentId}` : props['aria-labelledby']
+      }
     >
       <span
+        id={renderDayContent ? contentId : undefined}
         data-slot="date-picker-day-content"
         className="nx:relative nx:z-10 nx:flex nx:flex-col nx:items-center nx:justify-center nx:gap-1"
       >
