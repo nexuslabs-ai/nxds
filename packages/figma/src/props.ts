@@ -64,8 +64,10 @@ function propsOf(checker: ts.TypeChecker, type: ts.Type) {
   for (const branch of type.isUnion() ? type.types : [type]) {
     for (const prop of checker.getPropertiesOfType(branch)) {
       if (!isOwn(prop)) continue;
-      const entry = found.get(prop.name) ?? { symbols: [], types: new Set() };
       const own = checker.getNonNullableType(checker.getTypeOfSymbol(prop));
+      // A branch that bans the prop with `?: never` adds none of its values.
+      if (own.flags & ts.TypeFlags.Never) continue;
+      const entry = found.get(prop.name) ?? { symbols: [], types: new Set() };
       entry.symbols.push(prop);
       for (const each of own.isUnion() ? own.types : [own])
         entry.types.add(each);
@@ -188,9 +190,24 @@ function readParts(folder: string): AppParts {
   return { props: parts, folders };
 }
 
+/** Throws when `react` has no type declarations from `folder`, since every prop would then read as `any`. */
+function assertReactTypes(folder: string) {
+  const { resolvedModule } = ts.resolveModuleName(
+    'react',
+    path.join(folder, 'index.ts'),
+    OPTIONS,
+    ts.sys
+  );
+  if (resolvedModule?.extension === ts.Extension.Dts) return;
+  throw new ExportError(
+    "The app has no type declarations for React, so the export can't read its components' props. Install @types/react and @types/react-dom, then run the command again."
+  );
+}
+
 /** Every part in the app's components folder, `<root>/<dir>/components`. */
 export function appParts(root: string, dir: string): AppParts {
   const components = path.join(dir, 'components');
+  assertReactTypes(path.join(root, components));
   try {
     return readParts(path.join(root, components));
   } catch (error) {

@@ -11,6 +11,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -19,14 +20,9 @@ import { request } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { buildAppPage } from '../src/app.ts';
-import {
-  captureComponents,
-  componentNames,
-  recipeContent,
-} from '../src/capture.ts';
+import type { AppSetup } from '../src/app.ts';
+import { captureApp, componentNames } from '../src/capture.ts';
 import { openLink } from '../src/link.ts';
-import { appParts } from '../src/props.ts';
 import {
   type BuildReport,
   type ComponentSpec,
@@ -61,41 +57,48 @@ const check = (ok: boolean, message: string) => {
   if (!ok) fail(message);
 };
 
-/** Captures the app at `root` as `nxds-cli export figma` does, without the plugin. */
-async function captureApp(root: string, out: string, only?: readonly string[]) {
+/** The app at `root`, as its nxds.json describes it to `nxds-cli export figma`. */
+function appSetup(root: string): AppSetup {
   const config = JSON.parse(
     readFileSync(path.join(root, 'nxds.json'), 'utf8')
   ) as { version: string; dir: string; css: string; iconLibrary?: string };
   const css = readFileSync(path.join(root, config.css), 'utf8');
-  const parts = appParts(root, config.dir);
-  const content = recipeContent(parts);
-  const page = await buildAppPage(
-    {
-      root,
-      dir: config.dir,
-      css: config.css,
-      iconLibrary: config.iconLibrary ?? 'phosphor',
-      ownColors: css.includes('nxds-colors.css'),
-    },
-    content.text,
-    content.icons
-  );
-  const result = await captureComponents({
+  return {
+    root,
     version: config.version,
-    files: { styles: [page.css], scripts: [page.script] },
-    props: parts.props,
-    outDir: out,
-    progress: only ? () => {} : (line) => console.log(line),
-    only,
-  });
-  return { ...result, undrawn: content.undrawn };
+    dir: config.dir,
+    css: config.css,
+    iconLibrary: config.iconLibrary ?? 'phosphor',
+    ownColors: css.includes('nxds-colors.css'),
+  };
 }
 
-const started = Date.now();
-const { capture, problems, notInstalled, undrawn } = await captureApp(
-  reference,
-  outDir
+// figma-app has every nxds component, so a new one reaches Figma.
+const setup = appSetup(reference);
+const folders = (dir: string) =>
+  readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
+const appFolders = folders(path.join(reference, setup.dir, 'components'));
+const reactFolders = folders(
+  path.join(import.meta.dirname, '..', '..', 'react', 'src', 'components')
 );
+const lacking = reactFolders.filter((name) => !appFolders.includes(name));
+const extra = appFolders.filter((name) => !reactFolders.includes(name));
+check(
+  lacking.length === 0,
+  `figma-app has no ${lacking.join(', ')}. Add them to the items in its nxds.json, then run npm run nxds:add.`
+);
+check(
+  extra.length === 0,
+  `figma-app has ${extra.join(', ')}, which @nxds/react doesn't. Remove them from its nxds.json and its components folder.`
+);
+
+const started = Date.now();
+const { capture, problems, notInstalled, undrawn } = await captureApp(setup, {
+  outDir,
+  progress: (line) => console.log(line),
+});
 const json = JSON.stringify(capture, null, 2);
 writeFileSync(path.join(outDir, 'capture.json'), json);
 const variantCount = capture.components.reduce(
@@ -565,8 +568,8 @@ for (const collection of capture.collections) {
 // A copy of figma-app, edited as a team would: its own colours file, where a
 // reference to another nxds token becomes an alias and an app's own variable
 // resolves to its value, a new Button variant, a component of its own that no
-// recipe draws, and Kbd removed. The copy sits in the repo, so its packages
-// resolve from the repo's.
+// recipe draws, and Kbd and Drawer removed. The copy sits in the repo, so its
+// packages resolve from the repo's.
 const fixture = path.join(import.meta.dirname, '..', '.fixture');
 rmSync(fixture, { recursive: true, force: true });
 cpSync(reference, fixture, {
@@ -616,11 +619,14 @@ writeFileSync(
   '/** A row of stars. */\nexport function Rating({ value }: { value: number }) {\n  return <span data-slot="rating">{"★".repeat(value)}</span>;\n}\n'
 );
 rmSync(path.join(fixture, config.dir, 'components/kbd'), { recursive: true });
-const own = await captureApp(fixture, path.join(outDir, 'own'), [
-  'Button',
-  'Card',
-  'Kbd',
-]);
+rmSync(path.join(fixture, config.dir, 'components/drawer'), {
+  recursive: true,
+});
+const own = await captureApp(appSetup(fixture), {
+  outDir: path.join(outDir, 'own'),
+  progress: () => {},
+  only: ['Button', 'Card', 'Kbd', 'Drawer'],
+});
 rmSync(fixture, { recursive: true, force: true });
 
 const ownVariable = (token: string) =>
@@ -706,6 +712,10 @@ check(
 check(
   own.notInstalled.includes('Kbd'),
   "Edited app: Kbd, which the app removed, isn't listed as not installed."
+);
+check(
+  own.notInstalled.includes('Drawer/Title'),
+  "Edited app: Drawer/Title, whose Direction comes from the removed Drawer's props, isn't listed as not installed."
 );
 check(
   own.undrawn.includes('rating'),

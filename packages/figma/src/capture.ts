@@ -8,6 +8,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { type CDPSession, chromium, type Page } from 'playwright-core';
 
+import { type AppPage, type AppSetup, buildAppPage } from './app.ts';
 import {
   convertVariant,
   deepFingerprint,
@@ -24,9 +25,9 @@ import {
   installHelpers,
   type MarkupElement,
   type MarkupNode,
-  missingParts,
   type MountInput,
   type Override,
+  readBundle,
   readTokenNames,
   readTokenValues,
   readTypography,
@@ -36,7 +37,7 @@ import {
   settle,
   type TextFacts,
 } from './page.ts';
-import type { AppParts, PartProps } from './props.ts';
+import { type AppParts, appParts, type PartProps } from './props.ts';
 import {
   type Axis,
   cardOf,
@@ -66,17 +67,7 @@ import {
   valueProbes,
 } from './tokens.ts';
 
-export interface CaptureInput {
-  /** The nxds release the app's components came from, as its nxds.json records it. */
-  version: string;
-  files: {
-    /** The app's compiled CSS entry, served at its own path, so its relative URLs, such as fonts, reach the app's files. */
-    styles: { path: string; css: string }[];
-    /** The app's bundle, which sets `window.React`, `window.ReactDOM` and `window.Nxds`. */
-    scripts: { path: string; js: string }[];
-  };
-  /** Each of the app's parts' props, from its own types. */
-  props: PartProps;
+export interface CaptureOptions {
   /** Screenshots go in `<outDir>/screenshots/<Component>/`. */
   outDir: string;
   progress(line: string): void;
@@ -90,6 +81,10 @@ export interface CaptureResult {
   problems: string[];
   /** Components the app doesn't have, because their recipe draws a part it didn't add. */
   notInstalled: string[];
+  /** The app's component folders no recipe draws, such as one the team added. */
+  undrawn: string[];
+  /** Icons the recipes use that the app's icon library has no icon for. */
+  missingIcons: string[];
 }
 
 /** A recipe draws parts the app doesn't have. */
@@ -111,13 +106,13 @@ const NOT_VISUAL = new Set([
 /** A string union longer than this is a list of names, such as icons, not a variant property. */
 const MAX_VALUES = 12;
 
-/** The capture page: the stylesheets, then the capture's own rules, then the scripts. */
-function pageHtml(files: CaptureInput['files']) {
+/** The capture page: the app's CSS, then the capture's own rules, then the app's bundle. */
+function pageHtml(page: AppPage) {
   return `<!doctype html>
 <html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
-${files.styles.map((style) => `<link rel="stylesheet" href="${style.path}">`).join('\n')}
+<link rel="stylesheet" href="${page.css.path}">
 <style>
   *, *::before, *::after { transition: none !important; animation: none !important; }
   body {
@@ -128,7 +123,7 @@ ${files.styles.map((style) => `<link rel="stylesheet" href="${style.path}">`).jo
     font-family: var(--nx-typography-family-font-sans);
   }
 </style>
-${files.scripts.map((script) => `<script src="${script.path}"></script>`).join('\n')}
+<script src="${page.script.path}"></script>
 </head>
 <body></body>
 </html>`;
@@ -205,7 +200,8 @@ function combinations(
 interface Property {
   name: string;
   values: string[];
-  axis?: Axis;
+  /** The axis, with the part whose prop it sets, which may be a part a recipe names by its own name. */
+  axis?: Omit<Axis, 'part'> & { part: string };
   /** A boolean prop, so its values are written as booleans. */
   boolean: boolean;
 }
@@ -216,9 +212,11 @@ function defaultFirst(values: readonly string[], first: string | undefined) {
   return [first, ...values.filter((value) => value !== first)];
 }
 
-/** `prop` of `part`. Throws when the part has no such prop. */
+/** `prop` of `part`. Throws MissingParts when the app has no such part, and an Error when the part has no such prop. */
 function propOf(props: PartProps, part: string, prop: string) {
-  const found = props.get(part)?.find((entry) => entry.name === prop);
+  const own = props.get(part);
+  if (!own) throw new MissingParts(`the app has no ${part}`);
+  const found = own.find((entry) => entry.name === prop);
   if (!found) throw new Error(`${part} has no prop ${prop}.`);
   return found;
 }
@@ -306,7 +304,7 @@ function overridesFor(
       continue;
     }
     if (!property.axis.prop) continue;
-    set(property.axis.part ?? part, {
+    set(property.axis.part, {
       [property.axis.prop]: property.boolean ? value === 'true' : value,
     });
   }
@@ -344,7 +342,7 @@ async function mountOpen(page: Page, mount: MountInput, recipe: Recipe) {
   await page.evaluate(settle);
 }
 
-/** Mounts, opens, applies the state, and settles. Returns the target's box in page coordinates, or null when nothing matches it. */
+/** Mounts, opens, applies the state, and settles. Returns the target's box in the window's coordinates and how far the page is scrolled, or null when nothing matches it. */
 async function show(
   page: Page,
   cdp: CDPSession,
@@ -403,6 +401,8 @@ async function show(
       y: top,
       width: Math.max(1, right - left),
       height: Math.max(1, bottom - top),
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
     };
   }, target);
 }
@@ -541,7 +541,7 @@ function iconsInMarkup(nodes: readonly MarkupNode[], found: Set<string>) {
  * draws their icons. `undrawn` lists the app's component folders no recipe
  * draws a part of, such as one the team added, which Figma doesn't get.
  */
-export function recipeContent({ props, folders }: AppParts) {
+function recipeContent({ props, folders }: AppParts) {
   const text = new Set<string>();
   const icons = new Set<string>();
   const drawn = new Set<string>();
@@ -657,7 +657,7 @@ function attributeVariant(
     Object.fromEntries(
       properties.map((property) => {
         const prop = property.axis?.prop;
-        const slot = property.axis?.part ? kebab(property.axis.part) : null;
+        const slot = property.axis ? kebab(property.axis.part) : null;
         const holder =
           slot === null || element.slot === slot
             ? element
@@ -681,13 +681,20 @@ function attributeVariant(
     );
 }
 
-export async function captureComponents(
-  input: CaptureInput
+/**
+ * Captures `app`'s components: reads each part's props from its types,
+ * builds the page from its components and CSS, and renders every recipe.
+ */
+export async function captureApp(
+  app: AppSetup,
+  options: CaptureOptions
 ): Promise<CaptureResult> {
-  const every = RECIPES;
+  const parts = appParts(app.root, app.dir);
+  const recipes = recipeContent(parts);
+  const appPage = await buildAppPage(app, recipes.text, recipes.icons);
   const names = componentNames();
   // A card's name also takes its parts: Dialog brings Dialog/Header.
-  const only = input.only;
+  const only = options.only;
   const wanted = new Set(
     only
       ? names.filter(
@@ -710,15 +717,9 @@ export async function captureComponents(
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     const served = new Map<string, [string, string]>([
-      ['/', ['text/html', pageHtml(input.files)]],
-      ...input.files.styles.map((style): [string, [string, string]] => [
-        style.path,
-        ['text/css', style.css],
-      ]),
-      ...input.files.scripts.map((script): [string, [string, string]] => [
-        script.path,
-        ['text/javascript', script.js],
-      ]),
+      ['/', ['text/html', pageHtml(appPage)]],
+      [appPage.css.path, ['text/css', appPage.css.css]],
+      [appPage.script.path, ['text/javascript', appPage.script.js]],
     ]);
     await page.route(`${ORIGIN}/**`, (route) => {
       const urlPath = new URL(route.request().url()).pathname;
@@ -744,19 +745,16 @@ export async function captureComponents(
     await cdp.send('DOM.enable');
     await cdp.send('CSS.enable');
 
-    const iconNames = await page.evaluate(
-      () =>
-        (window as { Nxds?: { __figma?: { icons?: string[] } } }).Nxds?.__figma
-          ?.icons ?? []
-    );
-    const icons = await page.evaluate(recordIcons, iconNames);
+    const bundle = await page.evaluate(readBundle);
+    const exported = new Set(bundle.exports);
+    const icons = await page.evaluate(recordIcons, bundle.icons);
     const iconsByShape = new Map<string, string>();
     for (const icon of icons) {
       const signature = svgSignature(icon.svg);
       if (signature && !iconsByShape.has(signature))
         iconsByShape.set(signature, icon.name);
     }
-    input.progress(`Captured ${icons.length} icons.`);
+    options.progress(`Captured ${icons.length} icons.`);
     const styles = textStyles(await page.evaluate(readTypography));
     const textStylesByToken = new Map(
       styles.map((style) => [style.token, style])
@@ -772,15 +770,15 @@ export async function captureComponents(
     /** Every slot the captured components draw, to find the components they hold. */
     const seen = new Set<string>();
 
-    /** What the recipe renders for this variant, once the page has every part it draws. */
-    const nodesOf = async (recipe: Recipe, values: Record<string, string>) => {
+    /** What the recipe renders for this variant, once the app's bundle has every part it draws. */
+    const nodesOf = (recipe: Recipe, values: Record<string, string>) => {
       const nodes = markupOf(recipe, values);
       if (!nodes) {
         throw new Error(
           `it has no markup, and examples.tsx has no ${cardOf(recipe.name)} example`
         );
       }
-      const missing = await page.evaluate(missingParts, [...partsIn(nodes)]);
+      const missing = [...partsIn(nodes)].filter((part) => !exported.has(part));
       if (missing.length > 0) {
         throw new MissingParts(
           `the app has no ${missing.map((part) => `Nxds.${part}`).join(', ')}`
@@ -793,14 +791,14 @@ export async function captureComponents(
       await page.setViewportSize(recipe.viewport ?? recipe.screen ?? VIEWPORT);
       const card = cardOf(recipe.name);
       const part = recipe.part ?? recipe.name;
-      const axes = variantProperties(recipe, part, input.props);
+      const axes = variantProperties(recipe, part, parts.props);
       const stateNames = Object.keys(recipe.states ?? {});
       let properties: Property[] =
         stateNames.length > 0
           ? [...axes, { name: 'State', values: stateNames, boolean: false }]
           : axes;
       const folder = path.join('screenshots', recipe.name);
-      mkdirSync(path.join(input.outDir, folder), { recursive: true });
+      mkdirSync(path.join(options.outDir, folder), { recursive: true });
       const hasOffParts =
         recipe.parts?.some((entry) => !entry.default) ?? false;
       let variants: VariantSpec[] = [];
@@ -812,7 +810,7 @@ export async function captureComponents(
           blur: recipe.blur,
           ...recipe.states?.[values['State'] ?? 'default'],
         };
-        const nodes = await nodesOf(recipe, values);
+        const nodes = nodesOf(recipe, values);
         const mount = (full: boolean): MountInput => ({
           nodes,
           overrides: overridesFor(
@@ -852,18 +850,22 @@ export async function captureComponents(
         if (!box && recipe.axesFrom) continue;
         if (!box) throw new Error(`nothing matches ${target}`);
         const viewport = page.viewportSize() ?? VIEWPORT;
+        // A part laid out past the window, such as a tall vertical carousel's Next button.
+        const fullPage =
+          box.x + box.width + 8 > viewport.width ||
+          box.y + box.height + 8 > viewport.height;
+        // A full-page clip is in the document's coordinates, not the window's.
+        const x = box.x + (fullPage ? box.scrollX : 0);
+        const y = box.y + (fullPage ? box.scrollY : 0);
         await page.screenshot({
-          path: path.join(input.outDir, screenshot),
+          path: path.join(options.outDir, screenshot),
           clip: {
-            x: Math.max(0, box.x - 8),
-            y: Math.max(0, box.y - 8),
+            x: Math.max(0, x - 8),
+            y: Math.max(0, y - 8),
             width: box.width + 16,
             height: box.height + 16,
           },
-          // A part laid out past the window, such as a tall vertical carousel's Next button.
-          fullPage:
-            box.x + box.width + 8 > viewport.width ||
-            box.y + box.height + 8 > viewport.height,
+          fullPage,
         });
         if (hasOffParts)
           await show(page, cdp, mount(true), recipe, target, state);
@@ -951,7 +953,7 @@ export async function captureComponents(
           if (!sources.has(each)) sources.set(each, source);
         }
       }
-      input.progress(`Captured ${recipe.name}: ${variants.length} variants.`);
+      options.progress(`Captured ${recipe.name}: ${variants.length} variants.`);
       return spec;
     };
 
@@ -959,7 +961,7 @@ export async function captureComponents(
     // become instances. A held component comes earlier in recipe order, and
     // finding one means capturing again from the start.
     for (;;) {
-      for (const recipe of every.filter(({ name }) => wanted.has(name))) {
+      for (const recipe of RECIPES.filter(({ name }) => wanted.has(name))) {
         try {
           components.push(await captureRecipe(recipe));
         } catch (error) {
@@ -972,16 +974,14 @@ export async function captureComponents(
         errors.length = 0;
       }
       const last = Math.max(...[...wanted].map((name) => names.indexOf(name)));
-      const held = every
-        .slice(0, last)
-        .filter(
-          (recipe) =>
-            !wanted.has(recipe.name) &&
-            slotsOf(recipe).some((slot) => seen.has(slot))
-        );
+      const held = RECIPES.slice(0, last).filter(
+        (recipe) =>
+          !wanted.has(recipe.name) &&
+          slotsOf(recipe).some((slot) => seen.has(slot))
+      );
       if (held.length === 0) break;
       for (const recipe of held) wanted.add(recipe.name);
-      input.progress(
+      options.progress(
         `Capturing again with ${held.map(({ name }) => name).join(', ')}, which they hold.`
       );
       sources.clear();
@@ -994,8 +994,8 @@ export async function captureComponents(
         format: CAPTURE_FORMAT,
         version: PROTOCOL_VERSION,
         // The plugin removes what a full capture lacks, so a failed component stays.
-        partial: input.only !== undefined || problems.length > 0,
-        nxds: { version: input.version },
+        partial: only !== undefined || problems.length > 0,
+        nxds: { version: app.version },
         collections: collections(tokens, usedTokens(components), values),
         textStyles: styles,
         effectStyles: effects,
@@ -1005,6 +1005,8 @@ export async function captureComponents(
       },
       problems,
       notInstalled,
+      undrawn: recipes.undrawn,
+      missingIcons: appPage.missingIcons,
     };
   } finally {
     await browser.close();

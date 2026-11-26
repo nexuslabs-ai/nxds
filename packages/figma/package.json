@@ -29,7 +29,6 @@
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.142.0",
-    "@nxds/core": "workspace:*",
     "@types/culori": "^4.0.1",
     "@types/node": "^25.9.1"
   }

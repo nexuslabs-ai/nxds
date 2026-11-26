@@ -79,7 +79,7 @@ Figma gets the app's own components, as the team edited them. Nothing else is an
 
 Each Figma component is a recipe in `src/recipes.tsx`, written in JSX with the app's component names and real props. Most recipes draw their card's example in `src/examples.tsx`. The page renders the app's own component for each part.
 
-Every `--nx-*` property the app's CSS declares becomes a variable, sorted into a collection by its name. A colour that references another nxds token, such as `var(--nx-color-blue-600)`, becomes a Figma alias of that variable. Any other value, such as `color-mix()` or the app's own variable, is exported as the colour it resolves to.
+Each token in the families under [What it builds](#what-it-builds) becomes a variable, sorted into a collection by its name. A colour that references another nxds token, such as `var(--nx-color-blue-600)`, becomes a Figma alias of that variable. Any other value, such as `color-mix()` or the app's own variable, is exported as the colour it resolves to.
 
 The command lists what Figma doesn't get:
 
@@ -106,7 +106,7 @@ A new nxds component reaches Figma once it has a recipe:
 
 1. Add the card's example to `EXAMPLES` in `src/examples.tsx`, written as an app uses the component.
 2. Add each part the example draws to `src/parts.ts`.
-3. Add an entry to `RECIPES` in `src/recipes.tsx`. `{ name: 'Badge' }` draws the example. The other fields say what differs: parts on their own, an overlay to open, states, axes.
+3. Add an entry to `RECIPES` in `src/recipes.tsx`. `{ name: 'Kbd' }` draws the example. The other fields say what differs: parts on their own, an overlay to open, states, axes.
 4. Run `npm run nxds:add` in `examples/figma-app`, then the smoke test.
 
 A component folder Figma gets nothing for, such as Show, goes in `NOT_DRAWN` with the reason.
@@ -120,24 +120,24 @@ cd ../..
 pnpm --filter @nxds/figma smoke
 ```
 
-The smoke test captures every component in `examples/figma-app`, then checks the bindings, sizing, icons, nested instances, properties, variables and the local link. Then it copies the app to `packages/figma/.fixture`, adds its own colours file, a Button variant and a component of its own, removes Kbd, and checks Figma gets the edits. Pass a folder to keep its output: `pnpm --filter @nxds/figma smoke ../../nxds-figma-smoke`.
+The smoke test checks `examples/figma-app` has every `@nxds/react` component and captures each one. Then it checks the bindings, sizing, icons, nested instances, properties, variables and the local link. Then it copies the app to `packages/figma/.fixture`, adds its own colours file, a Button variant and a component of its own, removes Kbd and Drawer, and checks Figma gets the edits. Pass a folder to keep its output: `pnpm --filter @nxds/figma smoke ../../nxds-figma-smoke`.
 
 ## Source
 
-| File                   | Job                                                                               |
-| ---------------------- | --------------------------------------------------------------------------------- |
-| `src/recipes.tsx`      | Each Figma component: what it draws, its parts, overlays to open, states and axes |
-| `src/examples.tsx`     | Each card's example, in JSX with real props                                       |
-| `src/parts.ts`         | Every part a recipe draws, so a mistyped one fails the typecheck                  |
-| `src/markup.ts`        | The JSX factory recipes are written in                                            |
-| `src/app.ts`           | Bundles an app's components and compiles its CSS entry                            |
-| `src/props.ts`         | Reads each part's props from the app's own types                                  |
-| `src/page.ts`          | Runs in the page: mounts a variant, records it, reads tokens, draws the icon set  |
-| `src/convert.ts`       | Turns a recording into auto layout, sizing, bindings, icons and instances         |
-| `src/tokens.ts`        | Turns the page's tokens into variables, text styles and shadow styles             |
-| `src/capture.ts`       | Drives headless Chromium through every component and variant                      |
-| `src/link.ts`          | Serves the capture on `localhost:7357` and takes the report                       |
-| `src/spec.ts`          | The capture and report formats, shared with the plugin                            |
-| `scripts/tsx-hooks.ts` | Lets the smoke test load the `.tsx` recipes                                       |
-| `plugin/src/code.ts`   | Builds what the capture says in Figma                                             |
-| `plugin/src/ui.ts`     | Fetches the capture and posts the report                                          |
+| File                      | Job                                                                               |
+| ------------------------- | --------------------------------------------------------------------------------- |
+| `src/recipes.tsx`         | Each Figma component: what it draws, its parts, overlays to open, states and axes |
+| `src/examples.tsx`        | Each card's example, in JSX with real props                                       |
+| `src/parts.ts`            | Every part a recipe draws, so a mistyped one fails the typecheck                  |
+| `src/markup.ts`           | The JSX factory recipes are written in                                            |
+| `src/app.ts`              | Bundles an app's components and compiles its CSS entry                            |
+| `src/props.ts`            | Reads each part's props from the app's own types                                  |
+| `src/page.ts`             | Runs in the page: mounts a variant, records it, reads tokens, draws the icon set  |
+| `src/convert.ts`          | Turns a recording into auto layout, sizing, bindings, icons and instances         |
+| `src/tokens.ts`           | Turns the page's tokens into variables, text styles and shadow styles             |
+| `src/capture.ts`          | Drives headless Chromium through every component and variant                      |
+| `src/link.ts`             | Serves the capture on `localhost:7357` and takes the report                       |
+| `src/spec.ts`             | The capture and report formats, shared with the plugin                            |
+| `scripts/register-tsx.ts` | Lets the smoke test load the `.tsx` recipes                                       |
+| `plugin/src/code.ts`      | Builds what the capture says in Figma                                             |
+| `plugin/src/ui.ts`        | Fetches the capture and posts the report                                          |

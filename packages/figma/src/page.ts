@@ -90,6 +90,15 @@ export interface Recorded {
   rootScale: string;
 }
 
+/** What the app's bundle hands the page beside its components. */
+interface FigmaApp {
+  Provider: ReactModule.ElementType;
+  defaultState: unknown;
+  deriveColors: boolean;
+  /** The icon names `Icon` draws. */
+  icons: string[];
+}
+
 interface PageGlobals {
   React: typeof ReactModule;
   ReactDOM: {
@@ -99,23 +108,18 @@ interface PageGlobals {
     };
     flushSync(callback: () => void): void;
   };
-  Nxds: Record<string, unknown>;
+  Nxds: Record<string, unknown> & {
+    Icon: ReactModule.ElementType;
+    __figma: FigmaApp;
+  };
   __figmaMount(input: MountInput): void;
   __figmaUnmount(): void;
 }
 
-/** The parts, such as `Button`, that the page's `Nxds` doesn't have. */
-export function missingParts(parts: string[]) {
+/** Every name the app's bundle exports, such as `Button`, and the icon names its `Icon` draws. */
+export function readBundle() {
   const { Nxds } = window as unknown as PageGlobals;
-  return parts.filter(
-    (part) =>
-      part
-        .split('.')
-        .reduce<unknown>(
-          (scope, key) => (scope as Record<string, unknown> | undefined)?.[key],
-          Nxds
-        ) === undefined
-  );
+  return { exports: Object.keys(Nxds), icons: Nxds.__figma.icons };
 }
 
 /**
@@ -128,22 +132,13 @@ export function missingParts(parts: string[]) {
 export function installHelpers() {
   const page = window as unknown as PageGlobals;
   const { React, ReactDOM, Nxds } = page;
-  const component = (name: string) =>
-    name
-      .split('.')
-      .reduce<unknown>(
-        (scope, key) => (scope as Record<string, unknown> | undefined)?.[key],
-        Nxds
-      ) as ReactModule.ElementType | undefined;
   const revive = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(revive);
     if (!value || typeof value !== 'object' || value instanceof Date) {
       return value;
     }
     if ('__icon' in value) {
-      return React.createElement(Nxds['Icon'] as ReactModule.ElementType, {
-        name: value.__icon,
-      });
+      return React.createElement(Nxds.Icon, { name: value.__icon });
     }
     if ('__handler' in value) return () => undefined;
     return Object.fromEntries(
@@ -171,7 +166,7 @@ export function installHelpers() {
       let type: ReactModule.ElementType =
         node.tag as keyof ReactModule.JSX.IntrinsicElements;
       if (node.part !== null) {
-        const found = component(node.part);
+        const found = Nxds[node.part] as ReactModule.ElementType | undefined;
         if (!found) throw new Error(`The page has no Nxds.${node.part}.`);
         type = found;
         const extra = pending.get(node.part);
@@ -191,26 +186,17 @@ export function installHelpers() {
         `The markup has no ${[...pending.keys()].join(', ')} to set props on.`
       );
     }
-    // An app's bundle hands over its appearance provider, so each mount gets the app's colours, density and corners.
-    const app = Nxds['__figma'] as
-      | {
-          Provider: ReactModule.ElementType;
-          defaultState: unknown;
-          deriveColors: boolean;
-        }
-      | undefined;
-    const tree = React.createElement(React.Fragment, null, ...elements);
-    const content = app
-      ? React.createElement(
-          app.Provider,
-          {
-            defaultState: app.defaultState,
-            deriveColors: app.deriveColors,
-            storageKey: 'nxds-figma-capture',
-          },
-          tree
-        )
-      : tree;
+    // The app's bundle hands over its appearance provider, so each mount gets the app's colours, density and corners.
+    const app = Nxds.__figma;
+    const content = React.createElement(
+      app.Provider,
+      {
+        defaultState: app.defaultState,
+        deriveColors: app.deriveColors,
+        storageKey: 'nxds-figma-capture',
+      },
+      ...elements
+    );
     const wrapper = document.createElement('div');
     wrapper.setAttribute('data-capture-root', '');
     wrapper.style.cssText = `display: flow-root; width: ${width + 16}px; padding: 8px`;
@@ -247,40 +233,10 @@ export async function settle() {
   await document.fonts.ready;
 }
 
-/**
- * The icon set: each icon `Nxds.Icon` names, at 24px, and the filled weight
- * of each through its Phosphor component in `Nxds.Icons`, named `<name>-fill`.
- */
+/** The icon set: each icon `Nxds.Icon` names, at 24px. */
 export function recordIcons(names: string[]) {
   const page = window as unknown as PageGlobals;
   const { React, ReactDOM, Nxds } = page;
-  const phosphor = (Nxds['Icons'] ?? {}) as Record<
-    string,
-    ReactModule.ElementType
-  >;
-  const pascal = (name: string) =>
-    `${name.replace(/(^|-)([a-z0-9])/g, (_, __, char: string) => char.toUpperCase())}Icon`;
-  const wanted = new Map<string, ReactModule.ReactElement>();
-  for (const name of names) {
-    wanted.set(
-      name,
-      React.createElement(Nxds['Icon'] as ReactModule.ElementType, {
-        name,
-        size: 24,
-      })
-    );
-    const component = phosphor[pascal(name)];
-    if (
-      !name.endsWith('-fill') &&
-      component &&
-      !names.includes(`${name}-fill`)
-    ) {
-      wanted.set(
-        `${name}-fill`,
-        React.createElement(component, { size: 24, weight: 'fill' })
-      );
-    }
-  }
   const host = document.createElement('div');
   document.body.append(host);
   const root = ReactDOM.createRoot(host);
@@ -289,8 +245,12 @@ export function recordIcons(names: string[]) {
       React.createElement(
         React.Fragment,
         null,
-        ...[...wanted].map(([name, icon]) =>
-          React.createElement('span', { key: name, 'data-icon': name }, icon)
+        ...names.map((name) =>
+          React.createElement(
+            'span',
+            { key: name, 'data-icon': name },
+            React.createElement(Nxds.Icon, { name, size: 24 })
+          )
         )
       )
     )
@@ -326,8 +286,8 @@ export interface TokenValue {
 
 /**
  * Every token's value as the page resolves it, in light on the root and in
- * dark inside a `.dark` element, whatever declared it: tokens.css, an app's
- * own colours file or a preset. A probe element reads it through a property,
+ * dark inside a `.dark` element, whatever declared it: the app's CSS entry,
+ * its own colours file or its appearance provider. A probe element reads it through a property,
  * so the browser computes `color-mix()`, `var()` and `rem` the way it would
  * for a component.
  *
@@ -402,7 +362,7 @@ export function readTokenValues(probes: [string, ValueKind][]) {
   return values;
 }
 
-/** Every `--nx-*` property the page's stylesheets or its root element declare, by name without `--`. */
+/** Every `--nx-*` property the page's stylesheets or its root element declare, by name without `--`, in declaration order, which is each scale's order. */
 export function readTokenNames() {
   const found = new Set<string>();
   const add = (style: CSSStyleDeclaration) => {
@@ -418,7 +378,7 @@ export function readTokenNames() {
   };
   for (const sheet of document.styleSheets) visit(sheet.cssRules);
   add(document.documentElement.style);
-  return [...found].sort();
+  return [...found];
 }
 
 /** A `nx:typography-*` class as the page resolves it, and the token it declares each size with. */

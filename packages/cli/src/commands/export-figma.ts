@@ -1,14 +1,12 @@
-import { type AppSetup, buildAppPage } from '@nxds/figma/app';
+import type { AppSetup } from '@nxds/figma/app';
 import {
-  captureComponents,
-  type CaptureInput,
+  captureApp,
+  type CaptureOptions,
   componentNames,
-  recipeContent,
 } from '@nxds/figma/capture';
 import { ExportError } from '@nxds/figma/errors';
 import { openLink, PortInUseError } from '@nxds/figma/link';
 import { LINK_PORT } from '@nxds/figma/port';
-import { appParts } from '@nxds/figma/props';
 import {
   type BuildReport,
   CAPTURE_FORMAT,
@@ -125,14 +123,18 @@ async function reported<T>(work: () => T | Promise<T>) {
  * Captures into a staging folder in `out`, then replaces the last export's
  * files with it. A capture that fails leaves the last export as it was.
  */
-async function captureInto(out: string, input: Omit<CaptureInput, 'outDir'>) {
+async function captureInto(
+  out: string,
+  app: AppSetup,
+  options: Omit<CaptureOptions, 'outDir'>
+) {
   const staging = path.join(out, STAGING);
   // A run stopped with Ctrl+C leaves its staging folder.
   rmSync(staging, { recursive: true, force: true });
   mkdirSync(staging, { recursive: true });
   try {
     const result = await reported(() =>
-      captureComponents({ ...input, outDir: staging })
+      captureApp(app, { ...options, outDir: staging })
     );
     const json = JSON.stringify(result.capture, null, 2);
     const unbound = unboundValues(result.capture);
@@ -188,32 +190,31 @@ export async function exportFigma(
     );
   }
   assertComponents(options.only, componentNames());
-  const ownColors = importsColors(
-    readFileSync(path.join(cwd, app.css), 'utf8')
-  );
+  const cssEntry = path.join(cwd, app.css);
+  if (!existsSync(cssEntry)) {
+    throw new UsageError(
+      `There's no ${app.css}, the CSS entry ${CONFIG_FILE} names. Restore it, or set css in ${CONFIG_FILE} to your nxds CSS entry.`
+    );
+  }
+  const ownColors = importsColors(readFileSync(cssEntry, 'utf8'));
   const setup: AppSetup = {
     root: cwd,
+    version: app.version,
     dir: app.dir,
     css: app.css,
     iconLibrary: app.iconLibrary ?? 'phosphor',
     ownColors,
   };
-  const parts = await reported(() => appParts(setup.root, setup.dir));
-  const recipes = recipeContent(parts);
-  const page = await reported(() =>
-    buildAppPage(setup, recipes.text, recipes.icons)
-  );
 
-  const { capture, json, unbound, problems, notInstalled } = await captureInto(
-    out,
-    {
-      version: app.version,
-      files: { styles: [page.css], scripts: [page.script] },
-      props: parts.props,
-      progress,
-      only: options.only,
-    }
-  );
+  const {
+    capture,
+    json,
+    unbound,
+    problems,
+    notInstalled,
+    undrawn,
+    missingIcons,
+  } = await captureInto(out, setup, { progress, only: options.only });
 
   const relative = path.relative(cwd, out) || '.';
   const variants = capture.components.reduce(
@@ -230,14 +231,14 @@ export async function exportFigma(
       `Components whose recipe draws a part the app didn't add aren't exported: ${notInstalled.join(', ')}.`
     );
   }
-  if (recipes.undrawn.length > 0) {
+  if (undrawn.length > 0) {
     captured.push(
-      `These components have no recipe in the Figma export, so Figma doesn't get them: ${recipes.undrawn.join(', ')}.`
+      `These components have no recipe in the Figma export, so Figma doesn't get them: ${undrawn.join(', ')}.`
     );
   }
-  if (page.missingIcons.length > 0) {
+  if (missingIcons.length > 0) {
     captured.push(
-      `The app's icon library doesn't have these icons, so the components draw without them: ${page.missingIcons.join(', ')}.`
+      `The app's icon library doesn't have these icons, so the components draw without them: ${missingIcons.join(', ')}.`
     );
   }
   if (problems.length > 0) {
@@ -285,8 +286,8 @@ export async function exportFigma(
       components: capture.components.map((component) => component.name),
       problems,
       notInstalled,
-      noRecipe: recipes.undrawn,
-      missingIcons: page.missingIcons,
+      noRecipe: undrawn,
+      missingIcons,
       unbound: unbound.length,
       report,
     },

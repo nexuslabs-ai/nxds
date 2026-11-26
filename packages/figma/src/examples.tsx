@@ -33,22 +33,6 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
       </Nxds.AccordionItem>
     </Nxds.Accordion>
   ),
-  Alert: (
-    <Nxds.Alert
-      layout="stack"
-      presentation="card"
-      variant="default"
-      className="nx:max-w-md"
-    >
-      <Nxds.AlertIcon>
-        <Nxds.Icon name="info" />
-      </Nxds.AlertIcon>
-      <Nxds.AlertTitle>Information</Nxds.AlertTitle>
-      <Nxds.AlertDescription>
-        This is an informational alert with an icon.
-      </Nxds.AlertDescription>
-    </Nxds.Alert>
-  ),
   AlertDialog: (
     <Nxds.AlertDialog>
       <Nxds.AlertDialogTrigger asChild>
@@ -75,7 +59,7 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
     <div style={{ width: 'var(--nx-spacing-80)' }}>
       <Nxds.AspectRatio ratio={1.5}>
         <div
-          className="typography-body-small"
+          className="nx:typography-body-small"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -107,16 +91,6 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
       </Nxds.AttachmentActions>
     </Nxds.Attachment>
   ),
-  Avatar: (
-    <Nxds.Avatar size="md" shape="circle" ring={false}>
-      <Nxds.AvatarImage
-        src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NjAgNTYwIiBmaWxsPSJub25lIiBzaGFwZS1yZW5kZXJpbmc9ImF1dG8iPjxtZXRhZGF0YSB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiIHhtbG5zOnhzaT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS9YTUxTY2hlbWEtaW5zdGFuY2UiIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1sbnM6ZGN0ZXJtcz0iaHR0cDovL3B1cmwub3JnL2RjL3Rlcm1zLyI+PHJkZjpSREY+PHJkZjpEZXNjcmlwdGlvbj48ZGM6dGl0bGU+Tm90aW9uaXN0czwvZGM6dGl0bGU+PGRjOmNyZWF0b3I+Wm9pc2g8L2RjOmNyZWF0b3I+PGRjOnNvdXJjZSB4c2k6dHlwZT0iZGN0ZXJtczpVUkkiPmh0dHBzOi8vaGV5em9pc2guZ3Vtcm9hZC5jb20vbC9ub3Rpb25pc3RzPC9kYzpzb3VyY2U+PGRjdGVybXM6bGljZW5zZSB4c2k6dHlwZT0iZGN0ZXJtczpVUkkiPmh0dHBzOi8vY3JlYXRpdmVjb21tb25zLm9yZy9wdWJsaWNkb21haW4vemVyby8xLjAvPC9kY3Rlcm1zOmxpY2Vuc2U+PGRjOnJpZ2h0cz5SZW1peCBvZiDigJ5Ob3Rpb25pc3Rz4oCdIChodHRwczovL2hleXpvaXNoLmd1bXJvYWQuY29tL2wvbm90aW9uaXN0cykgYnkg4oCeWm9pc2jigJ0sIGxpY2Vuc2VkIHVuZGVyIOKAnkNDMCAxLjDigJ0gKGh0dHBzOi8vY3JlYXRpdmVjb21tb25zLm9yZy9wdWJsaWNkb21haW4vemVyby8xLjAvKTwvZGM6cmlnaHRzPjwvcmRmOkRlc2NyaXB0aW9uPjwvcmRmOlJERj48L21ldGFkYXRhPjxtYXNrIGlkPSJ2aWV3Ym94TWFzayI+PHJlY3Qgd2lkdGg9IjU2MCIgaGVpZ2h0PSI1NjAiIHJ4PSIwIiByeT0iMCIgeD0iMCIgeT0iMCIgZmlsbD0iI2ZmZiIgLz48L21hc2s+PGcgbWFzaz0idXJsKCN2aWV3Ym94TWFzaykiPjxyZWN0IGZpbGw9IiNmZmM1Y2QiIHdpZHRoPSI1NjAiIGhlaWdodD0iNTYwIiB4PSIwIiB5PSIwIiAvPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEzNiAzMjgpIj48cGF0aCBkPSJNODAuNyA2NS40Yy0xLjEtNC42LTIuOC04LjggMi0xMC44Qzg2LjcgNTMgOTAgNTUgOTMgNThhNzYgNzYgMCAwIDAgMzQuNCAyMWMyNyA2LjcgNTEtLjUgNzEuMi0xOS45IDMuNC0zLjIgNi43LTYuNSAxMC4yLTkuNSAyLjQtMiA1LjEtMy4yIDgtLjcgMyAyLjcgMS41IDUuNC0uMSA4LTEzLjYgMjEuNC0zMS43IDM1LjgtNTguMSAzNy04IC4zLTE2LjEgMS0yNC4xLjgtMjIuNC0uNi0zOC0xNC4zLTUzLjgtMjkuM1pNNDkuMyA1NC41Yy40LTE1LjUgOC0yNS40IDE5LjctMzMgNC43LTMgOS40LTQgMTQuNS0yLjcgMy4zIDEgNi41IDIuNyA3IDYuNi43IDQuMy0yLjQgNS42LTYgNi44YTMwLjUgMzAuNSAwIDAgMC0yMS40IDIyLjljLTEgNC4zLTIgOS03IDkuNC01LjkuNi01LjItNS40LTYuOC0xMFpNMjMwLjQgMzVjMC04LjggNS40LTcuNCA5LjctNiA3LjIgMi4zIDE2IDE4LjYgMTQuNyAyNi41LS40IDIuNS0uNCA1LjMtMy4zIDYuNC0zLjQgMS4zLTUuOC0uNC03LjUtMy4xYTcxMCA3MTAgMCAwIDEtMTMuNi0yMy45WiIgZmlsbD0iIzAwMCIvPjwvZz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyNDYgMTI1KSI+PHBhdGggZD0iTTQxLjIgMTk3LjZjLTUuNC00LjgtMTAuMi05LjQtNS41LTE1LjggNS02LjcgOS44LjEgMTQuNyAxLjQgMy4yLjkgNS42IDQuNCA5LjMgMy4zIDYuNS0xLjggMTQtMi41IDE1LTExLjQuOC04LjUtNi0xMC41LTExLjctMTMuMS00LjQtMi0xMyAxLTExLjMtOCAxLjUtOC4zIDkuMS03LjcgMTUuNi03LjFhMjUgMjUgMCAwIDEgMjQgMjVjLjUgMTYuMi04LjQgMjguNS0yMy4zIDMwLTguNyAxLTE4IDItMjYuOC00LjNaIiBmaWxsPSIjMDAwIi8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKC00NSAxMzcpIj48cGF0aCBkPSJNNDE5LjYgMTExYy00LjItOS41LTkuOS0xNS4yLTE5LjgtMTUuNy02LS4zLTctNS4xLTguOS05LjggMi0xLjUgMy41LTMuNyA1LjMtMy44IDIxLjEtMS43IDQyLjQtMS44IDYzLjUtLjEgNiAuNCA5LjMgOCAzLjIgMTAuNC0xMCA0LTEyLjUgMTMuMi0xOC41IDE5LjgtOC4yIDktMTUuMiA5LjEtMjQuOC0uOFpNMjI4LjYgODEuNGMxMi4yLjcgMjMuMSAxIDM0IDIgMy42LjMgOCAxLjggOCA2LjcgMCA1LjYtNC42IDUuMi04LjMgNS4xLTYuMyAwLTkuNyAyLjctMTIuNSA4LjYtMy40IDcuNC02LjkgMTUuMy0xOCAxNC44LTEwLjUtLjUtMTUuMS03LjItMTguMS0xNS4yLTIuMi01LjctNS04LjQtMTEtOC4yLTMuNC4xLTcuMS0uMi03LjUtNC45LS40LTUgMy02IDctNy4yYTY3LjkgNjcuOSAwIDAgMSAyNi40LTEuN1oiIGZpbGw9IiMwMDAiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTQ1IDEzNykiPjwvZz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMTkgMTE0KSI+PHBhdGggZD0iTTU3LjUgNDEuOEM1MS4zIDQxLjMgNDYgNDEgNDEgNDFjLTUuNy0uMi04LjUtMy40LTktOC44LS41LTUuMyAzLTcgNy41LTguNSA4LjYtMyAxNy4xLS41IDI1LjIuNyAxNS40IDIuMSAzMS41LS42IDQ2LjQgNi4zIDUgMi4zIDguMyA0LjcgNi40IDEwLjMtMS44IDUuMi02LjEgNS4yLTEwLjYgNC4xLTE2LTMuNy0zMi40LjktNDkuNC0zLjNaTTI1MS44IDMyYzE3LjIuOSAzMy4xLTUgNDkuMy0xLjIgNCAxIDkgLjcgOC44IDcgMCA2LjItNC43IDcuNC05LjUgOC0xOSAyLjItMzggNC01Ni45IDYuNC01LjcuNy0xMSAuMS0xMi42LTUuNi0xLjctNS43IDQtNy44IDgtMTAgMy41LTIuMSA3LjgtMy4xIDEyLjktNC43WiIgZmlsbD0iIzAwMCIvPjwvZz48L2c+PC9zdmc+"
-        alt="Ada Lovelace"
-      />
-      <Nxds.AvatarFallback>AL</Nxds.AvatarFallback>
-    </Nxds.Avatar>
-  ),
-  Badge: <Nxds.Badge>Badge</Nxds.Badge>,
   Breadcrumb: (
     <Nxds.Breadcrumb>
       <Nxds.BreadcrumbList>
@@ -148,28 +122,12 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
       </Nxds.Bubble>
     </Nxds.BubbleGroup>
   ),
-  Button: <Nxds.Button>Button</Nxds.Button>,
   ButtonGroup: (
     <Nxds.ButtonGroup>
       <Nxds.Button variant="outline">Day</Nxds.Button>
       <Nxds.Button variant="outline">Week</Nxds.Button>
       <Nxds.Button variant="outline">Month</Nxds.Button>
     </Nxds.ButtonGroup>
-  ),
-  Card: (
-    <Nxds.Card className="nx:w-[350px]">
-      <Nxds.CardHeader>
-        <Nxds.CardTitle>Card Title</Nxds.CardTitle>
-        <Nxds.CardDescription>Card description goes here.</Nxds.CardDescription>
-      </Nxds.CardHeader>
-      <Nxds.CardContent>
-        <p>Card content goes here.</p>
-      </Nxds.CardContent>
-      <Nxds.CardFooter>
-        <Nxds.Button variant="outline">Cancel</Nxds.Button>
-        <Nxds.Button>Submit</Nxds.Button>
-      </Nxds.CardFooter>
-    </Nxds.Card>
   ),
   Carousel: (
     <div
@@ -183,7 +141,7 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
           <Nxds.CarouselItem>
             <Nxds.Card>
               <div
-                className="typography-heading-large"
+                className="nx:typography-heading-large"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -199,7 +157,7 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
           <Nxds.CarouselItem>
             <Nxds.Card>
               <div
-                className="typography-heading-large"
+                className="nx:typography-heading-large"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -215,7 +173,7 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
           <Nxds.CarouselItem>
             <Nxds.Card>
               <div
-                className="typography-heading-large"
+                className="nx:typography-heading-large"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -232,22 +190,6 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
         <Nxds.CarouselPrevious />
         <Nxds.CarouselNext />
       </Nxds.Carousel>
-    </div>
-  ),
-  Chart: (
-    <div className="nx:w-[600px] nx:max-w-full">
-      <Nxds.BarChart
-        data={[
-          { month: 'Jan', desktop: 186, mobile: 80 },
-          { month: 'Feb', desktop: 305, mobile: 200 },
-          { month: 'Mar', desktop: 237, mobile: 120 },
-          { month: 'Apr', desktop: 173, mobile: 190 },
-          { month: 'May', desktop: 209, mobile: 130 },
-          { month: 'Jun', desktop: 264, mobile: 140 },
-        ]}
-        xKey="month"
-        series={['desktop', 'mobile']}
-      />
     </div>
   ),
   Checkbox: (
@@ -592,11 +534,6 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
       </Nxds.HoverCardContent>
     </Nxds.HoverCard>
   ),
-  Input: (
-    <div className="nx:w-[400px]">
-      <Nxds.Input type="email" placeholder="email@example.com" />
-    </div>
-  ),
   InputGroup: (
     <Nxds.InputGroup className="nx:w-80">
       <Nxds.InputGroupAddon>
@@ -643,12 +580,6 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
         <Nxds.Kbd>⌘</Nxds.Kbd>
         <Nxds.Kbd>K</Nxds.Kbd>
       </Nxds.KbdGroup>
-    </div>
-  ),
-  Label: (
-    <div className="nx:flex nx:flex-col nx:gap-2">
-      <Nxds.Label htmlFor="email">Email</Nxds.Label>
-      <Nxds.Input id="email" type="email" placeholder="you@example.com" />
     </div>
   ),
   Marker: (
@@ -893,7 +824,7 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
       <Nxds.ResizablePanelGroup orientation="horizontal">
         <Nxds.ResizablePanel defaultSize={35}>
           <div
-            className="typography-label-default"
+            className="nx:typography-label-default"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -907,7 +838,7 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
         <Nxds.ResizableHandle withHandle />
         <Nxds.ResizablePanel defaultSize={65}>
           <div
-            className="typography-label-default"
+            className="nx:typography-label-default"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -932,7 +863,7 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
     >
       <Nxds.ScrollArea className="nx:h-48">
         <div
-          className="typography-body-small"
+          className="nx:typography-body-small"
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -940,7 +871,7 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
             padding: 'var(--nx-spacing-4)',
           }}
         >
-          <span className="typography-label-default">Releases</span>
+          <span className="nx:typography-label-default">Releases</span>
           <span>v2.6.0</span>
           <span>v2.5.1</span>
           <span>v2.5.0</span>
@@ -1033,12 +964,6 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
     </div>
   ),
   Spinner: <Nxds.Spinner />,
-  Switch: (
-    <div className="nx:flex nx:items-center nx:gap-2">
-      <Nxds.Switch id="switch" />
-      <Nxds.Label htmlFor="switch">Airplane mode</Nxds.Label>
-    </div>
-  ),
   Table: (
     <Nxds.Table aria-label="Invoices">
       <Nxds.TableHeader>
@@ -1090,11 +1015,6 @@ export const EXAMPLES: Readonly<Record<string, Markup>> = {
         </p>
       </Nxds.TabsContent>
     </Nxds.Tabs>
-  ),
-  Textarea: (
-    <div className="nx:w-[400px]">
-      <Nxds.Textarea placeholder="Tell us about yourself..." />
-    </div>
   ),
   Toggle: (
     <Nxds.Toggle aria-label="Bold">

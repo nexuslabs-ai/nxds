@@ -582,9 +582,6 @@ importers:
 
   packages/figma:
     dependencies:
-      '@nxds/claude-design':
-        specifier: workspace:*
-        version: link:../claude-design
       '@nxds/source-model':
         specifier: workspace:*
         version: link:../source-model
@@ -604,9 +601,6 @@ importers:
       '@figma/plugin-typings':
         specifier: ^1.142.0
         version: 1.142.0
-      '@nxds/core':
-        specifier: workspace:*
-        version: link:../core
       '@types/culori':
         specifier: ^4.0.1
         version: 4.0.1

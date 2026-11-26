@@ -6,13 +6,13 @@
 import type { MarkupElement, MarkupNode } from './page.ts';
 
 /** A part of the app's nxds, such as `Button`, as a JSX tag. */
-export interface Part {
+export interface Part<Name extends string = string> {
   (props: Record<string, unknown>): MarkupElement;
   /** The name the app exports it under. */
-  readonly part: string;
+  readonly part: Name;
 }
 
-export function part(name: string): Part {
+export function part<Name extends string>(name: Name): Part<Name> {
   const tag = (): MarkupElement => {
     throw new Error(`${name} is drawn by the capture page, not called.`);
   };

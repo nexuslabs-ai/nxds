@@ -13,6 +13,8 @@ import { ExportError } from './errors.ts';
 /** An app's nxds setup, as nxds.json and the CLI's setup describe it. */
 export interface AppSetup {
   root: string;
+  /** The nxds release the app's components came from. */
+  version: string;
   /** The nxds folder, relative to `root`. */
   dir: string;
   /** The nxds CSS entry, relative to `root`. */

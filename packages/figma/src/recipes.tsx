@@ -11,11 +11,19 @@ import type { ElementFacts, Override } from './page.ts';
 import * as Nxds from './parts.ts';
 import type { GridSpec } from './spec.ts';
 
+/** A part in parts.ts, such as `Button`, so a mistyped one fails the typecheck. */
+export type PartName = keyof typeof Nxds;
+
+/** Props a recipe sets on a part. */
+interface PartOverride extends Override {
+  part: PartName;
+}
+
 export interface StateSpec {
   /** Props on the recipe's part, or on `on`. */
   props?: Record<string, unknown>;
   /** The part `props` go on, when it isn't the recipe's part. */
-  on?: string;
+  on?: PartName;
   /** Pseudo-classes forced on the captured element. */
   pseudo?: readonly string[];
   /** Attributes set on the captured element after it mounts. */
@@ -28,10 +36,10 @@ export interface Axis {
   name: string;
   /** The prop it sets, on `part` (default: the recipe's part). Its values come from the prop's type unless `values` lists them. */
   prop?: string;
-  part?: string;
+  part?: PartName;
   values?: readonly string[];
   /** What each value sets, for a property no single prop sets, such as which tab is selected. `values` holds every property's value for the variant. */
-  set?: (value: string, values: Record<string, string>) => Override[];
+  set?: (value: string, values: Record<string, string>) => PartOverride[];
 }
 
 export const kebab = (name: string) =>
@@ -54,9 +62,9 @@ export interface Recipe {
   /** What it renders, in place of its card's example. */
   markup?: Markup | ((values: Record<string, string>) => Markup);
   /** The part whose props become variant properties and take each state's props. Default: `name`. */
-  part?: string;
+  part?: PartName;
   /** The part whose props become the default variant properties, and that axes without a `part` set: a part's whole, so the part takes the whole's properties and keeps only those that change its look. Default: `part`. */
-  axesFrom?: string;
+  axesFrom?: PartName;
   /** The variant properties. Default: every string-literal prop of `part`, plus `booleans`. */
   axes?: readonly Axis[];
   /** Boolean props of `part` that become variant properties. */
@@ -183,7 +191,7 @@ const PIE_DATA = [
   { browser: 'Edge', visitors: 173 },
 ];
 
-const chart = (Chart: Part, axes: Partial<Recipe>): Recipe => ({
+const chart = (Chart: Part<PartName>, axes: Partial<Recipe>): Recipe => ({
   name: `Chart/${Chart.part.replace(/Chart$/, '')}`,
   part: Chart.part,
   markup: (
@@ -216,14 +224,14 @@ const NAV_OPEN: Partial<Recipe> = {
 const partOf = (
   card: string,
   name: string,
-  part: string,
+  part: PartName,
   extra: Partial<Recipe> = {}
 ): Recipe => ({ name: `${card}/${name}`, part, axes: [], ...extra });
 
 /** A trigger in the open example, open or closed, such as a menubar's. */
 const triggerOf = (
   card: string,
-  part: string,
+  part: PartName,
   slot: string,
   opener: Partial<Recipe>
 ) =>
@@ -249,9 +257,12 @@ const panelPart = (
   card: string,
   axis: Axis,
   name: string,
-  part: string,
+  part: PartName,
   extra: Partial<Recipe> = {}
 ) => partOf(card, name, part, { ...PANEL, axes: [axis], ...extra });
+
+/** A recipe whose parts are their own components. It names its part, which its parts take their variant properties from. */
+type Whole = Recipe & { part: PartName };
 
 /**
  * A part of `whole`'s example as its own component, `<Card>/<Name>`. It
@@ -259,24 +270,23 @@ const panelPart = (
  * optional parts, and keeps the properties that change how it looks.
  */
 const partIn = (
-  whole: Recipe,
+  whole: Whole,
   name: string,
-  part: string,
+  part: PartName,
   extra: Partial<Recipe> = {}
 ): Recipe => {
-  const owner = whole.part ?? whole.name;
   const states = whole.states
     ? Object.fromEntries(
         Object.entries(whole.states).map(([state, spec]) => [
           state,
-          spec.props ? { ...spec, on: spec.on ?? owner } : spec,
+          spec.props ? { ...spec, on: spec.on ?? whole.part } : spec,
         ])
       )
     : undefined;
   return {
     name: `${cardOf(whole.name)}/${name}`,
     part,
-    axesFrom: owner,
+    axesFrom: whole.part,
     target: `[data-slot=${kebab(part)}]`,
     markup: whole.markup,
     axes: whole.axes,
@@ -421,7 +431,7 @@ const CARD = (
 );
 
 /** The part each kind of pagination link is drawn by. */
-const PAGINATION_PARTS: Record<string, string> = {
+const PAGINATION_PARTS: Record<string, PartName> = {
   page: 'PaginationLink',
   previous: 'PaginationPrevious',
   next: 'PaginationNext',
@@ -446,8 +456,9 @@ const MENU_BUTTON = (withIcon: boolean) => (
 );
 
 // Wholes whose parts are their own components, each part taking the whole's variant properties.
-const AVATAR: Recipe = {
+const AVATAR: Whole = {
   name: 'Avatar',
+  part: 'Avatar',
   markup: (
     <Nxds.Avatar>
       <Nxds.AvatarFallback>AL</Nxds.AvatarFallback>
@@ -455,10 +466,10 @@ const AVATAR: Recipe = {
   ),
   booleans: ['ring'],
 };
-const MARKER: Recipe = { name: 'Marker' };
+const MARKER: Whole = { name: 'Marker', part: 'Marker' };
 const ACCORDION_ITEM_TARGET = ({ Last }: Record<string, string>) =>
   `[data-slot=accordion-item]:${Last === 'true' ? 'last-child' : 'first-child'}`;
-const ACCORDION_ITEM: Recipe = {
+const ACCORDION_ITEM: Whole = {
   name: 'Accordion/Item',
   part: 'AccordionItem',
   axes: [
@@ -497,7 +508,7 @@ const ACCORDION_ITEM: Recipe = {
 /** A part inside an accordion item: its variant is its item's. */
 const accordionPart = (
   name: string,
-  part: string,
+  part: PartName,
   extra: Partial<Recipe> = {}
 ): Recipe =>
   partIn(ACCORDION_ITEM, name, part, {
@@ -515,10 +526,16 @@ const accordionPart = (
         : {};
     },
   });
-const TABS: Recipe = { name: 'Tabs' };
-const TABLE: Recipe = { name: 'Table', booleans: ['striped'], width: 560 };
-const SIDEBAR_WHOLE: Recipe = {
+const TABS: Whole = { name: 'Tabs', part: 'Tabs' };
+const TABLE: Whole = {
+  name: 'Table',
+  part: 'Table',
+  booleans: ['striped'],
+  width: 560,
+};
+const SIDEBAR_WHOLE: Whole = {
   name: 'Sidebar',
+  part: 'Sidebar',
   markup: SIDEBAR,
   axes: [
     { name: 'Variant', prop: 'variant' },
@@ -526,8 +543,9 @@ const SIDEBAR_WHOLE: Recipe = {
   ],
   width: 280,
 };
-const ALERT_WHOLE: Recipe = {
+const ALERT_WHOLE: Whole = {
   name: 'Alert',
+  part: 'Alert',
   markup: ALERT,
   width: 480,
   parts: [
@@ -540,8 +558,9 @@ const ALERT_WHOLE: Recipe = {
     { selector: '[data-slot=alert-actions]', name: 'Actions', default: true },
   ],
 };
-const CARD_WHOLE: Recipe = {
+const CARD_WHOLE: Whole = {
   name: 'Card',
+  part: 'Card',
   markup: CARD,
   width: 360,
   slot: true,
@@ -554,26 +573,27 @@ const CARD_WHOLE: Recipe = {
     { selector: '[data-slot=card-action]', name: 'Action', default: true },
   ],
 };
-const ATTACHMENT: Recipe = { name: 'Attachment' };
-const BUBBLE: Recipe = { name: 'Bubble', exclude: ['side'] };
-const CAROUSEL: Recipe = { name: 'Carousel' };
-const CHOICE_CARD: Recipe = { name: 'ChoiceCard' };
-const CODE_BLOCK: Recipe = { name: 'CodeBlock' };
-const INPUT_GROUP: Recipe = { name: 'InputGroup' };
-const ITEM: Recipe = { name: 'Item' };
-const MESSAGE: Recipe = { name: 'Message' };
-const RESIZABLE: Recipe = {
+const ATTACHMENT: Whole = { name: 'Attachment', part: 'Attachment' };
+const BUBBLE: Whole = { name: 'Bubble', part: 'Bubble', exclude: ['side'] };
+const CAROUSEL: Whole = { name: 'Carousel', part: 'Carousel' };
+const CHOICE_CARD: Whole = { name: 'ChoiceCard', part: 'ChoiceCard' };
+const CODE_BLOCK: Whole = { name: 'CodeBlock', part: 'CodeBlock' };
+const INPUT_GROUP: Whole = { name: 'InputGroup', part: 'InputGroup' };
+const ITEM: Whole = { name: 'Item', part: 'Item' };
+const MESSAGE: Whole = { name: 'Message', part: 'Message' };
+const RESIZABLE: Whole = {
   name: 'Resizable',
   part: 'ResizablePanelGroup',
   target: '[data-slot=resizable-panel-group]',
 };
-const TOOLBAR: Recipe = { name: 'Toolbar' };
-const EMPTY_STATE: Recipe = {
+const TOOLBAR: Whole = { name: 'Toolbar', part: 'Toolbar' };
+const EMPTY_STATE: Whole = {
   name: 'EmptyState',
+  part: 'EmptyState',
   booleans: ['bordered'],
   slot: true,
 };
-const FIELD: Recipe = { name: 'Field' };
+const FIELD: Whole = { name: 'Field', part: 'Field' };
 
 /** In capture order: a component comes after every component it holds an instance of. */
 export const RECIPES: readonly Recipe[] = [
