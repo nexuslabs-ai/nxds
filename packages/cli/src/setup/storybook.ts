@@ -362,7 +362,7 @@ function wirePreview(
 
 /** The files Storybook reads from a `stories` entry that names only a folder. */
 const DEFAULT_STORY_FILES = '**/*.@(mdx|stories.@(js|jsx|mjs|ts|tsx))';
-/** The nxds folder's files that are stories, which the entry `init` adds loads. */
+/** The nxds folder's story files. `init` adds main's entry for them. */
 const NXDS_STORY_FILES = '**/*.stories.tsx';
 
 /**

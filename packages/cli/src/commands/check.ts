@@ -382,13 +382,17 @@ function storiesCheck(
 ) {
   if (!config.stories) return catalog;
   const unsupported = storybookProblem(catalog, project);
+  if (unsupported !== null) {
+    check('stories', false, unsupported);
+    return catalog;
+  }
+  const result = withStories(catalog, project);
   const framework = storybookFramework(catalog, project);
-  const result = unsupported === null ? withStories(catalog, project) : catalog;
-  let problem = unsupported;
+  let problem: string | null = null;
   try {
     if (framework) {
       const { known } = splitInstalled(result, config.items);
-      problem ??= storybookWiringProblem(project, config, framework, {
+      problem = storybookWiringProblem(project, config, framework, {
         tailwind: setupVariant(catalog, config).packages.tailwind,
         files: [...filesOf(result, config, known)],
       });
