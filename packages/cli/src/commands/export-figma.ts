@@ -185,7 +185,7 @@ export async function exportFigma(
   // Figma gets the app: its own components, CSS, provider and colours.
   const app = readConfig(cwd);
   if (!app) {
-    throw new UsageError(
+    throw new CliError(
       `There's no ${CONFIG_FILE} here. The Figma export draws an app's own nxds components, so run it in an app nxds-cli set up, such as examples/figma-app in the nxds repo.`
     );
   }
