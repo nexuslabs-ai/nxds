@@ -313,6 +313,7 @@ export const LabelledBy: Story = {
       <MultiSelect defaultValues={['react', 'vue']}>
         <MultiSelectTrigger
           aria-labelledby="frameworks-heading"
+          aria-label="Tech stack"
           className="nx:w-80"
         >
           <MultiSelectValue placeholder="Select frameworks" />
@@ -334,6 +335,7 @@ export const LabelledBy: Story = {
     const canvas = within(canvasElement);
     const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
+    // The heading names the trigger ahead of its `aria-label`, as ARIA ranks them.
     await expect(trigger).toHaveAccessibleName(/^Frameworks.*React.*Vue/);
   },
 };
