@@ -1811,6 +1811,21 @@ describe('stories', () => {
     expect(body.data.packages).not.toContain('shiki@4.4.3');
   });
 
+  it('views a package only a story imports as a dev dependency', async () => {
+    const release = storiesRelease('0.4.7');
+    Object.assign(reactVariant(release, 'button').stories?.packages.npm ?? {}, {
+      shiki: '4.4.3',
+    });
+    const context = setupStories([release]);
+    await cli(['init', '--stories'], context);
+
+    const { exitCode, body } = await cliJson(['view', 'button'], context);
+
+    expect(exitCode, JSON.stringify(body)).toBe(EXIT_CODES.ok);
+    expect(body.data.devPackages).toEqual(['shiki@4.4.3']);
+    expect(body.data.packages).not.toContain('shiki@4.4.3');
+  });
+
   it('installs no story, and says how to get them, while stories are off', async () => {
     const context = setupStories();
     await cli(['init'], context);
@@ -1930,6 +1945,9 @@ describe('stories', () => {
     // The Button story and the wiring file.
     expect(off.stdout).toContain(
       'Stopped tracking 2 Storybook files in components/nxds.'
+    );
+    expect(off.stdout).toContain(
+      'Delete components/nxds/storybook.tsx only after you remove its import from .storybook/preview.'
     );
     expect(nxdsJson(context.app)).toMatchObject({ stories: false });
     expect(readApp(context.app, NXDS_BUTTON_STORY)).toBe(story);
@@ -2072,20 +2090,29 @@ export default ${exported};
     }
   );
 
-  it('adds its entry when the one for the nxds folder loads no stories', async () => {
-    const context = setupStories();
-    writeApp(
-      context.app,
-      STORYBOOK_MAIN,
-      MAIN_SOURCE.replace('"../stories/**/*.mdx"', '"../components/**/*.mdx"')
-    );
+  it.each([
+    ['loads no stories', '"../components/**/*.mdx"'],
+    [
+      "loads only the components' stories",
+      '"../components/nxds/components/**/*.stories.tsx"',
+    ],
+  ])(
+    'adds its entry when the one for the nxds folder %s',
+    async (_name, entry) => {
+      const context = setupStories();
+      writeApp(
+        context.app,
+        STORYBOOK_MAIN,
+        MAIN_SOURCE.replace('"../stories/**/*.mdx"', entry)
+      );
 
-    await cli(['init', '--stories'], context);
+      await cli(['init', '--stories'], context);
 
-    expect(readApp(context.app, STORYBOOK_MAIN)).toContain(
-      '"../components/nxds/**/*.stories.tsx"'
-    );
-  });
+      expect(readApp(context.app, STORYBOOK_MAIN)).toContain(
+        '"../components/nxds/**/*.stories.tsx"'
+      );
+    }
+  );
 
   it('takes a stories list it cannot read as done once main names the nxds folder', async () => {
     const context = setupStories();
@@ -2150,6 +2177,7 @@ function storyGlobs() {
 
   it.each([
     ['sets its own viteFinal', 'viteFinal: (config) => config,'],
+    ['sets its own quoted viteFinal', '"viteFinal": (config) => config,'],
     ['spreads another config, which may set viteFinal', '...sharedMain,'],
   ])('leaves a main that %s as a step for you', async (_name, member) => {
     const context = setupStories();
@@ -2262,7 +2290,7 @@ function storyGlobs() {
     );
   });
 
-  it('fails the doctor colors check while the preview still derives colors', async () => {
+  it('fails the doctor stories check while the preview still derives colors', async () => {
     const context = setupStories([ownColorsStoriesRelease('0.4.7')]);
     await cli(['init', '--stories', '--own-colors'], context);
     writeApp(
@@ -2274,10 +2302,26 @@ function storyGlobs() {
       )
     );
 
-    expect(await doctorCheck(context, 'colors')).toMatchObject({
+    expect(await doctorCheck(context, 'stories')).toMatchObject({
+      ok: false,
+      message: expect.stringContaining(STORYBOOK_PREVIEW),
+    });
+    expect(await doctorCheck(context, 'colors')).toMatchObject({ ok: true });
+  });
+
+  it('names the preview call that keeps your own colors in the doctor stories step', async () => {
+    const context = setupStories([ownColorsStoriesRelease('0.4.7')]);
+    await cli(['init', '--stories', '--own-colors'], context);
+    writeApp(
+      context.app,
+      STORYBOOK_PREVIEW,
+      "import { sharedPreview } from '@acme/storybook';\n\nexport default sharedPreview;\n"
+    );
+
+    expect(await doctorCheck(context, 'stories')).toMatchObject({
       ok: false,
       message: expect.stringContaining(
-        `still derives colors in ${STORYBOOK_PREVIEW}`
+        'nxdsPreview(defaultAppearance, { deriveColors: false })'
       ),
     });
   });

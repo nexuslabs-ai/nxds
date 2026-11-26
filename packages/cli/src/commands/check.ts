@@ -51,11 +51,7 @@ import {
   rendersDerivedColors,
   VITE_PLUGIN_FILE,
 } from '../setup/react';
-import {
-  previewDerivingColors,
-  storybookProblem,
-  storybookWiringProblem,
-} from '../setup/storybook';
+import { storybookProblem, storybookWiringProblem } from '../setup/storybook';
 import {
   fontImportLine,
   nxdsThemeSource,
@@ -165,13 +161,12 @@ function read(root: string, file: string | undefined) {
 /**
  * The wiring files where the theme engine still derives colors, which would
  * override the app's own: an entry that renders the provider or the head
- * script without `deriveColors={false}`, a Vite theme script without it, and
- * a Storybook preview that wires the app's stories without it.
+ * script without `deriveColors={false}`, and a Vite theme script without it.
+ * The `stories` check covers a Storybook preview.
  */
 function filesDerivingColors(
   root: string,
   project: Project,
-  config: Config,
   entry: string | undefined,
   entrySource: string
 ) {
@@ -183,8 +178,6 @@ function filesDerivingColors(
   ) {
     files.push(VITE_PLUGIN_FILE);
   }
-  const preview = config.stories && previewDerivingColors(project);
-  if (preview) files.push(preview);
   return files;
 }
 
@@ -215,7 +208,7 @@ function ownColorsProblem(
 ) {
   let deriving: string[];
   try {
-    deriving = filesDerivingColors(root, project, config, entry, entrySource);
+    deriving = filesDerivingColors(root, project, entry, entrySource);
   } catch (error) {
     if (!(error instanceof CliError)) throw error;
     return error.message;

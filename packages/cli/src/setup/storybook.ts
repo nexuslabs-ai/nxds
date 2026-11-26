@@ -15,6 +15,7 @@ import {
   isVariableDeclaration,
   type Node,
   type ObjectExpression,
+  type ObjectMethod,
   type ObjectProperty,
   type Program,
 } from '@babel/types';
@@ -35,7 +36,9 @@ import {
   entryDir,
   type ManualStep,
   NO_CHANGES,
+  ownsColors,
   POSTCSS_CONFIGS,
+  turnCallDerivationOff,
   type WiringPlan,
 } from './react';
 import {
@@ -65,6 +68,7 @@ const MAIN_FILES = [
 ];
 /** The wiring file setup's stories bring, in the nxds folder. */
 const WIRING = 'storybook';
+export const WIRING_FILE = `${WIRING}.tsx`;
 const DOCS = 'https://nxds.dev/getting-started/storybook';
 
 /** Whether the app has a Storybook config folder. */
@@ -143,21 +147,27 @@ function hasSpread(object: ObjectExpression) {
   return object.properties.some((member) => isSpreadElement(member));
 }
 
+/** Whether a member's key is `name`, bare or quoted. */
+function hasKey(member: ObjectProperty | ObjectMethod, name: string) {
+  return (
+    isIdentifier(member.key, { name }) ||
+    isStringLiteral(member.key, { value: name })
+  );
+}
+
 /** Whether an object literal has a property or method named `name`. */
 function hasMember(object: ObjectExpression, name: string) {
   return object.properties.some(
     (member) =>
       (isObjectProperty(member) || isObjectMethod(member)) &&
-      isIdentifier(member.key, { name })
+      hasKey(member, name)
   );
 }
 
 function property(object: ObjectExpression, name: string) {
   return object.properties.find(
     (candidate): candidate is ObjectProperty =>
-      isObjectProperty(candidate) &&
-      (isIdentifier(candidate.key, { name }) ||
-        isStringLiteral(candidate.key, { value: name }))
+      isObjectProperty(candidate) && hasKey(candidate, name)
   );
 }
 
@@ -264,49 +274,6 @@ const DERIVED_PREVIEW = 'nxdsPreview(defaultAppearance)';
 const OWN_COLORS_PREVIEW = `nxdsPreview(defaultAppearance, { ${DERIVE_COLORS_OFF_OPTION} })`;
 
 /**
- * Turns color derivation off in a preview `init` wired earlier. One that
- * calls `nxdsPreview` another way is a manual step.
- */
-function turnDerivationOff(source: string, file: string): WiringPlan {
-  if (source.includes(DERIVE_COLORS_OFF_OPTION)) return NO_CHANGES;
-  if (!source.includes(DERIVED_PREVIEW)) {
-    return {
-      changes: [],
-      manual: [
-        {
-          file,
-          step: `Pass { ${DERIVE_COLORS_OFF_OPTION} } as the second argument of nxdsPreview.`,
-        },
-      ],
-    };
-  }
-  return {
-    changes: [
-      {
-        path: file,
-        content: source.replace(DERIVED_PREVIEW, OWN_COLORS_PREVIEW),
-        created: false,
-      },
-    ],
-    manual: [],
-  };
-}
-
-/**
- * The preview file, when it wires nxds's stories with color derivation on,
- * which overrides an app's own colors.
- */
-export function previewDerivingColors(project: Project) {
-  const file = findFile(project, PREVIEW_FILES);
-  if (!file) return undefined;
-  const source = read(project, file);
-  return source.includes('nxdsPreview') &&
-    !source.includes(DERIVE_COLORS_OFF_OPTION)
-    ? file
-    : undefined;
-}
-
-/**
  * Wires nxds into `.storybook/preview`: the nxds CSS entry, and the appearance
  * decorator, toolbar and accessibility settings from the wiring file. A
  * preview the edit can't extend is a manual step. For an app's own colors,
@@ -357,7 +324,12 @@ function wirePreview(
 
   const source = read(project, file);
   if (source.includes('nxdsPreview')) {
-    return ownColors ? turnDerivationOff(source, file) : NO_CHANGES;
+    if (!ownColors) return NO_CHANGES;
+    return turnCallDerivationOff(file, source, {
+      derived: DERIVED_PREVIEW,
+      own: OWN_COLORS_PREVIEW,
+      callee: 'nxdsPreview',
+    });
   }
   const program = parseModule(source, file);
   const preview = exportedObject(program);
@@ -390,8 +362,11 @@ function wirePreview(
 
 /** The files Storybook reads from a `stories` entry that names only a folder. */
 const DEFAULT_STORY_FILES = '**/*.@(mdx|stories.@(js|jsx|mjs|ts|tsx))';
-/** Where a component's story sits in the nxds folder, to try an entry on. */
-const SAMPLE_STORY = 'components/button/Button.stories.tsx';
+/** Where a component's and a block's story sit in the nxds folder, to try entries on. */
+const SAMPLE_STORIES = [
+  'components/button/Button.stories.tsx',
+  'blocks/editing/inline-edit/InlineEdit.stories.tsx',
+];
 
 /**
  * A `stories` entry as one glob, from `.storybook`: the glob it is, or its
@@ -411,17 +386,16 @@ function storiesGlob(entry: Node | null) {
 }
 
 /**
- * Whether a `stories` entry loads the stories in the nxds folder, matched as
- * Storybook matches them.
+ * Whether a `stories` list loads the stories in the nxds folder, components'
+ * and blocks' alike, matched as Storybook matches them.
  */
-function loadsStories(entry: Node | null, dir: string) {
-  const glob = storiesGlob(entry);
-  return (
-    glob !== null &&
-    picomatch.isMatch(
-      `${dir}/${SAMPLE_STORY}`,
-      path.posix.join(STORYBOOK_DIR, glob)
-    )
+function loadsStories(stories: ArrayExpression, dir: string) {
+  const globs = stories.elements
+    .map(storiesGlob)
+    .filter((glob) => glob !== null)
+    .map((glob) => path.posix.join(STORYBOOK_DIR, glob));
+  return SAMPLE_STORIES.every((sample) =>
+    picomatch.isMatch(`${dir}/${sample}`, globs)
   );
 }
 
@@ -484,10 +458,7 @@ function wireMain(
   if (!isArrayExpression(stories) && !source.includes(folder)) {
     manual.push({ file: target, step: `Add '${glob}' to stories.` });
   }
-  if (
-    isArrayExpression(stories) &&
-    !stories.elements.some((entry) => loadsStories(entry, config.dir))
-  ) {
+  if (isArrayExpression(stories) && !loadsStories(stories, config.dir)) {
     // The entry takes the quotes the file's other entries use.
     const written = stories.elements.find((entry) => isStringLiteral(entry));
     const quote = written ? source.charAt(startOf(written)) : "'";
@@ -553,8 +524,8 @@ export function planStorybook(
 
 /**
  * Why the installed stories won't render as nxds's own do, or null: what
- * `init --stories` would still edit, or leave as a step for you. Doctor's
- * `colors` check covers a preview that still derives colors.
+ * `init --stories` would still edit, or leave as a step for you. That covers a
+ * preview that derives colors over the app's own.
  */
 export function storybookWiringProblem(
   project: Project,
@@ -565,7 +536,7 @@ export function storybookWiringProblem(
   const { changes, manual } = planStorybook(project, config, framework, {
     tailwind,
     addsTailwind: false,
-    ownColors: false,
+    ownColors: ownsColors(project, config),
   });
   const [step] = manual;
   if (step) return `${step.file}: ${step.step}`;

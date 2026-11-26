@@ -65,7 +65,8 @@ If your Storybook has no `storybook` Vitest project, add the addon with
 Stories start from `defaultAppearance` in your `appearance-state.ts`.
 
 If your app sets [its own colors](/theming/own-colors), `init` passes
-`{ deriveColors: false }` to `nxdsPreview`, so stories show your colors.
+`{ deriveColors: false }` to `nxdsPreview`, so stories show your colors. The
+toolbar then has no brand color or surface tone menu.
 
 ## Wire the preview by hand
 
@@ -119,7 +120,8 @@ npx nxds-cli@latest init --no-stories
 `init --no-stories` leaves the story files where they are, and prints how many
 it left. `add`, `update` and `diff` stop copying and tracking them. Delete the
 ones you don't need, because `update` no longer changes a story when its
-component changes.
+component changes. Delete `storybook.tsx` only after you remove its import from
+`.storybook/preview`.
 
 `init` records `"stories": false` in `nxds.json`, so `add` stops suggesting
 stories.

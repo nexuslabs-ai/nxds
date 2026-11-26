@@ -115,6 +115,10 @@ function projectReact(cwd: string): ReactMajor {
   return 'react' in project.dependencies ? reactMajor(project) : 19;
 }
 
+function packageSpecs(packages: Record<string, string> = {}) {
+  return Object.entries(packages).map(([pkg, range]) => `${pkg}@${range}`);
+}
+
 export async function view(
   cwd: string,
   registry: string,
@@ -132,10 +136,8 @@ export async function view(
     framework: projectFramework(config, catalog),
     react,
   });
-  const packages = Object.entries({
-    ...variant.packages.npm,
-    ...variant.packages.dev,
-  }).map(([pkg, range]) => `${pkg}@${range}`);
+  const packages = packageSpecs(variant.packages.npm);
+  const devPackages = packageSpecs(variant.packages.dev);
   const needs = variant.items.filter((other) => other !== SETUP);
   return {
     data: {
@@ -143,6 +145,7 @@ export async function view(
       docs: item.docs,
       items: variant.items,
       packages,
+      devPackages,
       files: variant.files.map((file) => file.path),
     },
     lines: [
@@ -151,6 +154,9 @@ export async function view(
       `Docs: ${item.docs}`,
       ...(needs.length > 0 ? [`Also installs: ${needs.join(', ')}`] : []),
       ...(packages.length > 0 ? [`Packages: ${packages.join(' ')}`] : []),
+      ...(devPackages.length > 0
+        ? [`Dev packages: ${devPackages.join(' ')}`]
+        : []),
       'Files:',
       ...variant.files.map((file) => `  ${file.path}`),
     ],

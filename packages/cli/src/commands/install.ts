@@ -50,6 +50,7 @@ import {
   hasStorybook,
   planStorybook,
   storybookProblem,
+  WIRING_FILE,
 } from '../setup/storybook';
 import {
   nxdsThemeSource,
@@ -421,11 +422,7 @@ export async function init(
       ...installLines(config, result, options),
       ...created.map((file) => `${createVerb} ${file}`),
       ...edited.map((file) => `${editVerb} ${file}`),
-      ...(untracked.length > 0
-        ? [
-            `${options.dryRun ? 'Would stop' : 'Stopped'} tracking ${untracked.length} Storybook ${untracked.length === 1 ? 'file' : 'files'} in ${config.dir}. \`${CLI_COMMAND} update\` no longer changes them, so delete the ones you don't need.`,
-          ]
-        : []),
+      ...untrackedLines(config, untracked, options.dryRun),
       ...manualLines(wiring.manual),
       ...storiesHint(release, project, config),
       ...(done && !options.dryRun
@@ -436,6 +433,20 @@ export async function init(
     ],
     ok: done,
   };
+}
+
+/** What `init --no-stories` says about the Storybook files it leaves behind. */
+function untrackedLines(config: Config, untracked: string[], dryRun: boolean) {
+  if (untracked.length === 0) return [];
+  const lines = [
+    `${dryRun ? 'Would stop' : 'Stopped'} tracking ${untracked.length} Storybook ${untracked.length === 1 ? 'file' : 'files'} in ${config.dir}. \`${CLI_COMMAND} update\` no longer changes them, so delete the ones you don't need.`,
+  ];
+  if (untracked.includes(WIRING_FILE)) {
+    lines.push(
+      `Delete ${config.dir}/${WIRING_FILE} only after you remove its import from .storybook/preview.`
+    );
+  }
+  return lines;
 }
 
 function manualLines(manual: ManualStep[]) {
