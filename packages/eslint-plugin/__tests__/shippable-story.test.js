@@ -63,6 +63,8 @@ ruleTester.run('shippable-story', rule, {
     `<AvatarImage src={STARTER_AVATARS[0].src} alt="Ada Lovelace" />`,
     `<a href="/settings/billing">Billing</a>`,
     `<img src="https://example.com/ada.svg" alt="" />`,
+    // Passing a class on to an element reads no element's classes.
+    `<Badge className={status.className}>{status.label}</Badge>`,
     {
       code: `import { PhDownloadSimple } from '@phosphor-icons/vue';
              import type { Meta, StoryObj } from '@storybook/vue3-vite';
@@ -77,7 +79,23 @@ ruleTester.run('shippable-story', rule, {
   invalid: [
     {
       code: `await expect(button).toHaveClass('nx:underline-offset-4');`,
-      errors: [{ messageId: 'classAssertion' }],
+      errors: [{ messageId: 'classAssertion', data: { name: 'toHaveClass' } }],
+    },
+    {
+      code: `await expect(dialog.className).toContain('nx:max-w-xs');`,
+      errors: [{ messageId: 'classAssertion', data: { name: 'className' } }],
+    },
+    {
+      code: `await expect(input.classList.contains('nx:border-0')).toBe(true);`,
+      errors: [{ messageId: 'classAssertion', data: { name: 'classList' } }],
+    },
+    {
+      code: `const classes = Array.from(chart.classList);`,
+      errors: [{ messageId: 'classAssertion', data: { name: 'classList' } }],
+    },
+    {
+      code: `const spinners = canvasElement.getElementsByClassName('nx:animate-spin');`,
+      errors: [{ messageId: 'classSelector' }],
     },
     {
       code: `await expect(surface).not.toHaveClass('nx:data-[state=open]:animate-in');`,

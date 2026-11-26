@@ -162,9 +162,9 @@ in the `*.test.stories.*` file beside it:
 
 | Pattern                                                                                   | Use instead                                     |
 | ----------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `toHaveClass`                                                                             | A role, name, state or data attribute assertion |
+| `toHaveClass`, or a read of `classList` or `className`                                    | A role, name, state or data attribute assertion |
 | `getComputedStyle`, `toHaveStyle`, `getBoundingClientRect`, `offset*` and `client*` sizes | The test stories file                           |
-| A class in a `querySelector`, `closest` or `matches` selector                             | A role, label, text, `data-slot` or test id     |
+| A class in a `querySelector`, `closest` or `matches` selector, `getElementsByClassName`   | A role, label, text, `data-slot` or test id     |
 | An import from `stories/support`, or one with a query such as `?raw`                      | The test stories file                           |
 | A Storybook import other than `storybookImports`                                          | The test stories file                           |
 | An icon package other than `iconImports`                                                  | The icons the catalog rewrites per icon library |

@@ -40,6 +40,8 @@ const SELECTOR_CALLS = new Set([
   'matches',
 ]);
 
+const CLASS_PROPERTIES = new Set(['classList', 'className']);
+
 const ASSET_ATTRIBUTES = new Set(['src', 'srcSet', 'poster']);
 const MARKUP_ASSET = /\bsrc="(\/(?!\/)[^"]*)"/;
 
@@ -120,11 +122,11 @@ export default {
     ],
     messages: {
       classAssertion:
-        '`toHaveClass` pins nxds’s own classes, so it fails once an app restyles the component. Move it to the test stories file.',
+        '`{{name}}` pins nxds’s own classes, so it fails once an app restyles the component. Move it to the test stories file.',
       measurement:
         '`{{name}}` reads layout or computed CSS, which depends on the app’s viewport, fonts and Storybook setup. Move it to the test stories file.',
       classSelector:
-        'A class selector depends on nxds’s own classes. Find the element by role, label, text, `data-slot` or test id.',
+        'Finding an element by class depends on nxds’s own classes. Find it by role, label, text, `data-slot` or test id.',
       helperImport:
         '`{{source}}` is a test helper that doesn’t ship. Use it in the test stories file.',
       bundlerImport:
@@ -212,11 +214,15 @@ export default {
       CallExpression(node) {
         const name = calleeName(node);
         if (name === 'toHaveClass') {
-          context.report({ node, messageId: 'classAssertion' });
+          context.report({ node, messageId: 'classAssertion', data: { name } });
           return;
         }
         if (MEASURING_CALLS.has(name)) {
           context.report({ node, messageId: 'measurement', data: { name } });
+          return;
+        }
+        if (name === 'getElementsByClassName') {
+          context.report({ node, messageId: 'classSelector' });
           return;
         }
         if (!SELECTOR_CALLS.has(name)) return;
@@ -236,6 +242,19 @@ export default {
           context.report({
             node: node.property,
             messageId: 'measurement',
+            data: { name },
+          });
+          return;
+        }
+        // `className={item.className}` passes a class on. Any other read
+        // checks one.
+        if (
+          CLASS_PROPERTIES.has(name) &&
+          node.parent.type !== 'JSXExpressionContainer'
+        ) {
+          context.report({
+            node: node.property,
+            messageId: 'classAssertion',
             data: { name },
           });
         }
