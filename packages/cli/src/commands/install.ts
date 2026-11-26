@@ -93,6 +93,11 @@ function installLines(
     ...(result.packages.length > 0
       ? [`${packagesVerb(options)} ${result.packages.join(' ')}`]
       : []),
+    ...(result.devPackages.length > 0
+      ? [
+          `${packagesVerb(options)} dev dependencies ${result.devPackages.join(' ')}`,
+        ]
+      : []),
     ...result.cssImports.map(
       (line) => `${dryRun ? 'Would add' : 'Added'} ${line}`
     ),
@@ -117,14 +122,33 @@ function assertFilesMatchReact(config: Config, react: ReactMajor) {
 }
 
 /**
- * A line that tells an app with Storybook it can have stories, when it has
- * none and its release ships them.
+ * A line that tells an app with Storybook it can have stories, when its
+ * release ships them and it has turned them neither on nor off.
  */
 function storiesHint(release: Catalog, project: Project, config: Config) {
-  if (config.stories || !release.storybook || !hasStorybook(project)) return [];
+  if (
+    config.stories !== undefined ||
+    !release.storybook ||
+    !hasStorybook(project)
+  ) {
+    return [];
+  }
   return [
     `Storybook found. Run \`${CLI_COMMAND} init --stories\` to get each item's stories.`,
   ];
+}
+
+/**
+ * The installed items' story files, and the Storybook wiring, that are in the
+ * app. `catalog` holds them apart from each item's own files.
+ */
+function storyFilesInApp(catalog: Catalog, project: Project, config: Config) {
+  const files = resolveItems(catalog, config.framework, config.items)
+    .flatMap((item) => variantFor(item, config).stories?.files ?? [])
+    .map((file) => file.path);
+  return [...new Set(files)].filter((file) =>
+    existsSync(path.join(project.root, config.dir, file))
+  );
 }
 
 function nxdsDir(dir: string) {
@@ -251,8 +275,8 @@ export async function init(
     }
     config.stories = true;
   }
-  // The story files stay where they are; nxds stops installing and tracking them.
-  if (options.stories === false) delete config.stories;
+  // nxds stops installing, tracking and suggesting stories. The files stay.
+  if (options.stories === false) config.stories = false;
   const icons = pickedIconLibrary(release, options.icons);
   config.iconLibrary =
     icons ?? config.iconLibrary ?? release.iconLibraries[0]?.name;
@@ -272,17 +296,28 @@ export async function init(
   if (custom) config.theme = flags;
   else delete config.theme;
   const catalog = appCatalog(release, config, project);
+  // The files that turning stories off leaves behind, for the app to keep or
+  // delete: `update` no longer changes them.
+  const untracked =
+    before.stories && options.stories === false
+      ? storyFilesInApp(catalog, project, config)
+      : [];
   // A new icon library rewrites `lib/icons.ts` and the stories' icons in every
   // installed item, from the files the old library gave them.
   const switched =
     existing !== null && icons !== undefined && icons !== before.iconLibrary;
   // Turning stories on installs the stories of every installed item.
   const addedStories = existing !== null && config.stories && !before.stories;
+  const reinstall = switched || addedStories;
 
   const setup = setupVariant(catalog, config);
   const framework = config.stories && storybookFramework(catalog, project);
   const storybook = framework
-    ? planStorybook(project, config, framework, setup.packages.tailwind)
+    ? planStorybook(project, config, framework, {
+        tailwind: setup.packages.tailwind,
+        addsTailwind: addTailwind,
+        ownColors: options.ownColors === true || ownsColors(project, config),
+      })
     : { changes: [], manual: [], devPackages: {} };
   const app = planWiring(
     project,
@@ -310,9 +345,18 @@ export async function init(
     catalog,
     project,
     config,
-    switched || addedStories ? [SETUP, ...config.items] : [SETUP],
-    switched
-      ? releaseFiles(appCatalog(release, before, project), config)
+    reinstall ? [SETUP, ...config.items] : [SETUP],
+    // An edited file merges from this release as the old icon library drew
+    // it, with the stories the app now has.
+    reinstall
+      ? releaseFiles(
+          appCatalog(
+            release,
+            { ...config, iconLibrary: before.iconLibrary },
+            project
+          ),
+          config
+        )
       : null,
     options,
     Object.fromEntries(fonts.map((font) => [font.package, font.range]))
@@ -340,7 +384,10 @@ export async function init(
     edited.push(config.css);
   }
 
-  const packages = [...devPackages, ...installed.packages];
+  const result = {
+    ...installed,
+    devPackages: [...devPackages, ...installed.devPackages],
+  };
   const iconsLabel = release.iconLibraries.find(
     (library) => library.name === config.iconLibrary
   )?.label;
@@ -363,21 +410,24 @@ export async function init(
       stories: config.stories === true,
       theme: flags,
       dryRun: options.dryRun,
-      ...installed,
-      packages,
+      ...result,
       created,
       edited,
+      untracked,
       manual: wiring.manual,
     },
     lines: [
       `nxds ${config.version} in ${config.dir}, for React ${config.react}${extras.length > 0 ? `, with ${extras.join(' and ')}` : ''}`,
-      ...installLines(config, { ...installed, packages }, options),
+      ...installLines(config, result, options),
       ...created.map((file) => `${createVerb} ${file}`),
       ...edited.map((file) => `${editVerb} ${file}`),
+      ...(untracked.length > 0
+        ? [
+            `${options.dryRun ? 'Would stop' : 'Stopped'} tracking ${untracked.length} Storybook ${untracked.length === 1 ? 'file' : 'files'} in ${config.dir}. \`${CLI_COMMAND} update\` no longer changes them, so delete the ones you don't need.`,
+          ]
+        : []),
       ...manualLines(wiring.manual),
-      ...(options.stories === false
-        ? []
-        : storiesHint(release, project, config)),
+      ...storiesHint(release, project, config),
       ...(done && !options.dryRun
         ? [
             `nxds is set up. Add a component with \`${CLI_COMMAND} add button\`.`,

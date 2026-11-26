@@ -51,7 +51,11 @@ import {
   rendersDerivedColors,
   VITE_PLUGIN_FILE,
 } from '../setup/react';
-import { storybookProblem, storybookWiringProblem } from '../setup/storybook';
+import {
+  previewDerivingColors,
+  storybookProblem,
+  storybookWiringProblem,
+} from '../setup/storybook';
 import {
   fontImportLine,
   nxdsThemeSource,
@@ -161,11 +165,13 @@ function read(root: string, file: string | undefined) {
 /**
  * The wiring files where the theme engine still derives colors, which would
  * override the app's own: an entry that renders the provider or the head
- * script without `deriveColors={false}`, and a Vite theme script without it.
+ * script without `deriveColors={false}`, a Vite theme script without it, and
+ * a Storybook preview that wires the app's stories without it.
  */
 function filesDerivingColors(
   root: string,
   project: Project,
+  config: Config,
   entry: string | undefined,
   entrySource: string
 ) {
@@ -177,6 +183,8 @@ function filesDerivingColors(
   ) {
     files.push(VITE_PLUGIN_FILE);
   }
+  const preview = config.stories && previewDerivingColors(project);
+  if (preview) files.push(preview);
   return files;
 }
 
@@ -207,7 +215,7 @@ function ownColorsProblem(
 ) {
   let deriving: string[];
   try {
-    deriving = filesDerivingColors(root, project, entry, entrySource);
+    deriving = filesDerivingColors(root, project, config, entry, entrySource);
   } catch (error) {
     if (!(error instanceof CliError)) throw error;
     return error.message;
@@ -307,7 +315,10 @@ function reactChecks(project: Project, config: Config): Check[] {
   return checks;
 }
 
-/** Each package the installed items need that is missing or below range. */
+/**
+ * Each package the installed items need, their stories' dev dependencies
+ * included, that is missing or below range.
+ */
 function packageProblems(
   project: Project,
   config: Config,
@@ -315,7 +326,10 @@ function packageProblems(
 ) {
   const needed: Record<string, string> = Object.assign(
     {},
-    ...items.map((item) => variantFor(item, config).packages.npm)
+    ...items.flatMap((item) => {
+      const { npm, dev } = variantFor(item, config).packages;
+      return [dev, npm];
+    })
   );
   return Object.entries(needed).flatMap(([name, range]) => {
     if (!(name in project.dependencies))

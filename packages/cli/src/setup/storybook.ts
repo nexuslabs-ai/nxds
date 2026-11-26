@@ -8,6 +8,7 @@ import {
   isObjectExpression,
   isObjectMethod,
   isObjectProperty,
+  isSpreadElement,
   isStringLiteral,
   isTSAsExpression,
   isTSSatisfiesExpression,
@@ -19,10 +20,12 @@ import {
 } from '@babel/types';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import picomatch from 'picomatch';
 import { minVersion, satisfies, validRange } from 'semver';
 
 import { type Catalog, storybookFramework } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
+import { DERIVE_COLORS_OFF_OPTION } from '../colors';
 import type { Config } from '../config';
 import { relativeImport } from '../files';
 import { installedVersion } from '../packages';
@@ -31,6 +34,7 @@ import { findFile, type Project } from '../project';
 import {
   entryDir,
   type ManualStep,
+  NO_CHANGES,
   POSTCSS_CONFIGS,
   type WiringPlan,
 } from './react';
@@ -134,6 +138,11 @@ function exportedObject(program: Program): ObjectExpression | undefined {
   return objectOf(declaration);
 }
 
+/** Whether an object literal spreads another in, which may set any member. */
+function hasSpread(object: ObjectExpression) {
+  return object.properties.some((member) => isSpreadElement(member));
+}
+
 /** Whether an object literal has a property or method named `name`. */
 function hasMember(object: ObjectExpression, name: string) {
   return object.properties.some(
@@ -198,9 +207,11 @@ const A11Y_LEVELS = [
 /**
  * The edits that add nxds's decorator, toolbar and accessibility settings to
  * a preview object, keeping what it sets itself. Null when one of them is
- * written in a way the edit can't extend, such as a variable.
+ * written in a way the edit can't extend, such as a variable, or when an
+ * object the edit adds a member to has a spread, which may set that member.
  */
 function previewInsertions(source: string, preview: ObjectExpression) {
+  if (hasSpread(preview)) return null;
   const insertions: Insertion[] = [];
   /** The properties the preview lacks. */
   const added: string[] = [];
@@ -233,7 +244,7 @@ function previewInsertions(source: string, preview: ObjectExpression) {
   let object = preview;
   for (const [name, from] of A11Y_LEVELS) {
     const value = own(object, name);
-    if (value && !isObjectExpression(value)) return null;
+    if (value && (!isObjectExpression(value) || hasSpread(value))) return null;
     if (value) {
       object = value;
       continue;
@@ -249,24 +260,73 @@ function previewInsertions(source: string, preview: ObjectExpression) {
   return null;
 }
 
+const DERIVED_PREVIEW = 'nxdsPreview(defaultAppearance)';
+const OWN_COLORS_PREVIEW = `nxdsPreview(defaultAppearance, { ${DERIVE_COLORS_OFF_OPTION} })`;
+
+/**
+ * Turns color derivation off in a preview `init` wired earlier. One that
+ * calls `nxdsPreview` another way is a manual step.
+ */
+function turnDerivationOff(source: string, file: string): WiringPlan {
+  if (source.includes(DERIVE_COLORS_OFF_OPTION)) return NO_CHANGES;
+  if (!source.includes(DERIVED_PREVIEW)) {
+    return {
+      changes: [],
+      manual: [
+        {
+          file,
+          step: `Pass { ${DERIVE_COLORS_OFF_OPTION} } as the second argument of nxdsPreview.`,
+        },
+      ],
+    };
+  }
+  return {
+    changes: [
+      {
+        path: file,
+        content: source.replace(DERIVED_PREVIEW, OWN_COLORS_PREVIEW),
+        created: false,
+      },
+    ],
+    manual: [],
+  };
+}
+
+/**
+ * The preview file, when it wires nxds's stories with color derivation on,
+ * which overrides an app's own colors.
+ */
+export function previewDerivingColors(project: Project) {
+  const file = findFile(project, PREVIEW_FILES);
+  if (!file) return undefined;
+  const source = read(project, file);
+  return source.includes('nxdsPreview') &&
+    !source.includes(DERIVE_COLORS_OFF_OPTION)
+    ? file
+    : undefined;
+}
+
 /**
  * Wires nxds into `.storybook/preview`: the nxds CSS entry, and the appearance
  * decorator, toolbar and accessibility settings from the wiring file. A
- * preview the edit can't extend is a manual step.
+ * preview the edit can't extend is a manual step. For an app's own colors,
+ * the stories don't derive colors either.
  */
 function wirePreview(
   project: Project,
   config: Config,
-  framework: string
+  framework: string,
+  ownColors: boolean
 ): WiringPlan {
   const file = findFile(project, PREVIEW_FILES) ?? DEFAULT_PREVIEW;
   const wiring = relativeImport(file, `${config.dir}/${WIRING}`);
+  const call = ownColors ? OWN_COLORS_PREVIEW : DERIVED_PREVIEW;
   const lines = [
     `import '${relativeImport(file, config.css)}';`,
     `import { nxdsPreview } from '${wiring}';`,
     `import { defaultAppearance } from '${relativeImport(file, `${entryDir(project)}/appearance-state`)}';`,
     '',
-    'const nxds = nxdsPreview(defaultAppearance);',
+    `const nxds = ${call};`,
   ];
   if (!existsSync(path.join(project.root, file))) {
     return {
@@ -296,7 +356,9 @@ function wirePreview(
   }
 
   const source = read(project, file);
-  if (source.includes('nxdsPreview')) return { changes: [], manual: [] };
+  if (source.includes('nxdsPreview')) {
+    return ownColors ? turnDerivationOff(source, file) : NO_CHANGES;
+  }
   const program = parseModule(source, file);
   const preview = exportedObject(program);
   const insertions = preview && previewInsertions(source, preview);
@@ -306,7 +368,7 @@ function wirePreview(
       manual: [
         {
           file,
-          step: `Import your nxds CSS entry and nxdsPreview from '${wiring}', then add its decorators, parameters, globalTypes and initialGlobals to the preview. See ${DOCS}.`,
+          step: `Import your nxds CSS entry and nxdsPreview from '${wiring}', then add the decorators, parameters, globalTypes and initialGlobals of ${call} to the preview. See ${DOCS}.`,
         },
       ],
     };
@@ -326,26 +388,40 @@ function wirePreview(
   };
 }
 
-/** The folder a `stories` entry names, as written: its glob, or its `directory`. */
-function storiesEntry(entry: Node | null) {
-  if (isStringLiteral(entry)) return entry.value;
+/** The files Storybook reads from a `stories` entry that names only a folder. */
+const DEFAULT_STORY_FILES = '**/*.@(mdx|stories.@(js|jsx|mjs|ts|tsx))';
+/** Where a component's story sits in the nxds folder, to try an entry on. */
+const SAMPLE_STORY = 'components/button/Button.stories.tsx';
+
+/**
+ * A `stories` entry as one glob, from `.storybook`: the glob it is, or its
+ * folder with the files Storybook reads there.
+ */
+function storiesGlob(entry: Node | null) {
+  if (isStringLiteral(entry)) {
+    return picomatch.scan(entry.value).isGlob
+      ? entry.value
+      : `${entry.value}/${DEFAULT_STORY_FILES}`;
+  }
   if (!isObjectExpression(entry)) return null;
   const directory = property(entry, 'directory')?.value;
-  return isStringLiteral(directory) ? directory.value : null;
+  if (!isStringLiteral(directory)) return null;
+  const files = property(entry, 'files')?.value;
+  return `${directory.value}/${isStringLiteral(files) ? files.value : DEFAULT_STORY_FILES}`;
 }
 
-/** Whether a `stories` entry's folder is the nxds folder or one above it. */
-function coversDir(entry: Node | null, dir: string) {
-  const written = storiesEntry(entry);
-  if (written === null) return false;
-  // A glob covers the folder its fixed part names.
-  const base = written.split(/[*{[(@!?]/)[0] ?? '';
-  const folder = path.posix.join(STORYBOOK_DIR, base).replace(/\/+$/, '');
+/**
+ * Whether a `stories` entry loads the stories in the nxds folder, matched as
+ * Storybook matches them.
+ */
+function loadsStories(entry: Node | null, dir: string) {
+  const glob = storiesGlob(entry);
   return (
-    folder === '.' ||
-    /^\.\.(\/\.\.)*$/.test(folder) ||
-    dir === folder ||
-    dir.startsWith(`${folder}/`)
+    glob !== null &&
+    picomatch.isMatch(
+      `${dir}/${SAMPLE_STORY}`,
+      path.posix.join(STORYBOOK_DIR, glob)
+    )
   );
 }
 
@@ -369,16 +445,26 @@ type MainPlan = WiringPlan & {
   devPackages: Record<string, string>;
 };
 
+/** What the app's files don't show about it yet. */
+type StorybookApp = {
+  /** The Tailwind range the release installs. */
+  tailwind: string;
+  /** Whether `init` is adding Tailwind to the app's build in this run. */
+  addsTailwind: boolean;
+  /** Whether the app sets its own colors. */
+  ownColors: boolean;
+};
+
 /**
- * What `.storybook/main` needs for the nxds stories: an entry that covers the
- * nxds folder, and Tailwind's Vite plugin where the app's build runs Tailwind
- * out of Storybook's sight, as Next.js with Turbopack does. Each part the edit
- * can't add is a manual step.
+ * What `.storybook/main` needs for the nxds stories: an entry that loads the
+ * nxds folder's stories, and Tailwind's Vite plugin where the app's build runs
+ * Tailwind out of Storybook's sight, as Next.js with Turbopack does. Each part
+ * the edit can't add is a manual step.
  */
 function wireMain(
   project: Project,
   config: Config,
-  tailwind: string
+  { tailwind, addsTailwind }: StorybookApp
 ): MainPlan {
   const file = findFile(project, MAIN_FILES);
   const source = file ? read(project, file) : '';
@@ -390,20 +476,29 @@ function wireMain(
   const manual: ManualStep[] = [];
   const devPackages: Record<string, string> = {};
 
-  const glob = `${relativeImport(`${STORYBOOK_DIR}/main`, config.dir)}/**/*.stories.tsx`;
+  const folder = relativeImport(`${STORYBOOK_DIR}/main`, config.dir);
+  const glob = `${folder}/**/*.stories.tsx`;
   const stories = main && property(main, 'stories')?.value;
-  if (!isArrayExpression(stories)) {
+  // A `stories` the edit can't read, such as a function, is a step for you,
+  // done once main names the nxds folder.
+  if (!isArrayExpression(stories) && !source.includes(folder)) {
     manual.push({ file: target, step: `Add '${glob}' to stories.` });
-  } else if (!stories.elements.some((entry) => coversDir(entry, config.dir))) {
+  }
+  if (
+    isArrayExpression(stories) &&
+    !stories.elements.some((entry) => loadsStories(entry, config.dir))
+  ) {
     // The entry takes the quotes the file's other entries use.
     const written = stories.elements.find((entry) => isStringLiteral(entry));
     const quote = written ? source.charAt(startOf(written)) : "'";
     insertions.push(appended(source, stories, [`${quote}${glob}${quote}`]));
   }
 
-  if (!buildsTailwind(project) && !source.includes(TAILWIND_VITE)) {
+  // Tailwind that `init` is adding goes where Storybook's Vite sees it.
+  const seesTailwind = addsTailwind || buildsTailwind(project);
+  if (!seesTailwind && !source.includes(TAILWIND_VITE)) {
     devPackages[TAILWIND_VITE] = tailwind;
-    if (main && !hasMember(main, 'viteFinal')) {
+    if (main && !hasSpread(main) && !hasMember(main, 'viteFinal')) {
       imports.push(`import tailwindcss from '${TAILWIND_VITE}';`);
       insertions.push(
         appended(source, main, [
@@ -440,16 +535,15 @@ function wireMain(
 /**
  * What `init --stories` writes or edits in `.storybook`: the preview takes
  * nxds's wiring, and main lists the nxds folder's stories and builds its CSS.
- * `tailwind` is the Tailwind range the release installs.
  */
 export function planStorybook(
   project: Project,
   config: Config,
   framework: string,
-  tailwind: string
+  app: StorybookApp
 ): MainPlan {
-  const preview = wirePreview(project, config, framework);
-  const main = wireMain(project, config, tailwind);
+  const preview = wirePreview(project, config, framework, app.ownColors);
+  const main = wireMain(project, config, app);
   return {
     changes: [...preview.changes, ...main.changes],
     manual: [...preview.manual, ...main.manual],
@@ -459,7 +553,8 @@ export function planStorybook(
 
 /**
  * Why the installed stories won't render as nxds's own do, or null: what
- * `init --stories` would still edit, or leave as a step for you.
+ * `init --stories` would still edit, or leave as a step for you. Doctor's
+ * `colors` check covers a preview that still derives colors.
  */
 export function storybookWiringProblem(
   project: Project,
@@ -467,12 +562,11 @@ export function storybookWiringProblem(
   framework: string,
   tailwind: string
 ) {
-  const { changes, manual } = planStorybook(
-    project,
-    config,
-    framework,
-    tailwind
-  );
+  const { changes, manual } = planStorybook(project, config, framework, {
+    tailwind,
+    addsTailwind: false,
+    ownColors: false,
+  });
   const [step] = manual;
   if (step) return `${step.file}: ${step.step}`;
   if (changes.length === 0) return null;

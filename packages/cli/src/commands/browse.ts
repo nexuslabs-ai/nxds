@@ -132,9 +132,10 @@ export async function view(
     framework: projectFramework(config, catalog),
     react,
   });
-  const packages = Object.entries(variant.packages.npm).map(
-    ([pkg, range]) => `${pkg}@${range}`
-  );
+  const packages = Object.entries({
+    ...variant.packages.npm,
+    ...variant.packages.dev,
+  }).map(([pkg, range]) => `${pkg}@${range}`);
   const needs = variant.items.filter((other) => other !== SETUP);
   return {
     data: {

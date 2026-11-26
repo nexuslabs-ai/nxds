@@ -151,7 +151,7 @@ function editedFile(file: string, content: string): FileChange {
   return { path: file, content, created: false };
 }
 
-const NO_CHANGES: WiringPlan = { changes: [], manual: [] };
+export const NO_CHANGES: WiringPlan = { changes: [], manual: [] };
 
 type Steps = ReadonlySet<SetupStep>;
 

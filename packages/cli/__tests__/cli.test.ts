@@ -1693,6 +1693,15 @@ function addStorybook(
   writeApp(app, STORYBOOK_PREVIEW, PREVIEW_SOURCE);
 }
 
+/** Takes `names` out of the app's package.json. */
+function removePackages(app: string, names: string[]) {
+  const manifest = JSON.parse(readApp(app, 'package.json')) as {
+    devDependencies: Record<string, string>;
+  };
+  for (const name of names) delete manifest.devDependencies[name];
+  writeApp(app, 'package.json', JSON.stringify(manifest));
+}
+
 const POSTCSS_CONFIG = 'postcss.config.mjs';
 
 /**
@@ -1708,6 +1717,22 @@ function setupStories(releases: Catalog[] = [storiesRelease('0.4.7')]) {
     "export default { plugins: { '@tailwindcss/postcss': {} } };\n"
   );
   return context;
+}
+
+/** `storiesRelease`, from a nxds whose provider takes `deriveColors`. */
+function ownColorsStoriesRelease(version: string): Catalog {
+  return { ...storiesRelease(version), ownColors: true };
+}
+
+const OWN_COLORS_PREVIEW =
+  'const nxds = nxdsPreview(defaultAppearance, { deriveColors: false })';
+
+type Checks = { name: string; ok: boolean; message: string }[];
+
+/** The doctor check named `name`, if doctor ran it. */
+async function doctorCheck(context: Context, name: string) {
+  const { body } = await cliJson(['doctor'], context);
+  return (body.data.checks as Checks).find((check) => check.name === name);
 }
 
 describe('stories', () => {
@@ -1768,6 +1793,24 @@ describe('stories', () => {
     expect(body.data.packages).toContain('@tabler/icons-react@^3.36.1');
   });
 
+  it('installs a package only a story imports as a dev dependency', async () => {
+    const release = storiesRelease('0.4.7');
+    // As CodeBlock's story imports shiki, which no item needs to run.
+    Object.assign(reactVariant(release, 'button').stories?.packages.npm ?? {}, {
+      shiki: '4.4.3',
+    });
+    const context = setupStories([release]);
+    await cli(['init', '--stories'], context);
+
+    const { exitCode, body } = await cliJson(['add', 'button'], context);
+
+    expect(exitCode, JSON.stringify(body)).toBe(EXIT_CODES.ok);
+    expect(body.data.devPackages).toEqual(['shiki@4.4.3']);
+    // Items draw their own icons with Tabler, so it stays a dependency.
+    expect(body.data.packages).toContain('@tabler/icons-react@^3.36.1');
+    expect(body.data.packages).not.toContain('shiki@4.4.3');
+  });
+
   it('installs no story, and says how to get them, while stories are off', async () => {
     const context = setupStories();
     await cli(['init'], context);
@@ -1800,6 +1843,34 @@ describe('stories', () => {
     expect(nxdsJson(context.app)).toMatchObject({
       items: expect.arrayContaining(['button', 'label']),
     });
+  });
+
+  it('keeps a component you edited when stories turn on', async () => {
+    const context = setupStories();
+    await installButton(context);
+    const edited = `${readApp(context.app, NXDS_BUTTON)}\nexport const edited = true;\n`;
+    writeApp(context.app, NXDS_BUTTON, edited);
+
+    const { exitCode, body } = await cliJson(['init', '--stories'], context);
+
+    expect(exitCode, JSON.stringify(body)).toBe(EXIT_CODES.ok);
+    expect(body.data.skipped).toEqual([]);
+    expect(body.data.written).toContain(BUTTON_STORY);
+    expect(readApp(context.app, NXDS_BUTTON)).toBe(edited);
+  });
+
+  it('keeps a story you edited when stories turn off and on again', async () => {
+    const context = setupStories();
+    await cli(['init', '--stories'], context);
+    await cli(['add', 'button'], context);
+    const story = `${readApp(context.app, NXDS_BUTTON_STORY)}\n// Edited.\n`;
+    writeApp(context.app, NXDS_BUTTON_STORY, story);
+    await cli(['init', '--no-stories'], context);
+
+    const { exitCode, body } = await cliJson(['init', '--stories'], context);
+
+    expect(exitCode, JSON.stringify(body)).toBe(EXIT_CODES.ok);
+    expect(readApp(context.app, NXDS_BUTTON_STORY)).toBe(story);
   });
 
   it("draws a story's icons with the app's icon library", async () => {
@@ -1856,12 +1927,45 @@ describe('stories', () => {
 
     expect(off.exitCode, off.stdout).toBe(EXIT_CODES.ok);
     expect(off.stdout).not.toMatch(/Storybook found/);
-    expect(nxdsJson(context.app)).not.toHaveProperty('stories');
+    // The Button story and the wiring file.
+    expect(off.stdout).toContain(
+      'Stopped tracking 2 Storybook files in components/nxds.'
+    );
+    expect(nxdsJson(context.app)).toMatchObject({ stories: false });
     expect(readApp(context.app, NXDS_BUTTON_STORY)).toBe(story);
     const { body } = await cliJson(['diff'], context);
     expect(
       body.data.files.map((file: { path: string }) => file.path)
     ).not.toContain(BUTTON_STORY);
+  });
+
+  it('stops suggesting stories once init is given --no-stories', async () => {
+    const context = setupStories();
+    await cli(['init', '--no-stories'], context);
+
+    const run = await cli(['add', 'button'], context);
+
+    expect(run.exitCode, run.stdout).toBe(EXIT_CODES.ok);
+    expect(run.stdout).not.toMatch(/--stories/);
+  });
+
+  it('turns stories off, and switches icons, in an app that dropped Storybook', async () => {
+    const context = setupStories();
+    await cli(['init', '--stories'], context);
+    await cli(['add', 'button', 'spinner'], context);
+    removePackages(context.app, ['storybook', NEXTJS_VITE]);
+
+    const run = await cli(
+      ['init', '--no-stories', '--icons', 'lucide'],
+      context
+    );
+
+    expect(run.exitCode, run.stdout + run.stderr).toBe(EXIT_CODES.ok);
+    expect(nxdsJson(context.app)).toMatchObject({
+      stories: false,
+      iconLibrary: 'lucide',
+    });
+    expect(readApp(context.app, NXDS_ICONS)).toBe(LUCIDE_ICONS);
   });
 
   it('tracks a story in diff while stories are on', async () => {
@@ -1922,11 +2026,17 @@ export default {
     );
   });
 
-  it('leaves a preview it cannot extend as a step for you', async () => {
+  it.each([
+    ['exports a variable', 'sharedPreview'],
+    [
+      'spreads another preview, which may set what nxds would add',
+      "{\n  ...sharedPreview,\n  parameters: { layout: 'centered' },\n}",
+    ],
+  ])('leaves a preview that %s as a step for you', async (_name, exported) => {
     const context = setupStories();
     const preview = `import { sharedPreview } from '@acme/storybook';
 
-export default sharedPreview;
+export default ${exported};
 `;
     writeApp(context.app, STORYBOOK_PREVIEW, preview);
 
@@ -1942,17 +2052,70 @@ export default sharedPreview;
     );
   });
 
-  it('leaves main alone when its stories already cover the nxds folder', async () => {
+  it.each([
+    ['a glob', '"../components/**/*.stories.@(ts|tsx)"'],
+    ['a folder', '"../components"'],
+    [
+      'a folder and its files',
+      '{ directory: "../components", files: "**/*.stories.*" }',
+    ],
+  ])(
+    'leaves main alone when %s already loads the nxds stories',
+    async (_name, entry) => {
+      const context = setupStories();
+      const main = MAIN_SOURCE.replace('"../stories/**/*.mdx"', entry);
+      writeApp(context.app, STORYBOOK_MAIN, main);
+
+      await cli(['init', '--stories'], context);
+
+      expect(readApp(context.app, STORYBOOK_MAIN)).toBe(main);
+    }
+  );
+
+  it('adds its entry when the one for the nxds folder loads no stories', async () => {
     const context = setupStories();
-    const main = MAIN_SOURCE.replace(
-      '"../stories/**/*.mdx",',
-      '"../components/**/*.stories.@(ts|tsx)",'
+    writeApp(
+      context.app,
+      STORYBOOK_MAIN,
+      MAIN_SOURCE.replace('"../stories/**/*.mdx"', '"../components/**/*.mdx"')
     );
-    writeApp(context.app, STORYBOOK_MAIN, main);
 
     await cli(['init', '--stories'], context);
 
-    expect(readApp(context.app, STORYBOOK_MAIN)).toBe(main);
+    expect(readApp(context.app, STORYBOOK_MAIN)).toContain(
+      '"../components/nxds/**/*.stories.tsx"'
+    );
+  });
+
+  it('takes a stories list it cannot read as done once main names the nxds folder', async () => {
+    const context = setupStories();
+    const main = `${MAIN_SOURCE.replace(/"stories": \[[^\]]*\]/, '"stories": storyGlobs()')}
+function storyGlobs() {
+  return ['../stories/**/*.stories.tsx'];
+}
+`;
+    writeApp(context.app, STORYBOOK_MAIN, main);
+
+    const first = await cliJson(['init', '--stories'], context);
+
+    expect(first.exitCode).toBe(EXIT_CODES.attention);
+    expect(first.body.data.manual).toContainEqual({
+      file: STORYBOOK_MAIN,
+      step: "Add '../components/nxds/**/*.stories.tsx' to stories.",
+    });
+
+    writeApp(
+      context.app,
+      STORYBOOK_MAIN,
+      main.replace(
+        "return ['../stories/**/*.stories.tsx'];",
+        "return ['../stories/**/*.stories.tsx', '../components/nxds/**/*.stories.tsx'];"
+      )
+    );
+    const again = await cli(['init', '--stories'], context);
+
+    expect(again.exitCode, again.stdout).toBe(EXIT_CODES.ok);
+    expect(await doctorCheck(context, 'stories')).toMatchObject({ ok: true });
   });
 
   it("adds Tailwind to Storybook's build when the app's own build keeps it out of sight", async () => {
@@ -1968,16 +2131,30 @@ export default sharedPreview;
     expect(main).toContain(
       'viteFinal: (config) => ({ ...config, plugins: [...(config.plugins ?? []), tailwindcss()] })'
     );
-    expect(body.data.packages.join(' ')).toContain('@tailwindcss/vite@');
+    expect(body.data.devPackages.join(' ')).toContain('@tailwindcss/vite@');
   });
 
-  it('leaves a main that sets its own viteFinal as a step for you', async () => {
+  it('adds no Tailwind to Storybook in the run where init adds it to the app', async () => {
+    const context = setup([storiesRelease('0.4.7')]);
+    addStorybook(context.app);
+    removePackages(context.app, ['tailwindcss', '@tailwindcss/postcss']);
+
+    const { exitCode, body } = await cliJson(['init', '--stories'], context);
+
+    expect(exitCode, JSON.stringify(body)).toBe(EXIT_CODES.ok);
+    // Storybook's Vite reads the PostCSS config init writes.
+    expect(body.data.created).toContain(POSTCSS_CONFIG);
+    expect(readApp(context.app, STORYBOOK_MAIN)).not.toContain('tailwindcss');
+    expect(body.data.devPackages.join(' ')).not.toContain('@tailwindcss/vite');
+  });
+
+  it.each([
+    ['sets its own viteFinal', 'viteFinal: (config) => config,'],
+    ['spreads another config, which may set viteFinal', '...sharedMain,'],
+  ])('leaves a main that %s as a step for you', async (_name, member) => {
     const context = setupStories();
     rmSync(path.join(context.app, POSTCSS_CONFIG));
-    const main = MAIN_SOURCE.replace(
-      '"framework"',
-      'viteFinal: (config) => config,\n  "framework"'
-    );
+    const main = MAIN_SOURCE.replace('"framework"', `${member}\n  "framework"`);
     writeApp(context.app, STORYBOOK_MAIN, main);
 
     const { exitCode, body } = await cliJson(['init', '--stories'], context);
@@ -2029,21 +2206,79 @@ export default sharedPreview;
     const context = setupStories();
     await cli(['init', '--stories'], context);
     await cli(['add', 'button'], context);
-    type Checks = { name: string; ok: boolean; message: string }[];
-    const storiesCheck = async () => {
-      const { body } = await cliJson(['doctor'], context);
-      return (body.data.checks as Checks).find(
-        (check) => check.name === 'stories'
-      );
-    };
 
-    expect(await storiesCheck()).toMatchObject({ ok: true });
+    expect(await doctorCheck(context, 'stories')).toMatchObject({ ok: true });
 
     writeApp(context.app, STORYBOOK_PREVIEW, PREVIEW_SOURCE);
 
-    expect(await storiesCheck()).toMatchObject({
+    expect(await doctorCheck(context, 'stories')).toMatchObject({
       ok: false,
       message: expect.stringContaining(STORYBOOK_PREVIEW),
+    });
+  });
+
+  it('wires a preview that derives no colors in an app that sets its own', async () => {
+    const context = setupStories([ownColorsStoriesRelease('0.4.7')]);
+    await cli(['init', '--own-colors'], context);
+
+    const run = await cli(['init', '--stories'], context);
+
+    expect(run.exitCode, run.stdout).toBe(EXIT_CODES.ok);
+    expect(readApp(context.app, STORYBOOK_PREVIEW)).toContain(
+      OWN_COLORS_PREVIEW
+    );
+    expect(await doctorCheck(context, 'colors')).toMatchObject({ ok: true });
+  });
+
+  it('turns color derivation off in a preview it wired earlier', async () => {
+    const context = setupStories([ownColorsStoriesRelease('0.4.7')]);
+    await cli(['init', '--stories'], context);
+
+    const run = await cli(['init', '--own-colors'], context);
+
+    expect(run.exitCode, run.stdout).toBe(EXIT_CODES.ok);
+    expect(readApp(context.app, STORYBOOK_PREVIEW)).toContain(
+      OWN_COLORS_PREVIEW
+    );
+  });
+
+  it('leaves a preview that calls nxdsPreview its own way as a step for you', async () => {
+    const context = setupStories([ownColorsStoriesRelease('0.4.7')]);
+    await cli(['init', '--stories'], context);
+    writeApp(
+      context.app,
+      STORYBOOK_PREVIEW,
+      readApp(context.app, STORYBOOK_PREVIEW).replace(
+        'nxdsPreview(defaultAppearance)',
+        "nxdsPreview({ ...defaultAppearance, density: 'compact' })"
+      )
+    );
+
+    const run = await cli(['init', '--own-colors'], context);
+
+    expect(run.exitCode).toBe(EXIT_CODES.attention);
+    expect(run.stdout).toContain(
+      `${STORYBOOK_PREVIEW}: Pass { deriveColors: false } as the second argument of nxdsPreview.`
+    );
+  });
+
+  it('fails the doctor colors check while the preview still derives colors', async () => {
+    const context = setupStories([ownColorsStoriesRelease('0.4.7')]);
+    await cli(['init', '--stories', '--own-colors'], context);
+    writeApp(
+      context.app,
+      STORYBOOK_PREVIEW,
+      readApp(context.app, STORYBOOK_PREVIEW).replace(
+        ', { deriveColors: false }',
+        ''
+      )
+    );
+
+    expect(await doctorCheck(context, 'colors')).toMatchObject({
+      ok: false,
+      message: expect.stringContaining(
+        `still derives colors in ${STORYBOOK_PREVIEW}`
+      ),
     });
   });
 

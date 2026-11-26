@@ -210,8 +210,13 @@ function toolbarItems<
 /**
  * What a Storybook preview takes from nxds: the appearance decorator, its
  * toolbar and the accessibility settings. Stories start from `appearance`.
+ * An app that sets its own colors passes `deriveColors: false`, as it does to
+ * its provider.
  */
-export function nxdsPreview(appearance: NxdsAppearanceState) {
+export function nxdsPreview(
+  appearance: NxdsAppearanceState,
+  { deriveColors = true }: { deriveColors?: boolean } = {}
+) {
   const AppearanceDecorator: Decorator = (Story, context) => {
     const [globals, updateGlobals] = useGlobals();
     const isDocs = context.viewMode === 'docs';
@@ -265,6 +270,7 @@ export function nxdsPreview(appearance: NxdsAppearanceState) {
       <NxdsAppearanceProvider
         state={appearanceState}
         storageKey={false}
+        deriveColors={deriveColors}
         onStateChange={handleStateChange}
       >
         <div

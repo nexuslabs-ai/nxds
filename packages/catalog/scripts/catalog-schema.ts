@@ -212,13 +212,19 @@ export function variantForReact<V extends Variant>(
   };
 }
 
-const variantSchema = variantWith(z.object({ npm: npmPackagesSchema }));
+const packagesShape = {
+  npm: npmPackagesSchema,
+  /** Packages only the variant's stories import, which an app installs as dev dependencies. A release leaves it out; `catalogWithStories` sets it. */
+  dev: npmPackagesSchema.optional(),
+};
+
+const variantSchema = variantWith(z.object(packagesShape));
 
 export type Variant = z.infer<typeof variantSchema>;
 
 const setupVariantSchema = variantWith(
   z.object({
-    npm: npmPackagesSchema,
+    ...packagesShape,
     /** The Tailwind range `init` installs, with the app's build plugin, when the app has no Tailwind. */
     tailwind: rangeSchema,
   })
@@ -523,31 +529,45 @@ export function catalogWithIconLibrary(
   };
 }
 
+/** How a catalog's stories fold into its variants. */
+type StoriesFold = {
+  /** The Storybook framework package the stories name. */
+  from: string;
+  /** The one the app has, which they import their types from instead. */
+  to: string;
+  /** The packages some item needs to run. */
+  runtime: ReadonlySet<string>;
+};
+
 /**
- * `variant` with its stories among its own files, items and packages. A story
- * imports its types from `framework.to` in place of `framework.from`.
+ * `variant` with its stories among its own files, items and packages. A
+ * package only stories import is a dev dependency.
  */
-function withStories<V extends Variant>(
-  variant: V,
-  framework: { from: string; to: string }
-): V {
+function withStories<V extends Variant>(variant: V, fold: StoriesFold): V {
   const { stories } = variant;
   if (!stories) return variant;
   const plain = ({ path, content }: StoryFile): CatalogFile => ({
     path,
-    content: content.replaceAll(`'${framework.from}'`, `'${framework.to}'`),
+    content: content.replaceAll(`'${fold.from}'`, `'${fold.to}'`),
   });
   const react18Files = [
     ...(variant.react18?.files ?? []),
     ...(stories.react18?.files ?? []).map(plain),
   ];
+  const storyPackages = (runtime: boolean) =>
+    Object.fromEntries(
+      Object.entries(stories.packages.npm).filter(
+        ([name]) => fold.runtime.has(name) === runtime
+      )
+    );
   return {
     ...variant,
     stories: undefined,
     items: [...new Set([...variant.items, ...stories.items])],
     packages: {
       ...variant.packages,
-      npm: { ...stories.packages.npm, ...variant.packages.npm },
+      npm: { ...storyPackages(true), ...variant.packages.npm },
+      dev: storyPackages(false),
     },
     files: [...variant.files, ...stories.files.map(plain)],
     ...(react18Files.length > 0 && {
@@ -560,26 +580,26 @@ function withStories<V extends Variant>(
 }
 
 // Two returns, so each keeps its own variant type.
-function itemWithStories(
-  item: CatalogItem,
-  framework: { from: string; to: string }
-): CatalogItem {
-  const fold = <V extends Variant>(variants: Partial<Record<Framework, V>>) =>
+function itemWithStories(item: CatalogItem, fold: StoriesFold): CatalogItem {
+  const folded = <V extends Variant>(variants: Partial<Record<Framework, V>>) =>
     Object.fromEntries(
       Object.entries(variants).map(([name, variant]) => [
         name,
-        withStories(variant, framework),
+        withStories(variant, fold),
       ])
     ) as Partial<Record<Framework, V>>;
-  if (item.kind === 'setup') return { ...item, variants: fold(item.variants) };
-  return { ...item, variants: fold(item.variants) };
+  if (item.kind === 'setup') {
+    return { ...item, variants: folded(item.variants) };
+  }
+  return { ...item, variants: folded(item.variants) };
 }
 
 /**
  * `catalog` as an app with stories installs it: each variant's stories are
  * among its files, and import their types from the Storybook framework package
- * `framework`. Call it after `catalogWithIconLibrary`, which draws the stories'
- * icons.
+ * `framework`. A package the stories import that no item needs to run goes in
+ * the variant's `packages.dev`. Call it after `catalogWithIconLibrary`, which
+ * draws the stories' icons.
  */
 export function catalogWithStories(
   catalog: Catalog,
@@ -587,11 +607,17 @@ export function catalogWithStories(
 ): Catalog {
   const [written] = catalog.storybook?.frameworks ?? [];
   if (!written) return catalog;
+  const runtime = new Set(
+    catalog.items.flatMap((item) =>
+      Object.values(item.variants).flatMap((variant) =>
+        Object.keys(variant.packages.npm)
+      )
+    )
+  );
+  const fold = { from: written, to: framework, runtime };
   return {
     ...catalog,
-    items: catalog.items.map((item) =>
-      itemWithStories(item, { from: written, to: framework })
-    ),
+    items: catalog.items.map((item) => itemWithStories(item, fold)),
   };
 }
 

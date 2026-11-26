@@ -31,7 +31,7 @@ const configSchema = z.looseObject({
   iconLibrary: z.string().optional(),
   /** The theme `nxds-theme.ts` sets: each `init` theme flag the app was given, by flag name. */
   theme: z.record(z.string(), z.string()).optional(),
-  /** Whether each item's Storybook stories are installed and tracked with it. */
+  /** Whether each item's Storybook stories are installed and tracked with it. Left out until `init` is given `--stories` or `--no-stories`. */
   stories: z.boolean().optional(),
 });
 

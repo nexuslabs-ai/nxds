@@ -35,7 +35,7 @@ npx nxds-cli@latest add dialog
 
 `add` copies `Dialog.stories.tsx` beside `dialog.tsx`. It also installs the
 components the stories use, such as Button and Input, and any package they
-import.
+import. A package only a story imports is a dev dependency.
 
 Each story draws its icons with your icon library. A story has no title, so
 Storybook names it from its path.
@@ -63,6 +63,9 @@ If your Storybook has no `storybook` Vitest project, add the addon with
 | `parameters`                    | Turns off axe's two color contrast rules. nxds checks contrast with APCA, which those rules disagree with       |
 
 Stories start from `defaultAppearance` in your `appearance-state.ts`.
+
+If your app sets [its own colors](/theming/own-colors), `init` passes
+`{ deriveColors: false }` to `nxdsPreview`, so stories show your colors.
 
 ## Wire the preview by hand
 
@@ -95,6 +98,9 @@ Put your own decorators before `...nxds.decorators`, so the provider wraps
 them. Keep the default export an object, because Storybook reads the preview
 file without running it.
 
+If your app sets its own colors, call
+`nxdsPreview(defaultAppearance, { deriveColors: false })`.
+
 ## Edit and update stories
 
 Stories are your files. `update` replaces a story you haven't edited, and
@@ -110,8 +116,13 @@ names the behaviour the change broke.
 npx nxds-cli@latest init --no-stories
 ```
 
-`init --no-stories` leaves the story files where they are. `add`, `update` and
-`diff` stop copying and tracking them.
+`init --no-stories` leaves the story files where they are, and prints how many
+it left. `add`, `update` and `diff` stop copying and tracking them. Delete the
+ones you don't need, because `update` no longer changes a story when its
+component changes.
+
+`init` records `"stories": false` in `nxds.json`, so `add` stops suggesting
+stories.
 
 ## Check your setup
 
