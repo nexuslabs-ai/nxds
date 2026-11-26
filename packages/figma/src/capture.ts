@@ -43,6 +43,7 @@ import {
   cardOf,
   kebab,
   NOT_DRAWN,
+  type PartName,
   type Recipe,
   RECIPES,
   type StateSpec,
@@ -200,8 +201,8 @@ function combinations(
 interface Property {
   name: string;
   values: string[];
-  /** The axis, with the part whose prop it sets, which may be a part a recipe names by its own name. */
-  axis?: Omit<Axis, 'part'> & { part: string };
+  /** The axis, with the part whose prop it sets. */
+  axis?: Axis & { part: PartName };
   /** A boolean prop, so its values are written as booleans. */
   boolean: boolean;
 }
@@ -213,7 +214,7 @@ function defaultFirst(values: readonly string[], first: string | undefined) {
 }
 
 /** `prop` of `part`. Throws MissingParts when the app has no such part, and an Error when the part has no such prop. */
-function propOf(props: PartProps, part: string, prop: string) {
+function propOf(props: PartProps, part: PartName, prop: string) {
   const own = props.get(part);
   if (!own) throw new MissingParts(`the app has no ${part}`);
   const found = own.find((entry) => entry.name === prop);
@@ -221,13 +222,9 @@ function propOf(props: PartProps, part: string, prop: string) {
   return found;
 }
 
-function variantProperties(
-  recipe: Recipe,
-  part: string,
-  props: PartProps
-): Property[] {
+function variantProperties(recipe: Recipe, props: PartProps): Property[] {
   // The part whose props they are: the recipe's, or its whole's.
-  const owner = recipe.axesFrom ?? part;
+  const owner = recipe.axesFrom ?? recipe.part;
   if (recipe.axes) {
     return recipe.axes.map((given): Property => {
       const axis = { ...given, part: given.part ?? owner };
@@ -288,7 +285,6 @@ function overridesFor(
   values: Record<string, string>,
   state: StateSpec,
   full: boolean,
-  part: string,
   rootPart: string | undefined
 ): Override[] {
   const merged = new Map<string, Record<string, unknown>>();
@@ -308,8 +304,8 @@ function overridesFor(
       [property.axis.prop]: property.boolean ? value === 'true' : value,
     });
   }
-  if (state.props) set(state.on ?? part, state.props);
-  if (full && recipe.full) set(part, recipe.full(values));
+  if (state.props) set(state.on ?? recipe.part, state.props);
+  if (full && recipe.full) set(recipe.part, recipe.full(values));
   return [...merged].map(([on, props]) => ({ part: on, props }));
 }
 
@@ -488,10 +484,7 @@ function slotsOf(recipe: Recipe) {
     typeof recipe.target === 'string'
       ? /\[data-slot=([\w-]+)\]$/.exec(recipe.target)?.[1]
       : undefined;
-  return [
-    target ?? kebab(recipe.part ?? recipe.name),
-    ...(recipe.alsoSlots ?? []),
-  ];
+  return [target ?? kebab(recipe.part), ...(recipe.alsoSlots ?? [])];
 }
 
 /** Every `data-slot` in a recorded tree. */
@@ -548,11 +541,11 @@ function recipeContent({ props, folders }: AppParts) {
   for (const recipe of RECIPES) {
     let properties: Property[] = [];
     try {
-      properties = variantProperties(recipe, recipe.part ?? recipe.name, props);
+      properties = variantProperties(recipe, props);
     } catch {
       // The capture reports a part the app lacks.
     }
-    drawn.add(recipe.part ?? recipe.name);
+    drawn.add(recipe.part);
     for (const values of combinations(properties)) {
       const nodes = markupOf(recipe, values) ?? [];
       text.add(JSON.stringify(nodes));
@@ -790,8 +783,7 @@ export async function captureApp(
     const captureRecipe = async (recipe: Recipe): Promise<ComponentSpec> => {
       await page.setViewportSize(recipe.viewport ?? recipe.screen ?? VIEWPORT);
       const card = cardOf(recipe.name);
-      const part = recipe.part ?? recipe.name;
-      const axes = variantProperties(recipe, part, parts.props);
+      const axes = variantProperties(recipe, parts.props);
       const stateNames = Object.keys(recipe.states ?? {});
       let properties: Property[] =
         stateNames.length > 0
@@ -819,7 +811,6 @@ export async function captureApp(
             values,
             state,
             full,
-            part,
             rootPart(nodes)
           ),
           width: recipe.width ?? DEFAULT_WIDTH,
@@ -834,7 +825,7 @@ export async function captureApp(
         if (!target) {
           await mountOpen(page, mount(false), recipe);
           for (const candidate of [
-            `[data-slot=${kebab(part)}]`,
+            `[data-slot=${kebab(recipe.part)}]`,
             '[data-capture-root] > *',
           ]) {
             if (await exists(page, candidate)) {
@@ -879,7 +870,7 @@ export async function captureApp(
         const notes: string[] = [];
         const root = convertVariant(recorded, {
           component: recipe.name,
-          slot: recorded.tree.slot ?? kebab(part),
+          slot: recorded.tree.slot ?? kebab(recipe.part),
           rootSlot: recipe.slot ?? false,
           prefix: kebab(card),
           textNames: recipe.textNames ?? {},

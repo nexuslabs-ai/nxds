@@ -238,7 +238,7 @@ export interface EffectStyleSpec {
 }
 
 export interface IconSpec {
-  /** The name `Nxds.Icon` takes, such as `plus` or `check-circle-fill`. */
+  /** The name `Nxds.Icon` takes, such as `plus` or `check-circle`. */
   name: string;
   svg: string;
 }

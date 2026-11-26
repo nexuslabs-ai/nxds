@@ -192,7 +192,7 @@ export async function exportFigma(
   assertComponents(options.only, componentNames());
   const cssEntry = path.join(cwd, app.css);
   if (!existsSync(cssEntry)) {
-    throw new UsageError(
+    throw new CliError(
       `There's no ${app.css}, the CSS entry ${CONFIG_FILE} names. Restore it, or set css in ${CONFIG_FILE} to your nxds CSS entry.`
     );
   }

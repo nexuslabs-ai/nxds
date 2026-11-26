@@ -61,8 +61,8 @@ export interface Recipe {
   name: string;
   /** What it renders, in place of its card's example. */
   markup?: Markup | ((values: Record<string, string>) => Markup);
-  /** The part whose props become variant properties and take each state's props. Default: `name`. */
-  part?: PartName;
+  /** The part whose props become variant properties and take each state's props. */
+  part: PartName;
   /** The part whose props become the default variant properties, and that axes without a `part` set: a part's whole, so the part takes the whole's properties and keeps only those that change its look. Default: `part`. */
   axesFrom?: PartName;
   /** The variant properties. Default: every string-literal prop of `part`, plus `booleans`. */
@@ -261,16 +261,13 @@ const panelPart = (
   extra: Partial<Recipe> = {}
 ) => partOf(card, name, part, { ...PANEL, axes: [axis], ...extra });
 
-/** A recipe whose parts are their own components. It names its part, which its parts take their variant properties from. */
-type Whole = Recipe & { part: PartName };
-
 /**
  * A part of `whole`'s example as its own component, `<Card>/<Name>`. It
  * renders what the whole renders, takes the whole's variant properties and
  * optional parts, and keeps the properties that change how it looks.
  */
 const partIn = (
-  whole: Whole,
+  whole: Recipe,
   name: string,
   part: PartName,
   extra: Partial<Recipe> = {}
@@ -303,11 +300,12 @@ const partIn = (
 
 /** A card's whole example with its overlay open, recorded as a screen. */
 const opened = (
-  card: string,
+  card: PartName,
   screen: Recipe['screen'],
   extra: Partial<Recipe> = {}
 ): Recipe => ({
   name: card,
+  part: card,
   target: 'body',
   screen,
   axes: [],
@@ -456,7 +454,7 @@ const MENU_BUTTON = (withIcon: boolean) => (
 );
 
 // Wholes whose parts are their own components, each part taking the whole's variant properties.
-const AVATAR: Whole = {
+const AVATAR: Recipe = {
   name: 'Avatar',
   part: 'Avatar',
   markup: (
@@ -466,10 +464,10 @@ const AVATAR: Whole = {
   ),
   booleans: ['ring'],
 };
-const MARKER: Whole = { name: 'Marker', part: 'Marker' };
+const MARKER: Recipe = { name: 'Marker', part: 'Marker' };
 const ACCORDION_ITEM_TARGET = ({ Last }: Record<string, string>) =>
   `[data-slot=accordion-item]:${Last === 'true' ? 'last-child' : 'first-child'}`;
-const ACCORDION_ITEM: Whole = {
+const ACCORDION_ITEM: Recipe = {
   name: 'Accordion/Item',
   part: 'AccordionItem',
   axes: [
@@ -526,14 +524,14 @@ const accordionPart = (
         : {};
     },
   });
-const TABS: Whole = { name: 'Tabs', part: 'Tabs' };
-const TABLE: Whole = {
+const TABS: Recipe = { name: 'Tabs', part: 'Tabs' };
+const TABLE: Recipe = {
   name: 'Table',
   part: 'Table',
   booleans: ['striped'],
   width: 560,
 };
-const SIDEBAR_WHOLE: Whole = {
+const SIDEBAR_WHOLE: Recipe = {
   name: 'Sidebar',
   part: 'Sidebar',
   markup: SIDEBAR,
@@ -543,7 +541,7 @@ const SIDEBAR_WHOLE: Whole = {
   ],
   width: 280,
 };
-const ALERT_WHOLE: Whole = {
+const ALERT_WHOLE: Recipe = {
   name: 'Alert',
   part: 'Alert',
   markup: ALERT,
@@ -558,7 +556,7 @@ const ALERT_WHOLE: Whole = {
     { selector: '[data-slot=alert-actions]', name: 'Actions', default: true },
   ],
 };
-const CARD_WHOLE: Whole = {
+const CARD_WHOLE: Recipe = {
   name: 'Card',
   part: 'Card',
   markup: CARD,
@@ -573,33 +571,34 @@ const CARD_WHOLE: Whole = {
     { selector: '[data-slot=card-action]', name: 'Action', default: true },
   ],
 };
-const ATTACHMENT: Whole = { name: 'Attachment', part: 'Attachment' };
-const BUBBLE: Whole = { name: 'Bubble', part: 'Bubble', exclude: ['side'] };
-const CAROUSEL: Whole = { name: 'Carousel', part: 'Carousel' };
-const CHOICE_CARD: Whole = { name: 'ChoiceCard', part: 'ChoiceCard' };
-const CODE_BLOCK: Whole = { name: 'CodeBlock', part: 'CodeBlock' };
-const INPUT_GROUP: Whole = { name: 'InputGroup', part: 'InputGroup' };
-const ITEM: Whole = { name: 'Item', part: 'Item' };
-const MESSAGE: Whole = { name: 'Message', part: 'Message' };
-const RESIZABLE: Whole = {
+const ATTACHMENT: Recipe = { name: 'Attachment', part: 'Attachment' };
+const BUBBLE: Recipe = { name: 'Bubble', part: 'Bubble', exclude: ['side'] };
+const CAROUSEL: Recipe = { name: 'Carousel', part: 'Carousel' };
+const CHOICE_CARD: Recipe = { name: 'ChoiceCard', part: 'ChoiceCard' };
+const CODE_BLOCK: Recipe = { name: 'CodeBlock', part: 'CodeBlock' };
+const INPUT_GROUP: Recipe = { name: 'InputGroup', part: 'InputGroup' };
+const ITEM: Recipe = { name: 'Item', part: 'Item' };
+const MESSAGE: Recipe = { name: 'Message', part: 'Message' };
+const RESIZABLE: Recipe = {
   name: 'Resizable',
   part: 'ResizablePanelGroup',
   target: '[data-slot=resizable-panel-group]',
 };
-const TOOLBAR: Whole = { name: 'Toolbar', part: 'Toolbar' };
-const EMPTY_STATE: Whole = {
+const TOOLBAR: Recipe = { name: 'Toolbar', part: 'Toolbar' };
+const EMPTY_STATE: Recipe = {
   name: 'EmptyState',
   part: 'EmptyState',
   booleans: ['bordered'],
   slot: true,
 };
-const FIELD: Whole = { name: 'Field', part: 'Field' };
+const FIELD: Recipe = { name: 'Field', part: 'Field' };
 
 /** In capture order: a component comes after every component it holds an instance of. */
 export const RECIPES: readonly Recipe[] = [
   // Components that others hold.
   {
     name: 'Button',
+    part: 'Button',
     markup: <Nxds.Button>Button</Nxds.Button>,
     axes: [
       { name: 'Variant', prop: 'variant' },
@@ -657,6 +656,7 @@ export const RECIPES: readonly Recipe[] = [
   },
   {
     name: 'Badge',
+    part: 'Badge',
     markup: <Nxds.Badge>Badge</Nxds.Badge>,
     booleans: ['isCaps'],
     full: () => ({ leftIcon: icon('check'), rightIcon: icon('x') }),
@@ -673,18 +673,23 @@ export const RECIPES: readonly Recipe[] = [
       },
     ],
   },
-  { name: 'Kbd' },
-  { name: 'Label', markup: <Nxds.Label>Email address</Nxds.Label> },
-  { name: 'Separator' },
-  { name: 'Spinner' },
-  { name: 'Skeleton' },
-  { name: 'Progress' },
+  { name: 'Kbd', part: 'Kbd' },
+  {
+    name: 'Label',
+    part: 'Label',
+    markup: <Nxds.Label>Email address</Nxds.Label>,
+  },
+  { name: 'Separator', part: 'Separator' },
+  { name: 'Spinner', part: 'Spinner' },
+  { name: 'Skeleton', part: 'Skeleton' },
+  { name: 'Progress', part: 'Progress' },
   partIn(MARKER, 'Content', 'MarkerContent'),
   MARKER,
   partIn(AVATAR, 'Fallback', 'AvatarFallback'),
   AVATAR,
   {
     name: 'Checkbox',
+    part: 'Checkbox',
     axes: [
       {
         name: 'Checked',
@@ -703,6 +708,7 @@ export const RECIPES: readonly Recipe[] = [
   },
   {
     name: 'Switch',
+    part: 'Switch',
     markup: <Nxds.Switch aria-label="Notifications" />,
     axes: [
       { name: 'Size', prop: 'size' },
@@ -724,6 +730,7 @@ export const RECIPES: readonly Recipe[] = [
   },
   {
     name: 'Toggle',
+    part: 'Toggle',
     axes: [
       { name: 'Variant', prop: 'variant' },
       { name: 'Size', prop: 'size' },
@@ -739,6 +746,7 @@ export const RECIPES: readonly Recipe[] = [
   },
   {
     name: 'Input',
+    part: 'Input',
     markup: <Nxds.Input placeholder="you@example.com" aria-label="Email" />,
     states: {
       ...FIELD_STATES,
@@ -748,6 +756,7 @@ export const RECIPES: readonly Recipe[] = [
   },
   {
     name: 'Textarea',
+    part: 'Textarea',
     markup: (
       <Nxds.Textarea
         placeholder="Tell us about your project"
@@ -1079,8 +1088,8 @@ export const RECIPES: readonly Recipe[] = [
   partIn(CARD_WHOLE, 'Content', 'CardContent', SLOT),
   partIn(CARD_WHOLE, 'Footer', 'CardFooter', SLOT),
   CARD_WHOLE,
-  { name: 'Accordion' },
-  { name: 'AspectRatio' },
+  { name: 'Accordion', part: 'Accordion' },
+  { name: 'AspectRatio', part: 'AspectRatio' },
   partIn(ATTACHMENT, 'Media', 'AttachmentMedia'),
   partIn(ATTACHMENT, 'Title', 'AttachmentTitle'),
   partIn(ATTACHMENT, 'Description', 'AttachmentDescription'),
@@ -1089,10 +1098,10 @@ export const RECIPES: readonly Recipe[] = [
   ATTACHMENT,
   partOf('Breadcrumb', 'Separator', 'BreadcrumbSeparator'),
   partOf('Breadcrumb', 'Page', 'BreadcrumbPage'),
-  { name: 'Breadcrumb' },
+  { name: 'Breadcrumb', part: 'Breadcrumb' },
   partIn(BUBBLE, 'Content', 'BubbleContent', SLOT),
   BUBBLE,
-  { name: 'ButtonGroup' },
+  { name: 'ButtonGroup', part: 'ButtonGroup' },
   partIn(CAROUSEL, 'Item', 'CarouselItem', SLOT),
   partIn(CAROUSEL, 'Content', 'CarouselContent', SLOT),
   partIn(CAROUSEL, 'Previous', 'CarouselPrevious'),
@@ -1112,7 +1121,7 @@ export const RECIPES: readonly Recipe[] = [
   partIn(CHOICE_CARD, 'Content', 'ChoiceCardContent'),
   CHOICE_CARD,
   partOf('ChoiceRow', 'Title', 'ChoiceRowTitle'),
-  { name: 'ChoiceRow' },
+  { name: 'ChoiceRow', part: 'ChoiceRow' },
   partIn(CODE_BLOCK, 'Line', 'CodeBlockLine'),
   partIn(CODE_BLOCK, 'Content', 'CodeBlockContent'),
   partIn(CODE_BLOCK, 'Copy button', 'CodeBlockCopyButton'),
@@ -1121,9 +1130,9 @@ export const RECIPES: readonly Recipe[] = [
     rootProps: { open: true },
     ...SLOT,
   }),
-  { name: 'Collapsible', rootProps: { open: true } },
+  { name: 'Collapsible', part: 'Collapsible', rootProps: { open: true } },
   partOf('Command', 'Input', 'CommandInput'),
-  { name: 'Command', axes: [], slot: true },
+  { name: 'Command', part: 'Command', axes: [], slot: true },
   partOf('Combobox', 'Trigger', 'ComboboxTrigger'),
   partOf('Combobox', 'Input', 'ComboboxInput', OPEN),
   partOf('Combobox', 'Content', 'ComboboxContent', { ...OPEN, ...SLOT }),
@@ -1134,6 +1143,7 @@ export const RECIPES: readonly Recipe[] = [
   }),
   {
     name: 'ContextMenu',
+    part: 'ContextMenu',
     open: { click: '[data-slot=context-menu-trigger]', button: 'right' },
     target: 'body',
     screen: FLOATING,
@@ -1141,13 +1151,14 @@ export const RECIPES: readonly Recipe[] = [
   },
   {
     name: 'DatePicker',
+    part: 'DatePicker',
     target: '[data-slot=date-picker], [data-slot=calendar]',
     axes: [],
   },
   partOf('DescriptionList', 'Term', 'DescriptionListTerm'),
   partOf('DescriptionList', 'Description', 'DescriptionListDescription'),
   partOf('DescriptionList', 'Item', 'DescriptionListItem'),
-  { name: 'DescriptionList' },
+  { name: 'DescriptionList', part: 'DescriptionList' },
   // An overlay's parts, each captured from the open example before what holds it.
   partOf('Dialog', 'Title', 'DialogTitle', OPEN),
   partOf('Dialog', 'Description', 'DialogDescription', OPEN),
@@ -1212,8 +1223,8 @@ export const RECIPES: readonly Recipe[] = [
   partIn(FIELD, 'Label', 'FieldLabel'),
   partIn(FIELD, 'Description', 'FieldDescription'),
   FIELD,
-  { name: 'FilterBuilder', width: 560 },
-  { name: 'FilterChip' },
+  { name: 'FilterBuilder', part: 'FilterBuilder', width: 560 },
+  { name: 'FilterChip', part: 'FilterChip' },
   partOf('FilterCondition', 'Field', 'FilterConditionField', { width: 560 }),
   partOf('FilterCondition', 'Segment', 'FilterConditionSegment', {
     width: 560,
@@ -1221,7 +1232,7 @@ export const RECIPES: readonly Recipe[] = [
   partOf('FilterCondition', 'Remove', 'FilterConditionRemove', {
     width: 560,
   }),
-  { name: 'FilterCondition', width: 560 },
+  { name: 'FilterCondition', part: 'FilterCondition', width: 560 },
   partOf('HoverCard', 'Content', 'HoverCardContent', { ...OPEN, ...SLOT }),
   opened('HoverCard', FLOATING),
   partOf('Popover', 'Content', 'PopoverContent', { ...OPEN, ...SLOT }),
@@ -1247,7 +1258,11 @@ export const RECIPES: readonly Recipe[] = [
   partOf('InputOTP', 'Group', 'InputOTPGroup', {
     target: '[data-slot=input-otp-group]',
   }),
-  { name: 'InputOTP', exclude: ['textAlign', 'pushPasswordManagerStrategy'] },
+  {
+    name: 'InputOTP',
+    part: 'InputOTP',
+    exclude: ['textAlign', 'pushPasswordManagerStrategy'],
+  },
   partIn(ITEM, 'Media', 'ItemMedia'),
   partIn(ITEM, 'Title', 'ItemTitle'),
   partIn(ITEM, 'Description', 'ItemDescription'),
@@ -1259,6 +1274,7 @@ export const RECIPES: readonly Recipe[] = [
   partOf('Menubar', 'Content', 'MenubarContent', { ...MENUBAR_OPEN, ...SLOT }),
   {
     name: 'Menubar',
+    part: 'Menubar',
     target: 'body',
     screen: FLOATING,
     axes: [],
@@ -1269,7 +1285,7 @@ export const RECIPES: readonly Recipe[] = [
   partIn(MESSAGE, 'Footer', 'MessageFooter', SLOT),
   partIn(MESSAGE, 'Content', 'MessageContent', SLOT),
   MESSAGE,
-  { name: 'MessageScroller', width: 480 },
+  { name: 'MessageScroller', part: 'MessageScroller', width: 480 },
   partOf('MultiSelect', 'Trigger', 'MultiSelectTrigger'),
   partOf('MultiSelect', 'Content', 'MultiSelectContent', {
     ...MULTI_SELECT_OPEN,
@@ -1277,12 +1293,13 @@ export const RECIPES: readonly Recipe[] = [
   }),
   {
     name: 'MultiSelect',
+    part: 'MultiSelect',
     target: 'body',
     screen: FLOATING,
     axes: [],
     ...MULTI_SELECT_OPEN,
   },
-  { name: 'NativeSelect', states: FIELD_STATES },
+  { name: 'NativeSelect', part: 'NativeSelect', states: FIELD_STATES },
   triggerOf(
     'NavigationMenu',
     'NavigationMenuTrigger',
@@ -1293,7 +1310,7 @@ export const RECIPES: readonly Recipe[] = [
     ...NAV_OPEN,
     ...SLOT,
   }),
-  { name: 'NavigationMenu', axes: [], ...NAV_OPEN },
+  { name: 'NavigationMenu', part: 'NavigationMenu', axes: [], ...NAV_OPEN },
   partOf('PageHeader', 'Title', 'PageHeaderTitle', { width: 720 }),
   partOf('PageHeader', 'Description', 'PageHeaderDescription', {
     width: 720,
@@ -1302,14 +1319,14 @@ export const RECIPES: readonly Recipe[] = [
     width: 720,
     ...SLOT,
   }),
-  { name: 'PageHeader', width: 720 },
+  { name: 'PageHeader', part: 'PageHeader', width: 720 },
   partOf('Pagination', 'Ellipsis', 'PaginationEllipsis'),
-  { name: 'Pagination' },
-  { name: 'RadioGroup' },
+  { name: 'Pagination', part: 'Pagination' },
+  { name: 'RadioGroup', part: 'RadioGroup' },
   partIn(RESIZABLE, 'Handle', 'ResizableHandle'),
   partIn(RESIZABLE, 'Panel', 'ResizablePanel', SLOT),
   RESIZABLE,
-  { name: 'ScrollArea' },
+  { name: 'ScrollArea', part: 'ScrollArea' },
   {
     name: 'Select/Trigger',
     part: 'SelectTrigger',
@@ -1318,11 +1335,12 @@ export const RECIPES: readonly Recipe[] = [
   partOf('Select', 'Content', 'SelectContent', { ...OPEN, ...SLOT }),
   opened('Select', FLOATING),
   SIDEBAR_WHOLE,
-  { name: 'Slider', booleans: ['inverted'] },
+  { name: 'Slider', part: 'Slider', booleans: ['inverted'] },
   TABLE,
   TABS,
   {
     name: 'Toast',
+    part: 'Toast',
     markup: (
       <Nxds.Toast
         title="Changes saved"
@@ -1331,7 +1349,7 @@ export const RECIPES: readonly Recipe[] = [
     ),
     booleans: ['closeButton', 'richColors'],
   },
-  { name: 'ToggleGroup' },
+  { name: 'ToggleGroup', part: 'ToggleGroup' },
   partIn(TOOLBAR, 'Button', 'ToolbarButton'),
   partIn(TOOLBAR, 'Separator', 'ToolbarSeparator'),
   TOOLBAR,

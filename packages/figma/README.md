@@ -17,7 +17,7 @@ npm run figma
 
 `npm run nxds:add` brings the app's components up to date with the repo, so Figma gets the current source.
 
-In your own app, run the command in the folder with `nxds.json`, after the app's packages are installed. The app needs Tailwind CSS 4.3 or a later 4.x release.
+In your own app, run the command in the folder with `nxds.json`, after the app's packages are installed. The app needs Tailwind CSS 4.3 or a later 4.x release, and `@types/react`.
 
 ```bash
 cd path/to/app
@@ -106,7 +106,7 @@ A new nxds component reaches Figma once it has a recipe:
 
 1. Add the card's example to `EXAMPLES` in `src/examples.tsx`, written as an app uses the component.
 2. Add each part the example draws to `src/parts.ts`.
-3. Add an entry to `RECIPES` in `src/recipes.tsx`. `{ name: 'Kbd' }` draws the example. The other fields say what differs: parts on their own, an overlay to open, states, axes.
+3. Add an entry to `RECIPES` in `src/recipes.tsx`. `{ name: 'Kbd', part: 'Kbd' }` draws the example. The other fields say what differs: parts on their own, an overlay to open, states, axes.
 4. Run `npm run nxds:add` in `examples/figma-app`, then the smoke test.
 
 A component folder Figma gets nothing for, such as Show, goes in `NOT_DRAWN` with the reason.
