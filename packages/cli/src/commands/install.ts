@@ -49,7 +49,7 @@ import {
 import {
   hasStorybook,
   planStorybook,
-  storybookProblem,
+  storybookSupport,
   WIRING_FILE,
 } from '../setup/storybook';
 import {
@@ -268,10 +268,10 @@ export async function init(
   };
   const before = { iconLibrary: config.iconLibrary, stories: config.stories };
   if (options.stories) {
-    const problem = storybookProblem(release, project);
-    if (problem) {
+    const support = storybookSupport(release, project);
+    if ('problem' in support) {
       throw new CliError(
-        `${problem} Then run \`${CLI_COMMAND} init --stories\` again.`
+        `${support.problem} Then run \`${CLI_COMMAND} init --stories\` again.`
       );
     }
     config.stories = true;

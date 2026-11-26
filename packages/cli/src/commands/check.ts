@@ -15,7 +15,6 @@ import {
   resolveItems,
   setupVariant,
   splitInstalled,
-  storybookFramework,
   variantFor,
   withIconLibrary,
   withStories,
@@ -52,7 +51,7 @@ import {
   rendersDerivedColors,
   VITE_PLUGIN_FILE,
 } from '../setup/react';
-import { storybookProblem, storybookWiringProblem } from '../setup/storybook';
+import { storybookSupport, storybookWiringProblem } from '../setup/storybook';
 import {
   fontImportLine,
   nxdsThemeSource,
@@ -371,8 +370,9 @@ function iconsCheck(
 
 /**
  * `catalog` with each item's stories, for an app that has stories on, after
- * checking that its Storybook runs them and takes nxds's wiring. When it
- * doesn't, the `stories` check fails and `catalog` keeps its stories apart.
+ * checking that its Storybook runs them and takes nxds's wiring. The `stories`
+ * check fails when either doesn't hold. `catalog` keeps its stories apart only
+ * when the Storybook can't run them.
  */
 function storiesCheck(
   catalog: Catalog,
@@ -381,22 +381,19 @@ function storiesCheck(
   check: (name: string, ok: boolean, message: string) => void
 ) {
   if (!config.stories) return catalog;
-  const unsupported = storybookProblem(catalog, project);
-  if (unsupported !== null) {
-    check('stories', false, unsupported);
+  const support = storybookSupport(catalog, project);
+  if ('problem' in support) {
+    check('stories', false, support.problem);
     return catalog;
   }
   const result = withStories(catalog, project);
-  const framework = storybookFramework(catalog, project);
-  let problem: string | null = null;
+  let problem: string | null;
   try {
-    if (framework) {
-      const { known } = splitInstalled(result, config.items);
-      problem = storybookWiringProblem(project, config, framework, {
-        tailwind: setupVariant(catalog, config).packages.tailwind,
-        files: [...filesOf(result, config, known)],
-      });
-    }
+    const { known } = splitInstalled(result, config.items);
+    problem = storybookWiringProblem(project, config, support.framework, {
+      tailwind: setupVariant(catalog, config).packages.tailwind,
+      files: [...filesOf(result, config, known)],
+    });
   } catch (error) {
     if (!(error instanceof CliError)) throw error;
     problem = error.message;

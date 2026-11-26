@@ -85,26 +85,42 @@ function storybookVersion(project: Project) {
   return minVersion(declared)?.version ?? null;
 }
 
-/** Why the release's stories won't run in this app's Storybook, or null. */
-export function storybookProblem(release: Catalog, project: Project) {
+/**
+ * The framework package the release's stories run in, in this app's
+ * Storybook, or why they won't run there.
+ */
+export function storybookSupport(
+  release: Catalog,
+  project: Project
+): { framework: string } | { problem: string } {
   const { storybook } = release;
   if (!storybook) {
-    return `nxds ${release.version} has no stories. Run \`${CLI_COMMAND} update\` to move to a release that has them.`;
+    return {
+      problem: `nxds ${release.version} has no stories. Run \`${CLI_COMMAND} update\` to move to a release that has them.`,
+    };
   }
   if (!('storybook' in project.dependencies)) {
-    return 'This app has no Storybook. Add it with `npx storybook@latest init`.';
+    return {
+      problem:
+        'This app has no Storybook. Add it with `npx storybook@latest init`.',
+    };
   }
   const version = storybookVersion(project);
   if (
     version !== null &&
     !satisfies(version, storybook.range, { includePrerelease: true })
   ) {
-    return `nxds stories need Storybook ${storybook.range}, and this app has storybook ${version}. Upgrade it with \`npx storybook@latest upgrade\`.`;
+    return {
+      problem: `nxds stories need Storybook ${storybook.range}, and this app has storybook ${version}. Upgrade it with \`npx storybook@latest upgrade\`.`,
+    };
   }
-  if (!storybookFramework(release, project)) {
-    return `nxds stories run in a Vite-based Storybook, and this app has neither ${storybook.frameworks.join(' nor ')}. Move your Storybook to one of them.`;
+  const framework = storybookFramework(release, project);
+  if (!framework) {
+    return {
+      problem: `nxds stories run in a Vite-based Storybook, and this app has neither ${storybook.frameworks.join(' nor ')}. Move your Storybook to one of them.`,
+    };
   }
-  return null;
+  return { framework };
 }
 
 function read(project: Project, file: string) {
