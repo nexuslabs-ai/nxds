@@ -35,6 +35,88 @@ export const RAW_LETTER_SPACINGS = [
   'widest',
 ];
 
+// A size from spacing follows density: a numeric spacing step (`size-4`), or an
+// arbitrary value that reads a spacing variable
+// (`size-[var(--nx-spacing-8)]`, `size-(--nx-spacing-8)`). Glyph tokens
+// (`size-icon-glyph-sm`) and other arbitrary values (`size-[24px]`) do not.
+// A leading `!` is Tailwind's important modifier.
+const SPACING_SIZE = /^!?(?:size|h|w)-(?:\d|[[(].*--nx-spacing-)/;
+
+// Any size utility: a spacing step, a glyph token or an arbitrary value.
+const ANY_SIZE = /^!?(?:size|h|w)-/;
+
+// A fixed size that leaves `--nx-icon-size` unset, such as `size-[24px]`. A size
+// from spacing reports `densityIconSize` instead.
+const PLAIN_SIZE = /^!?(?:size|h|w)-(?!icon-glyph-|\d|[[(].*--nx-spacing-)/;
+
+// An `Icon*` or `*Icon` JSX element, such as `IconX` or `CheckIcon`.
+const ICON_ELEMENT_NAME = /^Icon(?![a-z])|Icon$/;
+
+/** The `nx:` classes in a class string. */
+function nxClasses(raw) {
+  return raw.split(/\s+/).filter((token) => token.startsWith('nx:'));
+}
+
+/** Splits a class at the `:` separators outside `[…]` and `(…)`. */
+function splitVariants(className) {
+  const parts = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < className.length; i++) {
+    const char = className[i];
+    if (char === '[' || char === '(') depth++;
+    else if (char === ']' || char === ')') depth--;
+    else if (char === ':' && depth === 0) {
+      parts.push(className.slice(start, i));
+      start = i + 1;
+    }
+  }
+  parts.push(className.slice(start));
+  return parts;
+}
+
+/** A selector without its `[…]` and `(…)` groups. */
+function withoutGroups(selector) {
+  let depth = 0;
+  let kept = '';
+  for (const char of selector) {
+    if (char === '[' || char === '(') depth++;
+    else if (char === ']' || char === ')') depth--;
+    else if (depth === 0) kept += char;
+  }
+  return kept;
+}
+
+// An arbitrary variant whose subject is the `svg`, such as `[&_svg]` or
+// `[&>svg:not(…)]`. In `has-[>svg]` and `[&:has(svg)]` the subject is the box
+// around the icon.
+function selectsSvg(variant) {
+  if (!variant.startsWith('[') || !variant.endsWith(']')) return false;
+  const compounds = withoutGroups(variant.slice(1, -1)).split(/[_>+~]/);
+  return /^svg(?![\w-])/.test(compounds.at(-1));
+}
+
+/** Whether an `nx:` class sizes an `svg` with a utility that `size` matches. */
+function sizesSvg(token, size) {
+  const variants = splitVariants(token.slice('nx:'.length));
+  const utility = variants.pop();
+  return size.test(utility) && variants.some(selectsSvg);
+}
+
+function sizesSvgFromSpacing(raw) {
+  return nxClasses(raw).some((token) => sizesSvg(token, SPACING_SIZE));
+}
+
+function sizesFromSpacing(raw) {
+  return nxClasses(raw).some((token) =>
+    SPACING_SIZE.test(splitVariants(token).at(-1))
+  );
+}
+
+function isIconElement(name) {
+  return name.type === 'JSXIdentifier' && ICON_ELEMENT_NAME.test(name.name);
+}
+
 const NAMED_VARIANT = String.raw`@?[\w-]+(?:\[[^\s]+?\])?(?:\/[\w-]+)?:`;
 const ARBITRARY_VARIANT = String.raw`\[[^\s]+?\]:`;
 const CHILD_VARIANT = String.raw`\*{1,2}:`;
@@ -72,21 +154,22 @@ const CHECKS = [
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}font-(?:${RAW_FONT_WEIGHTS.join('|')})\\b`
     ),
-    runtimeOnly: true,
   },
   {
     messageId: 'rawLineHeight',
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}leading-(?:${RAW_LINE_HEIGHTS.join('|')}|\\d+|\\[)`
     ),
-    runtimeOnly: true,
+  },
+  {
+    messageId: 'densityIconSize',
+    test: sizesSvgFromSpacing,
   },
   {
     messageId: 'rawLetterSpacing',
     re: new RegExp(
       `nx:${NX_MODIFIER_CHAIN}tracking-(?:${RAW_LETTER_SPACINGS.join('|')}|\\[)`
     ),
-    runtimeOnly: true,
   },
 ];
 
@@ -105,38 +188,36 @@ function fadesItsFocusRing(scope) {
   );
 }
 
-function isStoryFile(filename) {
-  return /\.stories\.[jt]sx?$/.test(filename);
+// A class list that sizes its `svg` children draws the icon, so it sets the
+// icon's line with `nx:icon-stroke` too.
+function leavesIconUnstroked(scope) {
+  const classes = nxClasses(scope);
+  if (classes.includes('nx:icon-stroke')) return false;
+  return classes.some((token) => sizesSvg(token, ANY_SIZE));
 }
 
-function isDocsFile(filename) {
-  return /(?:^|[/\\])apps[/\\]docs[/\\]/.test(filename);
+// `size-icon-glyph-*` sets `--nx-icon-size`, the size the line is drawn for. Any
+// other size must set the variable itself, under the same variants.
+function sizesIconWithoutLine(scope) {
+  const classes = nxClasses(scope);
+  return classes.some((token) => {
+    if (!sizesSvg(token, PLAIN_SIZE)) return false;
+    const variants = splitVariants(token).slice(0, -1).join(':');
+    return !classes.some((other) =>
+      other.startsWith(`${variants}:[--nx-icon-size:`)
+    );
+  });
 }
 
-// What the runtime-only checks skip: stories and the docs app quote utilities
-// as specimens and prose, and the docs app styles its own chrome off-system.
-function isExampleFile(filename) {
-  return isStoryFile(filename) || isDocsFile(filename);
-}
-
-// The ring check skips less: only the docs pages, which render a pairing as
-// the subject of the prose around it. The rest of the docs app is its own
-// shipped chrome, and a story's class strings are the component's real ones.
-function isDocsSpecimenPage(filename) {
-  return /(?:^|[/\\])apps[/\\]docs[/\\]app[/\\]_pages[/\\]/.test(filename);
-}
-
+// Avatar's initials and Chart's tooltip values. The class string alone
+// matches, so the components pass wherever an app copies them.
 const RAW_TYPOGRAPHY_EXCEPTIONS = [
   {
-    filename:
-      /(?:^|[/\\])packages[/\\]react(?:-18)?[/\\]src[/\\]components[/\\]avatar[/\\]avatar\.tsx$/,
     className:
       'nx:flex nx:size-full nx:items-center nx:justify-center nx:rounded-[inherit] nx:bg-muted nx:text-foreground nx:font-medium nx:leading-none',
     messageIds: new Set(['rawFontWeight', 'rawLineHeight']),
   },
   {
-    filename:
-      /(?:^|[/\\])packages[/\\]react(?:-18)?[/\\]src[/\\]components[/\\]chart[/\\]chart\.tsx$/,
     className: 'nx:text-foreground nx:font-mono nx:font-medium nx:tabular-nums',
     messageIds: new Set(['rawFontWeight']),
   },
@@ -146,35 +227,24 @@ function normalizeClassName(raw) {
   return raw.trim().replace(/\s+/g, ' ');
 }
 
-function isRawTypographyException(check, filename, raw) {
+function isRawTypographyException(check, raw) {
   const normalized = normalizeClassName(raw);
   return RAW_TYPOGRAPHY_EXCEPTIONS.some(
     (exception) =>
-      exception.filename.test(filename) &&
       exception.className === normalized &&
       exception.messageIds.has(check.messageId)
   );
 }
 
-function shouldRunCheck(check, filename, raw) {
-  if (!check.runtimeOnly) {
-    return true;
-  }
-  if (isExampleFile(filename)) {
-    return false;
-  }
-  return !isRawTypographyException(check, filename, raw);
-}
-
-function matchedMessageIds(raw, filename) {
+function matchedMessageIds(raw) {
   const matched = new Set();
   for (const check of CHECKS) {
-    const { messageId, re } = check;
-    if (!shouldRunCheck(check, filename, raw)) {
+    if (isRawTypographyException(check, raw)) {
       continue;
     }
-    if (re.test(raw)) {
-      matched.add(messageId);
+    const matches = check.test ? check.test(raw) : check.re.test(raw);
+    if (matches) {
+      matched.add(check.messageId);
     }
   }
   return matched;
@@ -250,53 +320,80 @@ function collectClassStrings(node, visitorKeys, collected) {
   }
 }
 
+const MESSAGES = {
+  prefixOrder:
+    'Wrong nx: prefix order — `nx:` must come BEFORE all modifiers (e.g. `nx:hover:bg-*`, not `hover:nx:bg-*`).',
+  bannedAccent:
+    'Banned `accent` token — nxds has no `accent`; use `background-hover` / `container-hover` / `popover-hover`.',
+  incompletePath:
+    'Incomplete semantic token path — add a `-background`, `-foreground`, or `-subtle` suffix (e.g. `nx:bg-primary-background`).',
+  rawPrimitive:
+    'Raw Tailwind primitive color — use a semantic token instead (e.g. `nx:bg-primary-background`, not `nx:bg-blue-500`).',
+  rawFontSize:
+    'Raw Tailwind font-size utility — use a typography composite instead (e.g. `nx:typography-body-default`, not `nx:text-sm`).',
+  rawFontWeight:
+    'Raw Tailwind font-weight utility — use a typography composite instead (e.g. `nx:typography-label-default`, not `nx:font-medium`).',
+  rawLineHeight:
+    'Raw Tailwind line-height utility — let a typography composite own line-height instead of `nx:leading-*`.',
+  rawLetterSpacing:
+    'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
+  densityIconSize:
+    'Icon size from spacing — a numeric `size-*`, `h-*` or `w-*`, or one that reads a `--nx-spacing-*` variable, on an `svg` selector (`[&_svg]:size-4`) or on an `Icon*` / `*Icon` element follows density. Use `size-icon-glyph-xs`, `-sm`, `-default`, `-lg` or `-xl` (12, 14, 16, 24 or 32px at the Default UI scale).',
+  ringFadingTransition:
+    'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
+  unstrokedIcon:
+    'Unstroked icon — this class list sizes its `svg` children (`[&_svg]:size-icon-glyph-default`), so add `nx:icon-stroke` to draw stroked icons at the icon line width.',
+  plainIconSize:
+    'Plain icon size — size `svg` children with a `size-icon-glyph-*` class, so the line matches the icon. `size-*`, `h-*` and `w-*` leave `--nx-icon-size` unset, so set it on the same selector for a size off the scale.',
+};
+
 export default {
   meta: {
     type: 'problem',
     docs: {
       description:
-        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, and no ring-fading `transition-colors` on a focus-ring surface.',
+        'Enforce nx: Tailwind class conventions — correct prefix order, no banned `accent` token, complete semantic token paths, no raw primitive colors, no raw named font-size utilities, no icon sized from spacing, no ring-fading `transition-colors` on a focus-ring surface, and no sized `svg` children without `nx:icon-stroke`.',
     },
-    schema: [],
-    messages: {
-      prefixOrder:
-        'Wrong nx: prefix order — `nx:` must come BEFORE all modifiers (e.g. `nx:hover:bg-*`, not `hover:nx:bg-*`).',
-      bannedAccent:
-        'Banned `accent` token — nxds has no `accent`; use `background-hover` / `container-hover` / `popover-hover` (see shadcn-divergences.md).',
-      incompletePath:
-        'Incomplete semantic token path — add a `-background`, `-foreground`, or `-subtle` suffix (e.g. `nx:bg-primary-background`).',
-      rawPrimitive:
-        'Raw Tailwind primitive color — use a semantic token instead (e.g. `nx:bg-primary-background`, not `nx:bg-blue-500`).',
-      rawFontSize:
-        'Raw Tailwind font-size utility — use a typography composite instead (e.g. `nx:typography-body-default`, not `nx:text-sm`).',
-      rawFontWeight:
-        'Raw Tailwind font-weight utility — use a typography composite instead (e.g. `nx:typography-label-default`, not `nx:font-medium`).',
-      rawLineHeight:
-        'Raw Tailwind line-height utility — let a typography composite own line-height instead of `nx:leading-*`.',
-      rawLetterSpacing:
-        'Raw Tailwind letter-spacing utility — use a typography composite such as `nx:typography-label-caps` instead of `nx:tracking-*`.',
-      ringFadingTransition:
-        'Ring-fading transition — `nx:transition-colors` includes `outline-color`, so this focus ring fades in instead of landing with the keypress. Use `nx:transition-control` (or `nx:transition-field` on a field surface).',
-    },
+    schema: [
+      {
+        type: 'object',
+        properties: {
+          skip: {
+            type: 'array',
+            items: { enum: Object.keys(MESSAGES) },
+            uniqueItems: true,
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
+    messages: MESSAGES,
   },
   create(context) {
-    const filename = context.filename ?? '';
+    const skipped = new Set(context.options[0]?.skip);
     const { visitorKeys } = context.sourceCode;
 
-    function report(node, raw) {
-      for (const messageId of matchedMessageIds(raw, filename)) {
+    function report(node, messageId) {
+      if (!skipped.has(messageId)) {
         context.report({ node, messageId });
       }
     }
 
     function reportScope(node) {
-      if (isDocsSpecimenPage(filename) || isInsideClassCall(node)) {
+      if (isInsideClassCall(node)) {
         return;
       }
       const collected = [];
       collectClassStrings(node, visitorKeys, collected);
-      if (fadesItsFocusRing(collected.join(' '))) {
-        context.report({ node, messageId: 'ringFadingTransition' });
+      const scope = collected.join(' ');
+      if (fadesItsFocusRing(scope)) {
+        report(node, 'ringFadingTransition');
+      }
+      if (leavesIconUnstroked(scope)) {
+        report(node, 'unstrokedIcon');
+      }
+      if (sizesIconWithoutLine(scope)) {
+        report(node, 'plainIconSize');
       }
     }
 
@@ -305,19 +402,21 @@ export default {
         if (typeof node.value !== 'string') {
           return;
         }
-        report(node, node.value);
+        for (const messageId of matchedMessageIds(node.value)) {
+          report(node, messageId);
+        }
         reportScope(node);
       },
       TemplateLiteral(node) {
         const matched = new Set();
         for (const quasi of node.quasis) {
           const raw = quasi.value.cooked ?? quasi.value.raw;
-          for (const id of matchedMessageIds(raw, filename)) {
+          for (const id of matchedMessageIds(raw)) {
             matched.add(id);
           }
         }
         for (const messageId of matched) {
-          context.report({ node, messageId });
+          report(node, messageId);
         }
         reportScope(node);
       },
@@ -326,6 +425,24 @@ export default {
           return;
         }
         reportScope(node);
+      },
+      JSXOpeningElement(node) {
+        if (!isIconElement(node.name)) {
+          return;
+        }
+        const className = node.attributes.find(
+          (attribute) =>
+            attribute.type === 'JSXAttribute' &&
+            attribute.name.name === 'className'
+        );
+        if (!className?.value) {
+          return;
+        }
+        const collected = [];
+        collectClassStrings(className.value, visitorKeys, collected);
+        if (collected.some(sizesFromSpacing)) {
+          report(className, 'densityIconSize');
+        }
       },
     };
   },

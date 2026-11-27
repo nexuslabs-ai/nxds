@@ -38,7 +38,7 @@ export {
 
 export const selectTriggerVariants = cva(
   [
-    'nx:group/select-trigger nx:flex nx:box-border nx:w-full nx:items-center nx:justify-between nx:gap-2',
+    'nx:group/select-trigger nx:flex nx:box-border nx:w-full nx:items-center nx:justify-between nx:gap-2 nx:icon-stroke',
     'nx:rounded-md nx:border-default nx:transition-field',
     'nx:whitespace-nowrap nx:text-inherit',
     'nx:data-[placeholder]:text-muted-foreground',

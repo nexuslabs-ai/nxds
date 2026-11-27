@@ -1,54 +1,134 @@
-# nxds
+<div align="center">
 
-nxds is a framework-agnostic theme engine and design system. Set one appearance object, and every component follows your brand, density and corners. Docs: **<https://nxds.dev>**.
+<a href="https://nxds.dev">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="apps/docs/public/brand/nx-icon-dark.svg">
+    <img src="apps/docs/public/brand/nx-icon-light.svg" alt="nxds logo" width="88" height="88">
+  </picture>
+</a>
 
-Three layers compose into one consumable surface:
+# Your design system starts here.
 
-- **`@nxds/core`** — DTCG design tokens (color, spacing, radius, shadow, typography, motion). Color emits as OKLCH at build time via a perceptual-L grid; spacing is per-mode (mode swap at runtime via the `data-density` attribute).
-- **`@nxds/tailwind`** — Tailwind CSS theme generated from the tokens. All utilities are namespaced with the `nx:` prefix.
-- **`@nxds/react`** — React components built on Radix UI primitives and the Tailwind layer. Variants via CVA; data-attribute test surface.
+**nxds** is a theme engine and design system. Set one appearance object, and every component follows your brand, density and corners.
 
-Add nxds to your app with `nxds-cli`:
+**Alpha:** APIs may change before 1.0. Your copied components change only when you run `npx nxds-cli@latest update`.
+
+[![@nxds/core on npm](https://img.shields.io/npm/v/@nxds/core?label=%40nxds%2Fcore)](https://www.npmjs.com/package/@nxds/core)
+[![nxds-cli on npm](https://img.shields.io/npm/v/nxds-cli?label=nxds-cli)](https://www.npmjs.com/package/nxds-cli)
+[![CI](https://github.com/nexuslabs-ai/nxds/actions/workflows/ci.yml/badge.svg)](https://github.com/nexuslabs-ai/nxds/actions/workflows/ci.yml)
+[![MIT license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Discord](https://img.shields.io/badge/chat-Discord-5865F2?logo=discord&logoColor=white)](https://discord.gg/PTT5JFyhHw)
+
+[Docs](https://nxds.dev/getting-started/introduction) · [Components](https://nxds.dev/components) · [Playground](https://nxds.dev/playground) · [Storybook](https://storybook.nxds.dev) · [Changelog](https://nxds.dev/changelog)
+
+</div>
+
+<br>
+
+<a href="https://nxds.dev">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/readme-hero-dark.png">
+    <img src=".github/assets/readme-hero-light.png" alt="nxds components in a project dashboard: a create-project form, a workspace activity chart, team access roles, a design review comment and a project checklist">
+  </picture>
+</a>
+
+## Get started
 
 ```bash
 npx nxds-cli@latest init
 npx nxds-cli@latest add button
 ```
 
-To give Claude Code the nxds skills, run `/plugin install nxds --marketplace nexuslabs-ai/nxds`.
+The CLI copies each component into your app, so the code is yours to edit. For Vue, follow the [install guide](https://nxds.dev/getting-started/install#install-by-hand).
 
-Storybook hosts the component catalog and runs both visual docs and interaction tests against the real components. The catalog is published from `main` at **<https://storybook.nxds.dev>**.
+## Customize every detail.
 
-## Prerequisites
+Change one setting. See your system respond.
 
-- **Node** ≥ 22 (see `.nvmrc`)
-- **pnpm** — pinned via `packageManager: pnpm@10.12.1`
-- **Docker Desktop** — for the docs-MCP server (optional)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/readme-themes-dark.png">
+  <img src=".github/assets/readme-themes-light.png" alt="The same create-project card in three themes. Dense: black, Geist, small UI scale, compact spacing. Friendly: indigo, Figtree, comfortable spacing, extra-round corners. Editorial: amber, Lora with Playfair Display headings, large UI scale, relaxed spacing, square corners.">
+</picture>
 
-## Quick start
+Every theme passes contrast checks in CI, in light and dark. **[Open Playground →](https://nxds.dev/playground)**
+
+## Your next component shouldn't change the rest.
+
+nxds components bring their own styles, so you add what you need and keep the look you built.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/readme-coexist-dark.png">
+  <img src=".github/assets/readme-coexist-light.png" alt="Two copies of a shadcn/ui app. Adding a react-bootstrap Dropdown changes the app's buttons through global rules. Adding the nxds Select leaves the app unchanged.">
+</picture>
+
+Works next to MUI, shadcn/ui, Chakra UI, Mantine, Ant Design, Bootstrap and Tailwind. **[Explore integrations →](https://nxds.dev/integrations/overview)**
+
+## One foundation. Many frameworks.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/readme-frameworks-dark.png">
+  <img src=".github/assets/readme-frameworks-light.png" alt="Design tokens feed nxds core. Brand color, surfaces and contrast feed the theme engine. Typography, spacing, radius, borders, shadows and motion feed the appearance engine. Both produce a shared theme for React, Vue, and the planned Svelte, Angular and React Native.">
+</picture>
+
+**[Explore the engine →](https://nxds.dev/foundations/tokens)**
+
+## Stories are the tests.
+
+The example you explore is the example we check.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/readme-stories-dark.png">
+  <img src=".github/assets/readme-stories-light.png" alt="A Switch example next to its Storybook story. Five checks, from starts off to reports false, have passed.">
+</picture>
+
+**[Open Storybook →](https://storybook.nxds.dev)**
+
+## For designers
+
+Pick a theme in the Playground, then select **Use in Claude Design**. Claude builds your own nxds Design System on a canvas, with live components in your theme.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/readme-playground-dark.png">
+  <img src=".github/assets/readme-playground-light.png" alt="The nxds Playground with an indigo theme. The appearance panel sets brand color, mode, surface tone, contrast, UI scale, text size and density, and the examples follow it.">
+</picture>
+
+**[Set up Claude Design →](https://nxds.dev/getting-started/claude-design)**
+
+## For AI agents
+
+Give your agent the nxds skills:
 
 ```bash
-make setup        # install deps + the Playwright browser
-make dev          # Storybook — the component catalog & dev surface
+# Claude Code
+/plugin marketplace add nexuslabs-ai/nxds
+/plugin install nxds@nxds
+
+# Cursor, Codex, Gemini CLI and other agents
+npx skills add nexuslabs-ai/nxds --skill nxds nxds-adopt
 ```
 
-`make help` lists every shortcut. Full setup, the `make` workflow, the testing model, and the docs-MCP are in **[`CONTRIBUTING.md`](CONTRIBUTING.md)**.
+Every docs page is also Markdown, listed in [llms.txt](https://nxds.dev/llms.txt). **[Read the AI agents guide →](https://nxds.dev/getting-started/ai-agents)**
 
-## Workspace layout
+## Packages
 
-| Path                     | Purpose                                                       |
-| ------------------------ | ------------------------------------------------------------- |
-| `packages/core`          | Internal design tokens and theme definitions (not published)  |
-| `packages/tailwind`      | Tailwind CSS theme with `nx:` prefix                          |
-| `packages/react`         | React components built with Radix UI and Tailwind CSS         |
-| `packages/cli`           | `nxds-cli`, which installs nxds into an app                   |
-| `packages/claude-design` | nxds as a Claude Design System, built on every release        |
-| `apps/docs`              | Documentation site (Next.js — IA shell + live theme explorer) |
-| `plugins/nxds`           | The nxds skills for Claude Code and other AI agents           |
+| Package                                         | What it does                                        |
+| ----------------------------------------------- | --------------------------------------------------- |
+| [`nxds-cli`](packages/cli)                      | Copies nxds into your app and updates it            |
+| [`@nxds/core`](packages/core)                   | The theme engine                                    |
+| [`@nxds/eslint-plugin`](packages/eslint-plugin) | Lint rules for nxds conventions                     |
+| [`@nxds/claude-design`](packages/claude-design) | nxds as a Claude Design System                      |
+| [`plugins/nxds`](plugins/nxds)                  | The nxds skills for Claude Code and other AI agents |
 
-## Where to learn more
+## Community
 
-- **[`CONTRIBUTING.md`](CONTRIBUTING.md)** — setup, the `make` workflow, the testing model, story patterns, and the docs-MCP
-- [`.claude/rules/`](.claude/rules/) — project conventions (canonical; there is no root `CLAUDE.md`). High-traffic files:
-  - [`testing-react.md`](.claude/rules/testing-react.md) — testing patterns for the React package
-- [Issue tracker](../../issues) — bugs and feature requests
+Ask questions, suggest ideas and share what you built in [GitHub Discussions](https://github.com/nexuslabs-ai/nxds/discussions). Chat on [Discord](https://discord.gg/PTT5JFyhHw). Report bugs in [GitHub issues](https://github.com/nexuslabs-ai/nxds/issues). Follow [@nxdsdev on X](https://x.com/nxdsdev) for news.
+
+Everyone in the nxds community follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) to set up the repo, run the tests and [add a component or block](CONTRIBUTING.md#add-a-component-or-block).
+
+## License
+
+[MIT](LICENSE) © Nexus Labs

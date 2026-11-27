@@ -237,7 +237,7 @@ export const AsyncLoading: Story = {
         <Spinner
           aria-hidden="true"
           role="presentation"
-          className="nx:size-3.5"
+          className="nx:size-icon-glyph-sm"
         />
         Loading commands...
       </CommandLoading>
@@ -662,7 +662,7 @@ export const WithDataAttributes: Story = {
       '[data-slot="command-shortcut"]'
     );
     await expect(shortcut).toHaveClass('nx:typography-shortcut');
-    await expect(shortcut).not.toHaveClass('nx:tracking-widest');
+    await expect(shortcut).not.toHaveClass(/tracking-/);
   },
 };
 

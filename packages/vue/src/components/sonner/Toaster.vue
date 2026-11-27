@@ -24,6 +24,7 @@ import {
   IconCircleCheck,
   IconInfoCircle,
   IconLoader2,
+  IconX,
 } from '../../lib/icons';
 
 import 'vue-sonner/style.css';
@@ -57,11 +58,12 @@ function getThemeSnapshot(): 'light' | 'dark' {
 }
 
 /**
- * Sonner reads these custom properties off the toaster container to colour each
- * toast; map every one to its nxds semantic token. The `-bg`/`-text`/`-border`
+ * Sonner reads these custom properties off the toaster container to size and
+ * colour each toast; map every one to its nxds token. The `-bg`/`-text`/`-border`
  * triples for success/error/warning/info apply when `richColors` is enabled.
  */
 const toasterThemeVars = {
+  '--width': 'calc(356px*var(--nx-ui-scale))',
   '--normal-bg': 'var(--nx-color-container)',
   '--normal-text': 'var(--nx-color-foreground)',
   '--normal-border': 'var(--nx-color-border-default)',
@@ -113,20 +115,40 @@ const forwarded = computed(
 </script>
 
 <template>
-  <div data-slot="toaster">
+  <div
+    data-slot="toaster"
+    class="nx:[&_[data-icon]]:icon-stroke nx:[&_[data-close-button]]:icon-stroke"
+  >
     <Sonner
       v-bind="forwarded"
       :id="NXDS_TOASTER_ID"
       :theme="props.theme ?? documentTheme"
       :style="style"
     >
-      <template #success-icon><IconCircleCheck class="nx:size-4" /></template>
-      <template #info-icon><IconInfoCircle class="nx:size-4" /></template>
-      <template #warning-icon><IconAlertTriangle class="nx:size-4" /></template>
-      <template #error-icon><IconAlertCircle class="nx:size-4" /></template>
-      <template #loading-icon
-        ><IconLoader2 class="nx:size-4 nx:animate-spin"
-      /></template>
+      <template #success-icon>
+        <component :is="props.icons.success" v-if="props.icons?.success" />
+        <IconCircleCheck v-else class="nx:size-icon-glyph-default" />
+      </template>
+      <template #info-icon>
+        <component :is="props.icons.info" v-if="props.icons?.info" />
+        <IconInfoCircle v-else class="nx:size-icon-glyph-default" />
+      </template>
+      <template #warning-icon>
+        <component :is="props.icons.warning" v-if="props.icons?.warning" />
+        <IconAlertTriangle v-else class="nx:size-icon-glyph-default" />
+      </template>
+      <template #error-icon>
+        <component :is="props.icons.error" v-if="props.icons?.error" />
+        <IconAlertCircle v-else class="nx:size-icon-glyph-default" />
+      </template>
+      <template #loading-icon>
+        <component :is="props.icons.loading" v-if="props.icons?.loading" />
+        <IconLoader2
+          v-else
+          class="nx:size-icon-glyph-default nx:animate-spin"
+        />
+      </template>
+      <template #close-icon><IconX class="nx:size-icon-glyph-xs" /></template>
     </Sonner>
   </div>
 </template>

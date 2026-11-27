@@ -36,19 +36,24 @@ With `--json`, a command prints one object: `{ "ok": true, "exitCode": 0,
 npx nxds-cli@latest export claude-design
 ```
 
-The command writes a `nxds-design-system` folder. Ask Claude to publish that
-folder as a Design System artifact, unchanged. Your canvas then mounts every
-nxds component, shows its props as controls and lists the nxds tokens.
+The command writes a `nxds-design-system` folder. Its `SETUP.md` walks the
+agent through publishing the system as a Design System artifact, installing it
+on a canvas and checking it. Your canvas then mounts every nxds component, shows
+its props as controls and lists the nxds tokens.
 
-| Option              | What it does                                                                     |
-| ------------------- | -------------------------------------------------------------------------------- |
-| `--release <v>`     | Export that nxds release instead of the latest                                   |
-| `--out <path>`      | Write the folder somewhere else                                                  |
-| `--index <path>`    | Keep the title and creation date from your system's current `design-system.json` |
-| `--existing <path>` | List, in `removed.json`, the files your system has that this release drops       |
+In a Claude chat, start from the [Claude Design](/getting-started/claude-design)
+prompt instead.
 
-If you republish over an existing system, remove the files in `removed.json`
-too, so no old component stays on the page.
+| Option                                               | What it does                                                                            |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `--release <v>`                                      | Export that nxds release instead of the latest                                          |
+| `--out <path>`                                       | Write the folder somewhere else                                                         |
+| `--index <path>`                                     | Keep the title, creation date and theme from your system's current `design-system.json` |
+| `--brand-color <c>` and the other `init` theme flags | Theme the system. `--mode` and `--icons` aren't taken                                   |
+| `--existing <path>`                                  | List, in `removed.json`, the files your system has that this release drops              |
+
+`SETUP.md`'s update steps use `--index` and `--existing` to republish over an
+existing system.
 
 On the canvas, every prop is an attribute. A bare `disabled` is true,
 `value="60"` is a number and `default-value="20,80"` is a list. Each
@@ -107,7 +112,10 @@ curl https://nxds.dev/getting-started/install.md
 ```
 
 The Markdown keeps the page's text, tables and code. Live previews and copy
-buttons are left out, because they mean nothing as text.
+buttons are left out, because they mean nothing as text. Links point at other
+pages' Markdown, so an agent can follow them.
+
+To paste a page into a chat, click **Copy page** at the top of the page.
 
 ## Fetch every page in one file
 

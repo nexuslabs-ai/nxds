@@ -9,6 +9,7 @@ import type { HTMLAttributes } from 'vue';
 
 import { IconChevronRight } from '../../lib/icons';
 import { cn } from '../../lib/utils';
+import { menuItemInsetClassName } from '../overlay-layout/overlay-layout';
 
 export interface DropdownMenuSubTriggerProps extends RekaDropdownMenuSubTriggerProps {
   /**
@@ -35,13 +36,13 @@ const forwarded = useForwardProps(delegated);
         'nx:rounded-sm nx:px-2 nx:py-1.5 nx:typography-body-default nx:outline-none',
         'nx:focus:bg-popover-hover nx:focus:text-popover-foreground',
         'nx:data-[state=open]:bg-popover-hover nx:data-[state=open]:text-popover-foreground',
-        'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-4 nx:[&_svg]:shrink-0',
-        inset && 'nx:pl-8',
+        'nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:[&_svg]:shrink-0 nx:icon-stroke',
+        inset && menuItemInsetClassName,
         props.class
       )
     "
   >
     <slot />
-    <IconChevronRight class="nx:ml-auto nx:size-4" />
+    <IconChevronRight class="nx:ml-auto" />
   </DropdownMenuSubTrigger>
 </template>

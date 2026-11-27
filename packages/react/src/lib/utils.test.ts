@@ -115,6 +115,25 @@ function emittedThemeTokens(cssKey: string) {
 }
 
 describe('cn', () => {
+  it('lets a later height or size replace a control min-height', () => {
+    expect(cn('nx:h-fit nx:min-h-10', 'nx:h-8')).toBe('nx:h-8');
+    expect(cn('nx:h-fit nx:min-h-10', 'nx:size-8')).toBe('nx:size-8');
+    expect(cn('nx:h-8', 'nx:min-h-0')).toBe('nx:h-8 nx:min-h-0');
+  });
+
+  it('keeps min-h-0 under a later height or size', () => {
+    expect(cn('nx:min-h-0', 'nx:h-full')).toBe('nx:min-h-0 nx:h-full');
+    expect(cn('nx:min-h-0', 'nx:size-8')).toBe('nx:min-h-0 nx:size-8');
+    expect(cn('nx:h-fit nx:min-h-10', 'nx:min-h-0')).toBe(
+      'nx:h-fit nx:min-h-0'
+    );
+    expect(cn('nx:min-h-0', 'nx:min-h-10')).toBe('nx:min-h-10');
+    expect(cn('nx:min-h-[0px]', 'nx:h-8')).toBe('nx:min-h-[0px] nx:h-8');
+    expect(cn('nx:h-fit nx:min-h-10', 'nx:min-h-[0px]')).toBe(
+      'nx:h-fit nx:min-h-[0px]'
+    );
+  });
+
   it.each(['primary', 'error', 'information', 'success', 'warning'])(
     'keeps border widths while merging renamed %s colors and aliases',
     (family) => {
@@ -170,6 +189,31 @@ describe('cn', () => {
       'nx:animate-none',
     ],
     ['z-index', 'nx:z-overlay nx:z-popover', 'nx:z-popover'],
+    [
+      'icon size',
+      'nx:size-4 nx:size-icon-glyph-default',
+      'nx:size-icon-glyph-default',
+    ],
+    [
+      'icon size xs',
+      'nx:size-4 nx:size-icon-glyph-xs',
+      'nx:size-icon-glyph-xs',
+    ],
+    [
+      'icon size sm',
+      'nx:size-4 nx:size-icon-glyph-sm',
+      'nx:size-icon-glyph-sm',
+    ],
+    [
+      'icon size lg',
+      'nx:size-6 nx:size-icon-glyph-lg',
+      'nx:size-icon-glyph-lg',
+    ],
+    [
+      'icon size xl',
+      'nx:size-8 nx:size-icon-glyph-xl',
+      'nx:size-icon-glyph-xl',
+    ],
     [
       'spacing role',
       'nx:gap-container nx:gap-layout-stack',
@@ -237,6 +281,13 @@ describe('cn', () => {
     ).toBe(
       'nx:focus-visible:outline-default nx:focus-visible:outline-focus-default'
     );
+  });
+
+  it("keeps the icon stroke beside the element's own stroke utilities", () => {
+    expect(cn('nx:icon-stroke', 'nx:stroke-2 nx:stroke-current')).toBe(
+      'nx:icon-stroke nx:stroke-2 nx:stroke-current'
+    );
+    expect(cn('nx:icon-stroke', 'nx:icon-stroke')).toBe('nx:icon-stroke');
   });
 
   it('merges custom utilities within the same modifier scope', () => {

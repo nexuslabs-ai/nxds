@@ -1,23 +1,37 @@
 // The page a Design canvas loads, and the helpers every check renders and
-// reads it with. A check records each problem with `fail`.
+// reads it with. `openCanvas` points them at an exported folder before any
+// check runs. A check records each problem with `fail`. Google Fonts answers
+// from the Fontsource files in node_modules, so a themed export's fonts load
+// with no network.
 import type * as ReactModule from 'react';
 import type * as ReactDOMModule from 'react-dom';
 import type * as ReactDOMClient from 'react-dom/client';
 
+import {
+  applyNxdsThemeFlags,
+  DEFAULT_NXDS_THEME,
+  FONT_OPTIONS,
+  type NxdsAppearanceState,
+} from '@nxds/core';
 import { readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import {
+  type Browser,
+  type BrowserContext,
   type BrowserContextOptions,
   chromium,
   type Page,
   type Route,
 } from 'playwright';
 
+import { canvasLinks } from '../../src/setup.ts';
+import type { ThemeId, TokensFile } from '../../src/tokens.ts';
+
 const packageRoot = path.join(import.meta.dirname, '..', '..');
-export const projectDir = path.join(packageRoot, 'dist', 'project');
 const require = createRequire(path.join(packageRoot, 'package.json'));
 const ORIGIN = 'https://system.test';
+const GOOGLE_FONTS = 'https://fonts.googleapis.com';
 
 // Development builds, so React's key, ref and nesting warnings surface.
 const REACT = {
@@ -34,28 +48,19 @@ const REACT = {
 /** The `<link>` and `<script>` lines the README tells a canvas artboard to add, pointed at /project/. */
 function canvasLines() {
   const readme = readFileSync(path.join(projectDir, 'README.md'), 'utf8');
-  const section = /^## On a Design canvas\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(
-    readme
-  )?.[1];
-  const html = /```html\n([\s\S]*?)```/.exec(section ?? '')?.[1];
-  if (!html) {
-    throw new Error(
-      'README.md: no html block under "On a Design canvas" to load the system from.'
-    );
-  }
-  return html
-    .trim()
-    .split('\n')
-    .map((line) => line.replaceAll('ds/<folder>/', '/project/'));
+  return canvasLinks(readme).map((line) =>
+    line.replaceAll('ds/<folder>/', '/project/')
+  );
 }
 
-const PRELOAD = [
-  '<script src="/lib/react.js"></script>',
-  '<script src="/lib/react-dom.js"></script>',
-  ...canvasLines(),
-].join('\n');
+/** The folder `nxds-cli export claude-design` wrote: `project/`, SETUP.md and the rest. */
+export let exportDir = '';
+export let projectDir = '';
+let preload = '';
+export let browser: Browser | undefined;
+let context: BrowserContext;
 
-export type Theme = { attribute: string | null; darkClass: boolean };
+export type Theme = { attribute: ThemeId | null; darkClass: boolean };
 export const LIGHT: Theme = { attribute: 'light', darkClass: false };
 export const DARK: Theme = { attribute: 'dark', darkClass: false };
 export const DARK_CLASS: Theme = { attribute: null, darkClass: true };
@@ -68,8 +73,13 @@ export interface PageGlobals {
   ReactDOM: typeof ReactDOMClient & Pick<typeof ReactDOMModule, 'flushSync'>;
   Nxds: Record<string, unknown>;
   __nxdsElement: (tree: Part | string) => ReactModule.ReactNode;
-  __nxdsMarkup: (markup: string, wrapped: boolean) => ReactModule.ReactNode;
-  __nxdsSignature: (host: Element) => string[];
+  __nxdsMarkup: (
+    markup: string,
+    wrapped: boolean,
+    values?: Record<string, unknown>
+  ) => ReactModule.ReactNode;
+  __nxdsArtboard: (markup: string, script: string) => ReactModule.ReactNode;
+  __nxdsSettle: (host: Element) => Promise<string[]>;
 }
 
 export function fail(message: string) {
@@ -83,7 +93,7 @@ function frame(previewHtml: string, theme: Theme) {
   ].join(' ');
   return previewHtml
     .replace(/<html([^>]*)>/, `<html$1 ${attributes}>`)
-    .replace('<head>', `<head>\n${PRELOAD}`);
+    .replace('<head>', `<head>\n${preload}`);
 }
 
 export function cards() {
@@ -120,8 +130,6 @@ export async function openPage(card: string, theme: Theme, on = context) {
   return { page, problems };
 }
 
-export const browser = await chromium.launch();
-
 // `window.__nxdsElement(tree)` renders a `Part` tree as plain React: each
 // prop holds its real value, as nxds's own stories pass it.
 //
@@ -131,10 +139,17 @@ export const browser = await chromium.launch();
 // a canvas does: every element gets `data-dc-tpl` and its children as an
 // array, indentation kept as strings, and every x-import sits inside its own
 // `<div class="sc-host-x" style="display: contents">`. Without, it leaves out
-// the wrappers and the indentation.
+// the wrappers and the indentation. An attribute that is exactly `{{name}}`
+// takes `values[name]`, as an artboard's `renderVals()` binds it.
 //
-// `window.__nxdsSignature(host)` lists what a viewer and a screen reader get
-// from each element: tag, part, role, state, classes and text.
+// `window.__nxdsArtboard(markup, script)` renders markup the way an artboard
+// with that `<script type="text/x-dc">` does: the script's `Component` runs
+// on a stand-in DCLogic, its `renderVals()` fills the `{{name}}` bindings,
+// and each `setState` renders again.
+//
+// `window.__nxdsSettle(host)` waits until what a viewer and a screen reader
+// get from each element stops changing, up to four seconds, and returns it:
+// tag, part, role, state, classes and text.
 function pageHelpers() {
   const NAMES: Record<string, string> = {
     class: 'className',
@@ -232,13 +247,18 @@ function pageHelpers() {
   const markupNode = (
     node: ChildNode,
     wrapped: boolean,
+    values: Record<string, unknown>,
     key: number
   ): ReactModule.ReactNode => {
+    const bound = (value: string) => {
+      const name = /^\{\{(\w+)\}\}$/.exec(value)?.[1];
+      return name !== undefined && name in values ? values[name] : value;
+    };
     const { React } = globals();
     if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
     if (!(node instanceof Element)) return null;
     const children = [...node.childNodes]
-      .map((child, index) => markupNode(child, wrapped, index))
+      .map((child, index) => markupNode(child, wrapped, values, index))
       .filter((child) => child !== null);
     const content = wrapped ? children : compact(children);
     const tag = node.tagName.toLowerCase();
@@ -247,7 +267,7 @@ function pageHelpers() {
       const props: Record<string, unknown> = {};
       for (const attribute of node.attributes) {
         if (attribute.name === 'component-from-global-scope') continue;
-        props[camel(attribute.name)] = attribute.value;
+        props[camel(attribute.name)] = bound(attribute.value);
       }
       const type = part(name) ?? name;
       if (!wrapped) {
@@ -271,7 +291,9 @@ function pageHelpers() {
     for (const attribute of node.attributes) {
       const name = NAMES[attribute.name] ?? attribute.name;
       props[name] =
-        name === 'style' ? styleObject(attribute.value) : attribute.value;
+        name === 'style'
+          ? styleObject(attribute.value)
+          : bound(attribute.value);
     }
     if (wrapped) {
       mounted += 1;
@@ -282,14 +304,46 @@ function pageHelpers() {
       ? React.createElement(tag, { ...props, children: content })
       : React.createElement(tag, props);
   };
-  const markup = (text: string, wrapped: boolean): ReactModule.ReactNode => {
+  const markup = (
+    text: string,
+    wrapped: boolean,
+    values: Record<string, unknown> = {}
+  ): ReactModule.ReactNode => {
     const { React } = globals();
     const template = document.createElement('template');
     template.innerHTML = text.trim();
     const nodes = [...template.content.childNodes]
-      .map((node, index) => markupNode(node, wrapped, index))
+      .map((node, index) => markupNode(node, wrapped, values, index))
       .filter((node) => node !== null);
     return React.createElement(React.Fragment, null, ...compact(nodes));
+  };
+  const artboard = (text: string, script: string): ReactModule.ReactNode => {
+    const { React } = globals();
+    const template = document.createElement('template');
+    template.innerHTML = script;
+    const body = template.content.querySelector('script')?.textContent ?? '';
+    function Artboard() {
+      const [, render] = React.useReducer((count: number) => count + 1, 0);
+      const [logic] = React.useState(() => {
+        class DCLogic {
+          props: Record<string, unknown>;
+          state: Record<string, unknown> = {};
+          constructor(props: Record<string, unknown>) {
+            this.props = props;
+          }
+          setState(next: Record<string, unknown>) {
+            this.state = { ...this.state, ...next };
+            render();
+          }
+        }
+        const Component = new Function('DCLogic', `${body}\nreturn Component;`)(
+          DCLogic
+        ) as new (props: object) => { renderVals(): Record<string, unknown> };
+        return new Component({});
+      });
+      return markup(text, true, logic.renderVals());
+    }
+    return React.createElement(Artboard);
   };
   const signature = (host: Element) =>
     [...host.querySelectorAll('*')]
@@ -307,15 +361,82 @@ function pageHelpers() {
           .trim();
         return `${node.tagName.toLowerCase()}${classes ? `.${classes}` : ''}${states.length > 0 ? ` [${states.join(' ')}]` : ''}${text ? ` "${text}"` : ''}`;
       });
+  const settle = async (host: Element) => {
+    let last: string[] = [];
+    for (let tries = 0; tries < 20; tries += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      const next = signature(host);
+      if (next.join('\n') === last.join('\n')) break;
+      last = next;
+    }
+    return last;
+  };
   Object.assign(window, {
     __nxdsElement: element,
     __nxdsMarkup: markup,
-    __nxdsSignature: signature,
+    __nxdsArtboard: artboard,
+    __nxdsSettle: settle,
   });
+}
+
+/** The tokens.json the export wrote. */
+export function exportTokens() {
+  return JSON.parse(
+    readFileSync(path.join(projectDir, 'tokens.json'), 'utf8')
+  ) as TokensFile & { meta: { theme: Record<string, string> } };
+}
+
+/** The appearance the export's theme sets. */
+export function exportAppearance(): NxdsAppearanceState {
+  return applyNxdsThemeFlags(DEFAULT_NXDS_THEME, exportTokens().meta.theme)
+    .appearance;
+}
+
+/** A curated font's latin Fontsource file, by its Google Fonts family name. */
+function fontFile(family: string) {
+  const font = FONT_OPTIONS.find((option) => option.label === family);
+  if (!font) return undefined;
+  return path.join(
+    path.dirname(require.resolve(`${font.package}/package.json`)),
+    'files',
+    `${font.value}-latin-wght-normal.woff2`
+  );
+}
+
+/** What Google Fonts' css2 answers for `url`'s families: a face each, from this origin. */
+function googleFontsCss(url: URL) {
+  return url.searchParams
+    .getAll('family')
+    .map((entry) => entry.split(':')[0] ?? '')
+    .map(
+      (family) =>
+        `@font-face { font-family: '${family}'; font-weight: 100 900; src: url(${ORIGIN}/fonts/${encodeURIComponent(family)}.woff2) format('woff2'); }`
+    )
+    .join('\n');
+}
+
+function serveFont(route: Route, url: URL) {
+  const file = fontFile(
+    decodeURIComponent(url.pathname.slice('/fonts/'.length, -'.woff2'.length))
+  );
+  if (!file) {
+    fail(`request for ${url.pathname}, which no curated font serves`);
+    return route.abort();
+  }
+  return route.fulfill({ path: file, contentType: 'font/woff2' });
 }
 
 function serve(route: Route) {
   const url = new URL(route.request().url());
+  if (url.origin === GOOGLE_FONTS && url.pathname === '/css2') {
+    return route.fulfill({
+      body: googleFontsCss(url),
+      contentType: 'text/css',
+    });
+  }
+  if (url.origin === ORIGIN && url.pathname.startsWith('/fonts/')) {
+    return serveFont(route, url);
+  }
   if (url.origin !== ORIGIN) {
     fail(`network request to ${url.href}`);
     return route.abort();
@@ -335,6 +456,7 @@ function serve(route: Route) {
 
 /** A browser context that serves the system and has the page helpers. */
 export async function canvasContext(options: BrowserContextOptions = {}) {
+  if (!browser) throw new Error('openCanvas has not run.');
   const created = await browser.newContext({
     viewport: { width: 960, height: 720 },
     ...options,
@@ -344,7 +466,25 @@ export async function canvasContext(options: BrowserContextOptions = {}) {
   return created;
 }
 
-const context = await canvasContext();
+/** Closes the browser the last `openCanvas` opened. */
+export async function closeCanvas() {
+  await browser?.close();
+  browser = undefined;
+}
+
+/** Loads the export in `folder` the way a canvas does, for every check after it. */
+export async function openCanvas(folder: string) {
+  await closeCanvas();
+  exportDir = folder;
+  projectDir = path.join(folder, 'project');
+  preload = [
+    '<script src="/lib/react.js"></script>',
+    '<script src="/lib/react-dom.js"></script>',
+    ...canvasLines(),
+  ].join('\n');
+  browser = await chromium.launch();
+  context = await canvasContext();
+}
 
 export async function rendered(page: Page) {
   return page.evaluate(() => {
@@ -424,7 +564,7 @@ type Mount = { tree: Part } | { markup: string };
 // chart's entry animation has finished.
 export async function signatureOf(page: Page, mount: Mount) {
   return page.evaluate(async (mount) => {
-    const { ReactDOM, __nxdsElement, __nxdsMarkup, __nxdsSignature } =
+    const { ReactDOM, __nxdsElement, __nxdsMarkup, __nxdsSettle } =
       window as unknown as PageGlobals;
     const host = document.createElement('div');
     host.style.width = '640px';
@@ -443,16 +583,10 @@ export async function signatureOf(page: Page, mount: Mount) {
       host.remove();
       return { error: error instanceof Error ? error.message : String(error) };
     }
-    let last: string[] = [];
-    for (let tries = 0; tries < 20; tries += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      const next = __nxdsSignature(host);
-      if (next.join('\n') === last.join('\n')) break;
-      last = next;
-    }
+    const signature = await __nxdsSettle(host);
     root.unmount();
     host.remove();
-    return { signature: last };
+    return { signature };
   }, mount);
 }
 

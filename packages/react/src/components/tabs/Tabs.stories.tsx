@@ -239,19 +239,13 @@ export const WithCards: Story = {
           </CardHeader>
           <CardContent className="nx:space-y-2">
             <div className="nx:space-y-1">
-              <label
-                htmlFor="name"
-                className="nx:typography-label-default nx:leading-none"
-              >
+              <label htmlFor="name" className="nx:typography-label-default">
                 Name
               </label>
               <Input id="name" defaultValue="Pedro Duarte" />
             </div>
             <div className="nx:space-y-1">
-              <label
-                htmlFor="username"
-                className="nx:typography-label-default nx:leading-none"
-              >
+              <label htmlFor="username" className="nx:typography-label-default">
                 Username
               </label>
               <Input id="username" defaultValue="@peduarte" />
@@ -270,19 +264,13 @@ export const WithCards: Story = {
           </CardHeader>
           <CardContent className="nx:space-y-2">
             <div className="nx:space-y-1">
-              <label
-                htmlFor="current"
-                className="nx:typography-label-default nx:leading-none"
-              >
+              <label htmlFor="current" className="nx:typography-label-default">
                 Current password
               </label>
               <Input id="current" type="password" />
             </div>
             <div className="nx:space-y-1">
-              <label
-                htmlFor="new"
-                className="nx:typography-label-default nx:leading-none"
-              >
+              <label htmlFor="new" className="nx:typography-label-default">
                 New password
               </label>
               <Input id="new" type="password" />

@@ -16,7 +16,7 @@ const props = defineProps<MarkerIconProps>();
     aria-hidden="true"
     :class="
       cn(
-        'nx:inline-flex nx:size-4 nx:shrink-0 nx:items-center nx:justify-center',
+        'nx:inline-flex nx:size-icon-glyph-default nx:shrink-0 nx:items-center nx:justify-center',
         props.class
       )
     "

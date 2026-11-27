@@ -77,9 +77,7 @@ export const WithForm: Story = {
         <PopoverContent className="nx:w-80">
           <div className="nx:flex nx:flex-col nx:gap-4">
             <div className="nx:flex nx:flex-col nx:gap-1.5">
-              <h4 className="nx:typography-label-default nx:leading-none">
-                Dimensions
-              </h4>
+              <h4 className="nx:typography-label-default">Dimensions</h4>
               <p className="nx:typography-body-default nx:text-muted-foreground">
                 Set the dimensions for the layer.
               </p>

@@ -1,4 +1,4 @@
-import { TopNav } from '../_components/TopNav';
+import { SiteHeader } from '../_components/SiteHeader';
 
 export default function WorkspaceGroupLayout({
   children,
@@ -7,8 +7,8 @@ export default function WorkspaceGroupLayout({
 }) {
   return (
     <>
-      <TopNav />
-      <main>{children}</main>
+      <SiteHeader />
+      <main id="main">{children}</main>
     </>
   );
 }

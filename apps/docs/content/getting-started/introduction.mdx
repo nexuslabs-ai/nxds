@@ -7,15 +7,20 @@ nxds is a framework-agnostic theme engine that ships components, not a component
 
 You copy the components into your app and own them. The engine, `@nxds/core`, produces every token those components use, from one appearance object. Change your brand color, density or corner style, and every component follows.
 
+## Alpha
+
+nxds is in alpha. APIs may change before 1.0. Your copied components change only when you update them.
+
 ## Our philosophy
 
 nxds rests on six ideas. Each one links to the page that explains it.
 
 ### You own the components
 
-Every component is source code you paste into your app and edit like any other
-file. To update one, paste the newer version over yours.
-[Install](/getting-started/install#add-your-first-component) shows how.
+Every component is source code you copy into your app and edit like any other
+file. To update, run `npx nxds-cli@latest update`. It merges each release into
+the files you edited. [Install](/getting-started/install#update-components)
+shows how.
 
 ### One engine makes every token
 

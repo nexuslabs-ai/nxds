@@ -1,0 +1,19 @@
+name: Docs fix
+description: A page on nxds.dev is wrong, unclear or missing something.
+type: Task
+labels: ['documentation', 'status: needs triage']
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      placeholder: https://nxds.dev/components/button
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's wrong
+      description: Quote the text or name the example, and say what to change.
+    validations:
+      required: true

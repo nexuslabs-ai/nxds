@@ -138,6 +138,62 @@ export const FewPages: Story = {
   }),
 };
 
+export const IconOnly: Story = {
+  tags: ['docs'],
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'When the row is narrow, set `icon-only` on PaginationPrevious and PaginationNext to show only their chevrons. `icon-only` ignores `as-child` and the default slot.',
+      },
+    },
+  },
+  render: () => ({
+    components: {
+      Pagination,
+      PaginationContent,
+      PaginationItem,
+      PaginationLink,
+      PaginationNext,
+      PaginationPrevious,
+    },
+    template: `
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious href="#" icon-only />
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationLink href="#">1</PaginationLink>
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationLink href="#" is-active>2</PaginationLink>
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationLink href="#">3</PaginationLink>
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationNext href="#" icon-only />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    for (const { name, label } of [
+      { name: 'Go to previous page', label: 'Previous' },
+      { name: 'Go to next page', label: 'Next' },
+    ]) {
+      const link = canvas.getByRole('link', { name });
+      const { width, height } = link.getBoundingClientRect();
+      await expect(width).toBe(height);
+      await expect(within(link).getByText(label)).toHaveClass('nx:sr-only');
+    }
+  },
+};
+
 export const AsChild: Story = {
   tags: ['docs'],
   parameters: {

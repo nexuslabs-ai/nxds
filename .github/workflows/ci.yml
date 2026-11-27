@@ -303,11 +303,11 @@ jobs:
       - name: Validate spacing mode files
         run: pnpm validate:spacing-modes
 
-      # Guard against drift between the committed canonical-step-set.json
-      # and the live union across spacing-*.json. Same fail-fast tier as
-      # the validator above — stdlib-only, sub-second.
+      # Fails when a spacing-*.json file uses a px step that the committed
+      # canonical-step-set.json lacks, or the set keeps a step no file uses.
+      # Same fail-fast tier as the validator above — stdlib-only, sub-second.
       - name: Check canonical step set freshness
-        run: pnpm --filter @nxds/eslint-plugin refresh:canonical-set --check
+        run: pnpm --filter @nxds/core refresh:canonical-set --check
 
       - name: Check token scales freshness
         run: pnpm --filter @nxds/core generate:scales --check
@@ -491,10 +491,11 @@ jobs:
   # ============================================
   # Claude Design System smoke test
   # ============================================
-  # Loads the built @nxds/claude-design output the way Claude Design does:
-  # React 18 globals, then the bundle as a classic script. Every preview
-  # renders in both themes, overlays open and close, and nothing hits the
-  # network.
+  # Packs the built @nxds/claude-design, serves it from a local npm registry
+  # and exports it with the built nxds-cli, as a user's chat does. Then it
+  # loads the export the way Claude Design does: React 18 globals, then the
+  # bundle as a classic script. Every preview renders in both themes, overlays
+  # open and close, the sampler artboard renders, and nothing hits the network.
 
   claude-design-smoke:
     name: Claude Design Smoke

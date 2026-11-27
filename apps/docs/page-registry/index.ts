@@ -51,6 +51,7 @@ export const PAGE_REGISTRY = {
       { slug: 'install', label: 'Install' },
       { slug: 'examples', label: 'Examples' },
       { slug: 'ai-agents', label: 'AI agents' },
+      { slug: 'claude-design', label: 'Claude Design' },
       { slug: 'canvas-icons', label: 'Canvas icons' },
     ],
   },
@@ -76,6 +77,9 @@ export const PAGE_REGISTRY = {
     pages: [
       { slug: 'appearance', label: 'Appearance' },
       { slug: 'overrides', label: 'Overrides' },
+      { slug: 'own-colors', label: 'Your own colors' },
+      { slug: 'material-look', label: 'Material look' },
+      { slug: 'ant-look', label: 'Ant Design look' },
     ],
   },
   components: {

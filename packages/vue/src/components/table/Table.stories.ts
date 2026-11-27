@@ -246,7 +246,7 @@ export const Default: Story = {
         </TableHeader>
         <TableBody>
           <TableRow v-for="row in invoices" :key="row.invoice">
-            <TableCell class="nx:font-medium">{{ row.invoice }}</TableCell>
+            <TableCell class="nx:typography-label-default">{{ row.invoice }}</TableCell>
             <TableCell>{{ row.status }}</TableCell>
             <TableCell>{{ row.method }}</TableCell>
             <TableCell class="nx:text-right">{{ row.amount }}</TableCell>
@@ -296,7 +296,7 @@ export const WithFooter: Story = {
         </TableHeader>
         <TableBody>
           <TableRow v-for="row in invoices" :key="row.invoice">
-            <TableCell class="nx:font-medium">{{ row.invoice }}</TableCell>
+            <TableCell class="nx:typography-label-default">{{ row.invoice }}</TableCell>
             <TableCell>{{ row.status }}</TableCell>
             <TableCell class="nx:text-right">{{ row.amount }}</TableCell>
           </TableRow>
@@ -449,7 +449,7 @@ export const WithActions: Story = {
         </TableHeader>
         <TableBody>
           <TableRow v-for="row in invoices" :key="row.invoice">
-            <TableCell class="nx:font-medium">{{ row.invoice }}</TableCell>
+            <TableCell class="nx:typography-label-default">{{ row.invoice }}</TableCell>
             <TableCell>{{ row.status }}</TableCell>
             <TableCell>
               <div class="nx:flex nx:justify-end nx:gap-2">
@@ -667,7 +667,7 @@ export const SortableHeader: Story = {
                 type="button"
                 class="nx:ml-auto nx:inline-flex nx:items-center nx:gap-1 nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default"
                 @click="sort = sort === 'asc' ? 'desc' : 'asc'"
-              >Amount<component :is="sort === 'asc' ? PhCaretUp : PhCaretDown" class="nx:size-4" aria-hidden="true" /></button>
+              >Amount<component :is="sort === 'asc' ? PhCaretUp : PhCaretDown" class="nx:size-icon-glyph-default" aria-hidden="true" /></button>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -901,7 +901,7 @@ export const AllVariants: Story = {
               :key="row.invoice"
               :data-state="i === 1 ? 'selected' : undefined"
             >
-              <TableCell class="nx:font-medium">{{ row.invoice }}</TableCell>
+              <TableCell class="nx:typography-label-default">{{ row.invoice }}</TableCell>
               <TableCell>{{ row.status }}</TableCell>
               <TableCell>{{ row.method }}</TableCell>
               <TableCell class="nx:text-right">{{ row.amount }}</TableCell>
@@ -1251,7 +1251,7 @@ export const StackedCard: Story = {
             >
               <div class="nx:flex nx:justify-between">
                 <span class="nx:text-muted-foreground">Invoice</span>
-                <span class="nx:font-medium">{{ row.invoice }}</span>
+                <span class="nx:typography-label-default">{{ row.invoice }}</span>
               </div>
               <div class="nx:flex nx:justify-between">
                 <span class="nx:text-muted-foreground">Status</span>
@@ -1469,7 +1469,7 @@ const DataTableRecipeDemo = defineComponent({
                   @click="toggleSort"
                 >
                   Amount
-                  <component :is="sortIcon" class="nx:size-4" aria-hidden="true" />
+                  <component :is="sortIcon" class="nx:size-icon-glyph-default" aria-hidden="true" />
                 </button>
               </TableHead>
             </TableRow>
@@ -1507,22 +1507,20 @@ const DataTableRecipeDemo = defineComponent({
           <span class="nx:text-muted-foreground nx:typography-label-default">Page {{ safePage + 1 }} of {{ pageCount }}</span>
           <Button
             variant="outline"
-            size="icon-sm"
+            size="sm"
+            icon-only
             :disabled="safePage === 0"
-            aria-label="Previous page"
             @click="page = Math.max(0, page - 1)"
           >
-            <PhCaretLeft />
-          </Button>
+            <template #start-icon><PhCaretLeft /></template>Previous page</Button>
           <Button
             variant="outline"
-            size="icon-sm"
+            size="sm"
+            icon-only
             :disabled="safePage >= pageCount - 1"
-            aria-label="Next page"
             @click="page = Math.min(pageCount - 1, page + 1)"
           >
-            <PhCaretRight />
-          </Button>
+            <template #start-icon><PhCaretRight /></template>Next page</Button>
         </div>
       </div>
     </div>
@@ -1592,7 +1590,7 @@ const SortableRecipeHead = defineComponent({
         @click="$emit('sort', sortKey)"
       >
         {{ label }}
-        <component :is="sortIcon" :class="isActive ? 'nx:size-4' : 'nx:size-4 nx:opacity-40'" aria-hidden="true" />
+        <component :is="sortIcon" :class="isActive ? 'nx:size-icon-glyph-default' : 'nx:size-icon-glyph-default nx:opacity-40'" aria-hidden="true" />
       </button>
     </TableHead>
   `,
@@ -1852,7 +1850,7 @@ const DataTableErrorRows = defineComponent({
       <TableRow>
         <TableCell :colspan="3" class="nx:py-8 nx:text-center nx:text-muted-foreground">
           <div class="nx:flex nx:flex-col nx:items-center nx:gap-3">
-            <PhWarningCircle aria-hidden="true" class="nx:size-5" />
+            <PhWarningCircle aria-hidden="true" class="nx:size-[20px]" />
             <span>{{ retried ? 'Retry queued.' : 'Could not load invoices.' }}</span>
             <Button size="sm" variant="secondary" aria-label="Retry loading invoices" @click="retried = true">Retry</Button>
           </div>

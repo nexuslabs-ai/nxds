@@ -9,8 +9,8 @@
       "args": ["chrome-devtools-mcp@latest"]
     },
     "nxds-docs-mcp": {
-      "type": "sse",
-      "url": "http://localhost:6282/sse"
+      "type": "http",
+      "url": "http://localhost:6282/mcp"
     }
   }
 }

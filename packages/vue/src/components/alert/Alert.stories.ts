@@ -333,7 +333,7 @@ export const HelperBanner: Story = {
         <AlertContent>
           <AlertDescription>
             Scheduled maintenance begins at 9 PM.
-            <a class="nx:font-medium nx:text-primary-subtle-foreground nx:underline-offset-4 nx:hover:underline" href="/status">View status</a>
+            <a class="nx:typography-label-default nx:text-primary-subtle-foreground nx:no-underline nx:underline-offset-4 nx:hover:underline" href="/status">View status</a>
           </AlertDescription>
         </AlertContent>
         <AlertActions>

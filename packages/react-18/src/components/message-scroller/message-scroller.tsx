@@ -335,7 +335,7 @@ const MessageScrollerItem = React.forwardRef<
 });
 
 const messageScrollerButtonVariants = cva(
-  'nx:absolute nx:inset-x-0 nx:z-sticky nx:mx-auto nx:rounded-full nx:[&_svg]:size-4 nx:data-[active=false]:invisible',
+  'nx:absolute nx:inset-x-0 nx:z-sticky nx:mx-auto nx:rounded-full nx:[&_svg]:size-icon-glyph-default nx:icon-stroke nx:data-[active=false]:invisible',
   {
     variants: {
       direction: {
@@ -354,7 +354,7 @@ const messageScrollerButtonVariants = cva(
  */
 type MessageScrollerButtonProps = Omit<
   React.ComponentProps<typeof Button>,
-  'children' | 'asChild'
+  'iconOnly' | 'children' | 'startIcon' | 'endIcon' | 'asChild'
 > &
   VariantProps<typeof messageScrollerButtonVariants>;
 
@@ -370,7 +370,7 @@ const MessageScrollerButton = React.forwardRef<
     className,
     direction = 'end',
     variant = 'outline',
-    size = 'icon-sm',
+    size = 'sm',
     ...props
   }: React.PropsWithoutRef<MessageScrollerButtonProps> & {
     ref?: React.ForwardedRef<HTMLButtonElement>;
@@ -390,18 +390,17 @@ const MessageScrollerButton = React.forwardRef<
       data-slot="message-scroller-button"
       data-direction={direction}
       data-active={isActive}
-      aria-label={
-        direction === 'end'
-          ? 'Scroll to the latest message'
-          : 'Scroll to the oldest message'
-      }
       variant={variant}
       size={size}
+      iconOnly
+      startIcon={<Icon />}
       onClick={direction === 'end' ? scrollToEnd : scrollToStart}
       className={cn(messageScrollerButtonVariants({ direction }), className)}
       {...props}
     >
-      <Icon />
+      {direction === 'end'
+        ? 'Scroll to the latest message'
+        : 'Scroll to the oldest message'}
     </Button>
   );
 });

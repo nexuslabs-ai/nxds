@@ -40,21 +40,23 @@ Each flag sets one part of your theme. To build the command, pick a theme in
 the [Playground](/playground) or the theme panel on any docs page, then open
 **Use this theme**.
 
-| Flag                                  | Values                                                                                                             |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `--brand-color`                       | Any CSS color                                                                                                      |
-| `--surface-tone`                      | `stone`, `neutral`, `zinc` (default), `slate`, `gray`                                                              |
-| `--density`                           | `tight`, `compact`, `default` (default), `comfortable`, `relaxed`, `spacious`                                      |
-| `--corners`                           | `square`, `subtle` (default), `smooth`, `round`, `extra-round`                                                     |
-| `--elevation`                         | `flat`, `quiet` (default), `soft`, `standard`, `strong`                                                            |
-| `--stroke`                            | `fine`, `normal` (default), `strong`                                                                               |
-| `--mode`                              | `light` (default), `dark`, `system`                                                                                |
-| `--light-contrast`, `--dark-contrast` | 0 to 100 (default 50)                                                                                              |
-| `--font`                              | `system` (default), `geist`, `inter`, `figtree`, `dm-sans`, `manrope`, `ibm-plex-sans`, `lora`, `playfair-display` |
-| `--heading-font`                      | `ui` (the UI font, default), or any `--font` value but `system`                                                    |
-| `--code-font`                         | `system` (default), `geist-mono`, `jetbrains-mono`                                                                 |
-| `--font-size`, `--code-font-size`     | 8 to 32, in px (default 14 and 12)                                                                                 |
-| `--icons`                             | `phosphor` (default), `lucide`, `tabler`, `hugeicons`, `remix`                                                     |
+| Flag                                  | Values                                                                                                                       |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `--brand-color`                       | Any CSS color                                                                                                                |
+| `--surface-tone`                      | `stone`, `neutral`, `zinc` (default), `slate`, `gray`                                                                        |
+| `--ui-scale`                          | `small`, `default` (default), `large`, `larger`                                                                              |
+| `--text-size`                         | 12 to 16, in px (default 14)                                                                                                 |
+| `--density`                           | `tight`, `compact`, `default` (default), `comfortable`, `relaxed`, `spacious`                                                |
+| `--corners`                           | `square`, `subtle` (default), `smooth`, `round`, `extra-round`                                                               |
+| `--elevation`                         | `flat`, `quiet` (default), `soft`, `standard`, `strong`                                                                      |
+| `--stroke`                            | `fine`, `normal` (default), `strong`                                                                                         |
+| `--mode`                              | `light` (default), `dark`, `system`                                                                                          |
+| `--light-contrast`, `--dark-contrast` | 0 to 100 (default 50)                                                                                                        |
+| `--font`                              | `system` (default), `geist`, `inter`, `figtree`, `dm-sans`, `manrope`, `ibm-plex-sans`, `roboto`, `lora`, `playfair-display` |
+| `--heading-font`                      | `ui` (the UI font, default), or any `--font` value but `system`                                                              |
+| `--code-font`                         | `system` (default), `geist-mono`, `jetbrains-mono`                                                                           |
+| `--code-font-size`                    | 8 to 32, in px (default 12)                                                                                                  |
+| `--icons`                             | `phosphor` (default), `lucide`, `tabler`, `hugeicons`, `remix`                                                               |
 
 `init` writes the theme to `nxds-theme.ts` and records it in `nxds.json`. It
 installs the icon package and each font's Fontsource package, and imports the
@@ -69,6 +71,10 @@ replaces the old one's import, and `doctor` lists the old package to remove.
 
 If an older `init` wrote your `appearance-state.ts`, `init` asks you to spread
 `nxdsTheme` there once.
+
+If your palette needs more than a brand color and a surface tone, run
+`init --own-colors`. It writes every color to a CSS file you edit.
+[Your own colors](/theming/own-colors) covers it.
 
 ## Add a component
 
@@ -136,13 +142,14 @@ and says how to fix each problem.
 
 ## Options
 
-| Option                   | What it does                                                             |
-| ------------------------ | ------------------------------------------------------------------------ |
-| `--dry-run`              | Shows what would change, without changing anything                       |
-| `--json`                 | Prints `{ ok, exitCode, data }`, or `{ ok, exitCode, error }` on failure |
-| `--no-install`           | Skips installing npm packages                                            |
-| `--cwd <path>`           | Runs in another folder                                                   |
-| `--registry <url\|path>` | Installs from another registry. `NXDS_REGISTRY_URL` sets it too          |
+| Option                   | Commands                 | What it does                                                              |
+| ------------------------ | ------------------------ | ------------------------------------------------------------------------- |
+| `--dry-run`              | `init`, `add`, `update`  | Shows what would change, without changing anything                        |
+| `--overwrite`            | `init`, `add`, `update`  | Replaces files that differ from nxds's copy, including files you edited   |
+| `--no-install`           | `init`, `add`, `update`  | Skips installing npm packages                                             |
+| `--json`                 | Every command            | Prints `{ ok, exitCode, data }`, or `{ ok, exitCode, error }` on failure  |
+| `--cwd <path>`           | Every command            | Runs in another folder                                                    |
+| `--registry <url\|path>` | All but `info`, `export` | Gets nxds releases from another registry. `NXDS_REGISTRY_URL` sets it too |
 
 Run `npx nxds-cli@latest --help` to list every command, or
 `npx nxds-cli@latest add --help` for one command's options.
@@ -192,19 +199,20 @@ same file doesn't give you unprefixed classes.
 
 ## Step 2: Add the token CSS
 
-The token CSS defines the colors, spacing and type scale. Copy the seven files
+The token CSS defines the colors, spacing and type scale. Copy the eight files
 from `packages/tailwind/` in the
 [nxds repo](https://github.com/nexuslabs-ai/nxds) into
 `components/nxds/tailwind/`:
 
 ```
 components/nxds/tailwind/
-├── nxds.css                 # entry point, imports the other six
+├── nxds.css                 # entry point, imports the other seven
 ├── variables.css
 ├── typography-utilities.css
 ├── borderwidth-utilities.css
 ├── border-color-aliases.css
 ├── motion-utilities.css
+├── icon-utilities.css
 └── spacing-utilities.css
 ```
 
@@ -685,7 +693,7 @@ from `npm create vue@latest`, with TypeScript.
 
 ## Step 2: Add the token CSS
 
-The token CSS defines the colors, spacing and type scale. Copy the seven files
+The token CSS defines the colors, spacing and type scale. Copy the eight files
 from `packages/tailwind/` in the
 [nxds repo](https://github.com/nexuslabs-ai/nxds) into `src/styles/nxds/`.
 

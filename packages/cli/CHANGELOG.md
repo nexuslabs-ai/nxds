@@ -1,5 +1,65 @@
 # nxds-cli
 
+## 0.9.0
+
+### Minor Changes
+
+- 236929a: Add `init --own-colors`, for an app that sets every color itself.
+  - It writes `nxds-colors.css` beside the nxds CSS entry, with every nxds color in light and dark at the value your theme gives it, and imports it from the entry. The file is yours from then on: a later `init` or `update` leaves it alone.
+  - It turns color derivation off: `deriveColors={false}` on `NxdsAppearanceProvider` and `NxdsAppearanceScript`, and `{ deriveColors: false }` in a Vite app's `nxds.vite.ts`. It edits an app that is already set up, and lists a step for anything it cannot find, such as a provider in a file of its own.
+  - An existing `deriveColors` that isn't `false` is a step for you too.
+  - `doctor` gains a `colors` check. It fails when the entry imports `nxds-colors.css` and the provider or the theme script still derives colors, which would override yours. It also fails when `nxds-colors.css` has no value under `:root` or under `.dark` for a color your `nxds.css` sets there, such as one a later release added, and names each one.
+  - Once the entry imports `nxds-colors.css`, `init` refuses `--brand-color`, `--surface-tone` and the contrast flags, which would change nothing.
+  - A release from before own colors refuses the flag and names `update`.
+
+## 0.8.0
+
+### Minor Changes
+
+- 19e119b: Add `uiScale` to the appearance: `'small'`, `'default'`, `'large'` or `'larger'`. It makes the whole UI larger or smaller and keeps its proportions.
+  - Label text is 12, 14, 16 or 18px, the default icon is 14, 16, 18 or 20px, and a default Button is 36, 40, 44 or 50px at the Default density.
+  - Spacing and corners at every density and corner mode scale with it. Lengths are whole px below 16px and even px from 16px, and spacing steps stay in order.
+  - Icons are even px at every scale, so an icon centers in an even box such as Kbd. The `xs` icon is 10, 12, 14 or 16px.
+  - Page widths (`max-w-*` and the other named widths) and the Sidebar and Toaster widths scale with it. `--nx-ui-scale` holds the factor (0.9, 1, 1.1 or 1.25) for the few other fixed sizes. The collapsed Sidebar rail is now its button plus padding, so the buttons stay inside it and centered at every scale and density, also with `data-density` on the Sidebar. From `md` up, Sidebar props other than `className` go on its root, so the space the Sidebar keeps beside the page is as wide as the rail. The Sidebar no longer sets `--sidebar-width-icon`.
+  - The provider sets `data-ui-scale` on `<html>`. Density and corners nest under it.
+  - Checkbox, Radio and Switch take their size from the icon tokens, so they follow the UI scale and still ignore density. The MultiSelect option box is the Checkbox size.
+  - Every named icon size follows it: `lg` is 22, 24, 28 or 30px and `xl` is 28, 32, 36 or 40px.
+  - Code text grows with the label text. `prefs.codeFontSize` is the code size at the Default scale, and 12px code is 10, 14 and 15px at Small, Large and Larger. The `[data-ui-scale]` blocks in `nxds.css` set the code size too, so code scales without the provider.
+  - The UI scale never shrinks text below 8px.
+  - The close button of Dialog and Sheet keeps a 24px target at every scale.
+  - The code size variable is `--nx-typography-code-size`, in its own `code` group. It was `--nx-typography-size-code`.
+  - `prefs.uiFontSize` is gone. Use `uiScale`. The CLI flag `--font-size` is replaced by `--ui-scale`. Shuffle keeps the user's UI scale.
+  - The token catalogue's `control` is now `controls`, a list. A new `scale` control names `uiScale`, which scales the token. Spacing and radius name their mode and `uiScale`, and the code size names `codeFontSize` and `uiScale`. The catalogue also lists `--nx-ui-scale` in family `ui-scale` and the page widths in family `width`.
+  - The settings screen and the Storybook toolbars offer the new mode.
+  - `nxds-cli export claude-design` takes `--ui-scale` in place of `--font-size`. A Claude Design system has no `data-ui-scale` attribute. A system at another scale lists every token at that scale and declares its density and corner presets at that scale in `tokens.css`. Its sampler board is wider to match, and its height fits the system's UI scale, density and stroke.
+  - `createTokenCatalogue(appearance)` lists each token at the appearance's UI scale, the same values the `[data-ui-scale]` blocks in `nxds.css` hold.
+
+## 0.7.0
+
+### Minor Changes
+
+- c004e3a: `nxds-cli export claude-design` takes the `init` theme flags, except `--mode` and `--icons`, and exports a system in that theme: its colours, presets, type scale, code size and fonts. Curated fonts load from Google Fonts through tokens.css. The system records its theme in `design-system.json`, so an update with `--index` keeps it. Passed flags change only the parts they name, and an empty one, such as `--density=`, resets it. Default code text in the export is 12px, as in apps.
+
+  `createTokenCatalogue` takes the appearance fields it uses: the brand colour, surface tone, contrasts, and UI and code font sizes.
+
+  Code text reads `--nx-typography-size-code`, 12px by default. `nx:typography-code-block` and `nx:typography-code-inline` are 12px without the provider too, and the code font size pref sets the variable. `nx:font-mono` sets only the font family, so mono text takes its size from its own text style.
+
+## 0.6.1
+
+### Patch Changes
+
+- 822919d: The sampler is now a sales dashboard shipped as `nxds-sampler.dc.html` beside `SETUP.md`, so it shows as an artboard on a Claude Design canvas. Claude puts the file on the canvas unchanged and adds its `canvas.json` entry. Switch its `mode` tweak to `dark` to check the dark theme. `Label`, `ChoiceRow` and `ChoiceCard` now list `htmlFor`, so a canvas can link a label to its control. A release's `files.json` now lists the files beside `project/` with their hashes too, and `nxds-cli` copies only what it lists. When a release drops a root file you edited, `nxds-cli` keeps it, lists it in the `--json` output's `data.kept`, and exits 3.
+
+## 0.6.0
+
+### Minor Changes
+
+- 6da5b6b: Set up nxds on a Claude Design canvas from one prompt in a Claude chat.
+  - The export writes `SETUP.md` beside `project/`. It walks Claude through publishing the system, installing it on a canvas, checking it and updating it to a new release. It isn't part of the published system.
+  - `SETUP.md` ships a sampler artboard that writes every attribute form a canvas reads. Claude builds it to check the install.
+  - `export claude-design` writes `SETUP.md` and `coverage.md` beside `project/`, and removes an earlier copy the release doesn't have. `--json` reports their paths in `data.root`.
+  - `export claude-design` ends by telling Claude to read `SETUP.md` and follow it.
+
 ## 0.5.0
 
 ### Minor Changes
