@@ -10,7 +10,8 @@ import {
   type PageGlobals,
 } from './harness.ts';
 
-// Every icon name the README lists draws an svg.
+// Every icon name the README lists draws an svg, so the weights bundle.js
+// keeps (src/bundle.ts) cover each plain and `-fill` name.
 export async function checkIcons() {
   const { page, problems } = await openPage('Button', LIGHT);
   const names = iconSet().map(({ name }) => name);

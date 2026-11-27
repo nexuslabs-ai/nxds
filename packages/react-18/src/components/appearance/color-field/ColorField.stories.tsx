@@ -63,6 +63,17 @@ export const Default: Story = {
   },
 };
 
+export const HexInCodeFont: Story = {
+  play: async ({ canvasElement }) => {
+    const { hex } = fieldsIn(canvasElement);
+    const style = getComputedStyle(hex);
+
+    await expect(style.fontFamily).toBe(
+      style.getPropertyValue('--nx-typography-family-font-mono').trim()
+    );
+  },
+};
+
 export const TypedHex: Story = {
   play: async ({ canvasElement, args }) => {
     const { picker, hex } = fieldsIn(canvasElement);

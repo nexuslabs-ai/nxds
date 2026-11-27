@@ -216,7 +216,7 @@ export function InvoiceFilteringExample() {
         <div className="nx:relative nx:w-64 nx:max-w-full">
           <MagnifyingGlassIcon
             aria-hidden="true"
-            className="nx:pointer-events-none nx:absolute nx:start-2.5 nx:top-1/2 nx:size-4 nx:-translate-y-1/2 nx:text-muted-foreground"
+            className="nx:pointer-events-none nx:absolute nx:start-2.5 nx:top-1/2 nx:size-icon-glyph-default nx:-translate-y-1/2 nx:text-muted-foreground"
           />
           <Input
             ref={searchRef}

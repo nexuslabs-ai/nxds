@@ -69,7 +69,7 @@ export const Default: Story = {
   render: () => (
     <ScrollArea className="nx:h-48 nx:w-72 nx:rounded-md nx:border-default nx:border-border-default">
       <div className="nx:flex nx:flex-col nx:gap-3 nx:p-4 nx:typography-label-default nx:text-foreground">
-        <h4 className="nx:font-medium nx:leading-none">Release notes</h4>
+        <h4 className="nx:typography-label-default">Release notes</h4>
         {releaseNotes.map((note, i) => (
           <p key={i} className="nx:text-muted-foreground">
             {note}
@@ -93,7 +93,7 @@ export const VerticalList: Story = {
   render: () => (
     <ScrollArea className="nx:h-72 nx:w-56 nx:rounded-md nx:border-default nx:border-border-default">
       <div className="nx:p-4">
-        <h4 className="nx:mb-3 nx:typography-label-default nx:leading-none nx:text-foreground">
+        <h4 className="nx:mb-3 nx:typography-label-default nx:text-foreground">
           Builds
         </h4>
         <ul className="nx:flex nx:flex-col">

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { expectMenuItemInsetAtEveryDensity } from '../../stories/support/menu-item-inset-test-utils';
 import { expectInterruptibleOverlayMotion } from '../../stories/support/overlay-motion-test-utils';
 import { Input } from '../input/input';
 
@@ -379,6 +380,36 @@ export const Scrollable: Story = {
 // ============================================
 // INTERACTION TESTS
 // ============================================
+
+export const CheckInsetAtEveryDensity: Story = {
+  render: (_args) => (
+    <Select defaultValue="banana">
+      <SelectTrigger className="nx:w-[180px]" aria-label="Select a fruit">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="apple">Apple</SelectItem>
+        <SelectItem value="banana">Banana</SelectItem>
+        <SelectItem value="orange">Orange</SelectItem>
+      </SelectContent>
+    </Select>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('combobox'));
+    const listbox = await within(document.body).findByRole('listbox');
+    const option = within(listbox).getByRole('option', { name: 'Banana' });
+    const check = option.querySelector<HTMLElement>(
+      '[data-slot="select-item-indicator-icon"]'
+    )!.parentElement!;
+    await expectMenuItemInsetAtEveryDensity(listbox, option, check);
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(document.querySelector('[role="listbox"]')).toBeNull();
+    });
+  },
+};
 
 export const OpenCloseInteraction: Story = {
   render: (_args) => (

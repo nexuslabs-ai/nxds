@@ -9,6 +9,7 @@ import {
 import type { HTMLAttributes } from 'vue';
 
 import { cn } from '../../lib/utils';
+import { menuItemInsetClassName } from '../overlay-layout/overlay-layout';
 
 import { type ContextMenuItemVariants, contextMenuItemVariants } from '.';
 
@@ -37,7 +38,11 @@ const forwarded = useForwardPropsEmits(delegated, emits);
     :data-inset="inset || undefined"
     :data-variant="variant"
     :class="
-      cn(contextMenuItemVariants({ variant }), inset && 'nx:pl-8', props.class)
+      cn(
+        contextMenuItemVariants({ variant }),
+        inset && menuItemInsetClassName,
+        props.class
+      )
     "
   >
     <slot />

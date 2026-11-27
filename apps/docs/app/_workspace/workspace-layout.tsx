@@ -2,8 +2,8 @@
 
 import type { ReactElement, ReactNode } from 'react';
 
+import { Hide } from '@/components/hide/hide';
 import {
-  Hide,
   Sheet,
   SheetBody,
   SheetContent,
@@ -11,8 +11,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  Show,
-} from '@nxds/react';
+} from '@/components/sheet/sheet';
+import { Show } from '@/components/show/show';
 
 export interface WorkspaceLayoutProps {
   /** Names the side-panel landmark and titles the narrow-screen sheet. */
@@ -41,7 +41,7 @@ export function WorkspaceLayout({
   return (
     <div
       data-slot="workspace-layout"
-      className="nx:flex nx:flex-col nx:lg:flex-row nx:h-[calc(100svh-var(--docs-header-h))] nx:min-h-0"
+      className="nx:flex nx:flex-col nx:lg:flex-row nx:h-[calc(100svh-var(--site-header-h))] nx:min-h-0"
     >
       <Show above="lg" as="div">
         <aside

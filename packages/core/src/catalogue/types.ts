@@ -1,7 +1,9 @@
 import type {
   NxdsAppearancePrefs,
-  NxdsAppearanceState,
+  NxdsColorAppearance,
   NxdsPresetField,
+  NxdsTextSize,
+  NxdsUiScale,
 } from '../lib/appearance-model';
 import type { Mode } from '../lib/palette';
 import type { TokenValue } from '../token-source/types';
@@ -13,16 +15,30 @@ type DeepReadonly<T> = T extends object
   ? { readonly [Key in keyof T]: DeepReadonly<T[Key]> }
   : T;
 
+/**
+ * The appearance fields the catalogue derives values from: runtime colours
+ * from the brand colour, surface tone and contrasts, sizes from the UI scale,
+ * type sizes from the text size too, and the code size from `codeFontSize`.
+ */
+export type CatalogueAppearance = NxdsColorAppearance & {
+  readonly uiScale: NxdsUiScale;
+  readonly textSize: NxdsTextSize;
+  readonly prefs: Pick<NxdsAppearancePrefs, 'codeFontSize'>;
+};
+
 /** Token families the catalogue covers. */
 export type CatalogueFamily =
   | 'borderwidth'
   | 'breakpoint'
   | 'color'
+  | 'icon'
   | 'motion'
   | 'radius'
   | 'shadow'
   | 'spacing'
   | 'typography'
+  | 'ui-scale'
+  | 'width'
   | 'z-index';
 
 /**
@@ -78,10 +94,15 @@ export interface CatalogueVariant {
    * file.
    */
   readonly preset: string | null;
-  /** The authored leaf, or `null` for a colour the engine derives. */
+  /**
+   * The authored leaf, or `null` for a colour the engine derives and for the
+   * UI scale factor and page widths.
+   */
   readonly source: CatalogueSource | null;
-  /** The full appearance config a derived colour was computed from. */
-  readonly appearance: DeepReadonly<NxdsAppearanceState> | null;
+  /** The appearance fields a derived colour was computed from, and its mode. */
+  readonly appearance: DeepReadonly<
+    NxdsColorAppearance & { readonly mode: Mode }
+  > | null;
   readonly authoredValue: TokenValue | null;
   /**
    * What the generated CSS declares: one custom property for a scalar or a
@@ -94,11 +115,13 @@ export interface CatalogueVariant {
 }
 
 /**
- * The appearance setting that writes a token at runtime: a preset field that
- * picks one of its moded values, or a preference the provider computes it from.
+ * An appearance setting that writes a token at runtime: a preset field that
+ * picks one of its moded values, the UI scale or text size that scales its
+ * value, or a preference the provider computes it from.
  */
 export type CatalogueControl =
   | { readonly kind: 'preset'; readonly field: NxdsPresetField }
+  | { readonly kind: 'scale'; readonly field: 'uiScale' | 'textSize' }
   | { readonly kind: 'pref'; readonly field: keyof NxdsAppearancePrefs };
 
 export interface CatalogueToken {
@@ -106,14 +129,15 @@ export interface CatalogueToken {
   readonly family: CatalogueFamily;
   /**
    * The registry category for a derived colour, the first path key for a
-   * nested leaf (`green`, `size`, `container`), or the family for a flat file.
+   * nested leaf (`green`, `size`, `container`), or the family for a flat file
+   * and for a token no file authors.
    */
   readonly group: string;
   /** The DTCG `$type`. */
   readonly type: string;
   readonly description: string | null;
   readonly aliases: readonly CatalogueAlias[];
-  /** The appearance setting that writes it, or `null` when nothing does. */
-  readonly control: CatalogueControl | null;
+  /** The appearance settings that write it. Empty when nothing does. */
+  readonly controls: readonly CatalogueControl[];
   readonly variants: readonly CatalogueVariant[];
 }

@@ -14,7 +14,11 @@ import {
   type NxdsElevation,
   type NxdsStroke,
   type NxdsSurfaceTone,
+  type NxdsUiScale,
   STROKE_OPTIONS,
+  TEXT_SIZE_OPTIONS,
+  textSizePx,
+  UI_SCALE_OPTIONS,
 } from '@nxds/core';
 
 import {
@@ -142,8 +146,76 @@ function FontSizeInput({
   );
 }
 
-export function NxdsAppearanceSettings() {
+/**
+ * The settings nxds derives its colors from: brand color, surface tone and
+ * contrast.
+ */
+function DerivedColorSettings() {
   const { state, setState, resolvedMode } = useNxdsAppearance();
+  const contrastKey =
+    resolvedMode === 'dark' ? 'darkContrast' : 'lightContrast';
+
+  const setContrast = (values: number[]) => {
+    const value = values[0];
+    if (value === undefined) return;
+    setState((current) => ({ ...current, [contrastKey]: value }));
+  };
+
+  return (
+    <>
+      <NxdsAppearanceSettingRow
+        label="Brand color"
+        description="Primary actions, selected states, and highlights"
+      >
+        <NxdsAppearanceBrandColorField
+          label="Brand color"
+          value={state.brandColor}
+          onChange={(brandColor) =>
+            setState((current) => ({ ...current, brandColor }))
+          }
+        />
+      </NxdsAppearanceSettingRow>
+
+      <NxdsAppearanceSettingRow
+        label="Surface tone"
+        description="Neutral surfaces, borders, and muted UI"
+      >
+        <AxisSelect<NxdsSurfaceTone>
+          value={state.surfaceTone}
+          options={BASE_TONE_OPTIONS}
+          onValueChange={(surfaceTone) =>
+            setState((current) => ({ ...current, surfaceTone }))
+          }
+          ariaLabel="Surface tone"
+        />
+      </NxdsAppearanceSettingRow>
+
+      <p
+        className="nx:m-0 nx:typography-body-small nx:text-muted-foreground"
+        role="status"
+      >
+        Editing {resolvedMode} appearance
+      </p>
+      <NxdsAppearanceSettingRow
+        label="Contrast"
+        description={`Text and surface definition · ${state[contrastKey]}`}
+      >
+        <Slider
+          value={[state[contrastKey]]}
+          onValueChange={setContrast}
+          min={0}
+          max={100}
+          step={1}
+          aria-label="Contrast"
+          className="nx:w-48"
+        />
+      </NxdsAppearanceSettingRow>
+    </>
+  );
+}
+
+export function NxdsAppearanceSettings() {
+  const { state, setState, resolvedMode, deriveColors } = useNxdsAppearance();
 
   const updatePrefs = (patch: Partial<NxdsAppearancePrefs>) => {
     setState((current) => ({
@@ -157,23 +229,18 @@ export function NxdsAppearanceSettings() {
     setState((current) => ({ ...current, mode: value }));
   };
 
-  const contrastKey =
-    resolvedMode === 'dark' ? 'darkContrast' : 'lightContrast';
-
-  const setContrast = (values: number[]) => {
-    const value = values[0];
-    if (value === undefined) return;
-    setState((current) => ({ ...current, [contrastKey]: value }));
+  const setTextSize = (value: string) => {
+    const option = TEXT_SIZE_OPTIONS.find(
+      (each) => String(each.value) === value
+    );
+    if (option === undefined) return;
+    setState((current) => ({ ...current, textSize: option.value }));
   };
 
-  const setFontSize = (key: 'uiFontSize' | 'codeFontSize', value: number) => {
-    if (key === 'uiFontSize') {
-      updatePrefs({ uiFontSize: value });
-      return;
-    }
-
-    updatePrefs({ codeFontSize: value });
-  };
+  const textSizeOptions = TEXT_SIZE_OPTIONS.map(({ value, label }) => ({
+    value: String(value),
+    label,
+  }));
 
   return (
     <div data-slot="appearance-settings" className="nx:space-y-6">
@@ -181,7 +248,9 @@ export function NxdsAppearanceSettings() {
         <CardHeader>
           <CardTitle>Theme</CardTitle>
           <CardDescription>
-            Choose your mode, brand color, surface tone, and contrast.
+            {deriveColors
+              ? 'Choose your mode, brand color, surface tone, and contrast.'
+              : 'Choose your mode.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="nx:space-y-4">
@@ -202,57 +271,12 @@ export function NxdsAppearanceSettings() {
             </ToggleGroup>
           </NxdsAppearanceSettingRow>
 
-          <NxdsAppearanceSettingRow
-            label="Brand color"
-            description="Primary actions, selected states, and highlights"
-          >
-            <NxdsAppearanceBrandColorField
-              label="Brand color"
-              value={state.brandColor}
-              onChange={(brandColor) =>
-                setState((current) => ({ ...current, brandColor }))
-              }
-            />
-          </NxdsAppearanceSettingRow>
-
-          <NxdsAppearanceSettingRow
-            label="Surface tone"
-            description="Neutral surfaces, borders, and muted UI"
-          >
-            <AxisSelect<NxdsSurfaceTone>
-              value={state.surfaceTone}
-              options={BASE_TONE_OPTIONS}
-              onValueChange={(surfaceTone) =>
-                setState((current) => ({ ...current, surfaceTone }))
-              }
-              ariaLabel="Surface tone"
-            />
-          </NxdsAppearanceSettingRow>
-
-          <p
-            className="nx:m-0 nx:typography-body-small nx:text-muted-foreground"
-            role="status"
-          >
-            Editing {resolvedMode} appearance
-          </p>
-          <NxdsAppearanceSettingRow
-            label="Contrast"
-            description={`Text and surface definition · ${state[contrastKey]}`}
-          >
-            <Slider
-              value={[state[contrastKey]]}
-              onValueChange={setContrast}
-              min={0}
-              max={100}
-              step={1}
-              aria-label="Contrast"
-              className="nx:w-48"
-            />
-          </NxdsAppearanceSettingRow>
+          {deriveColors ? <DerivedColorSettings /> : null}
 
           <NxdsAppearanceConfigPreview
             state={state}
             resolvedMode={resolvedMode}
+            deriveColors={deriveColors}
           />
         </CardContent>
       </Card>
@@ -270,7 +294,7 @@ export function NxdsAppearanceSettings() {
               value={state.prefs.uiFont}
               onChange={(event) => updatePrefs({ uiFont: event.target.value })}
               aria-label="UI font"
-              className="nx:w-56 nx:font-mono nx:typography-body-small"
+              className="nx:w-56 nx:typography-code-block"
             />
           </NxdsAppearanceSettingRow>
           <NxdsAppearanceSettingRow label="Heading font">
@@ -281,7 +305,7 @@ export function NxdsAppearanceSettings() {
               }
               placeholder="Same as UI font"
               aria-label="Heading font"
-              className="nx:w-56 nx:font-mono nx:typography-body-small"
+              className="nx:w-56 nx:typography-code-block"
             />
           </NxdsAppearanceSettingRow>
           <NxdsAppearanceSettingRow label="Code font">
@@ -291,21 +315,14 @@ export function NxdsAppearanceSettings() {
                 updatePrefs({ codeFont: event.target.value })
               }
               aria-label="Code font"
-              className="nx:w-56 nx:font-mono nx:typography-body-small"
-            />
-          </NxdsAppearanceSettingRow>
-          <NxdsAppearanceSettingRow label="UI font size">
-            <FontSizeInput
-              value={state.prefs.uiFontSize}
-              ariaLabel="UI font size"
-              onCommit={(value) => setFontSize('uiFontSize', value)}
+              className="nx:w-56 nx:typography-code-block"
             />
           </NxdsAppearanceSettingRow>
           <NxdsAppearanceSettingRow label="Code font size">
             <FontSizeInput
               value={state.prefs.codeFontSize}
               ariaLabel="Code font size"
-              onCommit={(value) => setFontSize('codeFontSize', value)}
+              onCommit={(codeFontSize) => updatePrefs({ codeFontSize })}
             />
           </NxdsAppearanceSettingRow>
         </CardContent>
@@ -315,10 +332,39 @@ export function NxdsAppearanceSettings() {
         <CardHeader>
           <CardTitle>Layout Feel</CardTitle>
           <CardDescription>
-            Density, corners, elevation, and stroke use curated token modes.
+            UI scale, text size, density, corners, elevation, and stroke use
+            curated token modes.
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <NxdsAppearanceSettingRow label="UI scale">
+            <AxisSelect<NxdsUiScale>
+              value={state.uiScale}
+              options={UI_SCALE_OPTIONS}
+              onValueChange={(uiScale) =>
+                setState((current) => ({ ...current, uiScale }))
+              }
+              ariaLabel="UI scale"
+            />
+          </NxdsAppearanceSettingRow>
+          <NxdsAppearanceSettingRow
+            label="Text size"
+            description="The size at the Default UI scale."
+          >
+            <AxisSelect
+              value={String(state.textSize)}
+              options={textSizeOptions}
+              onValueChange={setTextSize}
+              ariaLabel="Text size"
+            />
+          </NxdsAppearanceSettingRow>
+          <p
+            data-slot="appearance-text-size-preview"
+            className="nx:m-0 nx:pb-3 nx:typography-body-default nx:text-foreground"
+          >
+            At this UI scale, your text shows at{' '}
+            {textSizePx(state.textSize, state.uiScale)}px.
+          </p>
           <NxdsAppearanceSettingRow label="Density">
             <AxisSelect<NxdsDensity>
               value={state.density}

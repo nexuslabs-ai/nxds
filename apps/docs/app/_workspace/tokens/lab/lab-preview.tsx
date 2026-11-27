@@ -2,7 +2,8 @@
 
 import { useId } from 'react';
 
-import { Alert, AlertDescription, AlertTitle, Badge } from '@nxds/react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/alert/alert';
+import { Badge } from '@/components/badge/badge';
 
 import { Sampler } from '../../sampler';
 

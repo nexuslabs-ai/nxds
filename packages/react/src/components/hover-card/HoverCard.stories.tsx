@@ -43,7 +43,7 @@ export const Default: Story = {
       </HoverCardTrigger>
       <HoverCardContent>
         <div className="nx:flex nx:flex-col nx:gap-1">
-          <p className="nx:typography-label-default nx:font-semibold nx:text-foreground">
+          <p className="nx:typography-label-default nx:text-foreground">
             @nxds
           </p>
           <p className="nx:typography-body-default nx:text-muted-foreground">
@@ -77,7 +77,7 @@ export const ProfileCard: Story = {
             <AvatarFallback>AL</AvatarFallback>
           </Avatar>
           <div className="nx:flex nx:flex-col nx:gap-1">
-            <p className="nx:typography-label-default nx:font-semibold nx:text-foreground">
+            <p className="nx:typography-label-default nx:text-foreground">
               Ada Lovelace
             </p>
             <p className="nx:typography-body-default nx:text-muted-foreground">

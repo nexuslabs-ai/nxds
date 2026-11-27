@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { buildSystemIndex } from '@nxds/claude-design/system-index';
+import { EXPORT_THEME_FLAGS } from '@nxds/claude-design/theme';
 import { compileTokensCss } from '@nxds/claude-design/tokens-css';
 import { createHash } from 'node:crypto';
 import {
@@ -111,19 +112,32 @@ const PROJECT: Record<string, string> = {
     '<!-- @dsCard height=288 -->\n<!doctype html>\n<html><body><p>nxds</p></body></html>\n',
 };
 
+/** The files a small release ships beside `project/`. */
+const ROOT: Record<string, string> = {
+  'coverage.md': '# Canvas prop coverage\n',
+  'SETUP.md': `# Set up nxds ${VERSION} on a Claude Design canvas\n`,
+  'nxds-sampler.dc.html':
+    '<!doctype html>\n<html lang="en">\n<head>\n<title>nxds sampler</title>\n</head>\n</html>\n',
+};
+
+function manifestEntries(files: Record<string, string>) {
+  return Object.entries(files).map(([file, content]) => ({
+    path: file,
+    sha256: createHash('sha256').update(content).digest('hex'),
+  }));
+}
+
 /** The files of a small system in the @nxds/claude-design package layout. */
 const PACKAGE_FILES: Record<string, string> = {
   'package.json': JSON.stringify({
     name: '@nxds/claude-design',
     version: VERSION,
   }),
-  'coverage.md': '# Canvas prop coverage\n',
-  'files.json': JSON.stringify(
-    Object.entries(PROJECT).map(([file, content]) => ({
-      path: file,
-      sha256: createHash('sha256').update(content).digest('hex'),
-    }))
-  ),
+  ...ROOT,
+  'files.json': JSON.stringify({
+    project: manifestEntries(PROJECT),
+    root: manifestEntries(ROOT),
+  }),
   ...Object.fromEntries(
     Object.entries(PROJECT).map(([file, content]) => [
       `project/${file}`,
@@ -179,6 +193,10 @@ async function cliJson(args: string[], cwd: string) {
 
 function readOut(cwd: string, file: string) {
   return readFileSync(path.join(cwd, 'nxds-design-system', file), 'utf8');
+}
+
+function lastLine(stdout: string) {
+  return stdout.trim().split('\n').at(-1);
 }
 
 /** An npm registry serving the package folder as `version`'s tarball. */
@@ -251,6 +269,279 @@ describe('nxds-cli export claude-design', () => {
     expect(
       existsSync(path.join(cwd, 'nxds-design-system', 'coverage.md'))
     ).toBe(true);
+  });
+
+  it('writes the setup guide and the sampler beside project/ and ends by pointing at the guide', async () => {
+    const { source, cwd } = setup();
+    const { exitCode, stdout } = await cli(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(readOut(cwd, 'SETUP.md')).toBe(PACKAGE_FILES['SETUP.md']);
+    expect(readOut(cwd, 'nxds-sampler.dc.html')).toBe(
+      PACKAGE_FILES['nxds-sampler.dc.html']
+    );
+    expect(
+      existsSync(path.join(cwd, 'nxds-design-system', 'project', 'SETUP.md'))
+    ).toBe(false);
+    expect(lastLine(stdout)).toBe(
+      'Read nxds-design-system/SETUP.md and follow it. It publishes the system, installs it on a canvas and checks it.'
+    );
+
+    const json = await cliJson(
+      [
+        'export',
+        'claude-design',
+        '--source',
+        source,
+        '--out',
+        'design/nxds',
+        '--overwrite',
+      ],
+      cwd
+    );
+    expect(json.body.data.root).toEqual([
+      path.join(cwd, 'design', 'nxds', 'coverage.md'),
+      path.join(cwd, 'design', 'nxds', 'SETUP.md'),
+      path.join(cwd, 'design', 'nxds', 'nxds-sampler.dc.html'),
+    ]);
+  });
+
+  it('lists the files to remove before the line that points at the guide', async () => {
+    const { source, cwd } = setup();
+    writeFileSync(
+      path.join(cwd, 'existing.json'),
+      JSON.stringify(['project/components/Legacy/README.md'])
+    );
+    const { stdout } = await cli(
+      [
+        'export',
+        'claude-design',
+        '--source',
+        source,
+        '--existing',
+        'existing.json',
+      ],
+      cwd
+    );
+
+    const lines = stdout.trim().split('\n');
+    expect(lines.at(-2)).toMatch(/^Remove the 1 files .*removed\.json\.$/);
+    expect(lines.at(-1)).toMatch(/^Read nxds-design-system\/SETUP\.md/);
+  });
+
+  it('refuses a release whose files.json lists no SETUP.md', async () => {
+    const { source, cwd } = setup({
+      'files.json': JSON.stringify({
+        project: manifestEntries(PROJECT),
+        root: manifestEntries({ 'coverage.md': ROOT['coverage.md'] ?? '' }),
+      }),
+    });
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toBe(
+      "The release's files.json lists no SETUP.md, so there's no guide to follow."
+    );
+    expect(existsSync(path.join(cwd, 'nxds-design-system'))).toBe(false);
+  });
+
+  it.each([
+    ['..', '..'],
+    ['', 'an empty path'],
+    ['guides/SETUP.md', 'guides/SETUP.md'],
+    ['project', 'project'],
+    ['removed.json', 'removed.json'],
+    ['files.json', 'files.json'],
+  ])('refuses %j as a root file', async (name, shown) => {
+    const { source, cwd } = setup({
+      'files.json': JSON.stringify({
+        project: manifestEntries(PROJECT),
+        root: [...manifestEntries(ROOT), { path: name, sha256: '' }],
+      }),
+    });
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toBe(
+      `files.json lists ${shown} as a root file. A root file is one name beside project/, other than project, files.json and removed.json.`
+    );
+  });
+
+  it('removes a root file the last export wrote and this release drops', async () => {
+    const { source, cwd } = setup();
+    await cli(['export', 'claude-design', '--source', source], cwd);
+    writeFileSync(
+      path.join(cwd, 'nxds-design-system', 'notes.md'),
+      '# Canvas notes\n'
+    );
+    const kept = Object.fromEntries(
+      Object.entries(ROOT).filter(([name]) => name !== 'coverage.md')
+    );
+    writeFiles(source, {
+      'files.json': JSON.stringify({
+        project: manifestEntries(PROJECT),
+        root: manifestEntries(kept),
+      }),
+    });
+
+    const { exitCode } = await cliJson(
+      ['export', 'claude-design', '--source', source, '--overwrite'],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(readdirSync(path.join(cwd, 'nxds-design-system')).sort()).toEqual(
+      [...Object.keys(kept), 'files.json', 'notes.md', 'project'].sort()
+    );
+    expect(JSON.parse(readOut(cwd, 'files.json'))).toMatchObject({
+      root: manifestEntries(kept),
+    });
+  });
+
+  it('keeps a root file this release drops when you edited it', async () => {
+    const { source, cwd } = setup();
+    await cli(['export', 'claude-design', '--source', source], cwd);
+    const coverage = path.join(cwd, 'nxds-design-system', 'coverage.md');
+    writeFileSync(coverage, '# Coverage, with my notes\n');
+    writeFiles(source, {
+      'files.json': JSON.stringify({
+        project: manifestEntries(PROJECT),
+        root: manifestEntries(
+          Object.fromEntries(
+            Object.entries(ROOT).filter(([name]) => name !== 'coverage.md')
+          )
+        ),
+      }),
+    });
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source, '--overwrite'],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.attention);
+    expect(readFileSync(coverage, 'utf8')).toBe('# Coverage, with my notes\n');
+    expect(body.data.kept).toEqual([coverage]);
+  });
+
+  it("refuses an earlier export's files.json that lists no root files", async () => {
+    const { source, cwd } = setup();
+    await cli(['export', 'claude-design', '--source', source], cwd);
+    const manifest = path.join(cwd, 'nxds-design-system', 'files.json');
+    writeFileSync(manifest, JSON.stringify({ project: [] }));
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source, '--overwrite'],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.usage);
+    expect(body.error).toBe(
+      `${manifest} must hold root, a JSON array of { path, sha256 } entries. Delete it, then run the command again.`
+    );
+  });
+
+  it('keeps your files beside project/ when it exports again', async () => {
+    const { source, cwd } = setup();
+    await cli(['export', 'claude-design', '--source', source], cwd);
+    writeFileSync(
+      path.join(cwd, 'nxds-design-system', 'notes.md'),
+      '# Canvas notes\n'
+    );
+
+    const { exitCode } = await cliJson(
+      ['export', 'claude-design', '--source', source, '--overwrite'],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(readdirSync(path.join(cwd, 'nxds-design-system')).sort()).toEqual(
+      [...Object.keys(ROOT), 'files.json', 'notes.md', 'project'].sort()
+    );
+  });
+
+  it("refuses a release whose SETUP.md isn't a regular file", async () => {
+    const { source, cwd } = setup();
+    rmSync(path.join(source, 'SETUP.md'));
+    mkdirSync(path.join(source, 'SETUP.md'));
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toBe(
+      "SETUP.md is missing from the release, or isn't a regular file."
+    );
+    expect(existsSync(path.join(cwd, 'nxds-design-system'))).toBe(false);
+  });
+
+  it("refuses a release whose sampler doesn't match files.json", async () => {
+    const { source, cwd } = setup({
+      'nxds-sampler.dc.html': '<!doctype html>\n<title>Edited</title>\n',
+    });
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toBe(
+      "nxds-sampler.dc.html doesn't match the release's files.json, so nothing was written."
+    );
+    expect(existsSync(path.join(cwd, 'nxds-design-system'))).toBe(false);
+  });
+
+  it('refuses a files.json that lists only project/', async () => {
+    const { source, cwd } = setup({
+      'files.json': JSON.stringify(manifestEntries(PROJECT)),
+    });
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toMatch(
+      /files\.json must hold project and root, each a JSON array/
+    );
+  });
+
+  it.each([
+    ['a list', (entry: unknown) => [entry]],
+    ['another file', (entry: object) => ({ ...entry, path: 'theme.mjs' })],
+  ])('refuses a files.json whose theme is %s', async (_, theme) => {
+    const { source, cwd } = setup({
+      'files.json': JSON.stringify({
+        project: manifestEntries(PROJECT),
+        root: manifestEntries(ROOT),
+        theme: theme(manifestEntries({ 'theme.js': THEME_JS })[0] ?? {}),
+      }),
+    });
+
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toMatch(
+      /may hold theme, the \{ path, sha256 \} entry for theme\.js/
+    );
   });
 
   it('downloads the release from the npm registry and checks its integrity', async () => {
@@ -470,6 +761,31 @@ describe('nxds-cli export claude-design', () => {
     expect(JSON.parse(readOut(cwd, 'removed.json'))).toEqual(body.data.removed);
   });
 
+  it('removes an earlier removed.json when the export is run without --existing', async () => {
+    const { source, cwd } = setup();
+    writeFileSync(path.join(cwd, 'existing.json'), JSON.stringify([]));
+    await cli(
+      [
+        'export',
+        'claude-design',
+        '--source',
+        source,
+        '--existing',
+        'existing.json',
+      ],
+      cwd
+    );
+
+    await cli(
+      ['export', 'claude-design', '--source', source, '--overwrite'],
+      cwd
+    );
+
+    expect(
+      existsSync(path.join(cwd, 'nxds-design-system', 'removed.json'))
+    ).toBe(false);
+  });
+
   it('leaves the existing folder alone when a file does not match files.json', async () => {
     const { source, cwd } = setup();
     await cli(['export', 'claude-design', '--source', source], cwd);
@@ -524,5 +840,484 @@ describe('nxds-cli export claude-design', () => {
     expect(exitCode).toBe(EXIT_CODES.usage);
     expect(body.error).toMatch(/needs "v": 3/);
     expect(existsSync(path.join(cwd, 'nxds-design-system'))).toBe(false);
+  });
+});
+
+/**
+ * A small theme module in the shape theme.js has. It takes every export flag,
+ * rejects a corners value nxds doesn't take with core's message, and writes
+ * the theme into each file it renders, so a test can read back what it got.
+ */
+const THEME_JS = `const CORNERS = ['square', 'subtle', 'round'];
+function check(theme) {
+  const corners = theme.corners;
+  if (corners !== undefined && !CORNERS.includes(corners)) {
+    throw Object.assign(
+      new Error('--corners "' + corners + '" isn\\'t one of ' + CORNERS.join(', ') + '.'),
+      { flag: 'corners' }
+    );
+  }
+}
+const title = (theme) =>
+  theme['brand-color'] ? 'nxds · ' + theme['brand-color'] : 'nxds';
+export default {
+  api: 1,
+  flags: ${JSON.stringify(EXPORT_THEME_FLAGS)},
+  title(theme) {
+    check(theme);
+    return title(theme);
+  },
+  render(theme) {
+    check(theme);
+    return {
+      project: {
+        'tokens.json': JSON.stringify({ meta: { theme } }),
+        'tokens.css': '/* themed */\\n',
+        'README.md': 'Themed with ' + JSON.stringify(theme) + '\\n',
+      },
+      index: { title: title(theme), theme },
+      guide: (files) => '# Set up nxds, ' + files + ' files, ' + JSON.stringify(theme) + '\\n',
+    };
+  },
+};
+`;
+
+/** A release with a theme module, and files.json listing it. */
+function themedSetup(themeJs = THEME_JS) {
+  return setup({
+    'theme.js': themeJs,
+    'files.json': JSON.stringify({
+      project: manifestEntries(PROJECT),
+      root: manifestEntries(ROOT),
+      theme: manifestEntries({ 'theme.js': themeJs })[0],
+    }),
+  });
+}
+
+const EVERY_FLAG: Record<string, string> = {
+  'brand-color': '#e11d48',
+  'surface-tone': 'stone',
+  'ui-scale': 'large',
+  density: 'compact',
+  corners: 'round',
+  elevation: 'strong',
+  stroke: 'strong',
+  'light-contrast': '70',
+  'dark-contrast': '30',
+  font: 'inter',
+  'heading-font': 'playfair-display',
+  'code-font': 'jetbrains-mono',
+  'code-font-size': '13',
+};
+
+const flagArgs = (flags: Record<string, string>) =>
+  Object.entries(flags).map(([flag, value]) => `--${flag}=${value}`);
+
+function readIndex(cwd: string) {
+  return JSON.parse(readOut(cwd, 'project/design-system.json')) as Record<
+    string,
+    unknown
+  >;
+}
+
+/** The export's design-system.json, saved as a system's current index. */
+function saveIndex(cwd: string, changes: Record<string, unknown> = {}) {
+  writeFileSync(
+    path.join(cwd, 'current.json'),
+    JSON.stringify({ ...readIndex(cwd), ...changes })
+  );
+}
+
+describe('nxds-cli export claude-design with theme flags', () => {
+  it('themes the system with every flag, and records the theme', async () => {
+    const { source, cwd } = themedSetup();
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source, ...flagArgs(EVERY_FLAG)],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(body.data.theme).toEqual(EVERY_FLAG);
+    expect(JSON.parse(readOut(cwd, 'project/tokens.json'))).toEqual({
+      meta: { theme: EVERY_FLAG },
+    });
+    expect(readOut(cwd, 'project/tokens.css')).toBe('/* themed */\n');
+    expect(readIndex(cwd)).toMatchObject({
+      title: 'nxds · #e11d48',
+      theme: EVERY_FLAG,
+      namespace: 'Nxds',
+    });
+    expect(readOut(cwd, 'SETUP.md')).toBe(
+      `# Set up nxds, ${Object.keys(PROJECT).length} files, ${JSON.stringify(EVERY_FLAG)}\n`
+    );
+    expect(readOut(cwd, 'project/components/bundle.js')).toBe(BUNDLE);
+    expect(existsSync(path.join(cwd, 'nxds-design-system', 'theme.js'))).toBe(
+      false
+    );
+  });
+
+  it('says which flags themed the system, quoted for a shell', async () => {
+    const { source, cwd } = themedSetup();
+    const { stdout } = await cli(
+      [
+        'export',
+        'claude-design',
+        '--source',
+        source,
+        '--brand-color',
+        'oklch(0.6 0.2 20)',
+        '--corners',
+        'round',
+      ],
+      cwd
+    );
+
+    expect(stdout).toContain(
+      "Themed with --brand-color 'oklch(0.6 0.2 20)' --corners round."
+    );
+  });
+
+  it('writes the release as it is without a theme, and never loads theme.js', async () => {
+    const { source, cwd } = themedSetup(
+      "throw new Error('theme.js was loaded');\n"
+    );
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(body.data.theme).toEqual({});
+    for (const [file, content] of Object.entries(PROJECT)) {
+      expect(readOut(cwd, `project/${file}`), file).toBe(content);
+    }
+    expect(readOut(cwd, 'SETUP.md')).toBe(ROOT['SETUP.md']);
+  });
+
+  it("refuses a value the release doesn't take, with its message", async () => {
+    const { source, cwd } = themedSetup();
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source, '--corners', 'bevel'],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.usage);
+    expect(body.error).toBe(
+      '--corners "bevel" isn\'t one of square, subtle, round.'
+    );
+    expect(existsSync(path.join(cwd, 'nxds-design-system'))).toBe(false);
+  });
+
+  it('refuses theme flags on a release from before themes', async () => {
+    const { source, cwd } = setup();
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source, '--corners', 'round'],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.usage);
+    expect(body.error).toBe(
+      `nxds ${VERSION} has no --corners. Pass --release latest to export a release that has it.`
+    );
+  });
+
+  it("refuses to drop a system's theme on a release from before themes", async () => {
+    const { source, cwd } = setup();
+    writeFileSync(
+      path.join(cwd, 'current.json'),
+      JSON.stringify({
+        ...buildSystemIndex({ version: VERSION, at: '2026-10-01T08:00:00Z' }),
+        theme: { corners: 'round' },
+      })
+    );
+    const { exitCode, body } = await cliJson(
+      [
+        'export',
+        'claude-design',
+        '--source',
+        source,
+        '--index',
+        'current.json',
+      ],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.usage);
+    expect(body.error).toBe(
+      `current.json has a theme, and nxds ${VERSION} can't theme an export. Pass --release latest to keep the theme.`
+    );
+  });
+
+  it('takes an empty flag on a release from before themes, since it leaves no theme', async () => {
+    const { source, cwd } = setup();
+    const { exitCode } = await cliJson(
+      ['export', 'claude-design', '--source', source, '--corners='],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(readOut(cwd, 'project/tokens.json')).toBe(PROJECT['tokens.json']);
+  });
+
+  it('keeps the theme on an update, and changes only the flags passed', async () => {
+    const { source, cwd } = themedSetup();
+    const theme = { 'brand-color': '#e11d48', corners: 'round' };
+    await cli(
+      ['export', 'claude-design', '--source', source, ...flagArgs(theme)],
+      cwd
+    );
+    saveIndex(cwd);
+
+    const update = (...flags: string[]) =>
+      cliJson(
+        [
+          'export',
+          'claude-design',
+          '--source',
+          source,
+          '--overwrite',
+          '--index',
+          'current.json',
+          ...flags,
+        ],
+        cwd
+      );
+
+    const kept = await update();
+    expect(kept.exitCode).toBe(EXIT_CODES.ok);
+    expect(kept.body.data.theme).toEqual(theme);
+    expect(JSON.parse(readOut(cwd, 'project/tokens.json')).meta.theme).toEqual(
+      theme
+    );
+
+    saveIndex(cwd);
+    await update('--corners', 'square');
+    expect(readIndex(cwd)['theme']).toEqual({
+      'brand-color': '#e11d48',
+      corners: 'square',
+    });
+
+    saveIndex(cwd);
+    const reset = await update('--corners=');
+    expect(reset.body.data.theme).toEqual({ 'brand-color': '#e11d48' });
+    expect(readIndex(cwd)['theme']).toEqual({ 'brand-color': '#e11d48' });
+  });
+
+  it('goes back to the default system when every flag is reset', async () => {
+    const { source, cwd } = themedSetup();
+    await cli(
+      ['export', 'claude-design', '--source', source, '--corners', 'round'],
+      cwd
+    );
+    saveIndex(cwd);
+    const { exitCode, body } = await cliJson(
+      [
+        'export',
+        'claude-design',
+        '--source',
+        source,
+        '--overwrite',
+        '--index',
+        'current.json',
+        '--corners=',
+      ],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(body.data.theme).toEqual({});
+    expect(readIndex(cwd)).not.toHaveProperty('theme');
+    expect(readOut(cwd, 'project/tokens.json')).toBe(PROJECT['tokens.json']);
+  });
+
+  it('retitles a system the person never renamed, and keeps a title they set', async () => {
+    const { source, cwd } = themedSetup();
+    await cli(
+      ['export', 'claude-design', '--source', source, '--brand-color=#e11d48'],
+      cwd
+    );
+    const args = [
+      'export',
+      'claude-design',
+      '--source',
+      source,
+      '--overwrite',
+      '--index',
+      'current.json',
+    ];
+
+    saveIndex(cwd);
+    await cli([...args, '--brand-color=#4f46e5'], cwd);
+    expect(readIndex(cwd)['title']).toBe('nxds · #4f46e5');
+
+    saveIndex(cwd, { title: 'Acme on nxds' });
+    await cli(args, cwd);
+    expect(readIndex(cwd)['title']).toBe('Acme on nxds');
+
+    saveIndex(cwd);
+    await cli([...args, '--brand-color=#0891b2'], cwd);
+    expect(readIndex(cwd)['title']).toBe('Acme on nxds');
+  });
+
+  it('themes a system from before themes when flags are passed', async () => {
+    const { source, cwd } = themedSetup();
+    writeFileSync(
+      path.join(cwd, 'current.json'),
+      JSON.stringify(
+        buildSystemIndex({ version: '0.4.6', at: '2026-10-01T08:00:00Z' })
+      )
+    );
+    const { exitCode } = await cliJson(
+      [
+        'export',
+        'claude-design',
+        '--source',
+        source,
+        '--index',
+        'current.json',
+        '--brand-color=#e11d48',
+      ],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(readIndex(cwd)).toMatchObject({
+      title: 'nxds · #e11d48',
+      theme: { 'brand-color': '#e11d48' },
+      createdOnFiles: { at: '2026-10-01T08:00:00Z' },
+    });
+  });
+
+  it.each([
+    ['null', null],
+    ['a list', ['corners', 'round']],
+    ['a string', 'round'],
+    ['a number value', { 'light-contrast': 70 }],
+  ])('refuses a stored theme that is %s', async (_, theme) => {
+    const { source, cwd } = themedSetup();
+    writeFileSync(
+      path.join(cwd, 'current.json'),
+      JSON.stringify({
+        ...buildSystemIndex({ version: VERSION, at: '2026-10-01T08:00:00Z' }),
+        theme,
+      })
+    );
+    const { exitCode, body } = await cliJson(
+      [
+        'export',
+        'claude-design',
+        '--source',
+        source,
+        '--index',
+        'current.json',
+      ],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.usage);
+    expect(body.error).toMatch(
+      /current\.json: "theme" must be an object of theme flag values/
+    );
+  });
+
+  it.each([
+    [
+      'a flag the release has no field for',
+      { shimmer: 'on' },
+      `current.json theme: "shimmer" isn't a theme flag nxds ${VERSION} takes. Remove it from "theme".`,
+    ],
+    [
+      'a mode',
+      { mode: 'dark' },
+      'current.json theme: a system carries Light and Dark and one icon library, so it has no "mode". Remove it from "theme".',
+    ],
+    [
+      'an icon library',
+      { icons: 'lucide' },
+      'current.json theme: a system carries Light and Dark and one icon library, so it has no "icons". Remove it from "theme".',
+    ],
+    [
+      "a value the release doesn't take",
+      { corners: 'bevel' },
+      'current.json theme: --corners "bevel" isn\'t one of square, subtle, round. Pass --corners <value> to change it, or --corners= to reset it.',
+    ],
+  ])('refuses a stored theme with %s', async (_, theme, message) => {
+    const { source, cwd } = themedSetup();
+    writeFileSync(
+      path.join(cwd, 'current.json'),
+      JSON.stringify({
+        ...buildSystemIndex({ version: VERSION, at: '2026-10-01T08:00:00Z' }),
+        theme,
+      })
+    );
+    const { exitCode, body } = await cliJson(
+      [
+        'export',
+        'claude-design',
+        '--source',
+        source,
+        '--index',
+        'current.json',
+      ],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.usage);
+    expect(body.error).toBe(message);
+  });
+
+  it('leaves the existing export alone when theme.js fails', async () => {
+    const { source, cwd } = themedSetup(
+      "export default { api: 1, flags: ['corners'], title: () => 'nxds', render() { throw new Error('out of memory'); } };\n"
+    );
+    await cli(['export', 'claude-design', '--source', source], cwd);
+    const { exitCode, body } = await cliJson(
+      [
+        'export',
+        'claude-design',
+        '--source',
+        source,
+        '--overwrite',
+        '--corners',
+        'round',
+      ],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toBe(`nxds ${VERSION}'s theme.js failed: out of memory`);
+    expect(readOut(cwd, 'project/tokens.json')).toBe(PROJECT['tokens.json']);
+  });
+
+  it("refuses a theme.js this CLI doesn't know", async () => {
+    const { source, cwd } = themedSetup(
+      'export default { api: 2, flags: [], render() {} };\n'
+    );
+    const { exitCode, body } = await cliJson(
+      ['export', 'claude-design', '--source', source, '--corners', 'round'],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.error);
+    expect(body.error).toMatch(/theme\.js is newer than this nxds-cli/);
+  });
+
+  it('themes a release downloaded from the npm registry', async () => {
+    const { root, source, cwd } = themedSetup();
+    const registry = await npmRegistry(root, source);
+    const { exitCode } = await cliJson(
+      [
+        'export',
+        'claude-design',
+        '--npm-registry',
+        registry,
+        '--corners',
+        'round',
+      ],
+      cwd
+    );
+
+    expect(exitCode).toBe(EXIT_CODES.ok);
+    expect(readIndex(cwd)['theme']).toEqual({ corners: 'round' });
   });
 });

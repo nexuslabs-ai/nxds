@@ -1,32 +1,140 @@
 # @nxds/core
 
-The framework-agnostic engine behind nxds Appearance: appearance model, runtime theme derivation, and first-paint snapshots. Use it directly for non-React targets like Electron, React Native, or native shells, or via `@nxds/react/appearance` in React apps. It also contains the design tokens in DTCG format and CSS generation documented below.
-
-## Install
+The nxds theme engine. It turns an appearance, such as a brand color, a density
+and a font, into the `--nx-*` CSS variables every nxds component reads.
 
 ```bash
-pnpm add @nxds/core
+npm install @nxds/core
 ```
 
-## Primary Exports
+In a React app, `npx nxds-cli@latest init` installs `@nxds/core` and copies in
+a provider that calls it. In a Vue app,
+[Install by hand](https://nxds.dev/getting-started/install#install-by-hand)
+copies in a plugin that calls it. Use the engine directly in a shell without
+React or Vue, such as Electron, or in a tool that reads the tokens.
 
-- `DEFAULT_NXDS_APPEARANCE`, `sanitizeNxdsAppearance`, `NxdsAppearanceState`: the appearance model.
-- `BRAND_COLOR_PRESETS`, `BrandColorPreset`, `findBrandColorPreset`, `DEFAULT_BRAND_COLOR`: brand color choices for appearance editors. Default is `DEFAULT_BRAND_COLOR`; Indigo, Blue, Violet, Rose, Orange, Amber, Green, and Teal use each family's authored 600 hex. Assign a preset's `color` to `brandColor`; `findBrandColorPreset(brandColor)` returns the preset an opaque saved color matches in any CSS notation the engine parses (`#4F46E5`, `4f46e5`, `rgb(79 70 229)`), ignoring surrounding whitespace, or `undefined` for a custom or unparseable color.
-- `createNxdsThemeContract`, `deriveTheme`, `themeToCss`: derive a full token set from appearance state and render it to CSS.
-- `measureThemeContrast`, `ThemeContrastCheck`, `Mode`, `Tier`: measure a derived theme against every registered APCA pair. See [Contrast report](#contrast-report).
-- `createNxdsAppearanceSnapshotFromState`, `createNxdsAppearanceBootstrapScript`, `resolveFirstPaint`, `DEFAULT_STORAGE_KEY`: first-paint, no-flash bootstrap.
+## Apply a theme
 
-## Advanced / Engine Exports
-
-`adjustContrast`, `PALETTE_KEYS`, `TIER_THRESHOLDS`, `isColor`: low-level palette and contrast utilities. Stability is not guaranteed pre-1.0.
-
-See the nxds docs, Theming -> Appearance, for setup recipes.
-
-## Contrast report
-
-`measureThemeContrast(theme)` measures a derived theme after derivation. It returns one `ThemeContrastCheck` per registered foreground/background pair in each mode:
+Put your app's starting appearance and storage key in their own file, so
+`vite.config.ts` can import them too:
 
 ```ts
+// src/appearance-state.ts
+import { DEFAULT_NXDS_APPEARANCE, type NxdsAppearanceState } from '@nxds/core';
+
+export const storageKey = 'app-appearance';
+
+export const defaultAppearance = {
+  ...DEFAULT_NXDS_APPEARANCE,
+  brandColor: '#2563eb',
+  surfaceTone: 'slate',
+} satisfies NxdsAppearanceState;
+```
+
+```ts
+// src/appearance.ts
+import {
+  applyNxdsAppearance,
+  type NxdsAppearanceState,
+  persistNxdsAppearance,
+  prefersDarkColorScheme,
+  readStoredNxdsAppearance,
+} from '@nxds/core';
+
+import { defaultAppearance, storageKey } from './appearance-state';
+
+applyNxdsAppearance(
+  readStoredNxdsAppearance(storageKey, defaultAppearance),
+  prefersDarkColorScheme()
+);
+
+export function setAppearance(appearance: NxdsAppearanceState) {
+  applyNxdsAppearance(appearance, prefersDarkColorScheme());
+  persistNxdsAppearance(appearance, { storageKey });
+}
+```
+
+`readStoredNxdsAppearance` returns the appearance the user saved, or
+`defaultAppearance` on a first visit. `applyNxdsAppearance` sets the `dark`
+class and the preset attributes on `<html>`, and writes the theme CSS into
+`<head>`.
+
+Call `setAppearance` when the user changes the appearance. It applies the
+change, and `persistNxdsAppearance` saves it for the next load.
+
+## Stop the theme flashing on reload
+
+```ts
+// vite.config.ts
+import {
+  createNxdsAppearanceBootstrapScript,
+  createNxdsAppearanceSnapshotFromState,
+} from '@nxds/core';
+import { defineConfig } from 'vite';
+
+import { defaultAppearance, storageKey } from './src/appearance-state';
+
+const script = createNxdsAppearanceBootstrapScript({
+  storageKey,
+  defaultSnapshot: createNxdsAppearanceSnapshotFromState(defaultAppearance),
+});
+
+export default defineConfig({
+  plugins: [
+    {
+      name: 'nxds-appearance-bootstrap',
+      transformIndexHtml(html) {
+        return html.replace('</head>', `<script>${script}</script></head>`);
+      },
+    },
+  ],
+});
+```
+
+The script applies the saved appearance before the first paint, so the page
+doesn't flash the default theme. If you don't use Vite, put `script` in a
+`<script>` tag in `<head>` yourself.
+
+## Main exports
+
+| Export                                                                                                                                                                           | What it does                                                                                                        |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `DEFAULT_NXDS_APPEARANCE`, `sanitizeNxdsAppearance`, `NxdsAppearanceState`                                                                                                       | The appearance: its defaults, its validation and its type                                                           |
+| `applyNxdsAppearance`, `removeNxdsAppearance`, `persistNxdsAppearance`, `readStoredNxdsAppearance`                                                                               | Apply, remove, save and read an appearance in the browser                                                           |
+| `prefersDarkColorScheme`, `watchColorScheme`, `resolveNxdsAppearanceMode`                                                                                                        | Read the OS color scheme, and resolve `system` mode to light or dark                                                |
+| `createNxdsAppearanceSnapshotFromState`, `createNxdsAppearanceBootstrapScript`, `resolveFirstPaint`, `DEFAULT_STORAGE_KEY`                                                       | The first-paint script                                                                                              |
+| `createNxdsAppearanceSnapshotFromCookie`, `DEFAULT_COOKIE_KEY`                                                                                                                   | The first paint from a cookie, for an app that renders on the server                                                |
+| `createNxdsThemeContract`, `deriveTheme`, `themeToCss`                                                                                                                           | Derive the color tokens from an appearance, and render them to CSS                                                  |
+| `BRAND_COLOR_PRESETS`, `findBrandColorPreset`, `DEFAULT_BRAND_COLOR`                                                                                                             | Brand color choices for an appearance editor                                                                        |
+| `BASE_TONE_OPTIONS`, `UI_SCALE_OPTIONS`, `TEXT_SIZE_OPTIONS`, `DENSITY_OPTIONS`, `CORNER_OPTIONS`, `ELEVATION_OPTIONS`, `STROKE_OPTIONS`, `FONT_OPTIONS`, `ICON_LIBRARY_OPTIONS` | The values and labels for each other field, for an appearance editor                                                |
+| `shuffleNxdsAppearance`                                                                                                                                                          | A random brand color, surface tone, density, corners, elevation, stroke and fonts. The rest of the appearance stays |
+| `shuffleNxdsIconLibrary`                                                                                                                                                         | A random icon library                                                                                               |
+| `NxdsTheme`, `DEFAULT_NXDS_THEME`                                                                                                                                                | A theme: an appearance, and the icon library the app installs                                                       |
+| `nxdsThemeFlags`, `applyNxdsThemeFlags`                                                                                                                                          | Turn a theme into `nxds-cli init` flags, and flags into a theme                                                     |
+| `measureThemeContrast`                                                                                                                                                           | Measures a derived theme against every contrast pair                                                                |
+| `adjustContrast`, `PALETTE_KEYS`, `TIER_THRESHOLDS`, `isColor`                                                                                                                   | Low-level palette and contrast helpers. They may change before 1.0                                                  |
+
+`findBrandColorPreset(color)` returns the preset a saved color matches, in any
+CSS notation, or `undefined` for a custom color.
+
+## Set your own colors
+
+```ts
+// src/appearance.ts
+import { applyNxdsAppearance, DEFAULT_NXDS_APPEARANCE } from '@nxds/core';
+
+applyNxdsAppearance(DEFAULT_NXDS_APPEARANCE, false, { deriveColors: false });
+```
+
+`deriveColors: false` leaves every color to your own CSS. The mode, the preset
+attributes and the fonts still apply. Pass the same option to
+`persistNxdsAppearance` and `createNxdsAppearanceSnapshotFromState`.
+[Your own colors](https://nxds.dev/theming/own-colors) covers the CSS.
+
+## Check contrast
+
+```ts
+// scripts/check-contrast.ts
 import {
   createNxdsThemeContract,
   DEFAULT_NXDS_APPEARANCE,
@@ -40,161 +148,62 @@ const checks = measureThemeContrast(
 const failing = checks.filter((check) => !check.pass);
 ```
 
-Each check has `mode`, the `fg` and `bg` CSS variable names (such as `--nx-color-foreground`), an optional `backdrop` (a CSS variable name or hex color), `tier`, the measured absolute APCA `lc`, the tier `floor`, and `pass` (`lc >= floor`). Translucent colors are composited over their backdrop before measurement.
+`measureThemeContrast` returns one check per foreground and background pair in
+each mode:
 
-## Authored palette lookup
+| Field      | Holds                                                                                                |
+| ---------- | ---------------------------------------------------------------------------------------------------- |
+| `mode`     | `light` or `dark`                                                                                    |
+| `fg`, `bg` | The CSS variable names, such as `--nx-color-foreground`                                              |
+| `backdrop` | Optional. The CSS variable or hex color a translucent background is composited over before measuring |
+| `tier`     | The pair's contrast tier                                                                             |
+| `lc`       | The measured APCA contrast, as an absolute value                                                     |
+| `floor`    | The tier's minimum                                                                                   |
+| `pass`     | `lc >= floor`                                                                                        |
 
-The browser-safe `@nxds/core/palette` entry resolves the same authored palettes used by CSS generation:
+## Look up palette colors
 
 ```ts
+// src/palette.ts
 import { getPaletteRamp, getPaletteShade } from '@nxds/core/palette';
 
 getPaletteShade('green', '600'); // oklch(0.62 0.2233 140.055)
-const neutral = getPaletteRamp('neutral'); // Frozen, readonly shade map
+const neutral = getPaletteRamp('neutral');
 ```
 
-`PRIMITIVE_PALETTE_NAMES` lists the 22 shade families typed by `PrimitivePaletteName`; `SHADES` lists 50 through 950, typed by `Shade`. White and Black are singleton colors, not ramps. `PALETTE_KEYS` identifies only the five surface-tone families. Lookups resolve on first use and cache immutable values; importing the engine does not convert palettes.
+`PRIMITIVE_PALETTE_NAMES` lists the 22 palettes, and `SHADES` lists the shades
+from 50 through 950. `getPaletteShade` returns the shade nxds renders, not the
+authored hex.
 
-The engine starts from authored palettes: Success uses Green, Warning Orange, Error Red, and Information Blue. Secondary colors and near-black/near-white primary interaction endpoints use Neutral. The contrast solver can adjust these starting colors before emission.
+`BRAND_COLOR_PRESETS` holds nine presets. The first, Default, is
+`DEFAULT_BRAND_COLOR`. The other eight are the authored 600 hex of Indigo, Blue,
+Violet, Rose, Orange, Amber, Green and Teal. To seed `brandColor` from a preset,
+use its `color`.
 
-Under deuteranopia the Success (Green) and Warning (Orange) 600 shades are hard to tell apart, so status UI must pair color with an icon and label. The color-vision audit reports this pair as its one accepted limitation.
-
-Custom brand ramps and raw surface-tone references retain their separate algorithms. A palette's processed 600 shade is not interchangeable with its authored hex as a brand seed.
-
-## Token catalogue
-
-The browser-safe `@nxds/core/catalogue` entry describes every token family for tools and docs: colour, typography, spacing, radius, border width, shadow, motion, z-index, and breakpoints. Each token has its `--nx-*` name, aliases, values per theme mode and preset as the generated CSS declares them, and the authored source leaf. It builds a fresh array and derives both runtime colour modes on each call, so call it once per build or page, not per render.
+## Read the token catalogue
 
 ```ts
+// scripts/tokens.ts
+import { DEFAULT_NXDS_APPEARANCE } from '@nxds/core';
 import { createTokenCatalogue } from '@nxds/core/catalogue';
 
 const tokens = createTokenCatalogue();
-```
-
-## Non-React Shell Example
-
-Use the engine directly when a host shell owns DOM or native styling.
-
-```ts
-import {
-  createNxdsAppearanceSnapshotFromState,
-  createNxdsThemeContract,
-  DEFAULT_NXDS_APPEARANCE,
-  deriveTheme,
-  resolveFirstPaint,
-  themeToCss,
-} from '@nxds/core';
-
-const state = {
+const rose = createTokenCatalogue({
   ...DEFAULT_NXDS_APPEARANCE,
-  brandColor: '#2563eb',
-  surfaceTone: 'slate',
-};
-const snapshot = createNxdsAppearanceSnapshotFromState(state);
-const firstPaint = resolveFirstPaint(snapshot, false);
-const themeStyle =
-  document.querySelector<HTMLStyleElement>('style[data-theme]') ??
-  document.head.appendChild(document.createElement('style'));
-themeStyle.dataset.theme = '';
-
-document.documentElement.classList.toggle(
-  'dark',
-  firstPaint.className === 'dark'
-);
-themeStyle.textContent = themeToCss(
-  deriveTheme(createNxdsThemeContract(snapshot.state))
-);
+  brandColor: '#e11d48',
+});
 ```
 
-## Token Architecture
+`createTokenCatalogue` lists every token: color, typography, spacing, radius,
+border width, shadow, motion, z-index, breakpoints, UI scale and page widths.
+Each entry has its `--nx-*` name, its value in each mode and preset, and the
+appearance settings that change it.
 
-### DTCG Format (W3C Standard)
+Pass an appearance to read the tokens at that appearance. The call derives both
+color modes, so call it once per build or page, not per render.
 
-All tokens follow the [Design Tokens Community Group](https://tr.designtokens.org/) specification:
+## Docs
 
-```json
-{
-  "token-name": {
-    "$value": "#ffffff",
-    "$type": "color",
-    "$description": "Optional description"
-  }
-}
-```
-
-### Token Hierarchy
-
-**Primitives** (`tokens/primitives/`)
-
-- Context-independent base values
-- Color, radius, border-width, shadow, typography, motion
-- Output: CSS variables with the `--nx-*` prefix
-- Example: `--nx-color-gray-950`, `--nx-radius-md`
-- Motion primitives also promote named Tailwind utilities such as `nx:duration-fast` and `nx:ease-enter`: durations are emitted as explicit `@utility` rules, while easing uses Tailwind's `@theme` namespace. Existing Tailwind numeric duration/ease defaults remain available until the repo-wide migration lands.
-
-**Semantic** (`tokens/semantic/`)
-
-- Contextual meanings that reference primitives (and per-mode direct values for spacing)
-- Semantic **color** is engine-derived (`deriveTheme`), not authored here; `tokens/semantic/` now holds only spacing, breakpoints, and z-index
-- Output: Tailwind v4 `@theme` block (semantic color via `@theme inline`, accepting runtime `--nx-color-*` overrides) + per-mode `[data-density="X"]` blocks
-- Example: `--color-background: var(--nx-color-background, oklch(1 0 0))` (engine color floor), `--nx-spacing-4: 16px`
-
-> **Spacing is two-tier, not three.** Unlike color/radius/shadow/typography, spacing has no `--nx-size-*` primitive layer — `semantic/spacing-{mode}.json` files carry direct px values, and the build emits per-mode `[data-density="X"]` blocks plus role utilities (`nx:p-container`, `nx:gap-layout-section`, …). Mode swap is runtime via the `data-density` attribute on `<html>`.
-
-**Component** (future)
-
-- Component-specific tokens
-- References semantic tokens
-
-### Color generation
-
-Color tokens don't ship the values stored on disk. Source files hold hex. Build and runtime share authored-palette conversion: chromatic families use their hue-specific lightness curves and P3 cusp chroma; neutral families use the flat lightness grid and source chroma. Both preserve each authored shade's hue. Runtime semantic text/surface pairs are checked against the registered APCA constraints in CI.
-
-Generated global CSS sets the native browser UI policy alongside the tokens: `:root` advertises light/dark support, `.dark` pins native controls and scrollbars to dark, and the light root stays light when `.dark` is absent.
-
-## Reference Resolution
-
-Semantic **color** is produced by the engine (`deriveTheme`), not authored as
-JSON. The build bakes each derived value into `nxds.css` as a `@theme inline`
-fallback that still accepts a runtime override:
-
-```css
---color-background: var(--nx-color-background, oklch(1 0 0));
-```
-
-The `--color-*` name is the Tailwind v4 `@theme` key that generates the utility
-(`nx:bg-background`); the `--nx-color-*` fallback is the runtime override the
-appearance provider injects. Non-color families (spacing, radius, shadow,
-borderwidth, …) still use DTCG `{reference}` syntax, resolved to `var(--nx-*)`
-at build time.
-
-## Build Process
-
-### Generate CSS
-
-```bash
-pnpm tokens:tailwind      # From the repo root: generate the token scales, build core and generate @nxds/tailwind CSS
-```
-
-### Output Files
-
-- `../tailwind/nxds.css` - Main Tailwind theme with `nx:` prefix
-- `../tailwind/variables.css` - Primitive CSS variables with `--nx-*` prefix
-
-## Future Platform Support
-
-Tokens are in DTCG format, making them portable to:
-
-- iOS (Swift)
-- Android (Kotlin/XML)
-- React Native
-- Any tool supporting DTCG standard
-
-When multi-platform support is needed, tools like Style Dictionary can be added to generate platform-specific outputs from the same DTCG token files.
-
-## Adding New Tokens
-
-- **Color** is engine-owned: edit the derivation in `src/lib/surface-ladder.ts` / `src/lib/derive-theme.ts` (color primitives live in `tokens/primitives/color.json`).
-- **Non-color** (spacing, radius, shadow, borderwidth, motion, typography): edit the DTCG token files in `tokens/` (`$value`, `$type`, `$description`).
-
-Then run `make tokens` (or `pnpm tokens:tailwind`) to regenerate the spacing steps and palette names in `src/lib/token-scales.generated.ts` and the CSS; the CSS is copied into the `@nxds/tailwind` package. A new or renamed token file also needs an import in `src/catalogue/token-files.ts`; `pnpm test:unit` fails until the manifest matches the files on disk.
+- **[Appearance](https://nxds.dev/theming/appearance)**: every field the engine reads.
+- **[Tokens](https://nxds.dev/foundations/tokens)**: the token layers and how the engine builds them.
+- **[Color](https://nxds.dev/foundations/color)**: how the palette is built and checked.

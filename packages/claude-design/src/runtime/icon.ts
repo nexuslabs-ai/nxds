@@ -4,12 +4,11 @@ import * as React from 'react';
 
 import { ICON_COMPONENTS } from 'nxds:icon-names';
 
-import { useCanvasProps } from './attributes.ts';
+import { useCanvasProps, warnOnce } from './attributes.ts';
 
 export interface IconProps {
   name: string;
   size?: number;
-  weight?: 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone';
   className?: string;
   'aria-label'?: string;
   [attribute: `data-${string}`]: string | undefined;
@@ -19,22 +18,29 @@ export function Icon(raw: IconProps) {
   const {
     name,
     size = 16,
-    weight,
     className,
     'aria-label': label,
+    weight,
     ...rest
-  } = useCanvasProps('Icon', raw);
+  }: IconProps & { weight?: unknown } = useCanvasProps('Icon', raw);
   const Component = ICON_COMPONENTS[name];
   if (!Component) return null;
+  if (weight !== undefined) {
+    warnOnce(
+      'Icon',
+      'weight',
+      String(weight),
+      'does nothing: Icon has no weight prop, and a filled icon uses a `-fill` name',
+      'regular'
+    );
+  }
   // An empty label names nothing, so the icon stays hidden from screen readers.
   const naming = label
     ? { role: 'img', 'aria-label': label }
     : { 'aria-hidden': true };
-  // A `-fill` name sets its own weight, so pass one only when it is set.
   return React.createElement(Component, {
     ...rest,
     size,
-    ...(weight ? { weight } : {}),
     className,
     ...naming,
   });

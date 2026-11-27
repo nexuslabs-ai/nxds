@@ -1,9 +1,6 @@
 import js from '@eslint/js';
 import eslintCommentsPlugin from '@eslint-community/eslint-plugin-eslint-comments';
-import {
-  nxdsComponentConfig,
-  nxdsSpacingTokenConfig,
-} from '@nxds/eslint-plugin/config';
+import { nxdsComponentConfig } from '@nxds/eslint-plugin/config';
 import { nxdsTailwindClassesConfig } from '@nxds/eslint-plugin/tailwind';
 import prettierConfig from 'eslint-config-prettier';
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
@@ -13,7 +10,6 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import pluginVue from 'eslint-plugin-vue';
 import vueA11yPlugin from 'eslint-plugin-vuejs-accessibility';
 import globals from 'globals';
-import * as jsoncParser from 'jsonc-eslint-parser';
 import path from 'node:path';
 import tseslint from 'typescript-eslint';
 import vueParser from 'vue-eslint-parser';
@@ -28,6 +24,15 @@ function reactSources(...globs) {
     globs.map((glob) => `${root}/${glob}`)
   );
 }
+
+const docsSkippedChecks = [
+  'rawFontWeight',
+  'rawLineHeight',
+  'rawLetterSpacing',
+  'densityIconSize',
+  'unstrokedIcon',
+  'plainIconSize',
+];
 
 const radiusBaseConsumer = String.raw`/rounded(?:-[a-z]{1,2})?-base\b|radius-base/`;
 const radiusBaseMessage =
@@ -355,6 +360,25 @@ export default tseslint.config(
     files: [...reactSources('src/**/*.{ts,tsx}'), 'apps/**/*.{ts,tsx}'],
     ...nxdsComponentConfig(),
   },
+  // The docs app quotes utilities as specimens and prose, and styles its own
+  // chrome off-system.
+  {
+    files: ['apps/docs/**/*.{ts,tsx}'],
+    rules: {
+      '@nxds/nx-class-conventions': ['error', { skip: docsSkippedChecks }],
+    },
+  },
+  // The docs pages also render a transition and focus ring pairing as the
+  // subject of the prose around it.
+  {
+    files: ['apps/docs/app/_pages/**/*.{ts,tsx}'],
+    rules: {
+      '@nxds/nx-class-conventions': [
+        'error',
+        { skip: [...docsSkippedChecks, 'ringFadingTransition'] },
+      ],
+    },
+  },
 
   // The docs read defaults from code and examples from docs stories, so the
   // published source carries no `@default` or `@example` copies of them.
@@ -401,7 +425,7 @@ export default tseslint.config(
     files: reactSources('src/components/**/*.{ts,tsx}'),
     ignores: [
       ...reactSources(
-        'src/components/button/button.tsx',
+        'src/components/button/button-variants.ts',
         'src/components/filter-condition/filter-condition.tsx'
       ),
       '**/*.stories.tsx',
@@ -423,16 +447,26 @@ export default tseslint.config(
   },
 
   {
+    // The docs app builds every Nexus part from source (`@/` resolves to
+    // packages/react/src), like the generated demos. The built package can't
+    // be tree-shaken, so importing it would load a second copy of every part,
+    // and only source parts draw the reader's icon library (see
+    // apps/docs/next.config.ts).
     files: ['apps/docs/**/*.{ts,tsx,js,mjs}'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
-          patterns: [
+          paths: [
             {
-              group: ['@/*'],
+              name: '@nxds/react',
               message:
-                '`@/` resolves to packages/react/src for the generated, paste-ready docs code only — import @nxds/react here.',
+                'Import the part from source, `@/components/<name>/<name>`, so the page loads one copy of it.',
+            },
+            {
+              name: '@nxds/react/utils',
+              message:
+                'Import `cn` from source, `@/lib/utils`, so the page loads one copy of it.',
             },
           ],
         },
@@ -441,26 +475,28 @@ export default tseslint.config(
   },
 
   {
-    // The playground previews the reader's icon library, which only the
-    // components built from source can draw (see apps/docs/next.config.ts).
-    files: [
-      'apps/docs/app/_lib/switchable-icons.tsx',
-      'apps/docs/app/_workspace/sampler.tsx',
-    ],
-    rules: { 'no-restricted-imports': 'off' },
-  },
-
-  {
     files: ['apps/docs/app/_pages/patterns/**/*.tsx'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
+          paths: [
+            {
+              name: '@nxds/react',
+              message:
+                'Import the part from source, `@/components/<name>/<name>`, so the page loads one copy of it.',
+            },
+            {
+              name: '@nxds/react/utils',
+              message:
+                'Import `cn` from source, `@/lib/utils`, so the page loads one copy of it.',
+            },
+          ],
           patterns: [
             {
-              regex: '^@/(?!patterns/)',
+              regex: '^@/(?!patterns/|components/|lib/utils$)',
               message:
-                'A pattern page imports its examples from `@/patterns/`, which @nxds/react does not export — import components from @nxds/react.',
+                'A pattern page imports its examples from `@/patterns/`, its parts from `@/components/` and `cn` from `@/lib/utils`.',
             },
           ],
         },
@@ -476,12 +512,6 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',
     },
-  },
-
-  // nxds: gate px values in spacing mode files to the canonical step set.
-  {
-    files: ['packages/core/tokens/semantic/spacing-*.json'],
-    ...nxdsSpacingTokenConfig({ parser: jsoncParser }),
   },
 
   // Disable rules that conflict with Prettier

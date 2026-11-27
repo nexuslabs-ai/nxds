@@ -284,8 +284,8 @@ export const WithHeaderActions: Story = {
             </DrawerDescription>
           </div>
           <DrawerClose asChild>
-            <Button variant="ghost" size="icon" aria-label="Close drawer">
-              <IconX aria-hidden="true" />
+            <Button variant="ghost" iconOnly startIcon={<IconX />}>
+              Close drawer
             </Button>
           </DrawerClose>
         </DrawerHeader>

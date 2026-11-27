@@ -1,0 +1,294 @@
+import { LookSource } from './_look-source';
+import { MaterialLookPreview } from './_material-look/preview';
+
+export const description =
+  'A Material-style settings screen built from nxds parts: your own colors, Material shadows, an edited Card, Button and Progress, a rewritten Switch and Checkbox, and a new TextField.';
+
+# Material look
+
+A Material-style settings screen, built from nxds parts with your own colors.
+
+<MaterialLookPreview />
+
+The first screen is built with nxds parts. The second is the same screen built
+with Material UI, to compare.
+
+## Set your own colors
+
+Create the colors file, with Roboto and the `standard` elevation:
+
+```bash
+npx nxds-cli@latest init --own-colors --font roboto --elevation standard
+```
+
+Replace its values with Material's palette:
+
+```css
+/* app/nxds-colors.css */
+@layer theme {
+  :root {
+    --nx-color-primary-background: #1976d2;
+    --nx-color-primary-background-hover: #1565c0;
+    --nx-color-primary-foreground: #fff;
+    --nx-color-primary-disabled: rgb(0 0 0 / 0.12);
+    --nx-color-secondary-background: #9c27b0;
+    --nx-color-secondary-background-hover: #7b1fa2;
+    --nx-color-secondary-border: rgb(156 39 176 / 0.5);
+    --nx-color-error-background: #d32f2f;
+    --nx-color-foreground: rgb(0 0 0 / 0.87);
+    --nx-color-border-default: rgb(0 0 0 / 0.23);
+    /* The other colors */
+  }
+}
+```
+
+The
+[full palette](https://github.com/nexuslabs-ai/nxds/blob/main/apps/docs/content/theming/_material-look/material-look.css)
+has every color for light and dark. It sets them on a wrapper, so they reach
+only the preview on this page. Your app sets them on `:root` and `.dark`.
+
+[Your own colors](/theming/own-colors) covers the colors file.
+
+## Add Material's shadows
+
+Material lifts a card and a button off the page. Redefine the `standard`
+elevation in the colors file:
+
+```css
+/* app/nxds-colors.css */
+@layer theme {
+  [data-shadow='standard'],
+  .dark[data-shadow='standard'],
+  .dark [data-shadow='standard'] {
+    --nx-shadow-xs:
+      0 2px 1px -1px rgb(0 0 0 / 0.2), 0 1px 1px 0 rgb(0 0 0 / 0.14),
+      0 1px 3px 0 rgb(0 0 0 / 0.12);
+    --nx-shadow-sm:
+      0 3px 1px -2px rgb(0 0 0 / 0.2), 0 2px 2px 0 rgb(0 0 0 / 0.14),
+      0 1px 5px 0 rgb(0 0 0 / 0.12);
+    --nx-shadow-base:
+      0 2px 4px -1px rgb(0 0 0 / 0.2), 0 4px 5px 0 rgb(0 0 0 / 0.14),
+      0 1px 10px 0 rgb(0 0 0 / 0.12);
+    --nx-shadow-md:
+      0 3px 5px -1px rgb(0 0 0 / 0.2), 0 6px 10px 0 rgb(0 0 0 / 0.14),
+      0 1px 18px 0 rgb(0 0 0 / 0.12);
+    --nx-shadow-lg:
+      0 5px 5px -3px rgb(0 0 0 / 0.2), 0 8px 10px 1px rgb(0 0 0 / 0.14),
+      0 3px 14px 2px rgb(0 0 0 / 0.12);
+    --nx-shadow-xl:
+      0 7px 8px -4px rgb(0 0 0 / 0.2), 0 12px 17px 2px rgb(0 0 0 / 0.14),
+      0 5px 22px 4px rgb(0 0 0 / 0.12);
+  }
+}
+```
+
+The six shadows are Material's elevations 1, 2, 4, 6, 8 and 12.
+
+## Set Material's letter spacing
+
+Material spaces its body text by 0.15px. Set the nxds letter spacing for body
+text in the colors file:
+
+```css
+/* app/nxds-colors.css */
+@layer theme {
+  :root {
+    --nx-typography-letterspacing-normal: 0.15px;
+  }
+}
+```
+
+## Add the parts
+
+```bash
+npx nxds-cli@latest add card button progress switch checkbox label
+```
+
+Each part needs a different amount of work:
+
+| Part      | Change                                                              |
+| --------- | ------------------------------------------------------------------- |
+| Label     | None. It reads the colors you set                                   |
+| Card      | A shadow in place of the border, and Material's title sizes         |
+| Button    | Three restyled variants, a `tone` prop, round icon buttons          |
+| Progress  | A thin, square bar on a tinted track                                |
+| Switch    | A new class recipe: a thin track, a raised thumb and a hover halo   |
+| Checkbox  | A new class recipe and check mark: a bold outline, and a hover halo |
+| TextField | A new part: the label sits inside the field                         |
+
+## Edit the Card
+
+A Material card has a shadow and no border, and a large title in regular
+weight. Change the Card's class strings:
+
+<LookSource look="material" file="card/card.tsx" />
+
+| Material needs                       | Change                                                             |
+| ------------------------------------ | ------------------------------------------------------------------ |
+| A shadow, and no border              | `nx:shadow-xs` in place of the border classes                      |
+| 4px corners                          | `nx:rounded-md`                                                    |
+| Tighter padding                      | `nx:p-4` on the header and the content, and no gap under the title |
+| A 24px title in regular weight       | `nx:typography-heading-medium nx:font-normal nx:tracking-normal`   |
+| 16px supporting text                 | The `base` size and line height on the description                 |
+| An action row that fits text buttons | `nx:p-2` on the footer                                             |
+
+## Edit the Button
+
+Restyle three of the Button's variants, and add a `tone` beside `variant`:
+
+<LookSource look="material" file="button/button-variants.ts" />
+
+| Material needs                             | Change in the recipe                                           |
+| ------------------------------------------ | -------------------------------------------------------------- |
+| Contained, outlined and text buttons       | New classes on `default`, `outline` and `ghost`                |
+| Each in three colors                       | A `tone` variant: `primary`, `secondary` or `error`            |
+| Uppercase labels with wider letter spacing | `nx:uppercase` and a `nx:tracking-*` class                     |
+| A shadow that grows on hover and press     | `nx:shadow-sm`, `nx:hover:shadow-base`, `nx:active:shadow-lg`  |
+| A readable disabled button                 | `nx:disabled:text-disabled-foreground`, and no shadow          |
+| 36.5px tall with 16px side padding         | `nx:py-1.5`, `nx:px-4` and a line height of 1.75               |
+| 8px side padding on a text button          | `nx:px-2` on the `ghost` variant                               |
+| An outline that takes no room              | `nx:inset-ring-*` in place of a border                         |
+| A faint wash on hover                      | The button's color at 4%, such as `nx:bg-primary-background/4` |
+| Round icon buttons, 48px wide              | `nx:rounded-full` and `nx:size-12` on the icon-only variant    |
+
+The variant names stay, so parts that build on Button, such as Pagination,
+still compile. Without a `tone`, a button keeps its nxds colors, so those parts
+look as they did. The other variants keep their nxds classes.
+
+The component takes the new `tone` prop and passes it to the recipe. `color`
+is already an HTML attribute, so the prop has another name:
+
+<LookSource look="material" file="button/button.tsx" />
+
+Loading, the icon slots, `asChild` and the focus ring are unchanged.
+
+## Edit the Progress
+
+A Material progress bar is thin and square, on a track in a lighter shade of
+its own color. Change one class string in the Progress:
+
+<LookSource look="material" file="progress/progress.tsx" />
+
+| Material needs               | Change                                             |
+| ---------------------------- | -------------------------------------------------- |
+| A thin bar with square ends  | `nx:h-1`, and no corner class                      |
+| A track in a lighter primary | `nx:bg-primary-background/38` in place of the rail |
+
+## Rewrite the Switch
+
+A Material thumb is larger than its track, and casts a shadow. Replace the
+Switch's two class recipes. The component under them stays as it is:
+
+<LookSource look="material" file="switch/switch.tsx" />
+
+| Material needs                                  | Change in the recipe                                           |
+| ----------------------------------------------- | -------------------------------------------------------------- |
+| A 58 by 38px touch area                         | The root's size. An `nx:before:` box draws the track inside it |
+| A track thinner than the thumb                  | A 14px track, with a 20px thumb placed over it                 |
+| A raised thumb                                  | `nx:shadow-xs` on the thumb                                    |
+| The primary color at half strength on the track | `nx:before:bg-primary-background/50`                           |
+| A darker track when the switch is off           | `nx:before:bg-muted-foreground-subtle`                         |
+| A round halo behind the thumb on hover          | An `nx:after:` circle that moves with the thumb                |
+
+## Rewrite the Checkbox
+
+A Material checkbox is a larger box with a bold outline, a bold check and a
+round halo on hover. Replace the Checkbox's class recipe and its two marks.
+The component under them stays as it is:
+
+<LookSource look="material" file="checkbox/checkbox.tsx" />
+
+| Material needs              | Change                                                          |
+| --------------------------- | --------------------------------------------------------------- |
+| An 18px box                 | The icon size plus 2px                                          |
+| A bold outline, and no fill | `nx:border-thick nx:border-muted-foreground nx:bg-transparent`  |
+| A bold check and dash       | Two inline SVG marks with a 2px line, in place of the icons     |
+| A round halo on hover       | An `nx:after:` circle that takes `nx:bg-background-hover-alpha` |
+| A 42px touch area           | `nx:m-3` around the box                                         |
+| No color change on hover    | No hover or press fill classes                                  |
+
+## Add a TextField
+
+Material's label sits inside the field and rises into its border. No color or
+class change gives the nxds Input that shape, so add a part of your own:
+
+<LookSource look="material" file="text-field/text-field.tsx" />
+
+| Part                        | Job                                                                                   |
+| --------------------------- | ------------------------------------------------------------------------------------- |
+| `<input>`                   | The native field. Its blank placeholder lets CSS tell an empty field from a full one  |
+| `<label>`                   | Rests on the text line. Rises to the top edge on focus, or when the field has a value |
+| `<fieldset>` and `<legend>` | Draw the outline. The legend opens a gap as wide as the label                         |
+| `<p>`                       | Helper or error text, linked to the field with `aria-describedby`                     |
+
+The field keeps no state in JavaScript. Its classes read `:focus` and
+`:placeholder-shown`.
+
+If you pass a `placeholder`, the label stays raised, so the two never overlap.
+
+TextField is a new file. The nxds Input, and the parts that build on it, stay
+as they are.
+
+## Use the parts
+
+```tsx
+// app/settings/notifications.tsx
+import { Button } from '@/components/nxds/components/button/button';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/nxds/components/card/card';
+import { Label } from '@/components/nxds/components/label/label';
+import { Switch } from '@/components/nxds/components/switch/switch';
+import { TextField } from '@/components/nxds/components/text-field/text-field';
+
+export function Notifications() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Notifications</CardTitle>
+      </CardHeader>
+      <CardContent className="nx:flex nx:flex-col nx:gap-6">
+        <TextField label="Send to" type="email" />
+        <div className="nx:flex nx:items-center nx:justify-between">
+          <Label htmlFor="product-updates">Product updates</Label>
+          <Switch id="product-updates" defaultChecked />
+        </div>
+      </CardContent>
+      <CardFooter className="nx:justify-end">
+        <Button variant="ghost" tone="primary">
+          Cancel
+        </Button>
+        <Button>Save</Button>
+      </CardFooter>
+    </Card>
+  );
+}
+```
+
+## What nxds provides
+
+| From nxds           | In this example                                                         |
+| ------------------- | ----------------------------------------------------------------------- |
+| Light and dark mode | The provider switches `.dark`, and the colors file has a value for each |
+| Density             | Padding and gaps on the nxds scale read the nxds spacing tokens         |
+| Corners and stroke  | The parts read the nxds radius and border width tokens                  |
+| Color names         | Every class reads an nxds color, so one file recolors every part        |
+| Behavior            | Switch and Checkbox keep their keyboard and screen reader support       |
+
+The nxds screen on this page follows the page's mode, density and corners. Its
+colors come from the palette file, so the brand color in the theme picker
+doesn't change it. The Material UI screen follows the page's mode only.
+
+The example has no ripple. Material draws its ripple with JavaScript.
+
+## Next steps
+
+- **[Ant Design look](/theming/ant-look)**: an admin page with a dark sider,
+  built the same way.
+- **[Your own colors](/theming/own-colors)**: the colors file, and what keeps
+  working.
+- **[Install](/getting-started/install)**: set up nxds in your app.

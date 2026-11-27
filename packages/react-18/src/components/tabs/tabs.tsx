@@ -5,10 +5,8 @@ import * as React from 'react';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { cva } from 'class-variance-authority';
 
+import { useIsomorphicLayoutEffect } from '../../hooks/use-isomorphic-layout-effect';
 import { cn } from '../../lib/utils';
-
-const useIsomorphicLayoutEffect =
-  typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
 
 /**
  * Root of the tabs. Holds the active tab, the list and the panels.
@@ -193,6 +191,7 @@ const tabsTriggerVariants = cva(
     'nx:transition-control',
     'nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default',
     'nx:disabled:pointer-events-none nx:disabled:text-disabled-foreground',
+    "nx:[&_svg:not([class*='size-'])]:size-icon-glyph-default nx:icon-stroke",
   ],
   {
     variants: {

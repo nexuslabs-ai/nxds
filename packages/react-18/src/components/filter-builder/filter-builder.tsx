@@ -42,25 +42,25 @@ const fieldIcons: Record<FilterField['type'], React.ReactNode> = {
   text: (
     <IconLetterCase
       aria-hidden="true"
-      className="nx:size-3.5 nx:shrink-0 nx:text-muted-foreground"
+      className="nx:size-icon-glyph-sm nx:shrink-0 nx:text-muted-foreground"
     />
   ),
   number: (
     <IconHash
       aria-hidden="true"
-      className="nx:size-3.5 nx:shrink-0 nx:text-muted-foreground"
+      className="nx:size-icon-glyph-sm nx:shrink-0 nx:text-muted-foreground"
     />
   ),
   date: (
     <IconCalendar
       aria-hidden="true"
-      className="nx:size-3.5 nx:shrink-0 nx:text-muted-foreground"
+      className="nx:size-icon-glyph-sm nx:shrink-0 nx:text-muted-foreground"
     />
   ),
   choice: (
     <IconList
       aria-hidden="true"
-      className="nx:size-3.5 nx:shrink-0 nx:text-muted-foreground"
+      className="nx:size-icon-glyph-sm nx:shrink-0 nx:text-muted-foreground"
     />
   ),
 };
@@ -138,7 +138,7 @@ function Picker<Value extends string>({
         aria-invalid={invalid}
         aria-describedby={describedBy}
         className={cn(
-          'nx:h-(--nx-spacing-8) nx:w-auto nx:min-w-0 nx:max-w-full nx:px-2.5 nx:[&>span]:flex-1 nx:[&>span]:text-start',
+          'nx:min-h-(--nx-spacing-8) nx:w-auto nx:min-w-0 nx:max-w-full nx:px-2.5 nx:[&>span]:flex-1 nx:[&>span]:text-start',
           className
         )}
       >
@@ -437,13 +437,14 @@ function FilterRuleEditor({
         </div>
         <Button
           variant="ghost"
-          size="icon-sm"
+          size="sm"
+          iconOnly
+          startIcon={<IconX />}
           className="nx:size-(--nx-spacing-8) nx:shrink-0 nx:text-muted-foreground"
-          aria-label={`Remove ${field?.label ?? 'unavailable'} condition`}
           disabled={disabled}
           onClick={onRemove}
         >
-          <IconX aria-hidden="true" />
+          {`Remove ${field?.label ?? 'unavailable'} condition`}
         </Button>
       </div>
       {error && (
@@ -572,12 +573,13 @@ function GroupEditor({
           <Button
             className="nx:size-(--nx-spacing-8) nx:shrink-0 nx:text-muted-foreground"
             variant="ghost"
-            size="icon-sm"
-            aria-label={`Remove ${label}`}
+            size="sm"
+            iconOnly
+            startIcon={<IconX />}
             onClick={onRemove}
             disabled={disabled}
           >
-            <IconX aria-hidden="true" />
+            {`Remove ${label}`}
           </Button>
         )}
       </div>

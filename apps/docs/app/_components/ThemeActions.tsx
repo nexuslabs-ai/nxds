@@ -1,8 +1,8 @@
 'use client';
 
-import { useDocsTheme } from '../_lib/docs-theme';
+import { Button } from '@/components/button/button';
 
-import { Button } from './nxds';
+import { useDocsTheme } from '../_lib/docs-theme';
 
 /** Shuffle, Undo and Reset for the docs theme, sharing one undo history. */
 export function ThemeActions({ size }: { size?: 'sm' }) {

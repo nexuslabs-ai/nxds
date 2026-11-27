@@ -4,7 +4,10 @@ import {
   PhCaretDown,
   PhCaretLeft,
   PhCaretRight,
+  PhCursor,
   PhDotsThree,
+  PhEraser,
+  PhPencilSimple,
   PhTextB,
   PhTextItalic,
   PhTextUnderline,
@@ -22,7 +25,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../dropdown-menu';
+import { Hide } from '../hide';
 import { Label } from '../label';
+import { Show } from '../show';
 import {
   Tooltip,
   TooltipContent,
@@ -38,6 +43,9 @@ import {
   ToolbarSeparator,
   ToolbarToggleGroup,
   ToolbarToggleItem,
+  ToolbarTool,
+  ToolbarToolGroup,
+  ToolbarToolPanel,
 } from '.';
 
 const meta = {
@@ -52,7 +60,10 @@ const meta = {
           '',
           '- Label the toolbar with `aria-label` or `aria-labelledby`.',
           '- Build it from ToolbarButton, ToolbarLink, ToolbarToggleGroup and ToolbarToggleItem so every control joins the arrow-key order.',
-          '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading` or icon slots.',
+          '- For tools with options, use ToolbarToolGroup, ToolbarTool and ToolbarToolPanel. Choosing another tool swaps the open panel. Escape returns focus to the tool.',
+          '- ToolbarButton and ToolbarLink take Button `variant` and `size`, but not `loading`.',
+          '- ToolbarButton, ToolbarToggleItem and ToolbarTool take `#start-icon` and `icon-only`. `icon-only` shows only the icon, and the text stays as the hidden name. `icon-only` ignores `as-child`.',
+          '- Use `variant="floating"` for a toolbar that sits over content, like a canvas.',
           '- Use `as-child` to make a toolbar control a menu trigger.',
           '- Keep text fields outside the toolbar, because arrow keys would conflict with typing.',
           '- In narrow containers, controls wrap in DOM order and arrow keys still reach every row.',
@@ -90,9 +101,8 @@ export const Default: Story = {
           <Tooltip>
             <TooltipTrigger as-child>
               <span class="nx:inline-flex">
-                <ToolbarButton size="icon-sm" aria-label="Undo formatting" class="nx:text-muted-foreground" @click="formatting = []">
-                  <PhArrowUUpLeft aria-hidden="true" />
-                </ToolbarButton>
+                <ToolbarButton icon-only class="nx:text-muted-foreground" @click="formatting = []">
+                  <template #start-icon><PhArrowUUpLeft /></template>Undo formatting</ToolbarButton>
               </span>
             </TooltipTrigger>
             <TooltipContent>Reset formatting</TooltipContent>
@@ -102,9 +112,8 @@ export const Default: Story = {
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="bold" aria-label="Bold" size="icon-sm">
-                    <PhTextB aria-hidden="true" />
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="bold" icon-only>
+                    <template #start-icon><PhTextB /></template>Bold</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Bold</TooltipContent>
@@ -112,9 +121,8 @@ export const Default: Story = {
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="italic" aria-label="Italic" size="icon-sm">
-                    <PhTextItalic aria-hidden="true" />
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="italic" icon-only>
+                    <template #start-icon><PhTextItalic /></template>Italic</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Italic</TooltipContent>
@@ -122,9 +130,8 @@ export const Default: Story = {
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="underline" aria-label="Underline" size="icon-sm">
-                    <PhTextUnderline aria-hidden="true" />
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="underline" icon-only>
+                    <template #start-icon><PhTextUnderline /></template>Underline</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Underline</TooltipContent>
@@ -197,9 +204,8 @@ export const FileActions: Story = {
         <ToolbarSeparator />
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <ToolbarButton size="icon-sm" aria-label="More file actions">
-              <PhDotsThree />
-            </ToolbarButton>
+            <ToolbarButton icon-only>
+              <template #start-icon><PhDotsThree /></template>More file actions</ToolbarButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem>Rename</DropdownMenuItem>
@@ -249,13 +255,11 @@ export const Calendar: Story = {
     template: `
       <Toolbar aria-label="Calendar controls">
         <ToolbarGroup aria-label="Date navigation">
-          <ToolbarButton size="icon-sm" aria-label="Previous period">
-            <PhCaretLeft />
-          </ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhCaretLeft /></template>Previous period</ToolbarButton>
           <ToolbarButton>Today</ToolbarButton>
-          <ToolbarButton size="icon-sm" aria-label="Next period">
-            <PhCaretRight />
-          </ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhCaretRight /></template>Next period</ToolbarButton>
         </ToolbarGroup>
         <ToolbarToggleGroup
           class="nx:ms-auto"
@@ -455,9 +459,8 @@ export const InsideTooltipProvider: Story = {
         <Toolbar aria-label="Text formatting">
           <Tooltip>
             <TooltipTrigger as-child>
-              <ToolbarButton size="icon-sm" aria-label="Bold">
-                <PhTextB aria-hidden="true" />
-              </ToolbarButton>
+              <ToolbarButton icon-only>
+                <template #start-icon><PhTextB /></template>Bold</ToolbarButton>
             </TooltipTrigger>
             <TooltipContent>Bold</TooltipContent>
           </Tooltip>
@@ -483,7 +486,9 @@ export const Sizes: Story = {
   render: () => ({
     components: {
       Toolbar,
+      PhArrowUUpLeft,
       ToolbarButton,
+      ToolbarSeparator,
       ToolbarToggleGroup,
       ToolbarToggleItem,
     },
@@ -495,22 +500,301 @@ export const Sizes: Story = {
           <ToolbarToggleGroup type="multiple" aria-label="Formatting">
             <ToolbarToggleItem value="bold" :size="size">Bold</ToolbarToggleItem>
           </ToolbarToggleGroup>
+          <ToolbarSeparator />
+          <ToolbarButton :size="size" icon-only>
+            <template #start-icon><PhArrowUUpLeft /></template>Undo</ToolbarButton>
         </Toolbar>
       </div>
     `,
   }),
   play: async ({ canvasElement }) => {
+    const separators: number[] = [];
     for (const toolbar of within(canvasElement).getAllByRole('toolbar', {
       name: /controls$/,
     })) {
-      const button = within(toolbar).getByRole('button', { name: 'Action' });
-      const toggle = within(toolbar).getByRole('button', { name: 'Bold' });
-      await expect(toggle.getBoundingClientRect().height).toBe(
-        button.getBoundingClientRect().height
-      );
+      const bar = within(toolbar);
+      const button = bar.getByRole('button', { name: 'Action' });
+      const toggle = bar.getByRole('button', { name: 'Bold' });
+      const undo = bar.getByRole('button', { name: 'Undo' });
+      const height = button.getBoundingClientRect().height;
+      await expect(toggle.getBoundingClientRect().height).toBe(height);
+      await expect(undo.getBoundingClientRect().height).toBe(height);
       await expect(getComputedStyle(toggle).fontSize).toBe(
         getComputedStyle(button).fontSize
       );
+      const separator = bar.getByRole('separator').getBoundingClientRect();
+      await expect(separator.height).toBeLessThan(height);
+      separators.push(separator.height);
+    }
+    await expect(separators[0]).toBeLessThan(separators[2] ?? 0);
+  },
+};
+
+export const Floating: Story = {
+  tags: ['docs'],
+  render: () => ({
+    components: {
+      PhArrowUUpLeft,
+      PhEraser,
+      PhPencilSimple,
+      PhCursor,
+      Toolbar,
+      ToolbarButton,
+      ToolbarSeparator,
+      ToolbarTool,
+      ToolbarToolGroup,
+    },
+    template: `
+      <div class="nx:flex nx:min-h-40 nx:items-end nx:justify-center">
+        <Toolbar variant="floating" aria-label="Canvas">
+          <ToolbarToolGroup aria-label="Drawing tools" default-value="select">
+            <ToolbarTool value="select" icon-only>
+              <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+            <ToolbarTool value="draw" icon-only>
+              <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
+            <ToolbarTool value="erase" icon-only>
+              <template #start-icon><PhEraser /></template>Erase</ToolbarTool>
+          </ToolbarToolGroup>
+          <ToolbarSeparator />
+          <ToolbarButton icon-only>
+            <template #start-icon><PhArrowUUpLeft /></template>Undo</ToolbarButton>
+        </Toolbar>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('toolbar', { name: 'Canvas' })
+    ).toHaveAttribute('data-variant', 'floating');
+  },
+};
+
+export const GroupSpacing: Story = {
+  render: () => ({
+    components: {
+      PhArrowUUpLeft,
+      PhTextB,
+      PhTextItalic,
+      PhPencilSimple,
+      PhCursor,
+      Toolbar,
+      ToolbarButton,
+      ToolbarGroup,
+      ToolbarToggleGroup,
+      ToolbarToggleItem,
+      ToolbarTool,
+      ToolbarToolGroup,
+    },
+    setup: () => ({
+      bars: [
+        ['default', undefined],
+        ['floating', undefined],
+        ['default', 'nx:gap-4'],
+      ] as const,
+    }),
+    template: `
+      <div class="nx:grid nx:gap-6">
+        <Toolbar
+          v-for="[variant, className] in bars"
+          :key="variant + '-' + className"
+          :variant="variant"
+          :class="className"
+          :aria-label="variant + ' bar'"
+        >
+          <ToolbarToolGroup aria-label="Tools" default-value="select">
+            <ToolbarTool value="select" icon-only>
+              <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+            <ToolbarTool value="draw" icon-only>
+              <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
+          </ToolbarToolGroup>
+          <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+            <ToolbarToggleItem value="bold" icon-only>
+              <template #start-icon><PhTextB /></template>Bold</ToolbarToggleItem>
+            <ToolbarToggleItem value="italic" icon-only>
+              <template #start-icon><PhTextItalic /></template>Italic</ToolbarToggleItem>
+          </ToolbarToggleGroup>
+          <ToolbarGroup aria-label="History">
+            <ToolbarButton icon-only>
+              <template #start-icon><PhArrowUUpLeft /></template>Undo</ToolbarButton>
+          </ToolbarGroup>
+        </Toolbar>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    for (const toolbar of within(canvasElement).getAllByRole('toolbar')) {
+      const barGap = getComputedStyle(toolbar).columnGap;
+      for (const name of ['Tools', 'Formatting', 'History']) {
+        await expect(
+          getComputedStyle(within(toolbar).getByRole('group', { name }))
+            .columnGap
+        ).toBe(barGap);
+      }
+    }
+  },
+};
+
+const HistoryGroup = defineComponent({
+  components: { PhArrowUUpLeft, PhEraser, ToolbarButton, ToolbarGroup },
+  template: `
+    <ToolbarGroup aria-label="History">
+      <ToolbarButton icon-only>
+        <template #start-icon><PhArrowUUpLeft /></template>Undo</ToolbarButton>
+      <ToolbarButton icon-only>
+        <template #start-icon><PhEraser /></template>Clear canvas</ToolbarButton>
+    </ToolbarGroup>
+  `,
+});
+
+export const GroupInShowHide: Story = {
+  render: () => ({
+    components: { Hide, HistoryGroup, Show, Toolbar },
+    template: `
+      <Toolbar variant="floating" aria-label="Canvas tools">
+        <Show above="md" as="div">
+          <HistoryGroup />
+        </Show>
+        <Hide above="md" as="div">
+          <HistoryGroup />
+        </Hide>
+      </Toolbar>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const toolbar = within(canvasElement).getByRole('toolbar');
+    await expect(
+      getComputedStyle(within(toolbar).getByRole('group', { name: 'History' }))
+        .columnGap
+    ).toBe(getComputedStyle(toolbar).columnGap);
+  },
+};
+
+export const VerticalTools: Story = {
+  render: () => ({
+    components: {
+      PhArrowUUpLeft,
+      PhEraser,
+      PhPencilSimple,
+      PhCursor,
+      Toolbar,
+      ToolbarButton,
+      ToolbarGroup,
+      ToolbarTool,
+      ToolbarToolGroup,
+    },
+    template: `
+      <Toolbar orientation="vertical" aria-label="Canvas tools">
+        <ToolbarToolGroup aria-label="Tools" default-value="select">
+          <ToolbarTool value="select" icon-only>
+            <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+          <ToolbarTool value="draw" icon-only>
+            <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
+        </ToolbarToolGroup>
+        <ToolbarGroup aria-label="History">
+          <ToolbarButton icon-only>
+            <template #start-icon><PhArrowUUpLeft /></template>Undo</ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhEraser /></template>Clear canvas</ToolbarButton>
+        </ToolbarGroup>
+      </Toolbar>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const [first, second] of [
+      ['Select', 'Draw'],
+      ['Undo', 'Clear canvas'],
+    ]) {
+      const above = canvas
+        .getByRole('button', { name: first })
+        .getBoundingClientRect();
+      const below = canvas
+        .getByRole('button', { name: second })
+        .getBoundingClientRect();
+      await expect(below.top).toBeGreaterThanOrEqual(above.bottom);
+    }
+  },
+};
+
+export const IconOnly: Story = {
+  render: () => ({
+    components: {
+      PhArrowUUpLeft,
+      PhCursor,
+      PhTextB,
+      Toolbar,
+      ToolbarButton,
+      ToolbarToggleGroup,
+      ToolbarToggleItem,
+      ToolbarTool,
+      ToolbarToolGroup,
+    },
+    template: `
+      <Toolbar aria-label="Text formatting">
+        <ToolbarButton icon-only>
+          <template #start-icon><PhArrowUUpLeft /></template>Undo formatting</ToolbarButton>
+        <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+          <ToolbarToggleItem value="bold" icon-only>
+            <template #start-icon><PhTextB /></template>Bold</ToolbarToggleItem>
+        </ToolbarToggleGroup>
+        <ToolbarToolGroup aria-label="Tools" default-value="select">
+          <ToolbarTool value="select" icon-only>
+            <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+        </ToolbarToolGroup>
+      </Toolbar>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const toolbar = within(canvasElement).getByRole('toolbar', {
+      name: 'Text formatting',
+    });
+    for (const name of ['Undo formatting', 'Bold', 'Select']) {
+      const button = within(toolbar).getByRole('button', { name });
+      const { width, height } = button.getBoundingClientRect();
+      await expect(width).toBe(height);
+      await expect(within(button).getByText(name)).toHaveClass('nx:sr-only');
+    }
+  },
+};
+
+export const StartIcon: Story = {
+  render: () => ({
+    components: {
+      PhArrowUUpLeft,
+      PhCursor,
+      PhTextB,
+      Toolbar,
+      ToolbarButton,
+      ToolbarToggleGroup,
+      ToolbarToggleItem,
+      ToolbarTool,
+      ToolbarToolGroup,
+    },
+    template: `
+      <Toolbar aria-label="Text formatting">
+        <ToolbarButton>
+          <template #start-icon><PhArrowUUpLeft /></template>Undo formatting</ToolbarButton>
+        <ToolbarToggleGroup type="multiple" aria-label="Formatting">
+          <ToolbarToggleItem value="bold">
+            <template #start-icon><PhTextB /></template>Bold</ToolbarToggleItem>
+        </ToolbarToggleGroup>
+        <ToolbarToolGroup aria-label="Tools" default-value="select">
+          <ToolbarTool value="select">
+            <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+        </ToolbarToolGroup>
+      </Toolbar>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const toolbar = within(canvasElement).getByRole('toolbar', {
+      name: 'Text formatting',
+    });
+    for (const name of ['Undo formatting', 'Bold', 'Select']) {
+      const button = within(toolbar).getByRole('button', { name });
+      await expect(
+        button.querySelector('[aria-hidden="true"] svg')
+      ).not.toBeNull();
+      await expect(button.querySelector('.nx\\:sr-only')).toBeNull();
     }
   },
 };
@@ -633,6 +917,9 @@ const AttachedExample = defineComponent({
     DropdownMenuItem,
     DropdownMenuTrigger,
     PhCaretDown,
+    PhTextB,
+    PhTextItalic,
+    PhTextUnderline,
     Toolbar,
     ToolbarButton,
     ToolbarSeparator,
@@ -658,9 +945,8 @@ const AttachedExample = defineComponent({
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="bold" size="icon-sm" aria-label="Bold note">
-                    <span class="nx:font-bold">B</span>
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="bold" icon-only>
+                    <template #start-icon><PhTextB /></template>Bold note</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Bold</TooltipContent>
@@ -668,9 +954,8 @@ const AttachedExample = defineComponent({
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="italic" size="icon-sm" aria-label="Italic note">
-                    <span class="nx:italic">I</span>
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="italic" icon-only>
+                    <template #start-icon><PhTextItalic /></template>Italic note</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Italic</TooltipContent>
@@ -678,9 +963,8 @@ const AttachedExample = defineComponent({
             <Tooltip>
               <TooltipTrigger as-child>
                 <span class="nx:inline-flex">
-                  <ToolbarToggleItem value="underline" size="icon-sm" aria-label="Underline note">
-                    <span class="nx:underline">U</span>
-                  </ToolbarToggleItem>
+                  <ToolbarToggleItem value="underline" icon-only>
+                    <template #start-icon><PhTextUnderline /></template>Underline note</ToolbarToggleItem>
                 </span>
               </TooltipTrigger>
               <TooltipContent>Underline</TooltipContent>
@@ -833,18 +1117,17 @@ const SelectionExample = defineComponent({
           <Tooltip>
             <TooltipTrigger as-child>
               <ToolbarButton
-                size="icon-sm"
-                aria-label="Clear selection"
+                icon-only
+               
                 class="nx:text-muted-foreground"
                 @click="clearSelection"
               >
-                <PhX aria-hidden="true" />
-              </ToolbarButton>
+                <template #start-icon><PhX /></template>Clear selection</ToolbarButton>
             </TooltipTrigger>
             <TooltipContent>Clear selection</TooltipContent>
           </Tooltip>
           <span class="nx:px-2 nx:typography-label-default nx:whitespace-nowrap" aria-live="polite">{{ selected.length }} selected</span>
-          <ToolbarSeparator class="nx:self-stretch nx:data-[orientation=vertical]:h-auto" />
+          <ToolbarSeparator />
           <ToolbarButton @click="archiveSelection">
             <PhArchive aria-hidden="true" />Archive</ToolbarButton>
         </Toolbar>
@@ -883,14 +1166,424 @@ export const Selection: Story = {
   },
 };
 
+export const ToolsWithPanels: Story = {
+  tags: ['docs'],
+  render: () => ({
+    components: {
+      Checkbox,
+      PhArrowUUpLeft,
+      PhEraser,
+      PhPencilSimple,
+      PhCursor,
+      Label,
+      Toolbar,
+      ToolbarButton,
+      ToolbarSeparator,
+      ToolbarTool,
+      ToolbarToolGroup,
+      ToolbarToolPanel,
+    },
+    setup: () => ({ id: useId() }),
+    template: `
+      <div class="nx:flex nx:min-h-64 nx:items-end">
+        <Toolbar aria-label="Canvas">
+          <ToolbarToolGroup aria-label="Drawing tools" default-value="select">
+            <ToolbarTool value="select" icon-only>
+              <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+            <ToolbarTool value="draw" icon-only>
+              <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
+            <ToolbarTool value="erase" icon-only>
+              <template #start-icon><PhEraser /></template>Erase</ToolbarTool>
+            <ToolbarToolPanel value="draw" side="top">
+              <div class="nx:flex nx:items-center nx:gap-2">
+                <Checkbox :id="id + '-smooth'" :default-value="true" />
+                <Label :for="id + '-smooth'">Smooth strokes</Label>
+              </div>
+            </ToolbarToolPanel>
+            <ToolbarToolPanel value="erase" side="top">
+              <div class="nx:flex nx:items-center nx:gap-2">
+                <Checkbox :id="id + '-whole'" />
+                <Label :for="id + '-whole'">Erase whole strokes</Label>
+              </div>
+            </ToolbarToolPanel>
+          </ToolbarToolGroup>
+          <ToolbarSeparator />
+          <ToolbarButton icon-only>
+            <template #start-icon><PhArrowUUpLeft /></template>Undo</ToolbarButton>
+        </Toolbar>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    const select = canvas.getByRole('button', { name: 'Select' });
+    const draw = canvas.getByRole('button', { name: 'Draw' });
+    await expect(select).toHaveAttribute('aria-pressed', 'true');
+    await expect(select).not.toHaveAttribute('aria-haspopup');
+    await expect(select).not.toHaveAttribute('aria-expanded');
+    await expect(draw).toHaveAttribute('aria-haspopup', 'dialog');
+    await expect(draw).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(draw);
+    const panel = await page.findByRole('dialog', { name: 'Draw' });
+    await expect(draw).toHaveAttribute('aria-pressed', 'true');
+    await expect(draw).toHaveAttribute('aria-expanded', 'true');
+    await expect(draw).toHaveAttribute('aria-controls', panel.id);
+    await expect(select).toHaveAttribute('aria-pressed', 'false');
+  },
+};
+
+const CanvasTools = defineComponent({
+  components: {
+    Button,
+    Checkbox,
+    PhEraser,
+    PhTextItalic,
+    PhPencilSimple,
+    PhCursor,
+    Label,
+    Toolbar,
+    ToolbarTool,
+    ToolbarToolGroup,
+    ToolbarToolPanel,
+  },
+  inheritAttrs: false,
+  emits: ['draw-panel-close'],
+  setup: () => ({ id: useId() }),
+  template: `
+    <div class="nx:flex nx:min-h-64 nx:items-end nx:gap-4">
+      <Toolbar aria-label="Canvas">
+        <ToolbarToolGroup aria-label="Drawing tools" default-value="select" v-bind="$attrs">
+          <ToolbarTool value="select" icon-only>
+            <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+          <ToolbarTool value="draw" icon-only>
+            <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
+          <ToolbarTool value="erase" icon-only>
+            <template #start-icon><PhEraser /></template>Erase</ToolbarTool>
+          <ToolbarTool value="text" icon-only disabled>
+            <template #start-icon><PhTextItalic /></template>Text</ToolbarTool>
+          <ToolbarToolPanel value="draw" side="top" @close-auto-focus="$emit('draw-panel-close')">
+            <div class="nx:flex nx:items-center nx:gap-2">
+              <Checkbox :id="id + '-smooth'" :default-value="true" />
+              <Label :for="id + '-smooth'">Smooth strokes</Label>
+            </div>
+          </ToolbarToolPanel>
+          <ToolbarToolPanel value="erase" side="top">
+            <div class="nx:flex nx:items-center nx:gap-2">
+              <Checkbox :id="id + '-whole'" />
+              <Label :for="id + '-whole'">Erase whole strokes</Label>
+            </div>
+          </ToolbarToolPanel>
+        </ToolbarToolGroup>
+      </Toolbar>
+      <Button variant="outline">Done</Button>
+    </div>
+  `,
+});
+
+const onToolChange = fn();
+const onPanelOpenChange = fn();
+const onDrawPanelClose = fn();
+function clearToolSpies() {
+  onToolChange.mockClear();
+  onPanelOpenChange.mockClear();
+  onDrawPanelClose.mockClear();
+}
+
+export const SwitchingTools: Story = {
+  beforeEach: clearToolSpies,
+  render: () => ({
+    components: { CanvasTools },
+    setup: () => ({ onToolChange, onPanelOpenChange }),
+    template: `<CanvasTools @value-change="onToolChange" @open-change="onPanelOpenChange" />`,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    const erase = canvas.getByRole('button', { name: 'Erase' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Draw' }));
+    await page.findByRole('dialog', { name: 'Draw' });
+    const focused: EventTarget[] = [];
+    function recordFocus(event: FocusEvent) {
+      if (event.target) focused.push(event.target);
+    }
+    canvasElement.ownerDocument.addEventListener('focusin', recordFocus);
+    await userEvent.click(erase);
+    const panel = await page.findByRole('dialog', { name: 'Erase' });
+    await expect(panel).toBeVisible();
+    await expect(
+      page.queryByRole('dialog', { name: 'Draw' })
+    ).not.toBeInTheDocument();
+    await expect(erase).toHaveFocus();
+    canvasElement.ownerDocument.removeEventListener('focusin', recordFocus);
+    await expect(
+      focused.filter((target) => panel.contains(target as Node))
+    ).toEqual([]);
+    await expect(onToolChange).toHaveBeenLastCalledWith('erase');
+    await expect(onPanelOpenChange).not.toHaveBeenCalledWith(false);
+  },
+};
+
+export const ToolPanelKeyboard: Story = {
+  render: () => CanvasTools,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    const select = canvas.getByRole('button', { name: 'Select' });
+    const draw = canvas.getByRole('button', { name: 'Draw' });
+    await expect(canvas.getByRole('button', { name: 'Text' })).toBeDisabled();
+    await userEvent.tab();
+    await expect(select).toHaveFocus();
+    await userEvent.keyboard('{End}');
+    await expect(canvas.getByRole('button', { name: 'Erase' })).toHaveFocus();
+    await userEvent.keyboard('{ArrowLeft}');
+    await expect(draw).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    const panel = await page.findByRole('dialog', { name: 'Draw' });
+    await waitFor(() =>
+      expect(panel).toContainElement(
+        canvasElement.ownerDocument.activeElement as HTMLElement
+      )
+    );
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(draw).toHaveFocus());
+    await expect(draw).toHaveAttribute('aria-expanded', 'false');
+    await expect(draw).toHaveAttribute('aria-pressed', 'true');
+  },
+};
+
+export const ToolWithoutPanel: Story = {
+  beforeEach: clearToolSpies,
+  render: () => ({
+    components: { CanvasTools },
+    setup: () => ({ onPanelOpenChange }),
+    template: `<CanvasTools @open-change="onPanelOpenChange" />`,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    const select = canvas.getByRole('button', { name: 'Select' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Draw' }));
+    await page.findByRole('dialog', { name: 'Draw' });
+    await userEvent.click(select);
+    await waitFor(() =>
+      expect(page.queryByRole('dialog')).not.toBeInTheDocument()
+    );
+    await expect(onPanelOpenChange).toHaveBeenLastCalledWith(false);
+    await expect(select).toHaveAttribute('aria-pressed', 'true');
+    await expect(select).not.toHaveAttribute('aria-expanded');
+    await expect(select).toHaveFocus();
+  },
+};
+
+export const ToolPanelOutsideClick: Story = {
+  beforeEach: clearToolSpies,
+  render: () => ({
+    components: { CanvasTools },
+    setup: () => ({ onDrawPanelClose }),
+    template: `<CanvasTools @draw-panel-close="onDrawPanelClose" />`,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    const draw = canvas.getByRole('button', { name: 'Draw' });
+    const done = canvas.getByRole('button', { name: 'Done' });
+    await userEvent.click(draw);
+    await page.findByRole('dialog', { name: 'Draw' });
+    await userEvent.click(done);
+    await waitFor(() => expect(onDrawPanelClose).toHaveBeenCalledTimes(1));
+    await expect(done).toHaveFocus();
+    await expect(draw).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(draw);
+    await page.findByRole('dialog', { name: 'Draw' });
+    await userEvent.click(canvasElement);
+    await waitFor(() => expect(onDrawPanelClose).toHaveBeenCalledTimes(2));
+    await expect(draw).not.toHaveFocus();
+  },
+};
+
+export const ControlledTools: Story = {
+  beforeEach: clearToolSpies,
+  render: () => ({
+    components: { CanvasTools },
+    setup: () => ({ onToolChange, onPanelOpenChange }),
+    template: `
+      <CanvasTools
+        value="draw"
+        :open="false"
+        @value-change="onToolChange"
+        @open-change="onPanelOpenChange"
+      />
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    const draw = canvas.getByRole('button', { name: 'Draw' });
+    await expect(
+      canvas.getByRole('group', { name: 'Drawing tools' })
+    ).toHaveAttribute('data-slot', 'toolbar-tool-group');
+    await expect(draw).toHaveAttribute('data-slot', 'toolbar-tool');
+    await expect(draw).toHaveAttribute('data-state', 'on');
+    await expect(draw).toHaveAttribute('data-size', 'sm');
+    await expect(
+      canvas.getByRole('button', { name: 'Select' })
+    ).toHaveAttribute('data-state', 'off');
+    await userEvent.click(draw);
+    await expect(onPanelOpenChange).toHaveBeenLastCalledWith(true);
+    await expect(onToolChange).not.toHaveBeenCalled();
+    await expect(page.queryByRole('dialog')).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'Erase' }));
+    await expect(onToolChange).toHaveBeenLastCalledWith('erase');
+    await expect(draw).toHaveAttribute('data-state', 'on');
+  },
+};
+
+const SwitchFromPanelDemo = defineComponent({
+  components: {
+    Button,
+    Checkbox,
+    PhEraser,
+    PhPencilSimple,
+    Label,
+    Toolbar,
+    ToolbarTool,
+    ToolbarToolGroup,
+    ToolbarToolPanel,
+  },
+  emits: ['draw-panel-close'],
+  setup: () => ({ id: useId(), value: ref('draw') }),
+  template: `
+    <div class="nx:flex nx:min-h-64 nx:items-end">
+      <Toolbar aria-label="Canvas">
+        <ToolbarToolGroup
+          aria-label="Drawing tools"
+          :value="value"
+          default-open
+          @value-change="(next) => (value = next)"
+        >
+          <ToolbarTool value="draw" icon-only>
+            <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
+          <ToolbarTool value="erase" icon-only>
+            <template #start-icon><PhEraser /></template>Erase</ToolbarTool>
+          <ToolbarToolPanel value="draw" side="top" @close-auto-focus="$emit('draw-panel-close')">
+            <Button size="sm" @click="value = 'erase'">Switch to eraser</Button>
+          </ToolbarToolPanel>
+          <ToolbarToolPanel value="erase" side="top">
+            <div class="nx:flex nx:items-center nx:gap-2">
+              <Checkbox :id="id + '-whole'" />
+              <Label :for="id + '-whole'">Erase whole strokes</Label>
+            </div>
+          </ToolbarToolPanel>
+        </ToolbarToolGroup>
+      </Toolbar>
+    </div>
+  `,
+});
+
+export const SwitchFromPanel: Story = {
+  beforeEach: clearToolSpies,
+  render: () => ({
+    components: { SwitchFromPanelDemo },
+    setup: () => ({ onDrawPanelClose }),
+    template: `<SwitchFromPanelDemo @draw-panel-close="onDrawPanelClose" />`,
+  }),
+  play: async ({ canvasElement }) => {
+    const page = within(canvasElement.ownerDocument.body);
+    await userEvent.click(
+      await page.findByRole('button', { name: 'Switch to eraser' })
+    );
+    const panel = await page.findByRole('dialog', { name: 'Erase' });
+    await waitFor(() => expect(onDrawPanelClose).toHaveBeenCalled());
+    await expect(panel).toContainElement(
+      canvasElement.ownerDocument.activeElement as HTMLElement
+    );
+  },
+};
+
+const NamedPanelsDemo = defineComponent({
+  components: {
+    Button,
+    Checkbox,
+    PhEraser,
+    PhPencilSimple,
+    PhCursor,
+    Label,
+    Toolbar,
+    ToolbarTool,
+    ToolbarToolGroup,
+    ToolbarToolPanel,
+  },
+  setup: () => ({ id: useId() }),
+  template: `
+    <div class="nx:flex nx:min-h-64 nx:items-end">
+      <Toolbar aria-label="Canvas">
+        <ToolbarToolGroup aria-label="Drawing tools" default-value="select">
+          <ToolbarTool value="select" icon-only>
+            <template #start-icon><PhCursor /></template>Select</ToolbarTool>
+          <ToolbarTool value="draw" icon-only>
+            <template #start-icon><PhPencilSimple /></template>Draw</ToolbarTool>
+          <ToolbarTool value="erase" icon-only>
+            <template #start-icon><PhEraser /></template>Erase</ToolbarTool>
+          <ToolbarToolPanel value="draw" side="top" aria-label="Brush options">
+            <Button size="sm">Reset brush</Button>
+          </ToolbarToolPanel>
+          <ToolbarToolPanel value="erase" side="top" :aria-labelledby="id + '-eraser'">
+            <p :id="id + '-eraser'" class="nx:m-0 nx:mb-2 nx:typography-label-default">Eraser settings</p>
+            <div class="nx:flex nx:items-center nx:gap-2">
+              <Checkbox :id="id + '-whole'" />
+              <Label :for="id + '-whole'">Erase whole strokes</Label>
+            </div>
+          </ToolbarToolPanel>
+        </ToolbarToolGroup>
+      </Toolbar>
+    </div>
+  `,
+});
+
+export const NamedPanels: Story = {
+  render: () => NamedPanelsDemo,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const page = within(canvasElement.ownerDocument.body);
+    await userEvent.click(canvas.getByRole('button', { name: 'Draw' }));
+    await expect(
+      await page.findByRole('dialog', { name: 'Brush options' })
+    ).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Erase' }));
+    await expect(
+      await page.findByRole('dialog', { name: 'Eraser settings' })
+    ).toBeVisible();
+  },
+};
+
 export const AllVariants: Story = {
   render: () => ({
-    components: { AttachedExample, InlineExample, SelectionExample },
+    components: {
+      AttachedExample,
+      PhArrowUUpLeft,
+      PhPencilSimple,
+      PhCursor,
+      InlineExample,
+      SelectionExample,
+      Toolbar,
+      ToolbarButton,
+      ToolbarSeparator,
+    },
     template: `
       <div class="nx:grid nx:gap-10">
         <InlineExample />
         <AttachedExample />
         <SelectionExample />
+        <Toolbar variant="floating" aria-label="Floating canvas tools">
+          <ToolbarButton icon-only>
+            <template #start-icon><PhCursor /></template>Pointer</ToolbarButton>
+          <ToolbarButton icon-only>
+            <template #start-icon><PhPencilSimple /></template>Pencil</ToolbarButton>
+          <ToolbarSeparator />
+          <ToolbarButton icon-only>
+            <template #start-icon><PhArrowUUpLeft /></template>Undo last change</ToolbarButton>
+        </Toolbar>
       </div>
     `,
   }),

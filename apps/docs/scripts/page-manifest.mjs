@@ -117,18 +117,6 @@ function assertOneSourcePerRoute(sources) {
   }
 }
 
-const CARD_JOINER = ' · ';
-
-function assertLabelsAvoidTheCardJoiner(section) {
-  for (const page of section.pages) {
-    if (page.label.includes(CARD_JOINER)) {
-      throw new Error(
-        `${section.slug}/${page.slug} has "${CARD_JOINER}" inside its label, which is what the home page joins a section's page labels with — the card would read the label as several pages. Name the page without it.`
-      );
-    }
-  }
-}
-
 const COMPONENTS_SECTION = 'components';
 const BLOCKS_SECTION = 'blocks';
 
@@ -250,9 +238,6 @@ export type ManifestSection =
   | GuideManifestSection
   | ComponentsManifestSection
   | BlocksManifestSection;
-
-/** The separator the home page's section cards join a section's page labels with. */
-export const CARD_JOINER = ${JSON.stringify(CARD_JOINER)};
 
 /** Every docs page, in nav order. Serializable — safe to import from a client component. */
 export const PAGE_MANIFEST: readonly ManifestSection[] = [
@@ -423,7 +408,6 @@ export async function buildPageManifest(docsRoot, formatOptions) {
     unit: section.unit,
     pages: section.entries.map((entry) => entry.page),
   }));
-  manifest.forEach(assertLabelsAvoidTheCardJoiner);
 
   const entries = built.flatMap((section) => section.entries);
   const loaders = entries

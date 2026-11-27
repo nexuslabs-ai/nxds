@@ -1,0 +1,315 @@
+/*
+ * The Material look page's preview: Material UI's default palette on the nxds
+ * color names, with Material's shadows and Roboto, inside one wrapper. An app
+ * sets the colors on :root and .dark instead, in its nxds-colors.css.
+ */
+@layer theme {
+  [data-look='material'] {
+    --nx-typography-family-font-sans:
+      'Roboto Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+      sans-serif;
+    --nx-typography-family-font-heading: var(--nx-typography-family-font-sans);
+    --nx-typography-letterspacing-normal: 0.15px;
+
+    /* Surfaces */
+    --nx-color-background: #fff;
+    --nx-color-background-hover: #f5f5f5;
+    --nx-color-background-active: #ebebeb;
+    --nx-color-muted: #f5f5f5;
+    --nx-color-muted-extralight: #fafafa;
+    --nx-color-container: #fff;
+    --nx-color-container-hover: #f5f5f5;
+    --nx-color-container-active: #ebebeb;
+    --nx-color-popover: #fff;
+    --nx-color-popover-hover: #f5f5f5;
+    --nx-color-popover-active: #ebebeb;
+    --nx-color-control-background: rgb(0 0 0 / 0.06);
+    --nx-color-control-background-hover: rgb(0 0 0 / 0.09);
+    --nx-color-control-thumb: #fff;
+    --nx-color-nav-background: #fff;
+    --nx-color-nav-item-hover: rgb(0 0 0 / 0.04);
+    --nx-color-nav-item-active: rgb(25 118 210 / 0.08);
+    --nx-color-nav-border: rgb(0 0 0 / 0.12);
+    --nx-color-disabled: rgb(0 0 0 / 0.12);
+
+    /* Text */
+    --nx-color-foreground: rgb(0 0 0 / 0.87);
+    --nx-color-container-foreground: rgb(0 0 0 / 0.87);
+    --nx-color-popover-foreground: rgb(0 0 0 / 0.87);
+    --nx-color-nav-foreground: rgb(0 0 0 / 0.87);
+    --nx-color-muted-foreground: rgb(0 0 0 / 0.6);
+    --nx-color-nav-muted-foreground: rgb(0 0 0 / 0.6);
+    --nx-color-muted-foreground-subtle: rgb(0 0 0 / 0.42);
+    --nx-color-disabled-foreground: rgb(0 0 0 / 0.38);
+
+    /* Borders and focus */
+    --nx-color-border-default: rgb(0 0 0 / 0.23);
+    --nx-color-border-disabled: rgb(0 0 0 / 0.26);
+    --nx-color-border-hairline: rgb(0 0 0 / 0.12);
+    --nx-color-border-focus: #1976d2;
+    --nx-color-focus-default: #1976d2;
+    --nx-color-focus-error: #d32f2f;
+
+    /* Primary: blue */
+    --nx-color-primary-background: #1976d2;
+    --nx-color-primary-background-hover: #1565c0;
+    --nx-color-primary-background-active: #1565c0;
+    --nx-color-primary-foreground: #fff;
+    --nx-color-primary-disabled: rgb(0 0 0 / 0.12);
+    --nx-color-primary-subtle: rgb(25 118 210 / 0.08);
+    --nx-color-primary-subtle-foreground: #1976d2;
+    --nx-color-primary-subtle-hover: rgb(25 118 210 / 0.12);
+    --nx-color-primary-subtle-active: rgb(25 118 210 / 0.16);
+    --nx-color-primary-border: rgb(25 118 210 / 0.5);
+    --nx-color-primary-border-active: #1976d2;
+
+    /* Secondary: purple. In nxds this family is a neutral grey. */
+    --nx-color-secondary-background: #9c27b0;
+    --nx-color-secondary-background-hover: #7b1fa2;
+    --nx-color-secondary-background-active: #7b1fa2;
+    --nx-color-secondary-foreground: #fff;
+    --nx-color-secondary-disabled: rgb(0 0 0 / 0.12);
+    --nx-color-secondary-subtle: rgb(156 39 176 / 0.08);
+    --nx-color-secondary-subtle-foreground: #9c27b0;
+    --nx-color-secondary-subtle-hover: rgb(156 39 176 / 0.12);
+    --nx-color-secondary-subtle-active: rgb(156 39 176 / 0.16);
+    --nx-color-secondary-border: rgb(156 39 176 / 0.5);
+    --nx-color-secondary-border-active: #9c27b0;
+
+    /* Success: green */
+    --nx-color-success-background: #2e7d32;
+    --nx-color-success-background-hover: #1b5e20;
+    --nx-color-success-background-active: #1b5e20;
+    --nx-color-success-foreground: #fff;
+    --nx-color-success-disabled: rgb(0 0 0 / 0.12);
+    --nx-color-success-subtle: rgb(46 125 50 / 0.08);
+    --nx-color-success-subtle-foreground: #2e7d32;
+    --nx-color-success-subtle-hover: rgb(46 125 50 / 0.12);
+    --nx-color-success-subtle-active: rgb(46 125 50 / 0.16);
+    --nx-color-success-border: rgb(46 125 50 / 0.5);
+    --nx-color-border-success-active: #2e7d32;
+
+    /* Warning: orange */
+    --nx-color-warning-background: #ed6c02;
+    --nx-color-warning-background-hover: #e65100;
+    --nx-color-warning-background-active: #e65100;
+    --nx-color-warning-foreground: #fff;
+    --nx-color-warning-disabled: rgb(0 0 0 / 0.12);
+    --nx-color-warning-subtle: rgb(237 108 2 / 0.08);
+    --nx-color-warning-subtle-foreground: #ed6c02;
+    --nx-color-warning-subtle-hover: rgb(237 108 2 / 0.12);
+    --nx-color-warning-subtle-active: rgb(237 108 2 / 0.16);
+    --nx-color-warning-border: rgb(237 108 2 / 0.5);
+    --nx-color-border-warning-active: #ed6c02;
+
+    /* Error: red */
+    --nx-color-error-background: #d32f2f;
+    --nx-color-error-background-hover: #c62828;
+    --nx-color-error-background-active: #c62828;
+    --nx-color-error-foreground: #fff;
+    --nx-color-error-disabled: rgb(0 0 0 / 0.12);
+    --nx-color-error-subtle: rgb(211 47 47 / 0.08);
+    --nx-color-error-subtle-foreground: #d32f2f;
+    --nx-color-error-subtle-hover: rgb(211 47 47 / 0.12);
+    --nx-color-error-subtle-active: rgb(211 47 47 / 0.16);
+    --nx-color-error-border: rgb(211 47 47 / 0.5);
+    --nx-color-border-error-active: #d32f2f;
+
+    /* Information: light blue */
+    --nx-color-information-background: #0288d1;
+    --nx-color-information-background-hover: #01579b;
+    --nx-color-information-background-active: #01579b;
+    --nx-color-information-foreground: #fff;
+    --nx-color-information-disabled: rgb(0 0 0 / 0.12);
+    --nx-color-information-subtle: rgb(2 136 209 / 0.08);
+    --nx-color-information-subtle-foreground: #0288d1;
+    --nx-color-information-subtle-hover: rgb(2 136 209 / 0.12);
+    --nx-color-information-subtle-active: rgb(2 136 209 / 0.16);
+    --nx-color-information-border: rgb(2 136 209 / 0.5);
+    --nx-color-border-information-active: #0288d1;
+
+    /* Charts and code */
+    --nx-color-chart-categorical-1: #1976d2;
+    --nx-color-chart-categorical-2: #9c27b0;
+    --nx-color-chart-categorical-3: #2e7d32;
+    --nx-color-chart-categorical-4: #ed6c02;
+    --nx-color-chart-categorical-5: #d32f2f;
+    --nx-color-syntax-keyword: #9c27b0;
+    --nx-color-syntax-string: #2e7d32;
+    --nx-color-syntax-function: #1976d2;
+    --nx-color-syntax-type: #0288d1;
+    --nx-color-syntax-constant: #ed6c02;
+
+    /* Translucent layers */
+    --nx-color-background-hover-alpha: rgb(0 0 0 / 0.04);
+    --nx-color-border-default-alpha: rgb(0 0 0 / 0.12);
+    --nx-color-overlay: rgb(0 0 0 / 0.5);
+    --nx-color-popover-alpha: #fff;
+    --nx-color-popover-backdrop: rgb(0 0 0 / 0.5);
+
+    /* Material's elevation shadows, the same in light and dark */
+    --nx-shadow-2xs:
+      0 2px 1px -1px rgb(0 0 0 / 0.2), 0 1px 1px 0 rgb(0 0 0 / 0.14),
+      0 1px 3px 0 rgb(0 0 0 / 0.12);
+    --nx-shadow-xs:
+      0 2px 1px -1px rgb(0 0 0 / 0.2), 0 1px 1px 0 rgb(0 0 0 / 0.14),
+      0 1px 3px 0 rgb(0 0 0 / 0.12);
+    --nx-shadow-sm:
+      0 3px 1px -2px rgb(0 0 0 / 0.2), 0 2px 2px 0 rgb(0 0 0 / 0.14),
+      0 1px 5px 0 rgb(0 0 0 / 0.12);
+    --nx-shadow-base:
+      0 2px 4px -1px rgb(0 0 0 / 0.2), 0 4px 5px 0 rgb(0 0 0 / 0.14),
+      0 1px 10px 0 rgb(0 0 0 / 0.12);
+    --nx-shadow-md:
+      0 3px 5px -1px rgb(0 0 0 / 0.2), 0 6px 10px 0 rgb(0 0 0 / 0.14),
+      0 1px 18px 0 rgb(0 0 0 / 0.12);
+    --nx-shadow-lg:
+      0 5px 5px -3px rgb(0 0 0 / 0.2), 0 8px 10px 1px rgb(0 0 0 / 0.14),
+      0 3px 14px 2px rgb(0 0 0 / 0.12);
+    --nx-shadow-xl:
+      0 7px 8px -4px rgb(0 0 0 / 0.2), 0 12px 17px 2px rgb(0 0 0 / 0.14),
+      0 5px 22px 4px rgb(0 0 0 / 0.12);
+    --nx-shadow-2xl:
+      0 11px 15px -7px rgb(0 0 0 / 0.2), 0 24px 38px 3px rgb(0 0 0 / 0.14),
+      0 9px 46px 8px rgb(0 0 0 / 0.12);
+    --nx-shadow-inner: none;
+  }
+
+  .dark [data-look='material'] {
+    /* Surfaces */
+    --nx-color-background: #121212;
+    --nx-color-background-hover: #252525;
+    --nx-color-background-active: #383838;
+    --nx-color-muted: #1e1e1e;
+    --nx-color-muted-extralight: #181818;
+    --nx-color-container: #1e1e1e;
+    --nx-color-container-hover: #303030;
+    --nx-color-container-active: #424242;
+    --nx-color-popover: #2e2e2e;
+    --nx-color-popover-hover: #3f3f3f;
+    --nx-color-popover-active: #4f4f4f;
+    --nx-color-control-background: rgb(255 255 255 / 0.09);
+    --nx-color-control-background-hover: rgb(255 255 255 / 0.13);
+    --nx-color-control-thumb: #e0e0e0;
+    --nx-color-nav-background: #1e1e1e;
+    --nx-color-nav-item-hover: rgb(255 255 255 / 0.08);
+    --nx-color-nav-item-active: rgb(144 202 249 / 0.16);
+    --nx-color-nav-border: rgb(255 255 255 / 0.12);
+    --nx-color-disabled: rgb(255 255 255 / 0.12);
+
+    /* Text */
+    --nx-color-foreground: #fff;
+    --nx-color-container-foreground: #fff;
+    --nx-color-popover-foreground: #fff;
+    --nx-color-nav-foreground: #fff;
+    --nx-color-muted-foreground: rgb(255 255 255 / 0.7);
+    --nx-color-nav-muted-foreground: rgb(255 255 255 / 0.7);
+    --nx-color-muted-foreground-subtle: rgb(255 255 255 / 0.5);
+    --nx-color-disabled-foreground: rgb(255 255 255 / 0.5);
+
+    /* Borders and focus */
+    --nx-color-border-default: rgb(255 255 255 / 0.23);
+    --nx-color-border-disabled: rgb(255 255 255 / 0.3);
+    --nx-color-border-hairline: rgb(255 255 255 / 0.12);
+    --nx-color-border-focus: #90caf9;
+    --nx-color-focus-default: #90caf9;
+    --nx-color-focus-error: #f44336;
+
+    /* Primary: blue */
+    --nx-color-primary-background: #90caf9;
+    --nx-color-primary-background-hover: #42a5f5;
+    --nx-color-primary-background-active: #42a5f5;
+    --nx-color-primary-foreground: rgb(0 0 0 / 0.87);
+    --nx-color-primary-disabled: rgb(255 255 255 / 0.12);
+    --nx-color-primary-subtle: rgb(144 202 249 / 0.16);
+    --nx-color-primary-subtle-foreground: #90caf9;
+    --nx-color-primary-subtle-hover: rgb(144 202 249 / 0.24);
+    --nx-color-primary-subtle-active: rgb(144 202 249 / 0.32);
+    --nx-color-primary-border: rgb(144 202 249 / 0.5);
+    --nx-color-primary-border-active: #90caf9;
+
+    /* Secondary: purple */
+    --nx-color-secondary-background: #ce93d8;
+    --nx-color-secondary-background-hover: #ab47bc;
+    --nx-color-secondary-background-active: #ab47bc;
+    --nx-color-secondary-foreground: rgb(0 0 0 / 0.87);
+    --nx-color-secondary-disabled: rgb(255 255 255 / 0.12);
+    --nx-color-secondary-subtle: rgb(206 147 216 / 0.16);
+    --nx-color-secondary-subtle-foreground: #ce93d8;
+    --nx-color-secondary-subtle-hover: rgb(206 147 216 / 0.24);
+    --nx-color-secondary-subtle-active: rgb(206 147 216 / 0.32);
+    --nx-color-secondary-border: rgb(206 147 216 / 0.5);
+    --nx-color-secondary-border-active: #ce93d8;
+
+    /* Success: green */
+    --nx-color-success-background: #66bb6a;
+    --nx-color-success-background-hover: #388e3c;
+    --nx-color-success-background-active: #388e3c;
+    --nx-color-success-foreground: rgb(0 0 0 / 0.87);
+    --nx-color-success-disabled: rgb(255 255 255 / 0.12);
+    --nx-color-success-subtle: rgb(102 187 106 / 0.16);
+    --nx-color-success-subtle-foreground: #66bb6a;
+    --nx-color-success-subtle-hover: rgb(102 187 106 / 0.24);
+    --nx-color-success-subtle-active: rgb(102 187 106 / 0.32);
+    --nx-color-success-border: rgb(102 187 106 / 0.5);
+    --nx-color-border-success-active: #66bb6a;
+
+    /* Warning: orange */
+    --nx-color-warning-background: #ffa726;
+    --nx-color-warning-background-hover: #f57c00;
+    --nx-color-warning-background-active: #f57c00;
+    --nx-color-warning-foreground: rgb(0 0 0 / 0.87);
+    --nx-color-warning-disabled: rgb(255 255 255 / 0.12);
+    --nx-color-warning-subtle: rgb(255 167 38 / 0.16);
+    --nx-color-warning-subtle-foreground: #ffa726;
+    --nx-color-warning-subtle-hover: rgb(255 167 38 / 0.24);
+    --nx-color-warning-subtle-active: rgb(255 167 38 / 0.32);
+    --nx-color-warning-border: rgb(255 167 38 / 0.5);
+    --nx-color-border-warning-active: #ffa726;
+
+    /* Error: red */
+    --nx-color-error-background: #f44336;
+    --nx-color-error-background-hover: #d32f2f;
+    --nx-color-error-background-active: #d32f2f;
+    --nx-color-error-foreground: #fff;
+    --nx-color-error-disabled: rgb(255 255 255 / 0.12);
+    --nx-color-error-subtle: rgb(244 67 54 / 0.16);
+    --nx-color-error-subtle-foreground: #f44336;
+    --nx-color-error-subtle-hover: rgb(244 67 54 / 0.24);
+    --nx-color-error-subtle-active: rgb(244 67 54 / 0.32);
+    --nx-color-error-border: rgb(244 67 54 / 0.5);
+    --nx-color-border-error-active: #f44336;
+
+    /* Information: light blue */
+    --nx-color-information-background: #29b6f6;
+    --nx-color-information-background-hover: #0288d1;
+    --nx-color-information-background-active: #0288d1;
+    --nx-color-information-foreground: rgb(0 0 0 / 0.87);
+    --nx-color-information-disabled: rgb(255 255 255 / 0.12);
+    --nx-color-information-subtle: rgb(41 182 246 / 0.16);
+    --nx-color-information-subtle-foreground: #29b6f6;
+    --nx-color-information-subtle-hover: rgb(41 182 246 / 0.24);
+    --nx-color-information-subtle-active: rgb(41 182 246 / 0.32);
+    --nx-color-information-border: rgb(41 182 246 / 0.5);
+    --nx-color-border-information-active: #29b6f6;
+
+    /* Charts and code */
+    --nx-color-chart-categorical-1: #90caf9;
+    --nx-color-chart-categorical-2: #ce93d8;
+    --nx-color-chart-categorical-3: #66bb6a;
+    --nx-color-chart-categorical-4: #ffa726;
+    --nx-color-chart-categorical-5: #f44336;
+    --nx-color-syntax-keyword: #ce93d8;
+    --nx-color-syntax-string: #66bb6a;
+    --nx-color-syntax-function: #90caf9;
+    --nx-color-syntax-type: #29b6f6;
+    --nx-color-syntax-constant: #ffa726;
+
+    /* Translucent layers */
+    --nx-color-background-hover-alpha: rgb(255 255 255 / 0.08);
+    --nx-color-border-default-alpha: rgb(255 255 255 / 0.12);
+    --nx-color-overlay: rgb(0 0 0 / 0.5);
+    --nx-color-popover-alpha: #2e2e2e;
+    --nx-color-popover-backdrop: rgb(0 0 0 / 0.5);
+  }
+}

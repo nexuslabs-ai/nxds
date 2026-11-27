@@ -56,7 +56,7 @@ export const Default: Story = {
     template: `
       <ScrollArea class="nx:h-48 nx:w-72 nx:rounded-md nx:border-default nx:border-border-default">
         <div class="nx:flex nx:flex-col nx:gap-3 nx:p-4 nx:typography-label-default nx:text-foreground">
-          <h4 class="nx:font-medium nx:leading-none">Release notes</h4>
+          <h4 class="nx:typography-label-default">Release notes</h4>
           <p v-for="(note, i) in notes" :key="i" class="nx:text-muted-foreground">{{ note }}</p>
         </div>
       </ScrollArea>
@@ -81,7 +81,7 @@ export const VerticalList: Story = {
     template: `
       <ScrollArea class="nx:h-72 nx:w-56 nx:rounded-md nx:border-default nx:border-border-default">
         <div class="nx:p-4">
-          <h4 class="nx:mb-3 nx:typography-label-default nx:leading-none nx:text-foreground">Builds</h4>
+          <h4 class="nx:mb-3 nx:typography-label-default nx:text-foreground">Builds</h4>
           <ul class="nx:flex nx:flex-col">
             <li
               v-for="version in versions"

@@ -60,6 +60,13 @@ export const FONT_OPTIONS = [
     package: '@fontsource-variable/ibm-plex-sans',
   },
   {
+    value: 'roboto',
+    label: 'Roboto',
+    category: 'sans',
+    family: `"Roboto Variable", ${SANS_FALLBACK}`,
+    package: '@fontsource-variable/roboto',
+  },
+  {
     value: 'lora',
     label: 'Lora',
     category: 'serif',

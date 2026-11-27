@@ -30,7 +30,7 @@ function pick<T>(options: readonly T[], random: () => number): T {
 /**
  * A random appearance from nxds's curated options: brand color preset, surface
  * tone, density, corners, elevation, stroke, UI font and heading font. Mode,
- * contrast and the other preferences stay as `state` has them.
+ * contrast, UI scale and the other preferences stay as `state` has them.
  */
 export function shuffleNxdsAppearance(
   state: NxdsAppearanceState,
