@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { BlockPage } from '../../../_components/BlockPage';
 import { Breadcrumb } from '../../../_components/Breadcrumb';
 import { ComponentPage } from '../../../_components/ComponentPage';
+import { PageActions } from '../../../_components/PageActions';
 import {
   docsPageParams,
   findDocsPage,
@@ -55,8 +56,11 @@ export default async function Page(props: PageProps) {
           ...('group' in page ? [{ label: page.group }] : []),
           { label: page.label },
         ]}
-        markdownHref={markdownHref}
-      />
+      >
+        {markdownHref && (
+          <PageActions key={markdownHref} markdownHref={markdownHref} />
+        )}
+      </Breadcrumb>
       <PageContent page={page} />
     </>
   );

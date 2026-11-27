@@ -16,6 +16,12 @@ import {
   withIconLibrary,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
+import {
+  colorNames,
+  COLORS_FILE,
+  DERIVE_COLORS_OFF_OPTION,
+  importsColors,
+} from '../colors';
 import { type Config, readConfig, requireConfig } from '../config';
 import { CliError } from '../errors';
 import {
@@ -35,7 +41,12 @@ import {
   VITE_CONFIGS,
   VITE_ENTRIES,
 } from '../project';
-import { entryDir } from '../setup/react';
+import {
+  colorsPath,
+  entryDir,
+  rendersDerivedColors,
+  VITE_PLUGIN_FILE,
+} from '../setup/react';
 import {
   fontImportLine,
   nxdsThemeSource,
@@ -136,6 +147,79 @@ function tailwindMessage(project: Project) {
 function read(root: string, file: string | undefined) {
   if (!file || !existsSync(path.join(root, file))) return '';
   return readFileSync(path.join(root, file), 'utf8');
+}
+
+/**
+ * The wiring files where the theme engine still derives colors, which would
+ * override the app's own: an entry that renders the provider or the head
+ * script without `deriveColors={false}`, and a Vite theme script without it.
+ */
+function filesDerivingColors(
+  root: string,
+  project: Project,
+  entry: string | undefined,
+  entrySource: string
+) {
+  const files =
+    entry && rendersDerivedColors(entrySource, entry) ? [entry] : [];
+  if (
+    project.setup === 'vite-react' &&
+    !read(root, VITE_PLUGIN_FILE).includes(DERIVE_COLORS_OFF_OPTION)
+  ) {
+    files.push(VITE_PLUGIN_FILE);
+  }
+  return files;
+}
+
+/** The step that adds the colors `nxds` sets under `selector` and `own` doesn't, if any. */
+function missingColorsStep(
+  selector: string,
+  nxds: Set<string>,
+  own: Set<string>
+) {
+  const missing = [...nxds].filter((name) => !own.has(name));
+  return missing.length > 0
+    ? [`Add ${missing.join(', ')} under ${selector}.`]
+    : [];
+}
+
+/**
+ * Why the app's own colors don't reach the page as written, or null. The entry
+ * doesn't parse, the theme engine still derives colors over them, or the colors
+ * file has no value in light or in dark for a color the app's `nxds.css` sets
+ * there, such as one a later release added.
+ */
+function ownColorsProblem(
+  root: string,
+  project: Project,
+  config: Config,
+  entry: string | undefined,
+  entrySource: string
+) {
+  let deriving: string[];
+  try {
+    deriving = filesDerivingColors(root, project, entry, entrySource);
+  } catch (error) {
+    if (!(error instanceof CliError)) throw error;
+    return error.message;
+  }
+  if (deriving.length > 0) {
+    return `${config.css} imports ${COLORS_FILE}, and the theme engine still derives colors in ${deriving.join(' and ')}, which override yours. Run \`${CLI_COMMAND} init --own-colors\`.`;
+  }
+  const colorsFile = colorsPath(config);
+  if (!existsSync(path.join(root, colorsFile))) {
+    return `${config.css} imports ${COLORS_FILE}, and ${colorsFile} is missing. Run \`${CLI_COMMAND} init --own-colors\` to write it.`;
+  }
+  const own = colorNames(read(root, colorsFile));
+  const nxds = colorNames(read(root, `${config.dir}/tailwind/nxds.css`));
+  const steps = [
+    ...missingColorsStep(':root', nxds.light, own.light),
+    ...missingColorsStep('.dark', nxds.dark, own.dark),
+  ];
+  if (steps.length > 0) {
+    return `${colorsFile} has no value for some nxds colors. ${steps.join(' ')}`;
+  }
+  return null;
 }
 
 /** Whether an `@source` in the CSS entry names the nxds folder or a folder above it. */
@@ -442,6 +526,16 @@ export async function doctor(
       ? 'The theme script runs before first paint'
       : `The theme script is missing, so the page can flash the wrong theme. Run \`${CLI_COMMAND} init\`.`
   );
+
+  if (importsColors(css)) {
+    const problem = ownColorsProblem(cwd, project, config, entry, entrySource);
+    check(
+      'colors',
+      problem === null,
+      problem ??
+        `${COLORS_FILE} sets every nxds color, and nothing overrides them`
+    );
+  }
 
   if (!catalog) return report(checks);
 

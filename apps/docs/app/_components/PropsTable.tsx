@@ -1,6 +1,6 @@
 import type * as React from 'react';
 
-import { cn } from '@nxds/react/utils';
+import { cn } from '@/lib/utils';
 
 import type { Framework } from '../_lib/frameworks';
 import {

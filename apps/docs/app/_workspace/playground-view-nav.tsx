@@ -1,8 +1,9 @@
 'use client';
 
-import { cn } from '@nxds/react/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+
+import { cn } from '@/lib/utils';
 
 import { PLAYGROUND_VIEWS } from '../_lib/playground-views';
 

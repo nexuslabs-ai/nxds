@@ -1,5 +1,6 @@
 import { DEFAULT_NXDS_APPEARANCE } from '@nxds/core';
 import type { Meta, StoryObj } from '@storybook/react';
+import { expect, within } from 'storybook/test';
 
 import { NxdsAppearanceConfigPreview } from './config-preview';
 
@@ -28,3 +29,16 @@ export default meta;
 type Story = StoryObj<typeof NxdsAppearanceConfigPreview>;
 
 export const Default: Story = {};
+
+export const OwnColors: Story = {
+  args: { deriveColors: false },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText('mode: "light",')).toBeVisible();
+    await expect(canvas.getByText('density: "default",')).toBeVisible();
+    await expect(canvas.queryByText(/brandColor:/)).toBeNull();
+    await expect(canvas.queryByText(/surfaceTone:/)).toBeNull();
+    await expect(canvas.queryByText(/Contrast:/)).toBeNull();
+  },
+};

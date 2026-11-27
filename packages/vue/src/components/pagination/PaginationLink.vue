@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Primitive, type PrimitiveProps } from 'reka-ui';
+import type { PrimitiveProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
-import { cn } from '../../lib/utils';
-import { type ButtonVariants, buttonVariants } from '../button';
+import type { ButtonVariants } from '../button';
+
+import PaginationAnchor from './PaginationAnchor.vue';
 
 export interface PaginationLinkProps extends PrimitiveProps {
   size?: ButtonVariants['size'];
@@ -16,26 +17,10 @@ export interface PaginationLinkProps extends PrimitiveProps {
 
 const props = withDefaults(defineProps<PaginationLinkProps>(), {
   as: 'a',
-  size: 'icon',
   isActive: undefined,
 });
 </script>
 
 <template>
-  <Primitive
-    :aria-current="isActive ? 'page' : undefined"
-    data-slot="pagination-link"
-    :data-active="isActive"
-    :as="as"
-    :as-child="asChild"
-    :class="
-      cn(
-        buttonVariants({ variant: isActive ? 'outline' : 'ghost', size }),
-        'nx:typography-label-default',
-        props.class
-      )
-    "
-  >
-    <slot />
-  </Primitive>
+  <PaginationAnchor square v-bind="props"><slot /></PaginationAnchor>
 </template>

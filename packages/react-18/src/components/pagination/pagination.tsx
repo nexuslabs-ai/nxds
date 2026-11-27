@@ -4,7 +4,7 @@ import { Slot } from '@radix-ui/react-slot';
 
 import { IconChevronLeft, IconChevronRight, IconDots } from '../../lib/icons';
 import { cn } from '../../lib/utils';
-import { type ButtonProps, buttonVariants } from '../button/button';
+import { type ButtonVariants, buttonVariants } from '../button/button-variants';
 
 /**
  * Props for the Pagination component.
@@ -99,7 +99,7 @@ const PaginationItem = React.forwardRef<
  * Props for the PaginationLink component.
  */
 interface PaginationLinkProps
-  extends React.ComponentProps<'a'>, Pick<ButtonProps, 'size'> {
+  extends React.ComponentProps<'a'>, Pick<ButtonVariants, 'size'> {
   /**
    * Marks the link as the current page and sets `aria-current="page"`.
    */
@@ -111,21 +111,19 @@ interface PaginationLinkProps
   asChild?: boolean;
 }
 
-/**
- * Page number link styled as a `ghost` button, or `outline` for the current
- * page. Uses the square `icon` size unless you set `size`.
- */
-const PaginationLink = React.forwardRef<
+/** The link every pagination part renders. Page numbers are square. */
+const PaginationAnchor = React.forwardRef<
   HTMLAnchorElement,
-  React.PropsWithoutRef<PaginationLinkProps>
->(function PaginationLink(propsWithoutRef, forwardedRef) {
+  React.PropsWithoutRef<PaginationLinkProps & { square: boolean }>
+>(function PaginationAnchor(propsWithoutRef, forwardedRef) {
   const {
     className,
     isActive,
-    size = 'icon',
+    size,
+    square,
     asChild = false,
     ...props
-  }: React.PropsWithoutRef<PaginationLinkProps> & {
+  }: React.PropsWithoutRef<PaginationLinkProps & { square: boolean }> & {
     ref?: React.ForwardedRef<HTMLAnchorElement>;
   } = forwardedRef === null
     ? propsWithoutRef
@@ -138,7 +136,11 @@ const PaginationLink = React.forwardRef<
       data-slot="pagination-link"
       data-active={isActive}
       className={cn(
-        buttonVariants({ variant: isActive ? 'outline' : 'ghost', size }),
+        buttonVariants({
+          variant: isActive ? 'outline' : 'ghost',
+          size,
+          iconOnly: square,
+        }),
         'nx:typography-label-default',
         className
       )}
@@ -148,9 +150,46 @@ const PaginationLink = React.forwardRef<
 });
 
 /**
+ * Square page number link styled as a `ghost` button, or `outline` for the
+ * current page. `size` sets its height.
+ */
+const PaginationLink = React.forwardRef<
+  HTMLAnchorElement,
+  React.PropsWithoutRef<PaginationLinkProps>
+>(function PaginationLink(propsWithoutRef, forwardedRef) {
+  const props: React.PropsWithoutRef<PaginationLinkProps> & {
+    ref?: React.ForwardedRef<HTMLAnchorElement>;
+  } =
+    forwardedRef === null
+      ? propsWithoutRef
+      : { ...propsWithoutRef, ref: forwardedRef };
+  return <PaginationAnchor square {...props} />;
+});
+
+/**
+ * Props for PaginationPrevious and PaginationNext. With `iconOnly`, the label
+ * is the hidden name, so `children` and `asChild` are not allowed.
+ */
+type PaginationEdgeProps =
+  | (PaginationLinkProps & {
+      /**
+       * Shows only the chevron, in a square. The label stays as hidden text.
+       */
+      iconOnly?: false;
+    })
+  | (Omit<PaginationLinkProps, 'children' | 'asChild'> & {
+      /**
+       * Shows only the chevron, in a square. The label stays as hidden text.
+       */
+      iconOnly: true;
+      children?: never;
+      asChild?: false;
+    });
+
+/**
  * Props for the PaginationPrevious component.
  */
-type PaginationPreviousProps = React.ComponentProps<typeof PaginationLink>;
+type PaginationPreviousProps = PaginationEdgeProps;
 
 /**
  * Link to the previous page, with a left chevron and the label "Previous".
@@ -162,29 +201,33 @@ const PaginationPrevious = React.forwardRef<
 >(function PaginationPrevious(propsWithoutRef, forwardedRef) {
   const {
     children,
+    iconOnly = false,
     ...props
   }: React.PropsWithoutRef<PaginationPreviousProps> & {
     ref?: React.ForwardedRef<HTMLAnchorElement>;
-  } =
-    forwardedRef === null
-      ? propsWithoutRef
-      : { ...propsWithoutRef, ref: forwardedRef };
+  } = forwardedRef === null
+    ? propsWithoutRef
+    : { ...propsWithoutRef, ref: forwardedRef };
   return (
-    <PaginationLink aria-label="Go to previous page" size="default" {...props}>
+    <PaginationAnchor
+      square={iconOnly}
+      aria-label="Go to previous page"
+      {...props}
+    >
       {children ?? (
         <>
           <IconChevronLeft />
-          <span>Previous</span>
+          <span className={iconOnly ? 'nx:sr-only' : undefined}>Previous</span>
         </>
       )}
-    </PaginationLink>
+    </PaginationAnchor>
   );
 });
 
 /**
  * Props for the PaginationNext component.
  */
-type PaginationNextProps = React.ComponentProps<typeof PaginationLink>;
+type PaginationNextProps = PaginationEdgeProps;
 
 /**
  * Link to the next page, with the label "Next" and a right chevron.
@@ -196,22 +239,22 @@ const PaginationNext = React.forwardRef<
 >(function PaginationNext(propsWithoutRef, forwardedRef) {
   const {
     children,
+    iconOnly = false,
     ...props
   }: React.PropsWithoutRef<PaginationNextProps> & {
     ref?: React.ForwardedRef<HTMLAnchorElement>;
-  } =
-    forwardedRef === null
-      ? propsWithoutRef
-      : { ...propsWithoutRef, ref: forwardedRef };
+  } = forwardedRef === null
+    ? propsWithoutRef
+    : { ...propsWithoutRef, ref: forwardedRef };
   return (
-    <PaginationLink aria-label="Go to next page" size="default" {...props}>
+    <PaginationAnchor square={iconOnly} aria-label="Go to next page" {...props}>
       {children ?? (
         <>
-          <span>Next</span>
+          <span className={iconOnly ? 'nx:sr-only' : undefined}>Next</span>
           <IconChevronRight />
         </>
       )}
-    </PaginationLink>
+    </PaginationAnchor>
   );
 });
 
@@ -246,7 +289,7 @@ const PaginationEllipsis = React.forwardRef<
       )}
       {...props}
     >
-      <IconDots className="nx:size-4" />
+      <IconDots className="nx:size-icon-glyph-default nx:icon-stroke" />
       <span className="nx:sr-only">More pages</span>
     </span>
   );

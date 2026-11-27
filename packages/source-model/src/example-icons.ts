@@ -132,6 +132,12 @@ export const EXAMPLE_ICONS: Record<string, ExampleIcon> = {
     hugeicons: 'Copy01',
     remix: 'FileCopyLine',
   },
+  Cursor: {
+    lucide: 'MousePointer2',
+    tabler: 'Pointer',
+    hugeicons: 'Cursor01',
+    remix: 'CursorLine',
+  },
   DotsThree: {
     lucide: 'Ellipsis',
     tabler: 'Dots',
@@ -149,6 +155,12 @@ export const EXAMPLE_ICONS: Record<string, ExampleIcon> = {
     tabler: 'Mail',
     hugeicons: 'Mail01',
     remix: 'MailLine',
+  },
+  Eraser: {
+    lucide: 'Eraser',
+    tabler: 'Eraser',
+    hugeicons: 'Eraser',
+    remix: 'EraserLine',
   },
   File: {
     lucide: 'File',

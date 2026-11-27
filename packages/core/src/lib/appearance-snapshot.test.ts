@@ -42,8 +42,8 @@ function mockSystemPrefersDark(matches: boolean): void {
 }
 
 describe('NxdsAppearanceSnapshot', () => {
-  it('invalidates cached CSS that styled the host page', () => {
-    expect(SNAPSHOT_VERSION).toBe(9);
+  it('invalidates cached CSS from before the secondary border colours', () => {
+    expect(SNAPSHOT_VERSION).toBe(12);
   });
 
   it('stores pre-derived CSS verbatim', () => {
@@ -97,7 +97,7 @@ describe('NxdsAppearanceSnapshot', () => {
     expect(snapshot.state).toEqual(state);
   });
 
-  it.each([1, 5, 6])(
+  it.each([1, 5, 6, 9, 10])(
     'refreshes a v%s snapshot without resetting the stored state',
     (version) => {
       const state = {
@@ -199,6 +199,23 @@ describe('NxdsAppearanceSnapshot', () => {
     );
   });
 
+  it('carries no theme CSS when the app owns its colours', () => {
+    const state = {
+      ...DEFAULT_NXDS_APPEARANCE,
+      mode: 'dark' as const,
+      brandColor: '#1976d2',
+    };
+    const snapshot = createNxdsAppearanceSnapshotFromState(state, {
+      deriveColors: false,
+    });
+
+    expect(snapshot).toMatchObject({
+      state,
+      themeCss: '',
+      prefsCss: prefsCss(state),
+    });
+  });
+
   it('falls back when the state cookie is unreadable or stale', () => {
     expect(parseNxdsAppearanceStateCookie('%')).toBeNull();
     expect(
@@ -232,6 +249,8 @@ describe('resolveFirstPaint', () => {
 
     expect(result.className).toBe('dark');
     expect(result.dataAttrs).toEqual({
+      'data-ui-scale': 'default',
+      'data-text-size': '14',
       'data-density': 'default',
       'data-radius': 'subtle',
       'data-shadow': 'quiet',
@@ -287,7 +306,12 @@ describe('createNxdsAppearanceBootstrapScript', () => {
 
   it('applies a stored dark snapshot to the document', () => {
     const dark = createNxdsAppearanceSnapshot(
-      { ...DEFAULT_NXDS_APPEARANCE, mode: 'dark' },
+      {
+        ...DEFAULT_NXDS_APPEARANCE,
+        mode: 'dark',
+        uiScale: 'large',
+        textSize: 16,
+      },
       ':root { --test-theme: dark; }',
       ':root { --test-prefs: dark; }'
     );
@@ -296,6 +320,10 @@ describe('createNxdsAppearanceBootstrapScript', () => {
     new Function(createNxdsAppearanceBootstrapScript())();
 
     expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.getAttribute('data-ui-scale')).toBe(
+      'large'
+    );
+    expect(document.documentElement.getAttribute('data-text-size')).toBe('16');
     expect(document.documentElement.getAttribute('data-radius')).toBe('subtle');
     // The host page's own color-scheme is left alone; `.dark` CSS covers it.
     expect(document.documentElement.style.colorScheme).toBe('');
@@ -306,6 +334,65 @@ describe('createNxdsAppearanceBootstrapScript', () => {
     expect(
       document.querySelector('style[data-nxds-appearance-prefs]')?.textContent
     ).toBe(':root { --test-prefs: dark; }');
+  });
+
+  it('switches the mode and presets, and paints no colours, when the app owns its colours', () => {
+    const defaultSnapshot = createNxdsAppearanceSnapshotFromState(
+      { ...DEFAULT_NXDS_APPEARANCE, mode: 'dark', density: 'compact' },
+      { deriveColors: false }
+    );
+
+    new Function(createNxdsAppearanceBootstrapScript({ defaultSnapshot }))();
+
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.getAttribute('data-density')).toBe(
+      'compact'
+    );
+    expect(
+      document.querySelector('style[data-nxds-appearance-theme]')?.textContent
+    ).toBe('');
+    expect(
+      document.querySelector('style[data-nxds-appearance-prefs]')?.textContent
+    ).toBe(defaultSnapshot.prefsCss);
+  });
+
+  it('paints no saved colours once the app owns its colours', () => {
+    const saved = createNxdsAppearanceSnapshotFromState({
+      ...DEFAULT_NXDS_APPEARANCE,
+      mode: 'dark',
+    });
+    window.localStorage.setItem('nxds-appearance', JSON.stringify(saved));
+    const defaultSnapshot = createNxdsAppearanceSnapshotFromState(
+      DEFAULT_NXDS_APPEARANCE,
+      { deriveColors: false }
+    );
+
+    new Function(createNxdsAppearanceBootstrapScript({ defaultSnapshot }))();
+
+    expect(saved.themeCss).toContain('--nx-color-primary-background');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(
+      document.querySelector('style[data-nxds-appearance-theme]')?.textContent
+    ).toBe('');
+  });
+
+  it('paints the default colours once an app that owned its colours derives them again', () => {
+    const saved = createNxdsAppearanceSnapshotFromState(
+      { ...DEFAULT_NXDS_APPEARANCE, mode: 'dark' },
+      { deriveColors: false }
+    );
+    window.localStorage.setItem('nxds-appearance', JSON.stringify(saved));
+    const defaultSnapshot = createNxdsAppearanceSnapshotFromState(
+      DEFAULT_NXDS_APPEARANCE
+    );
+
+    new Function(createNxdsAppearanceBootstrapScript({ defaultSnapshot }))();
+
+    expect(saved.themeCss).toBe('');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(
+      document.querySelector('style[data-nxds-appearance-theme]')?.textContent
+    ).toBe(defaultSnapshot.themeCss);
   });
 
   it('uses fresh cookie-derived CSS before hydration when storage contains v6 CSS', () => {
@@ -375,6 +462,7 @@ describe('createNxdsAppearanceBootstrapScript', () => {
     expect(document.documentElement.getAttribute('data-density')).toBe(
       'default'
     );
+    expect(document.documentElement.getAttribute('data-text-size')).toBe('14');
     expect(document.documentElement.classList.contains('dark')).toBe(false);
     expect(
       document.querySelectorAll('style[data-nxds-appearance-theme]')

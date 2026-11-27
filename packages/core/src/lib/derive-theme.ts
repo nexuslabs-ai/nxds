@@ -384,6 +384,8 @@ export function deriveSecondary(mode: Mode): TokenMap {
     '--nx-color-secondary-subtle-foreground': d ? n['200'] : n['600'],
     '--nx-color-secondary-subtle-hover': d ? n['700'] : n['200'],
     '--nx-color-secondary-subtle-active': d ? n['600'] : n['300'],
+    '--nx-color-secondary-border': d ? n['700'] : n['200'],
+    '--nx-color-secondary-border-active': d ? n['500'] : n['400'],
   };
 }
 

@@ -32,13 +32,13 @@ export const buttonGroupVariants = cva(
 );
 
 export const buttonGroupTextVariants = cva(
-  'nx:text-inherit nx:no-underline nx:flex nx:items-center nx:gap-2 nx:rounded-md nx:border-default nx:border-border-default nx:bg-control-background nx:shadow-xs nx:transition-control nx:duration-fast nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:[&_svg]:pointer-events-none nx:[&_svg]:size-4',
+  'nx:text-inherit nx:no-underline nx:flex nx:items-center nx:gap-2 nx:rounded-md nx:border-default nx:border-border-default nx:bg-control-background nx:shadow-xs nx:transition-control nx:duration-fast nx:focus-visible:outline-2 nx:focus-visible:outline-focus-default nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:icon-stroke',
   {
     variants: {
       size: {
-        sm: 'nx:h-8 nx:px-2.5 nx:typography-label-default',
-        default: 'nx:h-10 nx:px-3 nx:typography-label-default',
-        lg: 'nx:h-12 nx:px-3.5 nx:typography-label-default',
+        sm: 'nx:h-fit nx:min-h-8 nx:px-2.5 nx:typography-label-default',
+        default: 'nx:h-fit nx:min-h-10 nx:px-3 nx:typography-label-default',
+        lg: 'nx:h-fit nx:min-h-12 nx:px-3.5 nx:typography-label-default',
       },
     },
     defaultVariants: {

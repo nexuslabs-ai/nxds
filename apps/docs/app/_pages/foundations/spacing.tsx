@@ -32,19 +32,31 @@ const SCALE: { name: string; px: number }[] = [
   { name: '32', px: 128 },
 ];
 
-const ROLES: { token: string; px: string; use: string }[] = [
-  { token: 'container-p', px: '24', use: 'Card / panel inner padding' },
+const ROLES: { token: string; step: string; px: string; use: string }[] = [
+  {
+    token: 'container-p',
+    step: '6',
+    px: '24',
+    use: 'Card / panel inner padding',
+  },
   {
     token: 'container-gap',
+    step: '4',
     px: '16',
     use: 'Gap between items inside a container',
   },
   {
     token: 'layout-section-gap',
+    step: '8',
     px: '32',
     use: 'Vertical gap between page sections',
   },
-  { token: 'layout-stack-gap', px: '8', use: 'Gap in a tight vertical stack' },
+  {
+    token: 'layout-stack-gap',
+    step: '2',
+    px: '8',
+    use: 'Gap in a tight vertical stack',
+  },
 ];
 
 const MODES: { mode: string; archetype: string }[] = [
@@ -107,15 +119,16 @@ export default function Spacing() {
           Role tokens
         </SectionHeading>
         <p className="nx:typography-body-default nx:text-muted-foreground nx:mb-4 nx:max-w-[64ch]">
-          Components use these role tokens, like a button&rsquo;s padding,
-          instead of raw steps. Roles follow <code>density</code> too, so whole
-          components resize. Values are for the <code>default</code> density.
+          Components use these role tokens, like a card&rsquo;s padding, instead
+          of raw steps. Each role has its step&rsquo;s value at every{' '}
+          <code>density</code>. Values are for the <code>default</code> density.
         </p>
         <div className="nx:overflow-x-auto">
           <table className="nx:w-full nx:min-w-[560px] nx:border-collapse nx:typography-label-default">
             <thead>
               <tr className="nx:border-b nx:border-border-default nx:text-left">
                 <th className="nx:py-2 nx:pr-3 nx:font-semibold">Token</th>
+                <th className="nx:py-2 nx:pr-3 nx:font-semibold">Step</th>
                 <th className="nx:py-2 nx:pr-3 nx:font-semibold">px</th>
                 <th className="nx:py-2 nx:font-semibold">Use</th>
               </tr>
@@ -128,6 +141,9 @@ export default function Spacing() {
                 >
                   <td className="nx:py-2 nx:pr-3 nx:font-mono nx:typography-label-small">
                     {row.token}
+                  </td>
+                  <td className="nx:py-2 nx:pr-3 nx:font-mono nx:typography-label-small">
+                    {row.step}
                   </td>
                   <td className="nx:py-2 nx:pr-3 nx:font-mono nx:typography-label-small nx:whitespace-nowrap">
                     {row.px}

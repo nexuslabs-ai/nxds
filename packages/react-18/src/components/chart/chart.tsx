@@ -155,7 +155,7 @@ interface ChartTooltipContentProps extends Pick<
 /** Shared class for one tooltip row (formatter row and default row alike). */
 const tooltipRowClassName = (indicator: ChartIndicator) =>
   cn(
-    'nx:[&>svg]:text-muted-foreground nx:flex nx:w-full nx:flex-wrap nx:items-stretch nx:gap-2 nx:[&>svg]:h-2.5 nx:[&>svg]:w-2.5',
+    'nx:[&>svg]:text-muted-foreground nx:flex nx:w-full nx:flex-wrap nx:items-stretch nx:gap-2 nx:[&>svg]:size-icon-glyph-xs nx:icon-stroke',
     indicator === 'dot' && 'nx:items-center'
   );
 
@@ -403,7 +403,7 @@ function ChartLegendContent({
         return (
           <div
             key={`${item.value}`}
-            className="nx:[&>svg]:text-muted-foreground nx:flex nx:items-center nx:gap-1.5 nx:[&>svg]:h-3 nx:[&>svg]:w-3"
+            className="nx:[&>svg]:text-muted-foreground nx:flex nx:items-center nx:gap-1.5 nx:[&>svg]:size-icon-glyph-xs nx:icon-stroke"
           >
             {itemConfig?.icon && !hideIcon ? (
               <itemConfig.icon />
@@ -506,6 +506,7 @@ interface CartesianChartProps {
 type ChartFrameProps = Pick<
   CartesianChartProps,
   | 'xKey'
+  | 'series'
   | 'legend'
   | 'tooltip'
   | 'indicator'
@@ -517,9 +518,19 @@ type ChartFrameProps = Pick<
   horizontal?: boolean;
 };
 
+// Recharts sorts legend items alphabetically. A data chart lists them in its
+// own order.
+function byOrder(
+  keys: readonly string[],
+  key: (item: ChartPayloadItem) => unknown
+) {
+  return (item: ChartPayloadItem) => keys.indexOf(String(key(item)));
+}
+
 // Grid, axes, tooltip and legend shared by the cartesian charts.
 function ChartFrame({
   xKey,
+  series,
   legend,
   tooltip,
   indicator,
@@ -530,6 +541,7 @@ function ChartFrame({
 }: ChartFrameProps) {
   const category = { dataKey: xKey, type: 'category' as const };
   const value = { type: 'number' as const };
+  const inSeriesOrder = byOrder(series, (item) => item.dataKey);
   return (
     <>
       {grid && (
@@ -555,7 +567,12 @@ function ChartFrame({
       {tooltip && (
         <ChartTooltip content={<ChartTooltipContent indicator={indicator} />} />
       )}
-      {legend && <ChartLegend content={<ChartLegendContent />} />}
+      {legend && (
+        <ChartLegend
+          content={<ChartLegendContent />}
+          itemSorter={inSeriesOrder}
+        />
+      )}
     </>
   );
 }
@@ -611,6 +628,7 @@ function BarChart({
       >
         <ChartFrame
           xKey={xKey}
+          series={series}
           legend={legend}
           tooltip={tooltip}
           indicator={indicator}
@@ -666,6 +684,7 @@ function LineChart({
       <RechartsPrimitive.LineChart data={data} margin={{ left: 12, right: 12 }}>
         <ChartFrame
           xKey={xKey}
+          series={series}
           legend={legend}
           tooltip={tooltip}
           indicator={indicator}
@@ -748,6 +767,7 @@ function AreaChart({
         )}
         <ChartFrame
           xKey={xKey}
+          series={series}
           legend={legend}
           tooltip={tooltip}
           indicator={indicator}
@@ -855,7 +875,10 @@ function PieChart({
           label={labels}
         />
         {legend && (
-          <ChartLegend content={<ChartLegendContent nameKey={nameKey} />} />
+          <ChartLegend
+            content={<ChartLegendContent nameKey={nameKey} />}
+            itemSorter={byOrder(names, (item) => item.value)}
+          />
         )}
       </RechartsPrimitive.PieChart>
     </ChartContainer>

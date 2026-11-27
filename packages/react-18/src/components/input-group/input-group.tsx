@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import { cva, type VariantProps } from 'class-variance-authority';
 
-import { cn } from '../../lib/utils';
+import { cn, type DistributiveOmit } from '../../lib/utils';
 import { Button } from '../button/button';
 import { Input } from '../input/input';
 import { Textarea } from '../textarea/textarea';
@@ -19,9 +19,10 @@ const inputGroupVariants = cva(
     'nx:not-has-[>[data-align^=block]]:has-[[data-slot=input-group-control][data-size=default]]:h-10',
     'nx:not-has-[>[data-align^=block]]:has-[[data-slot=input-group-control][data-size=lg]]:h-12',
     // The control fills the fixed-height frame without adding height (the
-    // compound :has() selector outranks Input's own h-* by specificity).
+    // compound :has() selector outranks Input's own h-* and min-h-* by
+    // specificity).
     // Released in the stacked case, where the control keeps its own height.
-    'nx:not-has-[>[data-align^=block]]:[&>input]:h-full',
+    'nx:not-has-[>[data-align^=block]]:[&>input]:h-full nx:not-has-[>[data-align^=block]]:[&>input]:min-h-0',
     // Alignment: addons push the control's padding to make room.
     'nx:has-[>[data-align=inline-start]]:[&>input]:pl-2',
     'nx:has-[>[data-align=inline-end]]:[&>input]:pr-2',
@@ -89,7 +90,7 @@ const InputGroup = React.forwardRef<
 });
 
 const inputGroupAddonVariants = cva(
-  'nx:flex nx:h-auto nx:cursor-text nx:items-center nx:justify-start nx:gap-2 nx:py-1.5 nx:typography-label-default nx:text-muted-foreground nx:select-none nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:[&>kbd]:rounded-sm nx:[&>svg]:size-4',
+  'nx:flex nx:h-auto nx:cursor-text nx:items-center nx:justify-start nx:gap-2 nx:py-1.5 nx:typography-label-default nx:text-muted-foreground nx:select-none nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:[&>kbd]:rounded-sm nx:[&>svg]:size-icon-glyph-default nx:icon-stroke',
   {
     variants: {
       align: {
@@ -142,18 +143,36 @@ const InputGroupAddon = React.forwardRef<
 });
 
 const inputGroupButtonVariants = cva(
-  'nx:flex nx:items-center nx:py-0 nx:typography-label-default nx:shadow-none nx:group-data-[disabled=true]/input-group:text-disabled-foreground',
+  'nx:flex nx:items-center nx:py-0 nx:typography-label-default nx:shadow-none nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:icon-stroke',
   {
     variants: {
       size: {
-        xs: 'nx:h-6 nx:gap-1 nx:rounded-sm nx:px-2 nx:has-[>svg]:px-2 nx:[&>svg]:size-3.5',
-        sm: 'nx:h-8 nx:gap-1.5 nx:rounded-md nx:px-2.5 nx:has-[>svg]:px-2.5',
-        'icon-xs': 'nx:size-6 nx:rounded-sm nx:p-0 nx:has-[>svg]:p-0',
-        'icon-sm': 'nx:size-8 nx:p-0 nx:has-[>svg]:p-0',
+        xs: 'nx:h-auto nx:min-h-6 nx:rounded-sm',
+        sm: 'nx:h-fit nx:min-h-8',
+      },
+      iconOnly: {
+        false: '',
+        true: 'nx:p-0',
       },
     },
+    compoundVariants: [
+      {
+        iconOnly: false,
+        size: 'xs',
+        className:
+          'nx:gap-1 nx:px-2 nx:has-[>svg]:px-2 nx:[&>svg]:size-icon-glyph-sm',
+      },
+      {
+        iconOnly: false,
+        size: 'sm',
+        className: 'nx:gap-1.5 nx:rounded-md nx:px-2.5 nx:has-[>svg]:px-2.5',
+      },
+      { iconOnly: true, size: 'xs', className: 'nx:w-6' },
+      { iconOnly: true, size: 'sm', className: 'nx:w-8' },
+    ],
     defaultVariants: {
       size: 'xs',
+      iconOnly: false,
     },
   }
 );
@@ -161,8 +180,11 @@ const inputGroupButtonVariants = cva(
 /**
  * Props for the InputGroupButton component.
  */
-type InputGroupButtonProps = Omit<React.ComponentProps<typeof Button>, 'size'> &
-  VariantProps<typeof inputGroupButtonVariants>;
+type InputGroupButtonProps = DistributiveOmit<
+  React.ComponentProps<typeof Button>,
+  'size'
+> &
+  Pick<VariantProps<typeof inputGroupButtonVariants>, 'size'>;
 
 /**
  * Compact button sized to fit inside an `InputGroupAddon`. Uses the `ghost`
@@ -189,7 +211,10 @@ const InputGroupButton = React.forwardRef<
       data-slot="input-group-button"
       data-size={size}
       variant={variant}
-      className={cn(inputGroupButtonVariants({ size }), className)}
+      className={cn(
+        inputGroupButtonVariants({ size, iconOnly: props.iconOnly }),
+        className
+      )}
       {...props}
     />
   );
@@ -220,7 +245,7 @@ const InputGroupText = React.forwardRef<
     <span
       data-slot="input-group-text"
       className={cn(
-        'nx:flex nx:items-center nx:gap-2 nx:typography-body-default nx:text-muted-foreground nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-4',
+        'nx:flex nx:items-center nx:gap-2 nx:typography-body-default nx:text-muted-foreground nx:group-data-[disabled=true]/input-group:text-disabled-foreground nx:[&_svg]:pointer-events-none nx:[&_svg]:size-icon-glyph-default nx:icon-stroke',
         className
       )}
       {...props}

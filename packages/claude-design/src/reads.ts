@@ -10,21 +10,11 @@ import postcss from 'postcss';
 import ts from 'typescript';
 
 import { classCandidates, compileTheme } from './styles.ts';
-
-export interface ComponentReads {
-  /** Each `--nx-*` name a component reads, with the components that read it. */
-  readers: ReadonlyMap<string, readonly string[]>;
-  /** A name built at runtime, such as `--nx-spacing-${spacing}`, by its prefix. */
-  prefixes: ReadonlyMap<string, readonly string[]>;
-}
-
-// Tailwind's build wraps a long `var()` argument onto its own line.
-const VARIABLE = /var\(\s*(--nx-[\w-]+)\s*[,)]/g;
-export const DYNAMIC_VARIABLE = /var\(\s*(--nx-[\w-]*-)\$\{/g;
-/** Every `--nx-*` name `text` reads. */
-export function variablesRead(text: string) {
-  return new Set([...text.matchAll(VARIABLE)].map(([, name = '']) => name));
-}
+import {
+  type ComponentReads,
+  DYNAMIC_VARIABLE,
+  variablesRead,
+} from './token-reads.ts';
 
 const RELATIVE_IMPORT = /\bfrom\s+'(\.{1,2}\/[^']+)'/g;
 
@@ -143,13 +133,4 @@ export async function componentReads(
     }
   }
   return { readers: sorted(readers), prefixes: sorted(prefixes) };
-}
-
-/** The components that read `name`, directly or through a runtime-built name. */
-export function readersOf({ readers, prefixes }: ComponentReads, name: string) {
-  const found = new Set(readers.get(name) ?? []);
-  for (const [prefix, names] of prefixes) {
-    if (name.startsWith(prefix)) for (const reader of names) found.add(reader);
-  }
-  return [...found].sort();
 }

@@ -1,13 +1,14 @@
 // nxds:canvas-schema, the attributes bundle.js converts strings by
 // (src/runtime/attributes.ts), as index.d.ts reads them from each prop.
-import type {
-  Attribute,
-  CanvasAttribute,
-  ScalarAttribute,
-  SchemaAttribute,
-  SchemaScalar,
+import {
+  type Attribute,
+  type CanvasAttribute,
+  isCanvasAttribute,
+  type ScalarAttribute,
+  type SchemaAttribute,
+  type SchemaScalar,
 } from './attribute.ts';
-import type { FlatComponent } from './props.ts';
+import { type FlatComponent, isRequired } from './props.ts';
 import type { CanvasSchema } from './runtime/attributes.ts';
 import { kebab } from './runtime/canvas-names.ts';
 
@@ -33,25 +34,20 @@ function converted(
   attribute: Attribute | null,
   required: boolean
 ): SchemaAttribute | null {
-  if (!attribute || attribute.kind === 'content' || attribute.kind === 'none') {
-    return null;
-  }
+  if (!isCanvasAttribute(attribute)) return null;
   if (attribute.kind !== 'scalar' || required) return forRuntime(attribute);
   const { literals, string, number, boolean } = attribute;
   const plainString = string && literals.length === 0 && !number && !boolean;
   return plainString ? null : withoutSuggested(attribute);
 }
 
-/** Parts that read their children's types, as Recharts finds a chart's series and Cells. */
-const UNWRAPS = (part: FlatComponent) =>
-  part.slug === 'recharts' || part.name === 'ChartContainer';
-
 export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
   const schema: CanvasSchema = {
     attributes: {},
     required: {},
-    unwrap: parts.filter(UNWRAPS).map((part) => part.name),
+    unwrap: parts.filter((part) => part.unwraps).map((part) => part.name),
     renames: {},
+    handlers: {},
   };
   for (const part of parts) {
     const renames = part.props
@@ -59,14 +55,17 @@ export function canvasSchema(parts: readonly FlatComponent[]): CanvasSchema {
       .map((prop) => [kebab(prop.name), prop.name]);
     if (renames.length > 0)
       schema.renames[part.name] = Object.fromEntries(renames);
+    const handlers = part.props
+      .filter((prop) => isRequired(prop) && prop.attribute?.kind === 'handler')
+      .map((prop) => prop.name);
+    if (handlers.length > 0) schema.handlers[part.name] = handlers;
     const attributes: Record<string, SchemaAttribute> = {};
     const required: string[] = [];
     for (const prop of part.props) {
-      const isRequired = !prop.optional && prop.defaultValue === null;
-      const attribute = converted(prop.attribute, isRequired);
+      const attribute = converted(prop.attribute, isRequired(prop));
       if (!attribute) continue;
       attributes[prop.name] = attribute;
-      if (isRequired) required.push(prop.name);
+      if (isRequired(prop)) required.push(prop.name);
     }
     if (Object.keys(attributes).length > 0) {
       schema.attributes[part.name] = attributes;

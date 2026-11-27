@@ -1,0 +1,8 @@
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What you're trying to do, and your framework and nxds version.
+    validations:
+      required: true

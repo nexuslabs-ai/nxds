@@ -1,33 +1,31 @@
 import {
-  createDefaultNxdsAppearanceSnapshot,
   createNxdsAppearanceBootstrapScript,
   createNxdsAppearanceSnapshotFromState,
+  DEFAULT_NXDS_APPEARANCE,
   type NxdsAppearanceState,
-  sanitizeNxdsAppearance,
 } from '@nxds/core';
 
 export interface NxdsAppearanceScriptProps {
   storageKey?: string | false;
   defaultState?: NxdsAppearanceState;
+  /**
+   * `false` leaves every color to your own CSS. Pass what you pass to the
+   * provider.
+   */
+  deriveColors?: boolean;
   nonce?: string;
 }
 
 export interface CreateNxdsAppearanceScriptOptions {
   storageKey?: string | false;
   defaultState?: NxdsAppearanceState;
-}
-
-function defaultSnapshotFor(defaultState: NxdsAppearanceState | undefined) {
-  return defaultState
-    ? createNxdsAppearanceSnapshotFromState(
-        sanitizeNxdsAppearance(defaultState)
-      )
-    : createDefaultNxdsAppearanceSnapshot();
+  deriveColors?: boolean;
 }
 
 export function NxdsAppearanceScript({
   storageKey,
   defaultState,
+  deriveColors = true,
   nonce,
 }: NxdsAppearanceScriptProps) {
   return (
@@ -37,7 +35,10 @@ export function NxdsAppearanceScript({
       dangerouslySetInnerHTML={{
         __html: createNxdsAppearanceBootstrapScript({
           storageKey,
-          defaultSnapshot: defaultSnapshotFor(defaultState),
+          defaultSnapshot: createNxdsAppearanceSnapshotFromState(
+            defaultState ?? DEFAULT_NXDS_APPEARANCE,
+            { deriveColors }
+          ),
         }),
       }}
     />
@@ -47,6 +48,7 @@ export function NxdsAppearanceScript({
 export function createNxdsAppearanceScript({
   storageKey,
   defaultState,
+  deriveColors,
 }: CreateNxdsAppearanceScriptOptions = {}) {
   function ConfiguredNxdsAppearanceScript({
     nonce,
@@ -56,6 +58,7 @@ export function createNxdsAppearanceScript({
         nonce={nonce}
         storageKey={storageKey}
         defaultState={defaultState}
+        deriveColors={deriveColors}
       />
     );
   }

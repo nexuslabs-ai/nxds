@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   BASE_TONE_OPTIONS,
+  BRAND_COLOR_PRESETS,
   CORNER_OPTIONS,
   DEFAULT_NXDS_APPEARANCE,
   DENSITY_OPTIONS,
@@ -10,6 +11,8 @@ import {
   type NxdsAppearanceState,
   sanitizeNxdsAppearance,
   STROKE_OPTIONS,
+  TEXT_SIZE_OPTIONS,
+  UI_SCALE_OPTIONS,
 } from '@nxds/core';
 import type { Decorator, Preview } from '@storybook/react-vite';
 import { useGlobals } from 'storybook/preview-api';
@@ -28,6 +31,8 @@ type AppearanceGlobalKey =
   | 'surfaceTone'
   | 'lightContrast'
   | 'darkContrast'
+  | 'uiScale'
+  | 'textSize'
   | 'density'
   | 'corners'
   | 'elevation'
@@ -35,7 +40,6 @@ type AppearanceGlobalKey =
   | 'uiFont'
   | 'headingFont'
   | 'codeFont'
-  | 'uiFontSize'
   | 'codeFontSize'
   | 'reduceMotion'
   | 'pointerCursors'
@@ -47,6 +51,8 @@ const APPEARANCE_GLOBAL_KEYS: AppearanceGlobalKey[] = [
   'surfaceTone',
   'lightContrast',
   'darkContrast',
+  'uiScale',
+  'textSize',
   'density',
   'corners',
   'elevation',
@@ -54,7 +60,6 @@ const APPEARANCE_GLOBAL_KEYS: AppearanceGlobalKey[] = [
   'uiFont',
   'headingFont',
   'codeFont',
-  'uiFontSize',
   'codeFontSize',
   'reduceMotion',
   'pointerCursors',
@@ -108,6 +113,11 @@ function appearanceStateFromGlobals(
       typeof globals.darkContrast === 'number'
         ? globals.darkContrast
         : defaults.darkContrast,
+    uiScale: pickOption(globals.uiScale, UI_SCALE_OPTIONS, defaults.uiScale),
+    textSize:
+      typeof globals.textSize === 'string'
+        ? Number(globals.textSize)
+        : defaults.textSize,
     density: pickOption(globals.density, DENSITY_OPTIONS, defaults.density),
     corners: pickOption(globals.corners, CORNER_OPTIONS, defaults.corners),
     elevation: pickOption(
@@ -127,10 +137,6 @@ function appearanceStateFromGlobals(
         typeof globals.codeFont === 'string'
           ? globals.codeFont
           : prefs.codeFont,
-      uiFontSize:
-        typeof globals.uiFontSize === 'number'
-          ? globals.uiFontSize
-          : prefs.uiFontSize,
       codeFontSize:
         typeof globals.codeFontSize === 'number'
           ? globals.codeFontSize
@@ -160,6 +166,8 @@ function globalsFromAppearanceState(
     surfaceTone: state.surfaceTone,
     lightContrast: state.lightContrast,
     darkContrast: state.darkContrast,
+    uiScale: state.uiScale,
+    textSize: String(state.textSize),
     density: state.density,
     corners: state.corners,
     elevation: state.elevation,
@@ -167,7 +175,6 @@ function globalsFromAppearanceState(
     uiFont: state.prefs.uiFont,
     headingFont: state.prefs.headingFont,
     codeFont: state.prefs.codeFont,
-    uiFontSize: state.prefs.uiFontSize,
     codeFontSize: state.prefs.codeFontSize,
     reduceMotion: state.prefs.reduceMotion,
     pointerCursors: state.prefs.pointerCursors,
@@ -183,6 +190,14 @@ function appearanceStatesEqual(
   const bGlobals = globalsFromAppearanceState(b);
 
   return APPEARANCE_GLOBAL_KEYS.every((key) => aGlobals[key] === bGlobals[key]);
+}
+
+/** Toolbar values are strings, so each text size is its number as text. */
+function textSizeToolbarItems() {
+  return TEXT_SIZE_OPTIONS.map(({ value, label }) => ({
+    value: String(value),
+    title: label,
+  }));
 }
 
 function toolbarItems<
@@ -320,6 +335,8 @@ const preview: Preview = {
     surfaceTone: DEFAULT_NXDS_APPEARANCE.surfaceTone,
     lightContrast: DEFAULT_NXDS_APPEARANCE.lightContrast,
     darkContrast: DEFAULT_NXDS_APPEARANCE.darkContrast,
+    uiScale: DEFAULT_NXDS_APPEARANCE.uiScale,
+    textSize: String(DEFAULT_NXDS_APPEARANCE.textSize),
     density: DEFAULT_NXDS_APPEARANCE.density,
     corners: DEFAULT_NXDS_APPEARANCE.corners,
     elevation: DEFAULT_NXDS_APPEARANCE.elevation,
@@ -327,7 +344,6 @@ const preview: Preview = {
     uiFont: DEFAULT_NXDS_APPEARANCE.prefs.uiFont,
     headingFont: DEFAULT_NXDS_APPEARANCE.prefs.headingFont,
     codeFont: DEFAULT_NXDS_APPEARANCE.prefs.codeFont,
-    uiFontSize: DEFAULT_NXDS_APPEARANCE.prefs.uiFontSize,
     codeFontSize: DEFAULT_NXDS_APPEARANCE.prefs.codeFontSize,
     reduceMotion: DEFAULT_NXDS_APPEARANCE.prefs.reduceMotion,
     pointerCursors: DEFAULT_NXDS_APPEARANCE.prefs.pointerCursors,
@@ -347,12 +363,42 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    brandColor: {
+      name: 'Primary',
+      description: 'Primary brand color',
+      toolbar: {
+        icon: 'circle',
+        items: BRAND_COLOR_PRESETS.map(({ color, label }) => ({
+          value: color,
+          title: label,
+        })),
+        dynamicTitle: true,
+      },
+    },
     surfaceTone: {
       name: 'Surface',
       description: 'Neutral surface tone',
       toolbar: {
         icon: 'paintbrush',
         items: toolbarItems(BASE_TONE_OPTIONS),
+        dynamicTitle: true,
+      },
+    },
+    uiScale: {
+      name: 'UI scale',
+      description: 'Text, icon and spacing scale',
+      toolbar: {
+        icon: 'zoom',
+        items: toolbarItems(UI_SCALE_OPTIONS),
+        dynamicTitle: true,
+      },
+    },
+    textSize: {
+      name: 'Text size',
+      description: 'Label text size in px at the Default UI scale',
+      toolbar: {
+        icon: 'paragraph',
+        items: textSizeToolbarItems(),
         dynamicTitle: true,
       },
     },

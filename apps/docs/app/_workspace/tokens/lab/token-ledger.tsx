@@ -10,21 +10,24 @@ import {
   type TokenCategory,
   type TokenMap,
 } from '@nxds/core';
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-  Badge,
-  Button,
-  Input,
-  Label,
+} from '@/components/accordion/accordion';
+import { Badge } from '@/components/badge/badge';
+import { Button } from '@/components/button/button';
+import { Input } from '@/components/input/input';
+import { Label } from '@/components/label/label';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@nxds/react';
+} from '@/components/select/select';
 
 import { Swatch } from '../swatch';
 import type { LiveTheme } from '../use-live-theme';

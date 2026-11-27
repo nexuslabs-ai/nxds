@@ -16,28 +16,30 @@ import {
   type NxdsIconLibrary,
   type NxdsResolvedAppearanceMode,
   STROKE_OPTIONS,
+  TEXT_SIZE_OPTIONS,
+  UI_SCALE_OPTIONS,
 } from '@nxds/core';
+
+import { NxdsAppearanceBrandColorField } from '@/components/appearance/brand-color-field/brand-color-field';
+import { Input } from '@/components/input/input';
+import { Label } from '@/components/label/label';
 import {
-  Input,
-  Label,
   NativeSelect,
   NativeSelectOption,
-  NxdsAppearanceBrandColorField,
-  Slider,
-  Switch,
-} from '@nxds/react';
+} from '@/components/native-select/native-select';
+import { Slider } from '@/components/slider/slider';
+import { Switch } from '@/components/switch/switch';
 
 import {
   CODE_FONTS,
+  CONTRAST_RANGE,
+  findOption,
   type FontChoice,
   fontPick,
   HEADING_FONTS,
   MODE_OPTIONS,
   UI_FONTS,
 } from '../_lib/appearance-controls';
-
-const CONTRAST_MIN = 0;
-const CONTRAST_MAX = 100;
 
 const LABEL_CLASS = 'nx:typography-label-default';
 const FIELD_CLASS = 'nx:flex nx:flex-col nx:gap-2';
@@ -71,15 +73,14 @@ function SelectField<T extends string>({
   onChange: (value: T) => void;
 }) {
   const id = useId();
+  function change(event: ChangeEvent<HTMLSelectElement>) {
+    const option = findOption(options, event.target.value);
+    if (option) onChange(option);
+  }
   return (
     <div className={FIELD_CLASS}>
       <Label htmlFor={id}>{label}</Label>
-      <NativeSelect
-        id={id}
-        value={value}
-        // The options are exactly `options`, so the selected value is a `T`.
-        onChange={(event) => onChange(event.target.value as T)}
-      >
+      <NativeSelect id={id} value={value} onChange={change}>
         {options.map((option) => (
           <NativeSelectOption key={option.value} value={option.value}>
             {option.label}
@@ -104,19 +105,13 @@ function FontField({
   choices: FontChoice[];
   onChange: (family: string | null) => void;
 }) {
-  const { chosen, options } = fontPick(family, choices);
-
-  function change(value: string) {
-    const choice = options.find((option) => option.value === value);
-    if (choice) onChange(choice.family);
-  }
-
+  const font = fontPick(family, choices);
   return (
     <SelectField
       label={label}
-      value={chosen.value}
-      options={options}
-      onChange={change}
+      value={font.value}
+      options={font.options}
+      onChange={(value) => onChange(font.familyOf(value))}
     />
   );
 }
@@ -158,8 +153,8 @@ function ContrastField({
       </div>
       <Slider
         aria-labelledby={`${labelId} ${noteId}`}
-        min={CONTRAST_MIN}
-        max={CONTRAST_MAX}
+        min={CONTRAST_RANGE.min}
+        max={CONTRAST_RANGE.max}
         step={1}
         value={[shown]}
         onPointerDown={() => setDraft(value)}
@@ -294,6 +289,14 @@ export function AppearanceControls({
     onChange({ prefs: { ...state.prefs, ...patch } });
   }
 
+  function setTextSize(value: string) {
+    const option = TEXT_SIZE_OPTIONS.find(
+      (each) => String(each.value) === value
+    );
+    if (option === undefined) return;
+    onChange({ textSize: option.value });
+  }
+
   return (
     <div data-slot="appearance-controls" className="nx:space-y-8">
       <ControlGroup title="Color">
@@ -321,6 +324,21 @@ export function AppearanceControls({
         />
       </ControlGroup>
       <ControlGroup title="Shape">
+        <SelectField
+          label="UI scale"
+          value={state.uiScale}
+          options={UI_SCALE_OPTIONS}
+          onChange={(uiScale) => onChange({ uiScale })}
+        />
+        <SelectField
+          label="Text size"
+          value={String(state.textSize)}
+          options={TEXT_SIZE_OPTIONS.map(({ value, label }) => ({
+            value: String(value),
+            label,
+          }))}
+          onChange={setTextSize}
+        />
         <SelectField
           label="Density"
           value={state.density}
@@ -377,11 +395,6 @@ export function AppearanceControls({
         />
       </ControlGroup>
       <ControlGroup title="Preferences">
-        <FontSizeField
-          label="UI font size"
-          value={state.prefs.uiFontSize}
-          onChange={(uiFontSize) => changePrefs({ uiFontSize })}
-        />
         <FontSizeField
           label="Code font size"
           value={state.prefs.codeFontSize}

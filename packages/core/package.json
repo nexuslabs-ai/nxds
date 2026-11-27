@@ -1,6 +1,6 @@
 {
   "name": "@nxds/core",
-  "version": "0.12.0",
+  "version": "0.15.0",
   "type": "module",
   "description": "nxds theme engine: a framework-agnostic appearance model, runtime theme derivation and first-paint snapshots.",
   "keywords": [
@@ -112,6 +112,7 @@
     "audit:mode-codenames": "node scripts/audit-mode-codenames.js",
     "audit:mode-distinctness": "node scripts/audit-mode-distinctness.js",
     "validate:spacing-modes": "node scripts/validate-spacing-modes.js",
+    "refresh:canonical-set": "node scripts/refresh-canonical-set.js",
     "generate:scales": "node scripts/generate-token-scales.js"
   },
   "dependencies": {

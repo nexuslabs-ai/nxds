@@ -1,5 +1,6 @@
 import * as React from 'react';
 
+import { DENSITY_OPTIONS } from '@nxds/core';
 import {
   CalendarBlankIcon,
   CaretRightIcon,
@@ -20,6 +21,7 @@ import { useArgs } from 'storybook/preview-api';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
+import { expectTextFits } from '../../stories/support/story-height-test-utils';
 
 import {
   Sidebar,
@@ -318,6 +320,68 @@ export const Collapsed: Story = {
   ),
 };
 
+/** Checks that every menu button sits inside `rail` with the same space on both sides. */
+async function expectButtonsCentered(rail: HTMLElement) {
+  const left = rail.getBoundingClientRect().left + rail.clientLeft;
+  const right = left + rail.clientWidth;
+  const buttons = rail.querySelectorAll('[data-slot="sidebar-menu-button"]');
+  await expect(buttons.length).toBeGreaterThan(0);
+  for (const button of buttons) {
+    const box = button.getBoundingClientRect();
+    await expect(box.left - left).toBeGreaterThanOrEqual(0);
+    await expect(right - box.right).toBeGreaterThanOrEqual(0);
+    await expect(
+      Math.abs(box.left - left - (right - box.right))
+    ).toBeLessThanOrEqual(1);
+  }
+}
+
+/** Checks that the space the Sidebar keeps beside the page is as wide as its rail. */
+async function expectGapMatchesRail(canvasElement: HTMLElement) {
+  const width = (slot: string) =>
+    canvasElement
+      .querySelector(`[data-slot="${slot}"]`)!
+      .getBoundingClientRect().width;
+  await expect(width('sidebar-gap')).toBe(width('sidebar-container'));
+}
+
+export const CollapsedRailAtLargerScale: Story = {
+  // The largest scale with the smallest density gives the rail the most to
+  // hold. The density is set on the Sidebar, not on the page.
+  globals: { uiScale: 'larger' },
+  render: () => (
+    <SidebarProvider defaultOpen={false}>
+      <DemoSidebar collapsible="icon" data-density="tight" />
+      <DemoInset>The icon rail grows with the UI scale.</DemoInset>
+    </SidebarProvider>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectButtonsCentered(
+      canvasElement.querySelector<HTMLElement>(
+        '[data-slot="sidebar-container"]'
+      )!
+    );
+    await expectGapMatchesRail(canvasElement);
+  },
+};
+
+export const FloatingRailAtStrongStroke: Story = {
+  // The floating rail adds the panel padding and border to the rail width.
+  globals: { uiScale: 'larger', stroke: 'strong' },
+  render: () => (
+    <SidebarProvider defaultOpen={false}>
+      <DemoSidebar collapsible="icon" variant="floating" data-density="tight" />
+      <DemoInset>The floating rail holds its padding and border.</DemoInset>
+    </SidebarProvider>
+  ),
+  play: async ({ canvasElement }) => {
+    await expectButtonsCentered(
+      canvasElement.querySelector<HTMLElement>('[data-slot="sidebar-inner"]')!
+    );
+    await expectGapMatchesRail(canvasElement);
+  },
+};
+
 export const CollapsedTooltip: Story = {
   render: () => (
     <SidebarProvider>
@@ -601,6 +665,45 @@ export const Disabled: Story = {
     // full opacity (not a fade).
     await expect(button).toHaveClass('nx:disabled:text-disabled-foreground');
     await expect(getComputedStyle(button).opacity).toBe('1');
+  },
+};
+
+const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
+
+export const BadgeTextFitsAtEveryDensity: Story = {
+  // Text is tallest at the Larger UI scale, so it fits at every smaller one.
+  globals: { uiScale: 'larger' },
+  render: () => (
+    <SidebarProvider>
+      <Sidebar collapsible="none">
+        <SidebarContent>
+          {DENSITIES.map((density) => (
+            <SidebarMenu
+              key={density}
+              data-density={density}
+              data-testid={`row-${density}`}
+            >
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <TrayIcon />
+                  <span>Inbox</span>
+                </SidebarMenuButton>
+                <SidebarMenuBadge>4</SidebarMenuBadge>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          ))}
+        </SidebarContent>
+      </Sidebar>
+    </SidebarProvider>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const density of DENSITIES) {
+      // The count fits inside the badge at every density.
+      await expectTextFits(
+        within(canvas.getByTestId(`row-${density}`)).getByText('4')
+      );
+    }
   },
 };
 

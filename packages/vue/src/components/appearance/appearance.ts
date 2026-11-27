@@ -50,6 +50,11 @@ export interface NxdsAppearanceOptions {
   defaultState?: NxdsAppearanceState;
   /** Called with the next appearance on every `setState`. */
   onStateChange?: (state: NxdsAppearanceState) => void;
+  /**
+   * `false` leaves every color to your own CSS. The plugin keeps switching
+   * the mode and presets, and saving the user's choices.
+   */
+  deriveColors?: boolean;
 }
 
 export interface NxdsAppearance {
@@ -63,6 +68,11 @@ export interface NxdsAppearance {
       | ((previous: NxdsAppearanceState) => NxdsAppearanceState)
   ) => void;
   reset: () => void;
+  /**
+   * `false` when the app sets its own colors. The brand color, surface tone
+   * and contrast then have no effect.
+   */
+  deriveColors: boolean;
 }
 
 const NxdsAppearanceKey: InjectionKey<NxdsAppearance> =
@@ -81,6 +91,7 @@ export function createNxdsAppearance({
   state: controlledState,
   defaultState = DEFAULT_NXDS_APPEARANCE,
   onStateChange,
+  deriveColors = true,
 }: NxdsAppearanceOptions = {}): Plugin {
   return {
     install(app: App) {
@@ -110,6 +121,7 @@ export function createNxdsAppearance({
         mounted: readonly(mounted),
         setState,
         reset: () => setState(initialState),
+        deriveColors,
       });
 
       const mount = app.mount;
@@ -129,13 +141,16 @@ export function createNxdsAppearance({
             (systemDark.value = prefersDarkColorScheme());
           syncSystemDark();
           onScopeDispose(watchColorScheme(syncSystemDark));
-          watchEffect(() => applyNxdsAppearance(state.value, systemDark.value));
+          watchEffect(() =>
+            applyNxdsAppearance(state.value, systemDark.value, { deriveColors })
+          );
           if (isControlled) return;
           watchEffect(() =>
             persistNxdsAppearance(state.value, {
               storageKey,
               cookieWriteKey,
               cookieOptions,
+              deriveColors,
             })
           );
         });

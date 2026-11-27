@@ -196,10 +196,12 @@ If typecheck or lint surfaced an issue that was then fixed, that's fine — repo
 
 Fix issues in this order:
 
-| Priority | Type     | Indicators                          |
-| -------- | -------- | ----------------------------------- |
-| 1st      | Blocking | "must", "required", REQUEST_CHANGES |
-| 2nd      | Minor    | "consider", "suggestion", "nit"     |
+| Priority | Type     | Indicators                                           |
+| -------- | -------- | ---------------------------------------------------- |
+| 1st      | Blocking | `❌ Blocking`, "blocking", "must", "required"        |
+| 2nd      | Minor    | `⚠️ Minor`, "minor", "consider", "suggestion", "nit" |
+
+Read each issue's severity from the Severity column of the review body. In a follow-up review, the Status column (`❌ Still Present`, `⚠️ Partial`) and the `⚠️ New` inline marker are not severity.
 
 ## Error Handling
 

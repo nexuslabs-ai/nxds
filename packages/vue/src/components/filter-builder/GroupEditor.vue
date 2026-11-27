@@ -181,13 +181,14 @@ function separator(index: number) {
         v-if="depth > 0"
         class="nx:size-(--nx-spacing-8) nx:shrink-0 nx:text-muted-foreground"
         variant="ghost"
-        size="icon-sm"
-        :aria-label="`Remove ${label}`"
+        size="sm"
+        icon-only
         :disabled="disabled"
         @click="emit('remove')"
       >
-        <IconX aria-hidden="true" />
-      </Button>
+        <template #start-icon><IconX /></template
+        >{{ `Remove ${label}` }}</Button
+      >
     </div>
     <div class="nx:grid nx:gap-2">
       <div

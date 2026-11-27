@@ -7,9 +7,14 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import postcss from 'postcss';
 
-import { DYNAMIC_VARIABLE, variablesRead } from './reads.ts';
+import { PRESETS } from './presets.ts';
 import { IDENTIFIER, isPageGenerated, validateIndex } from './system-index.ts';
-import { familyVariable, type TokensFile } from './tokens.ts';
+import { DYNAMIC_VARIABLE, variablesRead } from './token-reads.ts';
+import {
+  familyVariable,
+  type ScaledPreset,
+  type TokensFile,
+} from './tokens.ts';
 import { compileTokensCss, listFamilies } from './tokens-css.ts';
 
 const KB = 1024;
@@ -24,8 +29,8 @@ const CAPS: [RegExp, number, string][] = [
   [/^components\/bundle\.css$/, 2 * MB, 'the stylesheet'],
   [/^components\/[^/]+\/preview\.html$/, 256 * KB, 'a preview'],
   [/^components\/[^/]+\/README\.md$/, 64 * KB, 'a component README'],
+  [/^components\/index\.d\.ts$/, 1.5 * MB, 'the type file'],
 ];
-const MAX_TYPES_BYTES = 1.5 * MB;
 
 const REFUSED_NAMES = new Set([
   'package.json',
@@ -40,6 +45,12 @@ const REFUSED_NAMES = new Set([
   'AGENTS.md',
   'node_modules',
 ]);
+
+/** The extensions the export writes that an Artifact publish serves by extension. */
+const SERVED_EXTENSIONS = new Set(['.html', '.css', '.js', '.json', '.md']);
+
+/** The files a publish refuses unless they go up as `text/plain`. SETUP.md names each one. */
+export const TEXT_PLAIN_FILES = ['components/index.d.ts'];
 
 const TOKEN_NAME = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
 const HEX = /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
@@ -100,6 +111,12 @@ function checkPaths(files: string[], errors: string[]) {
     if (segments.some((segment) => /~\d/.test(segment))) {
       errors.push(`${file}: 8.3 names are refused.`);
     }
+    const extension = /\.[^./]+$/.exec(file)?.[0] ?? '';
+    if (!SERVED_EXTENSIONS.has(extension) && !TEXT_PLAIN_FILES.includes(file)) {
+      errors.push(
+        `${file}: a publish doesn't serve ${extension || 'a file with no extension'}. Give it one of ${[...SERVED_EXTENSIONS].join(' ')}, or add it to TEXT_PLAIN_FILES if it's text.`
+      );
+    }
     if (isPageGenerated(file)) {
       errors.push(`${file}: the page generates this; never write it.`);
     }
@@ -115,7 +132,6 @@ function checkPaths(files: string[], errors: string[]) {
 }
 
 function checkSizes(root: string, files: string[], errors: string[]) {
-  let types = 0;
   for (const file of files) {
     const bytes = statSync(path.join(root, file)).size;
     if (bytes > MAX_FILE_BYTES)
@@ -125,13 +141,6 @@ function checkSizes(root: string, files: string[], errors: string[]) {
         errors.push(`${file}: ${bytes} bytes; ${what} is capped at ${cap}.`);
       }
     }
-    if (/^components\/(?:index|[^/]+\/[^/]+)\.d\.ts$/.test(file))
-      types += bytes;
-  }
-  if (types > MAX_TYPES_BYTES) {
-    errors.push(
-      `type files total ${types} bytes; the cap is ${MAX_TYPES_BYTES}.`
-    );
   }
 }
 
@@ -268,11 +277,106 @@ function checkType(type: TokensFile['type'] | undefined, errors: string[]) {
   }
 }
 
+const FONT_FAMILY_NAME = /^[A-Za-z0-9]+(?: [A-Za-z0-9]+)*$/;
+
+// tokens.css loads `meta.fonts` from Google Fonts, so each must be a plain
+// family name that a font stack in `type.families` starts with.
+function checkFonts(tokens: TokensFile, errors: string[]) {
+  const fonts = tokens.meta?.fonts;
+  if (fonts === undefined) return;
+  if (!Array.isArray(fonts) || fonts.length === 0) {
+    errors.push('tokens.json meta.fonts: must be a non-empty list of names.');
+    return;
+  }
+  const heads = new Set(
+    Object.values(tokens.type?.families ?? {}).map(
+      (stack) => /^"([^"]+)"/.exec(stack)?.[1]
+    )
+  );
+  for (const font of fonts) {
+    if (typeof font !== 'string' || !FONT_FAMILY_NAME.test(font)) {
+      errors.push(`tokens.json meta.fonts: "${font}" isn't a family name.`);
+    } else if (!heads.has(font)) {
+      errors.push(
+        `tokens.json meta.fonts: no type.families stack starts with "${font}".`
+      );
+    }
+  }
+  if (new Set(fonts).size !== fonts.length) {
+    errors.push('tokens.json meta.fonts: lists a family twice.');
+  }
+}
+
+// tokens.css declares each `meta.presets` entry as an `[attribute="value"]`
+// rule, so each must name a preset attribute, one of its values, and lengths
+// for tokens of the family that attribute swaps.
+function checkPresets(tokens: TokensFile, errors: string[]) {
+  const presets: unknown = tokens.meta?.presets;
+  if (presets === undefined) return;
+  if (!Array.isArray(presets)) {
+    errors.push('tokens.json meta.presets: must be a list.');
+    return;
+  }
+  const families = new Map(listFamilies(tokens));
+  for (const [index, preset] of (presets as unknown[]).entries()) {
+    const where = `tokens.json meta.presets[${index}]`;
+    if (typeof preset !== 'object' || preset === null) {
+      errors.push(`${where}: must be an object.`);
+      continue;
+    }
+    const {
+      attribute,
+      value,
+      tokens: lengths,
+    } = preset as Partial<ScaledPreset>;
+    const spec = Object.entries(PRESETS).find(
+      ([name]) => name === attribute
+    )?.[1];
+    if (!spec?.options.some((option) => option.value === value)) {
+      errors.push(`${where}: isn't a preset attribute and one of its values.`);
+      continue;
+    }
+    if (typeof lengths !== 'object' || lengths === null) {
+      errors.push(`${where}: needs a tokens map.`);
+      continue;
+    }
+    const names = new Set(
+      (families.get(spec.family) ?? []).map((token) => String(token.name))
+    );
+    for (const [name, length] of Object.entries(lengths)) {
+      if (!names.has(name)) {
+        errors.push(
+          `${where}: ${name} isn't a ${spec.family} token in tokens.json.`
+        );
+      } else if (typeof length !== 'string' || !LENGTH.test(length)) {
+        errors.push(`${where}: ${name}'s value "${length}" isn't a length.`);
+      }
+    }
+  }
+}
+
 function checkTokens(root: string, errors: string[]) {
   const tokens = readJson(root, 'tokens.json', errors) as
     | TokensFile
     | undefined;
   if (!tokens) return;
+  const cssPath = path.join(root, 'tokens.css');
+  const css = existsSync(cssPath) ? readFileSync(cssPath, 'utf8') : undefined;
+  return checkTokenFiles(tokens, css, errors);
+}
+
+/** What breaks the Design System format in a tokens.json and the tokens.css compiled from it. */
+export function tokensProblems(tokens: TokensFile, css: string) {
+  const errors: string[] = [];
+  checkTokenFiles(tokens, css, errors);
+  return errors;
+}
+
+function checkTokenFiles(
+  tokens: TokensFile,
+  css: string | undefined,
+  errors: string[]
+) {
   const themes = tokens.color?.themes ?? [];
   if (themes.length === 0 || themes.length > MAX_THEMES) {
     errors.push(`tokens.json: color needs 1 to ${MAX_THEMES} themes.`);
@@ -315,13 +419,14 @@ function checkTokens(root: string, errors: string[]) {
   }
   checkAliases(colors, errors);
   checkType(tokens.type, errors);
+  checkFonts(tokens, errors);
+  checkPresets(tokens, errors);
 
-  const cssPath = path.join(root, 'tokens.css');
-  if (!existsSync(cssPath)) {
+  if (css === undefined) {
     errors.push('tokens.css: missing.');
     return { tokens, allNames };
   }
-  checkTokensCss(tokens, readFileSync(cssPath, 'utf8'), errors);
+  checkTokensCss(tokens, css, errors);
   return { tokens, allNames };
 }
 

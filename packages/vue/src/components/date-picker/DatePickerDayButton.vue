@@ -58,10 +58,7 @@ const DayContent: FunctionalComponent = () =>
     :month="month"
     as="button"
     type="button"
-    data-slot="button"
-    data-variant="ghost"
-    data-size="icon"
-    data-icon-only="true"
+    data-slot="date-picker-day-button"
     :disabled="modifiers.disabled || undefined"
     :data-day="day.toString()"
     :data-selected-single="
@@ -77,7 +74,7 @@ const DayContent: FunctionalComponent = () =>
     :data-outside="isOutside || undefined"
     :class="
       cn(
-        buttonVariants({ variant: 'ghost', size: 'icon' }),
+        buttonVariants({ variant: 'ghost', iconOnly: true }),
         'nx:flex nx:aspect-square nx:size-(--cell-size) nx:min-w-(--cell-size) nx:typography-body-default',
         'nx:disabled:text-disabled-foreground nx:aria-disabled:text-disabled-foreground',
         isOutside && 'nx:text-muted-foreground-subtle',

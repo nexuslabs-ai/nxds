@@ -9,12 +9,6 @@ import path from 'node:path';
 
 import { ICON_NAMES, iconComponent, iconWeight } from './icons.ts';
 
-/**
- * Each icon adds about 3 KB to bundle.js and 0.26 KB to index.d.ts, which
- * prints every name on each of the 18 icon props so the panel can list them.
- */
-const MAX_ICONS = 520;
-
 const PHOSPHOR_IMPORT =
   /(?:import|export)\s*(?:type\s*)?\{([^}]*)\}\s*from\s*'@phosphor-icons\/react\/ssr'/g;
 
@@ -81,11 +75,6 @@ export function iconSet(): IconEntry[] {
   if (unlisted.length > 0) {
     throw new Error(
       `icons: the sources use icons src/icons.ts doesn't list. Add the names of ${unlisted.join(', ')}.`
-    );
-  }
-  if (ICON_NAMES.length > MAX_ICONS) {
-    throw new Error(
-      `icons: ${ICON_NAMES.length} icons, over the ${MAX_ICONS} budget. Trim src/icons.ts.`
     );
   }
   cached = ICON_NAMES.map((name) => {

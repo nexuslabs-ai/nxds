@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question
+    url: https://github.com/nexuslabs-ai/nxds/discussions/new?category=q-a
+    about: Ask how to use nxds in Discussions, where answers stay searchable.
+  - name: Request a component or block
+    url: https://github.com/nexuslabs-ai/nxds/discussions/new?category=ideas
+    about: Suggest it in Ideas. Maintainers turn accepted ideas into issues.

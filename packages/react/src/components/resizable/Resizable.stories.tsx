@@ -40,7 +40,11 @@ const groupStyle = { height: 220 } as const;
 const panelStyle = { overflow: 'hidden' } as const;
 
 function PanelBody({ label }: { label: string }) {
-  return <div className="nx:p-6 nx:text-center nx:font-semibold">{label}</div>;
+  return (
+    <div className="nx:p-6 nx:text-center nx:typography-label-default">
+      {label}
+    </div>
+  );
 }
 
 // ============================================
