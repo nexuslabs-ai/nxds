@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { expect, within } from 'storybook/test';
 
 import {
   tokenValue,
@@ -317,9 +318,10 @@ export const CompositeUtilities: Story = {
         </h2>
         <p className="nx:text-muted-foreground nx:typography-body-small nx:max-w-2xl">
           The ready-to-use `nx:typography-*` classes — each bundles font-family,
-          size, weight, line-height, and letter-spacing (body tiers also get
-          `text-wrap: pretty`). Prefer these over composing raw size/weight
-          utilities so every consumer stays consistent.
+          size, weight, line-height, and letter-spacing. They set no wrapping,
+          so `nx:truncate` works on the same element. Prefer these over
+          composing raw size/weight utilities so every consumer stays
+          consistent.
         </p>
       </div>
       {COMPOSITE_UTILITIES.map(({ group, items }) => (
@@ -344,4 +346,31 @@ export const CompositeUtilities: Story = {
       ))}
     </div>
   ),
+};
+
+const TYPE_STYLES = COMPOSITE_UTILITIES.flatMap(({ items }) => items);
+
+export const TruncateWithEveryStyle: Story = {
+  render: () => (
+    <div className="nx:flex nx:flex-col nx:gap-2 nx:bg-background nx:p-10">
+      {TYPE_STYLES.map(({ cls }) => (
+        <p
+          key={cls}
+          data-testid={cls}
+          className={`nx:m-0 nx:w-40 nx:truncate nx:text-foreground ${cls}`}
+        >
+          A title too long to fit on one line in this box
+        </p>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const { cls } of TYPE_STYLES) {
+      const line = within(canvasElement).getByTestId(cls);
+      // `truncate` keeps one line, cut with an ellipsis, under every type style.
+      await expect(getComputedStyle(line).whiteSpace, cls).toBe('nowrap');
+      await expect(getComputedStyle(line).textOverflow, cls).toBe('ellipsis');
+      await expect(line.scrollWidth, cls).toBeGreaterThan(line.clientWidth);
+    }
+  },
 };
