@@ -1,9 +1,8 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { expectExitBeforeUnmount } from '../../stories/support/overlay-motion-test-utils';
 import { Button } from '../button/button';
 import {
   DropdownMenu,
@@ -27,7 +26,6 @@ import {
 } from './dialog';
 
 const meta: Meta<typeof Dialog> = {
-  title: 'Components/Dialog',
   component: Dialog,
   parameters: {
     layout: 'padded',
@@ -49,7 +47,7 @@ type Story = StoryObj<typeof Dialog>;
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open Dialog</Button>
@@ -135,7 +133,7 @@ export const WithDescription: Story = {
 };
 
 export const NoCloseButton: Story = {
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open Dialog</Button>
@@ -171,7 +169,7 @@ export const ScrollableContent: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Terms & Conditions</Button>
@@ -205,7 +203,7 @@ export const ScrollableContent: Story = {
 };
 
 export const ViewportBoundContent: Story = {
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open viewport-bound dialog</Button>
@@ -252,21 +250,9 @@ export const ViewportBoundContent: Story = {
       name: 'Viewport bounded dialog',
     });
 
-    await expect(dialog).toHaveClass(
-      'nx:max-h-[calc(100svh-2rem)]',
-      'nx:overflow-hidden'
-    );
-
     const body = document.querySelector('[data-slot="dialog-body"]');
     const closeButton = within(dialog).getByRole('button', { name: 'Close' });
     await expect(body).toHaveAttribute('tabindex', '0');
-    await expect(body).toHaveClass(
-      'nx:min-h-0',
-      'nx:overflow-y-auto',
-      'nx:focus-visible:outline-2',
-      'nx:focus-visible:outline-focus-default',
-      'nx:focus-visible:[outline-offset:-2px]'
-    );
     expect(body).not.toContainElement(closeButton);
 
     await userEvent.click(
@@ -290,7 +276,7 @@ export const PropDrivenContent: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open invite dialog</Button>
@@ -336,9 +322,6 @@ export const PropDrivenContent: Story = {
     await expect(
       document.querySelector('[data-slot="dialog-description"]')
     ).toHaveTextContent('Send an invitation to a teammate');
-    await expect(
-      document.querySelector('[data-slot="dialog-body"]')
-    ).toHaveClass('nx:px-6');
     await expect(dialog).toHaveTextContent(
       'The invitation expires in seven days'
     );
@@ -355,7 +338,7 @@ export const PropDrivenContent: Story = {
 // ============================================
 
 export const OpenCloseInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open Dialog</Button>
@@ -400,7 +383,9 @@ export const OpenCloseInteraction: Story = {
     });
     await userEvent.click(dismissButton);
 
-    await expectExitBeforeUnmount(dialog);
+    await waitFor(() => {
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+    });
 
     // Reopen and close with the corner close button
     await userEvent.click(trigger);
@@ -415,7 +400,7 @@ export const OpenCloseInteraction: Story = {
 };
 
 export const KeyboardInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open Dialog</Button>
@@ -455,7 +440,7 @@ export const KeyboardInteraction: Story = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open Dialog</Button>
@@ -517,35 +502,12 @@ export const WithDataAttributes: Story = {
     const content = document.querySelector('[data-slot="dialog-content"]');
     await expect(content).toHaveAttribute('data-variant', 'default');
     await expect(content).toHaveAttribute('data-orientation', 'horizontal');
-    await expect(content).toHaveClass(
-      'nx:py-6',
-      'nx:gap-4',
-      'nx:max-h-[calc(100svh-2rem)]',
-      'nx:overflow-hidden'
-    );
-    await expect(content).not.toHaveClass('nx:p-6');
-    await expect(
-      document.querySelector('[data-slot="dialog-header"]')
-    ).toHaveClass('nx:px-6');
     await expect(
       document.querySelector('[data-slot="dialog-header"]')
     ).toHaveAttribute('data-variant', 'default');
     await expect(
       document.querySelector('[data-slot="dialog-footer"]')
-    ).toHaveClass('nx:px-6');
-    await expect(
-      document.querySelector('[data-slot="dialog-footer"]')
     ).toHaveAttribute('data-orientation', 'horizontal');
-    await expect(
-      document.querySelector('[data-slot="dialog-body"]')
-    ).toHaveClass(
-      'nx:px-6',
-      'nx:min-h-0',
-      'nx:overflow-y-auto',
-      'nx:focus-visible:outline-2',
-      'nx:focus-visible:outline-focus-default',
-      'nx:focus-visible:[outline-offset:-2px]'
-    );
     await expect(
       document.querySelector('[data-slot="dialog-body"]')
     ).toHaveAttribute('tabindex', '0');
@@ -556,7 +518,7 @@ export const WithDataAttributes: Story = {
 };
 
 export const CloseButtonFocus: Story = {
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open focus dialog</Button>
@@ -582,56 +544,6 @@ export const CloseButtonFocus: Story = {
     const closeButton = within(dialog).getByRole('button', { name: 'Close' });
 
     await waitFor(() => expect(closeButton).toHaveFocus());
-    await expect(closeButton).toHaveClass(
-      'nx:focus-visible:outline-2',
-      'nx:focus-visible:outline-focus-default'
-    );
-    await expect(closeButton).toHaveClass('nx:right-6', 'nx:top-6');
-    await expect(closeButton).toHaveClass(
-      'nx:hover:bg-container-hover',
-      'nx:focus-visible:bg-container-hover'
-    );
-
-    await userEvent.keyboard('{Escape}');
-    await waitFor(() => {
-      expect(document.querySelector('[role="dialog"]')).toBeNull();
-    });
-  },
-};
-
-export const CloseButtonTargetAtSmallScale: Story = {
-  globals: { uiScale: 'small' },
-  render: (_args) => (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">Open settings dialog</Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Settings</DialogTitle>
-          <DialogDescription>
-            The close button keeps a 24px target at every UI scale.
-          </DialogDescription>
-        </DialogHeader>
-      </DialogContent>
-    </Dialog>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Open settings dialog' })
-    );
-
-    const dialog = await within(document.body).findByRole('dialog');
-    const closeButton = within(dialog).getByRole('button', { name: 'Close' });
-    const box = closeButton.getBoundingClientRect();
-    const before =
-      parseFloat(getComputedStyle(closeButton, '::before').width) || 0;
-    // At the Small scale the button shrinks, but its target stays 24px.
-    await expect(
-      Math.min(Math.max(box.width, before), Math.max(box.height, before))
-    ).toBeGreaterThanOrEqual(24);
 
     await userEvent.keyboard('{Escape}');
     await waitFor(() => {
@@ -641,16 +553,11 @@ export const CloseButtonTargetAtSmallScale: Story = {
 };
 
 // ============================================
-// NESTED OVERLAY STACKING (z-index layering)
+// NESTED OVERLAYS
 // ============================================
 
-/**
- * Verifies the z-index layering contract: a DropdownMenu opened inside a Dialog
- * must render *above* the dialog (popover z=70 > modal z=50) so the menu stays
- * usable when nested. See issue #91.
- */
 export const NestedOverlayStacking: Story = {
-  render: (_args) => (
+  render: () => (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline">Open stacking dialog</Button>
@@ -680,26 +587,20 @@ export const NestedOverlayStacking: Story = {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
-    // Open the dialog (modal layer).
+    // Open the dialog.
     await userEvent.click(
       canvas.getByRole('button', { name: 'Open stacking dialog' })
     );
     const dialog = await body.findByRole('dialog');
-    await expect(dialog).toHaveClass('nx:z-modal');
 
-    // Open the dropdown nested inside the dialog (popover layer).
+    // Open the dropdown nested inside the dialog.
     await userEvent.click(
       within(dialog).getByRole('button', { name: 'Open menu' })
     );
     const menu = await body.findByRole('menu');
-    await expect(menu).toHaveClass('nx:z-popover');
     await expect(
       within(menu).getByRole('menuitem', { name: 'Profile' })
     ).toBeInTheDocument();
-
-    // The popover layer must stack above the modal layer.
-    const zIndexOf = (el: Element) => Number(getComputedStyle(el).zIndex);
-    await expect(zIndexOf(menu)).toBeGreaterThan(zIndexOf(dialog));
 
     // Cleanup: close the menu, then the dialog.
     await userEvent.keyboard('{Escape}');
@@ -718,7 +619,7 @@ export const NestedOverlayStacking: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

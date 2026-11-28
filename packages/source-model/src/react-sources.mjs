@@ -12,6 +12,29 @@ export function isModuleSource(filePath) {
   return !/-fixtures\.tsx?$/.test(name);
 }
 
+/**
+ * A story file `nxds-cli` copies into an app. Our `*.test.stories.tsx` stay here.
+ * @param {string} filePath
+ */
+export function isShippedStory(filePath) {
+  return (
+    filePath.endsWith('.stories.tsx') && !filePath.endsWith('.test.stories.tsx')
+  );
+}
+
+/**
+ * The stories `nxds-cli` copies with component `slug`: the ones directly in
+ * its folder.
+ * @param {string} slug
+ */
+export function shippedStoryFiles(slug) {
+  const dir = path.join(componentsRoot, slug);
+  return readdirSync(dir)
+    .filter(isShippedStory)
+    .sort()
+    .map((name) => path.join(dir, name));
+}
+
 export function isComponentSource(filePath) {
   return (
     isModuleSource(filePath) && !/^index\.tsx?$/.test(path.basename(filePath))

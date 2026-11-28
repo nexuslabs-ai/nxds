@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, mocked, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -8,7 +8,6 @@ import {
 } from './resizable';
 
 const meta: Meta<typeof ResizablePanelGroup> = {
-  title: 'Components/Resizable',
   component: ResizablePanelGroup,
   parameters: {
     layout: 'padded',

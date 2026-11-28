@@ -7,13 +7,17 @@ import {
   docsStoryModule,
   readDocsStories,
 } from '@nxds/source-model/docs-stories.ts';
-import { react18Src, reactStaticRoot } from '@nxds/source-model/roots.mjs';
-import { build, type Plugin } from 'esbuild';
-import { existsSync, readFileSync } from 'node:fs';
+import { react18Src } from '@nxds/source-model/roots.mjs';
+import { build, type OnResolveArgs, type Plugin } from 'esbuild';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { CANVAS_EXAMPLES, canvasSectionMarkdown } from './canvas-examples.ts';
-import { type CanvasExample, canvasExample } from './canvas-markup.ts';
+import {
+  type CanvasExample,
+  canvasExample,
+  type TreeValue,
+} from './canvas-markup.ts';
 import { ROOT_PARTS } from './groups.ts';
 import { type FlatComponent, type FlatProp, HANDLER } from './props.ts';
 import { NAMESPACE } from './system-index.ts';
@@ -45,28 +49,32 @@ const BUNDLE_MODULES: Record<string, string> = {
 const JSX_RUNTIME = path.join(import.meta.dirname, 'runtime', 'jsx-runtime.ts');
 const STORY_MODULE = 'nxds:story';
 
-const MEDIA_TYPES: Record<string, string> = {
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.webp': 'image/webp',
-};
+const STORY_DATA_IMPORT =
+  /import \{([^}]+)\} from ['"](@\/components\/[\w/-]+\.story-data)['"]/g;
 
-// A preview fetches nothing, so each static file a story names is inlined.
-function inlineStaticFiles(source: string) {
-  return source.replace(
-    /(["'])(\/[\w./-]+\.(?:svg|png|jpg|webp))\1/g,
-    (literal, quote, file) => {
-      const absolute = path.join(reactStaticRoot, file);
-      if (!existsSync(absolute)) return literal;
-      const type = MEDIA_TYPES[path.extname(file)];
-      return `${quote}data:${type};base64,${readFileSync(absolute).toString('base64')}${quote}`;
+/**
+ * The values a docs story imports from story data, by name. Canvas markup has
+ * no imports, so an example spells them out.
+ */
+async function storyData(source: string) {
+  const values = new Map<string, TreeValue>();
+  for (const [, names = '', specifier = ''] of source.matchAll(
+    STORY_DATA_IMPORT
+  )) {
+    const file = path.join(react18Src, `${specifier.slice(2)}.ts`);
+    const exported: Record<string, TreeValue | undefined> = await import(
+      pathToFileURL(file).href
+    );
+    for (const name of names.split(',').map((part) => part.trim())) {
+      const value = exported[name];
+      if (value !== undefined) values.set(name, value);
     }
-  );
+  }
+  return values;
 }
 
-// `@/components/*` is the bundle; `@/lib/*` and `@/hooks/*` helpers compile
-// into the preview from the React 18 sources.
+// `@/components/*` is the bundle; story data and the `@/lib/*` and `@/hooks/*`
+// helpers compile into the preview from the React 18 sources.
 function storyImports(source: string): Plugin {
   return {
     name: 'nxds-story-imports',
@@ -76,23 +84,27 @@ function storyImports(source: string): Plugin {
         namespace: 'nxds',
       }));
       builder.onLoad({ filter: /.*/, namespace: 'nxds' }, () => ({
-        contents: inlineStaticFiles(source),
+        contents: source,
         loader: 'tsx',
         resolveDir: react18Src,
       }));
       builder.onResolve({ filter: /^react\/jsx(-dev)?-runtime$/ }, () => ({
         path: JSX_RUNTIME,
       }));
+      const fromSource = (args: OnResolveArgs) =>
+        builder.resolve(`./${args.path.slice(2)}`, {
+          kind: args.kind,
+          resolveDir: react18Src,
+        });
+      builder.onResolve(
+        { filter: /^@\/components\/.*\.story-data$/ },
+        fromSource
+      );
       builder.onResolve({ filter: /^@\/components\// }, () => ({
         path: 'bundle',
         namespace: 'page-global',
       }));
-      builder.onResolve({ filter: /^@\// }, (args) =>
-        builder.resolve(`./${args.path.slice(2)}`, {
-          kind: args.kind,
-          resolveDir: react18Src,
-        })
-      );
+      builder.onResolve({ filter: /^@\// }, fromSource);
       builder.onResolve(
         {
           filter:
@@ -197,7 +209,7 @@ export async function folderCanvasExample(
 ): Promise<CanvasExample | null> {
   for (const story of readDocsStories(slug, componentStoryFiles(slug))) {
     const { source } = await docsStoryModule(story, {});
-    const example = canvasExample(inlineStaticFiles(source), exported);
+    const example = canvasExample(source, exported, await storyData(source));
     if (example) return example;
   }
   return null;

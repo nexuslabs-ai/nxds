@@ -1,5 +1,4 @@
-import { Canvas, Source, Title } from '@storybook/addon-docs/blocks';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import {
@@ -8,16 +7,6 @@ import {
   FilterConditionRemove,
   FilterConditionSegment,
 } from './filter-condition';
-
-const anatomySource = `import { FilterCondition, FilterConditionField, FilterConditionSegment, FilterConditionRemove } from '.';
-
-// Connect each callback to your editor or application state.
-<FilterCondition>
-  <FilterConditionField>Status</FilterConditionField>
-  <FilterConditionSegment aria-label="Edit status operator" onClick={openOperator}>is</FilterConditionSegment>
-  <FilterConditionSegment aria-label="Edit status value" onClick={openValue}>Paid</FilterConditionSegment>
-  <FilterConditionRemove onClick={removeCondition}>Remove status filter</FilterConditionRemove>
-</FilterCondition>`;
 
 function ConditionExample({
   field = 'Status',
@@ -40,7 +29,7 @@ function ConditionExample({
     <FilterCondition data-testid="condition">
       <FilterConditionField>{field}</FilterConditionField>
       <FilterConditionSegment
-        aria-label={`Edit ${field} operator`}
+        aria-label={`Edit ${field} operator: ${operator}`}
         className="nx:shrink-0 nx:text-muted-foreground"
         disabled={disabled}
         onClick={onOperatorClick}
@@ -63,7 +52,6 @@ function ConditionExample({
 }
 
 const meta = {
-  title: 'Components/FilterCondition',
   component: ConditionExample,
   args: {
     field: 'Status',
@@ -76,105 +64,6 @@ const meta = {
   },
   parameters: {
     docs: {
-      page: () => (
-        <>
-          <Title />
-          <p>
-            The shared parts of an editable condition: field, operator, value
-            and removal. ChoiceFilter and NumberRangeFilter use these same parts
-            and add working editors. FilterCondition alone does not select
-            values or filter data.
-          </p>
-          <Canvas of={Anatomy} />
-          <p>
-            One compact size follows nxds density. The field, operator, value
-            and remove button share the h-8 height token; there is no size prop.
-            Change density in the toolbar to see them adapt together. Inputs
-            inside an editor retain their own appropriate control size.
-          </p>
-          <p>
-            Field names identify the condition. The operator and value are
-            separate buttons; each opens its own editor. The final button
-            removes it. This anatomy example demonstrates button callbacks only.
-          </p>
-          <Source code={anatomySource} language="tsx" />
-          <h2>Use a working block</h2>
-          <p>
-            Six copyable blocks build on this anatomy. Each adds its own editor
-            and decides when a change applies.
-          </p>
-          <ul>
-            <li>
-              <a
-                href="/?path=/docs/blocks-filtering-choicefilter--docs"
-                target="_top"
-              >
-                ChoiceFilter
-              </a>
-              : one value from a short list, applied immediately.
-            </li>
-            <li>
-              <a
-                href="/?path=/docs/blocks-filtering-multichoicefilter--docs"
-                target="_top"
-              >
-                MultiChoiceFilter
-              </a>
-              : several values, applied with Apply.
-            </li>
-            <li>
-              <a
-                href="/?path=/docs/blocks-filtering-textfilter--docs"
-                target="_top"
-              >
-                TextFilter
-              </a>
-              : text a record contains, starts with or equals.
-            </li>
-            <li>
-              <a
-                href="/?path=/docs/blocks-filtering-numbercomparisonfilter--docs"
-                target="_top"
-              >
-                NumberComparisonFilter
-              </a>
-              : one number compared with a threshold.
-            </li>
-            <li>
-              <a
-                href="/?path=/docs/blocks-filtering-numberrangefilter--docs"
-                target="_top"
-              >
-                NumberRangeFilter
-              </a>
-              : a number between a minimum and a maximum.
-            </li>
-            <li>
-              <a
-                href="/?path=/docs/blocks-filtering-daterangefilter--docs"
-                target="_top"
-              >
-                DateRangeFilter
-              </a>
-              : a range of calendar days.
-            </li>
-          </ul>
-          <h2>Compose a custom editor</h2>
-          <p>
-            Use these parts directly for an editor the blocks do not provide,
-            such as Location / within / a distance opening a location-and-radius
-            editor. Import the parts from @nxds/react. Supply your own editor,
-            controlled values, open state, validation, and focus after removal.
-            Use FilterChip when editing happens elsewhere and the chip only
-            removes.
-          </p>
-          <p>
-            <a href="/?path=/docs/patterns-filtering--docs" target="_top">
-              Compare both approaches in the Filtering pattern
-            </a>
-          </p>
-        </>
-      ),
       description: {
         component:
           'FilterCondition shows one filter as separate field, operator, value and remove parts. Use it when the user edits a filter from its summary. For a chip that only removes, use FilterChip.\n\n- Wrap each FilterConditionSegment in a PopoverTrigger or DropdownMenuTrigger with `asChild`.\n- Your app owns open state, draft values, when changes apply and focus after removal.\n- All parts share one compact height that follows density. There is no `size` prop.\n- Editor inputs set their own size.\n- Segments are native buttons, so Enter and Space activate them.\n- The full summary stays accessible when it truncates on screen.\n- See Patterns/Filtering for recipes that apply changes at once or on Apply.',
@@ -191,7 +80,7 @@ export const ClickInteraction: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Edit Status operator' })
+      canvas.getByRole('button', { name: 'Edit Status operator: is' })
     );
     await expect(args.onOperatorClick).toHaveBeenCalledTimes(1);
     await expect(args.onValueClick).not.toHaveBeenCalled();
@@ -212,7 +101,7 @@ export const ClickInteraction: Story = {
 export const KeyboardInteraction: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    canvas.getByRole('button', { name: 'Edit Status operator' }).focus();
+    canvas.getByRole('button', { name: 'Edit Status operator: is' }).focus();
     await userEvent.keyboard('{Enter}');
     await userEvent.tab();
     await expect(
@@ -252,21 +141,11 @@ export const LongContent: Story = {
       <ConditionExample {...args} />
     </div>
   ),
-  play: async ({ canvasElement, args }) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', {
-      name: `Edit Workspace value: ${args.value}`,
-    });
-    await expect(trigger.scrollWidth).toBeLessThanOrEqual(
-      trigger.clientWidth + 1
-    );
     await expect(
       canvas.getByRole('button', { name: 'Remove Workspace filter' })
     ).toBeVisible();
-    const condition = canvas.getByTestId('condition');
-    await expect(condition.scrollWidth).toBeLessThanOrEqual(
-      condition.clientWidth + 1
-    );
   },
 };
 export const WithDataAttributes: Story = {

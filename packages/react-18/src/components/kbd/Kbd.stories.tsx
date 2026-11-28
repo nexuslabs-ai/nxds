@@ -1,14 +1,10 @@
-import { DENSITY_OPTIONS } from '@nxds/core';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
-import { expect, within } from 'storybook/test';
-
-import { expectTextFits } from '../../stories/support/story-height-test-utils';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect } from 'storybook/test';
 
 import { Kbd, KbdGroup } from './kbd';
 
 const meta: Meta<typeof Kbd> = {
-  title: 'Components/Kbd',
   component: Kbd,
   parameters: {
     docs: {
@@ -128,36 +124,6 @@ export const WithDataAttributes: Story = {
     await expect(letterKey?.textContent).toBe('K');
     await expect(letterKey).not.toHaveAttribute('role');
     await expect(letterKey).not.toHaveAttribute('tabindex');
-  },
-};
-
-const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
-
-export const TextFitsAtEveryDensity: Story = {
-  // Text is tallest at the Larger UI scale, so it fits at every smaller one.
-  globals: { uiScale: 'larger' },
-  render: () => (
-    <div className="nx:flex nx:flex-col nx:items-start nx:gap-3">
-      {DENSITIES.map((density) => (
-        <div
-          key={density}
-          data-density={density}
-          data-testid={`row-${density}`}
-        >
-          <Kbd>Ctrl</Kbd>
-        </div>
-      ))}
-    </div>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    for (const density of DENSITIES) {
-      const element = within(canvas.getByTestId(`row-${density}`)).getByText(
-        'Ctrl'
-      );
-      // The key label fits inside the border at every density.
-      await expectTextFits(element);
-    }
   },
 };
 

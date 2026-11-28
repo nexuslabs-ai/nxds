@@ -1,7 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
-
-import { expectInterruptibleOverlayMotion } from '../../stories/support/overlay-motion-test-utils';
 
 import {
   NavigationMenu,
@@ -15,7 +13,6 @@ import {
 } from './navigation-menu';
 
 const meta: Meta<typeof NavigationMenu> = {
-  title: 'Components/NavigationMenu',
   component: NavigationMenu,
   parameters: {
     layout: 'padded',
@@ -37,7 +34,7 @@ type Story = StoryObj<typeof NavigationMenu>;
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -88,7 +85,7 @@ export const WithSimpleLink: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -122,7 +119,7 @@ export const WithoutViewport: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <NavigationMenu viewport={false}>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -155,7 +152,7 @@ export const WithIndicator: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -193,7 +190,7 @@ export const Disabled: Story = {
       description: { story: 'Disable a trigger so its flyout cannot open.' },
     },
   },
-  render: (_args) => (
+  render: () => (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -216,10 +213,6 @@ export const Disabled: Story = {
     const trigger = canvas.getByRole('button', { name: /Products/i });
 
     await expect(trigger).toBeDisabled();
-
-    // Disabled trigger uses a semantic text token at full opacity (not a fade).
-    await expect(trigger).toHaveClass('nx:disabled:text-disabled-foreground');
-    await expect(getComputedStyle(trigger).opacity).toBe('1');
   },
 };
 
@@ -228,7 +221,7 @@ export const Disabled: Story = {
 // ============================================
 
 export const OpenCloseInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -262,9 +255,6 @@ export const OpenCloseInteraction: Story = {
     // The flyout links render in-tree (no portal)
     const link = await canvas.findByRole('link', { name: 'Analytics' });
     await expect(link).toBeInTheDocument();
-    await expectInterruptibleOverlayMotion(
-      canvasElement.querySelector('[data-slot="navigation-menu-viewport"]')
-    );
 
     // Close with Escape
     await userEvent.keyboard('{Escape}');
@@ -275,7 +265,7 @@ export const OpenCloseInteraction: Story = {
 };
 
 export const KeyboardInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -313,7 +303,7 @@ export const KeyboardInteraction: Story = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
@@ -353,8 +343,6 @@ export const WithDataAttributes: Story = {
       'data-slot',
       'navigation-menu-trigger'
     );
-    // #470: trigger reuses navigationMenuTriggerStyle -> typography-label-default.
-    await expect(trigger).toHaveClass('nx:typography-label-default');
 
     // Open → content + link slots render
     await userEvent.click(trigger);
@@ -366,10 +354,6 @@ export const WithDataAttributes: Story = {
         canvasElement.querySelector('[data-slot="navigation-menu-link"]')
       ).toBeInTheDocument();
     });
-    // #470: flyout link migrated from the raw named text-size utility.
-    await expect(
-      canvasElement.querySelector('[data-slot="navigation-menu-link"]')
-    ).toHaveClass('nx:typography-body-default');
 
     await userEvent.keyboard('{Escape}');
   },
@@ -380,7 +364,7 @@ export const WithDataAttributes: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

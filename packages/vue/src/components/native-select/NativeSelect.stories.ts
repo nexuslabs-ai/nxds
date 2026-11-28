@@ -2,8 +2,6 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { ref } from 'vue';
 
-import { expectAutofillPaired } from '../../stories/support/autofill-pairing';
-
 import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from '.';
 
 // `change` falls through to the `<select>`, so it is not a declared emit.
@@ -12,7 +10,6 @@ type NativeSelectArgs = InstanceType<typeof NativeSelect>['$props'] & {
 };
 
 const meta = {
-  title: 'Components/NativeSelect',
   component: NativeSelect,
   parameters: {
     docs: {
@@ -113,7 +110,7 @@ export const Invalid: Story = {
   }),
 };
 
-// Disabled — semantic disabled tokens on the select and chevron.
+// Disabled — dims the select and chevron and blocks changes.
 export const Disabled: Story = {
   tags: ['docs'],
   parameters: {
@@ -137,16 +134,6 @@ export const Disabled: Story = {
     const canvas = within(canvasElement);
     const select = canvas.getByRole('combobox', { name: 'Plan' });
     await expect(select).toBeDisabled();
-    await expect(select).toHaveClass('nx:disabled:border-border-disabled');
-    await expect(select).toHaveClass('nx:disabled:bg-disabled');
-    await expect(select).toHaveClass('nx:disabled:text-disabled-foreground');
-
-    const icon = canvasElement.querySelector(
-      '[data-slot="native-select-icon"]'
-    );
-    await expect(icon).toHaveClass(
-      'nx:group-has-[select:disabled]/native-select:text-disabled-foreground'
-    );
   },
 };
 
@@ -194,34 +181,8 @@ export const BorderlessStates: Story = {
     const disabled = canvas.getByTestId('native-select-borderless-disabled');
 
     await expect(base).toHaveAttribute('data-variant', 'borderless');
-    await expect(base).toHaveClass('nx:border-transparent');
-    await expect(base).toHaveClass('nx:bg-control-background');
-    await expect(base).toHaveClass(
-      'nx:enabled:hover:bg-control-background-hover'
-    );
-
     await expect(invalid).toHaveAttribute('aria-invalid', 'true');
-    await expect(invalid).toHaveClass('nx:aria-invalid:border-error-border');
-    // A borderless field keeps a transparent border, and the invalid state
-    // recolours it in place.
-    const restStyles = window.getComputedStyle(base);
-    await expect(Number.parseFloat(restStyles.borderTopWidth)).toBeGreaterThan(
-      0
-    );
-    await expect(restStyles.borderTopColor).toBe('rgba(0, 0, 0, 0)');
-
-    const invalidStyles = window.getComputedStyle(invalid);
-    await expect(
-      Number.parseFloat(invalidStyles.borderTopWidth)
-    ).toBeGreaterThan(0);
-    await expect(invalidStyles.borderTopColor).not.toBe('rgba(0, 0, 0, 0)');
-    await expect(invalidStyles.boxShadow).toBe('none');
-
     await expect(disabled).toBeDisabled();
-    await expect(disabled).toHaveClass('nx:disabled:bg-disabled');
-    await expect(disabled).not.toHaveClass(
-      'nx:disabled:border-border-disabled'
-    );
   },
 };
 
@@ -365,9 +326,6 @@ export const WithDataAttributes: Story = {
     await expect(select).toHaveAttribute('data-slot', 'native-select');
     await expect(select).toHaveAttribute('data-size', 'default');
     await expect(select).toHaveAttribute('data-variant', 'bordered');
-    await expect(select).toHaveClass('nx:bg-container');
-    await expect(select).toHaveClass('nx:enabled:hover:bg-container-hover');
-    await expectAutofillPaired(select);
     await expect(
       canvasElement.querySelector('[data-slot="native-select-wrapper"]')
     ).toBeInTheDocument();

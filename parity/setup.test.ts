@@ -18,15 +18,34 @@ function unwrap(node: ts.Expression): ts.Expression {
   return current;
 }
 
-/** The `const preview = { … }` object a Storybook preview file exports. */
-function readPreview(file: string) {
-  const source = ts.createSourceFile(
+function parse(file: string) {
+  return ts.createSourceFile(
     file,
     read(file),
     ts.ScriptTarget.Latest,
     true,
     file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
   );
+}
+
+/** The `{ … }` the top-level function `name` in `file` returns. */
+function readReturned(file: string, name: string) {
+  const source = parse(file);
+  for (const statement of source.statements) {
+    if (!ts.isFunctionDeclaration(statement)) continue;
+    if (statement.name?.text !== name) continue;
+    for (const inner of statement.body?.statements ?? []) {
+      if (!ts.isReturnStatement(inner) || !inner.expression) continue;
+      const init = unwrap(inner.expression);
+      if (ts.isObjectLiteralExpression(init)) return { source, init };
+    }
+  }
+  throw new Error(`${file} has no \`${name}\` that returns \`{ … }\`.`);
+}
+
+/** The `const preview = { … }` object a Storybook preview file exports. */
+function readPreview(file: string) {
+  const source = parse(file);
   for (const statement of source.statements) {
     if (!ts.isVariableStatement(statement)) continue;
     for (const declaration of statement.declarationList.declarations) {
@@ -52,8 +71,29 @@ function keys(object: ts.ObjectLiteralExpression) {
   return object.properties.map((property) => property.name?.getText()).sort();
 }
 
+/** The source text of `object`'s `name` property, such as `'error'`. */
+function valueText(object: ts.ObjectLiteralExpression, name: string) {
+  const property = object.properties.find(
+    (candidate) => candidate.name?.getText() === name
+  );
+  if (property && ts.isPropertyAssignment(property)) {
+    return property.initializer.getText();
+  }
+  throw new Error(`preview has no \`${name}\`.`);
+}
+
 const react = readPreview('packages/react/.storybook/preview.tsx');
 const vue = readPreview('packages/vue/.storybook/preview.ts');
+
+// React's preview takes its toolbar and axe rules from the wiring an app
+// gets. Vue's preview holds its own until the CLI installs Vue (#887).
+const REACT_WIRING = 'packages/react/src/storybook.tsx';
+const reactWiring = readReturned(REACT_WIRING, 'nxdsPreview');
+const reactGlobals = readReturned(REACT_WIRING, 'globalsFromAppearanceState');
+
+function a11y({ init }: typeof react) {
+  return member(member(init, 'parameters'), 'a11y');
+}
 
 function manifest(framework: 'react' | 'vue') {
   const { dependencies: declared } = JSON.parse(
@@ -67,23 +107,26 @@ describe('shared setup', () => {
     expect(read(vueFile)).toBe(read(reactFile));
   });
 
-  it.each(['parameters', 'globalTypes', 'initialGlobals'])(
-    'both Storybook previews set the same %s',
-    (name) => {
-      expect(keys(member(vue.init, name))).toEqual(
-        keys(member(react.init, name))
-      );
-    }
-  );
+  it.each([
+    ['parameters', () => member(react.init, 'parameters')],
+    ['globalTypes', () => member(reactWiring.init, 'globalTypes')],
+    ['initialGlobals', () => reactGlobals.init],
+  ] as const)('both Storybook previews set the same %s', (name, ofReact) => {
+    expect(keys(member(vue.init, name))).toEqual(keys(ofReact()));
+  });
 
   it('both Storybook previews run the same axe rules', () => {
-    const print = ({ source, init }: typeof react) =>
+    const print = (preview: typeof react) =>
       printer.printNode(
         ts.EmitHint.Expression,
-        member(member(init, 'parameters'), 'a11y'),
-        source
+        member(a11y(preview), 'options'),
+        preview.source
       );
-    expect(print(vue)).toBe(print(react));
+    expect(print(vue)).toBe(print(reactWiring));
+  });
+
+  it('both Storybook previews fail a story on an axe violation', () => {
+    expect(valueText(a11y(vue), 'test')).toBe(valueText(a11y(react), 'test'));
   });
 
   it.each(dependencies)(

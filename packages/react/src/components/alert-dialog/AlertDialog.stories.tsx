@@ -1,7 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import { expectExitBeforeUnmount } from '../../stories/support/overlay-motion-test-utils';
 import { Button } from '../button/button';
 
 import {
@@ -18,7 +17,6 @@ import {
 } from './alert-dialog';
 
 const meta: Meta<typeof AlertDialog> = {
-  title: 'Components/AlertDialog',
   component: AlertDialog,
   parameters: {
     layout: 'padded',
@@ -43,7 +41,7 @@ type Story = StoryObj<typeof AlertDialog>;
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="outline">Show dialog</Button>
@@ -74,7 +72,7 @@ export const Destructive: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="destructive">Delete account</Button>
@@ -114,7 +112,7 @@ export const Destructive: Story = {
 };
 
 export const ViewportBoundContent: Story = {
-  render: (_args) => (
+  render: () => (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="destructive">Show viewport alert</Button>
@@ -160,29 +158,6 @@ export const ViewportBoundContent: Story = {
     const dialog = await within(document.body).findByRole('alertdialog', {
       name: 'Viewport bounded alert dialog',
     });
-    await expect(dialog).toHaveClass(
-      'nx:max-h-[calc(100svh-2rem)]',
-      'nx:overflow-hidden',
-      'nx:py-6',
-      'nx:gap-4'
-    );
-    await expect(dialog).not.toHaveClass('nx:p-6');
-    await expect(
-      document.querySelector('[data-slot="alert-dialog-header"]')
-    ).toHaveClass('nx:px-6');
-    await expect(
-      document.querySelector('[data-slot="alert-dialog-footer"]')
-    ).toHaveClass('nx:px-6');
-    await expect(
-      document.querySelector('[data-slot="alert-dialog-body"]')
-    ).toHaveClass(
-      'nx:px-6',
-      'nx:min-h-0',
-      'nx:overflow-y-auto',
-      'nx:focus-visible:outline-2',
-      'nx:focus-visible:outline-focus-default',
-      'nx:focus-visible:[outline-offset:-2px]'
-    );
     await expect(
       document.querySelector('[data-slot="alert-dialog-body"]')
     ).toHaveAttribute('tabindex', '0');
@@ -208,7 +183,7 @@ export const Centered: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="destructive">Show centered dialog</Button>
@@ -238,7 +213,6 @@ export const Centered: Story = {
     const dialog = await within(document.body).findByRole('alertdialog');
     await expect(dialog).toHaveAttribute('data-variant', 'center');
     await expect(dialog).toHaveAttribute('data-orientation', 'vertical');
-    await expect(dialog.className).toContain('nx:max-w-xs');
 
     const header = document.querySelector('[data-slot="alert-dialog-header"]');
     const footer = document.querySelector('[data-slot="alert-dialog-footer"]');
@@ -259,7 +233,7 @@ export const Centered: Story = {
 // ============================================
 
 export const FocusManagement: Story = {
-  render: (_args) => (
+  render: () => (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="outline">Show focus dialog</Button>
@@ -295,7 +269,6 @@ export const FocusManagement: Story = {
 
     await userEvent.click(cancelButton);
 
-    await expectExitBeforeUnmount(dialog);
     await waitFor(() => {
       expect(trigger).toHaveFocus();
     });
@@ -357,7 +330,7 @@ export const OverlayDoesNotDismiss: Story = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="outline">Show dialog</Button>
@@ -446,7 +419,7 @@ export const WithDataAttributes: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

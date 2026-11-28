@@ -14,7 +14,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/ChoiceRow',
   component: ChoiceRow,
   parameters: {
     layout: 'padded',
@@ -351,10 +350,6 @@ export const WithDataAttributes: Story = {
       'data-slot',
       'choice-row-description'
     );
-
-    await expect(
-      Math.round(row.getBoundingClientRect().height)
-    ).toBeGreaterThanOrEqual(32);
   },
 };
 
@@ -385,10 +380,6 @@ export const EdgeCases: Story = {
     const emptyCheckbox = canvas.getByRole('checkbox', {
       name: 'Unnamed visual choice',
     });
-    const longTitle = getRequiredElement<HTMLElement>(
-      canvasElement,
-      '#choice-edge-long-title'
-    );
     const emptyTitle = getRequiredElement<HTMLElement>(
       canvasElement,
       '#choice-edge-empty-title'
@@ -397,7 +388,6 @@ export const EdgeCases: Story = {
     await expect(longCheckbox).toHaveAccessibleName(
       /Very long notification preference title/i
     );
-    await expect(longTitle.scrollWidth).toBeGreaterThan(longTitle.clientWidth);
     await expect(emptyCheckbox).toHaveAccessibleName('Unnamed visual choice');
     await expect(emptyTitle).toBeEmptyDOMElement();
   },

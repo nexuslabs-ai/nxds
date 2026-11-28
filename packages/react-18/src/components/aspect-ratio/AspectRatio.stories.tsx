@@ -1,10 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect } from 'storybook/test';
 
 import { AspectRatio } from './aspect-ratio';
 
 const meta: Meta<typeof AspectRatio> = {
-  title: 'Components/AspectRatio',
   component: AspectRatio,
   parameters: {
     docs: {

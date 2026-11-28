@@ -11,6 +11,8 @@ import {
   componentDescription,
   componentStoryFiles,
 } from '@nxds/source-model/docs-stories.ts';
+import { reactExampleEdits } from '@nxds/source-model/example-icon-sources.ts';
+import { ICON_LIBRARIES } from '@nxds/source-model/example-icons.ts';
 import {
   importSpecifiers,
   readCanonical,
@@ -21,6 +23,7 @@ import {
   blockSources,
   componentLabel,
   exportedComponentSlugs,
+  shippedStoryFiles,
 } from '@nxds/source-model/react-sources.mjs';
 import {
   react18Root,
@@ -65,12 +68,24 @@ import { CATALOG_FILE } from './roots.mjs';
  * @typedef {import('./catalog-schema').IconLibrary} IconLibrary
  * @typedef {import('./catalog-schema').Font} Font
  * @typedef {import('./catalog-schema').ThemeField} ThemeField
+ * @typedef {NonNullable<Variant['stories']>} Stories
+ * @typedef {Stories['files'][number]} StoryFile
  */
 
 const DOCS_URL = 'https://nxds.dev';
 const SETUP = 'setup';
 const TAILWIND_DIR = path.join(repoRoot, 'packages', 'tailwind');
 const ICONS_FILE = 'lib/icons.ts';
+
+/** The Storybook the stories run in. A story imports its types from the first framework. */
+const STORYBOOK = {
+  range: '>=10.0.0',
+  frameworks: ['@storybook/react-vite', '@storybook/nextjs-vite'],
+};
+/** What an app's own Storybook brings, so no story installs it. */
+const STORYBOOK_PACKAGES = new Set(['storybook', ...STORYBOOK.frameworks]);
+/** The wiring an app's Storybook preview imports, which setup's stories bring. */
+const STORYBOOK_FILE = 'storybook.tsx';
 
 /**
  * What each framework's setup copies and installs: the appearance provider and
@@ -117,7 +132,7 @@ function packageRecord(packages) {
   return Object.fromEntries(packages.map(({ name, range }) => [name, range]));
 }
 
-/** @type {{ version: string; devDependencies: Record<string, string>; peerDependencies: Record<string, string> }} */
+/** @type {{ version: string; dependencies: Record<string, string>; devDependencies: Record<string, string>; peerDependencies: Record<string, string> }} */
 const reactPackage = JSON.parse(
   readFileSync(path.join(reactRoot, 'package.json'), 'utf8')
 );
@@ -162,6 +177,149 @@ function withReact18(variant) {
     ...variant,
     packages: { ...variant.packages, npm },
     react18: { files, packages: { npm: react18Npm } },
+  };
+}
+
+/**
+ * A story file, with the edits each icon library after the first makes to
+ * draw its own icons.
+ * @param {string} src
+ * @param {string} srcPath
+ * @param {IconLibrary[]} libraries
+ * @returns {StoryFile}
+ */
+function storyFile(src, srcPath, libraries) {
+  const content = readCanonical(path.join(src, srcPath));
+  if (!content.includes('@phosphor-icons/')) return { path: srcPath, content };
+  const icons = Object.fromEntries(
+    libraries.slice(1).map(({ name }) => {
+      const library = ICON_LIBRARIES.find((known) => known === name);
+      if (!library) {
+        throw new Error(
+          `catalog: no story icons for the icon library ${name}. Add it to ICON_LIBRARIES in packages/source-model/src/example-icons.ts.`
+        );
+      }
+      return [
+        name,
+        reactExampleEdits(srcPath, content, library).map(
+          ({ start, end, text }) =>
+            /** @type {[number, number, string]} */ ([start, end, text])
+        ),
+      ];
+    })
+  );
+  return { path: srcPath, content, icons };
+}
+
+/**
+ * The range an app installs a package a story imports at: the one
+ * packages/react declares.
+ * @param {string} name
+ */
+function storyPackageRange(name) {
+  if (
+    name in reactPackage.dependencies ||
+    name in reactPackage.peerDependencies
+  ) {
+    return react.publishedRange(name);
+  }
+  const range = devRanges[name];
+  if (!range || range.startsWith('workspace:')) {
+    throw new Error(
+      `catalog: a shipped story imports ${name}, which packages/react doesn't declare. Add it to its devDependencies.`
+    );
+  }
+  return range;
+}
+
+/**
+ * What each component brings to an app: its files, its packages and the items
+ * it needs.
+ * @typedef {Map<string, { files: string[]; packages: string[]; items: string[] }>} Brought
+ */
+
+/**
+ * `names` and every component they bring.
+ * @param {string[]} names
+ * @param {Brought} brought
+ */
+function withBrought(names, brought) {
+  const seen = new Set();
+  const visit = (/** @type {string} */ name) => {
+    if (seen.has(name)) return;
+    seen.add(name);
+    brought.get(name)?.items.forEach(visit);
+  };
+  names.forEach(visit);
+  return seen;
+}
+
+/**
+ * `variant` with the stories at `roots`: the story files, and the items, files
+ * and packages they reach that the variant doesn't bring.
+ * @template {Variant} V
+ * @param {V} variant
+ * @param {string} name
+ * @param {string[]} roots
+ * @param {{ setup: Variant; brought: Brought; exported: Set<string>; libraries: IconLibrary[] }} context
+ * @returns {V}
+ */
+function withStories(variant, name, roots, context) {
+  if (roots.length === 0) return variant;
+  const { setup, brought, exported, libraries } = context;
+  const walked = react.walkRoots(name, roots);
+  const own = withBrought([name, ...variant.items], brought);
+  const used = [...react.linkedSlugs(walked.files, exported)]
+    .filter((slug) => !own.has(slug))
+    .sort();
+  const items = used.filter(
+    (slug) =>
+      !used.some(
+        (other) => other !== slug && withBrought([other], brought).has(slug)
+      )
+  );
+  const components = [...withBrought([...own, ...items], brought)].flatMap(
+    (slug) => brought.get(slug) ?? []
+  );
+  const haveFiles = new Set([
+    ...[...setup.files, ...variant.files].map((file) => file.path),
+    ...components.flatMap(({ files }) => files),
+  ]);
+  const havePackages = new Set([
+    ...Object.keys({ ...setup.packages.npm, ...variant.packages.npm }),
+    ...components.flatMap(({ packages }) => packages),
+    ...STORYBOOK_PACKAGES,
+  ]);
+  // A walk also lists the stylesheets beside each file, which a story never needs.
+  const paths = walked.files
+    .map(react.toSrcPath)
+    .filter((file) => !haveFiles.has(file) && !file.endsWith('.css'))
+    .sort();
+  const react18 = paths.flatMap((file) => {
+    const copy = path.join(react18Src, file);
+    if (!existsSync(copy)) {
+      throw new Error(
+        `catalog: ${toRepoPath(copy)} is missing. Run \`pnpm --filter @nxds/react-18 generate\`.`
+      );
+    }
+    return readCanonical(copy) === readCanonical(path.join(reactSrc, file))
+      ? []
+      : [storyFile(react18Src, file, libraries)];
+  });
+  return {
+    ...variant,
+    stories: {
+      items,
+      packages: {
+        npm: Object.fromEntries(
+          walked.packages
+            .filter((pkg) => !havePackages.has(pkg))
+            .map((pkg) => [pkg, storyPackageRange(pkg)])
+        ),
+      },
+      files: paths.map((file) => storyFile(reactSrc, file, libraries)),
+      ...(react18.length > 0 && { react18: { files: react18 } }),
+    },
   };
 }
 
@@ -378,11 +536,39 @@ function vueVariants(setup) {
 
 /** @returns {Catalog} */
 export function buildCatalog() {
-  const setup = setupItem();
   const entries = dependencyEntries();
+  const exported = exportedComponentSlugs();
+  const libraries = iconLibraries();
+  const withoutStories = setupItem();
+  const stories = {
+    setup: withoutStories.variants.react,
+    brought: new Map(
+      entries.components.map(({ slug, closure, plan }) => [
+        slug,
+        {
+          files: [...closure.files, ...closure.copy],
+          packages: closure.install.map(({ name }) => name),
+          items: plan.components,
+        },
+      ])
+    ),
+    exported,
+    libraries,
+  };
+  const setup = {
+    ...withoutStories,
+    variants: {
+      ...withoutStories.variants,
+      react: withStories(
+        withoutStories.variants.react,
+        SETUP,
+        [path.join(reactSrc, STORYBOOK_FILE)],
+        stories
+      ),
+    },
+  };
   const vueComponents = vueVariants(setup.variants.vue);
 
-  const exported = exportedComponentSlugs();
   for (const slug of vueComponents.keys()) {
     if (!exported.has(slug)) {
       throw new Error(
@@ -406,7 +592,12 @@ export function buildCatalog() {
         ).trim(),
         docs: `${DOCS_URL}/components/${slug}`,
         variants: {
-          react: withReact18(planVariant(reactSrc, plan, setup.variants.react)),
+          react: withStories(
+            withReact18(planVariant(reactSrc, plan, setup.variants.react)),
+            slug,
+            shippedStoryFiles(slug),
+            stories
+          ),
           ...(vueVariant && { vue: vueVariant }),
         },
       };
@@ -423,14 +614,22 @@ export function buildCatalog() {
     description: componentDescription(block.slug, [block.stories]).trim(),
     docs: `${DOCS_URL}/blocks/${block.slug}`,
     variants: {
-      react: withReact18(
-        planVariant(reactSrc, blockPlans.get(block.slug), setup.variants.react)
+      react: withStories(
+        withReact18(
+          planVariant(
+            reactSrc,
+            blockPlans.get(block.slug),
+            setup.variants.react
+          )
+        ),
+        block.slug,
+        [block.stories],
+        stories
       ),
     },
   }));
 
   const items = [setup, ...components, ...blocks];
-  const libraries = iconLibraries();
   assertIconsOnlyInIconsFile(items, libraries);
 
   /** @type {Catalog} */
@@ -444,6 +643,7 @@ export function buildCatalog() {
     fonts: fonts(),
     themeFields: themeFields(),
     ownColors: true,
+    storybook: STORYBOOK,
   };
   // Checked, not parsed: parsing would reorder keys in the written JSON.
   const checked = catalogSchema.safeParse(catalog);

@@ -595,11 +595,7 @@ function FilterChipTile() {
     <Tile name="Filter chip">
       <div className="nx:flex nx:flex-wrap nx:gap-2">
         {filters.map((filter) => (
-          <FilterChip
-            key={filter}
-            aria-label={`Remove filter ${filter}`}
-            onClick={() => remove(filter)}
-          >
+          <FilterChip key={filter} onClick={() => remove(filter)}>
             {filter}
           </FilterChip>
         ))}

@@ -34,6 +34,7 @@ add `languageOptions: { parser: tseslint.parser }` to the entry.
 | `no-multi-statement-jsx-handler` | Yes                      | Long inline JSX handlers that should be named functions           |
 | `no-jsdoc-data-tags`             | No                       | `@default` and `@example` JSDoc tags                              |
 | `no-react-19-only`               | No                       | React 19-only APIs in code that must also run on React 18         |
+| `shippable-story`                | No                       | What only passes in nxds's own Storybook, in a story that ships   |
 
 To turn on a rule the config leaves off, add it for the same files:
 
@@ -151,6 +152,29 @@ React 18:
 | `useDeferredValue(value, initialValue)`                                                                   | One argument                                            |
 | A function passed to `action` or `formAction`                                                             | `onSubmit` or `onClick`                                 |
 | `<title>` outside an `<svg>`, `<meta>`, `<link>`, `<style precedence>`                                    | Metadata the app's framework renders                    |
+
+### shippable-story
+
+`shippable-story` is for nxds's own source. The CLI copies a component's
+`*.stories.*` file into an app, so that file holds only what still passes after
+the app restyles the component. The rule reports everything else, which belongs
+in the `*.test.stories.*` file beside it:
+
+| Pattern                                                                                   | Use instead                                     |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `toHaveClass`, a read of `classList` or `className`, or of the `class` attribute          | A role, name, state or data attribute assertion |
+| `getComputedStyle`, `toHaveStyle`, `getBoundingClientRect`, `offset*` and `client*` sizes | The test stories file                           |
+| A class in a `querySelector`, `closest` or `matches` selector, `getElementsByClassName`   | A role, label, text, `data-slot` or test id     |
+| An import from `stories/support`, or one with a query such as `?raw`                      | The test stories file                           |
+| A Storybook import other than `storybookImports`                                          | The test stories file                           |
+| An icon package other than `iconImports`                                                  | The icons the catalog rewrites per icon library |
+| A `src` that starts with `/`                                                              | Story data                                      |
+| A `title` in the meta                                                                     | No title: Storybook names a story from its path |
+
+| Option             | Default                                       |
+| ------------------ | --------------------------------------------- |
+| `storybookImports` | `['@storybook/react-vite', 'storybook/test']` |
+| `iconImports`      | `['@phosphor-icons/react/ssr']`               |
 
 ## Catch unknown classes
 

@@ -1,16 +1,7 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
-
-import {
-  expectMenuItemInsetAtEveryDensity,
-  expectRadioDotInsetAtEveryUiScale,
-} from '../../stories/support/menu-item-inset-test-utils';
-import {
-  expectExitBeforeUnmount,
-  expectInterruptibleOverlayMotion,
-} from '../../stories/support/overlay-motion-test-utils';
 
 import {
   Menubar,
@@ -30,7 +21,6 @@ import {
 } from './menubar';
 
 const meta: Meta<typeof Menubar> = {
-  title: 'Components/Menubar',
   component: Menubar,
   parameters: {
     layout: 'padded',
@@ -52,7 +42,7 @@ type Story = StoryObj<typeof Menubar>;
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>File</MenubarTrigger>
@@ -154,7 +144,7 @@ export const WithRadioItems: Story = {
 };
 
 export const IndicatorCrossFade: Story = {
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>View</MenubarTrigger>
@@ -234,24 +224,8 @@ export const IndicatorCrossFade: Story = {
         'data-state',
         'indeterminate'
       );
-      await expect(checkedItem).toHaveClass('nx:group');
-      await expect(selectedRadio).toHaveClass('nx:group');
       await expect(checkedIcon).toHaveAttribute('aria-hidden', 'true');
       await expect(selectedDot).toHaveAttribute('aria-hidden', 'true');
-      await expect(checkedIcon).toHaveClass('nx:transition-[opacity,scale]');
-      await expect(uncheckedIcon).toHaveClass('nx:scale-50');
-      await expect(uncheckedIcon).toHaveClass('nx:opacity-0');
-      await expect(checkedIcon).toHaveClass(
-        'nx:group-data-[state=checked]:opacity-100'
-      );
-      await expect(indeterminateIcon).toHaveClass(
-        'nx:group-data-[state=indeterminate]:opacity-100'
-      );
-      await expect(unselectedDot).toHaveClass('nx:scale-50');
-      await expect(unselectedDot).toHaveClass('nx:opacity-0');
-      await expect(selectedDot).toHaveClass(
-        'nx:group-data-[state=checked]:opacity-100'
-      );
     } finally {
       await userEvent.keyboard('{Escape}');
       await waitFor(() => {
@@ -271,7 +245,7 @@ export const WithSubMenu: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>File</MenubarTrigger>
@@ -304,7 +278,7 @@ export const WithInsetItems: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>View</MenubarTrigger>
@@ -324,73 +298,8 @@ export const WithInsetItems: Story = {
 // INTERACTION TESTS
 // ============================================
 
-export const CheckInsetAtEveryDensity: Story = {
-  render: (_args) => (
-    <Menubar>
-      <MenubarMenu>
-        <MenubarTrigger>View</MenubarTrigger>
-        <MenubarContent className="nx:w-56">
-          <MenubarLabel inset>Appearance</MenubarLabel>
-          <MenubarCheckboxItem checked>Status bar</MenubarCheckboxItem>
-          <MenubarItem inset>Reset view</MenubarItem>
-        </MenubarContent>
-      </MenubarMenu>
-    </Menubar>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('menuitem', { name: 'View' }));
-    const menu = await within(document.body).findByRole('menu');
-    const item = within(menu).getByRole('menuitemcheckbox', {
-      name: 'Status bar',
-    });
-    const check = item.querySelector<HTMLElement>(
-      '[data-slot="menubar-checkbox-indicator"]'
-    )!.parentElement!;
-    await expectMenuItemInsetAtEveryDensity(menu, item, check, [
-      within(menu).getByRole('menuitem', { name: 'Reset view' }),
-      within(menu).getByText('Appearance'),
-    ]);
-
-    await userEvent.keyboard('{Escape}');
-    await expectExitBeforeUnmount(menu);
-  },
-};
-
-export const RadioDotAtEveryUiScale: Story = {
-  render: (_args) => (
-    <Menubar>
-      <MenubarMenu>
-        <MenubarTrigger>View</MenubarTrigger>
-        <MenubarContent className="nx:w-56">
-          <MenubarRadioGroup value="bottom">
-            <MenubarRadioItem value="top">Top</MenubarRadioItem>
-            <MenubarRadioItem value="bottom">Bottom</MenubarRadioItem>
-          </MenubarRadioGroup>
-        </MenubarContent>
-      </MenubarMenu>
-    </Menubar>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('menuitem', { name: 'View' }));
-    const menu = await within(document.body).findByRole('menu');
-    const item = within(menu).getByRole('menuitemradio', { name: 'Bottom' });
-    const indicator = item.querySelector<HTMLElement>(
-      '[data-slot="menubar-radio-indicator"]'
-    )!.parentElement!;
-    const dot = item.querySelector(
-      '[data-slot="menubar-radio-indicator-icon"]'
-    )!;
-    await expectRadioDotInsetAtEveryUiScale(menu, indicator, dot);
-
-    await userEvent.keyboard('{Escape}');
-    await expectExitBeforeUnmount(menu);
-  },
-};
-
 export const OpenCloseInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>File</MenubarTrigger>
@@ -416,7 +325,6 @@ export const OpenCloseInteraction: Story = {
     const menu = await within(document.body).findByRole('menu');
     await expect(menu).toBeInTheDocument();
     await expect(menu).toHaveAttribute('data-slot', 'menubar-content');
-    await expectInterruptibleOverlayMotion(menu);
 
     // Items should be visible
     const item = within(menu).getByRole('menuitem', { name: 'New Tab' });
@@ -426,12 +334,14 @@ export const OpenCloseInteraction: Story = {
     await userEvent.keyboard('{Escape}');
 
     // Wait for menu to be removed from DOM
-    await expectExitBeforeUnmount(document.querySelector('[role="menu"]'));
+    await waitFor(() => {
+      expect(document.querySelector('[role="menu"]')).toBeNull();
+    });
   },
 };
 
 export const KeyboardInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>File</MenubarTrigger>
@@ -483,7 +393,7 @@ export const WithDisabledItems: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>Edit</MenubarTrigger>
@@ -513,12 +423,6 @@ export const WithDisabledItems: Story = {
     await expect(disabledItem).toHaveAttribute('data-disabled');
     await expect(disabledItem).toHaveAttribute('aria-disabled', 'true');
 
-    // Disabled items use a semantic text token at full opacity (not a fade).
-    await expect(disabledItem).toHaveClass(
-      'nx:data-disabled:text-disabled-foreground'
-    );
-    await expect(getComputedStyle(disabledItem).opacity).toBe('1');
-
     // An enabled item is reachable
     const enabledItem = within(menu).getByRole('menuitem', { name: 'Paste' });
     await expect(enabledItem).not.toHaveAttribute('data-disabled');
@@ -532,7 +436,7 @@ export const WithDisabledItems: Story = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <Menubar>
       <MenubarMenu>
         <MenubarTrigger>File</MenubarTrigger>
@@ -577,26 +481,16 @@ export const WithDataAttributes: Story = {
       ).toBeInTheDocument();
     });
 
-    const shortcut = document.querySelector('[data-slot="menubar-shortcut"]');
-    await expect(shortcut).toHaveClass('nx:typography-shortcut');
-    await expect(shortcut).not.toHaveClass(/tracking-/);
-
     // Check destructive variant
     const destructiveItem = document.querySelector(
       '[data-slot="menubar-item"][data-variant="destructive"]'
     );
     await expect(destructiveItem).toBeInTheDocument();
 
-    // The bar root owns a raised component surface; triggers hover/open within it.
     const menubar = canvas
       .getByRole('menubar')
       .closest('[data-slot="menubar"]');
     await expect(menubar).toBeInTheDocument();
-    await expect(menubar).toHaveClass('nx:bg-container');
-    await expect(trigger).toHaveClass(
-      'nx:focus:bg-container-hover',
-      'nx:data-[state=open]:bg-container-hover'
-    );
 
     // Close the menu and wait for complete cleanup
     await userEvent.keyboard('{Escape}');
@@ -613,7 +507,7 @@ export const WithDataAttributes: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../card';
 import { ScrollArea, ScrollBar } from '.';
 
 const meta = {
-  title: 'Components/ScrollArea',
   component: ScrollArea,
   parameters: {
     layout: 'centered',

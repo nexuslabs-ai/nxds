@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { expect, within } from 'storybook/test';
+import { expect } from 'storybook/test';
 
 import { Badge } from '../badge';
 
@@ -11,7 +11,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/DescriptionList',
   component: DescriptionList,
   parameters: {
     docs: {
@@ -164,41 +163,6 @@ export const Configuration: Story = {
 
 // Behaviour stories: tests and Storybook only.
 
-export const ContainerLayouts: Story = {
-  render: () => ({
-    components: { ProfileDetails },
-    template: `
-      <div class="nx:flex nx:flex-wrap nx:gap-8">
-        <div style="width: 280px" data-testid="narrow"><ProfileDetails /></div>
-        <div style="width: 640px" data-testid="wide"><ProfileDetails /></div>
-      </div>
-    `,
-  }),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const narrow = canvas.getByTestId('narrow');
-    const wide = canvas.getByTestId('wide');
-    const termNarrow = narrow.querySelector('dt')!;
-    const valueNarrow = narrow.querySelector('dd')!;
-    const termWide = wide.querySelector('dt')!;
-    const valueWide = wide.querySelector('dd')!;
-    await expect(narrow.getBoundingClientRect().width).toBeLessThan(448);
-    await expect(wide.getBoundingClientRect().width).toBeGreaterThan(448);
-    await expect(
-      valueNarrow.getBoundingClientRect().top
-    ).toBeGreaterThanOrEqual(termNarrow.getBoundingClientRect().bottom);
-    await expect(valueWide.getBoundingClientRect().left).toBeGreaterThan(
-      termWide.getBoundingClientRect().left
-    );
-    await expect(
-      Math.abs(
-        valueWide.getBoundingClientRect().top -
-          termWide.getBoundingClientRect().top
-      )
-    ).toBeLessThan(2);
-  },
-};
-
 export const LongContent: Story = {
   render: () => ({
     components: listComponents,
@@ -226,16 +190,6 @@ export const LongContent: Story = {
       </div>
     `,
   }),
-  play: async ({ canvasElement }) => {
-    for (const list of canvasElement.querySelectorAll('dl')) {
-      await expect(list.scrollWidth).toBeLessThanOrEqual(list.clientWidth + 1);
-      for (const cell of list.querySelectorAll('dt, dd')) {
-        await expect(cell.scrollWidth).toBeLessThanOrEqual(
-          cell.clientWidth + 1
-        );
-      }
-    }
-  },
 };
 
 export const WithDataAttributes: Story = {

@@ -5,7 +5,7 @@ import {
   UI_SCALE_OPTIONS,
 } from '@nxds/core';
 import { MagnifyingGlassIcon } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { Badge } from '../components/badge/badge';

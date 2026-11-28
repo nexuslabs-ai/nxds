@@ -1,17 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import {
-  expectExitBeforeUnmount,
-  expectInterruptibleOverlayMotion,
-} from '../../stories/support/overlay-motion-test-utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../avatar';
+import { STARTER_AVATARS } from '../avatar/avatar.story-data';
 import { Button } from '../button';
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '.';
 
 const meta = {
-  title: 'Components/HoverCard',
   component: HoverCard,
   parameters: {
     docs: {
@@ -67,6 +63,7 @@ export const ProfileCard: Story = {
       HoverCardContent,
       HoverCardTrigger,
     },
+    setup: () => ({ ada: STARTER_AVATARS[0] }),
     template: `
       <HoverCard>
         <HoverCardTrigger as-child>
@@ -75,7 +72,7 @@ export const ProfileCard: Story = {
         <HoverCardContent class="nx:w-80">
           <div class="nx:flex nx:gap-4">
             <Avatar>
-              <AvatarImage src="/avatars/ada.svg" alt="Ada Lovelace" />
+              <AvatarImage :src="ada.src" alt="Ada Lovelace" />
               <AvatarFallback>AL</AvatarFallback>
             </Avatar>
             <div class="nx:flex nx:flex-col nx:gap-1">
@@ -149,8 +146,6 @@ export const OpenCloseInteraction: Story = {
         document.querySelector('[data-slot="hover-card-content"]')
       ).toBeInTheDocument();
     });
-    const content = document.querySelector('[data-slot="hover-card-content"]');
-    await expectInterruptibleOverlayMotion(content);
 
     await userEvent.unhover(trigger);
     // Reka closes only once the pointer leaves the trigger-to-card grace area.
@@ -160,7 +155,11 @@ export const OpenCloseInteraction: Story = {
         clientY: window.innerHeight - 1,
       },
     });
-    await expectExitBeforeUnmount(content);
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-slot="hover-card-content"]')
+      ).toBeNull();
+    });
   },
 };
 

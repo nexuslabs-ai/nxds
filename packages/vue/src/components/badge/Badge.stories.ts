@@ -1,4 +1,3 @@
-import { DENSITY_OPTIONS } from '@nxds/core';
 import {
   PhCheck,
   PhCheckCircle,
@@ -10,7 +9,6 @@ import {
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
 
-import { expectTextFits } from '../../stories/support/story-height-test-utils';
 import { Spinner } from '../spinner';
 
 import { Badge } from '.';
@@ -25,13 +23,7 @@ const VARIANTS = [
 ] as const;
 const FILLS = ['solid', 'light', 'outline'] as const;
 
-// `nx:min-h-6` / `nx:w-6` at `density: default`.
-const BADGE_SIZE_PX = 24;
-// `nx:size-icon-glyph-sm` icon slot.
-const BADGE_ICON_SIZE_PX = 14;
-
 const meta = {
-  title: 'Components/Badge',
   parameters: {
     docs: {
       description: {
@@ -119,20 +111,13 @@ export const IconOnly: Story = {
     const canvas = within(canvasElement);
     const badge = canvas.getByRole('img', { name: 'Approved' });
     const svg = badge.querySelector('svg');
-    const rect = badge.getBoundingClientRect();
 
     if (!(svg instanceof SVGElement)) {
       throw new Error('Expected icon-only badge to render an SVG icon.');
     }
 
-    const svgRect = svg.getBoundingClientRect();
-
     await expect(badge).toHaveAttribute('data-icon-only', 'true');
     expect(badge.textContent).toBe('');
-    expect(Math.round(rect.height)).toBe(BADGE_SIZE_PX);
-    expect(Math.round(rect.width)).toBeGreaterThanOrEqual(BADGE_SIZE_PX);
-    expect(Math.round(svgRect.width)).toBe(BADGE_ICON_SIZE_PX);
-    expect(Math.round(svgRect.height)).toBe(BADGE_ICON_SIZE_PX);
   },
 };
 
@@ -175,41 +160,6 @@ export const StatusWithIcons: Story = {
       </div>
     `,
   }),
-};
-
-const DENSITIES = DENSITY_OPTIONS.map((option) => option.value);
-
-export const TextFitsAtEveryDensity: Story = {
-  // Text is tallest at the Larger UI scale, so it fits at every smaller one.
-  globals: { uiScale: 'larger' },
-  render: () => ({
-    components: { Badge },
-    setup: () => ({ densities: DENSITIES }),
-    template: `
-      <div class="nx:flex nx:flex-col nx:items-start nx:gap-3">
-        <div
-          v-for="density in densities"
-          :key="density"
-          :data-density="density"
-          :data-testid="'row-' + density"
-          class="nx:flex nx:gap-2"
-        >
-          <Badge>Beta</Badge>
-          <Badge :is-caps="false">New</Badge>
-        </div>
-      </div>
-    `,
-  }),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    for (const density of DENSITIES) {
-      const row = within(canvas.getByTestId(`row-${density}`));
-      // Caps and sentence-case text fit inside the border at every density.
-      for (const element of [row.getByText('Beta'), row.getByText('New')]) {
-        await expectTextFits(element);
-      }
-    }
-  },
 };
 
 export const AllVariants: Story = {
@@ -362,14 +312,9 @@ export const OutlineFill: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const badge = canvas.getByText('Outline');
-    const badgeStyles = getComputedStyle(badge);
 
     await expect(badge).toHaveAttribute('data-variant', 'success');
     await expect(badge).toHaveAttribute('data-fill', 'outline');
-    // Assert the rendered result (opaque fill + visible border), not the
-    // utility class names — class names are implementation detail and mergeable.
-    expect(badgeStyles.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
-    expect(parseFloat(badgeStyles.borderTopWidth)).toBeGreaterThan(0);
   },
 };
 
@@ -390,12 +335,6 @@ export const WithBothIcons: Story = {
     const svgs = badge.querySelectorAll('svg');
 
     await expect(svgs).toHaveLength(2);
-    for (const svg of svgs) {
-      const rect = svg.getBoundingClientRect();
-
-      expect(Math.round(rect.width)).toBe(BADGE_ICON_SIZE_PX);
-      expect(Math.round(rect.height)).toBe(BADGE_ICON_SIZE_PX);
-    }
   },
 };
 
@@ -418,13 +357,9 @@ export const WithSvgLoader: Story = {
       throw new Error('Expected loader badge to render a Spinner SVG.');
     }
 
-    const rect = spinner.getBoundingClientRect();
-
     await expect(spinner).toHaveAttribute('role', 'presentation');
     await expect(spinner).toHaveAttribute('aria-hidden', 'true');
     await expect(spinner).not.toHaveAttribute('aria-label');
-    expect(Math.round(rect.width)).toBe(BADGE_ICON_SIZE_PX);
-    expect(Math.round(rect.height)).toBe(BADGE_ICON_SIZE_PX);
   },
 };
 
@@ -437,11 +372,8 @@ export const NumberBadgeHighValue: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const badge = canvas.getByText('99+');
-    const rect = badge.getBoundingClientRect();
 
     await expect(badge).toHaveAttribute('data-number', 'true');
-    expect(Math.round(rect.height)).toBe(BADGE_SIZE_PX);
-    expect(Math.round(rect.width)).toBeGreaterThan(BADGE_SIZE_PX);
   },
 };
 

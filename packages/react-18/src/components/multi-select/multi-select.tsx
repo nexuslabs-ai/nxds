@@ -23,6 +23,8 @@ interface MultiSelectContextValue {
   selectedValues: Set<string>;
   labels: Map<string, React.ReactNode>;
   toggle: (value: string) => void;
+  /** The id of the element that shows the selected values, or the placeholder. */
+  valueId: string;
 }
 
 const MultiSelectContext = React.createContext<MultiSelectContextValue | null>(
@@ -108,6 +110,7 @@ function MultiSelect({
   onValuesChange,
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
+  const valueId = React.useId();
   const [uncontrolled, setUncontrolled] = React.useState(
     () => new Set(values ?? defaultValues)
   );
@@ -130,8 +133,8 @@ function MultiSelect({
   );
 
   const context = React.useMemo<MultiSelectContextValue>(
-    () => ({ open, selectedValues, labels, toggle }),
-    [open, selectedValues, labels, toggle]
+    () => ({ open, selectedValues, labels, toggle, valueId }),
+    [open, selectedValues, labels, toggle, valueId]
   );
 
   return (
@@ -148,7 +151,8 @@ type MultiSelectTriggerProps = React.ComponentProps<'button'>;
 /**
  * Field that shows the selected values, opens the list, and removes the last
  * value on Backspace or Delete. Needs an `aria-label` or a visible label from
- * `Field`.
+ * `Field`. With an `aria-label` or `aria-labelledby`, its name is that label
+ * and then the values it shows.
  */
 const MultiSelectTrigger = React.forwardRef<
   HTMLButtonElement,
@@ -164,7 +168,13 @@ const MultiSelectTrigger = React.forwardRef<
     forwardedRef === null
       ? propsWithoutRef
       : { ...propsWithoutRef, ref: forwardedRef };
-  const { open, selectedValues, toggle } = useMultiSelect();
+  const { open, selectedValues, toggle, valueId } = useMultiSelect();
+  const ownId = React.useId();
+  const id = props.id ?? ownId;
+  // A label names the field, not the values the trigger shows, so the values
+  // follow it in the name. An `aria-label` labels the trigger by its own id.
+  const label =
+    props['aria-labelledby'] || (props['aria-label'] ? id : undefined);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (event.key !== 'Backspace' && event.key !== 'Delete') return;
@@ -191,6 +201,8 @@ const MultiSelectTrigger = React.forwardRef<
         )}
         onKeyDown={handleKeyDown}
         {...props}
+        id={id}
+        aria-labelledby={label ? `${label} ${valueId}` : undefined}
       >
         {children}
         <IconChevronDown
@@ -269,7 +281,7 @@ const MultiSelectValue = React.forwardRef<
   } = forwardedRef === null
     ? propsWithoutRef
     : { ...propsWithoutRef, ref: forwardedRef };
-  const { selectedValues, labels, open, toggle } = useMultiSelect();
+  const { selectedValues, labels, open, toggle, valueId } = useMultiSelect();
   const [overflowAmount, setOverflowAmount] = React.useState(0);
   const [container, setContainer] = React.useState<HTMLDivElement | null>(null);
   const composedRef = useComposedRefs(ref, setContainer);
@@ -306,6 +318,7 @@ const MultiSelectValue = React.forwardRef<
   if (selectedValues.size === 0)
     return (
       <span
+        id={valueId}
         data-slot="multi-select-placeholder"
         className="nx:truncate nx:text-muted-foreground"
       >
@@ -330,6 +343,7 @@ const MultiSelectValue = React.forwardRef<
         className
       )}
       {...props}
+      id={valueId}
     >
       {[...selectedValues].map((value) => (
         <Badge

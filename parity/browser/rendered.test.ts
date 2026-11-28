@@ -2,7 +2,7 @@ import {
   composeStory as composeReactStory,
   type Meta as ReactMeta,
   type StoryObj as ReactStory,
-} from '@storybook/react';
+} from '@storybook/react-vite';
 import {
   composeStory as composeVueStory,
   type Meta as VueMeta,
@@ -28,12 +28,16 @@ type StoryModule<TMeta, TStory> = { default: TMeta } & Partial<
 type ReactModule = StoryModule<ReactMeta, ReactStory>;
 type VueModule = StoryModule<VueMeta, VueStory>;
 
-const reactModules = import.meta.glob<ReactModule>(
-  '../../packages/react/src/components/*/*.stories.tsx'
-);
-const vueModules = import.meta.glob<VueModule>(
-  '../../packages/vue/src/components/*/*.stories.ts'
-);
+// The story file each component ships. Its test stories sit beside it and
+// render nothing a docs page shows.
+const reactModules = import.meta.glob<ReactModule>([
+  '../../packages/react/src/components/*/*.stories.tsx',
+  '!**/*.test.stories.tsx',
+]);
+const vueModules = import.meta.glob<VueModule>([
+  '../../packages/vue/src/components/*/*.stories.ts',
+  '!**/*.test.stories.ts',
+]);
 
 type Opener =
   | {

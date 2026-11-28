@@ -111,13 +111,25 @@ function program(
     initCommand.addOption(option);
     return { flag: field.flag, key: option.attributeName() };
   });
-  initCommand.option(
-    '--own-colors',
-    'set every color yourself: write nxds-colors.css from your theme, and stop the theme engine deriving colors'
-  );
+  initCommand
+    .option(
+      '--own-colors',
+      'set every color yourself: write nxds-colors.css from your theme, and stop the theme engine deriving colors'
+    )
+    .option(
+      '--stories',
+      "install each item's Storybook stories with it, and wire nxds into your Storybook"
+    )
+    .option(
+      '--no-stories',
+      'stop installing and tracking stories; the story files stay where they are'
+    );
   withInstallFlags(initCommand).action(async (_options, command: Command) => {
     const { cwd, registry } = context(command);
-    const { ownColors } = command.opts<{ ownColors?: boolean }>();
+    const { ownColors, stories } = command.opts<{
+      ownColors?: boolean;
+      stories?: boolean;
+    }>();
     const options = command.opts<Record<string, string | undefined>>();
     const theme = Object.fromEntries(
       themeOptions.flatMap(({ flag, key }) => {
@@ -134,6 +146,7 @@ function program(
         icons: options[ICONS_FLAG],
         theme,
         ownColors,
+        stories,
       })
     );
   });

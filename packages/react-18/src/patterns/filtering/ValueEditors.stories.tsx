@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { formatCalendarDay } from '../../blocks/filtering/date-range-filter/date-range-filter';
@@ -47,7 +47,7 @@ export const SingleChoice: Story = {
     const canvas = within(canvasElement);
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Change Status operator' })
+      canvas.getByRole('button', { name: /^Change Status operator/ })
     );
     await userEvent.click(
       page.getByRole('menuitemradio', { name: /^is not$/ })
@@ -56,7 +56,7 @@ export const SingleChoice: Story = {
       'is not Active'
     );
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Change Status operator' })
+      canvas.getByRole('button', { name: /^Change Status operator/ })
     );
     await userEvent.click(
       page.getByRole('menuitemradio', { name: /^is empty$/ })
@@ -68,7 +68,7 @@ export const SingleChoice: Story = {
       canvas.queryByRole('button', { name: /Edit Status/ })
     ).not.toBeInTheDocument();
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Change Status operator' })
+      canvas.getByRole('button', { name: /^Change Status operator/ })
     );
     await userEvent.click(page.getByRole('menuitemradio', { name: /^is$/ }));
     await userEvent.click(
@@ -105,7 +105,7 @@ export const NumberComparison: Story = {
     const canvas = within(canvasElement),
       page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Change Amount operator' })
+      canvas.getByRole('button', { name: /^Change Amount operator/ })
     );
     await userEvent.click(
       page.getByRole('menuitemradio', { name: 'is less than' })
@@ -147,10 +147,10 @@ export const CustomDateRange: Story = {
     );
     await expect(page.getByRole('button', { name: 'Apply' })).toBeDisabled();
     await userEvent.click(
-      page.getByRole('button', { name: /Tuesday, September 8th, 2026/ })
+      page.getByRole('button', { name: /Tuesday, September 8, 2026/ })
     );
     await userEvent.click(
-      page.getByRole('button', { name: /Thursday, September 10th, 2026/ })
+      page.getByRole('button', { name: /Thursday, September 10, 2026/ })
     );
     await expect(canvas.getByRole('status')).toHaveTextContent('Any date');
     await userEvent.click(page.getByRole('button', { name: 'Apply' }));
@@ -201,7 +201,7 @@ export const RemoveAndReAdd: Story = {
       ).toHaveFocus()
     );
     await expect(
-      canvas.queryByRole('button', { name: 'Change Name operator' })
+      canvas.queryByRole('button', { name: /^Change Name operator/ })
     ).not.toBeInTheDocument();
     await userEvent.click(
       canvas.getByRole('button', { name: 'Add name filter' })

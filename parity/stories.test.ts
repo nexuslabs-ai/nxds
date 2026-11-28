@@ -1,11 +1,14 @@
 import {
-  componentStoryFiles,
   DOCS_TAG,
   parseStoriesFile,
   type StoriesFile,
   tagsOf,
 } from '@nxds/source-model/docs-stories.ts';
-import { vueComponentsRoot } from '@nxds/source-model/roots.mjs';
+import { collectSourceFiles } from '@nxds/source-model/files.mjs';
+import {
+  componentsRoot,
+  vueComponentsRoot,
+} from '@nxds/source-model/roots.mjs';
 import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
@@ -14,6 +17,14 @@ import { describe, expect, it } from 'vitest';
 import { behaviourDifferences, behaviourOnlyIn, shared } from './parity.ts';
 
 const printer = ts.createPrinter({ removeComments: true });
+
+// Both lists hold the shipped stories and the test stories, so a story pairs
+// with its twin whichever file each one is in.
+function reactStoryFiles(slug: string) {
+  return collectSourceFiles(path.join(componentsRoot, slug), (file: string) =>
+    file.endsWith('.stories.tsx')
+  ).sort();
+}
 
 function vueStoryFiles(slug: string) {
   const dir = path.join(vueComponentsRoot, slug);
@@ -175,7 +186,7 @@ function sameSteps(react: string[] | undefined, vue: string[] | undefined) {
 
 const behaviour = shared.map((slug) => ({
   slug,
-  react: playStories(componentStoryFiles(slug)),
+  react: playStories(reactStoryFiles(slug)),
   vue: playStories(vueStoryFiles(slug)),
 }));
 
@@ -183,7 +194,7 @@ describe('docs stories', () => {
   it.each(shared)(
     '%s shows the same docs examples, in the same order',
     (slug) => {
-      const react = docsStoryNames(componentStoryFiles(slug));
+      const react = docsStoryNames(reactStoryFiles(slug));
       expect(react.length).toBeGreaterThan(0);
       expect(docsStoryNames(vueStoryFiles(slug))).toEqual(react);
     }

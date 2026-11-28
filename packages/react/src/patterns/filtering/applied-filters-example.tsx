@@ -78,20 +78,12 @@ export function AppliedFiltersExample() {
           Applied filters:
         </span>
         {paid && (
-          <FilterChip
-            ref={paidRef}
-            aria-label="Remove status filter: Paid"
-            onClick={removePaid}
-          >
+          <FilterChip ref={paidRef} onClick={removePaid}>
             Status: Paid
           </FilterChip>
         )}
         {india && (
-          <FilterChip
-            ref={indiaRef}
-            aria-label="Remove country filter: India"
-            onClick={removeIndia}
-          >
+          <FilterChip ref={indiaRef} onClick={removeIndia}>
             Country: India
           </FilterChip>
         )}

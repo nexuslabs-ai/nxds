@@ -154,13 +154,13 @@ A **block** composes existing components into a ready-made piece of UI, such as 
 
 Create `packages/react/src/blocks/{family}/{slug}/` with three files. [`inline-edit`](packages/react/src/blocks/editing/inline-edit) is the one to copy.
 
-| File                 | Holds                                                                                                    |
-| -------------------- | -------------------------------------------------------------------------------------------------------- |
-| `{slug}.tsx`         | The block                                                                                                |
-| `{slug}-example.tsx` | One realistic use of the block, with its state. This is the code the docs page shows.                    |
-| `{Slug}.stories.tsx` | A `Default` story tagged `docs` that renders the example and passes its source, plus interaction stories |
+| File                 | Holds                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------- |
+| `{slug}.tsx`         | The block                                                                             |
+| `{slug}-example.tsx` | One realistic use of the block, with its state. This is the code the docs page shows. |
+| `{Slug}.stories.tsx` | A `Default` story tagged `docs` that renders the example, plus interaction stories    |
 
-The docs page at `nxds.dev/blocks/{slug}` is generated from the folder. Blocks have no Vue twin yet, so the parity tests skip them.
+The docs page at `nxds.dev/blocks/{slug}` is generated from the folder. Blocks have no Vue twin yet, so the parity tests skip them. For a Storybook guide page, add `{Slug}.mdx` beside the stories, as [`InlineEdit.mdx`](packages/react/src/blocks/editing/inline-edit/InlineEdit.mdx) does.
 
 ### Add a component
 
@@ -178,7 +178,7 @@ Style it with semantic tokens and the `nx:` prefix, and put `data-slot` on every
 2. Run `pnpm changeset` and pick `@nxds/react` with a `minor` bump.
 3. Run `make verify`.
 
-The stories a component ships are listed in [`testing-react.md`](.claude/rules/testing-react.md). Read it before you write the stories.
+The stories a component ships are listed in [`testing-react.md`](.claude/rules/testing-react.md). Read it before you write the stories. `nxds-cli` copies `{Name}.stories.tsx` into apps, so a check that passes only with our classes or sizes goes in `{Name}.test.stories.tsx`.
 
 ## Change a token
 

@@ -1,5 +1,5 @@
 import { DEFAULT_NXDS_APPEARANCE } from '@nxds/core';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { NxdsAppearanceConfigPreview } from './config-preview';

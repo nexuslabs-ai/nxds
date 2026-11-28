@@ -20,6 +20,9 @@ npx nxds-cli@latest init --own-colors
 | Imports the colors file                                  | `nxds.css`                                                             |
 | Stops nxds deriving colors from your brand color         | `app/layout.tsx` on Next.js, `src/main.tsx` and `nxds.vite.ts` on Vite |
 
+If your app has [nxds stories](/getting-started/storybook), `init` also stops
+`.storybook/preview` deriving colors.
+
 `init` and `update` never change the colors file again. After an update,
 `doctor` names each color the new release added, so you can set it.
 
@@ -183,6 +186,9 @@ export default function RootLayout({
 On Vite, pass `deriveColors: false` to `createNxdsAppearance`. In
 `vite.config.ts`, pass `{ deriveColors: false }` as the second argument of
 `createNxdsAppearanceSnapshotFromState`.
+
+If your app has nxds stories, pass `{ deriveColors: false }` as the second
+argument of `nxdsPreview` in `.storybook/preview`.
 
 </FrameworkPanel>
 <FrameworkPanel framework="vue">

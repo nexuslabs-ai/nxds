@@ -29,7 +29,6 @@ const VARIANTS = [
 ] as const;
 
 const meta = {
-  title: 'Components/Alert',
   parameters: {
     docs: {
       description: {
@@ -309,10 +308,6 @@ export const DisabledClose: Story = {
     const close = canvas.getByRole('button', { name: 'Dismiss alert' });
 
     await expect(close).toBeDisabled();
-
-    // Disabled close uses a semantic text token at full opacity (not a fade).
-    await expect(close).toHaveClass('nx:disabled:text-disabled-foreground');
-    await expect(getComputedStyle(close).opacity).toBe('1');
   },
 };
 

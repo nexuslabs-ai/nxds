@@ -4,6 +4,7 @@ import {
   type CatalogItem,
   catalogSchema,
   catalogWithIconLibrary,
+  catalogWithStories,
   type Framework,
   issueLines,
   type ReactMajor,
@@ -17,6 +18,7 @@ import { EnvHttpProxyAgent, fetch } from 'undici';
 
 import { CLI_COMMAND } from './cli-command';
 import { CliError, readJson, UsageError } from './errors';
+import type { Project } from './project';
 import { assertRegistryUrl } from './url';
 
 export type {
@@ -241,6 +243,15 @@ export function resolveItems(
   return ordered;
 }
 
+/** The paths of the files `names` and everything they need install. */
+export function filesOf(catalog: Catalog, target: Target, names: string[]) {
+  return new Set(
+    resolveItems(catalog, target.framework, names).flatMap((item) =>
+      variantFor(item, target).files.map((file) => file.path)
+    )
+  );
+}
+
 /** Every file a release installs for `target`, by path. */
 export function releaseFiles(catalog: Catalog, target: Target) {
   return new Map(
@@ -299,6 +310,43 @@ export function withIconLibrary(
       )
   );
   return catalogWithIconLibrary(catalog, library);
+}
+
+/**
+ * The Storybook framework package the app's stories import their types from:
+ * the first one the release's stories run in that the app has.
+ */
+export function storybookFramework(catalog: Catalog, project: Project) {
+  return catalog.storybook?.frameworks.find(
+    (name) => name in project.dependencies
+  );
+}
+
+/**
+ * `catalog` with each item's stories among its files, for an app that asked
+ * for stories. A release from before stories has none to add. Call it after
+ * `withIconLibrary`, which draws the stories' icons.
+ */
+export function withStories(catalog: Catalog, project: Project): Catalog {
+  if (!catalog.storybook) return catalog;
+  const framework = storybookFramework(catalog, project);
+  if (framework) return catalogWithStories(catalog, framework);
+  throw new CliError(
+    `nxds.json has stories on, and this app has no Storybook they run in: ${catalog.storybook.frameworks.join(' or ')}. Install one, or run \`${CLI_COMMAND} init --no-stories\`.`
+  );
+}
+
+/**
+ * `release` as the app installs it: drawn by the app's icon library, with
+ * each item's stories among its files when nxds.json has stories on.
+ */
+export function appCatalog(
+  release: Catalog,
+  app: { iconLibrary?: string | undefined; stories?: boolean | undefined },
+  project: Project
+): Catalog {
+  const catalog = withIconLibrary(release, app.iconLibrary);
+  return app.stories ? withStories(catalog, project) : catalog;
 }
 
 /** Installed item names this catalog still has, and the ones it dropped. */

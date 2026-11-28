@@ -151,7 +151,35 @@ function editedFile(file: string, content: string): FileChange {
   return { path: file, content, created: false };
 }
 
-const NO_CHANGES: WiringPlan = { changes: [], manual: [] };
+export const NO_CHANGES: WiringPlan = { changes: [], manual: [] };
+
+/**
+ * Turns color derivation off in a call `init` wrote earlier, by swapping the
+ * `derived` call for the `own` one. A file that makes the call another way is
+ * a manual step.
+ */
+export function turnCallDerivationOff(
+  file: string,
+  source: string,
+  { derived, own, callee }: { derived: string; own: string; callee: string }
+): WiringPlan {
+  if (source.includes(DERIVE_COLORS_OFF_OPTION)) return NO_CHANGES;
+  if (!source.includes(derived)) {
+    return {
+      changes: [],
+      manual: [
+        {
+          file,
+          step: `Pass { ${DERIVE_COLORS_OFF_OPTION} } as the second argument of ${callee}.`,
+        },
+      ],
+    };
+  }
+  return {
+    changes: [editedFile(file, source.replace(derived, own))],
+    manual: [],
+  };
+}
 
 type Steps = ReadonlySet<SetupStep>;
 
@@ -422,29 +450,15 @@ function planViteScript(
     };
   }
   if (!ownColors) return NO_CHANGES;
-
-  const source = read(project, VITE_PLUGIN_FILE);
-  if (source.includes(DERIVE_COLORS_OFF_OPTION)) return NO_CHANGES;
-  if (!source.includes(DERIVED_SNAPSHOT)) {
-    return {
-      changes: [],
-      manual: [
-        {
-          file: VITE_PLUGIN_FILE,
-          step: `Pass { ${DERIVE_COLORS_OFF_OPTION} } as the second argument of createNxdsAppearanceSnapshotFromState.`,
-        },
-      ],
-    };
-  }
-  return {
-    changes: [
-      editedFile(
-        VITE_PLUGIN_FILE,
-        source.replace(DERIVED_SNAPSHOT, OWN_COLORS_SNAPSHOT)
-      ),
-    ],
-    manual: [],
-  };
+  return turnCallDerivationOff(
+    VITE_PLUGIN_FILE,
+    read(project, VITE_PLUGIN_FILE),
+    {
+      derived: DERIVED_SNAPSHOT,
+      own: OWN_COLORS_SNAPSHOT,
+      callee: 'createNxdsAppearanceSnapshotFromState',
+    }
+  );
 }
 
 /** The object a Vite config exports, directly or through `defineConfig(...)`. */
@@ -658,7 +672,7 @@ const POSTCSS_CONFIG = `export default {
 };
 `;
 
-const POSTCSS_CONFIGS = [
+export const POSTCSS_CONFIGS = [
   'postcss.config.mjs',
   'postcss.config.js',
   'postcss.config.cjs',

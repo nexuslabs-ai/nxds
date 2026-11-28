@@ -4,7 +4,6 @@ import { expect } from 'storybook/test';
 import { Skeleton } from '.';
 
 const meta = {
-  title: 'Components/Skeleton',
   component: Skeleton,
   parameters: {
     docs: {

@@ -10,9 +10,10 @@ import {
   type IconLibrary,
 } from './example-icons.ts';
 
-type Edit = { start: number; end: number; text: string };
+/** A replacement of `source.slice(start, end)`. */
+export type IconEdit = { start: number; end: number; text: string };
 
-function applyEdits(source: string, edits: Edit[]) {
+function applyEdits(source: string, edits: IconEdit[]) {
   return [...edits]
     .sort((a, b) => b.start - a.start)
     .reduce(
@@ -97,6 +98,18 @@ export function reactExampleSource(
   source: string,
   library: IconLibrary
 ) {
+  return applyEdits(source, reactExampleEdits(id, source, library));
+}
+
+/**
+ * The edits that draw a React example with `library`, in source order. None
+ * for Phosphor, or for an example that imports no Phosphor icon.
+ */
+export function reactExampleEdits(
+  id: string,
+  source: string,
+  library: IconLibrary
+): IconEdit[] {
   const file = ts.createSourceFile(
     `${id}.tsx`,
     source,
@@ -111,14 +124,14 @@ export function reactExampleSource(
       statement.moduleSpecifier.text === ICON_PACKAGES.phosphor.react.icons
   );
   const bindings = declaration?.importClause?.namedBindings;
-  if (!declaration || !bindings || !ts.isNamedImports(bindings)) return source;
+  if (!declaration || !bindings || !ts.isNamedImports(bindings)) return [];
   if (bindings.elements.some((element) => element.propertyName)) {
     throw new Error(`${id}: import Phosphor icons by their own names.`);
   }
   const names = new Set(bindings.elements.map((element) => element.name.text));
   const phosphorOf = (name: string) => name.replace(/Icon$/, '');
   for (const name of names) exampleIconName(phosphorOf(name), library);
-  if (library === 'phosphor') return source;
+  if (library === 'phosphor') return [];
 
   const huge = library === 'hugeicons';
   const exported = (name: string, filled = false) =>
@@ -127,7 +140,7 @@ export function reactExampleSource(
       'react',
       exampleIconName(phosphorOf(name), library, filled)
     );
-  const edits: Edit[] = [];
+  const edits: IconEdit[] = [];
   const imported = new Set<string>();
   const wrapped = new Map<string, string>();
 
@@ -222,9 +235,8 @@ export function reactExampleSource(
     });
   }
 
-  const rewritten = applyEdits(source, edits);
-  assertNoPhosphor(id, rewritten, /@phosphor-icons\//);
-  return rewritten;
+  assertNoPhosphor(id, applyEdits(source, edits), /@phosphor-icons\//);
+  return edits.sort((a, b) => a.start - b.start);
 }
 
 const VUE_IMPORT = /^import \{([^}]*)\} from '@phosphor-icons\/vue';$/m;

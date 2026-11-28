@@ -19,6 +19,8 @@ export type InstallResult = WriteResult & {
   items: string[];
   /** `name@range` packages that were missing or below range; installed unless dry-run or `--no-install`. */
   packages: string[];
+  /** The same, for dev dependencies: packages only stories import. */
+  devPackages: string[];
   /** `@import` lines added to the nxds CSS entry. */
   cssImports: string[];
 };
@@ -33,6 +35,7 @@ export function emptyInstallResult(): InstallResult {
     unresolved: [],
     skipped: [],
     packages: [],
+    devPackages: [],
     cssImports: [],
   };
 }
@@ -55,9 +58,10 @@ function addCssImports(
 
 /**
  * Installs `names` and everything they need: files, npm packages and
- * component stylesheet imports, plus `extraPackages`. A file that matches
- * `previous` is replaced; nxds's changes are merged into any other changed
- * file (see `writeFiles`). Updates `config` in place.
+ * component stylesheet imports, plus `extraPackages`. A package only stories
+ * import is a dev dependency. A file that matches `previous` is replaced;
+ * nxds's changes are merged into any other changed file (see `writeFiles`).
+ * Updates `config` in place.
  */
 export function installItems(
   catalog: Catalog,
@@ -93,8 +97,13 @@ export function installItems(
       extraPackages
     )
   );
+  const devPackages = packagesToInstall(
+    project,
+    Object.assign({}, ...variants.map((variant) => variant.packages.dev))
+  );
   if (options.install && !options.dryRun) {
     installPackages(project, packages, { dev: false });
+    installPackages(project, devPackages, { dev: true });
   }
 
   const cssImports = addCssImports(
@@ -114,6 +123,7 @@ export function installItems(
     ...written,
     items: items.map((item) => item.name),
     packages,
+    devPackages,
     cssImports,
   };
 }

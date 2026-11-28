@@ -141,9 +141,13 @@ function readerModule(specifier: string, slug: string) {
   if (specifier === '.') return `@/components/${slug}`;
   const sibling = specifier.match(/^\.\.\/([\w-]+)$/);
   if (sibling) return `@/components/${sibling[1]}`;
+  const storyData = specifier.match(
+    /^(?:\.|\.\.\/([\w-]+))\/([\w-]+\.story-data)$/
+  );
+  if (storyData) return `@/components/${storyData[1] ?? slug}/${storyData[2]}`;
   if (specifier.startsWith('.')) {
     fail(
-      `${slug}: docs stories import components as '.' or '../{slug}', not '${specifier}'.`
+      `${slug}: docs stories import components as '.' or '../{slug}', and story data as './{name}.story-data', not '${specifier}'.`
     );
   }
   return specifier;
@@ -167,7 +171,9 @@ function referencedNames(node: ts.Node, names = new Set<string>()) {
 /** The stories tagged `docs` in one component's story file. */
 function readDocsStories(slug: string) {
   const dir = path.join(vueComponentsRoot, slug);
-  const file = readdirSync(dir).find((name) => name.endsWith('.stories.ts'));
+  const file = readdirSync(dir).find(
+    (name) => name.endsWith('.stories.ts') && !name.endsWith('.test.stories.ts')
+  );
   if (!file) return null;
 
   const filePath = path.join(dir, file);

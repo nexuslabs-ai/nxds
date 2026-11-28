@@ -4,7 +4,6 @@ import { expect, fn, mocked, userEvent, waitFor, within } from 'storybook/test';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '.';
 
 const meta = {
-  title: 'Components/Resizable',
   component: ResizablePanelGroup,
   parameters: {
     layout: 'padded',

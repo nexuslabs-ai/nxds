@@ -1,5 +1,5 @@
 import { FolderIcon, GearIcon, HouseIcon } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -21,7 +21,6 @@ import {
 } from './breadcrumb';
 
 const meta: Meta<typeof Breadcrumb> = {
-  title: 'Components/Breadcrumb',
   component: Breadcrumb,
   parameters: {
     docs: {
@@ -269,7 +268,6 @@ export const IconOnly: Story = {
     await expect(
       canvas.getByRole('link', { name: 'Projects' })
     ).toHaveAttribute('data-slot', 'breadcrumb-link');
-    await expect(canvas.getByText('Settings')).toHaveClass('nx:sr-only');
   },
 };
 

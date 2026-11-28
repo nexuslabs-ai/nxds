@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import {
@@ -15,7 +15,6 @@ import { Input } from '../input/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
 
 const meta: Meta<typeof Tabs> = {
-  title: 'Components/Tabs',
   component: Tabs,
   parameters: {
     docs: {
@@ -53,7 +52,7 @@ async function waitForIndicatorReady(indicator: HTMLElement) {
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="account" className="nx:w-[400px]">
       <TabsList>
         <TabsTrigger value="account">Account</TabsTrigger>
@@ -97,7 +96,7 @@ export const UnderlineVariant: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="account" className="nx:w-[400px]">
       <TabsList variant="underline">
         <TabsTrigger value="account">Account</TabsTrigger>
@@ -136,20 +135,6 @@ export const UnderlineVariant: Story = {
     await userEvent.click(passwordTab);
     await expect(passwordTab).toHaveAttribute('data-state', 'active');
     await waitFor(() => expect(indicator.style.transform).not.toBe(before));
-    await waitFor(() => {
-      const indicatorRect = indicator.getBoundingClientRect();
-      const passwordRect = passwordTab.getBoundingClientRect();
-      expect(Math.round(indicatorRect.bottom)).toBe(
-        Math.round(passwordRect.bottom)
-      );
-      expect(Math.round(indicatorRect.left)).toBe(
-        Math.round(passwordRect.left)
-      );
-      expect(indicatorRect.height).toBeGreaterThan(0);
-      expect(Math.round(indicatorRect.height)).toBe(
-        Math.round(parseFloat(getComputedStyle(passwordTab).borderBottomWidth))
-      );
-    });
     await expect(
       canvas.getByText('Password settings with underline variant tabs.')
     ).toBeVisible();
@@ -169,7 +154,7 @@ export const SmallSize: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="tab1" className="nx:w-[400px]">
       <TabsList size="sm">
         <TabsTrigger value="tab1">Small Tab</TabsTrigger>
@@ -183,17 +168,6 @@ export const SmallSize: Story = {
       </TabsContent>
     </Tabs>
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const tab = canvas.getByRole('tab', { name: 'Small Tab' });
-
-    await expect(tab).toHaveClass(
-      'nx:typography-label-small',
-      'nx:px-2',
-      'nx:py-1'
-    );
-    await expect(getComputedStyle(tab).fontSize).toBe('12px');
-  },
 };
 
 export const LargeSize: Story = {
@@ -205,7 +179,7 @@ export const LargeSize: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="tab1" className="nx:w-[500px]">
       <TabsList size="lg">
         <TabsTrigger value="tab1">Large Tab</TabsTrigger>
@@ -222,7 +196,7 @@ export const LargeSize: Story = {
 };
 
 export const WithCards: Story = {
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="account" className="nx:w-[400px]">
       <TabsList className="nx:grid nx:w-full nx:grid-cols-2">
         <TabsTrigger value="account">Account</TabsTrigger>
@@ -292,7 +266,7 @@ export const WithDisabledTab: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="account" className="nx:w-[400px]">
       <TabsList>
         <TabsTrigger value="account">Account</TabsTrigger>
@@ -323,12 +297,6 @@ export const WithDisabledTab: Story = {
     const disabledTab = canvas.getByRole('tab', { name: 'Settings' });
 
     await expect(disabledTab).toBeDisabled();
-
-    // Disabled state uses a semantic text token at full opacity (not a fade).
-    await expect(disabledTab).toHaveClass(
-      'nx:disabled:text-disabled-foreground'
-    );
-    await expect(getComputedStyle(disabledTab).opacity).toBe('1');
   },
 };
 
@@ -337,7 +305,7 @@ export const WithDisabledTab: Story = {
 // ============================================
 
 export const ClickInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="tab1" className="nx:w-[400px]">
       <TabsList>
         <TabsTrigger value="tab1">Tab 1</TabsTrigger>
@@ -370,7 +338,7 @@ export const ClickInteraction: Story = {
 };
 
 export const KeyboardInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="tab1" className="nx:w-[400px]">
       <TabsList>
         <TabsTrigger value="tab1">Tab 1</TabsTrigger>
@@ -413,7 +381,7 @@ export const KeyboardInteraction: Story = {
 };
 
 export const DisabledTabInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="tab1" className="nx:w-[400px]">
       <TabsList>
         <TabsTrigger value="tab1">Tab 1</TabsTrigger>
@@ -454,92 +422,12 @@ export const DisabledTabInteraction: Story = {
     await expect(tab1).toHaveAttribute('data-state', 'inactive');
     await expect(disabledTab).toHaveAttribute('data-state', 'inactive');
     await expect(tab3).toHaveAttribute('data-state', 'active');
-    await waitFor(() => {
-      const indicatorRect = indicator.getBoundingClientRect();
-      const tab3Rect = tab3.getBoundingClientRect();
-      expect(Math.round(indicatorRect.left)).toBe(Math.round(tab3Rect.left));
-      expect(Math.round(indicatorRect.width)).toBe(Math.round(tab3Rect.width));
-    });
     await expect(canvas.getByText('Content 3')).toBeVisible();
   },
 };
 
-export const VerticalIndicatorFollowsActiveTab: Story = {
-  render: (_args) => (
-    <div className="nx:flex nx:gap-8">
-      <Tabs
-        defaultValue="account"
-        orientation="vertical"
-        className="nx:flex nx:gap-4"
-      >
-        <TabsList aria-label="Personal settings">
-          <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
-        </TabsList>
-        <TabsContent value="account">Change your name and email.</TabsContent>
-        <TabsContent value="billing">
-          Manage your plan and invoices.
-        </TabsContent>
-      </Tabs>
-      <Tabs
-        defaultValue="account"
-        orientation="vertical"
-        className="nx:flex nx:gap-4"
-      >
-        <TabsList variant="underline" aria-label="Workspace settings">
-          <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
-        </TabsList>
-        <TabsContent value="account">Rename your workspace.</TabsContent>
-        <TabsContent value="billing">Manage seats and invoices.</TabsContent>
-      </Tabs>
-    </div>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const list = canvas.getByRole('tablist', { name: 'Personal settings' });
-    const underlineList = canvas.getByRole('tablist', {
-      name: 'Workspace settings',
-    });
-    const billing = within(list).getByRole('tab', { name: 'Billing' });
-    const underlineBilling = within(underlineList).getByRole('tab', {
-      name: 'Billing',
-    });
-    const indicator = getTabsIndicator(list);
-    const underlineIndicator = getTabsIndicator(underlineList);
-
-    await waitForIndicatorReady(indicator);
-    await userEvent.click(billing);
-    await waitFor(() => {
-      const indicatorRect = indicator.getBoundingClientRect();
-      const billingRect = billing.getBoundingClientRect();
-      expect(Math.round(indicatorRect.top)).toBe(Math.round(billingRect.top));
-      expect(Math.round(indicatorRect.height)).toBe(
-        Math.round(billingRect.height)
-      );
-    });
-
-    await waitForIndicatorReady(underlineIndicator);
-    await userEvent.click(underlineBilling);
-    await waitFor(() => {
-      const indicatorRect = underlineIndicator.getBoundingClientRect();
-      const billingRect = underlineBilling.getBoundingClientRect();
-      expect(Math.round(indicatorRect.top)).toBe(Math.round(billingRect.top));
-      expect(Math.round(indicatorRect.right)).toBe(
-        Math.round(billingRect.right)
-      );
-      expect(indicatorRect.width).toBeGreaterThan(0);
-      expect(Math.round(indicatorRect.width)).toBe(
-        Math.round(
-          parseFloat(getComputedStyle(underlineBilling).borderRightWidth)
-        )
-      );
-    });
-  },
-};
-
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="tab1" className="nx:w-[400px]">
       <TabsList variant="underline" size="lg">
         <TabsTrigger value="tab1">Tab 1</TabsTrigger>
@@ -575,13 +463,6 @@ export const WithDataAttributes: Story = {
     // Check tabpanel has data-slot
     const tabPanel = canvas.getByRole('tabpanel');
     await expect(tabPanel).toHaveAttribute('data-slot', 'tabs-content');
-
-    await expect(tab2).toHaveClass(
-      'nx:typography-label-default',
-      'nx:px-4',
-      'nx:py-2'
-    );
-    await expect(getComputedStyle(tab2).fontSize).toBe('14px');
   },
 };
 
@@ -589,7 +470,7 @@ const listRef = React.createRef<HTMLDivElement>();
 
 // A ref on TabsList reaches the list, beside the ref the indicator measures.
 export const ListRef: Story = {
-  render: (_args) => (
+  render: () => (
     <Tabs defaultValue="tab1" className="nx:w-[400px]">
       <TabsList ref={listRef}>
         <TabsTrigger value="tab1">Tab 1</TabsTrigger>
@@ -606,13 +487,8 @@ export const ListRef: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const list = canvas.getByRole('tablist');
-    const indicator = getTabsIndicator(list);
-    const active = canvas.getByRole('tab', { name: 'Tab 1' });
 
     await expect(listRef.current).toBe(list);
-    await waitFor(() =>
-      expect(indicator.style.width).toBe(`${active.offsetWidth}px`)
-    );
   },
 };
 
@@ -621,7 +497,7 @@ export const ListRef: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

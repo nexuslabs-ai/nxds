@@ -147,7 +147,6 @@ const Demo = defineComponent({
 });
 
 const meta = {
-  title: 'Components/FilterBuilder',
   component: FilterBuilder,
   args: {
     fields: exampleFields,
@@ -187,6 +186,16 @@ const meta = {
 } satisfies Meta<typeof FilterBuilder>;
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+/**
+ * A Select hides the page from assistive technology while it is open. After
+ * one closes, this waits until role queries reach the page again.
+ */
+async function pageReachable(canvasElement: HTMLElement) {
+  await waitFor(() =>
+    expect(canvasElement.closest('[aria-hidden="true"]')).toBeNull()
+  );
+}
 export const Default: Story = {
   tags: ['docs'],
   render: () => ({
@@ -271,6 +280,7 @@ export const ValueChange: Story = {
       canvas.getByRole('combobox', { name: 'Filters match' })
     );
     await userEvent.click(page.getByRole('option', { name: 'Any' }));
+    await pageReachable(canvasElement);
     await closed();
     await expect(args['onValue-change']).toHaveBeenCalledWith(
       expect.objectContaining({ conjunction: 'any' })
@@ -299,6 +309,7 @@ export const Empty: Story = {
         name: 'Team',
       })
     );
+    await pageReachable(canvasElement);
     await closed();
     await expect(canvas.getByText('Enter a value.')).toBeVisible();
     await userEvent.click(
@@ -395,6 +406,7 @@ export const OperatorAndFieldChanges: Story = {
       canvas.getByRole('combobox', { name: 'Status operator' })
     );
     await userEvent.click(page.getByRole('option', { name: 'is empty' }));
+    await pageReachable(canvasElement);
     await closed();
     await expect(
       canvas.queryByRole('combobox', { name: 'Status value' })
@@ -404,6 +416,7 @@ export const OperatorAndFieldChanges: Story = {
     );
     await userEvent.click(canvas.getByRole('combobox', { name: 'Field' }));
     await userEvent.click(page.getByRole('option', { name: 'Projects' }));
+    await pageReachable(canvasElement);
     await closed();
     await expect(
       canvas.getByRole('spinbutton', { name: 'Projects value' })
@@ -437,6 +450,7 @@ export const KeyboardInteraction: Story = {
     await userEvent.keyboard('{Enter}');
     await expect(page.getByRole('listbox')).toBeVisible();
     await userEvent.keyboard('{ArrowDown}{Enter}');
+    await pageReachable(canvasElement);
     await closed();
     await expect(
       canvas.getByRole('combobox', { name: 'Status operator' })
@@ -474,10 +488,10 @@ export const MultipleChoices: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement),
       page = within(canvasElement.ownerDocument.body);
-    await userEvent.click(canvas.getByRole('button', { name: 'Team values' }));
+    await userEvent.click(canvas.getByRole('button', { name: /^Team values/ }));
     await userEvent.click(page.getByRole('checkbox', { name: 'Engineering' }));
     await expect(
-      canvas.getByRole('button', { name: 'Team values' })
+      canvas.getByRole('button', { name: /^Team values/ })
     ).toHaveTextContent('Design, Engineering');
     await userEvent.type(
       page.getByRole('textbox', { name: 'Search Team options' }),
@@ -487,7 +501,7 @@ export const MultipleChoices: Story = {
     await userEvent.keyboard('{Escape}');
     await closed();
     await waitFor(() =>
-      expect(canvas.getByRole('button', { name: 'Team values' })).toHaveFocus()
+      expect(canvas.getByRole('button', { name: /^Team values/ })).toHaveFocus()
     );
   },
 };
@@ -696,6 +710,7 @@ export const TextAndDates: Story = {
       canvas.getByRole('combobox', { name: 'Joined operator' })
     );
     await userEvent.click(page.getByRole('option', { name: 'is before' }));
+    await pageReachable(canvasElement);
     await closed();
     await expect(canvas.getByLabelText('Joined value')).toHaveValue('');
     await expect(canvas.getByRole('status')).toHaveTextContent('1 incomplete');

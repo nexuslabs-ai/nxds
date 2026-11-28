@@ -15,6 +15,7 @@ import ts from 'typescript';
 
 import { collectSourceFiles } from './files.mjs';
 import { humanize, pascal } from './humanize.ts';
+import { isShippedStory } from './react-sources.mjs';
 import { componentsRoot, isUnder, reactSrc, toRepoPath } from './roots.mjs';
 
 export const DOCS_TAG = 'docs';
@@ -294,10 +295,11 @@ interface DocsStory {
   object: ts.ObjectLiteralExpression;
 }
 
-/** Every `*.stories.tsx` under `components/{slug}/`, sorted. */
+/** Every shipped `*.stories.tsx` under `components/{slug}/`, sorted. */
 export function componentStoryFiles(slug: string): string[] {
-  return collectSourceFiles(path.join(componentsRoot, slug), (file: string) =>
-    file.endsWith('.stories.tsx')
+  return collectSourceFiles(
+    path.join(componentsRoot, slug),
+    isShippedStory
   ).sort();
 }
 

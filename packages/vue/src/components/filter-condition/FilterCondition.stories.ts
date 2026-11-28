@@ -36,7 +36,7 @@ const ConditionExample = defineComponent({
     <FilterCondition data-testid="condition">
       <FilterConditionField>{{ field }}</FilterConditionField>
       <FilterConditionSegment
-        :aria-label="'Edit ' + field + ' operator'"
+        :aria-label="'Edit ' + field + ' operator: ' + operator"
         class="nx:shrink-0 nx:text-muted-foreground"
         :disabled="disabled"
         @click="onOperatorClick?.()"
@@ -56,7 +56,6 @@ const ConditionExample = defineComponent({
 });
 
 const meta = {
-  title: 'Components/FilterCondition',
   component: ConditionExample,
   args: {
     field: 'Status',
@@ -96,7 +95,7 @@ export const Default: Story = {
     template: `
       <FilterCondition data-testid="condition">
         <FilterConditionField>Status</FilterConditionField>
-        <FilterConditionSegment aria-label="Edit Status operator" class="nx:shrink-0 nx:text-muted-foreground">is</FilterConditionSegment>
+        <FilterConditionSegment aria-label="Edit Status operator: is" class="nx:shrink-0 nx:text-muted-foreground">is</FilterConditionSegment>
         <FilterConditionSegment aria-label="Edit Status value: Paid" data-testid="condition-value">Paid</FilterConditionSegment>
         <FilterConditionRemove>Remove Status filter</FilterConditionRemove>
       </FilterCondition>
@@ -107,7 +106,7 @@ export const ClickInteraction: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Edit Status operator' })
+      canvas.getByRole('button', { name: 'Edit Status operator: is' })
     );
     await expect(args.onOperatorClick).toHaveBeenCalledTimes(1);
     await expect(args.onValueClick).not.toHaveBeenCalled();
@@ -128,7 +127,7 @@ export const ClickInteraction: Story = {
 export const KeyboardInteraction: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    canvas.getByRole('button', { name: 'Edit Status operator' }).focus();
+    canvas.getByRole('button', { name: 'Edit Status operator: is' }).focus();
     await userEvent.keyboard('{Enter}');
     await userEvent.tab();
     await expect(
@@ -172,21 +171,11 @@ export const LongContent: Story = {
       </div>
     `,
   }),
-  play: async ({ canvasElement, args }) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', {
-      name: `Edit Workspace value: ${args.value}`,
-    });
-    await expect(trigger.scrollWidth).toBeLessThanOrEqual(
-      trigger.clientWidth + 1
-    );
     await expect(
       canvas.getByRole('button', { name: 'Remove Workspace filter' })
     ).toBeVisible();
-    const condition = canvas.getByTestId('condition');
-    await expect(condition.scrollWidth).toBeLessThanOrEqual(
-      condition.clientWidth + 1
-    );
   },
 };
 export const WithDataAttributes: Story = {

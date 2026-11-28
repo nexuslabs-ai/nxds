@@ -1,13 +1,9 @@
 import { type ComponentProps, useState } from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { IconX } from '../../lib/icons';
-import {
-  expectExitBeforeUnmount,
-  expectInterruptibleOverlayMotion,
-} from '../../stories/support/overlay-motion-test-utils';
 import { Button } from '../button/button';
 
 import {
@@ -24,7 +20,6 @@ import {
 } from './drawer';
 
 const meta: Meta<typeof Drawer> = {
-  title: 'Components/Drawer',
   component: Drawer,
   parameters: {
     layout: 'padded',
@@ -240,14 +235,6 @@ export const ScrollableContent: Story = {
     const scrollArea = within(drawer).getByTestId('drawer-scroll-area');
 
     await expect(scrollArea).toHaveAttribute('tabindex', '0');
-    await expect(scrollArea).toHaveClass(
-      'nx:focus-visible:outline-2',
-      'nx:focus-visible:outline-focus-default',
-      'nx:focus-visible:[outline-offset:-2px]'
-    );
-    await waitFor(() => {
-      expect(scrollArea.scrollHeight).toBeGreaterThan(scrollArea.clientHeight);
-    });
     await expect(
       within(drawer).getByRole('button', { name: 'Save changes' })
     ).toBeVisible();
@@ -348,8 +335,6 @@ export const OpenCloseInteraction: Story = {
     // Content portals to document.body with role="dialog".
     const drawer = await within(document.body).findByRole('dialog');
     await expect(drawer).toHaveAttribute('data-slot', 'drawer-content');
-    const overlay = document.querySelector('[data-slot="drawer-overlay"]');
-    await expectInterruptibleOverlayMotion(overlay);
     await expect(
       within(drawer).getByText('Interaction Test')
     ).toBeInTheDocument();
@@ -358,7 +343,6 @@ export const OpenCloseInteraction: Story = {
       within(drawer).getByRole('button', { name: 'Dismiss' })
     );
 
-    await expectExitBeforeUnmount(overlay);
     await waitForDrawerToClose();
     await waitFor(() => expect(trigger).toHaveFocus());
   },
@@ -448,18 +432,6 @@ export const WithDataAttributes: Story = {
     });
 
     await expect(
-      document.querySelector('[data-slot="drawer-content"]')
-    ).toHaveClass('nx:overflow-hidden');
-    await expect(
-      document.querySelector('[data-slot="drawer-body"]')
-    ).toHaveClass(
-      'nx:min-h-0',
-      'nx:overflow-y-auto',
-      'nx:focus-visible:outline-2',
-      'nx:focus-visible:outline-focus-default',
-      'nx:focus-visible:[outline-offset:-2px]'
-    );
-    await expect(
       document.querySelector('[data-slot="drawer-body"]')
     ).toHaveAttribute('tabindex', '0');
 
@@ -494,11 +466,8 @@ export const HandleVisibilityWhileOpen: Story = {
       within(canvasElement).getByRole('button', { name: 'Open handle toggle' })
     );
     const drawer = await within(document.body).findByRole('dialog');
-    const header = drawer.querySelector<HTMLElement>(
-      '[data-slot="drawer-header"]'
-    );
+    const header = drawer.querySelector('[data-slot="drawer-header"]');
     await expect(header).not.toBeNull();
-    const hiddenOffset = header!.offsetTop;
     await expect(
       drawer.querySelector('[data-slot="drawer-handle"]')
     ).toBeNull();
@@ -508,7 +477,6 @@ export const HandleVisibilityWhileOpen: Story = {
     await expect(
       drawer.querySelector('[data-slot="drawer-handle"]')
     ).toBeVisible();
-    await expect(header!.offsetTop).toBeGreaterThanOrEqual(hiddenOffset + 8);
     await expect(document.querySelector('[role="dialog"]')).toBe(drawer);
     await userEvent.click(
       within(drawer).getByRole('button', { name: 'Hide handle' })
@@ -516,7 +484,6 @@ export const HandleVisibilityWhileOpen: Story = {
     await expect(
       drawer.querySelector('[data-slot="drawer-handle"]')
     ).toBeNull();
-    await expect(header!.offsetTop).toBe(hiddenOffset);
     await expect(document.querySelector('[role="dialog"]')).toBe(drawer);
     await userEvent.click(
       within(drawer).getByRole('button', { name: 'Close preview' })

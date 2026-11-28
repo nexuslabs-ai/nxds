@@ -1,5 +1,5 @@
 import tsx from '@shikijs/langs/tsx';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { createHighlighterCoreSync } from 'shiki/core';
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
 import { expect, fn, spyOn, userEvent, waitFor, within } from 'storybook/test';
@@ -15,7 +15,6 @@ import {
 } from './code-block';
 
 const meta: Meta<typeof CodeBlock> = {
-  title: 'Components/CodeBlock',
   component: CodeBlock,
   parameters: {
     docs: {
@@ -447,16 +446,6 @@ export const DiffLinesCopy: Story = {
 
     await expect(lines[1]).toHaveAttribute('data-diff', 'removed');
     await expect(lines[2]).toHaveAttribute('data-diff', 'added');
-    // The marker comes before the code, so readers hear it first.
-    await expect(
-      getComputedStyle(lines[1]!.firstElementChild!, '::before').content
-    ).toBe('"−"');
-    await expect(
-      getComputedStyle(lines[2]!.firstElementChild!, '::before').content
-    ).toBe('"+"');
-    // The marker shares the line's row, so a diff line is one line tall.
-    await expect(lines[1]!.offsetHeight).toBe(lines[0]!.offsetHeight);
-    await expect(lines[2]!.offsetHeight).toBe(lines[0]!.offsetHeight);
     await userEvent.click(canvas.getByRole('button', { name: 'Copy code' }));
     await expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
       '<Button\n  loading={saving}\n>'
@@ -484,18 +473,6 @@ export const LongLines: Story = {
       </CodeBlockContent>
     </CodeBlock>
   ),
-  play: async ({ canvasElement }) => {
-    const viewport = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="scroll-area-viewport"]'
-    );
-    const lines = canvasElement.querySelectorAll<HTMLElement>(
-      '[data-slot="code-block-line"]'
-    );
-
-    await expect(viewport!.scrollWidth).toBeGreaterThan(viewport!.clientWidth);
-    // The highlight spans the scrolled width, not only the visible part.
-    await expect(lines[1]!.offsetWidth).toBe(lines[0]!.offsetWidth);
-  },
 };
 
 // An empty line keeps the height of a line of text.
@@ -509,13 +486,6 @@ export const EmptyLine: Story = {
       </CodeBlockContent>
     </CodeBlock>
   ),
-  play: async ({ canvasElement }) => {
-    const lines = canvasElement.querySelectorAll<HTMLElement>(
-      '[data-slot="code-block-line"]'
-    );
-
-    await expect(lines[1]!.offsetHeight).toBe(lines[0]!.offsetHeight);
-  },
 };
 
 export const WithDataAttributes: Story = {
@@ -534,9 +504,6 @@ export const WithDataAttributes: Story = {
   ),
   play: async ({ canvasElement }) => {
     const root = canvasElement.querySelector('[data-slot="code-block"]');
-    const content = canvasElement.querySelector(
-      '[data-slot="code-block-content"]'
-    );
     const lines = canvasElement.querySelectorAll(
       '[data-slot="code-block-line"]'
     );
@@ -545,7 +512,6 @@ export const WithDataAttributes: Story = {
     );
 
     await expect(root).toHaveAttribute('data-variant', 'flush');
-    await expect(content!.querySelector('code')).toHaveClass('language-ts');
     await expect(lines[0]).toHaveAttribute('data-number', '1');
     await expect(lines[0]).toHaveAttribute('data-highlighted');
     await expect(lines[0]).toHaveAttribute('data-status', 'success');

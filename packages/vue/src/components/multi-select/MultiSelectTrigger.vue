@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { PopoverTrigger } from 'reka-ui';
-import type { HTMLAttributes } from 'vue';
+import { injectPopoverRootContext, PopoverTrigger } from 'reka-ui';
+import { computed, type HTMLAttributes, useAttrs, useId } from 'vue';
 
 import { IconChevronDown } from '../../lib/icons';
 import { cn } from '../../lib/utils';
@@ -15,7 +15,20 @@ defineOptions({ inheritAttrs: false });
 
 const props = defineProps<MultiSelectTriggerProps>();
 
-const { open, selectedValues, toggle } = injectMultiSelect();
+const { open, selectedValues, toggle, valueId } = injectMultiSelect();
+
+const attrs = useAttrs();
+const popover = injectPopoverRootContext();
+// Reka gives the trigger this id, and names the list's dialog by it.
+popover.triggerId ||= (attrs.id as string | undefined) ?? useId();
+// A label names the field, not the values the trigger shows, so the values
+// follow it in the name. An `aria-label` labels the trigger by its own id.
+const labelledBy = computed(() => {
+  const label =
+    (attrs['aria-labelledby'] as string | undefined) ||
+    (attrs['aria-label'] ? popover.triggerId : undefined);
+  return label ? `${label} ${valueId}` : undefined;
+});
 
 function handleKeyDown(event: KeyboardEvent) {
   if (event.key !== 'Backspace' && event.key !== 'Delete') return;
@@ -36,6 +49,7 @@ function handleKeyDown(event: KeyboardEvent) {
         'aria-expanded': open,
         'data-slot': 'multi-select-trigger',
         ...$attrs,
+        'aria-labelledby': labelledBy,
       }"
       :class="
         cn(

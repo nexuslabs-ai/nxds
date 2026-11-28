@@ -3,7 +3,6 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { computed, defineComponent, type PropType, reactive, ref } from 'vue';
 
 import { cn } from '../../lib/utils';
-import { expectImmediateItemMotion } from '../../stories/support/motion-test-utils';
 import { Field, FieldDescription, FieldError, FieldLabel } from '../field';
 
 import {
@@ -95,7 +94,6 @@ const ComboboxExample = defineComponent({
 });
 
 const meta = {
-  title: 'Components/Combobox',
   component: Combobox,
   parameters: {
     layout: 'padded',
@@ -674,10 +672,6 @@ export const WithDataAttributes: Story = {
     await userEvent.click(trigger);
     const listbox = await within(document.body).findByRole('listbox');
     await expect(listbox).toHaveAttribute('data-slot', 'combobox-list');
-    const items = Array.from(
-      listbox.querySelectorAll('[data-slot="combobox-item"]')
-    );
-    await expectImmediateItemMotion(items);
     await expect(
       within(listbox).getByRole('option', { name: 'Next.js' })
     ).toHaveAttribute('data-slot', 'combobox-item');

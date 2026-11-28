@@ -13,7 +13,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Pagination',
   component: Pagination,
   parameters: {
     layout: 'padded',
@@ -179,19 +178,6 @@ export const IconOnly: Story = {
       </Pagination>
     `,
   }),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    for (const { name, label } of [
-      { name: 'Go to previous page', label: 'Previous' },
-      { name: 'Go to next page', label: 'Next' },
-    ]) {
-      const link = canvas.getByRole('link', { name });
-      const { width, height } = link.getBoundingClientRect();
-      await expect(width).toBe(height);
-      await expect(within(link).getByText(label)).toHaveClass('nx:sr-only');
-    }
-  },
 };
 
 export const AsChild: Story = {

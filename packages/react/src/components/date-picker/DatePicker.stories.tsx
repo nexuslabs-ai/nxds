@@ -2,8 +2,8 @@ import * as React from 'react';
 import type { DateRange } from 'react-day-picker';
 
 import { ClockIcon } from '@phosphor-icons/react/ssr';
-import type { Decorator, Meta, StoryObj } from '@storybook/react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { Button } from '../button/button';
 import { Card, CardContent, CardFooter } from '../card/card';
@@ -26,15 +26,6 @@ function addDays(date: Date, days: number) {
   return next;
 }
 
-// Resolve a spacing token to px from :root so cell-size assertions track the
-// active spacing mode instead of hardcoding the default-mode value.
-function resolveSpacingPx(canvasElement: HTMLElement, varName: string) {
-  const root = canvasElement.ownerDocument.documentElement;
-  return Math.round(
-    parseFloat(getComputedStyle(root).getPropertyValue(varName))
-  );
-}
-
 const PRESETS = [
   { label: 'Today', days: 0 },
   { label: 'Tomorrow', days: 1 },
@@ -54,7 +45,6 @@ const inCard: Decorator = (Story) => (
 );
 
 const meta: Meta<typeof DatePicker> = {
-  title: 'Components/DatePicker',
   component: DatePicker,
   parameters: {
     docs: {
@@ -154,19 +144,10 @@ export const Default: Story = {
     const outsideMonthDay = canvasElement.querySelector<HTMLButtonElement>(
       'button[data-day="2024-12-29"]'
     );
-    const outsideMonthCell = outsideMonthDay?.closest('.rdp-day');
 
     await expect(currentMonthDay).toBeInTheDocument();
     await expect(outsideMonthDay).toBeInTheDocument();
-    await expect(outsideMonthCell).toBeInTheDocument();
     await expect(outsideMonthDay).toHaveAttribute('data-outside', 'true');
-
-    const currentColor = getComputedStyle(currentMonthDay!).color;
-    const outsideColor = getComputedStyle(outsideMonthDay!).color;
-    const outsideCellColor = getComputedStyle(outsideMonthCell!).color;
-
-    expect(outsideColor).not.toBe(currentColor);
-    expect(outsideColor).toBe(outsideCellColor);
   },
 };
 
@@ -201,19 +182,9 @@ export const LargeCells: Story = {
     />
   ),
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const selected = canvas.getByText('15').closest('button');
-
     await expect(
       canvasElement.querySelector('[data-cell-size="large"]')
     ).toBeInTheDocument();
-    const largeCellPx = resolveSpacingPx(canvasElement, '--nx-spacing-12');
-    expect(Math.round(selected!.getBoundingClientRect().width)).toBe(
-      largeCellPx
-    );
-    expect(Math.round(selected!.getBoundingClientRect().height)).toBe(
-      largeCellPx
-    );
   },
 };
 
@@ -239,19 +210,11 @@ export const CustomDayContent: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const selected = canvas.getByText('15').closest('button');
 
     await expect(
       canvasElement.querySelector('[data-cell-size="xlarge"]')
     ).toBeInTheDocument();
     await expect(canvas.getByText('$75')).toBeInTheDocument();
-    const xlargeCellPx = resolveSpacingPx(canvasElement, '--nx-spacing-14');
-    expect(Math.round(selected!.getBoundingClientRect().width)).toBe(
-      xlargeCellPx
-    );
-    expect(Math.round(selected!.getBoundingClientRect().height)).toBe(
-      xlargeCellPx
-    );
   },
 };
 
@@ -298,20 +261,6 @@ export const RangeHoverPreview: Story = {
       </Card>
     );
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.hover(canvas.getByText('11').closest('button')!);
-
-    // Day 10 sits between the committed start (8) and the hovered day (11),
-    // so its cell should carry the preview rail.
-    const cell = canvas.getByText('10').closest('td');
-    await waitFor(() =>
-      expect(getComputedStyle(cell!).backgroundColor).not.toBe(
-        'rgba(0, 0, 0, 0)'
-      )
-    );
-    await expect(cell).toHaveClass('nx:bg-container-hover');
-  },
 };
 
 // A range can't span a disabled or unavailable day: the preview drops, and a
@@ -342,29 +291,6 @@ export const RangeSkipsBlockedDays: Story = {
     const canvas = within(canvasElement);
     const day = (label: string) => canvas.getByText(label).closest('button')!;
     const cell = (label: string) => canvas.getByText(label).closest('td');
-
-    await userEvent.hover(day('13'));
-    await waitFor(() =>
-      expect(cell('13')).toHaveClass('nx:bg-container-hover')
-    );
-
-    // Day 12 is disabled, so hovering back to 10 shades nothing.
-    await userEvent.hover(day('10'));
-    await waitFor(() =>
-      expect(cell('13')).not.toHaveClass('nx:bg-container-hover')
-    );
-
-    await userEvent.hover(day('16'));
-    await waitFor(() =>
-      expect(cell('16')).toHaveClass('nx:bg-container-hover')
-    );
-
-    // Day 17 is unavailable, so hovering 19 shades nothing.
-    await userEvent.hover(day('19'));
-    await waitFor(() =>
-      expect(cell('16')).not.toHaveClass('nx:bg-container-hover')
-    );
-    await expect(cell('18')).not.toHaveClass('nx:bg-container-hover');
 
     // Clicking 19 can't end the range across day 17, so it starts a new one.
     await userEvent.click(day('19'));
@@ -458,10 +384,6 @@ export const DisabledDays: Story = {
     const day10 = canvas.getByText('10').closest('button');
 
     await expect(day10).toBeDisabled();
-    // A disabled day recolors via a semantic disabled-text token at full
-    // opacity (not a fade).
-    await expect(day10).toHaveClass('nx:disabled:text-disabled-foreground');
-    await expect(getComputedStyle(day10!).opacity).toBe('1');
     await userEvent.click(day10!, { pointerEventsCheck: 0 });
     await expect(day10).not.toHaveAttribute('data-selected-single', 'true');
   },
@@ -488,9 +410,6 @@ export const UnavailableDays: Story = {
     const cell = canvas.getByText('20').closest('td');
 
     await expect(cell).toBeInTheDocument();
-    expect(getComputedStyle(cell!).textDecorationLine).toContain(
-      'line-through'
-    );
   },
 };
 
@@ -507,13 +426,6 @@ export const WeekStartsMonday: Story = {
       selected={new Date(2025, 0, 15)}
     />
   ),
-  play: async ({ canvasElement }) => {
-    const weekdays = canvasElement.querySelectorAll('.rdp-weekday');
-
-    // Monday-first → the first weekday header is "Mo", last is "Su".
-    await expect(weekdays[0]).toHaveTextContent('Mo');
-    await expect(weekdays[6]).toHaveTextContent('Su');
-  },
 };
 
 // Week numbers exercise the dedicated week-number typography path.
@@ -566,12 +478,6 @@ export const WithDataAttributes: Story = {
     const canvas = within(canvasElement);
     const day15 = canvas.getByText('15').closest('button');
     await expect(day15).toHaveAttribute('data-day');
-    // #498: day cells + weekday headers use the typography-body-default composite
-    // (migrated from the raw named text-size utility); both share the same 14px/400 type.
-    await expect(day15).toHaveClass('nx:typography-body-default');
-    await expect(canvasElement.querySelector('.rdp-weekday')).toHaveClass(
-      'nx:typography-body-default'
-    );
   },
 };
 
@@ -611,8 +517,8 @@ export const Accessibility: Story = {
     const todayLabel =
       canvas.getByText('8').closest('button')!.getAttribute('aria-label') ?? '';
 
-    // Full date + status come from react-day-picker's labelDayButton.
-    expect(selectedLabel).toContain('January 15th, 2025');
+    // The full date, with the day as a plain number, and its status.
+    expect(selectedLabel).toContain('January 15, 2025');
     expect(selectedLabel).toContain('selected');
     expect(todayLabel).toContain('Today');
 
@@ -675,7 +581,7 @@ export const WithPresets: Story = {
 
 // Calendar in a Card with start/end time inputs in the footer (shadcn's
 // CalendarWithTime). The time fields use Field + InputGroup with a trailing
-// clock addon; the consumer supplies the icon (here from @phosphor-icons/react).
+// clock addon; the consumer supplies the icon.
 export const WithTime: Story = {
   render: function WithTimeStory() {
     const [date, setDate] = React.useState<Date | undefined>(

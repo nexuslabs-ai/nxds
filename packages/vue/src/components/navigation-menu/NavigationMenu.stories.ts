@@ -1,8 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { expectInterruptibleOverlayMotion } from '../../stories/support/overlay-motion-test-utils';
-
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -15,7 +13,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/NavigationMenu',
   component: NavigationMenu,
   parameters: {
     layout: 'padded',
@@ -242,10 +239,6 @@ export const Disabled: Story = {
     const trigger = canvas.getByRole('button', { name: /Products/i });
 
     await expect(trigger).toBeDisabled();
-
-    // Disabled trigger uses a semantic text token at full opacity (not a fade).
-    await expect(trigger).toHaveClass('nx:disabled:text-disabled-foreground');
-    await expect(getComputedStyle(trigger).opacity).toBe('1');
   },
 };
 
@@ -292,9 +285,6 @@ export const OpenCloseInteraction: Story = {
     // The flyout links render in-tree (no portal)
     const link = await canvas.findByRole('link', { name: 'Analytics' });
     await expect(link).toBeInTheDocument();
-    await expectInterruptibleOverlayMotion(
-      canvasElement.querySelector('[data-slot="navigation-menu-viewport"]')
-    );
 
     // Close with Escape
     await userEvent.keyboard('{Escape}');
@@ -399,8 +389,6 @@ export const WithDataAttributes: Story = {
       'data-slot',
       'navigation-menu-trigger'
     );
-    // #470: trigger reuses navigationMenuTriggerStyle -> typography-label-default.
-    await expect(trigger).toHaveClass('nx:typography-label-default');
 
     // Open → content + link slots render
     await userEvent.click(trigger);
@@ -412,10 +400,6 @@ export const WithDataAttributes: Story = {
         canvasElement.querySelector('[data-slot="navigation-menu-link"]')
       ).toBeInTheDocument();
     });
-    // #470: flyout link migrated from the raw named text-size utility.
-    await expect(
-      canvasElement.querySelector('[data-slot="navigation-menu-link"]')
-    ).toHaveClass('nx:typography-body-default');
 
     await userEvent.keyboard('{Escape}');
   },

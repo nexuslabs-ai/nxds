@@ -1,5 +1,5 @@
 import { Canvas, Source, Title } from '@storybook/addon-docs/blocks';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import appliedFiltersSource from '../../blocks/filtering/applied-filters.tsx?raw';
@@ -125,7 +125,7 @@ const meta = {
           <ul>
             <li>
               <a
-                href="/?path=/docs/blocks-filtering-choicefilter--docs"
+                href="/?path=/docs/blocks-filtering-choice-filter-choicefilter--docs"
                 target="_top"
               >
                 ChoiceFilter
@@ -134,7 +134,7 @@ const meta = {
             </li>
             <li>
               <a
-                href="/?path=/docs/blocks-filtering-multichoicefilter--docs"
+                href="/?path=/docs/blocks-filtering-multi-choice-filter-multichoicefilter--docs"
                 target="_top"
               >
                 MultiChoiceFilter
@@ -143,7 +143,7 @@ const meta = {
             </li>
             <li>
               <a
-                href="/?path=/docs/blocks-filtering-textfilter--docs"
+                href="/?path=/docs/blocks-filtering-text-filter-textfilter--docs"
                 target="_top"
               >
                 TextFilter
@@ -152,7 +152,7 @@ const meta = {
             </li>
             <li>
               <a
-                href="/?path=/docs/blocks-filtering-numbercomparisonfilter--docs"
+                href="/?path=/docs/blocks-filtering-number-comparison-filter-numbercomparisonfilter--docs"
                 target="_top"
               >
                 NumberComparisonFilter
@@ -161,7 +161,7 @@ const meta = {
             </li>
             <li>
               <a
-                href="/?path=/docs/blocks-filtering-numberrangefilter--docs"
+                href="/?path=/docs/blocks-filtering-number-range-filter-numberrangefilter--docs"
                 target="_top"
               >
                 NumberRangeFilter
@@ -170,7 +170,7 @@ const meta = {
             </li>
             <li>
               <a
-                href="/?path=/docs/blocks-filtering-daterangefilter--docs"
+                href="/?path=/docs/blocks-filtering-date-range-filter-daterangefilter--docs"
                 target="_top"
               >
                 DateRangeFilter
@@ -293,12 +293,12 @@ export const PanelSummaries: Story = {
     const canvas = within(canvasElement);
     const page = within(canvasElement.ownerDocument.body);
     const paid = canvas.getByRole('button', {
-      name: 'Remove status filter: Paid',
+      name: 'Remove filter: Status: Paid',
     });
     paid.focus();
     await userEvent.keyboard('{Enter}');
     await expect(
-      canvas.getByRole('button', { name: 'Remove country filter: India' })
+      canvas.getByRole('button', { name: 'Remove filter: Country: India' })
     ).toHaveFocus();
     await expect(canvas.getByRole('status')).toHaveTextContent(
       'any status from India'
@@ -312,7 +312,7 @@ export const PanelSummaries: Story = {
     await userEvent.click(page.getByRole('checkbox', { name: 'Status: Paid' }));
     await userEvent.keyboard('{Escape}');
     await expect(
-      canvas.getByRole('button', { name: 'Remove status filter: Paid' })
+      canvas.getByRole('button', { name: 'Remove filter: Status: Paid' })
     ).toBeVisible();
     await expect(canvas.getByRole('status')).toHaveTextContent(
       'paid invoices from all countries'

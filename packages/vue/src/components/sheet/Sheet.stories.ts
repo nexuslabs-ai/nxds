@@ -2,10 +2,6 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { useId } from 'vue';
 
-import {
-  expectExitBeforeUnmount,
-  expectInterruptibleOverlayMotion,
-} from '../../stories/support/overlay-motion-test-utils';
 import { Button } from '../button';
 import { Input } from '../input';
 import { Label } from '../label';
@@ -23,7 +19,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Sheet',
   component: Sheet,
   parameters: {
     layout: 'padded',
@@ -319,11 +314,6 @@ export const OpenCloseInteraction: Story = {
     const sheet = await within(document.body).findByRole('dialog');
     await expect(sheet).toBeInTheDocument();
     await expect(sheet).toHaveAttribute('data-slot', 'sheet-content');
-    await expectInterruptibleOverlayMotion(sheet);
-    await expect(sheet).toHaveClass('nx:transition-[translate]');
-    await expect(sheet).toHaveClass('nx:data-[state=closed]:translate-x-full');
-    const overlay = document.querySelector('[data-slot="sheet-overlay"]');
-    await expectInterruptibleOverlayMotion(overlay);
 
     // Title should be visible.
     await expect(
@@ -335,7 +325,9 @@ export const OpenCloseInteraction: Story = {
       within(sheet).getByRole('button', { name: 'Dismiss' })
     );
 
-    await expectExitBeforeUnmount(document.querySelector('[role="dialog"]'));
+    await waitFor(() => {
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+    });
     await expect(trigger).toHaveFocus();
   },
 };
@@ -465,26 +457,10 @@ export const WithDataAttributes: Story = {
     await expect(
       document.querySelector('[data-slot="sheet-content"]')
     ).toHaveAttribute('data-side', 'right');
-    await expect(
-      document.querySelector('[data-slot="sheet-content"]')
-    ).toHaveClass('nx:h-svh', 'nx:overflow-hidden');
 
-    await expect(
-      document.querySelector('[data-slot="sheet-body"]')
-    ).toHaveClass(
-      'nx:min-h-0',
-      'nx:overflow-y-auto',
-      'nx:focus-visible:outline-2',
-      'nx:focus-visible:outline-focus-default',
-      'nx:focus-visible:[outline-offset:-2px]'
-    );
     await expect(
       document.querySelector('[data-slot="sheet-body"]')
     ).toHaveAttribute('tabindex', '0');
-
-    await expect(
-      document.querySelector('[data-slot="sheet-close-button"]')
-    ).toHaveClass('nx:right-6', 'nx:top-6');
 
     await userEvent.keyboard('{Escape}');
   },

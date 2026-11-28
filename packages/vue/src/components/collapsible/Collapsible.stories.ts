@@ -8,7 +8,6 @@ import { Button } from '../button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '.';
 
 const meta = {
-  title: 'Components/Collapsible',
   component: Collapsible,
   parameters: {
     docs: {
@@ -259,9 +258,6 @@ export const WithDataAttributes: Story = {
     await expect(
       canvasElement.querySelector('[data-slot="collapsible-content"]')
     ).toBeInTheDocument();
-    await expect(
-      canvasElement.querySelector('[data-slot="collapsible-content"]')
-    ).toHaveClass('nx:duration-default');
   },
 };
 

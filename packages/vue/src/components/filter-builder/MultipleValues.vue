@@ -36,14 +36,15 @@ function toggle(option: string) {
   );
 }
 
-const summary = computed(() =>
-  props.value
-    .map(
-      (item) =>
-        props.field.options.find((option) => option.value === item)?.label ??
-        item
-    )
-    .join(', ')
+const summary = computed(
+  () =>
+    props.value
+      .map(
+        (item) =>
+          props.field.options.find((option) => option.value === item)?.label ??
+          item
+      )
+      .join(', ') || 'Choose values…'
 );
 </script>
 
@@ -54,12 +55,12 @@ const summary = computed(() =>
         size="sm"
         variant="outline"
         :disabled="disabled"
-        :aria-label="`${field.label} values`"
+        :aria-label="`${field.label} values: ${summary}`"
         :aria-invalid="invalid"
         :aria-describedby="describedBy"
         class="nx:h-(--nx-spacing-8) nx:w-full nx:min-w-0 nx:justify-between"
       >
-        <span class="nx:truncate">{{ summary || 'Choose values…' }}</span>
+        <span class="nx:truncate">{{ summary }}</span>
         <IconChevronDown aria-hidden="true" />
       </Button>
     </PopoverTrigger>

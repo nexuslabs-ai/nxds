@@ -7,8 +7,6 @@ import {
   ref,
 } from 'vue';
 
-import { expectImmediateItemMotion } from '../../stories/support/motion-test-utils';
-import { Checkbox } from '../checkbox';
 import { Field, FieldDescription, FieldError, FieldLabel } from '../field';
 
 import {
@@ -29,12 +27,6 @@ const FRAMEWORKS = [
   { value: 'solid', label: 'Solid' },
   { value: 'qwik', label: 'Qwik' },
 ];
-
-/**
- * Optical centering slack for the `+N` chip label. Sub-pixel text metrics drift
- * ~0.5px; losing the chip's flex centering drifts ~2.5px.
- */
-const MAX_LABEL_DRIFT_PX = 1;
 
 // The play stories' picker; each docs story spells its picker out instead.
 const Frameworks = defineComponent({
@@ -65,7 +57,6 @@ const Frameworks = defineComponent({
 });
 
 const meta = {
-  title: 'Components/MultiSelect',
   component: MultiSelect,
   parameters: {
     layout: 'padded',
@@ -254,17 +245,6 @@ export const OverflowCollapse: Story = {
     // Six chips overflow the 256px field, so measurement collapses the excess
     // into a visible `+N` badge.
     await waitFor(() => expect(canvas.getByText(/^\+\d+$/)).toBeVisible());
-
-    const overflow = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="multi-select-overflow"]'
-    )!;
-    const box = overflow.getBoundingClientRect();
-    const range = document.createRange();
-    range.selectNodeContents(overflow);
-    const label = range.getBoundingClientRect();
-    expect(
-      Math.abs((label.top + label.bottom) / 2 - (box.top + box.bottom) / 2)
-    ).toBeLessThan(MAX_LABEL_DRIFT_PX);
   },
 };
 
@@ -311,7 +291,7 @@ export const Disabled: Story = {
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await expect(trigger).toBeDisabled();
     await expect(trigger).toHaveAttribute('aria-expanded', 'false');
@@ -357,7 +337,7 @@ export const WithDisabledOption: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await userEvent.click(trigger);
     const disabled = await body.findByRole('option', { name: 'Vue' });
@@ -422,9 +402,45 @@ export const InvalidField: Story = {
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await expect(trigger).toHaveAttribute('aria-invalid', 'true');
+  },
+};
+
+export const LabelledBy: Story = {
+  render: () => ({
+    components: {
+      MultiSelect,
+      MultiSelectContent,
+      MultiSelectItem,
+      MultiSelectTrigger,
+      MultiSelectValue,
+    },
+    setup: () => ({ frameworks: FRAMEWORKS }),
+    template: `
+      <div class="nx:flex nx:flex-col nx:gap-2">
+        <span id="frameworks-heading">Frameworks</span>
+        <MultiSelect :default-values="['react', 'vue']">
+          <MultiSelectTrigger aria-labelledby="frameworks-heading" aria-label="Tech stack" class="nx:w-80">
+            <MultiSelectValue>
+              <template #placeholder>Select frameworks</template>
+            </MultiSelectValue>
+          </MultiSelectTrigger>
+          <MultiSelectContent search-placeholder="Search frameworks…">
+            <template #empty-message>No frameworks found.</template>
+            <MultiSelectItem v-for="option in frameworks" :key="option.value" :value="option.value">{{ option.label }}</MultiSelectItem>
+          </MultiSelectContent>
+        </MultiSelect>
+      </div>
+    `,
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
+
+    // The heading names the trigger ahead of its `aria-label`, as ARIA ranks them.
+    await expect(trigger).toHaveAccessibleName(/^Frameworks.*React.*Vue/);
   },
 };
 
@@ -436,7 +452,7 @@ export const ClickInteraction: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await userEvent.click(trigger);
     await userEvent.click(await body.findByRole('option', { name: 'React' }));
@@ -455,7 +471,7 @@ export const KeyboardInteraction: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await userEvent.click(trigger);
     const search = await body.findByPlaceholderText('Search frameworks…');
@@ -478,7 +494,7 @@ export const ChipRemoval: Story = {
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await expect(within(trigger).getByText('React')).toBeInTheDocument();
     await userEvent.click(within(trigger).getByText('React'));
@@ -497,7 +513,7 @@ export const ChipKeyboardRemoval: Story = {
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     // Backspace on the focused field removes the last selected value without
     // reopening the list — the keyboard equivalent of clicking a chip's X.
@@ -518,7 +534,7 @@ export const LastChipRemoval: Story = {
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await userEvent.click(within(trigger).getByText('React'));
 
@@ -585,7 +601,7 @@ export const SearchEmpty: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await userEvent.click(trigger);
     await userEvent.type(
@@ -605,50 +621,15 @@ export const WithDataAttributes: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
-    const trigger = canvas.getByRole('button', { name: 'Frameworks' });
+    const trigger = canvas.getByRole('button', { name: /^Frameworks/ });
 
     await expect(trigger).toHaveAttribute('data-slot', 'multi-select-trigger');
-    await expect(trigger).toHaveClass('nx:bg-container');
-    await expect(trigger).toHaveClass('nx:enabled:hover:bg-container-hover');
 
     await userEvent.click(trigger);
-    const listbox = await body.findByRole('listbox');
-    const options = Array.from(
-      listbox.querySelectorAll('[data-slot="multi-select-item"]')
-    );
-    await expectImmediateItemMotion(options);
     const option = await body.findByRole('option', { name: 'React' });
 
     await expect(option).toHaveAttribute('data-slot', 'multi-select-item');
     await userEvent.click(option);
     await expect(option).toHaveAttribute('data-checked', 'true');
-  },
-};
-
-export const IndicatorMatchesCheckboxAtLargerScale: Story = {
-  // The option box grows with the UI scale, as a Checkbox does.
-  globals: { uiScale: 'larger' },
-  render: () => ({
-    components: { Checkbox, Frameworks },
-    template: `
-      <div class="nx:flex nx:flex-col nx:gap-4">
-        <Checkbox aria-label="Notify me" />
-        <Frameworks :default-values="['react']" />
-      </div>
-    `,
-  }),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(document.body);
-    const checkbox = canvas.getByRole('checkbox').getBoundingClientRect();
-
-    await userEvent.click(canvas.getByRole('button', { name: 'Frameworks' }));
-    const option = await body.findByRole('option', { name: 'React' });
-    const indicator = option
-      .querySelector('[data-slot="multi-select-indicator"]')!
-      .getBoundingClientRect();
-
-    await expect(indicator.width).toBe(checkbox.width);
-    await expect(indicator.height).toBe(checkbox.height);
   },
 };

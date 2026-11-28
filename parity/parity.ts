@@ -442,6 +442,7 @@ export const behaviourOnlyIn: Record<
   react: {
     'button/RefForwarding': REACT_REF,
     'tabs/ListRef': REACT_REF,
+    'tabs/ListRefSize': REACT_REF,
   },
   vue: {
     'accordion/VModel': V_MODEL,
@@ -477,22 +478,26 @@ const TABS_INDICATOR =
 
 /** Paired play stories whose steps differ by design, as `{slug}/{Story}`. */
 export const behaviourDifferences: Record<string, string> = {
-  'avatar/CroppedImage': AVATAR_IMAGE_LOAD,
+  'avatar/CroppedImageStyle': AVATAR_IMAGE_LOAD,
   'command/SearchRanking':
     'cmdk sorts the matches by score; Vue keeps them in the order they are written, since sorting would move DOM nodes Vue owns, so Enter runs another item',
   'date-picker/Accessibility':
-    "react-day-picker labels a day 'Today, Wednesday, January 15th, 2025, selected'; Reka labels it 'Wednesday, January 15, 2025' and marks selection with aria-selected on the cell, so Vue checks those",
+    "React labels a day 'Today, Wednesday, January 15, 2025, selected'; Reka labels it 'Wednesday, January 15, 2025' and marks selection with aria-selected on the cell, so Vue checks those",
   'avatar/WithDataAttributes': AVATAR_IMAGE_LOAD,
   'bubble/WithTooltip': GRACE_AREA,
   'hover-card/OpenCloseInteraction': GRACE_AREA,
+  'hover-card/OpenCloseInteractionMotion': GRACE_AREA,
   'input-otp/KeyboardInteraction': PIN_INPUT,
   'input-otp/Paste': PIN_INPUT,
   'message/WithActions': GRACE_AREA,
   'tabs/DisabledTabInteraction': TABS_INDICATOR,
+  'tabs/DisabledTabInteractionGeometry':
+    "React pins its measured indicator's left and width; Vue checks the left, and IndicatorFollowsActiveTab pins the width of Reka's indicator",
   'tabs/UnderlineVariant': TABS_INDICATOR,
   'tabs/VerticalIndicatorFollowsActiveTab': TABS_INDICATOR,
   'tooltip/GroupedInProvider': GRACE_AREA,
   'tooltip/HoverInteraction': GRACE_AREA,
+  'tooltip/HoverInteractionMotion': GRACE_AREA,
   'tooltip/WithDataAttributes': GRACE_AREA,
   'toggle-group/ControlledDisabledTransition':
     "clearing a single selection emits '' from Radix and undefined from Reka",
@@ -673,8 +678,8 @@ export const copies: [react: string, vue: string][] = [
     'packages/vue/src/stories/support/story-height-test-utils.ts',
   ],
   [
-    'packages/react/src/components/avatar/avatar-fixtures.ts',
-    'packages/vue/src/stories/support/avatar-fixtures.ts',
+    'packages/react/src/components/avatar/avatar.story-data.ts',
+    'packages/vue/src/components/avatar/avatar.story-data.ts',
   ],
   [
     'packages/react/src/stories/support/menu-item-inset-test-utils.ts',

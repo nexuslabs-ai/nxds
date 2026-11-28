@@ -4,16 +4,20 @@ import path from 'node:path';
 import { major, satisfies } from 'semver';
 
 import {
+  appCatalog,
   type Catalog,
   type CatalogFile,
   type CatalogItem,
   fetchRelease,
+  filesOf,
   loadRelease,
   releaseFiles,
   resolveItems,
+  setupVariant,
   splitInstalled,
   variantFor,
   withIconLibrary,
+  withStories,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
 import {
@@ -47,6 +51,7 @@ import {
   rendersDerivedColors,
   VITE_PLUGIN_FILE,
 } from '../setup/react';
+import { storybookSupport, storybookWiringProblem } from '../setup/storybook';
 import {
   fontImportLine,
   nxdsThemeSource,
@@ -63,14 +68,18 @@ export async function diff(
   names: string[]
 ): Promise<CommandResult> {
   const config = requireConfig(cwd);
+  const project = readProject(cwd);
   // `update` installs the app's React major, which may differ from the files'.
-  const target = { ...config, react: reactMajor(readProject(cwd)) };
+  const target = { ...config, react: reactMajor(project) };
   const release = await loadRelease(registry, 'latest', target.react);
   // As `update` does: an app from before icon libraries gets the default.
-  const library = config.iconLibrary ?? release.iconLibraries[0]?.name;
-  const latest = withIconLibrary(release, library);
+  const app = {
+    iconLibrary: config.iconLibrary ?? release.iconLibraries[0]?.name,
+    stories: config.stories,
+  };
+  const latest = appCatalog(release, app, project);
   const fetched = await fetchRelease(registry, config.version);
-  const previous = fetched && withIconLibrary(fetched, library);
+  const previous = fetched && appCatalog(fetched, app, project);
   const previousFiles = previous && releaseFiles(previous, config);
   const { known, removed } = splitInstalled(latest, config.items);
   const items = resolveItems(
@@ -153,6 +162,7 @@ function read(root: string, file: string | undefined) {
  * The wiring files where the theme engine still derives colors, which would
  * override the app's own: an entry that renders the provider or the head
  * script without `deriveColors={false}`, and a Vite theme script without it.
+ * The `stories` check covers a Storybook preview.
  */
 function filesDerivingColors(
   root: string,
@@ -298,7 +308,10 @@ function reactChecks(project: Project, config: Config): Check[] {
   return checks;
 }
 
-/** Each package the installed items need that is missing or below range. */
+/**
+ * Each package the installed items need, their stories' dev dependencies
+ * included, that is missing or below range.
+ */
 function packageProblems(
   project: Project,
   config: Config,
@@ -306,7 +319,10 @@ function packageProblems(
 ) {
   const needed: Record<string, string> = Object.assign(
     {},
-    ...items.map((item) => variantFor(item, config).packages.npm)
+    ...items.flatMap((item) => {
+      const { npm, dev } = variantFor(item, config).packages;
+      return [dev, npm];
+    })
   );
   return Object.entries(needed).flatMap(([name, range]) => {
     if (!(name in project.dependencies))
@@ -350,6 +366,44 @@ function iconsCheck(
     check('icons', false, error.message);
     return release;
   }
+}
+
+/**
+ * `catalog` with each item's stories, for an app that has stories on, after
+ * checking that its Storybook runs them and takes nxds's wiring. The `stories`
+ * check fails when either doesn't hold. `catalog` keeps its stories apart only
+ * when the Storybook can't run them.
+ */
+function storiesCheck(
+  catalog: Catalog,
+  project: Project,
+  config: Config,
+  check: (name: string, ok: boolean, message: string) => void
+) {
+  if (!config.stories) return catalog;
+  const support = storybookSupport(catalog, project);
+  if ('problem' in support) {
+    check('stories', false, support.problem);
+    return catalog;
+  }
+  const result = withStories(catalog, project);
+  let problem: string | null;
+  try {
+    const { known } = splitInstalled(result, config.items);
+    problem = storybookWiringProblem(project, config, support.framework, {
+      tailwind: setupVariant(catalog, config).packages.tailwind,
+      files: [...filesOf(result, config, known)],
+    });
+  } catch (error) {
+    if (!(error instanceof CliError)) throw error;
+    problem = error.message;
+  }
+  check(
+    'stories',
+    problem === null,
+    problem ?? `Storybook runs the stories in ${config.dir}, with nxds's wiring`
+  );
+  return result;
 }
 
 /**
@@ -466,7 +520,8 @@ export async function doctor(
       ? `Files come from nxds ${config.version}`
       : `${registry} has no nxds ${config.version}. Run \`${CLI_COMMAND} update\`.`
   );
-  const catalog = fetched && iconsCheck(fetched, config, check);
+  const drawn = fetched && iconsCheck(fetched, config, check);
+  const catalog = drawn && storiesCheck(drawn, project, config, check);
 
   check(
     'tailwind',

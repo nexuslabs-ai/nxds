@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 import {
+  appCatalog,
   type Catalog,
   type CatalogItem,
   findItem,
@@ -10,7 +11,6 @@ import {
   type ReactMajor,
   SETUP,
   variantFor,
-  withIconLibrary,
 } from '../catalog';
 import { CLI_COMMAND } from '../cli-command';
 import { type Config, readConfig } from '../config';
@@ -115,6 +115,10 @@ function projectReact(cwd: string): ReactMajor {
   return 'react' in project.dependencies ? reactMajor(project) : 19;
 }
 
+function packageSpecs(packages: Record<string, string> = {}) {
+  return Object.entries(packages).map(([pkg, range]) => `${pkg}@${range}`);
+}
+
 export async function view(
   cwd: string,
   registry: string,
@@ -122,18 +126,18 @@ export async function view(
 ): Promise<CommandResult> {
   const config = readConfig(cwd);
   const react = projectReact(cwd);
-  const catalog = withIconLibrary(
-    await appRelease(registry, config, react),
-    config?.iconLibrary
-  );
+  const release = await appRelease(registry, config, react);
+  // What `add` would install: in an app, drawn by its icons, with its stories.
+  const catalog = config
+    ? appCatalog(release, config, readProject(cwd))
+    : release;
   const item = findItem(catalog, name);
   const variant = variantFor(item, {
     framework: projectFramework(config, catalog),
     react,
   });
-  const packages = Object.entries(variant.packages.npm).map(
-    ([pkg, range]) => `${pkg}@${range}`
-  );
+  const packages = packageSpecs(variant.packages.npm);
+  const devPackages = packageSpecs(variant.packages.dev);
   const needs = variant.items.filter((other) => other !== SETUP);
   return {
     data: {
@@ -141,6 +145,7 @@ export async function view(
       docs: item.docs,
       items: variant.items,
       packages,
+      devPackages,
       files: variant.files.map((file) => file.path),
     },
     lines: [
@@ -149,6 +154,9 @@ export async function view(
       `Docs: ${item.docs}`,
       ...(needs.length > 0 ? [`Also installs: ${needs.join(', ')}`] : []),
       ...(packages.length > 0 ? [`Packages: ${packages.join(' ')}`] : []),
+      ...(devPackages.length > 0
+        ? [`Dev packages: ${devPackages.join(' ')}`]
+        : []),
       'Files:',
       ...variant.files.map((file) => `  ${file.path}`),
     ],
@@ -173,6 +181,7 @@ export function info(cwd: string): CommandResult {
       version: config?.version ?? null,
       dir: config?.dir ?? null,
       css: config?.css ?? null,
+      stories: config?.stories === true,
       items: config?.items ?? [],
     },
     lines: [
@@ -181,7 +190,7 @@ export function info(cwd: string): CommandResult {
       `TypeScript: ${project.typescript ? 'yes' : 'no'}`,
       `Tailwind: ${project.dependencies.tailwindcss ?? 'not installed'}`,
       config
-        ? `nxds: ${config.version} in ${config.dir}, CSS entry ${config.css}`
+        ? `nxds: ${config.version} in ${config.dir}, CSS entry ${config.css}${config.stories ? ', with stories' : ''}`
         : `nxds: not set up. Run \`${CLI_COMMAND} init\`.`,
       ...(config && config.items.length > 0
         ? [

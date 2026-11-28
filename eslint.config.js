@@ -390,6 +390,37 @@ export default tseslint.config(
     rules: { '@nxds/no-jsdoc-data-tags': 'error' },
   },
 
+  // `nxds-cli` copies a component's or block's stories into an app, so they
+  // hold only what passes there. The rest goes in `*.test.stories.*`.
+  {
+    files: reactSources(
+      'src/components/*/*.stories.tsx',
+      'src/blocks/**/*.stories.tsx',
+      'src/**/*.story-*.{ts,tsx}'
+    ),
+    ignores: [
+      '**/*.test.stories.tsx',
+      ...reactSources('src/components/appearance/**'),
+    ],
+    rules: { '@nxds/shippable-story': 'error' },
+  },
+  {
+    files: [
+      'packages/vue/src/components/*/*.stories.ts',
+      'packages/vue/src/**/*.story-*.ts',
+    ],
+    ignores: ['**/*.test.stories.ts'],
+    rules: {
+      '@nxds/shippable-story': [
+        'error',
+        {
+          storybookImports: ['@storybook/vue3-vite', 'storybook/test'],
+          iconImports: ['@phosphor-icons/vue'],
+        },
+      ],
+    },
+  },
+
   // packages/react-18 is generated from packages/react by adding forwardRef
   // and nothing else, so packages/react can't use what React 18 lacks.
   {

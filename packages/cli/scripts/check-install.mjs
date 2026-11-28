@@ -2,13 +2,18 @@
 // Next.js App Router app, the same app with a whole theme set by `init` flags,
 // a fresh Vite + React app and the same Vite app moved to React 18, then
 // checks the result:
-// - `init`, then `add` with every catalog item, for the app's React;
+// - Storybook, added the way `storybook init` adds it;
+// - `init --stories`, then `add` with every catalog item and its stories,
+//   for the app's React;
 // - running `init` again, and `add --dry-run`, change nothing;
 // - every docs example, pasted as the docs page shows it for the app's icon
 //   library;
-// - the app's own typecheck, lint and production build pass;
+// - the app's own typecheck, lint and production build pass, stories included;
+// - Storybook builds, and every story passes as a test;
 // - `nxds-cli doctor` passes;
-// - `add` and `update` keep a file you edited.
+// - `add` and `update` keep a file you edited;
+// - in the Vite app, the stories type-check as each other icon library draws
+//   them.
 // The CLI installs from a registry built from this checkout, and the app gets
 // this checkout's @nxds/core as a packed tarball, since neither may be
 // published yet.
@@ -22,6 +27,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  rmSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -50,6 +56,10 @@ const VITE = {
   ],
   install: true,
   srcDir: 'src',
+  // Storybook's example stories, which the template's own tsconfig rejects.
+  storybookExamples: 'src/stories',
+  // Storybook's test setup imports Node modules into vite.config.ts.
+  storybookPackages: ['@types/node'],
   mount: (names) => mountInViteApp(names),
   checks: [
     ['npm', ['run', 'build']],
@@ -74,6 +84,7 @@ const NEXT = {
     '--disable-git',
   ],
   srcDir: 'app',
+  storybookExamples: 'stories',
   mount: (names) => writePage('app/nxds-check/page.tsx', 'app', names),
   checks: [
     ['npm', ['run', 'build']],
@@ -107,7 +118,8 @@ const APPS = {
       'lucide',
     ],
   },
-  vite: VITE,
+  // The icon libraries no app here installs: their stories are type-checked.
+  vite: { ...VITE, otherIconLibraries: ['tabler', 'hugeicons', 'remix'] },
   'vite-react18': {
     ...VITE,
     prepare: [
@@ -171,6 +183,54 @@ function installLocalCore(workDir) {
   });
   const tarball = output.trim().split('\n').at(-1);
   run('npm', ['install', '--no-audit', '--no-fund', tarball]);
+}
+
+/**
+ * Adds Storybook as `storybook init` does, with its Vitest and accessibility
+ * addons, and without its example stories.
+ */
+function addStorybook(app) {
+  run('npx', [
+    '--yes',
+    'storybook@10',
+    'init',
+    '--yes',
+    '--no-dev',
+    '--no-agent',
+    '--disable-telemetry',
+    '--builder',
+    'vite',
+    '--features',
+    'docs',
+    'test',
+    'a11y',
+    '--package-manager',
+    'npm',
+  ]);
+  rmSync(path.join(appDir, app.storybookExamples), { recursive: true });
+  if (app.storybookPackages) {
+    run('npm', [
+      'install',
+      '--no-audit',
+      '--no-fund',
+      '-D',
+      ...app.storybookPackages,
+    ]);
+  }
+}
+
+/** Storybook builds, and every story the app now has passes as a test. */
+function checkStories() {
+  run('npx', ['storybook', 'build', '--disable-telemetry']);
+  run('npx', ['vitest', 'run', '--project=storybook']);
+}
+
+/** The stories type-check as each of `libraries` draws them. */
+function checkOtherIconLibraries(libraries) {
+  for (const library of libraries) {
+    runCli(['init', '--icons', library]);
+    run('npx', ['tsc', '-b']);
+  }
 }
 
 /** Rerunning `init`, and `add` as a dry run, leave the app as it is. */
@@ -290,11 +350,12 @@ for (const [name, app] of Object.entries(APPS)) {
   if (app.prepare)
     run('npm', ['install', '--no-audit', '--no-fund', ...app.prepare]);
   installLocalCore(workDir);
+  addStorybook(app);
 
   registryDir = path.join(workDir, 'registry');
   writeRegistry(registryDir, [catalog]);
 
-  runCli(['init', ...(app.theme ?? [])]);
+  runCli(['init', '--stories', ...(app.theme ?? [])]);
   const { react, iconLibrary } = JSON.parse(
     readFileSync(path.join(appDir, 'nxds.json'), 'utf8')
   );
@@ -308,7 +369,9 @@ for (const [name, app] of Object.entries(APPS)) {
   app.mount(pasteDemos(app.srcDir, iconLibrary));
 
   for (const [command, args] of app.checks) run(command, args);
+  checkStories();
   runCli(['doctor']);
   checkEditedFileKept();
+  checkOtherIconLibraries(app.otherIconLibraries ?? []);
 }
 console.log('\nThe CLI installs nxds cleanly into every app.');

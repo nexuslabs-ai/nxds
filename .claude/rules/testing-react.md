@@ -15,7 +15,7 @@
 
 | What                   | Where                                  | Imports From     |
 | ---------------------- | -------------------------------------- | ---------------- |
-| Components             | `*.stories.tsx`                        | `storybook/test` |
+| Components             | `*.stories.tsx`, `*.test.stories.tsx`  | `storybook/test` |
 | `cn` merge             | `packages/react/src/lib/utils.test.ts` | `vitest`         |
 | Hooks, other utilities | No tests of their own                  | —                |
 
@@ -26,9 +26,10 @@ Hooks and utilities are covered by the stories of the components that use them. 
 ### Components (Story-First)
 
 ```
-component-name/              # kebab-case folder
-├── component-name.tsx        # Implementation (kebab-case)
-└── ComponentName.stories.tsx # Stories = Tests (PascalCase)
+component-name/                    # kebab-case folder
+├── component-name.tsx              # Implementation (kebab-case)
+├── ComponentName.stories.tsx       # Stories nxds-cli ships (PascalCase)
+└── ComponentName.test.stories.tsx  # Our own tests, when it needs them
 ```
 
 A component folder has no `index.ts`. Import another component by its file
@@ -42,16 +43,81 @@ file onto the page, and does not link its folder's component.
 
 **No separate `*.test.tsx` files for components.** Tests live in stories.
 
+## Shipped Stories and Test Stories
+
+`nxds-cli init --stories` copies a component's or block's `X.stories.tsx`
+into apps, where the app owns it. `X.test.stories.tsx` stays in this repo.
+
+**A test ships if it still passes after an app restyles the component.** It
+goes in the test file if it passes only with our classes, our pixel values or
+our Storybook setup.
+
+| Ships in `X.stories.tsx`                                 | Stays in `X.test.stories.tsx`                                         |
+| -------------------------------------------------------- | --------------------------------------------------------------------- |
+| Docs examples                                            | Class assertions (`toHaveClass`, class selectors)                     |
+| Roles, names, keyboard, focus, callbacks, ARIA, `data-*` | Computed CSS, positions and sizes                                     |
+| Sample data, in `x.story-data.ts` beside the component   | `stories/support` helpers, `?raw` imports, public-folder images       |
+| Icons from `@phosphor-icons/react/ssr`                   | Any Storybook import but `@storybook/react-vite` and `storybook/test` |
+
+`@nxds/shippable-story` reports a shipped file that breaks this, and the CLI
+install check runs every shipped story in four fresh apps.
+
+A shipped story runs in an app's Storybook, on the newest packages our ranges
+allow. So it:
+
+- Sets no `title`. Storybook names it from its path.
+- Has no unused import or parameter. An app's default tsconfig and ESLint
+  reject them.
+- Names each Phosphor icon in `EXAMPLE_ICONS`
+  (`packages/source-model/src/example-icons.ts`), so the catalog can draw it
+  in the app's icon library.
+- Brings what it needs: its own viewport in `parameters.viewport.options`,
+  not a name from our preview.
+- Finds an element by its label or `data-slot` where a dependency picks the
+  role, as Radix does for a ToggleGroup.
+- Waits for an overlay to close before a role query, since a closing Select
+  still hides the page from assistive technology.
+- Starts from what is on screen, not from an empty page. An earlier story's
+  toast can still be there.
+
+A test story reuses the shipped story it tests:
+
+```tsx
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, within } from 'storybook/test';
+
+import type { Button } from './button';
+import buttonMeta, { IconOnlySizes } from './Button.stories';
+
+const meta: Meta<typeof Button> = { ...buttonMeta, title: 'Tests/Button' };
+export default meta;
+type Story = StoryObj<typeof Button>;
+
+// Named for the story and what it pins: an icon-only button is square.
+export const IconOnlySizesSquare: Story = {
+  ...IconOnlySizes,
+  play: async ({ canvasElement }) => {
+    for (const button of within(canvasElement).getAllByRole('button')) {
+      const { width, height } = button.getBoundingClientRect();
+      await expect(width).toBe(height);
+    }
+  },
+};
+```
+
+A Storybook guide page for a component or block is `X.mdx` beside its
+stories, attached with `<Meta of={XStories} />`. A docs page in a test file
+can't show stories from another file.
+
 ## Story Template with Play Functions
 
 ```tsx
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Component } from './component';
 
 const meta: Meta<typeof Component> = {
-  title: 'Components/Component',
   component: Component,
   args: {
     onClick: fn(), // Spy for callbacks
@@ -215,6 +281,8 @@ pnpm test:storybook:ui
 | Skip keyboard interaction tests                 | Every interactive component needs them |
 | Write a `use-hook.test.ts` for a hook           | Cover it through a component's stories |
 | Import from `@storybook/test`                   | Use `storybook/test` (Storybook 10)    |
+| Import types from `@storybook/react`            | Use `@storybook/react-vite`            |
+| Assert a class or a size in `X.stories.tsx`     | Put it in `X.test.stories.tsx`         |
 
 ## Do Not
 

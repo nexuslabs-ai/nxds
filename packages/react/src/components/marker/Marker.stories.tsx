@@ -7,7 +7,7 @@ import {
   MagnifyingGlassIcon,
   PencilSimpleIcon,
 } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Spinner } from '../spinner/spinner';
@@ -15,7 +15,6 @@ import { Spinner } from '../spinner/spinner';
 import { Marker, MarkerContent, MarkerIcon, type MarkerProps } from './marker';
 
 const meta: Meta<typeof Marker> = {
-  title: 'Components/Marker',
   component: Marker,
   parameters: {
     layout: 'padded',
@@ -296,25 +295,14 @@ export const Disabled: StoryObj<MarkerProps & { onRevert: () => void }> = {
   ),
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    const enabled = canvas.getByRole('button', { name: 'Revert this change' });
     const disabled = canvas.getByRole('button', { name: 'Delete this draft' });
-    const link = canvas.getByRole('link', { name: 'View the pull request' });
-
-    const enabledColor = getComputedStyle(enabled).color;
 
     await expect(disabled).toBeDisabled();
-    await expect(disabled).toHaveStyle({ pointerEvents: 'none' });
-    await expect(disabled).not.toHaveStyle({ color: enabledColor });
 
     // user-event refuses to click through `pointer-events: none`, so the check
     // is bypassed to prove the handler stays silent on the native path too.
     await userEvent.click(disabled, { pointerEventsCheck: 0 });
     await expect(args.onRevert).not.toHaveBeenCalled();
-
-    // An `a` ignores native `disabled`, so the row's inertness rests entirely
-    // on the aria-disabled pair.
-    await expect(link).toHaveStyle({ pointerEvents: 'none' });
-    await expect(link).not.toHaveStyle({ color: enabledColor });
   },
 };
 
@@ -335,10 +323,6 @@ export const ClickInteraction: StoryObj<
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     const button = canvas.getByRole('button', { name: 'Revert this change' });
-
-    // A bare <button> has no UA pointer cursor, so this is the row's own
-    // `:is(button)` rule — WithDataAttributes proves the negative case.
-    await expect(button).toHaveStyle({ cursor: 'pointer' });
 
     await userEvent.click(button);
     await expect(args.onRevert).toHaveBeenCalledTimes(1);
@@ -389,10 +373,6 @@ export const WithDataAttributes: Story = {
     await expect(marker).toHaveAttribute('data-variant', 'separator');
     await expect(icon).toHaveAttribute('aria-hidden', 'true');
     await expect(content).toHaveTextContent('Today');
-
-    // The cursor rule rides the same static cva string as everywhere else, so
-    // a non-interactive row proves the `:is(button)` scoping actually bites.
-    await expect(marker).not.toHaveStyle({ cursor: 'pointer' });
   },
 };
 

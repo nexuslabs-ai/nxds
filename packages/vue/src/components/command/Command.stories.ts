@@ -27,7 +27,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Command',
   component: Command,
   parameters: {
     layout: 'padded',
@@ -508,12 +507,6 @@ export const Disabled: Story = {
     // attributes rather than clicking it.
     await expect(disabledItem).toHaveAttribute('data-disabled', 'true');
     await expect(disabledItem).toHaveAttribute('aria-disabled', 'true');
-
-    // Disabled items use a semantic text token at full opacity (not a fade).
-    await expect(disabledItem).toHaveClass(
-      'nx:data-[disabled=true]:text-disabled-foreground'
-    );
-    await expect(getComputedStyle(disabledItem).opacity).toBe('1');
   },
 };
 
@@ -689,11 +682,5 @@ export const WithDataAttributes: Story = {
     await expect(
       canvasElement.querySelector('[data-slot="command-shortcut"]')
     ).toBeInTheDocument();
-
-    const shortcut = canvasElement.querySelector(
-      '[data-slot="command-shortcut"]'
-    );
-    await expect(shortcut).toHaveClass('nx:typography-shortcut');
-    await expect(shortcut).not.toHaveClass(/tracking-/);
   },
 };

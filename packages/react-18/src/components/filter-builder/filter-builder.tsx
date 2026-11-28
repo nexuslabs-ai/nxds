@@ -186,12 +186,13 @@ function MultipleValues({
         : [...value, option]
     );
   }
-  const summary = value
-    .map(
-      (item) =>
-        field.options.find((option) => option.value === item)?.label ?? item
-    )
-    .join(', ');
+  const summary =
+    value
+      .map(
+        (item) =>
+          field.options.find((option) => option.value === item)?.label ?? item
+      )
+      .join(', ') || 'Choose values…';
   return (
     <Popover onOpenChange={() => setSearch('')}>
       <PopoverTrigger asChild>
@@ -199,12 +200,12 @@ function MultipleValues({
           size="sm"
           variant="outline"
           disabled={disabled}
-          aria-label={`${field.label} values`}
+          aria-label={`${field.label} values: ${summary}`}
           aria-invalid={invalid}
           aria-describedby={describedBy}
           className="nx:h-(--nx-spacing-8) nx:w-full nx:min-w-0 nx:justify-between"
         >
-          <span className="nx:truncate">{summary || 'Choose values…'}</span>
+          <span className="nx:truncate">{summary}</span>
           <IconChevronDown aria-hidden="true" />
         </Button>
       </PopoverTrigger>

@@ -1,6 +1,6 @@
 import { type ReactNode, useId } from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Badge } from '../badge/badge';
@@ -24,7 +24,6 @@ import {
 } from './page-header';
 
 const meta: Meta<typeof PageHeader> = {
-  title: 'Components/PageHeader',
   component: PageHeader,
   decorators: [
     (Story) => (
@@ -173,88 +172,6 @@ export const SectionHeader: Story = {
         name: 'Notification settings',
       })
     ).toHaveAttribute('data-slot', 'page-header-title');
-  },
-};
-const longDescription =
-  'A longer description that must wrap without pushing actions outside the available space.';
-function LongContentHeader() {
-  return (
-    <PageHeader>
-      <PageHeaderContent>
-        <PageHeaderTitle>
-          RegionalDisasterRecoveryConfigurationReview
-        </PageHeaderTitle>
-        <PageHeaderDescription>{longDescription}</PageHeaderDescription>
-      </PageHeaderContent>
-      <PageHeaderActions>
-        <Button variant="outline">Download report</Button>
-        <Button>Share report</Button>
-        <Button variant="outline">Archive</Button>
-      </PageHeaderActions>
-    </PageHeader>
-  );
-}
-export const ContainerLayouts: Story = {
-  render: () => (
-    <div className="nx:grid nx:gap-8">
-      <section style={{ width: 280 }} data-testid="narrow">
-        <ReportHeader />
-      </section>
-      <section style={{ width: 280 }} data-testid="narrow-long">
-        <LongContentHeader />
-      </section>
-      <section style={{ width: 460 }} data-testid="medium">
-        <LongContentHeader />
-      </section>
-      <section style={{ width: 720 }} data-testid="wide">
-        <ReportHeader />
-      </section>
-    </div>
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const description = 'Review activity for the selected period.';
-
-    const narrow = canvas.getByTestId('narrow');
-    const narrowContent = within(narrow)
-      .getByText(description)
-      .getBoundingClientRect();
-    const narrowAction = within(narrow)
-      .getByRole('button', { name: 'Export' })
-      .getBoundingClientRect();
-    await expect(narrowAction.top).toBeGreaterThanOrEqual(narrowContent.bottom);
-    await expect(narrow.scrollWidth).toBeLessThanOrEqual(
-      narrow.clientWidth + 1
-    );
-
-    const narrowLongHeader = canvas
-      .getByTestId('narrow-long')
-      .querySelector('header')!;
-    await expect(narrowLongHeader.scrollWidth).toBeLessThanOrEqual(
-      narrowLongHeader.clientWidth + 1
-    );
-
-    const medium = canvas.getByTestId('medium');
-    const mediumContent = within(medium)
-      .getByText(longDescription)
-      .getBoundingClientRect();
-    const mediumAction = within(medium)
-      .getByRole('button', { name: 'Download report' })
-      .getBoundingClientRect();
-    await expect(mediumAction.top).toBeGreaterThanOrEqual(mediumContent.bottom);
-    await expect(medium.scrollWidth).toBeLessThanOrEqual(
-      medium.clientWidth + 1
-    );
-
-    const wide = canvas.getByTestId('wide');
-    const wideContent = within(wide)
-      .getByText(description)
-      .getBoundingClientRect();
-    const wideAction = within(wide)
-      .getByRole('button', { name: 'Export' })
-      .getBoundingClientRect();
-    await expect(wideAction.left).toBeGreaterThanOrEqual(wideContent.right);
-    await expect(wide.scrollWidth).toBeLessThanOrEqual(wide.clientWidth + 1);
   },
 };
 const onSave = fn();

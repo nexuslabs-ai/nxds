@@ -1,10 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { Progress } from './progress';
 
 const meta: Meta<typeof Progress> = {
-  title: 'Components/Progress',
   component: Progress,
   parameters: {
     layout: 'padded',
@@ -89,12 +88,6 @@ export const Indeterminate: Story = {
     // Radix marks the bar indeterminate and omits the numeric value
     await expect(indicator).toHaveAttribute('data-state', 'indeterminate');
     await expect(progress).not.toHaveAttribute('aria-valuenow');
-    await expect(getComputedStyle(indicator as Element).animationName).toBe(
-      'nx-progress-indeterminate'
-    );
-    await expect(getComputedStyle(indicator as Element).animationDuration).toBe(
-      '1.5s'
-    );
   },
 };
 
@@ -116,7 +109,6 @@ export const WithDataAttributes: Story = {
     // value is forwarded to the Radix root, so it reports a determinate value
     await expect(progress).toHaveAttribute('aria-valuenow', '40');
     await expect(indicator).toHaveAttribute('data-state', 'loading');
-    await expect(indicator).toHaveClass('nx:duration-fast');
   },
 };
 

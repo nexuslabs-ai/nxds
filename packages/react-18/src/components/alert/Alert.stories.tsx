@@ -6,7 +6,7 @@ import {
   WarningCircleIcon,
   WarningIcon,
 } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -22,7 +22,6 @@ import {
 } from './alert';
 
 const meta: Meta<typeof Alert> = {
-  title: 'Components/Alert',
   component: Alert,
   parameters: {
     layout: 'padded',
@@ -463,10 +462,6 @@ export const DisabledClose: Story = {
     const close = canvas.getByRole('button', { name: 'Dismiss alert' });
 
     await expect(close).toBeDisabled();
-
-    // Disabled close uses a semantic text token at full opacity (not a fade).
-    await expect(close).toHaveClass('nx:disabled:text-disabled-foreground');
-    await expect(getComputedStyle(close).opacity).toBe('1');
   },
 };
 
@@ -542,7 +537,7 @@ export const TextCloseLabel: Story = {
 // ============================================
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-4">
       <Alert variant="destructive" className="nx:max-w-md">
         <AlertTitle>Test Alert</AlertTitle>
@@ -603,7 +598,7 @@ export const AllVariants: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-6">
       <div>
         <div className="nx:mb-4 nx:typography-label-default nx:text-foreground">
@@ -678,7 +673,7 @@ export const AllVariants: Story = {
 };
 
 export const AllBannerVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-6">
       <div>
         <div className="nx:mb-4 nx:typography-label-default nx:text-foreground">

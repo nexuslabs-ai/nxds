@@ -1,5 +1,5 @@
 import { FileIcon } from '@phosphor-icons/react/ssr';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { Button } from '../button/button';
@@ -16,7 +16,6 @@ import {
 } from './item';
 
 const meta: Meta<typeof Item> = {
-  title: 'Components/Item',
   component: Item,
   parameters: {
     docs: {

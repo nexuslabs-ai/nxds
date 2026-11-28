@@ -1,5 +1,5 @@
 import { apcaLc, SEMANTIC_TOKEN_REGISTRY, TIER_THRESHOLDS } from '@nxds/core';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { NxdsAppearanceSettings } from '../components/appearance/appearance-settings/appearance-settings';

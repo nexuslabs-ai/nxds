@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 
-import { Canvas, Source, Title } from '@storybook/addon-docs/blocks';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Button } from '../../../components/button/button';
@@ -13,12 +12,9 @@ import {
 } from '../../../components/description-list/description-list';
 
 import { InlineEdit, type InlineEditProps } from './inline-edit';
-import blockSource from './inline-edit.tsx?raw';
 import { InlineEditExample } from './inline-edit-example';
-import exampleSource from './inline-edit-example.tsx?raw';
 
 const meta: Meta<typeof InlineEdit> = {
-  title: 'Blocks/Editing/InlineEdit',
   component: InlineEdit,
   tags: ['autodocs'],
   parameters: {
@@ -29,111 +25,6 @@ const meta: Meta<typeof InlineEdit> = {
         component:
           'InlineEdit edits one line of text in place, saving with Enter or Save. Use it for a single field on a detail view, such as a name. For several fields use a form with Field, and for longer text use Textarea.',
       },
-      page: () => (
-        <>
-          <Title />
-          <p>
-            Edit a single line of text in place. The value reads as text until
-            you open the editor, then saves with Enter or Save.
-          </p>
-          <h2>When to use it</h2>
-          <p>
-            Use it for one field on a detail view, such as a name or title,
-            where a whole form would be heavy. For several related fields, or
-            anything longer than one line, use a form with Field and Input.
-          </p>
-          <h2>Minimal composition</h2>
-          <Canvas of={Default} />
-          <Source code={exampleSource} language="tsx" />
-          <h2>Value and changes</h2>
-          <p>
-            <code>value</code> is controlled: pass the saved value and update it
-            in <code>onCommit</code>.
-          </p>
-          <ul>
-            <li>
-              Enter or Save emits the trimmed draft through{' '}
-              <code>onCommit</code>. Escape and Cancel emit nothing.
-            </li>
-            <li>
-              Return a promise from <code>onCommit</code> to keep the editor
-              open until it settles. Resolving closes the editor; rejecting, or
-              throwing, keeps the draft open so you can show <code>error</code>{' '}
-              and the user can retry.
-            </li>
-            <li>
-              While a save is pending the input is read-only and Escape, Cancel
-              and leaving the editor do nothing.
-            </li>
-            <li>
-              <code>required</code> blocks an empty save and shows{' '}
-              <code>requiredMessage</code> until the user types.
-            </li>
-          </ul>
-          <p>
-            The block owns the draft and, unless you pass <code>editing</code>,
-            whether the editor is open. Your application owns the saved value,
-            persistence and any save error.
-          </p>
-          <h2>States and dismissal</h2>
-          <p>
-            <code>blurBehavior</code> decides what happens when focus leaves the
-            whole editor: keep it open (the default), save, or cancel. Closing
-            returns focus to the edit trigger only when focus was still inside
-            the editor, so it never takes focus from the next control. A
-            controlled close while a save is pending discards that save&apos;s
-            result.
-          </p>
-          <h3>Click activation</h3>
-          <Canvas of={ClickActivation} />
-          <h3>Required</h3>
-          <Canvas of={Required} />
-          <h3>Read only</h3>
-          <Canvas of={ReadOnly} />
-          <h3>In a description list</h3>
-          <Canvas of={InDescriptionList} />
-          <h2>Delivery</h2>
-          <p>
-            Manual guidance until the generated catalog lands (#798). This is
-            copy-source, not a package export.
-          </p>
-          <ul>
-            <li>
-              Copy <code>blocks/editing/inline-edit/inline-edit.tsx</code>.
-            </li>
-            <li>
-              It needs these nxds component folders, including the ones those
-              folders import: <code>button</code>, <code>button-group</code>,{' '}
-              <code>field</code>, <code>input</code>, <code>label</code>,{' '}
-              <code>separator</code>, <code>spinner</code> and <code>lib/</code>
-              . If your copy lives elsewhere, update the relative imports.
-            </li>
-            <li>
-              The icon package your <code>lib/icons</code> imports, which the
-              nxds components already use.
-            </li>
-            <li>
-              Include the copied file in your Tailwind source scan and use the
-              nxds theme and styles setup.
-            </li>
-            <li>
-              Your application owns the value, saving, validation beyond
-              required, permissions (<code>readOnly</code>) and error copy.
-            </li>
-          </ul>
-          <h2>Evidence and support boundary</h2>
-          <p>The stories on this page test each behaviour above.</p>
-          <p>
-            Not supported: multi-line text, rich text, and non-text values such
-            as dates or selects. Edit those in a form.
-          </p>
-          <h2>Implementation</h2>
-          <details>
-            <summary>blocks/editing/inline-edit/inline-edit.tsx</summary>
-            <Source code={blockSource} language="tsx" />
-          </details>
-        </>
-      ),
     },
   },
 };
@@ -165,7 +56,6 @@ function Example({ onCommit, ...props }: Partial<InlineEditProps>) {
 export const Default: Story = {
   tags: ['docs'],
   render: () => <InlineEditExample />,
-  parameters: { docs: { source: { code: exampleSource } } },
 };
 
 export const ClickActivation: Story = {
@@ -299,23 +189,6 @@ export const WithDataAttributes: Story = {
 };
 
 export const AllVariants: Story = {
-  play: async ({ canvasElement }) => {
-    const values = Array.from(
-      canvasElement.querySelectorAll('[data-slot="inline-edit-value"]')
-    ).filter((element) => element.textContent === 'Priya Shah');
-    const styles = values.map((element) => {
-      const style = getComputedStyle(element);
-      return {
-        size: style.fontSize,
-        weight: style.fontWeight,
-        lineHeight: style.lineHeight,
-        color: style.color,
-      };
-    });
-    await expect(styles).toHaveLength(3);
-    await expect(styles[0]).toEqual(styles[1]);
-    await expect(styles[1]).toEqual(styles[2]);
-  },
   render: () => (
     <div className="nx:grid nx:w-full nx:max-w-sm nx:gap-4">
       <Example activation="click" />

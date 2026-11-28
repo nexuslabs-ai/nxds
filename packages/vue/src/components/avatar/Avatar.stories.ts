@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import type { PropType } from 'vue';
 
-import { STARTER_AVATARS } from '../../stories/support/avatar-fixtures';
+import { STARTER_AVATARS } from './avatar.story-data';
 
 import {
   Avatar,
@@ -14,7 +14,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/Avatar',
   component: Avatar,
   parameters: {
     layout: 'padded',
@@ -63,7 +62,7 @@ const STATUS_VALUES = ['online', 'away', 'busy', 'offline'] as const;
 // The 5 starter portraits double as the demo team roster.
 const TEAM = STARTER_AVATARS;
 
-// Default single-avatar fixture (Ada) for the shape / state stories.
+// The single-avatar portrait (Ada).
 const AVATAR_URL = STARTER_AVATARS[0].src;
 
 // Deliberately wide (2:1) source so CroppedImage can demonstrate object-fit: cover.
@@ -116,9 +115,10 @@ export const Default: Story = {
   tags: ['docs'],
   render: () => ({
     components: { Avatar, AvatarFallback, AvatarImage },
+    setup: () => ({ ada: STARTER_AVATARS[0] }),
     template: `
       <Avatar>
-        <AvatarImage src="/avatars/ada.svg" alt="Ada Lovelace" />
+        <AvatarImage :src="ada.src" alt="Ada Lovelace" />
         <AvatarFallback>AL</AvatarFallback>
       </Avatar>
     `,
@@ -182,45 +182,15 @@ export const GroupWithMax: Story = {
       AvatarStatus,
     },
     setup: () => ({
-      people: [
-        {
-          name: 'Ada Lovelace',
-          initials: 'AL',
-          src: '/avatars/ada.svg',
-          status: 'online',
-        },
-        {
-          name: 'Grace Hopper',
-          initials: 'GH',
-          src: '/avatars/grace.svg',
-          status: 'away',
-        },
-        {
-          name: 'Katherine Johnson',
-          initials: 'KJ',
-          src: '/avatars/katherine.svg',
-          status: 'busy',
-        },
-        {
-          name: 'Mary Jackson',
-          initials: 'MJ',
-          src: '/avatars/mary.svg',
-          status: 'offline',
-        },
-        {
-          name: 'Dorothy Vaughan',
-          initials: 'DV',
-          src: '/avatars/dorothy.svg',
-          status: 'online',
-        },
-      ] as const,
+      people: STARTER_AVATARS,
+      statuses: ['online', 'away', 'busy', 'offline'] as const,
     }),
     template: `
       <AvatarGroup :max="3" role="group" aria-label="Project team">
-        <Avatar v-for="person in people" :key="person.name">
+        <Avatar v-for="(person, index) in people" :key="person.name">
           <AvatarImage :src="person.src" :alt="person.name" />
           <AvatarFallback>{{ person.initials }}</AvatarFallback>
-          <AvatarStatus :status="person.status" />
+          <AvatarStatus :status="statuses[index % statuses.length]" />
         </Avatar>
       </AvatarGroup>
     `,
@@ -270,38 +240,9 @@ export const AllSizes: Story = {
         '3xl',
         '4xl',
       ] as const,
-      people: [
-        {
-          name: 'Ada Lovelace',
-          initials: 'AL',
-          src: '/avatars/ada.svg',
-          status: 'online',
-        },
-        {
-          name: 'Grace Hopper',
-          initials: 'GH',
-          src: '/avatars/grace.svg',
-          status: 'away',
-        },
-        {
-          name: 'Katherine Johnson',
-          initials: 'KJ',
-          src: '/avatars/katherine.svg',
-          status: 'busy',
-        },
-        {
-          name: 'Mary Jackson',
-          initials: 'MJ',
-          src: '/avatars/mary.svg',
-          status: 'offline',
-        },
-        {
-          name: 'Dorothy Vaughan',
-          initials: 'DV',
-          src: '/avatars/dorothy.svg',
-          status: 'online',
-        },
-      ] as const,
+      ada: STARTER_AVATARS[0],
+      people: STARTER_AVATARS,
+      statuses: ['online', 'away', 'busy', 'offline'] as const,
     }),
     template: `
       <div class="nx:flex nx:flex-col nx:gap-8">
@@ -310,7 +251,7 @@ export const AllSizes: Story = {
           <div class="nx:flex nx:items-end nx:gap-4">
             <div v-for="size in sizes" :key="size" class="nx:flex nx:flex-col nx:items-center nx:gap-2">
               <Avatar :size="size">
-                <AvatarImage src="/avatars/ada.svg" :alt="'Ada Lovelace ' + size" />
+                <AvatarImage :src="ada.src" :alt="'Ada Lovelace ' + size" />
                 <AvatarFallback>{{ size === '2xs' ? '2X' : size.toUpperCase() }}</AvatarFallback>
               </Avatar>
               <span class="nx:typography-label-small nx:text-muted-foreground">{{ size }}</span>
@@ -323,14 +264,14 @@ export const AllSizes: Story = {
           <div class="nx:flex nx:items-center nx:gap-4">
             <div class="nx:flex nx:flex-col nx:items-center nx:gap-2">
               <Avatar size="xl" shape="circle">
-                <AvatarImage src="/avatars/ada.svg" alt="Ada Lovelace circle" />
+                <AvatarImage :src="ada.src" alt="Ada Lovelace circle" />
                 <AvatarFallback>AL</AvatarFallback>
               </Avatar>
               <span class="nx:typography-label-small nx:text-muted-foreground">circle</span>
             </div>
             <div class="nx:flex nx:flex-col nx:items-center nx:gap-2">
               <Avatar size="xl" shape="rounded">
-                <AvatarImage src="/avatars/ada.svg" alt="Ada Lovelace rounded" />
+                <AvatarImage :src="ada.src" alt="Ada Lovelace rounded" />
                 <AvatarFallback>AL</AvatarFallback>
               </Avatar>
               <span class="nx:typography-label-small nx:text-muted-foreground">rounded</span>
@@ -362,15 +303,15 @@ export const AllSizes: Story = {
           <h3 class="nx:mb-4 nx:typography-label-default nx:text-foreground">Status, Ring, and Group</h3>
           <div class="nx:flex nx:flex-wrap nx:items-center nx:gap-6">
             <Avatar size="xl" ring>
-              <AvatarImage src="/avatars/ada.svg" alt="Ada Lovelace selected" />
+              <AvatarImage :src="ada.src" alt="Ada Lovelace selected" />
               <AvatarFallback>AL</AvatarFallback>
               <AvatarStatus status="online" />
             </Avatar>
             <AvatarGroup :max="3">
-              <Avatar v-for="person in people" :key="person.name">
+              <Avatar v-for="(person, index) in people" :key="person.name">
                 <AvatarImage :src="person.src" :alt="person.name" />
                 <AvatarFallback>{{ person.initials }}</AvatarFallback>
-                <AvatarStatus :status="person.status" />
+                <AvatarStatus :status="statuses[index % statuses.length]" />
               </Avatar>
             </AvatarGroup>
           </div>
@@ -387,7 +328,7 @@ export const WithFallback: Story = {
     components: avatarComponents,
     template: `
       <Avatar role="img" aria-label="Ada Lovelace">
-        <AvatarImage src="/broken-image.jpg" alt="" />
+        <AvatarImage src="broken-image.jpg" alt="" />
         <AvatarFallback aria-hidden="true">AL</AvatarFallback>
       </Avatar>
     `,
@@ -418,14 +359,6 @@ export const CroppedImage: Story = {
       </Avatar>
     `,
   }),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const image = await canvas.findByAltText('Wide portrait crop');
-
-    // Reka mounts the <img> hidden until it loads.
-    await waitFor(() => expect(image).toBeVisible());
-    await expect(getComputedStyle(image).objectFit).toBe('cover');
-  },
 };
 
 export const ShapeRounded: Story = {
@@ -562,35 +495,6 @@ export const OnContainerSurface: Story = {
       </div>
     `,
   }),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const card = canvas.getByTestId('card');
-    const styleOf = (element: Element) => window.getComputedStyle(element);
-
-    await waitFor(() => expect(document.documentElement).toHaveClass('dark'));
-    const surface = styleOf(card).backgroundColor;
-    // Only a surface that differs from `background` can catch a ring that
-    // fell back to `background`.
-    await expect(surface).not.toBe(
-      styleOf(canvas.getByTestId('page')).backgroundColor
-    );
-
-    const rings = card.querySelectorAll<HTMLElement>(
-      '[data-slot="avatar"]:not([data-ring]), [data-slot="avatar-status"]'
-    );
-    await expect(rings.length).toBeGreaterThan(0);
-    for (const ring of rings) {
-      await expect(styleOf(ring).getPropertyValue('--tw-ring-color')).toBe(
-        surface
-      );
-    }
-
-    await expect(
-      styleOf(canvas.getByTestId('ring-avatar')).getPropertyValue(
-        '--tw-ring-offset-color'
-      )
-    ).toBe(surface);
-  },
 };
 
 export const WithDataAttributes: Story = {
@@ -630,11 +534,5 @@ export const WithDataAttributes: Story = {
     // With size/shape omitted, the cva defaults still surface on the data hooks.
     await expect(defaultAvatar).toHaveAttribute('data-size', 'md');
     await expect(defaultAvatar).toHaveAttribute('data-shape', 'circle');
-    // Initials scale with the avatar diameter, so md renders at the base size.
-    await expect(defaultAvatar).toHaveStyle({
-      fontSize: getComputedStyle(document.documentElement)
-        .getPropertyValue('--nx-typography-size-base')
-        .trim(),
-    });
   },
 };

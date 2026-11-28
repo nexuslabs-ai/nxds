@@ -10,17 +10,15 @@ type FilterChipArgs = InstanceType<typeof FilterChip>['$props'] & {
 };
 
 const meta = {
-  title: 'Components/FilterChip',
   component: FilterChip,
   args: {
-    ariaLabel: 'Remove status filter: Active',
     onClick: fn(),
   },
   parameters: {
     docs: {
       description: {
         component:
-          'FilterChip is a button that removes an applied filter. Use it in a row of applied filters chosen in a menu or panel. For passive metadata use Badge, and for a condition the user edits use FilterCondition.\n\n- Clicking the label or × removes the filter. It never opens an editor or toggles a choice.\n- Give it a full `aria-label`, such as "Remove status filter: Paid".\n- Your app owns the filter values. After removal, move focus to the next chip, the previous chip or a stable filter control.\n- Long labels truncate on screen but keep their full accessible name.\n- It has one compact size that follows the density setting.',
+          'FilterChip is a button that removes an applied filter. Use it in a row of applied filters chosen in a menu or panel. For passive metadata use Badge, and for a condition the user edits use FilterCondition.\n\n- Clicking the label or × removes the filter. It never opens an editor or toggles a choice.\n- Screen readers read its action and then its text, such as "Remove filter: Status: Paid". Set `action` to change the action\'s words, such as for another language.\n- Your app owns the filter values. After removal, move focus to the next chip, the previous chip or a stable filter control.\n- Long labels truncate on screen but keep their full accessible name.\n- It has one compact size that follows the density setting.',
       },
     },
   },
@@ -37,8 +35,7 @@ export const Default: Story = {
   tags: ['docs'],
   render: () => ({
     components: { FilterChip },
-    template:
-      '<FilterChip aria-label="Remove status filter: Active">Status: Active</FilterChip>',
+    template: '<FilterChip>Status: Active</FilterChip>',
   }),
 };
 export const ClickInteraction: Story = {
@@ -57,7 +54,9 @@ export const ClickInteraction: Story = {
     const form = canvas.getByRole('form');
     form.addEventListener('submit', submit);
     try {
-      await userEvent.click(canvas.getByRole('button'));
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Remove filter: Status: Active' })
+      );
       await expect(args.onClick).toHaveBeenCalledTimes(1);
       await expect(submit).not.toHaveBeenCalled();
     } finally {
@@ -72,6 +71,14 @@ export const KeyboardInteraction: Story = {
     await userEvent.keyboard('{Enter}');
     await userEvent.keyboard(' ');
     await expect(args.onClick).toHaveBeenCalledTimes(2);
+  },
+};
+export const ActionName: Story = {
+  args: { action: 'Clear filter' },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('button')
+    ).toHaveAccessibleName('Clear filter: Status: Active');
   },
 };
 export const Disabled: Story = {
@@ -97,9 +104,6 @@ export const WithDataAttributes: Story = {
   },
 };
 export const LongLabel: Story = {
-  args: {
-    ariaLabel: 'Remove owner filter: InternationalCustomerExperienceOperations',
-  },
   render: (args) => ({
     components: { FilterChip },
     setup: () => ({ args }),
@@ -109,12 +113,4 @@ export const LongLabel: Story = {
       </div>
     `,
   }),
-  play: async ({ canvasElement }) => {
-    const button = within(canvasElement).getByRole('button', {
-      name: 'Remove owner filter: InternationalCustomerExperienceOperations',
-    });
-    await expect(button.getBoundingClientRect().width).toBeLessThanOrEqual(
-      button.parentElement!.getBoundingClientRect().width
-    );
-  },
 };

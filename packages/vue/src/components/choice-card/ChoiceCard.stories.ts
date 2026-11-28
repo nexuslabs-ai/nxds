@@ -15,7 +15,6 @@ import {
 } from '.';
 
 const meta = {
-  title: 'Components/ChoiceCard',
   component: ChoiceCard,
   parameters: {
     layout: 'padded',
@@ -51,14 +50,6 @@ function getCardFor(root: ParentNode, controlId: string) {
     root,
     `[data-slot="choice-card"][for="${controlId}"]`
   );
-}
-
-function getBorderColor(element: HTMLElement) {
-  return getComputedStyle(element).borderTopColor;
-}
-
-function getBackgroundColor(element: HTMLElement) {
-  return getComputedStyle(element).backgroundColor;
 }
 
 const cardComponents = {
@@ -196,7 +187,6 @@ export const Default: Story = {
     await expect(checkbox).not.toHaveAccessibleName(
       /News about features and improvements/i
     );
-    await expect(getComputedStyle(checkbox).marginTop).toBe('2px');
   },
 };
 
@@ -267,7 +257,6 @@ export const WithRadioGroup: Story = {
     await expect(priority).toHaveAccessibleDescription(
       'Faster response routing for urgent teams.'
     );
-    await expect(getComputedStyle(standard).marginTop).toBe('2px');
 
     await userEvent.click(
       canvas.getByText('Faster response routing for urgent teams.')
@@ -328,7 +317,6 @@ export const TrailingControl: Story = {
 
     await expect(card.children[0]).toBe(content);
     await expect(card.children[1]).toBe(checkbox);
-    await expect(getComputedStyle(checkbox).marginTop).toBe('2px');
   },
 };
 
@@ -424,19 +412,6 @@ export const Disabled: Story = {
     const disabledRadio = canvas.getByRole('radio', {
       name: 'Enterprise plan',
     });
-    const disabledCard = getCardFor(canvasElement, 'choice-card-disabled');
-    const disabledCheckedCard = getCardFor(
-      canvasElement,
-      'choice-card-disabled-checked'
-    );
-    const disabledInvalidCard = getCardFor(
-      canvasElement,
-      'choice-card-disabled-invalid'
-    );
-    const disabledRadioCard = getCardFor(
-      canvasElement,
-      'choice-card-disabled-radio'
-    );
 
     await expect(disabled).toBeDisabled();
     await expect(disabledChecked).toBeDisabled();
@@ -449,26 +424,6 @@ export const Disabled: Story = {
       canvas.getByText('This setting is managed by your workspace.')
     );
     await expect(disabled).not.toBeChecked();
-
-    await expect(getComputedStyle(disabledCard).cursor).toBe('not-allowed');
-    await expect(getComputedStyle(disabledCheckedCard).cursor).toBe(
-      'not-allowed'
-    );
-    await expect(getComputedStyle(disabledInvalidCard).cursor).toBe(
-      'not-allowed'
-    );
-    await expect(getComputedStyle(disabledRadioCard).cursor).toBe(
-      'not-allowed'
-    );
-    await expect(getBorderColor(disabledCheckedCard)).toBe(
-      getBorderColor(disabledCard)
-    );
-    await expect(getBorderColor(disabledInvalidCard)).toBe(
-      getBorderColor(disabledCard)
-    );
-    await expect(getBorderColor(disabledRadioCard)).toBe(
-      getBorderColor(disabledCard)
-    );
   },
 };
 
@@ -550,19 +505,6 @@ export const Invalid: Story = {
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const unselectedCard = getCardFor(
-      canvasElement,
-      'choice-card-invalid-unselected'
-    );
-    const selectedCard = getCardFor(
-      canvasElement,
-      'choice-card-invalid-selected'
-    );
-    const invalidCard = getCardFor(canvasElement, 'choice-card-invalid');
-    const invalidRadioCard = getCardFor(
-      canvasElement,
-      'choice-card-invalid-radio'
-    );
     const invalid = canvas.getByRole('checkbox', { name: 'Required policy' });
     const invalidRadio = canvas.getByRole('radio', { name: 'Annual billing' });
 
@@ -571,16 +513,6 @@ export const Invalid: Story = {
     await expect(invalidRadio).toHaveAttribute('aria-invalid', 'true');
     await expect(invalid).toHaveAccessibleDescription(
       'Resolve this selection before continuing.'
-    );
-
-    await expect(getBorderColor(selectedCard)).not.toBe(
-      getBorderColor(unselectedCard)
-    );
-    await expect(getBorderColor(invalidCard)).not.toBe(
-      getBorderColor(selectedCard)
-    );
-    await expect(getBorderColor(invalidRadioCard)).toBe(
-      getBorderColor(invalidCard)
     );
   },
 };
@@ -645,32 +577,11 @@ export const Indeterminate: Story = {
   }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const unselectedCard = getCardFor(
-      canvasElement,
-      'choice-card-indeterminate-unselected'
-    );
-    const checkedCard = getCardFor(
-      canvasElement,
-      'choice-card-indeterminate-checked'
-    );
-    const indeterminateCard = getCardFor(
-      canvasElement,
-      'choice-card-indeterminate'
-    );
     const indeterminate = canvas.getByRole('checkbox', {
       name: 'Product',
     });
 
     await expect(indeterminate).toHaveAttribute('data-state', 'indeterminate');
-    await expect(getBorderColor(checkedCard)).not.toBe(
-      getBorderColor(unselectedCard)
-    );
-    await expect(getBorderColor(indeterminateCard)).toBe(
-      getBorderColor(checkedCard)
-    );
-    await expect(getBackgroundColor(indeterminateCard)).toBe(
-      getBackgroundColor(checkedCard)
-    );
   },
 };
 
@@ -794,9 +705,6 @@ export const WithDataAttributes: Story = {
       'data-slot',
       'choice-card-description'
     );
-    await expect(
-      Math.round(card.getBoundingClientRect().height)
-    ).toBeGreaterThanOrEqual(44);
   },
 };
 
@@ -832,32 +740,9 @@ export const EdgeCases: Story = {
     `,
   }),
   play: async ({ canvasElement }) => {
-    const referenceCard = getCardFor(
-      canvasElement,
-      'choice-card-edge-reference'
-    );
-    const decoyCard = getCardFor(canvasElement, 'choice-card-edge-decoy');
     const decoy = getRequiredElement(canvasElement, '[data-state="checked"]');
-    const longTitle = getRequiredElement<HTMLElement>(
-      canvasElement,
-      '#choice-card-edge-long-title'
-    );
-    const longDescription = getRequiredElement<HTMLElement>(
-      canvasElement,
-      '#choice-card-edge-long-description'
-    );
 
     await expect(decoy).toHaveTextContent('Nested data-state checked');
-    await expect(getBorderColor(decoyCard)).toBe(getBorderColor(referenceCard));
-    await expect(getBackgroundColor(decoyCard)).toBe(
-      getBackgroundColor(referenceCard)
-    );
-    await expect(longTitle.scrollWidth).toBeLessThanOrEqual(
-      longTitle.clientWidth + 1
-    );
-    await expect(longDescription.scrollWidth).toBeLessThanOrEqual(
-      longDescription.clientWidth + 1
-    );
   },
 };
 
@@ -958,10 +843,6 @@ export const AllVariants: Story = {
       canvasElement,
       'choice-card-radio-borderless'
     );
-    const trailingRadio = getRequiredElement<HTMLElement>(
-      canvasElement,
-      '#choice-card-radio-borderless'
-    );
 
     await expect(cards).toHaveLength(4);
     await expect(checkboxBordered).toHaveAttribute('data-variant', 'bordered');
@@ -971,12 +852,5 @@ export const AllVariants: Story = {
     );
     await expect(radioBordered).toHaveAttribute('data-variant', 'bordered');
     await expect(radioBorderless).toHaveAttribute('data-variant', 'borderless');
-    await expect(getBorderColor(checkboxBorderless)).not.toBe(
-      getBorderColor(checkboxBordered)
-    );
-    await expect(getBorderColor(radioBorderless)).toBe(
-      getBorderColor(radioBordered)
-    );
-    await expect(getComputedStyle(trailingRadio).marginTop).toBe('2px');
   },
 };

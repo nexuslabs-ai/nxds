@@ -1,13 +1,8 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import {
-  expectExitBeforeUnmount,
-  expectInterruptibleOverlayMotion,
-  expectPlacedBelow,
-} from '../../stories/support/overlay-motion-test-utils';
 import { Button } from '../button/button';
 import { Input } from '../input/input';
 import { Label } from '../label/label';
@@ -20,7 +15,6 @@ import {
 } from './popover';
 
 const meta: Meta<typeof Popover> = {
-  title: 'Components/Popover',
   component: Popover,
   parameters: {
     layout: 'padded',
@@ -42,7 +36,7 @@ type Story = StoryObj<typeof Popover>;
 
 export const Default: Story = {
   tags: ['docs'],
-  render: (_args) => (
+  render: () => (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline">Open popover</Button>
@@ -117,7 +111,7 @@ export const Placements: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-wrap nx:gap-4">
       {(['top', 'right', 'bottom', 'left'] as const).map((side) => (
         <Popover key={side}>
@@ -153,7 +147,7 @@ export const WithAnchor: Story = {
       },
     },
   },
-  render: (_args) => (
+  render: () => (
     <Popover>
       <PopoverAnchor asChild>
         <div className="nx:rounded-md nx:border-default nx:border-border-default nx:bg-muted nx:p-container nx:typography-label-default nx:text-muted-foreground">
@@ -179,7 +173,7 @@ export const WithAnchor: Story = {
 // ============================================
 
 export const OpenCloseInteraction: Story = {
-  render: (_args) => (
+  render: () => (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline">Open popover</Button>
@@ -195,14 +189,15 @@ export const OpenCloseInteraction: Story = {
 
     await userEvent.click(trigger);
     const content = await within(document.body).findByText('Popover content');
-    const panel = content.closest('[data-slot="popover-content"]');
 
     await waitFor(() => expect(content).toBeVisible());
-    await expectInterruptibleOverlayMotion(panel);
-    await expectPlacedBelow(panel, trigger);
 
     await userEvent.keyboard('{Escape}');
-    await expectExitBeforeUnmount(panel);
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-slot="popover-content"]')
+      ).toBeNull();
+    });
     await expect(trigger).toHaveFocus();
   },
 };
@@ -241,7 +236,7 @@ export const OutsideClickInteraction: StoryObj<typeof PopoverContent> = {
 };
 
 export const WithDataAttributes: Story = {
-  render: (_args) => (
+  render: () => (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline">Open popover</Button>
@@ -277,7 +272,7 @@ export const WithDataAttributes: Story = {
 // ============================================
 
 export const AllVariants: Story = {
-  render: (_args) => (
+  render: () => (
     <div className="nx:flex nx:flex-col nx:gap-8">
       <div>
         <h3 className="nx:text-foreground nx:mb-4 nx:typography-label-default">

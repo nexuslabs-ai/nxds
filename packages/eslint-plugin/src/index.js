@@ -5,6 +5,7 @@ import noMultiStatementJsxHandler from './rules/no-multi-statement-jsx-handler.j
 import noReact19Only from './rules/no-react-19-only.js';
 import noRenderPropTypes from './rules/no-render-prop-types.js';
 import nxClassConventions from './rules/nx-class-conventions.js';
+import shippableStory from './rules/shippable-story.js';
 
 // Derive from package.json so ESLint's --cache / --print-config, which key off
 // meta.version, don't desync when changesets bumps the published version.
@@ -18,6 +19,7 @@ const plugin = {
     'no-multi-statement-jsx-handler': noMultiStatementJsxHandler,
     'no-jsdoc-data-tags': noJsdocDataTags,
     'no-react-19-only': noReact19Only,
+    'shippable-story': shippableStory,
   },
 };
 

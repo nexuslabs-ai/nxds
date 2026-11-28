@@ -4,7 +4,10 @@ import react from '@vitejs/plugin-react';
 import vue from '@vitejs/plugin-vue';
 import { playwright } from '@vitest/browser-playwright';
 import path from 'path';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
+
+// Storybook lists hand-written docs pages as stories. They hold no tests.
+const NOT_STORIES = [...configDefaults.exclude, '**/*.mdx'];
 
 export default defineConfig({
   resolve: {
@@ -25,7 +28,7 @@ export default defineConfig({
       'react-dom',
       'react/jsx-dev-runtime',
       '@storybook/addon-a11y/preview',
-      '@storybook/react',
+      '@storybook/react-vite',
     ],
   },
   test: {
@@ -64,6 +67,7 @@ export default defineConfig({
         root: path.resolve(__dirname, 'packages/react'),
         test: {
           name: 'storybook',
+          exclude: NOT_STORIES,
           browser: {
             enabled: true,
             provider: playwright(),
@@ -93,6 +97,7 @@ export default defineConfig({
         resolve: { dedupe: ['react', 'react-dom'] },
         test: {
           name: 'storybook-react18',
+          exclude: NOT_STORIES,
           browser: {
             enabled: true,
             provider: playwright(),

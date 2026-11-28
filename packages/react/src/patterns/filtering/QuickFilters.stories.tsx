@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { CardFilters, FileFiltersExample } from './quick-filters';
@@ -239,7 +239,7 @@ export const OperatorChanges: Story = {
     const canvas = within(canvasElement);
     const page = within(canvasElement.ownerDocument.body);
     await userEvent.click(
-      await canvas.findByRole('button', { name: 'Change Status operator' })
+      await canvas.findByRole('button', { name: /^Change Status operator/ })
     );
     await userEvent.click(
       page.getByRole('menuitemradio', { name: /^is not$/ })
@@ -247,7 +247,7 @@ export const OperatorChanges: Story = {
     await expect(await canvas.findByText('1 of 6 members')).toBeVisible();
     await expect(canvas.getByText('Maya Chen')).toBeVisible();
     await userEvent.click(
-      await canvas.findByRole('button', { name: 'Change Status operator' })
+      await canvas.findByRole('button', { name: /^Change Status operator/ })
     );
     await userEvent.click(
       page.getByRole('menuitemradio', { name: /^is empty$/ })

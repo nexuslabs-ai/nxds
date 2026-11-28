@@ -1,7 +1,17 @@
 import type { StorybookConfig } from '@storybook/vue3-vite';
 
 const config: StorybookConfig = {
-  stories: ['../src/**/*.stories.ts'],
+  // The same split as packages/react's: a story that ships carries no title,
+  // so its folder names it.
+  stories: [
+    {
+      directory: '../src/components',
+      files: '*/!(*.test).stories.ts',
+      titlePrefix: 'Components',
+    },
+    '../src/**/*.test.stories.ts',
+    '../src/stories/**/*.stories.ts',
+  ],
   staticDirs: ['../../react/.storybook/public'],
   addons: [
     '@storybook/addon-docs',

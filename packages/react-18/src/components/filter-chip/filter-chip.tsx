@@ -6,11 +6,11 @@ import { buttonVariants } from '../button/button-variants';
 
 interface FilterChipProps extends Omit<
   React.ComponentProps<'button'>,
-  'children' | 'type'
+  'children' | 'type' | 'aria-label'
 > {
   children: string;
-  /** Names the action, field and full value, such as "Remove status filter: Active". */
-  'aria-label': string;
+  /** What activating the chip does. Screen readers read it before the chip's text, such as "Remove filter: Status: Active". */
+  action?: string;
 }
 
 /** An applied filter that is removed when activated. Your app owns the filter state and where focus goes next. */
@@ -19,15 +19,15 @@ const FilterChip = React.forwardRef<
   React.PropsWithoutRef<FilterChipProps>
 >(function FilterChip(propsWithoutRef, forwardedRef) {
   const {
+    action = 'Remove filter',
     children,
     className,
     ...props
   }: React.PropsWithoutRef<FilterChipProps> & {
     ref?: React.ForwardedRef<HTMLButtonElement>;
-  } =
-    forwardedRef === null
-      ? propsWithoutRef
-      : { ...propsWithoutRef, ref: forwardedRef };
+  } = forwardedRef === null
+    ? propsWithoutRef
+    : { ...propsWithoutRef, ref: forwardedRef };
   return (
     <button
       {...props}
@@ -39,6 +39,7 @@ const FilterChip = React.forwardRef<
         className
       )}
     >
+      <span className="nx:sr-only">{`${action}: `}</span>
       <span data-slot="filter-chip-label" className="nx:min-w-0 nx:truncate">
         {children}
       </span>

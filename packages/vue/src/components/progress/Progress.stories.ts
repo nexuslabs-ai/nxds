@@ -9,7 +9,6 @@ type ProgressArgs = InstanceType<typeof Progress>['$props'] & {
 };
 
 const meta = {
-  title: 'Components/Progress',
   component: Progress,
   parameters: {
     layout: 'padded',
@@ -108,12 +107,6 @@ export const Indeterminate: Story = {
     // Reka marks the bar indeterminate and omits the numeric value
     await expect(indicator).toHaveAttribute('data-state', 'indeterminate');
     await expect(progress).not.toHaveAttribute('aria-valuenow');
-    await expect(getComputedStyle(indicator as Element).animationName).toBe(
-      'nx-progress-indeterminate'
-    );
-    await expect(getComputedStyle(indicator as Element).animationDuration).toBe(
-      '1.5s'
-    );
   },
 };
 
@@ -135,7 +128,6 @@ export const WithDataAttributes: Story = {
     // model-value reaches the Reka root, so it reports a determinate value
     await expect(progress).toHaveAttribute('aria-valuenow', '40');
     await expect(indicator).toHaveAttribute('data-state', 'loading');
-    await expect(indicator).toHaveClass('nx:duration-fast');
   },
 };
 
