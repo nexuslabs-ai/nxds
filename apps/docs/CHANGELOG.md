@@ -1,5 +1,17 @@
 # @nxds/docs
 
+## 0.0.35
+
+### Patch Changes
+
+- Updated dependencies [95baa14]
+- Updated dependencies [93044ff]
+- Updated dependencies [95baa14]
+  - @nxds/react@0.19.0
+  - @nxds/core@0.15.1
+  - @nxds/catalog@0.0.5
+  - @nxds/claude-design@0.19.0
+
 ## 0.0.34
 
 ### Patch Changes

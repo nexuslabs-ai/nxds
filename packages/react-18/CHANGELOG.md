@@ -1,5 +1,12 @@
 # @nxds/react-18
 
+## 0.0.10
+
+### Patch Changes
+
+- Updated dependencies [93044ff]
+  - @nxds/core@0.15.1
+
 ## 0.0.9
 
 ### Patch Changes
