@@ -12,6 +12,10 @@ import { flushSync } from 'react-dom';
 
 import { Bar, BarChart, XAxis } from 'recharts';
 
+import {
+  TaskChecklist,
+  type TaskChecklistItem,
+} from '@/blocks/projects/task-checklist/task-checklist';
 import { Avatar, AvatarFallback } from '@/components/avatar/avatar';
 import { Badge } from '@/components/badge/badge';
 import { Bubble, BubbleContent } from '@/components/bubble/bubble';
@@ -506,63 +510,25 @@ export function PreferencesCard() {
   );
 }
 
-const initialTasks = [
-  'Explore the direction',
-  'Review the components',
-  'Polish the interactions',
-  'Share with the team',
+const initialTasks: TaskChecklistItem[] = [
+  { label: 'Explore the direction', done: true },
+  { label: 'Review the components', done: true },
+  { label: 'Polish the interactions' },
+  { label: 'Share with the team' },
 ];
 export function TasksCard() {
-  const id = useId();
-  const [done, setDone] = useState([true, true, false, false]);
-  const completed = done.filter(Boolean).length;
-  function toggleTask(index: number, checked: boolean) {
-    setDone((current) =>
-      current.map((value, i) => (i === index ? checked : value))
-    );
-  }
+  const [tasks, setTasks] = useState(initialTasks);
   return (
     <ShowcaseCard title="Project checklist">
-      <div className={metricClassName}>
-        <strong className={metricValueClassName}>
-          {completed}
-          <span className="nx:typography-heading-small nx:text-muted-foreground">
-            {' '}
-            / 4
-          </span>
-        </strong>
-        <Badge variant="secondary" fill="light">
-          In progress
-        </Badge>
-      </div>
-      <Progress
-        value={completed * 25}
-        aria-label={`${completed} of 4 tasks complete`}
+      <TaskChecklist
+        tasks={tasks}
+        assignee={{ name: 'Alex Morgan', detail: 'Due November 12' }}
+        onTaskChange={(index, done) =>
+          setTasks((current) =>
+            current.map((task, i) => (i === index ? { ...task, done } : task))
+          )
+        }
       />
-      <div className="nx:mt-4 nx:flex nx:flex-col">
-        {initialTasks.map((task, index) => (
-          <ChoiceRow htmlFor={`${id}-${index}`} key={task}>
-            <Checkbox
-              id={`${id}-${index}`}
-              checked={done[index]}
-              aria-labelledby={`${id}-${index}-label`}
-              onCheckedChange={(checked) => toggleTask(index, checked === true)}
-            />
-            <ChoiceRowTitle
-              id={`${id}-${index}-label`}
-              className={
-                done[index]
-                  ? 'nx:line-through nx:text-muted-foreground'
-                  : undefined
-              }
-            >
-              {task}
-            </ChoiceRowTitle>
-          </ChoiceRow>
-        ))}
-      </div>
-      <Separator className="nx:my-6" />
-      <Person name="Alex Morgan" detail="Due November 12" />
     </ShowcaseCard>
   );
 }
